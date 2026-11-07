@@ -1,20 +1,16 @@
 ---
 #------------------------------------------------------------------------------
-# Tests:           the Python unit test suite, plus the React apps' Prettier,
-#                  ESLint, TypeScript and Vitest unit tests.
+# Tests:           the Python unit test suite. The web console's tests are
+#                  smarter-sh/smarter-console's.
 #
 # The jobs:
 #
-#   fingerprint    Hashes the files each suite depends on (python: smarter/smarter,
-#                  react: smarter/react). When the pull request leaves them
-#                  as the base branch has them, or an earlier run passed on
-#                  those exact files, that suite is skipped and still
+#   fingerprint    Hashes the files the suite depends on (smarter/smarter and
+#                  what builds the platform). When the pull request leaves
+#                  them as the base branch has them, or an earlier run passed
+#                  on those exact files, the suite is skipped and still
 #                  reported as passing, so unchanged code isn't tested
 #                  twice. See the job.
-#   react         Prettier, ESLint, TypeScript and the Vitest unit tests of
-#                  smarter/react, as make react-lint and make react-test do.
-#                  Uploads its coverage to Codecov (flag: react). A few
-#                  minutes, on one runner.
 #   python         The Python suite, split into eight shards that run side by
 #                  side, one per runner.
 #
@@ -98,8 +94,8 @@ name: Tests
 
 #------------------------------------------------------------------------------
 # The first step of the pipeline (see build.yml): every pull request to main
-# runs the tests before it can be merged. python-report and react are main's
-# required status checks, so a pull request that fails them can't be merged.
+# runs the tests before it can be merged. python-report is main's required
+# status check, so a pull request that fails it can't be merged.
 # A new push to the pull request cancels the run in progress.
 #
 # A pull request whose head commit's message contains a CI skip tag, such as
@@ -134,39 +130,32 @@ env:
 
 jobs:
   #----------------------------------------------------------------------------
-  # Skip the suites whose files a pull request doesn't change.
+  # Skip the suite when a pull request doesn't change its files.
   #
-  # scripts/suite_fingerprints.py lists the files each suite depends on, and
-  # hashes them. A suite is skipped, and python-report and react still report
+  # scripts/suite_fingerprints.py lists the files the Python suite depends on,
+  # and hashes them. The suite is skipped, and python-report still reports
   # success, when either:
   #
   #   - its files are the same as the base branch's (HEAD^1 of the merge
   #     commit). Those passed the suite in the pull request that merged them.
   #     So a pull request of documentation, Helm values or change logs runs
-  #     neither suite, and one of React code runs only react; or
+  #     no tests; or
   #   - an earlier run of the same pull request saved a pass marker for
   #     exactly these files, in the Actions cache. So a re-push or rebase
   #     that leaves the files as they were passes in a minute.
   #
-  # The two suites have separate source trees, so a change to one doesn't
-  # rerun the other's tests:
+  # Its files: smarter/smarter, manage.py, requirements/ and .coveragerc;
+  # README.md and CODE_OF_CONDUCT.md, which the docs app serves; what builds
+  # the platform (Dockerfile, Makefile, ...), including the pinned web console
+  # (smarter-console-version.txt and scripts/fetch_console.py); this workflow
+  # and the script. Not docs/, which no Python test reads, and not
+  # changelogs/CHANGELOG.md, which every release rewrites. The script's
+  # SUITES has the exact list.
   #
-  #   python   smarter/smarter, manage.py, requirements/ and .coveragerc;
-  #            README.md and CODE_OF_CONDUCT.md, which the docs app serves;
-  #            what builds the platform (Dockerfile, Makefile, ...); and the
-  #            few files in smarter/react that the Python tests read. Not
-  #            docs/, which no Python test reads, and not
-  #            changelogs/CHANGELOG.md, which every release rewrites.
-  #   react    smarter/react, which is self-contained: its tests read nothing
-  #            outside it.
-  #
-  # Both include this workflow and the script. The script's SUITES has the
-  # exact lists.
-  #
-  # Markers are saved after a pass, by react and by python-report. GitHub
-  # scopes caches to a ref: a pull request's run sees the markers of earlier
-  # runs of the same pull request, not of its head branch, and the Tests
-  # never run on main. That is why the base branch comparison is needed.
+  # The marker is saved after a pass, by python-report. GitHub scopes caches
+  # to a ref: a pull request's run sees the markers of earlier runs of the
+  # same pull request, not of its head branch, and the Tests never run on
+  # main. That is why the base branch comparison is needed.
   #----------------------------------------------------------------------------
   fingerprint:
     runs-on: ubuntu-24.04
@@ -174,8 +163,6 @@ jobs:
     outputs:
       python-key: ${{ steps.keys.outputs.python-key }}
       python-passed: ${{ steps.keys.outputs.python-changed == 'false' || steps.python.outputs.cache-hit == 'true' }}
-      react-key: ${{ steps.keys.outputs.react-key }}
-      react-passed: ${{ steps.keys.outputs.react-changed == 'false' || steps.react.outputs.cache-hit == 'true' }}
     steps:
       # A pull request's checkout is its merge commit. Depth 2 also fetches
       # its first parent, HEAD^1: the base branch, which the change is
@@ -205,21 +192,11 @@ jobs:
           key: ${{ steps.keys.outputs.python-key }}
           lookup-only: true
 
-      - name: Look for a react pass
-        id: react
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: .tests-passed
-          key: ${{ steps.keys.outputs.react-key }}
-          lookup-only: true
-
       - name: Summary
         shell: bash
         env:
           PYTHON_CHANGED: ${{ steps.keys.outputs.python-changed }}
           PYTHON_HIT: ${{ steps.python.outputs.cache-hit }}
-          REACT_CHANGED: ${{ steps.keys.outputs.react-changed }}
-          REACT_HIT: ${{ steps.react.outputs.cache-hit }}
         run: |
           status() {
             if [ "$1" = "false" ]; then
@@ -233,105 +210,7 @@ jobs:
           {
             echo "### Fingerprints"
             echo "- python: $(status "$PYTHON_CHANGED" "$PYTHON_HIT")"
-            echo "- react: $(status "$REACT_CHANGED" "$REACT_HIT")"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  #----------------------------------------------------------------------------
-  # The React apps in smarter/react: formatting (Prettier), lint (ESLint),
-  # types (TypeScript) and unit tests (Vitest, with every Storybook story
-  # rendered as a test), as `make react-lint && make react-test` do. It needs
-  # only Node, so it runs alongside the test job, in a few minutes.
-  #
-  # The libraries' dist/ (@smarter/common, @smarter/didyouknow,
-  # @smarter/onboarding and Smarter Chat) are not committed. The apps
-  # type-check against their declarations, and the workbench imports the chat
-  # library as an npm package does, so they are built (build:deps) before the
-  # type check and the tests. The other tests use the workspace libraries'
-  # TypeScript source.
-  #
-  # Skipped when these files passed before (see fingerprint). GitHub reports
-  # a skipped job as a success to a required status check. !cancelled()
-  # makes it run, rather than skip, if the fingerprint job itself fails.
-  #----------------------------------------------------------------------------
-  react:
-    needs: fingerprint
-    if: ${{ !cancelled() && needs.fingerprint.outputs.react-passed != 'true' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: smarter/react
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
-
-      - name: Install Node
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: smarter/react/package-lock.json
-
-      - name: npm ci
-        run: npm ci --include=dev
-
-      - name: Formatting (Prettier)
-        run: npm run format:check
-
-      - name: Lint (ESLint)
-        run: npm run lint
-
-      - name: Types (TypeScript)
-        run: |
-          npm run build:deps
-          npm run typecheck
-
-      # The npm package that uiWidgetsRelease.yml publishes. build:deps built it.
-      - name: Check @smarter.sh/ui-widgets
-        run: npm run check:dist --workspace=@smarter.sh/ui-widgets
-
-      # Naming any reporter replaces Vitest's defaults, so default (the log)
-      # and github-actions (annotations and the job summary) are named too.
-      # json writes the results that the notify job posts to Slack.
-      - name: Unit tests (Vitest), with coverage
-        run: npm run coverage -- --reporter=default --reporter=github-actions --reporter=json --outputFile.json=vitest-results.json
-
-      - name: Upload the test results for notify
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: react-results
-          path: |
-            smarter/react/vitest-results.json
-            smarter/react/coverage/coverage-summary.json
-          if-no-files-found: ignore
-          retention-days: 7
-
-      #========================================================================
-      # Upload coverage/lcov.info under the react flag. Its paths are relative
-      # to smarter/react, which codecov.yml maps back to the repository's.
-      #========================================================================
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          files: ./smarter/react/coverage/lcov.info
-          flags: react
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      # Reached only when every step above passed.
-      - name: Record the pass
-        working-directory: .
-        shell: bash
-        run: |
-          mkdir -p .tests-passed
-          echo "${{ github.sha }}" > .tests-passed/commit
-
-      - name: Save the pass
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: .tests-passed
-          key: ${{ needs.fingerprint.outputs.react-key }}
 
   #----------------------------------------------------------------------------
   # The optional Slack bot of the Helm chart (helm/charts/slack-bot), and
@@ -676,7 +555,7 @@ jobs:
       # make collectstatic
       #
       # Fast, and its output depends on both the Python packages and the
-      # React build, so it always runs.
+      # installed web console, so it always runs.
       #========================================================================
       - name: make collectstatic
         shell: bash
@@ -882,7 +761,7 @@ jobs:
   # Merge the shards' results into one report.
   #
   # - Test summary: every shard's JUnit XML report, rendered together in the
-  #   job summary, like the react job's Vitest report. It runs even when a
+  #   job summary. It runs even when a
   #   shard fails, which is when it matters most.
   # - Coverage: the shards' coverage data files are combined, with their
   #   container paths mapped back to the repository's checkout, and reported
@@ -996,7 +875,7 @@ jobs:
           path: .tests-passed
           key: ${{ needs.fingerprint.outputs.python-key }}
 
-      # This job, with react, is the required status check of main: one check
+      # This job is the required status check of main: one check
       # for all eight shards, whose names would otherwise all be required.
       # A skip counts as a pass only when the fingerprint job found one: if
       # the fingerprint job failed, python-passed is empty, and this fails.
@@ -1008,8 +887,8 @@ jobs:
           exit 1
 
   #----------------------------------------------------------------------------
-  # Post the run's results to Slack: what the job summaries show (the React
-  # and Python test counts, coverage, and the tests that failed), which the
+  # Post the run's results to Slack: what the job summaries show (the Python
+  # test counts, coverage, and the tests that failed), which the
   # GitHub app for Slack leaves out. scripts/slack_test_report.py writes the
   # message, and scripts/slack_post.py posts it. A Slack outage doesn't fail
   # the run.
@@ -1023,7 +902,7 @@ jobs:
   # script by ${{ }}, because anyone who opens a pull request writes it.
   #----------------------------------------------------------------------------
   notify:
-    needs: [fingerprint, react, slack-bot, python-report]
+    needs: [fingerprint, slack-bot, python-report]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -1050,14 +929,11 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          REACT_RESULT: ${{ needs.react.result }}
-          REACT_PASSED_BEFORE: ${{ needs.fingerprint.outputs.react-passed }}
           PYTHON_RESULT: ${{ needs.python-report.result }}
           PYTHON_PASSED_BEFORE: ${{ needs.fingerprint.outputs.python-passed }}
           SLACK_BOT_RESULT: ${{ needs.slack-bot.result }}
         run: |
           args=()
-          [ "$REACT_PASSED_BEFORE" = "true" ] && args+=(--react-passed-before)
           [ "$PYTHON_PASSED_BEFORE" = "true" ] && args+=(--python-passed-before)
           python3 -I scripts/slack_test_report.py \
             --title "$TITLE" \
@@ -1067,9 +943,6 @@ jobs:
             --pr-title "$PR_TITLE" \
             --pr-url "$PR_URL" \
             --run-url "$RUN_URL" \
-            --react-result "$REACT_RESULT" \
-            --react-results results/react-results/vitest-results.json \
-            --react-coverage results/react-results/coverage/coverage-summary.json \
             --python-result "$PYTHON_RESULT" \
             --python-results results \
             --python-coverage results/python-coverage/coverage.json \

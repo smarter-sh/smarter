@@ -2,31 +2,20 @@
 #------------------------------------------------------------------------------
 # Codecov configuration
 #
-# .github/workflows/test.yml uploads two coverage reports, each under its own
-# flag, so that the README can show a badge for each:
-#
-# - python: the unit tests run with coverage inside the smarter-api
-#   container, where the repository's smarter/ folder is
-#   /home/smarter_user/smarter/. The python-report job combines the shards'
-#   data and already maps those paths back to the repository's, so the fix
-#   below only matters for a report made inside the container.
-# - react: the Vitest tests run in smarter/react, and lcov.info paths are
-#   relative to that folder (packages/...).
-#
-# The fixes map both reports' paths back to the repository's paths.
-# carryforward keeps a flag's last coverage when a commit uploads only the
-# other report, so that neither badge goes blank.
+# .github/workflows/test.yml uploads the Python coverage report, under the
+# python flag, for the README's badge. The unit tests run with coverage inside
+# the smarter-api container, where the repository's smarter/ folder is
+# /home/smarter_user/smarter/. The python-report job combines the shards' data
+# and already maps those paths back to the repository's, so the fix below only
+# matters for a report made inside the container. carryforward keeps the last
+# coverage when a commit uploads none, so that the badge doesn't go blank. The
+# web console's coverage is smarter-sh/smarter-console's.
 #------------------------------------------------------------------------------
 fixes:
   - "/home/smarter_user/smarter/::smarter/"
-  - "packages/::smarter/react/packages/"
 
 flags:
   python:
     paths:
       - smarter/smarter/
-    carryforward: true
-  react:
-    paths:
-      - smarter/react/
     carryforward: true

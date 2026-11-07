@@ -144,7 +144,7 @@ Prompt frontends pass the Smarter API key in the 'x-api-key' header.
 See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
-# Smarter React common custom headers. See smarter/react/packages/smarter-common/src/lib/django.tsx
+# The web console's custom headers. See smarter-sh/smarter-console's packages/smarter-common/src/lib/django.tsx
 CORS_ALLOW_HEADERS += [
     "x-smarter-client",
     "x-smarter-clientversion",

@@ -45,9 +45,8 @@
 # AWS_ACCESS_KEY_ID
 # AWS_REGION
 # AWS_SECRET_ACCESS_KEY
-# PAT (semantic-release, so that its tag and GitHub release trigger
-#      uiChatRelease.yml and uiWidgetsRelease.yml; the chart's GHCR login;
-#      the merge-back)
+# PAT (semantic-release, whose commit, tag and release a PAT lets start
+#      workflows; the chart's GHCR login; the merge-back)
 # DOCKERHUB_USERNAME, DOCKERHUB_PAT, DOCKERHUB_ACCOUNT, DOCKERHUB_REPO
 # COSIGN_KEY, COSIGN_PASSWORD
 # SLACK_BOT_TOKEN (optional: notify posts to #smarter with it)
@@ -96,8 +95,10 @@ env:
 
 jobs:
   #----------------------------------------------------------------------------
-  # semantic-release. The PAT secret, rather than GITHUB_TOKEN, makes its tag
-  # and GitHub release trigger other workflows, such as uiChatRelease.yml.
+  # semantic-release. The PAT secret, rather than GITHUB_TOKEN, lets its tag,
+  # GitHub release and commit start workflows, which GITHUB_TOKEN's can't. (The
+  # web console's npm releases, which its release used to start, are
+  # smarter-sh/smarter-console's.)
   #
   # The PAT also makes semantic-release's own commit, chore(release): <version>,
   # start this workflow again. That commit releases nothing, so the run skips

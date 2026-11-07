@@ -58,9 +58,6 @@ staticfiles
 # -------------------------------------
 **/.coverage
 **/.coverage.*
-# React test coverage reports (make react-test), and Storybook builds
-smarter/react/coverage/
-smarter/react/packages/*/coverage/
 **/storybook-static/
 htmlcov
 

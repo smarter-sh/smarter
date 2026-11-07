@@ -29,7 +29,7 @@ include .env
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
-	console console-local react-install react-build react-build-ci react-test react-lint react-storybook \
+	console console-local \
 	helm-update \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
@@ -204,8 +204,8 @@ docker-build:
 	  --build-arg DOCKER_COLLECT_STATIC_FILES=false && \
 	docker image prune -f
 
-# A full build, which collects the static files, including the React apps'.
-# Build the React apps first, with `cd smarter/react && npm run build`.
+# A full build, which collects the static files, including the web console's.
+# Install the web console first, with make console.
 docker-build-for-react:
 	make docker-check && \
 	docker-compose build  --progress=plain \
@@ -346,7 +346,7 @@ python-requirements:
 
 
 # ---------------------------------------------------------
-# React
+# Web console
 # ---------------------------------------------------------
 # The web console, smarter-sh/smarter-console: its release that smarter-console-version.txt pins, into
 # smarter/smarter/static/react/, where collectstatic and the Docker build pick it up. See scripts/fetch_console.py.
@@ -357,41 +357,6 @@ console:
 # make build in a smarter-console checkout, then make console-local CONSOLE_DIST=../smarter-console/dist
 console-local:
 	python3 -I scripts/fetch_console.py --from-dir $(or $(CONSOLE_DIST),../smarter-console/dist)
-
-react-install:
-	cd smarter/react && npm install --include=dev
-
-react-update:
-	cd smarter/react && ncu --workspaces --root -u && npm install
-
-react-build:
-	@echo "==============================================================================="
-	@echo "Building and collecting React files on local filesystem ..."
-	@echo "==============================================================================="
-	cd smarter/react && NODE_ENV=production npm run build
-	make collectstatic
-	make build
-
-react-build-ci:
-	cd smarter/react && \
-	NODE_ENV=production npm ci --include=dev && \
-	NODE_ENV=production npm run build
-
-# Run the unit tests of every React app, with a coverage report in smarter/react/coverage/.
-# Each story is rendered as a test too. See smarter/react/README.md. The workbench tests the
-# Smarter Chat library that it imports, so the library is built first (build:deps).
-react-test:
-	cd smarter/react && npm run build:deps && npm run coverage
-
-# Check the formatting, lint and types of every React app, as CI does. The apps type-check
-# against the workspace libraries' and Smarter Chat's declarations, which build:deps builds.
-react-lint:
-	cd smarter/react && npm run build:deps && npm run format:check && npm run lint && npm run typecheck
-
-# Browse a React app's components in Storybook, at http://localhost:6006.
-# example: make react-storybook APP=smarter-secret-list
-react-storybook:
-	cd smarter/react/packages/$(or $(APP),smarter-dashboard) && npm run storybook
 
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
 # (smarter.apps.prompt.contract.models), in the smarter-api container. Run it after changing the
@@ -560,12 +525,6 @@ help:
 	@echo '<************************** React **************************>'
 	@echo 'console                - Install the pinned release of the web console into the static folder'
 	@echo 'console-local          - Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist'
-	@echo 'react-install          - Install npm dependencies for React frontend apps'
-	@echo 'react-build            - Build all React frontend apps and collect static files'
-	@echo 'react-build-ci         - Build all React frontend apps using CI settings'
-	@echo 'react-test             - Run the unit tests of all React apps, with a coverage report'
-	@echo 'react-lint             - Check the formatting, lint and types of all React apps'
-	@echo 'react-storybook        - Browse a React app in Storybook, e.g. make react-storybook APP=smarter-secret-list'
 	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
 	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
 	@echo 'i18n-messages          - Regenerate and compile the web console translations (.po), optionally LANGUAGE=<code>'
