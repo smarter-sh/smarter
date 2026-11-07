@@ -19,26 +19,7 @@ repos:
     hooks:
       - id: codespell
         args: ["--ignore-words=codespell.txt"]
-        exclude: '\.svg$|^smarter/smarter/static/|^smarter/react/packages/smarter-console/public/scalar/|^helm/|^docs/source/example-manifests/|package-lock\.json$|^smarter/smarter/locale/(?!en/)|^smarter/react/storybook/public/mockServiceWorker\.js$|^smarter/react/packages/smarter\.sh-chat/(locale/(?!en/)|src/catalogs\.gen\.ts$|\.storybook/public/mockServiceWorker\.js$)'
-  # The React apps in smarter/react, with the workspace's own Prettier and ESLint (and their
-  # configuration in smarter/react), so that the hooks and `npm run format` / `npm run lint`
-  # always agree. They need smarter/react's node_modules: make react-install.
-  - repo: local
-    hooks:
-      - id: react-prettier
-        name: prettier (smarter/react)
-        entry: bash -c 'cd smarter/react && npx --no-install prettier --write --ignore-unknown "${@#smarter/react/}"' --
-        language: system
-        files: ^smarter/react/
-        # the console ships Scalar's vendored, minified build, unformatted.
-        exclude: ^smarter/react/(package-lock\.json|storybook/public/|packages/[^/]+/CHANGELOG\.md$|packages/smarter-console/public/scalar/)
-      - id: react-eslint
-        name: eslint (smarter/react)
-        entry: bash -c 'cd smarter/react && npx --no-install eslint --max-warnings=0 --no-warn-ignored "${@#smarter/react/}"' --
-        language: system
-        files: ^smarter/react/.*\.(ts|tsx|js)$
-        # the console ships Scalar's vendored, minified build.
-        exclude: ^smarter/react/packages/smarter-console/public/scalar/
+        exclude: '\.svg$|^smarter/smarter/static/|^helm/|^docs/source/example-manifests/|package-lock\.json$|^smarter/smarter/locale/(?!en/)'
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:

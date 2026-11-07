@@ -76,6 +76,7 @@ class TestFetchConsole(unittest.TestCase):
         self.assertTrue((self.static / "react/@smarter/console/index.html").is_file())
         self.assertTrue((self.static / "react/@smarter/llmclient-deployment/manifest.json").is_file())
         self.assertEqual((self.i18n / "messages.js").read_text(), 'gettext("Dashboard");\n')
+        self.assertEqual((self.root / "console" / "version.txt").read_text(), "1.2.0\n")
         # the old builds are gone, and Django's own static files are not.
         self.assertFalse((self.static / "react/@smarter/old-list").exists())
         self.assertEqual((self.static / "js/smarter-base.js").read_text(), "base")
@@ -137,6 +138,7 @@ class TestFetchConsole(unittest.TestCase):
         code, out, _ = self.run_main("--from-dir", str(dist))
         self.assertEqual(code, 0)
         self.assertIn("local build", out)
+        self.assertEqual((self.root / "console" / "version.txt").read_text(), "local\n")
         self.assertTrue((self.static / "react/@smarter/console/assets/index-abc12345.js").is_file())
         self.assertFalse((self.static / "react/@smarter/old-list").exists())
 
