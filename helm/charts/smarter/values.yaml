@@ -78,6 +78,9 @@ env:
   SMARTER_ENABLE_MANIFEST_DROPZONE: true
   SMARTER_ENABLE_PROXY: true
   SMARTER_ENABLE_VECTORSTORE: true
+  # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
+  # pages load them from its CDN, cdn.<platform>. It needs AWS. false: the server serves them.
+  SMARTER_STATIC_FILES_ON_CDN: false
   # The Smarter Extension registry's base64 Ed25519 public key. This is a
   # public key, not a secret. An empty value disables the registry.
   SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
