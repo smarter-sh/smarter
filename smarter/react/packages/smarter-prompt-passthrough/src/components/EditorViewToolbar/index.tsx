@@ -1,3 +1,3 @@
-import EditorViewToolbar from "@/components/EditorViewToolbar/Component";
+import EditorViewToolbar from "./Component";
 
 export default EditorViewToolbar;

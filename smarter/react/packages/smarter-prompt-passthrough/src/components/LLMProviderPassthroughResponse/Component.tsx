@@ -20,11 +20,11 @@ import type * as monaco from "monaco-editor";
 
 import { gettext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
-import EditorViewToolbar from "@/components/EditorViewToolbar";
-import { CompletionPanel, ErrorPanel } from "@/components/LLMProviderPassthroughResponse/ResponseSummary";
-import SuccessEmoji from "@/components/LLMProviderPassthroughResponse/status_success";
-import FailureEmoji from "@/components/LLMProviderPassthroughResponse/status_failure";
+import { loggerPrefix } from "../../const";
+import EditorViewToolbar from "../EditorViewToolbar";
+import { CompletionPanel, ErrorPanel } from "./ResponseSummary";
+import SuccessEmoji from "./status_success";
+import FailureEmoji from "./status_failure";
 import {
   completionSummary,
   editorHeight,
@@ -32,9 +32,9 @@ import {
   formatBytes,
   formatDuration,
   type PassthroughResponse,
-} from "@/components/LLMProviderPassthroughResponse/summary";
+} from "./summary";
 
-import "@/components/LLMProviderPassthroughResponse/styles.css";
+import "./styles.css";
 
 interface ResponseProps {
   apiResponse: PassthroughResponse | null;

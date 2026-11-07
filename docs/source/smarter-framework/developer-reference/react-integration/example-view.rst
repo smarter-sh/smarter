@@ -1,5 +1,5 @@
 Example Django View for React Integration
 ==============================================
 
-.. literalinclude:: ../../../../../smarter/smarter/apps/dashboard/views/terminal_emulator/reactapp.py
+.. literalinclude:: ../../../../../smarter/smarter/apps/prompt/views/detailviews/prompt_workbench_view.py
    :language: python

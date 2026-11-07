@@ -1,6 +1,6 @@
 ---
 name: smarter-django-react
-description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, or one of the pages that Django still hosts (workbench, Prompt Passthrough, Terminal, manifest drop zone). The Extensions console is the console's too. Covers the console's list routes (lib/lists), the Django page class that keeps a list's url name, the Django view, template and templatetag of a hosted page, SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
+description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, or the page that Django still hosts (the workbench). The Extensions console, the Prompt Passthrough, the Terminal and the manifest drop zone are the console's too (routes/ToolPages). Covers the console's list routes (lib/lists), the Django page class that keeps a list's url name, the Django view, template and templatetag of a hosted page, SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
 ---
 
 # Smarter Django + React
@@ -8,10 +8,11 @@ description: Use when building or changing a React app of the Smarter web consol
 The web console is moving into a single-page app, `@smarter/console`
 ([ADR-035](../../docs/source/adr/035-single-page-app.rst), `docs/spa-migration.md`). Its sign-in pages,
 frame (sidebar, header, user menu, welcome dialog), dashboard, every resource list and the Extensions console
-(`routes/ExtensionsPage`) and every resource's manifest page but the LLMClient's are the console's: it renders
-each package's component at the page's path. The other
-pages are still Django pages that each embed one React app, built by Vite into Django's static files: the
-workbench, the Prompt Passthrough, the Terminal and the manifest drop zone. The apps live in the npm workspace
+(`routes/ExtensionsPage`), every resource's manifest page but the LLMClient's, and the manifest drop zone, the
+Prompt Passthrough and the Terminal (`routes/ToolPages`, gated by the session's flags) are the console's: it renders
+each package's component at the page's path. The workbench's pages are still Django pages that embed one React
+app, built by Vite into Django's static files. Tests of Django's frame call `get_server_rendered_page()`
+(`smarter.lib.unittest.server_rendered_page`). The apps live in the npm workspace
 `smarter/react/packages/`, and share code through `@smarter/common`.
 
 ## How a list page is wired, end to end

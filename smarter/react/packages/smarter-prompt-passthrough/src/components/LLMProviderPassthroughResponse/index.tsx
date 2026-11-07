@@ -1,3 +1,3 @@
-import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse/Component";
+import LLMProviderPassthroughResponse from "./Component";
 
 export default LLMProviderPassthroughResponse;

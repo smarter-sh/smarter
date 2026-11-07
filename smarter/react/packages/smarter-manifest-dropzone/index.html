@@ -17,23 +17,8 @@
     <link href="/common-styles.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
-    <!--
-    only used for development via 'npm run dev'. In production, this file is rendered
-    by Django.
-
-    See:
-    - smarter.apps.drop-zone.views.views.drop-zone.DashboardView
-    - templates/react/drop-zone.html
-    -->
-    <div
-      id="smarter-manifest-dropzone-root"
-      smarter-cookie-domain="localhost"
-      smarter-csrf-cookie-name="csrftoken"
-      smarter-django-session-cookie-name="sessionid"
-      smarter-request-id="abcd1234"
-      react-debug-mode="true"
-      smarter-api-url="http://localhost:9357/api/v1/cli/apply/"
-    ></div>
+    <!-- the development page only (npm run dev): @smarter/console renders it in the web console. -->
+    <div id="smarter-manifest-dropzone-root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
   <script src="/assets/plugins/global/plugins.bundle.js"></script>

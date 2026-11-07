@@ -1,6 +1,6 @@
-import { type LLMProvider } from "@/components/LLMProviders";
+import { type LLMProvider } from "../LLMProviders";
 
-import "@/components/LLMProviderSelector/styles.css";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 
 interface LLMProviderSelectorProps {

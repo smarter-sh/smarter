@@ -4,7 +4,7 @@
  */
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
-import type { ExitReason, SessionInfo } from "@/lib/session";
+import type { ExitReason, SessionInfo } from "./session";
 
 const YELLOW = "\x1b[33m";
 const DIM = "\x1b[2m";

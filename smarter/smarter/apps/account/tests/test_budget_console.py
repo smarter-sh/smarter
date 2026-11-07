@@ -11,12 +11,12 @@ from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
-from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 from smarter.lib.unittest.resource_views import (
     assert_console_page,
     assert_no_resource,
     resource_detail_json,
 )
+from smarter.lib.unittest.server_rendered_page import get_server_rendered_page
 
 
 def url(name: str, **kwargs) -> str:
@@ -123,6 +123,6 @@ class TestBudgetConsole(TestAccountMixin):
         The console's dashboard calls the budgets api.
         """
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(SERVER_RENDERED_PAGE)
+        response = get_server_rendered_page(self.client)
         self.assertEqual(response.status_code, 200)
         self.assertIn(url(BudgetReverseNames.listview), response.content.decode())

@@ -219,5 +219,5 @@ Front End, Quality and the Whole
        logging handler that publishes to that channel, and the React component that renders the
        stream.
      - `apps/dashboard/views/terminal_emulator/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/views/terminal_emulator>`__,
-       `apps/dashboard/templatetags/react_terminal_emulator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/templatetags/react_terminal_emulator.py>`__,
+       `apps/dashboard/templatetags/react_terminal_emulator.py <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/dashboard/templatetags/react_terminal_emulator.py>`__,
        `smarter-terminal-emulator <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-terminal-emulator>`__

@@ -29,15 +29,15 @@ import { fetchDjangoUrl, gettext } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 import { ServerLogs, logStreamUrlForRequest, newRequestId, useLogStream } from "@smarter/serverlogs";
 
-import { loggerPrefix } from "@/const";
-import getPromptTemplate from "@/components/Prompt/templates";
-import LLMProviderMetaData from "@/components/LLMProviderMetaData";
-import LLMProviders, { type LLMProvider } from "@/components/LLMProviders";
-import LLMProviderPassthroughResponse from "@/components/LLMProviderPassthroughResponse";
-import type { PassthroughResponse } from "@/components/LLMProviderPassthroughResponse/summary";
-import LLMProviderPassthroughRequest from "@/components/LLMProviderPassthroughRequest";
+import { loggerPrefix } from "../../const";
+import getPromptTemplate from "./templates";
+import LLMProviderMetaData from "../LLMProviderMetaData";
+import LLMProviders, { type LLMProvider } from "../LLMProviders";
+import LLMProviderPassthroughResponse from "../LLMProviderPassthroughResponse";
+import type { PassthroughResponse } from "../LLMProviderPassthroughResponse/summary";
+import LLMProviderPassthroughRequest from "../LLMProviderPassthroughRequest";
 
-import "@/components/Prompt/styles.css";
+import "./styles.css";
 
 interface PromptProps {
   sessionContext: SessionContext;

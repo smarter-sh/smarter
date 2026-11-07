@@ -1,3 +1,3 @@
-import TemplateSelector from "@/components/TemplateSelector/Component";
+import TemplateSelector from "./Component";
 
 export default TemplateSelector;

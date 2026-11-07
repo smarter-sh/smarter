@@ -1,3 +1,3 @@
-import TerminalEmulator from "@/components/Terminal/Component";
+import TerminalEmulator from "./Component";
 
 export default TerminalEmulator;

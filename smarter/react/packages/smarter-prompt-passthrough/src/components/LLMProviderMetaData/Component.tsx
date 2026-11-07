@@ -13,13 +13,13 @@
  * :returns: The provider's card, or nothing without a provider.
  * :rtype: JSX.Element | null
  */
-import type { LLMProvider } from "@/components/LLMProviders";
-import ProviderDetails from "@/components/LLMProviderMetaData/ProviderDetails";
-import ProviderFlags from "@/components/LLMProviderMetaData/ProviderFlags";
-import ProviderLinks from "@/components/LLMProviderMetaData/ProviderLinks";
+import type { LLMProvider } from "../LLMProviders";
+import ProviderDetails from "./ProviderDetails";
+import ProviderFlags from "./ProviderFlags";
+import ProviderLinks from "./ProviderLinks";
 import { gettext, interpolate } from "@smarter/common";
 
-import "@/components/LLMProviderMetaData/styles.css";
+import "./styles.css";
 
 interface ProviderMetaDataProps {
   provider: LLMProvider | null;

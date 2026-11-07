@@ -3,6 +3,6 @@ Example Vite Build Configuration
 
 
 
-.. literalinclude:: ../../../../../smarter/react/packages/smarter-terminal-emulator/vite.config.ts
+.. literalinclude:: ../../../../../smarter/react/packages/smarter-workbench/vite.config.ts
    :language: ts
-   :caption: Vite Build Configuration for Terminal Application
+   :caption: Vite Build Configuration for the Prompt Engineer's Workbench

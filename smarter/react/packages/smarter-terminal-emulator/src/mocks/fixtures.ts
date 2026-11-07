@@ -1,7 +1,7 @@
 /** Example data for the terminal: its session context, a ticket, and the server's messages. See smarter.apps.dashboard.views.terminal_emulator. */
 import type { SessionContext } from "@smarter/common";
 
-import type { SessionInfo } from "@/lib/session";
+import type { SessionInfo } from "../lib/session";
 
 export const TICKET_URL = "/api/web/dashboard/terminal/ticket/";
 export const WEBSOCKET_PATH = "/ws/terminal/";

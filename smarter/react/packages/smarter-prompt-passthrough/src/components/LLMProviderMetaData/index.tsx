@@ -1,2 +1,2 @@
-import LLMProviderMetaData from "@/components/LLMProviderMetaData/Component";
+import LLMProviderMetaData from "./Component";
 export default LLMProviderMetaData;

@@ -1,6 +1,6 @@
 import { gettext, interpolate } from "@smarter/common";
 
-import type { CompletionSummary, ErrorSummary } from "@/components/LLMProviderPassthroughResponse/summary";
+import type { CompletionSummary, ErrorSummary } from "./summary";
 
 /** The assistant's reply: its text, the tools it called, and the model, finish reason and token counts. */
 export function CompletionPanel({ completion }: { completion: CompletionSummary }) {

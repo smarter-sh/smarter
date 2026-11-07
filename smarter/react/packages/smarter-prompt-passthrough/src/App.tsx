@@ -3,11 +3,11 @@
  * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
  *
  */
-import Hero from "@/components/Hero";
-import Prompt from "@/components/Prompt";
+import Hero from "./components/Hero";
+import Prompt from "./components/Prompt";
 import type { SessionContext } from "@smarter/common";
 
-interface AppProps {
+export interface AppProps {
   sessionContext: SessionContext;
   defaultLLMProviderId: number;
   defaultTemplateId: number;

@@ -16,14 +16,14 @@ import { FitAddon } from "@xterm/addon-fit";
 import { SerializeAddon } from "@xterm/addon-serialize";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import "@/components/Terminal/styles.css";
+import "./styles.css";
 import { gettext } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { banner, ended, restored } from "@/lib/banner";
-import { MAX_SAVED_LINES, loadScreen, saveScreen } from "@/lib/screen";
-import { TerminalSession } from "@/lib/session";
-import type { SessionInfo } from "@/lib/session";
+import { banner, ended, restored } from "../../lib/banner";
+import { MAX_SAVED_LINES, loadScreen, saveScreen } from "../../lib/screen";
+import { TerminalSession } from "../../lib/session";
+import type { SessionInfo } from "../../lib/session";
 
 const terminalTheme = {
   background: "#171b20",
