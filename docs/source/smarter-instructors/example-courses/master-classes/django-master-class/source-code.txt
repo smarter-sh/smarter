@@ -29,7 +29,7 @@ Configuration and Startup
        ``django.core.cache`` is imported too early.
      - `apps/dashboard/apps.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/apps.py>`__,
        `lib/django/waffle/ready.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/ready.py>`__,
-       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__,
+       `cache-results <https://github.com/smarter-sh/cache-results>`__,
        `common/mixins/helper_mixin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/mixins/helper_mixin.py>`__
        (``SmarterReadyState``)
    * - 3. Python logging
