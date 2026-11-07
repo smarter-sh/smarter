@@ -14,16 +14,15 @@ Attributes:
         (default: ``10``).
 
 Classes:
-    DashboardView: Authenticated, lightly cached view that renders the React
-        dashboard page.
+    DropzoneView: Authenticated view that renders the React dropzone page.
 
 Example:
     Wire up the view in your URL configuration::
 
-        from smarter.apps.dashboard.views.views.dashboard import DashboardView
+        from smarter.apps.dashboard.views.dropzone.view import DropzoneView
 
         urlpatterns = [
-            path("", DashboardView.as_view(), name="dashboard"),
+            path("", DropzoneView.as_view(), name="dropzone"),
         ]
 """
 

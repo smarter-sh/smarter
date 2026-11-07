@@ -3,12 +3,12 @@
  * mounted on the pages that the backend still renders, from the attributes of its template; in the console it
  * takes the same values from the session.
  */
-import type { SessionContext } from "@smarter/common";
 import type { AppContext } from "@smarter/dashboard-user-menu";
 
 import type { ConsoleSession } from "@/contract.gen";
 import { ACCOUNT_API, accountUrls } from "@/lib/account";
-import { LOGIN_PATH, projectName, projectVersion } from "@/lib/const";
+import { LOGIN_PATH } from "@/lib/const";
+import { djangoSessionContext } from "@/lib/djangoSession";
 
 /** The backend's urls that the user menu calls: Django's set_language view, and the console's account api. */
 export const userMenuUrls = {
@@ -18,11 +18,6 @@ export const userMenuUrls = {
   userProfileSelectApi: `${ACCOUNT_API}/user-profiles/select/`,
 };
 
-/** A new id for the user menu's requests, which the backend logs: 32 hex digits. */
-function requestId(): string {
-  return crypto.randomUUID().replaceAll("-", "");
-}
-
 /**
  * The user menu's context, for a signed-in session.
  *
@@ -31,19 +26,9 @@ function requestId(): string {
  * @returns The context.
  */
 export function userMenuContext(session: ConsoleSession, path: string): AppContext {
-  const { cookies, user, account, language, flags } = session;
-  const sessionContext: SessionContext = {
-    ApiUrl: userMenuUrls.profileImageApi,
-    csrfCookieName: cookies.csrfCookieName,
-    djangoSessionCookieName: cookies.sessionCookieName,
-    cookieDomain: cookies.cookieDomain || window.location.hostname,
-    debugMode: flags.reactDebugMode,
-    smarterClient: projectName,
-    smarterClientVersion: projectVersion,
-    smarterRequestId: requestId(),
-  };
+  const { user, account, language } = session;
   return {
-    sessionContext,
+    sessionContext: djangoSessionContext(session, userMenuUrls.profileImageApi),
     isAuthenticated: session.isAuthenticated,
     user: {
       username: user?.username ?? "",

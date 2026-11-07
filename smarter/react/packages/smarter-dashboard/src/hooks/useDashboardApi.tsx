@@ -25,7 +25,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../const";
 
 interface DashboardApiState<T> {
   data: T | null;

@@ -1,3 +1,3 @@
-import ServiceHealth from "@/components/ServiceHealth/Component";
+import ServiceHealth from "./Component";
 
 export default ServiceHealth;

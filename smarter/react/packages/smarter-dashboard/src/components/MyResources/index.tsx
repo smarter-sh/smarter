@@ -1,3 +1,3 @@
-import MyResources from "@/components/MyResources/Component";
+import MyResources from "./Component";
 
 export default MyResources;

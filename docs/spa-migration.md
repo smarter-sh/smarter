@@ -55,7 +55,14 @@ the session (`lib/userMenu`). Until a page moves into the console, its link is t
 
 The user menu's endpoints moved from `/account/dashboard/` to the account api: `profile-image/`,
 `user-profiles/` (now a `GET`) and `user-profiles/select/`, in `smarter.apps.account.api.web.profile_image` and
-`user_profiles`. The old paths answer 404. Next: the dashboard.
+`user_profiles`. The old paths answer 404.
+
+The dashboard is the console's: `/dashboard` renders `@smarter/dashboard`'s `Dashboard` (now an import-only package,
+with no build) inside the frame, and `/` redirects to it. Django serves the console at `/dashboard/`, keeping the
+name `dashboard:dashboard`; `DashboardView`, `react/dashboard.html` and the `react_dashboard` template tag are
+deleted, which closes bug 10. The sidebar opens the console's pages in place (`CONSOLE_PAGE_PATHS`). Tests of
+Django's frame use `SERVER_RENDERED_PAGE` (`/secret/`). Next: the welcome dialog, the onboarding hints, the
+Did you know? tip and the theme mode menu, which Django's frame has and the console's doesn't yet.
 
 ## Development
 
@@ -284,7 +291,7 @@ Security first. Fix these in phase 0 or in the endpoint that replaces the view.
 9. **`branding()` caches request values:** `canonical` and `root_url` keep the first request's
    values for the cache's lifetime.
 10. **The dashboard caches its whole context,** including `smarter_request_id`
-    (`apps/dashboard/views/views/dashboard.py:85-138`).
+    (`apps/dashboard/views/views/dashboard.py:85-138`). Fixed in phase 1: the console serves the dashboard.
 11. **Dead template keys:** `dashboard.debug_mode` and `dashboard.smarter_version` are never set, so
     `window.debugMode` is always false and the sidebar's changelog label has no version.
 12. **`/docs/cli`** is linked from the docs menu (`cms/base/menu/cli.html`) and has no route.

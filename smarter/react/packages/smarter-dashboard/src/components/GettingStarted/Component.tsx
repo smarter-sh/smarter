@@ -26,8 +26,8 @@ import { useEffect } from "react";
 import type { SessionContext } from "@smarter/common";
 import { getCookie, gettext, interpolate, interpolateNodes, setCookie } from "@smarter/common";
 
-import useDashboardApi from "@/hooks/useDashboardApi";
-import "@/components/GettingStarted/styles.css";
+import useDashboardApi from "../../hooks/useDashboardApi";
+import "./styles.css";
 
 interface GettingStartedStep {
   name: string;

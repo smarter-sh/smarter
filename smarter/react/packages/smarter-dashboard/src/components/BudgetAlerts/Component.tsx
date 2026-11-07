@@ -20,9 +20,9 @@
 import type { ReactNode } from "react";
 import type { SessionContext } from "@smarter/common";
 
-import useDashboardApi from "@/hooks/useDashboardApi";
-import { formatAmount } from "@/components/BudgetVsActual/format";
-import type { BudgetStatus } from "@/components/BudgetVsActual/types";
+import useDashboardApi from "../../hooks/useDashboardApi";
+import { formatAmount } from "../BudgetVsActual/format";
+import type { BudgetStatus } from "../BudgetVsActual/types";
 import { gettext, interpolateNodes } from "@smarter/common";
 
 export const ALERT_PERCENT = 80;

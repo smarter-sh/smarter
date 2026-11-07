@@ -4,10 +4,10 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { BudgetSeries, BudgetStatus } from "@/components/BudgetVsActual/types";
-import type { GlobalSearchResponse } from "@/components/GlobalSearch/Component";
-import type { TokenUsageSeries } from "@/components/TokenUsage/types";
-import type { AppContextInterface } from "@/main";
+import type { BudgetSeries, BudgetStatus } from "../components/BudgetVsActual/types";
+import type { GlobalSearchResponse } from "../components/GlobalSearch/Component";
+import type { TokenUsageSeries } from "../components/TokenUsage/types";
+import type { AppContextInterface } from "../Types";
 
 export const sessionContext: SessionContext = {
   ApiUrl: "/api/web/dashboard/",

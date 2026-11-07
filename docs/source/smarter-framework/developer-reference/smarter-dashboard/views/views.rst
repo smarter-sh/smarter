@@ -7,5 +7,4 @@ Dashboard Views
    authentication
    logs
    passthrough
-   views/dashboard
    views/urls

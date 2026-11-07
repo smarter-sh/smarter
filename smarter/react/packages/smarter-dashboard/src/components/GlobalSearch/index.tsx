@@ -1,3 +1,3 @@
-import GlobalSearch from "@/components/GlobalSearch/Component";
+import GlobalSearch from "./Component";
 
 export default GlobalSearch;

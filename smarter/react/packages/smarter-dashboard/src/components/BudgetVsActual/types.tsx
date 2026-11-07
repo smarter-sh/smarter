@@ -1,4 +1,4 @@
-import type { BudgetPeriod, BudgetSeriesRow, BudgetUnit } from "@/components/BudgetVsActual/format";
+import type { BudgetPeriod, BudgetSeriesRow, BudgetUnit } from "./format";
 
 /** The status of a budget attached to a resource, from /api/web/dashboard/budgets/. */
 export interface BudgetStatus {

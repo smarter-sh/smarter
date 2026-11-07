@@ -10,9 +10,9 @@ import { useEffect, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate } from "@smarter/common";
 import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
-import { formatPeriod } from "@/components/BudgetVsActual/format";
-import type { TokenUsageChartProps, TokenUsagePoint, TokenUsageSeries } from "@/components/TokenUsage/types";
-import { loggerPrefix } from "@/const";
+import { formatPeriod } from "../BudgetVsActual/format";
+import type { TokenUsageChartProps, TokenUsagePoint, TokenUsageSeries } from "./types";
+import { loggerPrefix } from "../../const";
 
 const AREAS: { key: keyof TokenUsagePoint; label: string; color: string }[] = [
   { key: "prompt_tokens", label: gettext("Request"), color: "#ff5733" },

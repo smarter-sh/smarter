@@ -8,10 +8,10 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchDjangoUrl, gettext, interpolate, interpolateNodes } from "@smarter/common";
 import type { SessionContext } from "@smarter/common";
 
-import BudgetChart from "@/components/BudgetVsActual/BudgetChart";
-import { formatAmount } from "@/components/BudgetVsActual/format";
-import type { BudgetSeries, BudgetStatus } from "@/components/BudgetVsActual/types";
-import { loggerPrefix } from "@/const";
+import BudgetChart from "./BudgetChart";
+import { formatAmount } from "./format";
+import type { BudgetSeries, BudgetStatus } from "./types";
+import { loggerPrefix } from "../../const";
 
 const PERIODS = 12;
 

@@ -4,11 +4,11 @@
  * Pages move here from Django one at a time (ADR-035, docs/spa-migration.md): each gets a route below, and
  * Django serves the console's index.html at the same path.
  */
-import type { RouteObject } from "react-router";
+import { Navigate, type RouteObject } from "react-router";
 
 import { ActivatePage } from "@/routes/ActivatePage";
 import { AlreadyAssociatedPage } from "@/routes/AlreadyAssociatedPage";
-import { HomePage } from "@/routes/HomePage";
+import { DashboardPage } from "@/routes/DashboardPage";
 import { InactivePage } from "@/routes/InactivePage";
 import { Layout } from "@/routes/Layout";
 import { LoginPage } from "@/routes/LoginPage";
@@ -17,7 +17,7 @@ import { PasswordResetPage } from "@/routes/PasswordResetPage";
 import { PasswordResetRequestPage } from "@/routes/PasswordResetRequestPage";
 import { RegisterPage } from "@/routes/RegisterPage";
 import { RequireAuth } from "@/routes/RequireAuth";
-import { INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
+import { DASHBOARD_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
 
 export const routes: RouteObject[] = [
   // the pages of a visitor who isn't signed in.
@@ -39,7 +39,9 @@ export const routes: RouteObject[] = [
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <HomePage /> },
+      // the dashboard is the console's home.
+      { index: true, element: <Navigate to={DASHBOARD_PATH} replace /> },
+      { path: DASHBOARD_PATH, element: <DashboardPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

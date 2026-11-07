@@ -1,14 +1,17 @@
 {
   "name": "@smarter/dashboard",
   "private": true,
-  "description": "React-based dashboard for the Smarter web console.",
+  "description": "The dashboard of the Smarter web console, which @smarter/console renders at /dashboard.",
   "version": "0.3.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mocks": "./src/mocks/handlers.ts"
+  },
   "scripts": {
     "dev": "NODE_ENV=dev && vite",
-    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "typecheck": "tsc -b",

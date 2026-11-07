@@ -77,6 +77,16 @@ class TestDocsUrls(SmarterTestBase):
         url = reverse(namespace, DocsReverseNames.openapi)
         self.process_url(url)
 
+    def test_signed_in_menu_signs_out_with_a_post(self) -> None:
+        """A docs page's Logout item is a POST form to the console's account api, which smarter-base.js sends."""
+        response = self.client.get(reverse(namespace, DocsReverseNames.openapi))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.content.decode()
+        # the html minifier orders the form's attributes alphabetically.
+        self.assertIn('<form action="/api/web/account/logout/" data-smarter-sign-out="/login/" method="post">', content)
+        self.assertIn('name="csrfmiddlewaretoken"', content)
+        self.assertNotIn('href="/logout/"', content)
+
     def test_url_openapi_json(self) -> None:
         """Test url for the OpenAPI document."""
         url = reverse(namespace, DocsReverseNames.openapi_json)

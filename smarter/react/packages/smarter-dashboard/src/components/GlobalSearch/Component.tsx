@@ -23,7 +23,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { SessionContext } from "@smarter/common";
 import { fetchDjangoUrl, gettext, interpolate, Loading, ngettext } from "@smarter/common";
 
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../../const";
 
 /** How long to wait after the last keystroke before searching, in milliseconds. */
 export const GLOBAL_SEARCH_DELAY_MS = 300;

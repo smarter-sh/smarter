@@ -3,7 +3,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { createMemoryRouter } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { dashboardHandlers } from "@smarter/dashboard/mocks";
 
 import { server } from "@test/server";
 
@@ -19,6 +21,11 @@ import {
   visitorSessionHandler,
 } from "@/mocks/handlers";
 import { routes } from "@/router";
+
+// a signed-in user lands on the dashboard, whose widgets call the dashboard api.
+beforeEach(() => {
+  server.use(...dashboardHandlers);
+});
 
 function mountAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -180,7 +187,7 @@ describe("signing out", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "ada@example.com" }));
     await user.click(screen.getByRole("button", { name: "Sign Out" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Request failed: 403");
+    expect(await screen.findByText("Request failed: 403")).toHaveAttribute("role", "alert");
     expect(screen.getByRole("button", { name: "Sign Out" })).toBeEnabled();
   });
 });
@@ -231,7 +238,7 @@ describe("the sign-up page", () => {
   it("sends a signed-in user home", async () => {
     server.use(userSessionHandler);
     mountAt("/register");
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
   });
 });
 
@@ -317,8 +324,8 @@ describe("activating an account", () => {
       }),
     );
     const router = mountAt(linkPath);
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/");
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/dashboard");
     expect(posts).toBe(1);
   });
 
@@ -335,7 +342,7 @@ describe("activating an account", () => {
   it("sends a signed-in user home", async () => {
     server.use(userSessionHandler);
     mountAt(linkPath);
-    expect(await screen.findByRole("heading", { name: "Welcome, Ada" })).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Dashboard" })).toBeInTheDocument();
   });
 });
 

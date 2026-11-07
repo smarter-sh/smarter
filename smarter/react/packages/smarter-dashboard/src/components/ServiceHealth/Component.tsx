@@ -35,12 +35,12 @@
 import type { SessionContext } from "@smarter/common";
 import { gettext, interpolate, ngettext } from "@smarter/common";
 
-import useDashboardApi from "@/hooks/useDashboardApi";
-import HealthRing from "@/components/ServiceHealth/HealthRing";
-import type { HealthLevel } from "@/components/ServiceHealth/HealthRing";
-import CIStatus from "@/components/ServiceHealth/CIStatus";
-import { GhostBody, GhostHeader } from "@/components/ServiceHealth/Ghost";
-import "@/components/ServiceHealth/styles.css";
+import useDashboardApi from "../../hooks/useDashboardApi";
+import HealthRing from "./HealthRing";
+import type { HealthLevel } from "./HealthRing";
+import CIStatus from "./CIStatus";
+import { GhostBody, GhostHeader } from "./Ghost";
+import "./styles.css";
 
 interface ServiceHealthProps {
   sessionContext: SessionContext;

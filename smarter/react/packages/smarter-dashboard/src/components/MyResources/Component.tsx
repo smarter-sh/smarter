@@ -21,9 +21,9 @@
  */
 import { useEffect, useState } from "react";
 import { gettext, interpolate, interpolateNodes, Loading } from "@smarter/common";
-import { loggerPrefix } from "@/const";
+import { loggerPrefix } from "../../const";
 
-import "@/components/MyResources/styles.css";
+import "./styles.css";
 
 interface MyResourcesProps {
   apiUrl: string;

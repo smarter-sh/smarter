@@ -17,6 +17,15 @@ export const LOGIN_PATH = "/login";
 /** The page of an account that isn't active, which the social sign-in pipeline redirects to as well. */
 export const INACTIVE_PATH = "/account/inactive";
 
+/** The console's dashboard, its home. */
+export const DASHBOARD_PATH = "/dashboard";
+
+/**
+ * The paths of the pages that have moved into the console, which its sidebar links to in place. Until a page moves,
+ * the sidebar's link to it loads the backend's page.
+ */
+export const CONSOLE_PAGE_PATHS = [DASHBOARD_PATH];
+
 /** The query parameter that carries the route to return to after signing in. */
 export const NEXT_PARAMETER = "next";
 

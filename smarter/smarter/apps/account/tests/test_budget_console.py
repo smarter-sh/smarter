@@ -11,6 +11,7 @@ from smarter.apps.account.models import Budget, Charge, ChargeTypes
 from smarter.apps.account.models.budget import get_resource_lock_message
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.views.budget.urls import BudgetReverseNames
+from smarter.lib.unittest.base_classes import SERVER_RENDERED_PAGE
 
 
 def url(name: str, **kwargs) -> str:
@@ -109,10 +110,12 @@ class TestBudgetConsole(TestAccountMixin):
         response = self.client.get(url(BudgetReverseNames.detailview, hashed_id=self.other.hashed_id))
         self.assertEqual(response.status_code, 404)
 
-    def test_dashboard_has_budgets_api_url(self):
-        """Test that the dashboard gives its React app the budgets API URL, and the sidebar links to Budgets."""
+    def test_sidebar_links_to_budgets(self):
+        """Test that the sidebar of a console page links to Budgets.
+
+        The console's dashboard calls the budgets api.
+        """
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(reverse("dashboard:dashboard"))
+        response = self.client.get(SERVER_RENDERED_PAGE)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('smarter-budgets-api-url="/api/web/dashboard/budgets/"', response.content.decode())
         self.assertIn(url(BudgetReverseNames.listview), response.content.decode())

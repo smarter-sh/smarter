@@ -1,10 +1,8 @@
 /**
- * LLM API Prompt Passthrough
- * Used to send raw JSON prompts to LLM APIs and display raw JSON responses.
- *
+ * The dashboard's development page: the dashboard in a container. See main.tsx.
  */
-import Dashboard from "@/components/Dashboard";
-import type { AppContextInterface } from "@/main";
+import Dashboard from "./components/Dashboard";
+import type { AppContextInterface } from "./Types";
 
 function App({ appContext }: { appContext: AppContextInterface }) {
   return (

@@ -1,3 +1,3 @@
-import Dashboard from "@/components/Dashboard/Component";
+import Dashboard from "./Component";
 
 export default Dashboard;

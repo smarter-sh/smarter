@@ -6,6 +6,7 @@
 import { gettext, interpolate } from "@smarter/common";
 
 import type { ConsoleBranding, ConsoleSidebar } from "@/contract.gen";
+import { CONSOLE_PAGE_PATHS } from "@/lib/const";
 
 /** The project's change log, which the Documentation section links to. */
 export const CHANGELOG_URL = "https://github.com/smarter-sh/smarter/blob/main/changelogs/CHANGELOG.md";
@@ -137,10 +138,33 @@ export function sidebarSections(branding: ConsoleBranding, version: string): Sid
 export function activeSidebarItem(path: string, sidebar: ConsoleSidebar): keyof ConsoleSidebar | null {
   let active: keyof ConsoleSidebar | null = null;
   let longest = 0;
+  // the backend's urls end with a slash, and the console's routes don't: /dashboard is /dashboard/'s page.
+  const page = path.endsWith("/") ? path : `${path}/`;
   for (const [key, url] of Object.entries(sidebar) as [keyof ConsoleSidebar, string | null][]) {
-    if (!url || !path.startsWith(url) || url.length <= longest) continue;
+    if (!url || !page.startsWith(url) || url.length <= longest) continue;
     active = key;
     longest = url.length;
   }
   return active;
+}
+
+/**
+ * A backend url's path in the console: the backend's urls end with a slash, the console's routes don't.
+ *
+ * @param url - A link's url, e.g. /dashboard/.
+ * @returns Its path without the trailing slash, e.g. /dashboard.
+ */
+export function consolePath(url: string): string {
+  if (url.length > 1 && url.endsWith("/")) return url.slice(0, -1);
+  return url;
+}
+
+/**
+ * Whether a link's page has moved into the console, so that it opens in place.
+ *
+ * @param url - The link's url, as the session's sidebar has it.
+ * @returns True for one of CONSOLE_PAGE_PATHS.
+ */
+export function isConsolePage(url: string): boolean {
+  return CONSOLE_PAGE_PATHS.includes(consolePath(url));
 }

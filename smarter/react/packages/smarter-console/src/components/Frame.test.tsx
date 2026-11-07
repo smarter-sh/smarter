@@ -2,7 +2,9 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { dashboardHandlers } from "@smarter/dashboard/mocks";
 
 import { server } from "@test/server";
 
@@ -14,6 +16,11 @@ import { userMenuContext } from "@/lib/userMenu";
 import { userSession, userSidebar } from "@/mocks/fixtures";
 import { sessionHandler } from "@/mocks/handlers";
 import { routes } from "@/router";
+
+// a signed-in user lands on the dashboard, whose widgets call the dashboard api.
+beforeEach(() => {
+  server.use(...dashboardHandlers);
+});
 
 function mountAt(path: string, session: ConsoleSession = userSession) {
   server.use(sessionHandler(session));
@@ -43,7 +50,7 @@ describe("the sidebar", () => {
   it("links to the session's pages, and leaves out the ones it doesn't have", async () => {
     mountAt("/");
     const nav = await findSidebar();
-    expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard/");
+    expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/dashboard");
     expect(within(nav).getByRole("link", { name: "Budgets" })).toHaveAttribute("href", "/budget/");
     for (const name of ["Terminal", "Proxies", "Vectorstores", "Infrastructure Resources", "Django Admin"]) {
       expect(within(nav).queryByRole("link", { name })).not.toBeInTheDocument();
@@ -90,6 +97,8 @@ describe("the sidebar", () => {
     expect(activeSidebarItem("/llm-tools/extensions/weather/", userSidebar)).toBe("extensions");
     expect(activeSidebarItem("/llm-tools/", userSidebar)).toBe("plugins");
     expect(activeSidebarItem("/", userSidebar)).toBeNull();
+    // a console route has no trailing slash.
+    expect(activeSidebarItem("/dashboard", userSidebar)).toBe("dashboard");
   });
 });
 
