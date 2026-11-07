@@ -1,10 +1,14 @@
 # pylint: disable=wrong-import-position
 """
-Test :mod:`smarter.apps.llmtool.views.detailview`, the plugin manifest page.
+Test :mod:`smarter.apps.llmtool.views.detailview`, the plugin manifest page: the single-page console's, which.
 
-The class fixture ``static_plugin`` is owned by the admin user. The page
-falls back to the account admin's plugins, and then to the smarter admin's.
+loads the plugin from the dashboard's resource api.
+
+The class fixture ``static_plugin`` is owned by the admin user. A user may read their own plugins, their account
+admin's, and the smarter admin's; a superuser may read every plugin.
 """
+
+from http import HTTPStatus
 
 from django.test import Client
 from django.urls import get_urlconf, reverse, set_urlconf
@@ -14,6 +18,12 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.static import StaticPlugin
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import logging
+from smarter.lib.unittest.resource_views import (
+    assert_console_page,
+    assert_no_resource,
+    resource_api_url,
+    resource_detail_json,
+)
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase
 
@@ -72,37 +82,43 @@ class TestPluginDetailView(PluginAppTestBase):
         self.assertEqual(plugin_meta.manifest_url, expected)  # type: ignore[union-attr]
 
     def test_get(self):
-        """Test that the owner gets the plugin's manifest, as yaml."""
-        response = self.client.get(self.url(self.static_plugin.plugin_meta))
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn(STATIC_PLUGIN_NAME, content)
-        self.assertIn("Gobstopper", content)
+        """Test that the manifest page is the console's, whose resource api returns the owner the plugin's manifest."""
+        plugin_meta = self.static_plugin.plugin_meta
+        detail = resource_detail_json(self, plugin_meta.record_locator)  # type: ignore[union-attr]
+        self.assertEqual(detail["name"], STATIC_PLUGIN_NAME)
+        self.assertIn(STATIC_PLUGIN_NAME, detail["manifest"] or "")
+        self.assertIn("Gobstopper", detail["manifest"] or "")
+        assert_console_page(self, self.url(plugin_meta))
 
     def test_get_account_admin_plugin(self):
-        """Test that a non-admin user gets their account admin's plugin."""
+        """Test that a non-admin user may read their account admin's plugin."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(self.url(self.static_plugin.plugin_meta))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(STATIC_PLUGIN_NAME, response.content.decode())
+        detail = resource_detail_json(self, self.static_plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
+        self.assertIn(STATIC_PLUGIN_NAME, detail["manifest"] or "")
 
     def test_get_other_account_plugin(self):
-        """Test that a user cannot get another account's plugin."""
-        response = self.client.get(self.url(self.other_plugin.plugin_meta))
-        self.assertEqual(response.status_code, 404)
-        self.assertNotIn(OTHER_PLUGIN_NAME, response.content.decode())
+        """
+        Test that a regular user may not read another account's plugin, and that a superuser, who may read every.
+
+        resource, may.
+        """
+        record_locator = self.other_plugin.plugin_meta.record_locator  # type: ignore[union-attr]
+        self.client.force_login(self.non_admin_user)
+        assert_no_resource(self, record_locator)
+        self.client.force_login(self.admin_user)
+        detail = resource_detail_json(self, record_locator)
+        self.assertEqual(detail["name"], OTHER_PLUGIN_NAME)
 
     def test_get_invalid_hashed_id(self):
-        """Test that an invalid plugin identifier is not found."""
-        url = reverse(
-            f"{PluginReverseNames.namespace}:{PluginReverseNames.detailview}", kwargs={"hashed_id": "not-a-hash"}
-        )
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
+        """Test that the resource api has no plugin for an invalid, or unknown, id."""
+        assert_no_resource(self, "pluginmeta-not-a-hash")
+        assert_no_resource(self, PluginMeta(id=999999999).record_locator)
 
     def test_anonymous_user(self):
-        """Test that an anonymous user cannot get the page."""
+        """Test that the resource api doesn't return the plugin to an anonymous user, whose manifest page is the console's."""
         self.client.logout()
-        response = self.client.get(self.url(self.static_plugin.plugin_meta))
-        self.assertIn(response.status_code, (302, 404))
+        response = self.client.get(resource_api_url(self.static_plugin.plugin_meta.record_locator))  # type: ignore[union-attr]
+        self.assertNotEqual(response.status_code, HTTPStatus.OK)
         self.assertNotIn("Gobstopper", response.content.decode())
+        self.assertNotIn(STATIC_PLUGIN_NAME, response.content.decode())
+        assert_console_page(self, self.url(self.static_plugin.plugin_meta))

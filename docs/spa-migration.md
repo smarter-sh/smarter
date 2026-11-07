@@ -82,7 +82,20 @@ The Extensions console is the console's too: `/extensions` and `/extensions/:slu
 `@smarter/extension-console` (now import-only) with `canEdit` from the session and the router's `navigate`. The api
 refuses an extension that the user's account may not use, as Django's detail view did. Django keeps
 `ExtensionListView` and `ExtensionDetailView` as `ConsoleAppView` subclasses; the templates and the template tag are
-deleted. `SERVER_RENDERED_PAGE` is the Prompt Passthrough. Next: the manifest detail pages (section 4).
+deleted. `SERVER_RENDERED_PAGE` is the Prompt Passthrough.
+
+The manifest pages (section 4) are the console's, but the LLMClient's, which moves with the workbench (section 5):
+`lib/manifestPages` (`MANIFEST_PAGES`) routes each existing path to `ManifestPage`, which reads the resource from
+`/api/web/dashboard/resource/<record locator>/`, a new route that infers the kind (`kind_of_instance()`), and renders
+`@smarter/manifest-editor`; after a delete it goes back to the list. The open question is answered: the api's
+`readable_instance()` is the detail views' three-step lookup, plus every resource for a superuser, less what
+`restrict_readable` hides, and across all of a user's profiles; Secrets use the same rule in both. Budgets had no
+rule in the api, so any signed-in user could read any Budget there: `readable_instance()` now asks the model's
+`is_readable_by()` when its manager has no read rule, and reads nothing for a model with neither, and
+`Budget.is_readable_by()` is the old page's rule. The api describes the resource as its owner, as the lists' detail
+dialogs already did, and an ownerless one, a Budget, as its reader, as the old page did. The fifteen detail views are `ConsoleAppView`
+subclasses; `common/manifest_detail.html`, the editor's template tag and `DocsBaseView` stay for the workbench.
+Next: the workbench and the other React pages (section 5).
 
 ## Development
 
@@ -209,8 +222,8 @@ and embed the YAML. They become one generic `/:kind/:locator` route that reads
 `/api/web/dashboard/resource/<kind>/<record_locator>/` (which already returns the manifest YAML) or
 `POST /api/v1/cli/describe/<kind>/`. The old paths stay as router aliases. Phase 2.
 
-Open question: whether `readable_instance()`, behind the resource endpoint, allows exactly what the
-detail views' three-step lookup allows.
+Open question, answered in phase 2: `readable_instance()` allows the detail views' three-step lookup, plus every
+resource for a superuser, less what `restrict_readable` hides, and across all of a user's profiles.
 
 Paths: `/authtoken/<uuid>/`, `/budget/budgets/<id>/`, `/connection/connections/sql-connection/<id>/`,
 `/connection/connections/api-connection/<id>/`, `/guardrail/guardrails/<id>/`,

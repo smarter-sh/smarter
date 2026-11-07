@@ -18,6 +18,7 @@ import { RegisterPage } from "@/routes/RegisterPage";
 import { RequireAuth } from "@/routes/RequireAuth";
 import { DASHBOARD_PATH, EXTENSIONS_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
 import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
+import { MANIFEST_PAGES, type ManifestPage as ManifestPageConfig } from "@/lib/manifestPages";
 
 /** A list's route: its package loads in a chunk of its own, when the list is first opened. */
 function listRoute(page: ListPageConfig): RouteObject {
@@ -26,6 +27,17 @@ function listRoute(page: ListPageConfig): RouteObject {
     lazy: async () => {
       const [{ ListPage }, List] = await Promise.all([import("@/routes/ListPage"), page.load()]);
       return { Component: () => <ListPage page={page} List={List} /> };
+    },
+  };
+}
+
+/** A manifest page's route: the manifest editor loads in a chunk of its own, when a manifest is first opened. */
+function manifestRoute(page: ManifestPageConfig): RouteObject {
+  return {
+    path: page.path,
+    lazy: async () => {
+      const { ManifestPage } = await import("@/routes/ManifestPage");
+      return { Component: () => <ManifestPage page={page} /> };
     },
   };
 }
@@ -58,6 +70,7 @@ export const routes: RouteObject[] = [
         lazy: async () => ({ Component: (await import("@/routes/DashboardPage")).DashboardPage }),
       },
       ...LIST_PAGES.map(listRoute),
+      ...MANIFEST_PAGES.map(manifestRoute),
       // the Extensions console, and an extension's page, in a chunk of their own.
       {
         path: EXTENSIONS_PATH,

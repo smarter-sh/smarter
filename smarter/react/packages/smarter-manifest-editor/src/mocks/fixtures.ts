@@ -4,7 +4,7 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { AppProps } from "@/App";
+import type { AppProps } from "../App";
 
 export const APPLY_API_URL = "/api/v1/cli/apply/";
 export const VALIDATE_API_URL = "/api/v1/cli/validate/";

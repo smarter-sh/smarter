@@ -24,6 +24,8 @@ from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import (
     ResourceViewsTestMixin,
     assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
 )
 
 from .base_classes import MCPCLIENT_NAME, MCPClientTestBase
@@ -106,22 +108,21 @@ class TestMCPClientViews(MCPClientTestBase):
         self.assertTrue(MCPClient.objects.filter(pk=self.mcpclient.pk).exists())
 
     def test_detailview(self):
-        """Test that the detail page renders the MCPClient's manifest."""
-        response = self.client.get(url(Names.detailview, hashed_id=self.mcpclient.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        content = response.content.decode()
-        self.assertIn(MCPCLIENT_NAME, content)
-        self.assertIn("mcp.example.com", content)
+        """Test that the manifest page is the console's, whose resource api returns the MCPClient's manifest."""
+        detail = resource_detail_json(self, self.mcpclient.record_locator)
+        self.assertEqual(detail["kind"], "MCPClient")
+        self.assertEqual(detail["name"], MCPCLIENT_NAME)
+        self.assertIn(MCPCLIENT_NAME, detail["manifest"] or "")
+        self.assertIn("mcp.example.com", detail["manifest"] or "")
+        assert_console_page(self, url(Names.detailview, hashed_id=self.mcpclient.hashed_id))
 
     def test_detailview_invalid(self):
-        """Test that an invalid identifier is not found."""
-        response = self.client.get(url(Names.detailview, hashed_id="not-a-hash"))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no MCPClient for an invalid identifier."""
+        assert_no_resource(self, "mcpclient-not-a-hash")
 
     def test_detailview_unknown_id(self):
-        """Test that a valid hashed id of an MCPClient that doesn't exist is not found."""
-        response = self.client.get(url(Names.detailview, hashed_id=MCPClient(id=999999999).hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no MCPClient for a valid hashed id of one that doesn't exist."""
+        assert_no_resource(self, MCPClient(id=999999999).record_locator)
 
 
 class TestMCPClientResourceViews(ResourceViewsTestMixin, MCPClientTestBase):

@@ -4,7 +4,6 @@ Test the Provider dashboard views: the React list page, its list, clone, delete 
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
-from http import HTTPStatus
 from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -18,7 +17,10 @@ from smarter.apps.provider.manifest.brokers.provider import (
 )
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.urls import ProviderReverseNames
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    resource_detail_json,
+)
 
 
 class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
@@ -53,7 +55,13 @@ class TestProviderViews(ResourceViewsTestMixin, TestAccountMixin):
         super().test_rename()
 
     def test_detail_reports_a_describe_error(self):
-        """A describe error is shown with the api's status and description, rather than as a 500."""
+        """
+        Test that the resource api reports a describe error as the detail's manifest error, rather than as a 500, so.
+
+        that the manifest page shows it.
+        """
         with patch.object(SAMProviderBroker, "describe", side_effect=SAMProviderBrokerError("describe is broken")):
-            response = self.client.get(self.url(self.detail_view_name, hashed_id=self.resource.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])
+            detail = resource_detail_json(self, self.resource.record_locator)
+        self.assertEqual(detail["name"], self.resource.name)
+        self.assertIsNone(detail["manifest"])
+        self.assertIn("describe is broken", detail["manifestError"])

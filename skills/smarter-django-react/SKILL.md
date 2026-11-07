@@ -8,7 +8,8 @@ description: Use when building or changing a React app of the Smarter web consol
 The web console is moving into a single-page app, `@smarter/console`
 ([ADR-035](../../docs/source/adr/035-single-page-app.rst), `docs/spa-migration.md`). Its sign-in pages,
 frame (sidebar, header, user menu, welcome dialog), dashboard, every resource list and the Extensions console
-(`routes/ExtensionsPage`) are the console's: it renders each package's component at the page's path. The other
+(`routes/ExtensionsPage`) and every resource's manifest page but the LLMClient's are the console's: it renders
+each package's component at the page's path. The other
 pages are still Django pages that each embed one React app, built by Vite into Django's static files: the
 workbench, the Prompt Passthrough, the Terminal and the manifest drop zone. The apps live in the npm workspace
 `smarter/react/packages/`, and share code through `@smarter/common`.
@@ -38,6 +39,21 @@ Django answers the list's own path, e.g. /guardrail/, with the console's index.h
    sidebar take it from there. Add the package to the console's `package.json`.
 3. **Tests**: the app's `ResourceViewsTestMixin` class checks that the page is a
    `ConsoleAppView`, and the console's `routes/ListPage.test.tsx` checks every entry.
+
+## A manifest page
+
+A resource's manifest page, e.g. `/guardrail/guardrails/<hashed id>/`, is the console's too. For a new kind:
+
+1. **Page view** (`<app>/views/detailview.py`): a one-line `ConsoleAppView` subclass, routed at
+   the page's path with its url name, which `console_paths()` in
+   `smarter/smarter/lib/manifest/record_locator.py` reverses: add the model there.
+2. **Kind**: add the model's record locator prefix and its SAM kind to
+   `KIND_BY_RECORD_LOCATOR_PREFIX` in `apps/dashboard/resource_detail.py`, unless the model has its
+   own `kind` field, as a plugin does. `test_kinds_of_the_manifest_pages` checks it.
+3. **Console route**: an entry in `smarter-console/src/lib/manifestPages.ts` (`MANIFEST_PAGES`):
+   the path with `:id`, the record locator prefix, the list to go back to after a delete, and
+   `visible` as for its list. `routes/ManifestPage.tsx` reads
+   `/api/web/dashboard/resource/<prefix>-<id>/` and renders `@smarter/manifest-editor`.
 
 ## A page that Django still hosts
 
