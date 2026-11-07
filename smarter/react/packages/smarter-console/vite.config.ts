@@ -8,6 +8,8 @@
  *   smarter/static/react/@smarter/console/, from which Django serves the console's pages until the console
  *   moves to its own host.
  * - console.debug() calls are removed from production builds.
+ * - The built scripts and styles load their chunks, fonts and images relative to themselves, so that they follow
+ *   them to the CDN while the backend serves the page with its CDN's STATIC_URL (SMARTER_STATIC_FILES_ON_CDN).
  */
 import { defineConfig, type ConfigEnv, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
@@ -40,6 +42,12 @@ export default defineConfig(({ command }: ConfigEnv) => ({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
+    },
+  },
+  experimental: {
+    renderBuiltUrl(_filename: string, { hostType }: { hostType: "js" | "css" | "html" }) {
+      if (hostType === "js" || hostType === "css") return { relative: true };
+      return undefined;
     },
   },
   build: {
