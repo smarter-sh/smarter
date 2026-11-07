@@ -20,7 +20,7 @@ The guardrail list page is the reference. Every list page in the console is buil
      - `guardrail/models/guardrail.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
    * - The sidebar link
      - The console's navigation, a Django template.
-     - `templates/dashboard/sidebar.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/dashboard/sidebar.html>`__
+     - `templates/dashboard/sidebar.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/dashboard/sidebar.html>`__
    * - The URLs
      - The page itself, and the ``react-integration/api/`` endpoints that the React app calls to
        list, clone, rename and delete.

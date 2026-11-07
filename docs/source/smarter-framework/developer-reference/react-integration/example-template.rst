@@ -1,6 +1,6 @@
 Example Django Template for React Integration
 ==============================================
 
-.. literalinclude:: ../../../../../smarter/smarter/templates/react/dashboard-user-menu.html
+.. literalinclude:: ../../../../../smarter/smarter/templates/llmclient/endpoints.html
    :language: django
-   :caption: The template that mounts the user menu, a widget of Django's console frame
+   :caption: The template of the page at a deployed LLMClient's url, which mounts @smarter/llmclient-deployment

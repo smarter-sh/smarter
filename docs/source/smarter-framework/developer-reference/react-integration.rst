@@ -156,16 +156,18 @@ served, nor which Django view answered the url.
    console page's script. Vite writes the hashed names into ``index.html`` and into the chunks
    that load each other.
 
-The Template-Tag Pattern of Django's Frame
-------------------------------------------
+The Template-Tag Pattern of a Deployed LLMClient's Page
+-------------------------------------------------------
 
-Before the console, each page was a Django template that mounted one React app, and Django's
-own frame, ``templates/dashboard/base.html``, still works this way. No console page uses it; the
-next step of the migration retires it. Its widgets are React apps that the frame's templates
-mount through template tags: the user menu (``@smarter/dashboard-user-menu``), the **Did you
-know?** tip (``@smarter/didyouknow``), onboarding (``@smarter/onboarding``) and the welcome dialog
-(``@smarter/welcome``). The console imports the same packages into its own frame, and builds
-their props from the session.
+One page is not part of the console, on purpose: the page that a browser sees at a deployed
+LLMClient's own url, e.g. ``https://<name>.<account>.<api domain>/``. That host serves one
+LLMClient and its api endpoints, ``/config/`` and ``/prompt/``, and nothing else; the console
+isn't there, and a visitor has no session on it. A ``GET`` or ``HEAD`` to it receives a page about
+the LLMClient instead, while the ``enable_llmclient_endpoints_page`` waffle switch is active: its
+url, the curl commands that call it, the ways to put its chat on a web site, and its manifest.
+Django renders that page from a template, and mounts its React app, ``@smarter/llmclient-deployment``,
+with a template tag. It is the only page that does so. The Prompt Engineer's Workbench shows the
+same content in its Deployment tab, by importing the package's component.
 
 .. important::
 
@@ -176,50 +178,58 @@ their props from the session.
   :alt: View, Template, and React Component Integration
   :width: 100%
 
-An Example: The User Menu
-~~~~~~~~~~~~~~~~~~~~~~~~~
+An Example: The Deployed LLMClient's Page
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The frame's navbar, ``templates/dashboard/navbar.html``, includes
-``templates/react/dashboard-user-menu.html``, which loads
-:mod:`smarter.apps.dashboard.templatetags.react_dashboard_user_menu`. Its two tags do the work:
+:class:`~smarter.apps.llmclient.views.endpoints.LLMClientEndpointsView` finds the LLMClient that
+serves the request's host, and builds the page's data with
+:func:`~smarter.apps.llmclient.views.endpoints.deployment_page`, a Pydantic model,
+:class:`~smarter.apps.llmclient.views.deployment_contract.LLMClientDeploymentPage`, whose public
+copy names no owner and has no api keys. It renders the template
+``smarter/templates/llmclient/endpoints.html``, which loads
+:mod:`smarter.apps.llmclient.templatetags.react_llmclient_deployment`. The tag module does two
+things:
 
-* ``dashboard_user_menu_react_assets`` returns the app's JavaScript and CSS files, from its
+* ``llmclient_deployment_react_assets`` returns the app's JavaScript and CSS files, from its
   ``manifest.json``.
-* ``dashboard_user_menu`` returns the root element's attributes: the cookie names and domain,
-  who the user is, their profile image, their account, the languages, and the urls of the
-  menu's apis, reversed with Django's ``reverse()`` so that routing stays in Django.
+* ``DEPLOYMENT_ROOT_ID`` and ``DEPLOYMENT_DATA_ID`` name the app's root element and the
+  ``json_script`` element that holds its data, so that the view, the template and the app agree on
+  them.
 
-The template renders the root element, with that configuration in custom HTML attributes:
+The template writes the data with Django's ``json_script`` filter, and renders the root element,
+which names the data's element in a custom HTML attribute:
 
 .. code-block:: html
 
+  <script id="smarter-llmclient-deployment-data" type="application/json">{"mode": "public", ...}</script>
   <div
-    id="smarter-dashboard-user-menu-root"
-    smarter-csrf-cookie-name="csrftoken"
-    smarter-django-session-cookie-name="sessionid"
-    smarter-cookie-domain="platform.example.com"
-    smarter-profile-image-api-url="/api/web/account/profile-image/"
-    ...
-  >
+    id="smarter-llmclient-deployment-root"
+    class="d-flex flex-column w-100"
+    smarter-deployment-data-id="smarter-llmclient-deployment-data"
+    react-debug-mode="False"
+    >
+  </div>
 
 and the ``<link>`` and ``<script>`` elements of the app's assets:
 
 .. code-block:: jinja
 
-  {% dashboard_user_menu_react_assets as user_menu_assets %}
-  {% for js_file in user_menu_assets.js %}
-    <script class="smarter" type="module" src="{% static 'react/@smarter/dashboard-user-menu/' %}{{ js_file }}"></script>
+  {% llmclient_deployment_react_assets as assets %}
+  {% for js_file in assets.js %}
+    <script class="smarter" type="module" src="{% static 'react/@smarter/llmclient-deployment/' %}{{ js_file }}"></script>
   {% endfor %}
 
-The package's ``main.tsx`` finds the root element, reads the attributes, builds its
-``SessionContext`` and renders the app. This is what the console replaces: there, the same
-configuration comes from the session api instead of from attributes.
+The package's ``main.tsx`` finds the root element, reads the data that its attribute names, and
+renders the app, with no session: the page has no actions. Unlike a console page, the package
+has a ``build`` script of its own, which writes its app into
+``static/react/@smarter/llmclient-deployment/``, and its ``main`` and ``exports`` still point at
+``src/index.ts``, so that the workbench can import its component.
 
 React Build Manifest
 ~~~~~~~~~~~~~~~~~~~~
 
-A widget's script names cannot be written into a template, because Vite gives every production
-file a content-based hash for browser cache invalidation. Instead, the widget's build writes a
+An app's script names cannot be written into a template, because Vite gives every production
+file a content-based hash for browser cache invalidation. Instead, the app's build writes a
 ``manifest.json`` file, the authoritative list of the JavaScript and CSS files it produced, and
 Django reads it at render time. Its exact contents vary with the application's dependencies,
 vendor libraries and code-split modules. The following example shows the manifest of an
@@ -267,7 +277,7 @@ application that imports xterm.js:
   }
 
 Every entry except ``_custom`` is a chunk generated by Vite. ``_custom`` is build information
-that the widgets' Vite configuration adds after the build, with its ``addCustomManifestData``
+that the app's Vite configuration adds after the build, with its ``addCustomManifestData``
 plugin: the build time, the package's version and the build's ``NODE_ENV``.
 
 One entry, marked ``"isEntry": true``, is the application's entry point and the root of the
@@ -283,13 +293,13 @@ Django doesn't read the manifest as loose JSON. It validates the file against th
 fields that Vite or Rolldown add in newer versions, so a Vite upgrade doesn't break page
 rendering. ``_custom`` is Smarter's own shape and accepts only its three fields. A manifest that
 is missing, isn't JSON, or doesn't match the model is logged as an error and treated as absent,
-and the page then renders without the widget's assets.
+and the page then renders without the app's assets.
 
 Django Template Tags
 ~~~~~~~~~~~~~~~~~~~~
 
 `Custom Django template tags <https://docs.djangoproject.com/en/6.0/howto/custom-template-tags/>`__
-keep the manifest's structure out of the templates. Each widget's tag module creates a
+keep the manifest's structure out of the templates. The app's tag module creates a
 :class:`~smarter.lib.django.templatetags.smarter_react_templatetag_manager.SmarterReactTemplateTagManager`
 for its package, which loads the ``manifest.json`` file, finds the entry point, collects its
 dependencies, and returns a
@@ -374,9 +384,9 @@ the build configuration. The console's configuration,
 
 An import-only package's ``vite.config.ts``, such as
 ``smarter/react/packages/smarter-workbench/vite.config.ts``, is for its development page only: it
-has no ``build`` section, and proxies ``/api`` and ``/static`` to the Django dev server. The frame
-widgets' configurations also write a ``manifest.json`` with the ``_custom`` build information
-that Django's template tags validate.
+has no ``build`` section, and proxies ``/api`` and ``/static`` to the Django dev server.
+``@smarter/llmclient-deployment``'s configuration also writes a ``manifest.json``, with the
+``_custom`` build information that its template tag validates.
 
 Build, Deployment, and CI/CD Considerations
 -------------------------------------------
@@ -385,13 +395,16 @@ The React code is a single npm workspace, ``smarter/react``, with one package pe
 widget. ``npm run build`` in the workspace builds, in order, the libraries that others import
 (``@smarter/common``, ``@smarter/didyouknow``'s and ``@smarter/onboarding``'s libraries,
 ``@smarter.sh/ui-widgets`` and ``@smarter.sh/ui-chat``), then every package that has a ``build``
-script: the console, which bundles every page package, and the frame's widgets, each into its
-own folder of Django's static file hierarchy, such as:
+script. Besides those libraries (``@smarter.sh/ui-chat``'s ``build`` adds its embed script), only
+two packages have one, and both are apps, each built into its own folder of Django's static file
+hierarchy: the console, which bundles every page package and the packages of its frame (the
+user menu, **Did you know?**, onboarding and the welcome dialog), and the deployed LLMClient's
+page:
 
 .. code-block:: text
 
   static/react/@smarter/console/
-  static/react/@smarter/dashboard-user-menu/
+  static/react/@smarter/llmclient-deployment/
 
 .. note::
 
@@ -437,7 +450,7 @@ Operational Considerations
     regenerated as part of the build process.
 * Build Prerequisites
     Django can serve no console page until the console has been built and collected: until then
-    every page answers 503. The frame's template tags, likewise, depend on their widgets'
+    every page answers 503. The deployed LLMClient's page, likewise, depends on its app's
     ``manifest.json``. Keep this in mind when, for example, you are changing versions in
     ``package.json``.
 * Rebuilding After React Changes
@@ -454,8 +467,8 @@ Operational Considerations
     artifacts can lead to confusing runtime behavior if these become out of sync.
 * Container Build Dependencies
     Docker images that serve the console must be built only after the frontend build has
-    completed, so that ``index.html``, the compiled bundles and the widgets' ``manifest.json``
-    files are inside the image at runtime.
+    completed, so that ``index.html``, the compiled bundles and the deployed LLMClient's page's
+    ``manifest.json`` are inside the image at runtime.
 * Published Packages
     :doc:`Smarter Chat <../smarter-chat>`, the chat of the Prompt Engineer's Workbench, is also
     published to npm, as ``@smarter.sh/ui-chat``, and so is ``@smarter.sh/ui-widgets``. Both are

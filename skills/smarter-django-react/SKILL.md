@@ -1,6 +1,6 @@
 ---
 name: smarter-django-react
-description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, as it does every page: the manifest pages, the workbench (routes/WorkbenchPage), the Extensions console, and the Prompt Passthrough, Terminal and manifest drop zone (routes/ToolPages). Django still mounts its frame's widgets (user menu, tips, onboarding, welcome) with template tags. Covers the console's list routes (lib/lists), the Django page class that keeps a page's url name, a console page that loads one resource (lib/useResource), the template tag of a frame widget, SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
+description: Use when building or changing a React app of the Smarter web console, especially a resource list page (smarter-<kind>-list), which the single-page console (@smarter/console) renders, as it does every page: the manifest pages, the workbench (routes/WorkbenchPage), the Extensions console, and the Prompt Passthrough, Terminal and manifest drop zone (routes/ToolPages). The console renders its frame too (sidebar, header, user menu, tips, onboarding, welcome), from its session. Covers the console's list routes (lib/lists), the Django page class that keeps a page's url name, a console page that loads one resource (lib/useResource), the template tag of the one page Django still renders (a deployed LLMClient's host), SessionContext and fetchDjangoUrl in @smarter/common, the list/clone/rename/delete API contract, importable packages, and the sidebar link.
 ---
 
 # Smarter Django + React
@@ -12,9 +12,10 @@ frame (sidebar, header, user menu, welcome dialog), dashboard, every resource li
 (`routes/WorkbenchPage`), and the manifest drop zone, the Prompt Passthrough and the Terminal
 (`routes/ToolPages`, gated by the session's flags) are the console's: it renders each package's component at the
 page's path, and Django answers the path with the console's `index.html` (a `ConsoleAppView` that keeps the url
-name). Never add a page as a Django template. Django still renders its own frame, `dashboard/base.html`, for
-which the user menu, Did you know?, onboarding and welcome widgets are mounted with template tags; tests of that
-frame call `get_server_rendered_page()` (`smarter.lib.unittest.server_rendered_page`). The apps live in the npm workspace
+name). Never add a page as a Django template. The console renders its frame too: the sidebar, the header, the
+user menu, Did you know?, onboarding and welcome, with props from its session (`GET /api/web/session/`), so a
+change to what the frame shows is a change to the session api and its contract. The only page that Django still
+renders with a React app is a deployed LLMClient's own host's page, outside the console. The apps live in the npm workspace
 `smarter/react/packages/`, and share code through `@smarter/common`.
 
 ## How a list page is wired, end to end
@@ -73,18 +74,20 @@ The workbench (`/workbench/llm-clients/:id/prompt`) is the example:
 4. **Django**: the page's view is a `ConsoleAppView` subclass that keeps its url name; its JSON endpoints are in
    `/api/web/<app>/` and refuse a resource the user may not read with the same 404.
 
-## A widget of Django's frame
+## A page that Django renders: a deployed LLMClient's host
 
-Django's frame (`templates/dashboard/base.html`) mounts the user menu, Did you know?, onboarding and welcome
-with template tags. The user menu is the example:
+A deployed LLMClient's own host serves only that LLMClient, so its page at `/` is outside the console, and Django
+renders it with the template-tag pattern:
 
-1. **Template tag** (`apps/dashboard/templatetags/react_dashboard_user_menu.py`):
-   `SmarterReactTemplateTagManager(app_name="@smarter/dashboard-user-menu", templatetag_name=__name__)`.
-   It reads `smarter/smarter/static/react/@smarter/dashboard-user-menu/manifest.json`, and a
+1. **Template tag** (`apps/llmclient/templatetags/react_llmclient_deployment.py`):
+   `SmarterReactTemplateTagManager(app_name="@smarter/llmclient-deployment", templatetag_name=__name__)`.
+   It reads `smarter/smarter/static/react/@smarter/llmclient-deployment/manifest.json`, and a
    `@register.simple_tag` returns `templatetag_manager.reactapp_build_assets`: the hashed CSS and JS file names.
-2. **Template** (`templates/react/dashboard-user-menu.html`): emits the CSS and the JS, and renders the root
-   `<div>`, whose attributes configure the widget.
-3. The widget's package has its own `build`. Its `main.tsx` reads the root element's attributes.
+2. **Template** (`templates/llmclient/endpoints.html`): emits the CSS and the JS, and renders the root
+   `<div>`, whose attributes configure the app.
+3. The package has its own `build`. Its `main.tsx` reads the root element's attributes.
+
+Don't add another: a new page is a console page.
 
 ## The list API
 
@@ -123,10 +126,9 @@ with template tags. The user menu is the example:
    - All are POSTs, scoped to what the user may read, own, or delete. A
      superuser sees every account's rows.
 2. **Sidebar**: add the URL to `sidebar_context()` in
-   `smarter/smarter/apps/dashboard/context_processors.py`, the link to
-   `smarter/smarter/templates/dashboard/sidebar.html` (the sidebar of the pages that Django
-   still hosts), a field to `ConsoleSidebar` (`smarter.apps.api.web.session`) and the item to
-   the console's `lib/sidebar.ts`. Never leave the sidebar pointing at a placeholder.
+   `smarter/smarter/apps/dashboard/context_processors.py`, a field to `ConsoleSidebar`
+   (`smarter.apps.api.web.session`, then `make console-session-contract`) and the item to the
+   console's `lib/sidebar.ts`. Never leave the sidebar pointing at a placeholder.
 
 ## The React side
 

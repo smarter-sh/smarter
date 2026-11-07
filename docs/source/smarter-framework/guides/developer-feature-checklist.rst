@@ -43,7 +43,7 @@ Smarter / SAM Checklist
 3. Include SAM models and brokers for each relevant ORM model.
 4. Add new Smarter resource kinds to :class:`~smarter_types.kinds.SAMKinds` in `smarter-types <https://docs.smarter-types.smarter.sh/>`__, which defines which kinds exist, then release it and raise its version here. :mod:`smarter.apps.api.v1.manifests.enum` re-exports it. See :doc:`../developer-reference/smarter-types`.
 5. Add waffle logging and feature switches as necessary to :class:`smarter.lib.django.waffle.SmarterWaffleSwitches`
-6. Ensure that your UI includes anchors as necessary in :file:`smarter/templates/dashboard/authenticated.html`
+6. Ensure that the web console's sidebar links to your feature's page: add its url to :func:`smarter.apps.dashboard.context_processors.sidebar_context` and to the session's :class:`smarter.apps.api.web.session.contract.ConsoleSidebar`, and its item to the console's :file:`smarter/react/packages/smarter-console/src/lib/sidebar.ts`
 7. Ensure that exceptions are properly handled and that you have inherited from :class:`smarter.common.exceptions.SmarterException`
 8. Add your feature's JSON schema view to smarter.apps.docs.views.json_schema and register it in smarter.apps.docs.urls
 9. Add your feature's example manifest view to smarter.apps.docs.views.manifest and register it in smarter.apps.docs.urls
