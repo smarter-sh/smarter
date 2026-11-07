@@ -28,21 +28,21 @@ The guardrail list page is the reference. Every list page in the console is buil
    * - The Django view
      - Builds the page's context: the root element's id, the CSRF and session cookie names, the
        cookie domain and the API's URL.
-     - `guardrail/views/listview/view.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+     - `guardrail/views/listview/view.py <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/views/listview/view.py>`__
    * - The template
      - Renders the root element with those values as data attributes, and the app's scripts and
        styles.
-     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
    * - The template tag
      - Reads the Vite build's ``manifest.json``, validated by Pydantic models, to find the hashed
        file names of the app's assets. A missing manifest renders an empty page without an
        error, and is cached, which is the classic failure of this design.
-     - `guardrail/templatetags/react_guardrail_list.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py>`__,
+     - `guardrail/templatetags/react_guardrail_list.py <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py>`__,
        `lib/django/templatetags/smarter_react_contract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_contract.py>`__
    * - The React entry point
      - Reads the data attributes into a ``SessionContext`` and mounts the app on the root
        element.
-     - `smarter-guardrail-list/src/main.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-guardrail-list/src/main.tsx>`__
+     - `smarter-guardrail-list/src/main.tsx <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/packages/smarter-guardrail-list/src/main.tsx>`__
    * - The API call
      - ``fetchDjangoUrl`` posts to Django with the session cookie and the CSRF token.
      - `smarter-common/src/lib/django.tsx <https://github.com/smarter-sh/smarter/blob/main/smarter/react/packages/smarter-common/src/lib/django.tsx>`__

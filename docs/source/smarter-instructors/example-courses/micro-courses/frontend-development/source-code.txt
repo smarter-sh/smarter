@@ -35,7 +35,7 @@ The Workspace
    * - Styling
      - The console uses the Keen Bootstrap theme, by decision. :doc:`ADR 026 </adr/026-keen>`,
        :doc:`ADR 019 </adr/019-react>`.
-     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+     - `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
 
 Quality Tools
 ~~~~~~~~~~~~~
@@ -87,7 +87,7 @@ Build, Integration and the Chat
        the Vite build's ``manifest.json``, validated by Pydantic models, to insert the app's
        scripts and styles. :doc:`/smarter-framework/developer-reference/react-integration`.
      - `smarter_react_templatetag_manager.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_templatetag_manager.py>`__,
-       `guardrail/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/templatetags>`__
+       `guardrail/templatetags/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/smarter/apps/guardrail/templatetags>`__
    * - The chat component
      - Built on the chatscope UI kit, with Markdown, KaTeX math and Mermaid diagrams, a Console
        panel, and Server-Sent Events for a prompt's progress and the server's log.

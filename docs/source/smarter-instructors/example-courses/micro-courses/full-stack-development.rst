@@ -7,15 +7,17 @@ seams between them are where students learn the most:
 
 - **A hybrid architecture used by many real applications.** Each page of the web console is a
   Django page that hosts one small React app. A `view
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+  <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/views/listview/view.py>`__
   and a `template
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+  <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
   render a root element that carries the session's cookie names, the cookie domain and the API's
   URL as data attributes, and a `template tag
-  <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py>`__
+  <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/templatetags/react_guardrail_list.py>`__
   reads Vite's build manifest, validated by `Pydantic models
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/templatetags/smarter_react_contract.py>`__,
-  to insert the app's hashed assets.
+  to insert the app's hashed assets. The links to the view, template and template tag are to
+  release v0.42.10: the web console is moving its pages into a single-page app
+  (:doc:`ADR 035 </adr/035-single-page-app>`), starting with this list.
 - **One contract for every list page.** React mounts on the root element, and calls back into
   `session-authenticated views
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
@@ -51,7 +53,7 @@ end to end; CI and releases; and performance and caching.
 
 - The guardrail list page, end to end:
   `apps/guardrail/views/listview/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail/views/listview>`__,
-  `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+  `templates/react/guardrail-list.html <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
   and `smarter/react/packages/smarter-guardrail-list/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-guardrail-list>`__.
 - `smarter/react/packages/smarter-common/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-common>`__,
   for ``fetchDjangoUrl`` and ``SessionContext``.

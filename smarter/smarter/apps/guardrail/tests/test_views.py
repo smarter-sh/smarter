@@ -22,6 +22,7 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames as Names
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
+from smarter.lib.django.listview import listview_registry
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
 
@@ -57,10 +58,15 @@ class TestGuardrailViews(GuardrailTestBase):
         return json.loads(response.content)
 
     def test_listview(self):
-        """Test the React list page, and that an anonymous user is redirected."""
+        """
+        Test that the list page is the single-page console's, at /guardrail/.
+
+        The global search still pairs it with its list api, through listview_registry().
+        """
+        self.assertEqual(url(Names.listview), "/guardrail/")
         self.assertEqual(self.client.get(url(Names.listview)).status_code, HTTPStatus.OK)
-        self.client.logout()
-        self.assertEqual(self.client.get(url(Names.listview)).status_code, HTTPStatus.FOUND)
+        pages = {entry.view_class.__name__: entry.page_url for entry in listview_registry()}
+        self.assertEqual(pages["GuardrailListApiView"], "/guardrail/")
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""
@@ -133,6 +139,7 @@ class TestGuardrailResourceViews(ResourceViewsTestMixin, GuardrailTestBase):
     id_kwarg = "guardrail_id"
     invalidate_cache = staticmethod(invalidate_all_cached_guardrails_for_user_profile)
     resource_name_prefix = "test_guardrail_resource_views"
+    console_page = True
 
     @classmethod
     def create_resource(cls, name: str) -> Guardrail:

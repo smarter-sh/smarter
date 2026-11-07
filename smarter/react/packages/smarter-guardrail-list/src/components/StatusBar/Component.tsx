@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar guardrail={guardrail} />
  */
-import type { Guardrail } from "@/lib/Types";
+import type { Guardrail } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   guardrail: Guardrail;

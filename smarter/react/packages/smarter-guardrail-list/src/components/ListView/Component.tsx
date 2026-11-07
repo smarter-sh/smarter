@@ -31,12 +31,12 @@ import React, { useState, useEffect } from "react";
 import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
-import type { Guardrail, GuardrailListViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/lib/const";
+import type { Guardrail, GuardrailListViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar } from "../StatusBar";
+import { loggerPrefix } from "../../lib/const";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * LoadingText
