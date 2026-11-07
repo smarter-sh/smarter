@@ -1,20 +1,19 @@
 """
-The page that renders the Smarter api's OpenAPI document, in the docs app.
+The OpenAPI page, and the OpenAPI document's earlier address, in the docs app.
 
 The document itself is served by the api, at ``/api/v1/openapi.json``
-(:mod:`smarter.apps.api.v1.contract.views`). The page renders it with Scalar, which is vendored in
-``static/assets/plugins/custom/scalar/``. ``/docs/openapi.json``, the document's earlier address,
-redirects to the api's, so that existing links and generated clients keep working.
+(:mod:`smarter.apps.api.v1.contract.views`). The single-page console's OpenAPI page renders it with Scalar,
+which the console ships. ``/docs/openapi.json``, the document's earlier address, redirects to the api's, so
+that existing links and generated clients keep working.
 
 Both are public: the document describes the api, and holds no data.
 """
 
-from django.http import HttpRequest
 from django.views.generic import RedirectView
 
 from smarter.apps.api.v1.urls import ApiV1ReverseNames
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import SmarterWebHtmlView
 
 
 class DocsOpenApiJsonView(RedirectView):
@@ -33,15 +32,8 @@ class DocsOpenApiJsonView(RedirectView):
         return super().get_redirect_url(*args, **kwargs)
 
 
-class DocsOpenApiView(SmarterWebHtmlView):
-    """A page that renders the Smarter api's OpenAPI document with Scalar, and links to it."""
-
-    template_path = "docs/openapi.html"
-
-    def get(self, request: HttpRequest, *args, **kwargs):
-        """Render the page."""
-        context = {"openapi_json_url": reverse(ApiV1ReverseNames.namespace, ApiV1ReverseNames.openapi_json)}
-        return self.clean_http_response(request, template_path=self.template_path, context=context)
+class DocsOpenApiView(ConsoleAppView):
+    """``/docs/openapi/``: the console's page that renders the api's OpenAPI document with Scalar."""
 
 
 __all__ = ["DocsOpenApiJsonView", "DocsOpenApiView"]

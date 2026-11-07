@@ -17,6 +17,7 @@ import { PasswordResetRequestPage } from "@/routes/PasswordResetRequestPage";
 import { RegisterPage } from "@/routes/RegisterPage";
 import { RequireAuth } from "@/routes/RequireAuth";
 import { DASHBOARD_PATH, EXTENSIONS_PATH, INACTIVE_PATH, LOGIN_PATH } from "@/lib/const";
+import { DOCS_PATH, MANIFESTS_PATH } from "@/lib/docs";
 import { LIST_PAGES, type ListPage as ListPageConfig } from "@/lib/lists";
 import { MANIFEST_PAGES, type ManifestPage as ManifestPageConfig } from "@/lib/manifestPages";
 import { DROPZONE_PATH, PASSTHROUGH_PATH, TERMINAL_PATH } from "@/lib/tools";
@@ -56,6 +57,35 @@ export const routes: RouteObject[] = [
   // the social sign-in pipeline redirects to these two.
   { path: INACTIVE_PATH, element: <InactivePage /> },
   { path: "/account/already-associated", element: <AlreadyAssociatedPage /> },
+  // the docs pages, which are public, in their own frame, and in a chunk of their own.
+  {
+    path: DOCS_PATH,
+    lazy: async () => ({ Component: (await import("@/routes/DocsLayout")).DocsLayout }),
+    children: [
+      { index: true, element: <Navigate to={MANIFESTS_PATH} replace /> },
+      {
+        path: "manifests",
+        lazy: async () => ({ Component: (await import("@/routes/DocsPages")).ManifestsPage }),
+      },
+      {
+        path: "json-schemas",
+        lazy: async () => ({ Component: (await import("@/routes/DocsPages")).JsonSchemasPage }),
+      },
+      {
+        path: "manifest/:kind",
+        lazy: async () => ({ Component: (await import("@/routes/DocsPages")).KindManifestPage }),
+      },
+      {
+        path: "json-schema/:kind",
+        lazy: async () => ({ Component: (await import("@/routes/DocsPages")).KindJsonSchemaPage }),
+      },
+      {
+        path: "openapi",
+        lazy: async () => ({ Component: (await import("@/routes/OpenApiPage")).OpenApiPage }),
+      },
+      { path: "*", element: <NotFoundPage /> },
+    ],
+  },
   {
     path: "/",
     element: (

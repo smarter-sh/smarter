@@ -2,12 +2,18 @@ import { Loading, LoadingText } from "./Loading";
 import { AnnotationChips, AnnotationsRow, annotationRequirement, TagChips, TagsRow } from "./MetadataChips";
 import ResourceDetail from "./ResourceDetail";
 import {
+  asYaml,
+  CodeBlock,
   DetailField,
   DetailOverview,
   DetailSection,
   DetailValue,
   fetchResourceDetail,
+  highlightJson,
+  highlightYaml,
   NoValue,
+  plainLines,
+  prettyJson,
   ResourceMetadataSection,
 } from "./ResourceDetail";
 import ResourceTree from "./ResourceTree";
@@ -29,10 +35,12 @@ import { WorkbenchHelp } from "./WorkbenchHelp";
 
 export {
   AnnotationChips,
+  asYaml,
   AnnotationsRow,
   annotationRequirement,
   branchIds,
   childId,
+  CodeBlock,
   countResources,
   depth,
   DetailField,
@@ -41,11 +49,15 @@ export {
   DetailValue,
   DOCS,
   fetchResourceDetail,
+  highlightJson,
+  highlightYaml,
   kindInfo,
   Loading,
   LoadingText,
   NoValue,
+  plainLines,
   PLUGIN_KINDS,
+  prettyJson,
   ResourceCard,
   ResourceDetail,
   ResourceMetadataSection,
@@ -60,6 +72,8 @@ export {
   WorkbenchHelp,
 };
 export type {
+  CodeBlockProps,
+  CodeLine,
   DetailFieldProps,
   DetailOverviewProps,
   DetailSectionProps,
