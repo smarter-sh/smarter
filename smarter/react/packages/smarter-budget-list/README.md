@@ -8,16 +8,17 @@ to, with their budget versus actual spending this billing period and in total, a
 last 12 billing periods. Superusers may delete a budget. Budgets are created and changed with
 Budget manifests: `smarter apply -f budget.yaml`.
 
-This component is served by Django. See also:
+The single-page console, `@smarter/console`, renders this package's `BudgetList` at that path (see
+`smarter-console/src/lib/lists.ts`). The package has no build of its own. See also:
 
-- [smarter.apps.account.views.budget.listview.BudgetListView](../../../smarter/apps/account/views/budget/listview.py)
-- [smarter.apps.account.templatetags.react_budget_list.budget_list_react_assets](../../../smarter/apps/account/templatetags/react_budget_list.py)
-- [templates/react/budget-list.html](../../../smarter/templates/react/budget-list.html)
+- [smarter.apps.account.views.budget.listview](../../../smarter/apps/account/views/budget/listview.py):
+  `BudgetListView`, the Django page, a `ConsoleAppView` subclass that keeps the page's url name, and
+  `BudgetListApiView`, the list api.
 
-## Setup
+## Development
 
 ```console
-npm install
-npm run dev     # http://localhost:5173, with API requests proxied to Django on :9357
-npm run build   # builds into smarter/static/react/@smarter/budget-list/
+cd smarter/react
+npm run dev -w @smarter/budget-list     # http://localhost:5173/, against the Django dev server at :9357
+npm run test -w @smarter/budget-list
 ```

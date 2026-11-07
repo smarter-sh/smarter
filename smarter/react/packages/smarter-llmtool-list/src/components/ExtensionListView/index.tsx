@@ -1,2 +1,2 @@
-import ExtensionListView from "@/components/ExtensionListView/Component";
+import ExtensionListView from "./Component";
 export default ExtensionListView;

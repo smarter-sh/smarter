@@ -4,7 +4,7 @@
  */
 import type { SessionContext } from "@smarter/common";
 
-import type { InfrastructureResource, InfrastructureResourceSummary } from "@/lib/Types";
+import type { InfrastructureResource, InfrastructureResourceSummary } from "../lib/Types";
 
 export const API_URL = "/api/web/infrastructure/listview/";
 

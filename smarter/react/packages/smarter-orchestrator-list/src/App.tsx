@@ -7,9 +7,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { Orchestrator, OrchestratorListViewProps, OrchestratorDetailViewProps } from "@/lib/Types";
-import ListView from "@/components/ListView";
-import DetailView from "@/components/DetailView";
+import type { Orchestrator, OrchestratorListViewProps, OrchestratorDetailViewProps } from "./lib/Types";
+import ListView from "./components/ListView";
+import DetailView from "./components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your Orchestrators") },
@@ -46,7 +46,7 @@ function App({ sessionContext }: AppProps) {
   );
   return (
     <>
-      <section className="mt-5 mb-5 container" id="orchestrator-list">
+      <section className="mt-5 mb-5" id="orchestrator-list">
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={orchestratorTabbedListViewContext} />
       </section>

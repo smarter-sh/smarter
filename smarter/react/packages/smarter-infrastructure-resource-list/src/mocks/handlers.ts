@@ -4,7 +4,7 @@
  */
 import { http, HttpResponse } from "msw";
 
-import type { InfrastructureResource, InfrastructureResourceListResponse } from "@/lib/Types";
+import type { InfrastructureResource, InfrastructureResourceListResponse } from "../lib/Types";
 
 import { API_URL, resources, summarize } from "./fixtures";
 

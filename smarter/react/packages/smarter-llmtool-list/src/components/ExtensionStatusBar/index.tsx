@@ -1,1 +1,1 @@
-export { ExtensionStatusBar } from "@/components/ExtensionStatusBar/Component";
+export { ExtensionStatusBar } from "./Component";

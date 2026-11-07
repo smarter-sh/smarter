@@ -1,3 +1,3 @@
-import { StatusBar } from "@/components/StatusBar/Component";
+import { StatusBar } from "./Component";
 
 export { StatusBar };

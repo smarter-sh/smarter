@@ -29,13 +29,13 @@ import React, { useState, useEffect } from "react";
 import { gettext, Loading, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
-import type { LLMHostCompute, LLMHostComputeListViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/lib/const";
-import { formatCpuMemory, formatGpus, formatPrice } from "@/lib/format";
+import type { LLMHostCompute, LLMHostComputeListViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar } from "../StatusBar";
+import { loggerPrefix } from "../../lib/const";
+import { formatCpuMemory, formatGpus, formatPrice } from "../../lib/format";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * LoadingText

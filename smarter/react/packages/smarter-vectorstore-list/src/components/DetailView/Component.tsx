@@ -24,10 +24,10 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { VectorstoreDetailViewProps } from "@/lib/Types";
-import { BACKEND_LABELS, HOSTING_LABELS, STATUS_BADGES } from "@/lib/format";
-import { StatusBar } from "@/components/StatusBar";
-import { Toolbar } from "@/components/Toolbar";
+import type { VectorstoreDetailViewProps } from "../../lib/Types";
+import { BACKEND_LABELS, HOSTING_LABELS, STATUS_BADGES } from "../../lib/format";
+import { StatusBar } from "../StatusBar";
+import { Toolbar } from "../Toolbar";
 
 function DetailView({ sessionContext, object: vectorstore, onRequery, filtering }: VectorstoreDetailViewProps) {
   const status = STATUS_BADGES[vectorstore.status];

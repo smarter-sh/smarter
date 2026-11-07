@@ -8,9 +8,9 @@
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
 
-import type { LLMHostCompute, LLMHostComputeListViewProps, LLMHostComputeDetailViewProps } from "@/lib/Types";
-import ListView from "@/components/ListView";
-import DetailView from "@/components/DetailView";
+import type { LLMHostCompute, LLMHostComputeListViewProps, LLMHostComputeDetailViewProps } from "./lib/Types";
+import ListView from "./components/ListView";
+import DetailView from "./components/DetailView";
 
 const tabs: Tabs = [
   { key: "owned" as TabKey, label: gettext("Your LLMHost Compute") },
@@ -47,7 +47,7 @@ function App({ sessionContext }: AppProps) {
   );
   return (
     <>
-      <section className="mt-5 mb-5 container" id="llmhost-compute-list">
+      <section className="mt-5 mb-5" id="llmhost-compute-list">
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={llmhostComputeTabbedListViewContext} />
       </section>

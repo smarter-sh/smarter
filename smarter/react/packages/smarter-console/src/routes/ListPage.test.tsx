@@ -6,13 +6,16 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { dashboardHandlers } from "@smarter/dashboard/mocks";
 import { listHandlers } from "@smarter/guardrail-list/mocks";
+import { listHandlers as infrastructureHandlers } from "@smarter/infrastructure-resource-list/mocks";
+import { listHandlers as proxyHandlers } from "@smarter/proxy-list/mocks";
 
 import { server } from "@test/server";
 
 import App from "@/App";
 import { LIST_PAGES } from "@/lib/lists";
 import { CONSOLE_PAGE_PATHS } from "@/lib/sidebar";
-import { userSessionHandler } from "@/mocks/handlers";
+import { userSession } from "@/mocks/fixtures";
+import { sessionHandler, userSessionHandler } from "@/mocks/handlers";
 import { routes } from "@/router";
 
 function mountAt(path: string) {
@@ -44,6 +47,34 @@ describe("the Guardrails list", () => {
     expect(await screen.findByRole("row", { name: /first_example/ })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/guardrail");
     expect(sidebar.getByRole("link", { name: "Guardrails" })).toHaveAttribute("aria-current", "page");
+  });
+});
+
+describe("a list that the session may not see", () => {
+  it("is not found while its feature is off", async () => {
+    server.use(...proxyHandlers());
+    mountAt("/proxy");
+    expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+  });
+
+  it("shows a feature's list while the feature is on", async () => {
+    server.use(sessionHandler({ ...userSession, flags: { ...userSession.flags, proxy: true } }), ...proxyHandlers());
+    mountAt("/proxy");
+    expect(await screen.findByText("Proxies")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Page not found" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the infrastructure resources for superusers", async () => {
+    mountAt("/infrastructure");
+    expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+  });
+
+  it("shows the infrastructure resources to a superuser", async () => {
+    const user = { ...userSession.user!, isSuperuser: true };
+    server.use(sessionHandler({ ...userSession, user }), ...infrastructureHandlers());
+    mountAt("/infrastructure");
+    expect(await screen.findByText("Infrastructure Resources")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Page not found" })).not.toBeInTheDocument();
   });
 });
 

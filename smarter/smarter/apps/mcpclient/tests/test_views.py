@@ -21,7 +21,10 @@ from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.urls import MCPClientReverseNames as Names
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    assert_console_page,
+)
 
 from .base_classes import MCPCLIENT_NAME, MCPClientTestBase
 
@@ -58,10 +61,8 @@ class TestMCPClientViews(MCPClientTestBase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_listview_anonymous(self):
-        """Test that an anonymous user is redirected to the login page."""
-        self.client.logout()
-        response = self.client.get(url(Names.listview))
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        """Test that the list page is the single-page console's, which sends an anonymous user to sign in."""
+        assert_console_page(self, url(Names.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""

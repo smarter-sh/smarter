@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Provider } from "@/lib/Types";
+import type { Provider } from "../lib/Types";
 
 export const API_URL = "/api/web/provider/listview/";
 

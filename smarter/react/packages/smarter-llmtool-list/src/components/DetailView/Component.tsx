@@ -24,9 +24,9 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import { formatSql } from "@/lib/sql";
-import type { ApiData, LLMTool, LLMToolDetailViewProps, SqlData, StaticData } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import { formatSql } from "../../lib/sql";
+import type { ApiData, LLMTool, LLMToolDetailViewProps, SqlData, StaticData } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** Whether a structured value has anything to show. */
 function hasContent(value: unknown): boolean {

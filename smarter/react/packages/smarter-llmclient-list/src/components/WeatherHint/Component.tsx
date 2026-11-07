@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { gettext } from "@smarter/common";
 import { OnboardingHints, Spotlight, onboardingSelector, waitForTarget, type Onboarding } from "@smarter/onboarding";
 
-import { WEATHER_TARGET } from "@/components/WeatherHint/const";
+import { WEATHER_TARGET } from "./const";
 
 const HINT = OnboardingHints.LLMCLIENT_WEATHER;
 

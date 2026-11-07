@@ -9,8 +9,8 @@
  * Usage:
  *   <StatusBar proxy={proxy} />
  */
-import type { Proxy } from "@/lib/Types";
-import { formatAllowedPaths, formatApiKey } from "@/lib/format";
+import type { Proxy } from "../../lib/Types";
+import { formatAllowedPaths, formatApiKey } from "../../lib/format";
 import { gettext, interpolate } from "@smarter/common";
 
 interface StatusbarProps {

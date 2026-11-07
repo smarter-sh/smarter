@@ -31,13 +31,13 @@ import React, { useState, useEffect } from "react";
 import { formatDateTime, gettext, interpolate, Loading, LoadingText, SortableHeader } from "@smarter/common";
 import type { SessionContext, Sorting } from "@smarter/common";
 
-import type { LLMClient } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
-import { StatusBar } from "@/components/StatusBar";
-import { loggerPrefix } from "@/const";
-import { weatherTargetAttribute } from "@/components/WeatherHint/const";
+import type { LLMClient } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
+import { StatusBar } from "../StatusBar";
+import { loggerPrefix } from "../../const";
+import { weatherTargetAttribute } from "../WeatherHint/const";
 
-import "@/components/ListView/styles.css";
+import "./styles.css";
 
 /**
  * TableHeader

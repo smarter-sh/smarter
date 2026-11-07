@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Orchestrator } from "@/lib/Types";
+import type { Orchestrator } from "../lib/Types";
 
 export const API_URL = "/api/web/orchestrator/listview/";
 

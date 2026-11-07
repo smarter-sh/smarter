@@ -25,8 +25,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { ProviderDetailViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { ProviderDetailViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 function DetailView({ sessionContext, object: provider, onRequery, filtering }: ProviderDetailViewProps) {
   return (

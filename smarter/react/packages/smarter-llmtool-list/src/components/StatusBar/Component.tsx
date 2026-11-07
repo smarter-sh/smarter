@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar llmtool={llmtool} />
  */
-import type { LLMTool } from "@/lib/Types";
+import type { LLMTool } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   llmtool: LLMTool;

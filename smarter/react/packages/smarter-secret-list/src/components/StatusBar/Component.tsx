@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar secret={secret} />
  */
-import type { Secret } from "@/lib/Types";
+import type { Secret } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   secret: Secret;

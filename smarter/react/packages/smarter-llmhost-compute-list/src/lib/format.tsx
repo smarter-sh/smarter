@@ -1,7 +1,7 @@
 /**
  * Formatting of LLMHostCompute attributes, shared by ListView, DetailView and StatusBar.
  */
-import type { LLMHostCompute } from "@/lib/Types";
+import type { LLMHostCompute } from "./Types";
 import { gettext, interpolate } from "@smarter/common";
 
 /** The node's GPUs, e.g. "1 × L4, 24 GB", or "CPU only". */

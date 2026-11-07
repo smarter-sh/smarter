@@ -7,11 +7,11 @@
  */
 import { gettext, TabbedListView, WorkbenchHelp } from "@smarter/common";
 import type { SessionContext, TabbedViewContext, TabKey, Tabs } from "@smarter/common";
-import type { LLMTool, LLMToolListViewProps, LLMToolDetailViewProps } from "@/lib/Types";
-import ListView from "@/components/ListView";
-import DetailView from "@/components/DetailView";
-import ExtensionListView from "@/components/ExtensionListView";
-import ExtensionDetailView from "@/components/ExtensionDetailView";
+import type { LLMTool, LLMToolListViewProps, LLMToolDetailViewProps } from "./lib/Types";
+import ListView from "./components/ListView";
+import DetailView from "./components/DetailView";
+import ExtensionListView from "./components/ExtensionListView";
+import ExtensionDetailView from "./components/ExtensionDetailView";
 
 // The Extensions tab is read-only for every user, superusers included: superusers manage
 // extensions in the Extensions console. Its objects are Extensions, not LLMTools, so it has
@@ -58,7 +58,7 @@ function App({ sessionContext }: AppProps) {
   );
   return (
     <>
-      <section className="mt-5 mb-5 container" id="llmtool-list">
+      <section className="mt-5 mb-5" id="llmtool-list">
         <WorkbenchHelp title={title} icon={icon} docsUrl={docsUrl} helpText={helpText} />
         <TabbedListView sessionContext={sessionContext} tabbedListViewContext={llmtoolTabbedListViewContext} />
       </section>

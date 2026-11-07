@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar connection={connection} />
  */
-import type { Connection } from "@/lib/Types";
+import type { Connection } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   connection: Connection;

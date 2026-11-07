@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Secret } from "@/lib/Types";
+import type { Secret } from "../lib/Types";
 
 export const API_URL = "/api/web/secret/listview/";
 

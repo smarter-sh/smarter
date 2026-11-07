@@ -16,8 +16,8 @@
  */
 import { DetailField, DetailOverview, DetailSection, gettext } from "@smarter/common";
 
-import type { ExtensionDetailViewProps } from "@/lib/Types";
-import { ExtensionStatusBar } from "@/components/ExtensionStatusBar";
+import type { ExtensionDetailViewProps } from "../../lib/Types";
+import { ExtensionStatusBar } from "../ExtensionStatusBar";
 
 function ExtensionDetailView({ object: extension }: ExtensionDetailViewProps) {
   return (

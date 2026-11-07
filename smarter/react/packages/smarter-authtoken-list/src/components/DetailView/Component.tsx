@@ -17,8 +17,8 @@
  */
 import { DetailField, DetailOverview, DetailSection, gettext, ResourceMetadataSection } from "@smarter/common";
 
-import type { AuthTokenDetailViewProps } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { AuthTokenDetailViewProps } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 function DetailView({ sessionContext, object: authtoken, onRequery, filtering }: AuthTokenDetailViewProps) {
   return (

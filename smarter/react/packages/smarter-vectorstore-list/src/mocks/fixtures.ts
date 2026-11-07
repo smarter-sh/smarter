@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { Vectorstore } from "@/lib/Types";
+import type { Vectorstore } from "../lib/Types";
 
 export const API_URL = "/api/web/vectorstore/listview/";
 

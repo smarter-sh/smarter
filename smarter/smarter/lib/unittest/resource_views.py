@@ -32,6 +32,26 @@ from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 
 
+def assert_console_page(testcase, url: str) -> None:
+    """
+    Assert that a page is the single-page console's (ADR-035): a ConsoleAppView, the same for anyone.
+
+    The console sends a visitor who isn't signed in to its sign-in page, so the page answers a signed-in user and an
+    anonymous one alike.
+
+    :param testcase: The test case, whose ``client`` may be signed in; it is signed out afterwards.
+    :param url: The page's url.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.dashboard.views.console_app import ConsoleAppView
+
+    view_class = resolve(url).func.view_class  # type: ignore[attr-defined]
+    testcase.assertTrue(issubclass(view_class, ConsoleAppView), view_class)
+    testcase.assertEqual(testcase.client.get(url).status_code, HTTPStatus.OK)
+    testcase.client.logout()
+    testcase.assertEqual(testcase.client.get(url).status_code, HTTPStatus.OK)
+
+
 class ResourceViewsTestMixin:
     """
     Test the React list page, the list api, the clone, delete and rename apis, and the detail page.
@@ -54,8 +74,6 @@ class ResourceViewsTestMixin:
     resource_name_prefix = "test_resource_views"
     #: The attribute of ``reverse_names`` that holds the detail page's url name.
     detail_view_name = "detailview"
-    #: Whether the single-page console serves the list page (ADR-035), rather than a Django template.
-    console_page = False
 
     @classmethod
     def create_resource(cls, name: str) -> MetaDataModel:
@@ -209,24 +227,8 @@ class ResourceViewsTestMixin:
     # the React list page and its list api
     # -------------------------------------------------------------------------
     def test_listview_page(self):
-        """
-        Test the React list page, and what an anonymous user gets.
-
-        A Django page redirects them to the login page. The single-page console's page is the same for anyone,
-        and the console sends a visitor to its sign-in page.
-        """
-        self.assertEqual(self.client.get(self.url("listview")).status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
-        self.client.logout()
-        response = self.client.get(self.url("listview"))  # type: ignore[attr-defined]
-        if self.console_page:
-            # pylint: disable=import-outside-toplevel
-            from smarter.apps.dashboard.views.console_app import ConsoleAppView
-
-            view_class = resolve(self.url("listview")).func.view_class  # type: ignore[attr-defined]
-            self.assertTrue(issubclass(view_class, ConsoleAppView), view_class)  # type: ignore[attr-defined]
-            self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
-        else:
-            self.assertEqual(response.status_code, HTTPStatus.FOUND)  # type: ignore[attr-defined]
+        """Test the list page: the single-page console's (ADR-035), the same for anyone."""
+        assert_console_page(self, self.url("listview"))  # type: ignore[attr-defined]
 
     def test_list_api(self):
         """Test that the list api returns the user, the smarter admin, and the resource, also for a GET."""

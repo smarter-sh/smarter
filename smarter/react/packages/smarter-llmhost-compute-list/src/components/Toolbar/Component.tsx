@@ -25,9 +25,9 @@ import { useState } from "react";
 import type { SessionContext } from "@smarter/common";
 import { actionUrl, fetchDjangoUrl, gettext, interpolate, interpolateNodes, Modal } from "@smarter/common";
 
-import { loggerPrefix } from "@/lib/const";
-import type { LLMHostCompute } from "@/lib/Types";
-import "@/components/Toolbar/styles.css";
+import { loggerPrefix } from "../../lib/const";
+import type { LLMHostCompute } from "../../lib/Types";
+import "./styles.css";
 
 /**
  * The messages that report the result of an action. Each is a whole sentence, so that it can be

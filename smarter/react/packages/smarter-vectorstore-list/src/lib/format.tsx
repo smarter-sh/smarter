@@ -1,7 +1,7 @@
 /**
  * Labels and badges of a Vectorstore's fields, shared by the ListView, DetailView and StatusBar.
  */
-import type { Vectorstore, VectorstoreStatus } from "@/lib/Types";
+import type { Vectorstore, VectorstoreStatus } from "./Types";
 import { gettext } from "@smarter/common";
 
 export const BACKEND_LABELS: Record<Vectorstore["backend"], string> = {

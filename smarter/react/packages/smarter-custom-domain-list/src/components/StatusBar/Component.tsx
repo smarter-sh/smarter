@@ -11,7 +11,7 @@
  * Usage:
  *   <StatusBar customDomain={customDomain} />
  */
-import type { CustomDomain } from "@/lib/Types";
+import type { CustomDomain } from "../../lib/Types";
 import { gettext, interpolate, ngettext } from "@smarter/common";
 interface StatusbarProps {
   customDomain: CustomDomain;

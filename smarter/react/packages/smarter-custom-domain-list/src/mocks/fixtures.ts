@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { CustomDomain } from "@/lib/Types";
+import type { CustomDomain } from "../lib/Types";
 
 export const API_URL = "/api/web/llmclient/custom-domains/listview/";
 

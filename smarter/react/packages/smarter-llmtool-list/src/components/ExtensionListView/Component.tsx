@@ -31,11 +31,11 @@ import React, { useState, useEffect } from "react";
 import { formatDateTime, gettext, Loading, SortableHeader } from "@smarter/common";
 import type { Sorting } from "@smarter/common";
 
-import type { Extension, ExtensionListViewProps } from "@/lib/Types";
-import { ExtensionStatusBar } from "@/components/ExtensionStatusBar";
-import { loggerPrefix } from "@/lib/const";
+import type { Extension, ExtensionListViewProps } from "../../lib/Types";
+import { ExtensionStatusBar } from "../ExtensionStatusBar";
+import { loggerPrefix } from "../../lib/const";
 
-import "@/components/ListView/styles.css";
+import "../ListView/styles.css";
 
 /**
  * LoadingText

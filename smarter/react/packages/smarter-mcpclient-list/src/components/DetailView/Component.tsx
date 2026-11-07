@@ -24,8 +24,8 @@ import {
   ResourceMetadataSection,
 } from "@smarter/common";
 
-import type { MCPClientDetailViewProps, MCPConnectionStatus } from "@/lib/Types";
-import { Toolbar } from "@/components/Toolbar";
+import type { MCPClientDetailViewProps, MCPConnectionStatus } from "../../lib/Types";
+import { Toolbar } from "../Toolbar";
 
 /** The badge class and label of each connection status. */
 function connectionStatus(status: MCPConnectionStatus): { badge: string; label: string } {

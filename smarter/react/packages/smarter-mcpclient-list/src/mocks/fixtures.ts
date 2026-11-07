@@ -4,7 +4,7 @@
  */
 import type { SessionContext, UserProfile } from "@smarter/common";
 
-import type { MCPClient } from "@/lib/Types";
+import type { MCPClient } from "../lib/Types";
 
 export const API_URL = "/api/web/mcpclient/listview/";
 

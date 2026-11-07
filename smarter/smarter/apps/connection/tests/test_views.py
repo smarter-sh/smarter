@@ -21,6 +21,7 @@ from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlCon
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.resource_views import assert_console_page
 
 from .mixins import ApiConnectionTestMixin, SqlConnectionTestMixin
 
@@ -75,10 +76,8 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     # ConnectionListView
     # -------------------------------------------------------------------------
     def test_list_page(self):
-        """Test that the list page renders the React app's root and its api url."""
-        response = self.client.get(self.url(ConnectionReverseNames.listview))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertIn(b"smarter-connection-list-root", response.content)
+        """Test that the list page is the single-page console's."""
+        assert_console_page(self, self.url(ConnectionReverseNames.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""

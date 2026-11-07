@@ -9,7 +9,7 @@
  * Usage:
  *   <StatusBar orchestrator={orchestrator} />
  */
-import type { Orchestrator } from "@/lib/Types";
+import type { Orchestrator } from "../../lib/Types";
 import { gettext } from "@smarter/common";
 interface StatusbarProps {
   orchestrator: Orchestrator;

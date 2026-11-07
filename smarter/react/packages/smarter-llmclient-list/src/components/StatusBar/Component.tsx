@@ -1,4 +1,4 @@
-import type { LLMClient } from "@/lib/Types";
+import type { LLMClient } from "../../lib/Types";
 import { gettext, interpolate } from "@smarter/common";
 /**
  * @file Component.tsx
