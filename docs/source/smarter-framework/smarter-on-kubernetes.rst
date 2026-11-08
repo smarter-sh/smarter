@@ -44,9 +44,11 @@ differs.
    * - Web application and REST API
      - ``smarter-api``: one container, uvicorn with auto-reload, on port 9357.
      - Deployment ``smarter-api``: uvicorn with 2 workers per pod (``app.workers``), on port 8000,
-       behind the ClusterIP Service ``smarter-api``. While ``app.legacyName.enabled`` is true, the
-       chart also runs a Deployment and a Service under the api's old name, ``smarter``, so that the
-       rename drops no request; both Services reach both Deployments' pods. Each worker accepts at most 100 concurrent
+       behind the ClusterIP Service ``smarter-api``. Before v0.43.0 both were named ``smarter``. An
+       install that upgrades from an older release sets ``app.legacyName.enabled`` for one upgrade,
+       which also runs a Deployment and a Service under the old name, both Services reaching both
+       Deployments' pods, so that the rename drops no request while its Ingresses still name
+       ``smarter``; once they name ``smarter-api``, it upgrades again without it. Each worker accepts at most 100 concurrent
        requests (``app.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
        load instead of running out of memory. Each worker runs at most 32 streamed chat prompts
        at once, in a thread pool of their own (``app.promptThreads``,
