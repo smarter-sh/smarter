@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.0...v0.44.1-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **account:** give every email one mail-safe layout and working images ([2f7dd1a](https://github.com/smarter-sh/smarter/commit/2f7dd1a56dc81f834c579ec45d05f1c2d8899b01)), closes [#954](https://github.com/smarter-sh/smarter/issues/954)
+
 ## [0.44.0](https://github.com/smarter-sh/smarter/compare/v0.43.2...v0.44.0) (2026-11-08)
 
 ### Features

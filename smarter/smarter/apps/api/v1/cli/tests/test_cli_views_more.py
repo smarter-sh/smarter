@@ -56,6 +56,27 @@ class TestSchemaAndExampleManifestViews(ApiV1CliTestBase):
                             self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
                             self.assertIn("data", json.loads(response.content))
 
+    def test_unsupported_kind(self):
+        """Test that an unsupported kind in the url is a 400 that names it, and parses the url only once (#954)."""
+        client = Client()
+        with (
+            patch(
+                "smarter.lib.django.waffle.switch_is_active",
+                side_effect=lambda name: name == SmarterWaffleSwitches.ALLOW_API_GET,
+            ),
+            patch("smarter.apps.api.v1.cli.views.base.SAMKinds.from_url", return_value=None) as from_url,
+        ):
+            for name in (ApiV1CliReverseViews.json_schema, ApiV1CliReverseViews.example_manifest):
+                for method in ("get", "post"):
+                    with self.subTest(view=name, method=method):
+                        from_url.reset_mock()
+                        response = getattr(client, method)(self.url(name, "ChatConfig"))
+                        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
+                        body = response.content.decode()
+                        self.assertIn("Unsupported manifest kind: ChatConfig", body)
+                        self.assertNotIn("Could not find broker", body)
+                        self.assertLessEqual(from_url.call_count, 1)
+
     def test_get_not_allowed(self):
         """Test that the example manifest can't be got while the ALLOW_API_GET switch is off."""
         with patch("smarter.lib.django.waffle.switch_is_active", return_value=False):

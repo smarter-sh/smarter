@@ -113,6 +113,20 @@ Links and images
   base64 ``png``, ``jpeg``, ``gif`` or ``webp`` data urls, for example from a tool that generates
   them. Anything else, such as a ``javascript:`` url, stays as text.
 
+SVG graphics and audio
+  An svg that the LLM writes as markup, either on lines of its own or as a fenced code block (whose
+  language is ``svg``, ``xml``, ``html`` or none) that holds only the svg, is drawn as the graphic,
+  in a code block whose **Code** button shows its source instead, and **Image** shows the graphic
+  again. The graphic is sanitized first, then displayed as an image, in which browsers never run
+  scripts. Other raw html is still displayed as text. ``![alt](url)`` whose url is an audio file (``mp3``, ``wav``,
+  ``ogg``, ``oga``, ``m4a``, ``flac`` or ``opus``), or a base64 audio data url, is an audio player.
+
+Downloads
+  Images, svg graphics, audio and Mermaid diagrams have a **Download** button. An svg or a diagram is
+  saved as an ``.svg`` file, and an image or audio clip under its own file name. Media on another
+  site is saved as a file if that site's server allows it (CORS), and otherwise opens in a new tab,
+  from which you can save it.
+
 Code
   Fenced code blocks are syntax highlighted, in GitHub's dark theme, with a header that names the
   language and a **Copy** button. Highlighting covers the common languages (Python, JavaScript,
