@@ -29,6 +29,7 @@ from smarter.apps.account.contract.models import (
 )
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.llmtool.contract.models import PluginApiPluginMeta
+from smarter.lib.openai.enum import OpenAIReasoningEffort
 
 if TYPE_CHECKING:
     from smarter.apps.llmclient.models import (
@@ -330,6 +331,9 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
     provider: Optional[str] = Field(None, description="LLMClient.provider: the LLM provider, e.g. openai.")
     default_model: Optional[str] = Field(None, description="LLMClient.default_model.")
     default_temperature: Optional[float] = Field(None, description="LLMClient.default_temperature.")
+    default_reasoning_effort: Optional[OpenAIReasoningEffort] = Field(
+        None, description="LLMClient.default_reasoning_effort."
+    )
     default_max_tokens: Optional[int] = Field(None, description="LLMClient.default_max_tokens.")
     app_name: Optional[str] = Field(None, description="LLMClient.app_name.")
     app_assistant: Optional[str] = Field(None, description="LLMClient.app_assistant: the assistant's name.")
@@ -460,6 +464,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             provider=llmclient.provider,
             default_model=llmclient.default_model,
             default_temperature=llmclient.default_temperature,
+            default_reasoning_effort=llmclient.default_reasoning_effort,
             default_max_tokens=llmclient.default_max_tokens,
             app_name=llmclient.app_name,
             app_assistant=llmclient.app_assistant,

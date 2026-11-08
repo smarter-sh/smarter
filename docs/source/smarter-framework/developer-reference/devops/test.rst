@@ -89,6 +89,36 @@ Tag a test, or a whole TestCase, that uses real infrastructure, with
 Prefer a fake, though: the LLMHost and Vectorstore tests replace the cluster with an in-memory
 backend, so that they test the same code in seconds.
 
+Vendor Tests
+--------------------
+
+LLM vendors' models disagree about request parameters that look harmless. Some of OpenAI's models
+accept only their default temperature, some reject ``reasoning_effort`` altogether, some accept
+function tools only with ``reasoning_effort`` set to ``none``, some don't support ``none``, and the
+search models reject tools and any temperature. A rule that Smarter gets wrong breaks every prompt
+to that model, so these rules are tested at two levels:
+
+- :mod:`smarter.lib.openai.model_capabilities` records what each model in
+  ``VALID_CHAT_COMPLETION_MODELS`` accepts. The platform uses it to reject an LLMClient manifest
+  whose settings its model can never honor, and to change each request to what its model accepts.
+  ``smarter/apps/provider/tests/vendor_profiles.py`` simulates the vendor from it, with the vendor's
+  own error messages, and ``test_vendor_quirks.py`` sends every kind of request that Smarter sends, to
+  every model, at every kind of reasoning effort, through the chat provider's own code, against the
+  simulator. It runs with the rest of the suite, and fails when a model isn't in the table.
+- ``test_vendor_quirks_live.py`` checks the table against the real api, and that every model
+  answers Smarter's requests. It sends a few hundred small, billed requests, so it is tagged
+  ``vendor``, and skipped unless it is asked for:
+
+.. code-block:: console
+
+  python manage.py test --tag vendor               # only the vendor tests
+  SMARTER_TEST_VENDOR=true python manage.py test   # everything, with the vendor tests
+
+Run the vendor tests when a model is added to ``VALID_CHAT_COMPLETION_MODELS``, before a release,
+and whenever a prompt fails with a 400 from the vendor. When they fail, update the model in
+:mod:`smarter.lib.openai.model_capabilities`, then run ``test_vendor_quirks.py``, which shows what
+Smarter must change.
+
 Coverage Report
 -----------------
 
