@@ -170,6 +170,19 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         broker._manifest = manifest
         self.assertEqual(AbstractBroker.name.fget(broker), manifest.metadata.name)
 
+    def test_a_missing_name_is_not_a_warning(self):
+        """A broker with no manifest, loader or name parameter, e.g. for json-schema, logs no warning (issue #952)."""
+        broker = self.broker
+        broker._name = None
+        broker._manifest = None
+        broker._loader = None
+        with (
+            patch.object(SAMGuardrailBroker, "params", new_callable=PropertyMock, return_value=None),
+            self.assertNoLogs("smarter.lib.manifest.broker.abstract_broker_class", level="WARNING"),
+        ):
+            self.assertIsNone(AbstractBroker.name.fget(broker))
+            self.assertIsNone(AbstractBroker.name.fget(broker))
+
     def test_setter_validation(self):
         broker = self.broker
         with self.assertRaises(SmarterValueError):

@@ -204,6 +204,12 @@ whole form, and the messages of each field, which the console shows beside it.
    * - ``profile-image/``
      - The user menu's profile image: ``POST`` uploads the signed-in user's own image, a multipart form;
        ``DELETE`` removes it. See :doc:`smarter-dashboard/views/authentication/profile_image`.
+   * - ``data-export/``
+     - The user menu's **Download My Data**: ``GET`` says where the link goes and how many exports are left
+       today; ``POST`` starts an export, or returns the one in progress. See
+       :doc:`smarter-dashboard/views/authentication/data_export`.
+   * - ``data-export/<id>/``
+     - ``GET`` an export's progress, which the dialog polls.
    * - ``user-profiles/``
      - ``GET`` lists the user's profiles, one per account, and which one the console acts as.
    * - ``user-profiles/select/``

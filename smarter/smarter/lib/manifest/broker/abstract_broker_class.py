@@ -729,7 +729,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         The name is looked up once, and kept: from the manifest, if it is a Pydantic model, else
         from the loader's manifest metadata, else from the request's ``name`` query parameter. A
-        name that cannot be found is logged as a warning.
+        name that cannot be found is logged at debug level, since some commands, e.g.
+        ``json-schema``, need no name, and those that do fail with their own error.
 
         The name is essential for database queries and model lookups, together with the user profile.
 
@@ -756,7 +757,9 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             if name_param:
                 self._name = name_param
         if not self._name:
-            logger.warning("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
+            # debug, not warning: commands such as json-schema need no name, and the commands
+            # that do (get, describe, delete, ...) fail with their own error (issue #952).
+            logger.debug("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
         return self._name
 
     def manifest_to_django_orm(self) -> SmarterDictType:

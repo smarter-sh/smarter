@@ -35,6 +35,12 @@ from .budget import (
     evaluate_resource_constraints,
 )
 from .charge import Actuals, AggregatedCharges, Charge, ChargeTypes, get_actuals
+from .data_export import (
+    DATA_EXPORT_STALE_AFTER,
+    DataExport,
+    DataExportStatus,
+    DataExportStep,
+)
 from .llm_prices import LLMPrices
 from .metadata_with_ownership import (
     MetaDataWithOwnershipModel,
@@ -48,6 +54,10 @@ __all__ = [
     "AccountContact",
     "Actuals",
     "Budget",
+    "DATA_EXPORT_STALE_AFTER",
+    "DataExport",
+    "DataExportStatus",
+    "DataExportStep",
     "BudgetAction",
     "BudgetPeriod",
     "BudgetUnit",

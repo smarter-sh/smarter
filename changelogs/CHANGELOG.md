@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.0](https://github.com/smarter-sh/smarter/compare/v0.43.2...v0.44.0) (2026-11-08)
+
+### Features
+
+* **account:** email users a zip of every manifest that they own ([bb70933](https://github.com/smarter-sh/smarter/commit/bb70933eedf7cab21ce81edf54c5635f09c57002))
+
+### Bug Fixes
+
+* bump smarter-console to v1.1.0 ([74c4c86](https://github.com/smarter-sh/smarter/commit/74c4c86b71e50e4b1d1e912d8e95f6fb64a79fe3))
+* **manifest:** log a broker without a name at debug, not as a warning ([700eac6](https://github.com/smarter-sh/smarter/commit/700eac686c6ab5e9602cc6769dfa70a7e483b4de)), closes [#952](https://github.com/smarter-sh/smarter/issues/952)
+* **waffle:** log a database outage in switch_is_active() as one warning line ([ff7d343](https://github.com/smarter-sh/smarter/commit/ff7d343d55287c1fb9d8f30403c6261ee34f5103)), closes [#951](https://github.com/smarter-sh/smarter/issues/951)
+
+## [0.44.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.44.0-alpha.2...v0.44.0-alpha.3) (2026-11-08)
+
+### Bug Fixes
+
+* bump smarter-console to v1.1.0 ([74c4c86](https://github.com/smarter-sh/smarter/commit/74c4c86b71e50e4b1d1e912d8e95f6fb64a79fe3))
+
+## [0.44.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.0-alpha.1...v0.44.0-alpha.2) (2026-11-08)
+
+### Bug Fixes
+
+* **manifest:** log a broker without a name at debug, not as a warning ([700eac6](https://github.com/smarter-sh/smarter/commit/700eac686c6ab5e9602cc6769dfa70a7e483b4de)), closes [#952](https://github.com/smarter-sh/smarter/issues/952)
+
+## [0.44.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.3-alpha.1...v0.44.0-alpha.1) (2026-11-08)
+
+### Features
+
+* **account:** email users a zip of every manifest that they own ([bb70933](https://github.com/smarter-sh/smarter/commit/bb70933eedf7cab21ce81edf54c5635f09c57002))
+
+## [0.43.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.2...v0.43.3-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **waffle:** log a database outage in switch_is_active() as one warning line ([ff7d343](https://github.com/smarter-sh/smarter/commit/ff7d343d55287c1fb9d8f30403c6261ee34f5103)), closes [#951](https://github.com/smarter-sh/smarter/issues/951)
+
 ## [0.43.2](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2) (2026-11-08)
 
 ### Bug Fixes

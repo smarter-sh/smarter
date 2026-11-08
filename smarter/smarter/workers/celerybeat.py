@@ -35,6 +35,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": OPERATIONAL,
     },
+    "delete-expired-data-exports": {
+        "task": "smarter.apps.account.tasks.delete_expired_data_exports",
+        "schedule": timedelta(hours=6),
+        "options": OPERATIONAL,
+    },
     "evaluate-budget-constraints": {
         "task": "smarter.apps.account.tasks.evaluate_budget_constraints",
         "schedule": timedelta(hours=1),

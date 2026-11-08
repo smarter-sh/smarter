@@ -1,17 +1,18 @@
 """
 The base class of the cloud providers.
 
-A cloud provider implements the services that depend on a cloud, :class:`CloudProvider.dns` and
-:class:`CloudProvider.certificates`, and contributes what the cloud-independent services need
+A cloud provider implements the services that depend on a cloud, :class:`CloudProvider.dns`,
+:class:`CloudProvider.certificates` and :class:`CloudProvider.storage`, and contributes what the cloud-independent services need
 from it: the Kubernetes cluster's kubeconfig, the cluster's description, and the cloud resources
 of the cluster, for the inventory.
 
 To add a cloud, e.g. Azure:
 
 1. Add a package, ``smarter.apps.infrastructure.providers.azure``, with a :class:`CloudProvider`
-   whose DNS and certificate services implement the primitives of
-   :class:`~smarter.apps.infrastructure.services.dns.DNSService` and
-   :class:`~smarter.apps.infrastructure.services.certificates.CertificateService`.
+   whose DNS, certificate and storage services implement the primitives of
+   :class:`~smarter.apps.infrastructure.services.dns.DNSService`,
+   :class:`~smarter.apps.infrastructure.services.certificates.CertificateService` and
+   :class:`~smarter.apps.infrastructure.services.storage.StorageService`.
 2. Register it, in :mod:`smarter.apps.infrastructure.providers`, under its
    :class:`~smarter.apps.infrastructure.const.CloudProviders` name.
 3. Set ``SMARTER_CLOUD_PROVIDER=azure``.
@@ -30,6 +31,7 @@ from smarter.apps.infrastructure.services.base import (
 )
 from smarter.apps.infrastructure.services.certificates import CertificateService
 from smarter.apps.infrastructure.services.dns import DNSService
+from smarter.apps.infrastructure.services.storage import StorageService
 from smarter.apps.infrastructure.signals import (
     infrastructure_authenticated,
     infrastructure_authentication_failed,
@@ -100,6 +102,11 @@ class CloudProvider(InfrastructureService):
     @abstractmethod
     def certificates(self) -> CertificateService:
         """The provider's TLS certificate service."""
+
+    @property
+    @abstractmethod
+    def storage(self) -> StorageService:
+        """The provider's private object storage."""
 
     @abstractmethod
     def update_kubeconfig(self) -> bool:
