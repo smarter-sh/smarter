@@ -26,6 +26,15 @@ PromptConfigView Class Reference
     :show-inheritance:
     :no-index:
 
+PromptProviderRequestView Class Reference
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: smarter.apps.prompt.views.detailviews.prompt_provider_request_view
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :no-index:
+
 DefaultLLMClientApiView Class Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: smarter.apps.llmclient.api.v1.views.default

@@ -30,6 +30,10 @@ shared resource management, and advanced logging and usage tracking, ensuring
 secure and efficient operation within your organization's AI ecosystem. The underlying
 API endpoints themselves are provisioned via Smarter's LLM Provider resource module.
 
+To start from a real conversation, download it from the prompt engineering workbench: in sandbox mode, Smarter
+Chat's **Download request** button saves the chat as the JSON request that Smarter sends to the LLM provider,
+which the Prompt Passthrough accepts as it is. See :doc:`/smarter-framework/smarter-chat/features`.
+
 The Prompt Passthrough is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
 ``/dashboard/passthrough/``, while ``smarter_settings.enable_dashboard_passthrough_prompt`` is on.
 ``@smarter/console`` renders ``@smarter/prompt-passthrough``'s ``PromptPassthrough`` inside its frame, with the

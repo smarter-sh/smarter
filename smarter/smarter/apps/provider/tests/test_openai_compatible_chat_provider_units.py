@@ -291,6 +291,32 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         messages = [{"role": "system", "content": module.MARKDOWN_SYSTEM_PROMPT}]
         self.assertEqual(OpenAISmarterClient.add_markdown_system_prompt(messages), messages)
 
+    def test_provider_messages_leave_out_smarter_content(self):
+        """Smarter's own messages and fields are never sent to the LLM provider."""
+        messages = [
+            {"role": "system", "content": "You are a test.", "smarter_is_new": False},
+            {"role": "smarter", "content": "Prompt configuration: ...", "smarter_is_new": False},
+            {"role": "user", "content": "hello", "smarter_is_new": False},
+            {"role": "smarter_error", "content": "it failed", "smarter_is_new": True},
+            {"role": "assistant", "content": "hi", "smarter_is_new": True},
+        ]
+        result = module.provider_messages(messages)
+        self.assertEqual([message["role"] for message in result], ["system", "user", "assistant"])
+        self.assertNotIn("smarter_is_new", str(result))
+        self.assertIn(module.MARKDOWN_SYSTEM_PROMPT, result[0]["content"])
+        # the history is unchanged
+        self.assertEqual(messages[0]["content"], "You are a test.")
+        self.assertIn("smarter_is_new", messages[2])
+
+    def test_provider_messages_pair_tool_calls(self):
+        """A tool reply without its tool call is left out, as OpenAI requires."""
+        messages = [
+            {"role": "user", "content": "hello"},
+            {"role": "tool", "content": "orphan", "tool_call_id": "call_1"},
+        ]
+        result = module.provider_messages(messages)
+        self.assertEqual([message["role"] for message in result], ["system", "user"])
+
     def test_messages_must_be_a_list(self):
         """The request messages need a message list."""
         self.client._messages = None

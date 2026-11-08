@@ -260,6 +260,17 @@ class PromptHelper(SmarterRequestMixin):
         return self._llmclient
 
     @property
+    def latest_prompt_history(self) -> Optional[PromptHistory]:
+        """
+        Get the newest PromptHistory row of the current prompt session: its latest prompt.
+
+        :returns: The newest PromptHistory, or None if the session has sent no prompt.
+        :rtype: Optional[PromptHistory]
+        """
+        rec = PromptHistory.objects.filter(prompt=self.prompt).order_by("-created_at").first()
+        return rec
+
+    @property
     def prompt_history(self) -> Union[models.QuerySet, list]:
         """
         Get the most recent prompt history for the current prompt session.
@@ -267,7 +278,7 @@ class PromptHelper(SmarterRequestMixin):
         :returns: The most recent PromptHistory instance's prompt_history field, or an empty list if none found.
         :rtype: Union[models.QuerySet, list]
         """
-        rec = PromptHistory.objects.filter(prompt=self.prompt).order_by("-created_at").first()
+        rec = self.latest_prompt_history
         return rec.prompt_history if rec else []
 
     @property
