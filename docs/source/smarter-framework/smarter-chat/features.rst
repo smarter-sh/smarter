@@ -122,7 +122,9 @@ italics, strikethrough, lists, tables, block quotes, inline code, fenced code bl
 images. A line break is a line break, as in any chat. The LLM is told so: Smarter adds a note to
 the system prompt of each request it sends to an OpenAI-compatible provider, which is not saved in
 the chat session's history. Your own messages are displayed as you typed them, except for their
-links and images.
+links and images, and for data, such as JSON, which is displayed as the LLM's is. Each paragraph
+reads left to right or right to left by its own first letters, so a reply in Arabic or Hebrew is
+right-aligned, and the message box does the same as you type. Code always reads left to right.
 
 Links and images
   Raw html is displayed as text. ``![alt](url)`` is an image, scaled to fit its chat bubble, which
@@ -131,17 +133,20 @@ Links and images
   base64 ``png``, ``jpeg``, ``gif`` or ``webp`` data urls, for example from a tool that generates
   them. Anything else, such as a ``javascript:`` url, stays as text.
 
-SVG graphics and audio
+SVG graphics, audio and video
   An svg that the LLM writes as markup, either on lines of its own or as a fenced code block (whose
   language is ``svg``, ``xml``, ``html`` or none) that holds only the svg, is drawn as the graphic,
   in a code block whose **Code** button shows its source instead, and **Image** shows the graphic
   again. The graphic is sanitized first, then displayed as an image, in which browsers never run
   scripts. Other raw html is still displayed as text. ``![alt](url)`` whose url is an audio file (``mp3``, ``wav``,
-  ``ogg``, ``oga``, ``m4a``, ``flac`` or ``opus``), or a base64 audio data url, is an audio player.
+  ``ogg``, ``oga``, ``m4a``, ``flac`` or ``opus``), or a base64 audio data url, is an audio player,
+  and one whose url is a video file (``mp4``, ``webm``, ``mov``, ``m4v`` or ``ogv``), or a base64
+  video data url, is a video player.
 
 Downloads
-  Images, svg graphics, audio and Mermaid diagrams have a **Download** button. An svg or a diagram is
-  saved as an ``.svg`` file, and an image or audio clip under its own file name. Media on another
+  Images, svg graphics, audio, video, Mermaid diagrams and Smarter manifests have a **Download**
+  button. An svg or a diagram is saved as an ``.svg`` file, a manifest as ``<metadata.name>.yaml``,
+  and an image, audio or video clip under its own file name. Media on another
   site is saved as a file if that site's server allows it (CORS), and otherwise opens in a new tab,
   from which you can save it.
 
@@ -149,14 +154,36 @@ Code
   Fenced code blocks are syntax highlighted, in GitHub's dark theme, with a header that names the
   language and a **Copy** button. Highlighting covers the common languages (Python, JavaScript,
   TypeScript, Bash, JSON, YAML, SQL, Go, Rust, Java, C, C++, C#, HTML, CSS and more), plus
-  Dockerfile, nginx and PowerShell.
+  Dockerfile, nginx and PowerShell. A code block of more than 25 lines shows its first lines,
+  fading out, and a **Show all lines** button that shows the rest, and collapses it again.
+
+Data
+  A message that is only data, whether yours, the LLM's or a tool's, is displayed as data. Data
+  with anything else around it, such as "Here it is:", stays as markdown.
+
+  - **JSON:** an object or an array is pretty printed, indented by two spaces, in a highlighted
+    ``json`` code block. So is a JSON string that holds one, such as ``"{\"course_code\": \"CS210\"}"``,
+    which tools often return, and an item of a markdown list that is only JSON, such as an example
+    prompt for an LLMClient that expects JSON, in its place in the list. A JSON string, number,
+    ``true``, ``false`` or ``null`` on its own stays as text.
+  - **Smarter manifests:** a YAML document with top-level ``apiVersion`` and ``kind`` keys, on its
+    own or in a ``yaml`` code block, is a highlighted ``yaml`` code block with a **Download** button.
+  - **CSV and TSV:** rows of comma or tab separated values, with a header row and at least two rows
+    of data, are a table. Commas are common in prose, so CSV needs three or more columns, or two of
+    which one is numbers, and no line may end with punctuation.
+
+Tool calls
+  In sandbox mode, an assistant message that only calls tools is displayed, as the tools' responses
+  are, as **Called** and the tool's name, which opens to show the call's arguments, pretty printed.
+  Production mode hides it.
 
 Math
   Math, written in LaTeX, is typeset by `KaTeX <https://katex.org>`__: ``\( ... \)`` is inline math,
   and ``\[ ... \]`` or ``$$ ... $$`` is an equation displayed on a line of its own, which scrolls
   sideways if it is wider than its chat bubble. A single dollar sign is not math, so prices stay as
   text. Math in inline code and code blocks stays as code, and LaTeX that KaTeX cannot typeset, such
-  as an equation that is still streaming, is displayed as its source. Screen readers read the
+  as an equation that the LLMClient's max tokens cut off, is displayed as its source. A code block
+  that was cut off is code to the end of the reply. Screen readers read the
   equation's MathML.
 
 Diagrams
