@@ -15,6 +15,9 @@ badge), and these items:
   :doc:`../smarter-dashboard/views/authentication/profile_image`.
 - **Change Profile**, for a user with more than one UserProfile, below.
 - **Welcome Tour**, which opens the :doc:`welcome dialog <welcome>`.
+- **Download My Data**, which opens a dialog that emails the user a zip file of the manifest of every
+  resource that they own, and shows its progress, step by step. See
+  :doc:`../smarter-dashboard/views/authentication/data_export`.
 - **Sign Out**, which posts to the account api, ``/api/web/account/logout/``, then goes to the sign-in
   page. An anonymous request gets **Sign In**, and the Language item.
 

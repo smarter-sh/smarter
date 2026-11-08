@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 13:39+0000\n"
+"POT-Creation-Date: 2026-11-08 14:58+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Latin American Spanish\n"
@@ -103,6 +103,29 @@ msgstr "Las contraseñas no coinciden."
 #: smarter/apps/account/api/web/views.py
 msgid "Your password has been changed. Sign in with it."
 msgstr "Tu contraseña ha cambiado. Inicia sesión con ella."
+
+#: smarter/apps/account/data_export.py
+msgid "Your account has no email address to send the download link to."
+msgstr ""
+"Tu cuenta no tiene una dirección de correo a la que enviar el enlace de "
+"descarga."
+
+#: smarter/apps/account/data_export.py
+#, python-format
+msgid ""
+"You can download your data %(count)s times a day. Please try again tomorrow."
+msgstr ""
+"Puedes descargar tus datos %(count)s veces al día. Vuelve a intentarlo "
+"mañana."
+
+#: smarter/apps/account/data_export.py
+#: smarter/templates/account/email/data-export.html
+msgid "Your Smarter data is ready to download"
+msgstr "Tus datos de Smarter están listos para descargar"
+
+#: smarter/apps/account/data_export.py
+msgid "The email with your download link could not be sent."
+msgstr "No se pudo enviar el correo con tu enlace de descarga."
 
 #: smarter/apps/account/email_links.py
 msgid "Invalid link. The user does not exist."
@@ -277,6 +300,117 @@ msgstr "Restablecer contraseña"
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
 msgstr "¡O habla con una persona!"
+
+#: smarter/templates/account/email/data-export.html
+msgid "Download My Data"
+msgstr "Descargar mis datos"
+
+#: smarter/templates/account/email/data-export.html
+msgid "Your data is ready"
+msgstr "Tus datos están listos"
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid "One manifest, zipped into a single file."
+msgid_plural ""
+"%(counter)s manifests, one per resource, zipped into a single file."
+msgstr[0] "Un manifiesto, comprimido en un solo archivo."
+msgstr[1] ""
+"%(counter)s manifiestos, uno por recurso, comprimidos en un solo archivo."
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid "Hi %(first_name)s,"
+msgstr "Hola, %(first_name)s:"
+
+#: smarter/templates/account/email/data-export.html
+msgid "Hi,"
+msgstr "Hola:"
+
+#: smarter/templates/account/email/data-export.html
+msgid ""
+"You asked for a copy of your data, and here it is: the manifest of every "
+"resource that you own, in every account that you belong to, as YAML. Each "
+"one is exactly what <code>smarter describe</code> prints, so you can keep "
+"it, read it, put it under version control, or apply it to any Smarter "
+"platform with <code>smarter apply -f</code>."
+msgstr ""
+"Pediste una copia de tus datos, y aquí la tienes: el manifiesto de cada "
+"recurso que te pertenece, en cada cuenta de la que formas parte, en YAML. "
+"Cada uno es exactamente lo que imprime <code>smarter describe</code>, así "
+"que puedes guardarlo, leerlo, ponerlo bajo control de versiones o aplicarlo "
+"en cualquier plataforma Smarter con <code>smarter apply -f</code>."
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid "Download your data (%(size)s)"
+msgstr "Descargar tus datos (%(size)s)"
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid ""
+"The link works for %(hours)s hours. After that, the file is deleted, and you "
+"can ask for a new one from the user menu."
+msgstr ""
+"El enlace funciona durante %(hours)s horas. Después, el archivo se elimina, "
+"y puedes pedir uno nuevo desde el menú de usuario."
+
+#: smarter/templates/account/email/data-export.html
+msgid "What's inside"
+msgstr "Qué contiene"
+
+#: smarter/templates/account/email/data-export.html
+msgid ""
+"A README, and one YAML file per resource, at <code>&lt;account number&gt;/"
+"&lt;kind&gt;/&lt;name&gt;.yaml</code>."
+msgstr ""
+"Un README y un archivo YAML por recurso, en <code>&lt;account number&gt;/"
+"&lt;kind&gt;/&lt;name&gt;.yaml</code>."
+
+#: smarter/templates/account/email/data-export.html
+msgid ""
+"Secrets' values are redacted, because this email could be forwarded. Set "
+"them again before you apply a Secret's manifest."
+msgstr ""
+"Los valores de los secretos están ocultos, porque este correo podría "
+"reenviarse. Vuelve a establecerlos antes de aplicar el manifiesto de un "
+"secreto."
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid "One resource could not be exported. The README says which, and why."
+msgid_plural ""
+"%(counter)s resources could not be exported. The README says which, and why."
+msgstr[0] "Un recurso no se pudo exportar. El README indica cuál y por qué."
+msgstr[1] ""
+"%(counter)s recursos no se pudieron exportar. El README indica cuáles y por "
+"qué."
+
+#: smarter/templates/account/email/data-export.html
+#, python-format
+msgid ""
+"Didn't ask for this? Someone signed in to your account and asked for your "
+"data. Change your password, and tell the platform's administrator at <a "
+"href=\"mailto:%(support_email)s\" style=\"color:#7E8299; font-"
+"weight:600\">%(support_email)s</a>."
+msgstr ""
+"¿No lo pediste? Alguien inició sesión en tu cuenta y solicitó tus datos. "
+"Cambia tu contraseña y avisa al administrador de la plataforma en <a "
+"href=\"mailto:%(support_email)s\" style=\"color:#7E8299; font-"
+"weight:600\">%(support_email)s</a>."
+
+#: smarter/templates/account/email/data-export.html
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
+#, python-format
+msgid ""
+"%(product_name)s is free, open source software, licensed under the <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
+msgstr ""
+"%(product_name)s es software libre y de código abierto, con licencia <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
 
 #: smarter/templates/account/email/slack-invitation.html
 msgid "The Smarter Project on Slack"
@@ -477,18 +611,6 @@ msgstr ""
 "600\">%(support_email)s</a>, o visita <a href=\"%(contact_url)s\" "
 "rel=\"noopener\" target=\"_blank\" style=\"font-weight: 600\">mi sitio web</"
 "a>."
-
-#: smarter/templates/account/email/slack-invitation.html
-#: smarter/templates/account/email/welcome.html
-#, python-format
-msgid ""
-"%(product_name)s is free, open source software, licensed under the <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
-msgstr ""
-"%(product_name)s es software libre y de código abierto, con licencia <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
 
 #: smarter/templates/account/email/unsubscribe-footer.html
 msgid ""
@@ -2087,9 +2209,6 @@ msgstr "Cerrar"
 #~ msgid "Username"
 #~ msgstr "Nombre de usuario"
 
-#~ msgid "Your data remains private."
-#~ msgstr "Tus datos siguen siendo privados."
-
 #~ msgid "Email address"
 #~ msgstr "Dirección de correo electrónico"
 
@@ -2578,9 +2697,6 @@ msgstr "Cerrar"
 
 #~ msgid "In Settings, Smarter Chat, enter this LLMClient's url."
 #~ msgstr "En Ajustes, Smarter Chat, introduce la url de este LLMClient."
-
-#~ msgid "Download"
-#~ msgstr "Descargar"
 
 #~ msgid "Guide"
 #~ msgstr "Guía"

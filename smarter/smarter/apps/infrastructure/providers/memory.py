@@ -13,10 +13,13 @@ tests exercise the service layer, and its signals, without reaching real infrast
     configure_provider(lambda: provider)
     provider.dns.add_zone("example.com")
     provider.certificates.issue_all = True
+    provider.storage.objects  # the private objects that were saved, by key
 """
 
 import copy
+from dataclasses import dataclass
 from typing import Any, Optional
+from urllib.parse import quote
 
 from smarter.apps.infrastructure.cluster_health import ClusterHealth
 from smarter.apps.infrastructure.const import CertificateStatus, CloudProviders
@@ -31,6 +34,7 @@ from smarter.apps.infrastructure.services.dns import (
     DNSZone,
     normalize_name,
 )
+from smarter.apps.infrastructure.services.storage import StorageService
 from smarter.lib.typing import SmarterDictType
 
 from .base import CloudProvider
@@ -158,6 +162,60 @@ class InMemoryCertificateService(CertificateService):
         self.certificates.pop(certificate_id, None)
 
 
+@dataclass
+class StoredObject:
+    """An object that :class:`InMemoryStorageService` saved."""
+
+    content: bytes
+    content_type: str
+
+
+class InMemoryStorageService(StorageService):
+    """
+    Private objects in memory, in :attr:`objects`.
+
+    Its presigned urls are fake: they name the object and when the url expires, but download nothing.
+    """
+
+    def __init__(self, provider: "InMemoryProvider", **kwargs):
+        super().__init__(provider_name=provider.provider_name, **kwargs)
+        self.provider = provider
+        self.objects: dict[str, StoredObject] = {}
+        """The objects, by key."""
+
+        self.fail: Optional[str] = None
+        """Set to make every operation fail with this error."""
+
+    @property
+    def ready(self) -> bool:
+        """Whether the in-memory provider is ready."""
+        return self.provider.ready
+
+    @property
+    def bucket(self) -> str:
+        """The fixed bucket ``memory-exports``."""
+        return "memory-exports"
+
+    def _check(self) -> None:
+        if self.fail:
+            raise RuntimeError(self.fail)
+
+    def _put_object(self, key: str, content: bytes, content_type: str) -> None:
+        self._check()
+        self.objects[key] = StoredObject(content=content, content_type=content_type)
+
+    def _presigned_url(self, key: str, expires_in: int, filename: Optional[str]) -> str:
+        self._check()
+        url = f"https://storage.memory.example/{self.bucket}/{quote(key)}?expires_in={expires_in}"
+        if filename:
+            url += f"&filename={quote(filename)}"
+        return url
+
+    def _delete_object(self, key: str) -> None:
+        self._check()
+        self.objects.pop(key, None)
+
+
 class InMemoryProvider(CloudProvider):
     """
     A cloud provider in memory.
@@ -172,6 +230,7 @@ class InMemoryProvider(CloudProvider):
         self._ready = ready
         self._dns = InMemoryDNSService(self)
         self._certificates = InMemoryCertificateService(self, self._dns)
+        self._storage = InMemoryStorageService(self)
         self.kubeconfig_updates = 0
         self.cluster_info: SmarterDictType = {
             "health": {"issues": []},
@@ -227,6 +286,11 @@ class InMemoryProvider(CloudProvider):
         """The in-memory certificate service."""
         return self._certificates
 
+    @property
+    def storage(self) -> InMemoryStorageService:
+        """The in-memory private object storage."""
+        return self._storage
+
     def update_kubeconfig(self) -> bool:
         """
         Count the call in :attr:`kubeconfig_updates`, rather than write a kubeconfig.
@@ -271,4 +335,10 @@ class InMemoryProvider(CloudProvider):
         return copy.deepcopy(self.cluster_resources)
 
 
-__all__ = ["InMemoryCertificateService", "InMemoryDNSService", "InMemoryProvider"]
+__all__ = [
+    "InMemoryCertificateService",
+    "InMemoryDNSService",
+    "InMemoryProvider",
+    "InMemoryStorageService",
+    "StoredObject",
+]
