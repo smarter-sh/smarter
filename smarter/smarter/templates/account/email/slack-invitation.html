@@ -1,4 +1,4 @@
-{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
+{% load i18n smarter_email %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
   The Slack invitation email, which account contacts are sent two days after the welcome email.
   See smarter.apps.account.models.SLACK_INVITATION_EMAIL. Mail clients strip <style> blocks,
   scripts and external stylesheets, so the layout is tables with inline styles, and the images
@@ -28,7 +28,7 @@
             <td align="center" style="padding:36px 40px 28px 40px">
               <a href="{{ branding.smarter_project_website_url }}" rel="noopener" target="_blank">
                 <img alt="{{ branding.smarter_product_name }}" height="60"
-                  src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}" style="height:60px; border:0" />
+                  src="{% smarter_logo_url %}" style="height:60px; border:0" />
               </a>
             </td>
           </tr>
@@ -37,7 +37,7 @@
           <tr>
             <td align="center" style="background-color:#4A154B; padding:40px 40px 36px 40px; text-align:center">
               <img alt="Slack" width="56" height="56"
-                src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-slack.png' %}"
+                src="{% absolute_static 'assets/media/email/icon-slack.png' %}"
                 style="width:56px; height:56px; border:0; background-color:#FFFFFF; border-radius:14px; padding:8px" />
               <p style="margin:22px 0 8px 0; color:#ECB22E; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase">
                 {% translate "The Smarter Project on Slack" %}</p>
@@ -55,7 +55,7 @@
           <tr>
             <td align="center" style="padding:32px 40px 8px 40px">
               <img alt="" width="260"
-                src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/unitedpalms-1/12.png' %}"
+                src="{% absolute_static 'assets/media/illustrations/unitedpalms-1/12.png' %}"
                 style="width:260px; max-width:70%; height:auto; border:0" />
             </td>
           </tr>
@@ -96,7 +96,7 @@
                 <tr>
                   <td valign="top" width="110" style="padding:24px 0 24px 22px">
                     <img alt="" width="96"
-                      src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/sigma-1/13.png' %}"
+                      src="{% absolute_static 'assets/media/illustrations/sigma-1/13.png' %}"
                       style="width:96px; height:auto; border:0" />
                   </td>
                   <td valign="top" style="padding:24px 24px 24px 16px; font-size:14px; line-height:1.6; color:#3F4254">
@@ -195,7 +195,7 @@
                   </td>
                   <td valign="top" width="110" style="padding:24px 22px 8px 0">
                     <img alt="" width="96"
-                      src="{{ environment_platform_domain }}{% static 'assets/media/illustrations/sigma-1/20.png' %}"
+                      src="{% absolute_static 'assets/media/illustrations/sigma-1/20.png' %}"
                       style="width:96px; height:auto; border:0" />
                   </td>
                 </tr>
@@ -255,11 +255,11 @@
           <tr>
             <td align="center" style="text-align:center; padding:10px 0 6px 0">
               <a href="{{ branding.url_linkedin }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
-                <img alt="LinkedIn" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-linkedin.png' %}" style="height:24px; border:0" /></a>
+                <img alt="LinkedIn" height="24" src="{% absolute_static 'assets/media/email/icon-linkedin.png' %}" style="height:24px; border:0" /></a>
               <a href="{{ branding.url_twitter }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
-                <img alt="X" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-twitter.png' %}" style="height:24px; border:0" /></a>
+                <img alt="X" height="24" src="{% absolute_static 'assets/media/email/icon-twitter.png' %}" style="height:24px; border:0" /></a>
               <a href="{{ branding.url_slack }}" target="_blank" rel="noopener" style="text-decoration:none">
-                <img alt="Slack" height="24" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-slack.png' %}" style="height:24px; border:0" /></a>
+                <img alt="Slack" height="24" src="{% absolute_static 'assets/media/email/icon-slack.png' %}" style="height:24px; border:0" /></a>
             </td>
           </tr>
           <tr>
