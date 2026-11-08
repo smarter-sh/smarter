@@ -31,6 +31,35 @@ To run the test suite locally, use the following command from the project root:
   # or
   make test
 
+Running the Suite in Shards
+---------------------------
+
+CI splits the suite into eight shards, each on a runner of its own: every runner sets
+``SMARTER_TEST_SHARD=<n>/8``, and :mod:`smarter.lib.unittest.runner` keeps that shard's share of
+the TestCases. To run one shard locally, pass the same variable:
+
+.. code-block:: console
+
+  docker exec -e SMARTER_TEST_SHARD=3/8 smarter-api bash -c "python manage.py test smarter"
+
+Several shards can't share one Docker stack. The tests write real rows without a rollback, sweep
+every test account in their teardown, clear the shared Redis cache, and send requests and Celery
+tasks to the one dev server and its workers, so two shards in one stack break each other's
+tests. ``make docker-test-sharded`` gives each shard a stack of its own, as CI gives each a runner:
+
+.. code-block:: console
+
+  make docker-test-sharded              # 8 shards
+  make docker-test-sharded SHARDS=4
+
+It dumps the local database once, starts one Compose project per shard from
+``docker-compose.shard.yml`` (MariaDB in memory, Redis, the api and the two workers, without
+Celery Beat), loads the dump into each, runs every shard at once, and prints each shard's result
+and every failing test. The logs are in ``.test-shards/``. The stacks are removed afterwards
+(``scripts/run_test_shards.py --keep`` leaves them running). It needs the ``smarter`` image
+(``make build``), ``smarter-mariadb`` running, and about 4 GB of Docker's memory per shard: set
+Docker Desktop's memory, and CPUs, to match.
+
 Infrastructure Tests
 --------------------
 

@@ -177,8 +177,18 @@ shards on eight runners, each with `SMARTER_TEST_SHARD=<n>/8` (see
 `smarter/lib/unittest/runner.py`: every shard discovers the whole suite, and
 TestCases are never split). The `python-report` job combines the shards'
 coverage data and uploads one `coverage.xml` to Codecov. To reproduce one
-shard locally, pass the same variable to `docker exec -e`. A full run takes a
-long time, so to raise coverage efficiently:
+shard locally, pass the same variable to `docker exec -e`.
+
+For a full local run, `make docker-test-sharded` (`SHARDS=8` by default,
+`scripts/run_test_shards.py`) runs every shard at once, each in a Docker stack
+of its own (`docker-compose.shard.yml`, a copy of the local database, no Beat),
+and prints each shard's result and the failing tests; logs in `.test-shards/`.
+Never run two shards in the one dev stack: the tests share its database,
+Redis, dev server and workers without rollback, and break each other. It needs
+about 4 GB of Docker's memory per shard. Run it in the background, like any
+long suite.
+
+A full run takes a long time, so to raise coverage efficiently:
 
 1. Work from an existing report (`coverage report -m` output) rather than
    re-running the suite.

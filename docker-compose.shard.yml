@@ -1,0 +1,82 @@
+---
+#------------------------------------------------------------------------------
+# One shard of the Python test suite, for make test-sharded (scripts/run_test_shards.py).
+#
+# The tests share their database, Redis, dev server and Celery workers, without
+# rollback, so two shards can't run in one stack: each gets a stack of its own,
+# as each of CI's shards gets a runner. scripts/run_test_shards.py starts one
+# Compose project per shard (smarter-shard-<n>) from this file, loads a copy of
+# the local database into it, and runs SMARTER_TEST_SHARD=<n>/<shards> in its api.
+#
+# It differs from docker-compose.yml in what would collide between stacks: no
+# container names, no host ports, and no bind-mounted database. The services keep
+# docker-compose.yml's names, which are the hostnames that settings/base.py uses,
+# so each stack's api and workers reach its own MariaDB and Redis on the project's
+# own network. There is no Celery Beat: its scheduled tasks would change the rows
+# of running tests. The image is the one make build builds.
+#------------------------------------------------------------------------------
+services:
+  smarter-mariadb:
+    mem_limit: 2g
+    cpus: 0.5
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: smarter
+      MYSQL_DATABASE: smarter
+      MYSQL_USER: smarter
+      MYSQL_PASSWORD: smarter
+    # in memory: a shard's database lives only as long as its run.
+    tmpfs:
+      - /var/lib/mysql:size=1g
+
+  smarter-redis:
+    cpus: 0.25
+    mem_limit: 1g
+    image: redis:latest
+    command: redis-server --requirepass smarter
+
+  smarter-api:
+    mem_limit: 4g
+    cpus: 1
+    user: smarter_user
+    image: smarter
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357 --lifespan off
+    depends_on:
+      - smarter-mariadb
+      - smarter-redis
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=app
+      - SMARTER_MYSQL_ROOT_PASSWORD=smarter
+
+  smarter-worker:
+    mem_limit: 2g
+    cpus: 0.5
+    user: smarter_user
+    image: smarter
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
+    depends_on:
+      - smarter-mariadb
+      - smarter-redis
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
+
+  smarter-worker-infrastructure:
+    mem_limit: 2g
+    cpus: 0.5
+    user: smarter_user
+    image: smarter
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q infrastructure_celery_task_queue -E -n infrastructure@%h
+    depends_on:
+      - smarter-mariadb
+      - smarter-redis
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker

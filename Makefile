@@ -25,7 +25,7 @@ include .env
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
-	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
+	docker-check docker-init docker-shell docker-build docker-run docker-test docker-test-sharded docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
@@ -236,6 +236,15 @@ docker-test:
 	docker exec smarter-api bash -c "python manage.py test smarter"; status=$$?; \
 	docker start smarter-beat > /dev/null; \
 	exit $$status
+
+# The Python tests in SHARDS shards at once, as CI splits them, each in a Docker stack of its
+# own (docker-compose.shard.yml), with a copy of the local database. The tests can't share one
+# stack: they write rows without rollback, and share Redis, the dev server and the workers.
+# Each stack needs about 4 GB of Docker's memory. Logs go to .test-shards/. Needs the smarter
+# image (make build) and smarter-mariadb running. See scripts/run_test_shards.py.
+SHARDS ?= 8
+docker-test-sharded:
+	python3 -I scripts/run_test_shards.py --shards $(SHARDS)
 
 docker-prune:
 	@echo ""
@@ -515,6 +524,7 @@ help:
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
+	@echo 'docker-test-sharded    - Run them in SHARDS (default 8) Docker stacks at once'
 	@echo 'docker-prune           - Remove unused Docker objects and clean up Docker artifacts'
 	@echo '<************************** Python **************************>'
 	@echo 'check-python           - Verify Python 3.14 is installed'
