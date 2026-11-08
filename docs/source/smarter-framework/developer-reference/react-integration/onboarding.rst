@@ -49,11 +49,16 @@ The package is a library, built into its ``dist`` folder like ``@smarter/common`
   to close.
 
 A hint finds what it points to by a ``data-smarter-onboarding`` attribute, e.g.
-``data-smarter-onboarding="sidebar-llmclients"`` on the sidebar's link in
-``templates/dashboard/sidebar.html``, or by a css selector. Each console page
-holds the hints' state as JSON, which ``templates/dashboard/base.html`` writes
-with ``templates/react/onboarding.html`` for signed-in users, so that a hint
-needs no request before it shows. The rings and notes use the welcome dialog's
+``data-smarter-onboarding="sidebar-llmclients"`` on the sidebar's LLM Clients
+link, which the console's ``src/lib/sidebar.ts`` marks and
+``src/components/Sidebar.tsx`` renders, or by a css selector. The hints' state,
+whether they are on and which ones the user has seen, is part of the web
+console's session, ``GET /api/web/session/``, under ``onboarding``, so that a
+hint needs no request of its own before it shows. ``onboardingContext()``, in the
+console's ``src/lib/welcome.ts``, turns it into the package's
+``OnboardingContext``, with the url of the onboarding seen api,
+``POST /api/web/dashboard/onboarding/seen/``, and the console passes it as a prop
+to the welcome dialog, the resource lists and the workbench. The rings and notes use the welcome dialog's
 orange accent and its warm gradient, with a Keen icon badge, an arrow that
 points at the element, and, in a tour, a progress bar. They follow the light
 and dark themes, and keep still for users who prefer reduced motion.
@@ -75,12 +80,5 @@ Model
 -----
 
 .. autoclass:: smarter.apps.dashboard.models.OnboardingHint
-   :members:
-   :no-index:
-
-Template Tags
--------------
-
-.. automodule:: smarter.apps.dashboard.templatetags.react_onboarding
    :members:
    :no-index:

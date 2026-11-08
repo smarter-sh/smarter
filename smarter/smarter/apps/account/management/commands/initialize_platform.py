@@ -3,6 +3,7 @@ import logging
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from smarter.apps.dashboard.views.console_app import mark_console_uploaded
 from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
     STACKADEMY_REPOSITORY_URL,
@@ -110,6 +111,19 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         fatal: list[str] = []
 
+        if smarter_settings.static_files_on_cdn:
+            try:
+                # the static files, the web console's scripts among them, to the environment's S3 bucket, which
+                # its CDN serves. It adds and replaces files, and deletes none, so a page that a browser opened
+                # before this deployment keeps loading its scripts. See smarter.lib.django.static_storage.
+                call_command("collectstatic", interactive=False, verbosity=0)
+                # only now do the console's pages point at the CDN: until then, the server serves this build.
+                mark_console_uploaded()
+            except (Exception, SystemExit) as e:
+                # fatal: this deployment's pages would load scripts that the CDN doesn't have.
+                logger.error("Failed to upload the static files to the CDN's bucket: %s", e)
+                fatal.append("collectstatic")
+
         try:
             call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
         except (Exception, SystemExit) as e:
@@ -216,6 +230,13 @@ class Command(SmarterCommand):
             )  # if AWS is configured then Verify Route53 Hosted Zones and DNS records
         except (Exception, SystemExit) as e:
             logger.error("Failed to verify DNS configuration: %s", e)
+
+        try:
+            # the api's Kubernetes Service was renamed to smarter-api: point every deployed LLMClient's ingress
+            # at it, before a later release removes the old Service. It does nothing without Kubernetes.
+            call_command("retarget_llmclient_ingresses")
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to retarget the LLMClient ingresses: %s", e)
 
         try:
             # read-only: record the Kubernetes cluster's resources in the ledger now, rather than

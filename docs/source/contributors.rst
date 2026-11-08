@@ -29,7 +29,7 @@ GitHub Repositories
      - `smarter-deploy (DockerHub) <https://github.com/smarter-sh/smarter-deploy>`_
    * - `smarter-nodejs (npm) <https://github.com/smarter-sh/smarter-nodejs>`_
      - `smarter-golang (Go) <https://github.com/smarter-sh/smarter-golang>`_
-   * - `smarter.sh-chat (npm, part of smarter) <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`_
+   * - `smarter-console (the web console, and smarter.sh-chat on npm) <https://github.com/smarter-sh/smarter-console>`_
      - some day™ 😄
 
 Core Contributors

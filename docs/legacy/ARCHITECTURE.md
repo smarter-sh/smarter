@@ -58,7 +58,7 @@ Most of Smarter is developed using Python's Django web framework with the follow
 
 ## ReactJS chat application
 
-The chat app in the dashboard sandbox is Smarter Chat, an NPM React component, [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat). Its source is in this repository, in [smarter/react/packages/smarter.sh-chat](../../smarter/react/packages/smarter.sh-chat). It used to be managed in its own repository, smarter-sh/smarter-chat, which is now archived.
+The chat app in the dashboard sandbox is Smarter Chat, an NPM React component, [@smarter.sh/ui-chat](https://www.npmjs.com/package/@smarter.sh/ui-chat). Its source is in the web console's repository, in [smarter-console/packages/smarter.sh-chat](https://github.com/smarter-sh/smarter-console/tree/main/packages/smarter.sh-chat). It was managed in its own repository, smarter-sh/smarter-chat, now archived, and then in this repository, until the web console moved to its own.
 
 This React component is built substantially with [Vite.js](https://github.com/smarter-sh/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
 

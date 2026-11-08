@@ -138,7 +138,7 @@
                       <!--end:Text-->
                       <!--begin:Media-->
                       <div style="margin:0 60px 38px 60px">
-                        <img alt="" style="width:100%" src="{{ environment_platform_domain }}{% static 'assets/media/email/img-2.png' %}" />
+                        <img alt="" style="width:100%" src="{{ branding.smarter_project_cdn_url }}/images/smarter-welcome-email.png" />
                       </div>
                       <!--end:Media-->
                       <!--begin:Text-->
@@ -250,8 +250,8 @@
                       <!--end:Text-->
                       <!--begin:Text-->
                       <div class="body-text">
-                        <video playsinline controls width="100%" style="object-fit: cover;" preload="auto" poster="https://cdn.smarter.sh/videos/about-poster.png">
-                          <source src="https://cdn.smarter.sh/videos/about.mp4" type="video/mp4">
+                        <video playsinline controls width="100%" style="object-fit: cover;" preload="auto" poster="{{ branding.smarter_project_cdn_url }}/videos/about-poster.png">
+                          <source src="{{ branding.smarter_project_cdn_url }}/videos/about.mp4" type="video/mp4">
                           {% translate "Sorry, your browser doesn't support embedded videos." %}
                         </video>
                       </div>

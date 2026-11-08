@@ -78,6 +78,9 @@ env:
   SMARTER_ENABLE_MANIFEST_DROPZONE: true
   SMARTER_ENABLE_PROXY: true
   SMARTER_ENABLE_VECTORSTORE: true
+  # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
+  # pages load them from its CDN, cdn.<platform>. It needs AWS. false: the server serves them.
+  SMARTER_STATIC_FILES_ON_CDN: false
   # The Smarter Extension registry's base64 Ed25519 public key. This is a
   # public key, not a secret. An empty value disables the registry.
   SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
@@ -258,6 +261,14 @@ app:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  # The api's Deployment, Service, HorizontalPodAutoscaler and PodDisruptionBudget are named
+  # <appName>-api. While legacyName is enabled, each also has a twin under the old name,
+  # <appName>, and both Services reach both Deployments' pods, so that renaming them drops no
+  # request, and the Ingresses that still name the old Service keep working. Turn it off in the
+  # release after the rename, once smarter-infrastructure's ingress and every LLMClient's ingress
+  # name <appName>-api. See smarter.apiNames in _helpers.tpl.
+  legacyName:
+    enabled: true
 
 names:
   mysqlName: mysql
@@ -752,7 +763,7 @@ alloy:
           }
           selectors {
             role  = "pod"
-            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
+            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
           }
         }
 

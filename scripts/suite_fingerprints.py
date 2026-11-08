@@ -36,13 +36,9 @@ SUITES: dict[str, tuple[str, ...]] = {
         "smarter/manage.py",
         "smarter/requirements",
         "smarter/.coveragerc",
-        # The few files in smarter/react that the Python tests read: the console's messages
-        # (update_console_messages), the onboarding app's constants (test_onboarding), and the
-        # files that name the built pages that the console's templates load.
-        "smarter/react/i18n",
-        "smarter/react/packages/smarter-onboarding/src/lib/const.ts",
-        "smarter/react/packages/*/package.json",
-        "smarter/react/packages/*/vite.config.ts",
+        # The web console's pinned release, which the tests' containers install, and its installer.
+        "smarter-console-version.txt",
+        "scripts/fetch_console.py",
         # The markdown pages that the docs app serves. changelogs/CHANGELOG.md is left out:
         # every release rewrites it, its test checks only that the page loads, and with it every
         # pull request from alpha to main would run the whole suite again.
@@ -55,13 +51,6 @@ SUITES: dict[str, tuple[str, ...]] = {
         "Makefile",
         ".env.example",
         "package.json",
-        ".github/workflows/test.yml",
-        ".github/actions/react-build",
-        "scripts/suite_fingerprints.py",
-    ),
-    # smarter/react is self-contained: its tests read nothing outside it.
-    "react": (
-        "smarter/react",
         ".github/workflows/test.yml",
         "scripts/suite_fingerprints.py",
     ),
@@ -77,7 +66,7 @@ def path_matches(path: str, pattern: str) -> bool:
     Whether a file's path is one of a pattern's files.
 
     :param path: A path relative to the repository's root, e.g. ``smarter/smarter/urls.py``.
-    :param pattern: A file, a folder, or a glob, e.g. ``smarter/react/packages/*/package.json``.
+    :param pattern: A file, a folder, or a glob, e.g. ``smarter/requirements/*.txt``.
     :returns: True when the path is the file, is in the folder, or matches the glob.
     """
     is_glob = False

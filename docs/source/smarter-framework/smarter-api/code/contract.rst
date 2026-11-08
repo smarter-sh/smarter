@@ -19,6 +19,9 @@ API Contract
 .. automodule:: smarter.apps.api.v1.contract.openapi
     :members:
 
+.. automodule:: smarter.apps.api.v1.contract.views
+    :members:
+
 .. automodule:: smarter.apps.account.contract.models
     :members:
     :undoc-members:

@@ -54,6 +54,9 @@ env:
   ROOT_DOMAIN: "smarter.sh"
   SMARTER_CACHE_EXPIRATION: "60"
   SMARTER_ENABLE_WEB_CONSOLE_TERMINAL: "true"
+  # true: each deployment uploads the static files to the environment's S3 bucket, and pages load them from its
+  # CDN, cdn.<platform>. See smarter.lib.django.static_storage.
+  SMARTER_STATIC_FILES_ON_CDN: "true"
   VERSION: "latest"
   SLACK_CHANNEL: "smarter"
 
@@ -196,6 +199,7 @@ jobs:
           smarter-email-admin: ${{ secrets.SMARTER_EMAIL_ADMIN }}
           smarter-cache-expiration: ${{ env.SMARTER_CACHE_EXPIRATION }}
           smarter-enable-web-console-terminal: ${{ env.SMARTER_ENABLE_WEB_CONSOLE_TERMINAL }}
+          smarter-static-files-on-cdn: ${{ env.SMARTER_STATIC_FILES_ON_CDN }}
           smarter-logo: ${{ secrets.SMARTER_LOGO }}
           smarter-mariadb-backup-password: ${{ secrets.SMARTER_MYSQL_BACKUP_PASSWORD }}
           smarter-settings-output: ${{ secrets.SMARTER_SETTINGS_OUTPUT }}

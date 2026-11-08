@@ -97,8 +97,9 @@ result.
 4. Reverse it as below, and test it through the attribute (`self.url("<role>", ...)`).
 
 The workbench's Deployment tab is a worked example: `LLMClientDeploymentView`,
-`PromptReverseNames.deployment_by_hashed_id`, the route `llm-clients/<str:hashed_id>/deployment/`, and
-`PromptWorkbenchView.deployment_url`, which reverses it.
+`PromptApiWebReverseNames.deployment_by_hashed_id` (in `apps/prompt/api/web/urls.py`, the web console's
+api), the route `llm-clients/<str:hashed_id>/deployment/`, and `PromptWorkbenchView.deployment_url`,
+which reverses it.
 
 ## Reversing
 
@@ -123,7 +124,7 @@ Django's `reverse`, so separate arguments would be taken as `urlconf`, `args`, .
 
 ```python
 reverse(
-    f"{PromptReverseNames.namespace}:{PromptReverseNames.deployment_by_hashed_id}",
+    f"{PromptApiWebReverseNames.namespace}:{PromptApiWebReverseNames.deployment_by_hashed_id}",
     kwargs={"hashed_id": llmclient.hashed_id},
 )
 ```
@@ -172,7 +173,7 @@ tags: they hard-code the derived string. The ones that remain (`console_home`, `
 
 `ResourceViewsTestMixin` reverses through the class: set `reverse_names = <App>ReverseNames`, then
 `self.url("<attribute>", **kwargs)`. In other tests, reverse through the class too, and assert the path
-when the path itself is the contract (`"/workbench/llm-clients/<hashed_id>/deployment/"`).
+when the path itself is the contract (`"/api/web/prompt/llm-clients/<hashed_id>/deployment/"`).
 
 ## Legacy shapes: don't copy, fix when you're there anyway
 

@@ -210,7 +210,7 @@ Assignment 3: Request Trace and Configuration Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Students follow a chat request across the containers, and map every environment variable that
-reaches the ``smarter-app`` container to where it is defined and what reads it (without copying
+reaches the ``smarter-api`` container to where it is defined and what reads it (without copying
 secret values).
 
 **Turn in:** a sequence diagram with evidence, and the configuration map.

@@ -168,7 +168,7 @@ From Source
    make build      # rebuilds the containers from your working copy
    make run        # starts every container, and the web server on http://localhost:9357
 
-``docker ps`` should list the ``smarter-app``, ``smarter-worker``, ``smarter-beat``,
+``docker ps`` should list the ``smarter-api``, ``smarter-worker``, ``smarter-beat``,
 ``smarter-mariadb`` and ``smarter-redis`` containers. The
 :doc:`Developer Setup Guide <smarter-framework/guides/developer-setup>` explains each part of the
 environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems.
@@ -255,12 +255,12 @@ each other's resources at all. This maps naturally onto a classroom:
   example for individually graded assignments.
 
 On a shared instance, create accounts, users and API keys with ``manage.py`` commands in the
-``smarter-app`` container (see :doc:`smarter-platform/user-management` and
+``smarter-api`` container (see :doc:`smarter-platform/user-management` and
 :doc:`smarter-platform/api-keys`):
 
 .. code-block:: console
 
-   docker exec -it smarter-app bash
+   docker exec -it smarter-api bash
    cd /home/smarter_user/smarter
 
    python manage.py create_account --company_name "CS 4410 Fall Section 1" --account_number "####-####-####"

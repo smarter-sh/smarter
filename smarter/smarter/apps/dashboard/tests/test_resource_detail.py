@@ -9,10 +9,13 @@ from django.urls import reverse
 
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.connection.models import ConnectionBase, SqlConnection
 from smarter.apps.dashboard.resource_detail import (
+    KIND_BY_RECORD_LOCATOR_PREFIX,
     ResourceDetail,
     instance_of_kind,
+    kind_of_instance,
     manifest_yaml,
     models_by_record_locator_prefix,
     readable_instance,
@@ -26,6 +29,15 @@ from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
 from smarter.lib.django.listview import ListviewPageRequest
+from smarter.lib.manifest.record_locator import console_paths
+
+
+def locator_url(record_locator: str) -> str:
+    """The url of a resource's detail by its record locator alone, as a manifest page asks."""
+    return reverse(
+        f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.resource_detail_by_locator}",
+        kwargs={"record_locator": record_locator},
+    )
 
 
 def detail_url(kind: str, record_locator: str) -> str:
@@ -167,3 +179,82 @@ class TestResourceDetail(TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(json.loads(response.content), {"error": "Guardrail not found."})
         client.logout()
+
+    def test_detail_by_record_locator(self):
+        """Without a kind, the detail is of the record locator's resource, of its own kind."""
+        detail = resource_detail(self.request(), None, self.guardrail.record_locator)
+        assert detail is not None
+        self.assertEqual((detail.kind, detail.name), ("Guardrail", self.guardrail.name))
+        self.assertIn("kind: Guardrail", detail.manifest or "")
+        self.assertIsNone(resource_detail(self.request(self.other_user), None, self.guardrail.record_locator))
+        self.assertIsNone(resource_detail(self.request(), None, "nonsense"))
+        # a model that has no manifest page has no kind.
+        self.assertIsNone(resource_detail(self.request(), None, self.user_profile.record_locator))
+
+    def test_api_by_record_locator(self):
+        """The api answers by the record locator alone, and is a 404 for another account's user."""
+        url = locator_url(self.guardrail.record_locator)
+        self.assertEqual(url, f"/api/web/dashboard/resource/{self.guardrail.record_locator}/")
+        client = Client()
+        client.force_login(self.user_profile.user)
+        response = client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(json.loads(response.content)["kind"], "Guardrail")
+        client.force_login(self.other_user)
+        response = client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(json.loads(response.content), {"error": f"{self.guardrail.record_locator} not found."})
+        client.logout()
+
+    def test_kind_of_instance(self):
+        """A resource's kind is its own kind field, as a plugin's, or its model's."""
+        self.assertEqual(kind_of_instance(self.guardrail), "Guardrail")
+        self.assertEqual(kind_of_instance(self.llmclient), "LLMClient")
+        self.assertIsNone(kind_of_instance(self.user_profile))
+
+        class Plugin:  # pylint: disable=too-few-public-methods
+            kind = "StaticPlugin"
+
+        self.assertEqual(kind_of_instance(Plugin()), "StaticPlugin")  # type: ignore[arg-type]
+
+    def test_kinds_of_the_manifest_pages(self):
+        """
+        Every model with a manifest page has a kind that a broker knows, but a plugin's, whose kind is its own, and.
+
+        an Extension's, which has no manifest.
+        """
+        prefixes = set(console_paths()) - {"pluginmeta", "extension"}
+        self.assertEqual(set(KIND_BY_RECORD_LOCATOR_PREFIX), prefixes)
+        for prefix, kind in KIND_BY_RECORD_LOCATOR_PREFIX.items():
+            with self.subTest(prefix=prefix):
+                self.assertIsNotNone(Brokers.get_broker(kind), kind)
+
+    def test_a_model_without_a_read_rule_is_read_by_nobody(self):
+        """
+        A model whose manager has no with_read_permission_for(), and that has no is_readable_by(), e.g. an Account,.
+
+        is read by nobody, not even its own users, so that it can't leak through the api.
+        """
+        self.assertFalse(hasattr(type(self.account)._default_manager, "with_read_permission_for"))
+        self.assertFalse(hasattr(self.account, "is_readable_by"))
+        self.assertIsNone(readable_instance(self.user_profile.user, self.account.record_locator))
+        self.assertIsNone(readable_instance(self.admin_user, self.account.record_locator))
+
+    def test_manifest_of_a_resource_without_an_owner(self):
+        """A resource that has no user_profile is described on behalf of the user who reads it."""
+
+        class Ownerless:  # pylint: disable=too-few-public-methods
+            name = "ownerless"
+
+        readers = []
+
+        class Broker:  # pylint: disable=too-few-public-methods
+            def __init__(self, request, **kwargs):
+                readers.append(request.user)
+                raise RuntimeError("described")
+
+        with patch("smarter.apps.dashboard.resource_detail.Brokers.get_broker", return_value=Broker):
+            manifest, error = manifest_yaml("Budget", Ownerless(), reader=self.user_profile.user)  # type: ignore[arg-type]
+        self.assertEqual(readers, [self.user_profile.user])
+        self.assertEqual((manifest, error), (None, "described"))
+        self.assertEqual(manifest_yaml("Budget", Ownerless()), (None, "A Budget has no manifest."))  # type: ignore[arg-type]

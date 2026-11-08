@@ -20,7 +20,12 @@ from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.apps.llmhost.urls import LLMHostReverseNames as Names
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 from .base_classes import LLMHostTestBase
 
@@ -158,23 +163,31 @@ class TestLLMHostDetailViews(LLMHostTestBase):
         self.addCleanup(self.client.logout)
 
     def test_llmhost_detail(self):
+        """Test that the LLMHost's manifest page is the console's, whose resource api returns its manifest."""
         llmhost = self.new_llmhost("test_views_detail")
-        response = self.client.get(url(Names.detailview, hashed_id=llmhost.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
-        self.assertIn(llmhost.name.encode(), response.content)
+        detail = resource_detail_json(self, llmhost.record_locator)
+        self.assertEqual(detail["kind"], "LLMHost")
+        self.assertEqual(detail["name"], llmhost.name)
+        self.assertIn(llmhost.name, detail["manifest"] or "")
+        assert_console_page(self, url(Names.detailview, hashed_id=llmhost.hashed_id))
 
     def test_compute_detail(self):
+        """Test that the LLMHostCompute's manifest page is the console's, whose resource api returns its manifest."""
         compute = TestLLMHostComputeListViews.own_compute(self, "test_views_compute_detail")
-        response = self.client.get(url(Names.compute_detailview, hashed_id=compute.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
-        self.assertIn(compute.name.encode(), response.content)
+        detail = resource_detail_json(self, compute.record_locator)
+        self.assertEqual(detail["kind"], "LLMHostCompute")
+        self.assertEqual(detail["name"], compute.name)
+        self.assertIn(compute.name, detail["manifest"] or "")
+        assert_console_page(self, url(Names.compute_detailview, hashed_id=compute.hashed_id))
 
     def test_detail_not_found(self):
-        for name in (Names.detailview, Names.compute_detailview):
-            with self.subTest(view=name):
-                for hashed_id in ("not-a-hashed-id", LLMHost(id=999999999).hashed_id):
-                    response = self.client.get(url(name, hashed_id=hashed_id))
-                    self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no LLMHost or LLMHostCompute for an invalid, or unknown, id."""
+        for model in (LLMHost, LLMHostCompute):
+            with self.subTest(model=model.__name__):
+                unknown = model(id=999999999)
+                prefix = unknown.record_locator.partition("-")[0]
+                assert_no_resource(self, f"{prefix}-not-a-hashed-id")
+                assert_no_resource(self, unknown.record_locator)
 
 
 class TestLLMHostResourceViews(ResourceViewsTestMixin, LLMHostTestBase):

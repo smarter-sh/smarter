@@ -12,6 +12,13 @@ ideal for teaching, demonstrating and debugging the platform from the inside. It
 superusers only, and off unless ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL`` is set. See
 :doc:`../../../smarter-platform/smarter-web-console`.
 
+The Terminal is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
+``/dashboard/terminal/``. ``@smarter/console`` renders ``@smarter/terminal-emulator``'s ``TerminalEmulator``
+inside its frame, with the url of the ticket api, ``/api/web/dashboard/terminal/ticket/``, whose single use
+ticket opens the terminal's WebSocket. The console's session turns the page on only for a superuser while the
+terminal is enabled, and Django's path and the ticket api are a 404 for everyone else. The package has no build
+of its own; ``npm run dev`` in it renders the terminal against the Django dev server.
+
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/terminal-emulator-react-component.png
    :alt: Terminal Emulator React Component Screenshot
    :class: screenshot
@@ -25,8 +32,5 @@ superusers only, and off unless ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL`` is set. 
 
    terminal-application/api
    terminal-application/django-view
-   terminal-application/django-template
-   terminal-application/template-tags
-   terminal-application/index
    terminal-application/example-usage
    terminal-application/react-component

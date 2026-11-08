@@ -20,7 +20,9 @@ Checks, for each course:
    names a file or folder on main (origin/main, else main) in the local clone
    of <repo>: this repository, or a sibling folder ../<repo>. A path that is
    only in the working tree is a warning: the link breaks until it is merged.
-   Every commit link must name a commit in that clone. Run git fetch first;
+   A link may name a release tag, vX.Y.Z, instead of main, for a file that a
+   later release removed; it must name a file or folder at that tag. Every
+   commit link must name a commit in that clone. Run git fetch first;
 5. the course is listed in micro-courses.rst (table and toctree).
 
 :doc: links are checked by skills/smarter-sphinx-docs/scripts/check-docs.sh.
@@ -46,6 +48,7 @@ SECTIONS = [
     "Recommended Texts",
     "Further Study",
 ]
+RELEASE_TAG = re.compile(r"v\d+\.\d+\.\d+")
 GITHUB = re.compile(r"https://github\.com/smarter-sh/([\w.-]+)/(blob|tree|commit)/([^\s>`]+)")
 
 errors: list[str] = []
@@ -138,8 +141,12 @@ def check_links(path: Path) -> None:
             continue
         branch, _, rel = rest.partition("/")
         rel = rel.split("#")[0].rstrip("/")
-        if branch != "main":
-            fail(f"{name}: link to branch '{branch}', use main: {repo}/{rest}")
+        if RELEASE_TAG.fullmatch(branch):
+            # a file that a later release removed, as it was at a release: tags don't move.
+            if rel and not git(local, "cat-file", "-e", f"{branch}:{rel}"):
+                fail(f"{name}: {repo} has no {rel} at {branch}")
+        elif branch != "main":
+            fail(f"{name}: link to branch '{branch}', use main or a release tag: {repo}/{rest}")
         elif rel and not git(local, "cat-file", "-e", f"{main_ref(local)}:{rel}"):
             if (local / rel).exists():
                 warnings.append(rel)

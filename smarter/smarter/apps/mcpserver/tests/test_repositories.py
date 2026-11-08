@@ -22,6 +22,7 @@ class TestProjectRepositories(SmarterTestBase):
         self.assertEqual(len(names), len(set(names)))
         for name in (
             "smarter",
+            "smarter-console",
             "smarter-cli",
             "smarter-python",
             "smarter-nodejs",

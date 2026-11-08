@@ -56,7 +56,7 @@ and testing a feature whose models are patched out.
 - `prompting.py
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmclient/prompting.py>`__,
   how the platform's own code prompts an LLMClient.
-- `smarter-doodle <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-doodle>`__,
+- `smarter-doodle <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-doodle>`__,
   the React app on the sign-in page.
 
 Each course plan lists every file that it uses under *Smarter in the Source Code*.

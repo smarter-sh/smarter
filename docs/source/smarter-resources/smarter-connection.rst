@@ -95,6 +95,5 @@ Technical Reference
    connection/serializers
    connection/signals
    connection/tasks
-   connection/templatetags
    connection/urls
    connection/views

@@ -504,6 +504,13 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             return user_profile.cached_user  # type: ignore[return-value]
         else:
             logger.warning("%s no admin user found for account %s. Creating new admin user.", console_prefix, account)
+            # an account whose every profile is a test profile is a test account, e.g. the end-to-end tests'
+            # throwaway account. Its admin is a test profile too, so that its contact's welcome email is sent
+            # quietly, rather than to <account>-admin@<root domain>, and the test teardown deletes it.
+            account_profiles = UserProfile.objects.filter(account=account)
+            has_profiles = account_profiles.exists()
+            has_real_profiles = account_profiles.filter(is_test=False).exists()
+            is_test_account = has_profiles and not has_real_profiles
             username = f"{account.account_number}-admin"
             new_user = User.objects.create(
                 username=username,
@@ -512,7 +519,9 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
                 is_superuser=True,
                 is_active=True,
             )
-            user_profile = UserProfile.objects.create(name=username, user=new_user, account=account)
+            user_profile = UserProfile.objects.create(
+                name=username, user=new_user, account=account, is_test=is_test_account
+            )
             return user_profile.user  # type: ignore[return-value]
 
     if invalidate:

@@ -18,6 +18,7 @@ from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.console_source import console_source
 
 # api:v1:prompt:passthrough
 namespace = ":".join(
@@ -30,17 +31,9 @@ namespace = ":".join(
 )
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-# the request templates of the dashboard's prompt passthrough page (/dashboard/passthrough/)
-PROMPT_TEMPLATES_PATH = os.path.join(
-    settings.PROJECT_ROOT,
-    "react",
-    "packages",
-    "smarter-prompt-passthrough",
-    "src",
-    "components",
-    "Prompt",
-    "templates.json",
-)
+# the request templates of the console's prompt passthrough page (/dashboard/passthrough/), in the web console's
+# repository, smarter-sh/smarter-console, at the installed release.
+PROMPT_TEMPLATES_PATH = "packages/smarter-prompt-passthrough/src/components/Prompt/templates.json"
 
 # exceptions raised by the provider's (OpenAI-compatible) client when the provider itself fails
 # the request: bad api key, no credits, rate limits, unknown model, outages, timeouts, rejected
@@ -126,8 +119,7 @@ class TestPassthroughView(TestAccountMixin):
         provider's default model plus the template body, posted to the provider's passthrough
         endpoint. Failures of the provider itself are logged and skipped; see UPSTREAM_ERRORS.
         """
-        with open(PROMPT_TEMPLATES_PATH, encoding="utf-8") as f:
-            templates = json.loads(f.read())
+        templates = json.loads(console_source(PROMPT_TEMPLATES_PATH))
         self.assertTrue(templates, f"no prompt templates found in {PROMPT_TEMPLATES_PATH}")
 
         providers = Provider.objects.filter(is_active=True).with_read_permission_for(self.admin_user)  # type: ignore

@@ -15,6 +15,7 @@ from django.urls import include, path
 
 from smarter.apps.account.api.web import urls as account_web_urls
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.api.web.session.views import ConsoleSessionView
 from smarter.apps.connection.api.web import urls as connection_web_urls
 from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard.api.web import urls as dashboard_web_urls
@@ -46,14 +47,25 @@ from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore.api.web import urls as vectorstore_web_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
+from smarter.common.utils import to_snake_case
 from smarter.lib.drf.api.web import urls as drf_web_urls
 from smarter.lib.drf.const import namespace as drf_namespace
 
-from .const import namespace
+from .const import namespace, path_namespace
 
 app_name = namespace
 
+
+class ApiWebReverseNames:
+    """The names of the web console api's own urls, the ones that belong to no Django app."""
+
+    namespace = path_namespace
+
+    console_session_view = to_snake_case(ConsoleSessionView.__name__)
+
+
 urlpatterns = [
+    path("session/", ConsoleSessionView.as_view(), name=ApiWebReverseNames.console_session_view),
     path(f"{account_namespace}/", include(account_web_urls, namespace=account_namespace)),
     # the one path that isn't its namespace: it matches the console page, /authtoken/.
     path("authtoken/", include(drf_web_urls, namespace=drf_namespace)),

@@ -28,7 +28,7 @@ skills/smarter-sphinx-docs/scripts/check-docs.sh docs/source/smarter-resources/s
   same shallow clone of smarter-sh/example-manifests into
   `docs/source/_example-manifests/` that `conf.py` makes at build time, when
   it's missing, so those includes resolve.
-- **Every autodoc target imports**, with Django set up, in the smarter-app
+- **Every autodoc target imports**, with Django set up, in the smarter-api
   container.
 
 To check only the autodoc targets of every page on the host, without the
