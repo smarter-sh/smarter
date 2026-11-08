@@ -121,6 +121,48 @@ def models_by_record_locator_prefix() -> dict[str, type[models.Model]]:
     }
 
 
+KIND_BY_RECORD_LOCATOR_PREFIX: dict[str, str] = {
+    "apiconnection": "ApiConnection",
+    "budget": "Budget",
+    "guardrail": "Guardrail",
+    "llmclient": "LLMClient",
+    "llmclientcustomdomain": "CustomDomain",
+    "llmhost": "LLMHost",
+    "llmhostcompute": "LLMHostCompute",
+    "mcpclient": "MCPClient",
+    "orchestrator": "Orchestrator",
+    "provider": "Provider",
+    "proxy": "Proxy",
+    "secret": "Secret",
+    "smarterauthtoken": "SmarterAuthToken",
+    "sqlconnection": "SqlConnection",
+    "vectorsearch": "Vectorsearch",
+    "vectorstoremeta": "Vectorstore",
+}
+"""
+The SAM kind of the resources of each record locator prefix that has a manifest page.
+
+A plugin's kind is its own ``kind`` field, so its prefix isn't here. A test checks the map against
+:func:`smarter.lib.manifest.record_locator.console_paths`.
+"""
+
+
+def kind_of_instance(instance: models.Model) -> Optional[str]:
+    """
+    Return a resource's SAM kind: its own ``kind`` field, as a plugin has, or its model's.
+
+    :param instance: The resource's Django ORM instance.
+    :type instance: models.Model
+    :returns: The kind, e.g. ``Guardrail``, or None for a model that has no manifest page.
+    :rtype: Optional[str]
+    """
+    own_kind = getattr(instance, "kind", None)
+    own_kind = getattr(own_kind, "value", own_kind)
+    if isinstance(own_kind, str) and own_kind:
+        return own_kind
+    return KIND_BY_RECORD_LOCATOR_PREFIX.get(record_locator_prefix(type(instance)))
+
+
 def readable_instance(user, record_locator: str) -> Optional[models.Model]:
     """
     Return the resource of a record locator, if the user may read it.
@@ -128,7 +170,9 @@ def readable_instance(user, record_locator: str) -> Optional[models.Model]:
     :param user: The authenticated user.
     :param record_locator: The resource's record locator, e.g. ``guardrail-rMTAwx``.
     :type record_locator: str
-    :returns: The resource's Django ORM instance, or None if there is none, or the user may not read it.
+    :returns: The resource's Django ORM instance, or None if there is none, or the user may not read it: the model's
+        manager's ``with_read_permission_for()`` decides, or the instance's ``is_readable_by()``; a model with
+        neither is read by nobody.
     :rtype: Optional[models.Model]
     """
     try:
@@ -141,11 +185,17 @@ def readable_instance(user, record_locator: str) -> Optional[models.Model]:
     instance = model.get_object_by_locator(record_locator)  # type: ignore[attr-defined]
     if instance is None:
         return None
+    # a model's read rule: its manager's, for an owned resource, or its own, e.g. a Budget's. A model that has
+    # neither is read by nobody, so that a model without a rule never leaks through the api.
     manager = type(instance)._default_manager  # pylint: disable=protected-access
     if hasattr(manager, "with_read_permission_for"):
         if not manager.filter(pk=instance.pk).with_read_permission_for(user).exists():  # type: ignore[attr-defined]
             return None
-    return instance
+        return instance
+    is_readable_by = getattr(instance, "is_readable_by", None)
+    if callable(is_readable_by) and is_readable_by(user):
+        return instance
+    return None
 
 
 def instance_of_kind(broker, kind: str, instance: models.Model) -> Optional[models.Model]:
@@ -189,23 +239,26 @@ def instance_of_kind(broker, kind: str, instance: models.Model) -> Optional[mode
     return None
 
 
-def manifest_yaml(kind: str, instance: models.Model) -> tuple[Optional[str], str]:
+def manifest_yaml(kind: str, instance: models.Model, reader=None) -> tuple[Optional[str], str]:
     """
     Return a resource's manifest, as YAML, as ``smarter describe`` returns it to its owner.
 
-    The resource is described on behalf of its owner, as the web console's manifest pages do, because a
-    broker finds a resource by its name among those of its own user. The caller has already checked that
-    the user may read it (see :func:`readable_instance`).
+    The resource is described on behalf of its owner, because a broker finds a resource by its name among those of
+    its own user. A resource that has no owner, e.g. a Budget, is described on behalf of the user who reads it. The
+    caller has already checked that the user may read it (see :func:`readable_instance`).
 
     :param kind: The resource's SAM kind.
     :type kind: str
-    :param instance: The resource's Django ORM instance, which has a ``user_profile`` and a ``name``.
+    :param instance: The resource's Django ORM instance, which has a ``name``, and usually a ``user_profile``.
     :type instance: models.Model
+    :param reader: The user who reads it, for a resource that has no owner.
     :returns: The manifest, and an empty string, or None and why it could not be read.
     :rtype: tuple[Optional[str], str]
     """
     broker_class = Brokers.get_broker(kind)
     owner = getattr(getattr(instance, "user_profile", None), "user", None)
+    if owner is None and not hasattr(instance, "user_profile"):
+        owner = reader
     name = getattr(instance, "name", None)
     if broker_class is None or owner is None or not name:
         return None, f"A {kind} has no manifest."
@@ -223,7 +276,7 @@ def manifest_yaml(kind: str, instance: models.Model) -> tuple[Optional[str], str
     return yaml.safe_dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True), ""
 
 
-def resource_detail(request, kind: str, record_locator: str) -> Optional[ResourceDetail]:
+def resource_detail(request, kind: Optional[str], record_locator: str) -> Optional[ResourceDetail]:
     """
     Return the detail of a resource that the request's user may read.
 
@@ -239,17 +292,20 @@ def resource_detail(request, kind: str, record_locator: str) -> Optional[Resourc
         #  "manifestError": "", "tree": {...}, "dependents": [{"kind": "LLMClient", ...}]}
 
     :param request: The request, whose user is authenticated.
-    :param kind: The resource's SAM kind, e.g. ``Guardrail``.
-    :type kind: str
+    :param kind: The resource's SAM kind, e.g. ``Guardrail``, or None for the kind of the record locator's resource,
+        as a manifest page, which knows only the record locator, asks: see :func:`kind_of_instance`.
+    :type kind: Optional[str]
     :param record_locator: The resource's record locator.
     :type record_locator: str
     :returns: The detail, or None if there is no such resource, the user may not read it, or no broker
         knows its kind.
     :rtype: Optional[ResourceDetail]
     """
-    broker_class = Brokers.get_broker(kind)
     instance = readable_instance(request.user, record_locator)
-    if broker_class is None or instance is None:
+    if instance is not None and not kind:
+        kind = kind_of_instance(instance)
+    broker_class = Brokers.get_broker(kind) if kind else None
+    if broker_class is None or instance is None or not kind:
         logger.debug("%s.resource_detail() no %s %s for %s", logger_prefix, kind, record_locator, request.user)
         return None
     name = getattr(instance, "name", None)
@@ -272,7 +328,7 @@ def resource_detail(request, kind: str, record_locator: str) -> Optional[Resourc
             )
             for row in unique.values()
         ]
-    manifest, manifest_error = manifest_yaml(kind, instance)
+    manifest, manifest_error = manifest_yaml(kind, instance, reader=request.user)
     return ResourceDetail(
         kind=kind,
         name=name,

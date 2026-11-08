@@ -5,4 +5,3 @@ Template Tags
    :maxdepth: 1
 
    templatetags/custom-filters
-   templatetags/react-authtoken-list

@@ -9,8 +9,10 @@ from django.views import View
 
 from smarter.apps.docs.urls import DocsReverseNames
 from smarter.common.conf import smarter_settings
+from smarter.lib.django import waffle
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterWebTxtView, SmarterWebXmlView
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 
 def absolute_url(path: str) -> str:
@@ -41,20 +43,15 @@ def sitemap_pages() -> list[tuple[str, str]]:
     )
 
     docs = DocsReverseNames.namespace
-    return [
+    pages = [
         (reverse(docs, DocsReverseNames.example_manifests), "0.8"),
         (reverse(docs, DocsReverseNames.json_schemas), "0.8"),
         (reverse(docs, DocsReverseNames.openapi), "0.8"),
-        (reverse(docs, DocsReverseNames.developer_readme), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_changelog), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_code_of_conduct), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_extension_protocol), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_makefile), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_requirements), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_dockerfile), "0.6"),
-        (reverse(docs, DocsReverseNames.developer_docker_compose), "0.6"),
-        (reverse(ConsoleReverseNames.register_view), "0.5"),
     ]
+    # the sign-up page answers 404 while registration is switched off.
+    if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION):
+        pages.append((reverse(ConsoleReverseNames.register_view), "0.5"))
+    return pages
 
 
 class RobotsTxtView(SmarterWebTxtView):

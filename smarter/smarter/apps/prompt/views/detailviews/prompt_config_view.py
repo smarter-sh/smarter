@@ -643,7 +643,9 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                     llmclient_id,
                 )
             except LLMClient.DoesNotExist:
-                verbose_logger.error(
+                # the client's error, e.g. a chat still configured for a deleted LLMClient, not the platform's.
+                # The journaled error response logs the 404 at WARNING.
+                verbose_logger.info(
                     "%s.dispatch() - LLMClient with id=%s does not exist. Returning 404.",
                     self.formatted_class_name,
                     llmclient_id,
@@ -766,8 +768,8 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             "%s get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
         )
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
-
-            logger.error(
+            # the client's error, not the platform's.
+            logger.warning(
                 "%s.get() %s is not allowed because %s switch is inactive.",
                 self.formatted_class_name,
                 request.path,

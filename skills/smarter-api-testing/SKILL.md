@@ -41,7 +41,7 @@ Create your own key, owned by the user whose resources you're testing, and mark
 it for deletion:
 
 ```console
-docker exec smarter-app bash -c 'cd /home/smarter_user/smarter && python manage.py shell -c "
+docker exec smarter-api bash -c 'cd /home/smarter_user/smarter && python manage.py shell -c "
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.apps.account.utils import smarter_cached_objects as s
 from smarter.apps.account.models import UserProfile
@@ -77,13 +77,13 @@ form, and the view sees no manifest: apply answers `Could not find broker for
 None manifest`, and validate says `kind must be one of: ...`, for a manifest
 that is perfectly valid.
 
-Make sure smarter-app is running your current code first (see
+Make sure smarter-api is running your current code first (see
 `smarter-docker-environment`).
 
 ## 3. Delete the key
 
 ```console
-docker exec smarter-app bash -c 'cd /home/smarter_user/smarter && python manage.py shell -c "
+docker exec smarter-api bash -c 'cd /home/smarter_user/smarter && python manage.py shell -c "
 from smarter.lib.drf.models import SmarterAuthToken
 print(SmarterAuthToken.objects.filter(name=\"api_test_probe\", description=\"DELETE ME\").delete())
 "' 2>/dev/null

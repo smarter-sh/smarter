@@ -8,7 +8,6 @@ Test the Guardrail dashboard views: the React list page, its api, the manifest d
     be documented.
 """
 
-import re
 from http import HTTPStatus
 
 from django.test import Client
@@ -22,8 +21,14 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.urls import GuardrailReverseNames as Names
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.lib import json
+from smarter.lib.django.listview import listview_registry
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 from .base_classes import GuardrailTestBase
 
@@ -57,10 +62,15 @@ class TestGuardrailViews(GuardrailTestBase):
         return json.loads(response.content)
 
     def test_listview(self):
-        """Test the React list page, and that an anonymous user is redirected."""
+        """
+        Test that the list page is the single-page console's, at /guardrail/.
+
+        The global search still pairs it with its list api, through listview_registry().
+        """
+        self.assertEqual(url(Names.listview), "/guardrail/")
         self.assertEqual(self.client.get(url(Names.listview)).status_code, HTTPStatus.OK)
-        self.client.logout()
-        self.assertEqual(self.client.get(url(Names.listview)).status_code, HTTPStatus.FOUND)
+        pages = {entry.view_class.__name__: entry.page_url for entry in listview_registry()}
+        self.assertEqual(pages["GuardrailListApiView"], "/guardrail/")
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""
@@ -100,28 +110,23 @@ class TestGuardrailViews(GuardrailTestBase):
         self.assertFalse(Guardrail.objects.filter(pk=clone_pk).exists())
 
     def test_detailview(self):
-        """Test that the detail page renders the Guardrail's manifest, not a Provider's."""
-        response = self.client.get(url(Names.detailview, hashed_id=self.guardrail.hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        content = response.content.decode()
-        self.assertIn(self.guardrail.name, content)
-        self.assertIn("Guardrail", content)
-        # the manifest editor's root element, and its manifest, as json_script data.
-        self.assertIn('id="smarter-manifest-editor-root"', content)
-        # the browser tab shows the name as plain text, and the page shows it in an h2.
-        title = re.search(r"<title>(.*?)</title>", content, re.S).group(1)  # type: ignore[union-attr]
-        self.assertIn(self.guardrail.name, title)
-        self.assertNotIn("<", title)
-        self.assertIn(f"<h2>{self.guardrail.name}</h2>", content)
-        self.assertIn('<script id="smarter-manifest-editor-data" type="application/json">', content)
-        self.assertEqual(
-            self.client.get(url(Names.detailview, hashed_id="not-a-hash")).status_code, HTTPStatus.NOT_FOUND
-        )
+        """
+        Test that the manifest page is the console's, whose resource api returns the Guardrail's manifest, not a.
+
+        Provider's, and that an invalid id has no resource.
+        """
+        detail = resource_detail_json(self, self.guardrail.record_locator)
+        self.assertEqual(detail["kind"], "Guardrail")
+        self.assertEqual(detail["name"], self.guardrail.name)
+        manifest = detail["manifest"] or ""
+        self.assertIn("kind: Guardrail", manifest)
+        self.assertIn(self.guardrail.name, manifest)
+        assert_no_resource(self, "guardrail-not-a-hash")
+        assert_console_page(self, url(Names.detailview, hashed_id=self.guardrail.hashed_id))
 
     def test_detailview_unknown_id(self):
-        """Test that a valid hashed id of a Guardrail that doesn't exist is not found."""
-        response = self.client.get(url(Names.detailview, hashed_id=Guardrail(id=999999999).hashed_id))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no Guardrail for a valid hashed id of one that doesn't exist."""
+        assert_no_resource(self, Guardrail(id=999999999).record_locator)
 
 
 class TestGuardrailResourceViews(ResourceViewsTestMixin, GuardrailTestBase):

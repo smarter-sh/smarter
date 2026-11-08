@@ -191,7 +191,7 @@ Installing, Loading and Publishing
        Schema. :doc:`/smarter-platform/extensions`.
      - `extension/views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/views.py>`__,
        `extension/contract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/contract.py>`__,
-       `smarter-extension-console/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-extension-console>`__
+       `smarter-extension-console/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-extension-console>`__
    * - Observability
      - Eight signals, from ``extension_installed`` to ``extension_tool_failed``, feed Smarter's
        logs, progress messages and history. The ``log_extension`` waffle switch turns on the

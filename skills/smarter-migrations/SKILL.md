@@ -5,7 +5,7 @@ description: Use when a Smarter Django model changes, or a choices enum used by 
 
 # Smarter Migrations
 
-Migrations are generated and applied **inside the smarter-app container**, then
+Migrations are generated and applied **inside the smarter-api container**, then
 copied back to the host. See `smarter-docker-environment` for syncing.
 
 **Every migration module starts with `# pylint: disable=all`**, as its first
@@ -37,11 +37,11 @@ That's possible when the app is new or unreleased, or its tables hold no data
 worth keeping:
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate <app> zero"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate <app> zero"
 # delete smarter/smarter/apps/<app>/migrations/0*.py on the host and in the container
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py makemigrations <app>"
-docker cp smarter-app:/home/smarter_user/smarter/smarter/apps/<app>/migrations/0001_initial.py smarter/smarter/apps/<app>/migrations/
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py makemigrations <app>"
+docker cp smarter-api:/home/smarter_user/smarter/smarter/apps/<app>/migrations/0001_initial.py smarter/smarter/apps/<app>/migrations/
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
 ```
 
 - `migrate <app> zero` also reverts the migrations of apps that depend on it.
@@ -81,11 +81,11 @@ field's state. It needs an `AlterField` migration
 
 ```console
 # no model changes without a migration
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py makemigrations --check --dry-run"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py makemigrations --check --dry-run"
 # forward
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate"
 # backward, then forward again, with legacy-shaped rows in the table
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py migrate <app> <previous_migration> && python manage.py migrate <app>"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py migrate <app> <previous_migration> && python manage.py migrate <app>"
 ```
 
 Test a data migration with rows shaped like production's (old rows, missing

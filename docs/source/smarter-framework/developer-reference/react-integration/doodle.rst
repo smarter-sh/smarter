@@ -8,6 +8,12 @@ secret that it uses, and its manifest. On days worth celebrating, the illustrati
 for the day: lanterns for the Lunar New Year, diyas for Diwali, a menorah for Hanukkah, gears for
 Ada Lovelace Day, fireworks for Canada Day. On other days it is the plain scene.
 
+The single-page console, ``@smarter/console``, imports the component and shows it beside its
+sign-in, sign-up and password reset forms. It passes the doodle api's url, the plain scene's url and
+the platform's branding from the console's session, ``GET /api/web/session/``, whose
+``signIn.doodle`` reports the ``enable_doodle`` switch. The panel's styles are the package's own,
+in ``App.css``. On a phone, the panel shows only the logo.
+
 Visitors in different regions can see different doodles on the same day. The browser sends its
 time zone, e.g. ``Asia/Kolkata``, which gives the visitor's local date, so a holiday starts at local
 midnight, and, through the time zone database, the country and the region. No IP address is
@@ -124,8 +130,8 @@ the blog post that walks through how the doodle is chosen and drawn.
 Waffle switches
 ---------------
 
-- ``enable_doodle``: shows the doodle of the day. Inactive, the page shows the plain scene,
-  without the React app.
+- ``enable_doodle``: shows the doodle of the day. Inactive, the sign-in pages show the logo, the
+  project's name and its description, without the doodle.
 - ``enable_doodle_regional``: chooses the doodle by the visitor's region. Inactive, everyone sees
   the global doodle.
 - ``enable_doodle_animation``: animates the doodles, e.g. a flickering flame. Inactive, every
@@ -203,9 +209,5 @@ Technical Reference
    :no-index:
 
 .. automodule:: smarter.apps.doodle.tasks
-   :members:
-   :no-index:
-
-.. automodule:: smarter.apps.doodle.templatetags.react_doodle
    :members:
    :no-index:

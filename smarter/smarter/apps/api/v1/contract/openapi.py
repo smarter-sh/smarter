@@ -28,8 +28,9 @@ so a change to any of them changes the document. ``manage.py export_api_contract
 route of a family in :data:`DOCUMENTED_URLCONFS` is neither in the document nor in
 :data:`UNDOCUMENTED_ROUTES`.
 
-Every platform serves this document at ``/docs/openapi.json``, and renders it with Scalar at
-``/docs/openapi/``. It is the platform's only api documentation.
+Every platform serves this document at ``/api/v1/openapi.json`` (:mod:`smarter.apps.api.v1.contract.views`;
+``/docs/openapi.json`` redirects there), and renders it with Scalar at ``/docs/openapi/``. It is the platform's
+only api documentation.
 """
 
 import json

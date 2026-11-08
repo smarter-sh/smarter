@@ -1,81 +1,13 @@
-# pylint: disable=W0613
 """
-This module contains views to implement the React.
+The Guardrail list page, ``/guardrail/``, which the single-page console serves (ADR-035).
 
-Guardrail list view in the Smarter Dashboard.
+The console renders ``@smarter/guardrail-list``'s list at the page's path, and the list calls the Guardrail list api,
+:mod:`smarter.apps.guardrail.views.listview.api`. The page keeps its view class, named after the list api's, which
+:func:`smarter.lib.django.listview.listview_registry` pairs it with, so that the dashboard's global search links to it.
 """
 
-from django.conf import settings
-from django.core.handlers.asgi import ASGIRequest
-from django.shortcuts import render
-
-from smarter.apps.guardrail.models import Guardrail
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING])
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class GuardrailListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the guardrail list view for the Smarter Workbench web console.
-
-    This view displays all guardrails available to the authenticated user as cards, providing a quick overview and access to guardrail details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each guardrail, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-    """
-
-    template_path = "react/guardrail-list.html"
-    guardrails: list[Guardrail]
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{GuardrailListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the page that hosts the Guardrail list React app, with the settings it reads.
-
-        :param request: The request.
-        :param args: Unused.
-        :param kwargs: Unused.
-        :returns: The rendered page.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.guardrail.api.web.urls import GuardrailApiWebReverseNames
-
-        context = {
-            "guardrail_list": {
-                "root_id": "smarter-guardrail-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "guardrail_list_api_url": reverse(
-                    GuardrailApiWebReverseNames.namespace, GuardrailApiWebReverseNames.listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class GuardrailListView(ConsoleAppView):
+    """The Guardrail list page: the single-page console's, at the path that Django served it at."""

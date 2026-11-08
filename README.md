@@ -4,7 +4,7 @@
 ![Test Status](https://github.com/smarter-sh/smarter/actions/workflows/test.yml/badge.svg?branch=main)
 ![Deploy Status](https://github.com/smarter-sh/smarter/actions/workflows/deploy.yml/badge.svg?branch=main)
 [![Python coverage](https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=python&label=Python%20coverage&logo=codecov)](https://codecov.io/gh/smarter-sh/smarter?flags%5B0%5D=python)
-[![React coverage](https://img.shields.io/codecov/c/github/smarter-sh/smarter/main?flag=react&label=React%20coverage&logo=codecov)](https://codecov.io/gh/smarter-sh/smarter?flags%5B0%5D=react)
+[![Web console coverage](https://img.shields.io/codecov/c/github/smarter-sh/smarter-console/main?flag=react&label=web%20console%20coverage&logo=codecov)](https://codecov.io/gh/smarter-sh/smarter-console)
 [![Latest Release](https://img.shields.io/github/v/release/smarter-sh/smarter?label=release)](https://github.com/smarter-sh/smarter/releases)
 [![Docs](https://img.shields.io/badge/Read%20the%20Docs-smarter.sh-blue?logo=readthedocs)](https://docs.smarter.sh/)
 [![Website](https://img.shields.io/badge/official%20web%20site-smarter.sh-blue?logo=google-chrome)](https://smarter.sh)
@@ -82,7 +82,8 @@ smarter apply -f my-ai-application.yaml
   - Build every AI resource with declarative YAML manifests, with no Python
     programming, much as you would with [Kubernetes](https://kubernetes.io/).
   - Manage resources with the
-    [web console](https://docs.smarter.sh/smarter-platform/smarter-web-console.html),
+    [web console](https://docs.smarter.sh/smarter-platform/smarter-web-console.html)
+    ([source](https://github.com/smarter-sh/smarter-console)),
     the [REST API](https://docs.smarter.sh/smarter-framework/smarter-api.html),
     and the [command-line interface](https://smarter.sh/cli).
   - Runs at scale on Kubernetes, with automatic horizontal scaling of
@@ -175,7 +176,7 @@ And it gives prompt engineering teams an intuitive workbench approach to
 designing, prototyping, testing, deploying and managing powerful AI resources
 for common corporate use cases including agentic workflows, customer facing chat
 solutions, and more. It includes a
-[React-based chat UI](https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat), published to npm as `@smarter.sh/ui-chat`, that is
+[React-based chat UI](https://github.com/smarter-sh/smarter-console/tree/main/packages/smarter.sh-chat), published to npm as `@smarter.sh/ui-chat`, that is
 compatible with a wide variety of front end ecosystems including NPM, Wordpress,
 Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and
 SAP. There is a

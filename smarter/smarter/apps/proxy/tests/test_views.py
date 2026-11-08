@@ -12,7 +12,12 @@ from smarter.apps.proxy.models import Proxy
 from smarter.apps.proxy.urls import ProxyReverseNames as Names
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 from .base_classes import API_KEY, ProxyTestBase
 
@@ -142,25 +147,28 @@ class TestProxyListApi(ProxyTestBase):
 
 
 class TestProxyDetailView(ProxyTestBase):
-    """Test the manifest detail view."""
+    """Test the manifest page: the console's, which loads the proxy from the dashboard's resource api."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+        self.addCleanup(self.client.logout)
 
     def test_detail(self):
+        """Test that the resource api returns the proxy's manifest, without its api key, and the page is the console's."""
         proxy = self.proxy("test_views_detail")
-        client = Client()
-        client.force_login(self.admin_user)
-        response = client.get(proxy.manifest_url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        content = response.content.decode()
-        self.assertIn("test_views_detail", content)
-        self.assertIn("kind: Proxy", content)
-        self.assertNotIn(API_KEY, content)
+        detail = resource_detail_json(self, proxy.record_locator)
+        manifest = detail["manifest"] or ""
+        self.assertIn("test_views_detail", manifest)
+        self.assertIn("kind: Proxy", manifest)
+        self.assertNotIn(API_KEY, json.dumps(detail))
+        assert_console_page(self, proxy.manifest_url)
 
     def test_not_found(self):
-        client = Client()
-        client.force_login(self.admin_user)
-        self.assertEqual(
-            client.get(url(Names.detailview, hashed_id="not-a-hashed-id")).status_code, HTTPStatus.NOT_FOUND
-        )
+        """Test that the resource api has no proxy for an invalid, or unknown, id."""
+        assert_no_resource(self, "proxy-not-a-hashed-id")
+        assert_no_resource(self, Proxy(id=999999999).record_locator)
 
 
 class TestProxyResourceViews(ResourceViewsTestMixin, ProxyTestBase):
