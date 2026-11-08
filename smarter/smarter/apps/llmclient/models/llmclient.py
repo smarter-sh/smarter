@@ -39,6 +39,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
+from smarter.lib.openai.enum import OPENAI_REASONING_EFFORTS
 
 from .llmclient_custom_domain import LLMClientCustomDomain
 from .llmclient_custom_domain_dns import LLMClientCustomDomainDNS
@@ -197,6 +198,16 @@ class LLMClient(MetaDataWithOwnershipModel):
     #: The default temperature setting for the LLMClient's language model.
     #: Example: 0.7
     default_temperature = models.FloatField(default=smarter_settings.llm_default_temperature, blank=True, null=True)
+
+    #: How much a reasoning model reasons before it answers, the chat completions api's
+    #: ``reasoning_effort``. None leaves it to the model's own default.
+    #: Example: "high"
+    default_reasoning_effort = models.CharField(
+        max_length=16,
+        choices=[(effort, effort) for effort in OPENAI_REASONING_EFFORTS],
+        blank=True,
+        null=True,
+    )
 
     #: The default maximum tokens for the LLMClient's language model responses.
     #: Example: 1024

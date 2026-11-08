@@ -3825,6 +3825,27 @@
             "description": "LLMClient.default_model.",
             "title": "Defaultmodel"
           },
+          "defaultReasoningEffort": {
+            "anyOf": [
+              {
+                "enum": [
+                  "none",
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.default_reasoning_effort.",
+            "title": "Defaultreasoningeffort"
+          },
           "defaultSystemRole": {
             "anyOf": [
               {
@@ -13298,6 +13319,27 @@
             "default": null,
             "description": "LLMClient.spec.configuration.prompt.default_model[str]. Optional. The default model to use for the llmclient. This changes routinely and is currently defaults to gpt-6-luna",
             "title": "Defaultmodel"
+          },
+          "defaultReasoningEffort": {
+            "anyOf": [
+              {
+                "enum": [
+                  "none",
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.spec.configuration.prompt.default_reasoning_effort[str]. Optional. How much a reasoning model reasons before it answers: none, minimal, low, medium, high or xhigh. When it is not set, the model reasons at its own default effort. Each model supports some of these values, and models that don't reason, e.g. gpt-4o, support none of them: an effort that the model doesn't support is left out, with a warning in the chat's sandbox mode. Some models use function tools only with none, e.g. gpt-6-luna, so the requests that offer the llmclient's tools use none, and the final answer uses this effort. A reasoning model ignores defaultTemperature at any effort but none. Example: high.",
+            "title": "Defaultreasoningeffort"
           },
           "defaultSystemRole": {
             "anyOf": [

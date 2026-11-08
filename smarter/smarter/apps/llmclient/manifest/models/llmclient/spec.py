@@ -4,18 +4,20 @@ import os
 import re
 from typing import ClassVar, List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmclient.manifest.models.llmclient.styles import (
     SAMLLMClientSpecConfigStyles,
 )
 from smarter.common.conf import settings_defaults
-from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.lib.manifest.models import AbstractSAMSpecBase, is_client_manifest
 from smarter.lib.manifest.system_role import (
     SMARTER_MAX_SYSTEM_ROLE_LENGTH,
     warn_if_long_system_role,
 )
+from smarter.lib.openai.enum import OpenAIReasoningEffort
+from smarter.lib.openai.model_capabilities import llmclient_settings_errors
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
@@ -84,6 +86,18 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
         ge=0.0,
         le=1.0,
         description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the llmclient. This defaults to {settings_defaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the llmclient's responses. A value of 0 means that the llmclient will always choose the most likely response, while a value of 1 means that the llmclient will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
+    )
+    defaultReasoningEffort: Optional[OpenAIReasoningEffort] = Field(
+        None,
+        description=(
+            f"{class_identifier}.default_reasoning_effort[str]. Optional. How much a reasoning model reasons before "
+            "it answers: none, minimal, low, medium, high or xhigh. When it is not set, the model reasons at its own "
+            "default effort. Each model supports some of these values, and models that don't reason, e.g. gpt-4o, "
+            "support none of them: an effort that the model doesn't support is left out, with a warning in the "
+            "chat's sandbox mode. Some models use function tools only with none, e.g. gpt-6-luna, so the requests "
+            "that offer the llmclient's tools use none, and the final answer uses this effort. A reasoning model "
+            "ignores defaultTemperature at any effort but none. Example: high."
+        ),
     )
     defaultMaxTokens: Optional[int] = Field(
         None,
@@ -211,6 +225,9 @@ class SAMLLMClientSpecConfig(AbstractSAMSpecBase):
     )
 
 
+OPENAI_PROVIDER = "openai"
+
+
 class SAMLLMClientSpec(AbstractSAMSpecBase):
     """Smarter API LLMClient Manifest LLMClient.spec."""
 
@@ -246,3 +263,40 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         None,
         description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by an administrator of the Smarter installation and are used to authenticate the llmclient with the Smarter API.",
     )
+
+    @model_validator(mode="after")
+    def validate_model_capabilities(self) -> "SAMLLMClientSpec":
+        """
+        Reject settings that the llmclient's OpenAI model can never honor, with the settings to use instead.
+
+        For example: a defaultReasoningEffort that the model doesn't support, tools (plugins,
+        mcpClients or extensions) on a model that can't use them, or a defaultTemperature that the
+        model always ignores. The models' rules are those of
+        :data:`~smarter.lib.openai.model_capabilities.OPENAI_MODEL_CAPABILITIES`: other providers'
+        models, and models that are not there, are not checked. Settings that only some requests
+        can use are allowed, and warned about in Smarter Chat's sandbox mode.
+
+        Only a manifest that a client sent is checked, inside
+        :func:`~smarter.lib.manifest.models.client_manifest_validation`, e.g. by apply. A manifest
+        that describe builds from an LLMClient in the database is not, so that one that was applied
+        before the check, or before its model's rules changed, can still be described, and fixed.
+
+        :raises ValueError: With every error, if there are any.
+        """
+        if not is_client_manifest():
+            return self
+        prompt = self.config.prompt
+        provider = prompt.provider or OPENAI_PROVIDER
+        if provider != OPENAI_PROVIDER:
+            return self
+        has_tools = bool(self.plugins) or bool(self.mcpClients) or bool(self.extensions)
+        errors = llmclient_settings_errors(
+            model=prompt.defaultModel,
+            temperature=prompt.defaultTemperature,
+            reasoning_effort=prompt.defaultReasoningEffort,
+            has_tools=has_tools,
+        )
+        if errors:
+            listed = " ".join(errors)
+            raise ValueError(f"spec.config.prompt doesn't suit its model. {listed}")
+        return self

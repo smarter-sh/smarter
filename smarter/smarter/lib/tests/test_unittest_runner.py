@@ -13,6 +13,8 @@ from smarter.lib.unittest.runner import (
     INFRASTRUCTURE,
     JUNIT_XML_ENVIRONMENT_VARIABLE,
     SHARD_ENVIRONMENT_VARIABLE,
+    VENDOR,
+    VENDOR_ENVIRONMENT_VARIABLE,
     SmarterTestRunner,
     junit_xml_path,
     requested_shard,
@@ -113,6 +115,32 @@ class TestSmarterTestRunner(SmarterTestBase):
 
     def test_skips_infrastructure_by_default(self):
         self.assertIn(INFRASTRUCTURE, SmarterTestRunner(verbosity=0).exclude_tags)
+
+    def test_skips_vendor_by_default(self):
+        with mock.patch.dict(os.environ, environ_without_report(), clear=True):
+            runner = SmarterTestRunner(verbosity=0)
+        self.assertIn(VENDOR, runner.exclude_tags)
+        self.assertIn(VENDOR, runner.skipped_tags)
+
+    def test_vendor_by_tag(self):
+        runner = SmarterTestRunner(verbosity=0, tags=[VENDOR])
+        self.assertNotIn(VENDOR, runner.exclude_tags)
+        self.assertEqual(runner.tags, {VENDOR})
+
+    def test_vendor_by_environment_variable(self):
+        with mock.patch.dict(os.environ, {VENDOR_ENVIRONMENT_VARIABLE: "true"}):
+            runner = SmarterTestRunner(verbosity=0)
+        self.assertNotIn(VENDOR, runner.exclude_tags)
+        self.assertNotIn(VENDOR, runner.skipped_tags)
+
+    def test_says_which_tags_are_skipped(self):
+        with mock.patch.dict(os.environ, environ_without_report(), clear=True):
+            runner = SmarterTestRunner(verbosity=1)
+        with mock.patch("smarter.lib.unittest.runner.DiscoverRunner.setup_test_environment"):
+            with mock.patch("sys.stdout", io.StringIO()) as stdout:
+                runner.setup_test_environment()
+        self.assertIn("'infrastructure'", stdout.getvalue())
+        self.assertIn("'vendor'", stdout.getvalue())
 
     def test_without_report(self):
         result = self.run_example_suite(environ_without_report())
