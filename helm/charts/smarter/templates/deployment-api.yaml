@@ -2,9 +2,10 @@
 # Deployment Manifest for Smarter Application
 #
 # This file defines the main Deployment resource for the Smarter app, the api, named
-# <appName>-api. While app.legacyName.enabled is true it also renders a twin under the
-# api's old name, <appName>: see smarter.apiNames in _helpers.tpl. Their pods share the
-# label app.kubernetes.io/component: api, which the Services select.
+# <appName>-api. With app.legacyName.enabled, an aid for upgrading from a release before
+# the rename, it also renders a twin under the api's old name, <appName>: see
+# smarter.apiNames in _helpers.tpl. Their pods share the label
+# app.kubernetes.io/component: api, which the Services select.
 #
 # - Maintainer: <your team/contact>
 # - Purpose: Deploys the main application container with Helm templating.

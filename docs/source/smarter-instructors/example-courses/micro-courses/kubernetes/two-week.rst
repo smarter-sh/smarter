@@ -6,7 +6,7 @@ Smarter's Helm chart on a local cluster. Smarter's `Helm chart
 <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
 production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
 probes, `autoscalers
-<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__ that
 scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
 database, Redis and monitoring, and `values
 <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
@@ -90,7 +90,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **Scaling.** Requests, limits, probes and the Horizontal Pod Autoscaler, and the chart's
-       ``hpa-app`` and ``hpa-worker`` templates.
+       ``hpa-api`` and ``hpa-worker`` templates.
    * - 2
      - Lecture 5 (30 min)
      - **Networking.** Services, Ingress, cluster DNS, network policies, and the metadata address.

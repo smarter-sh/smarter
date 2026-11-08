@@ -29,7 +29,7 @@ The Helm Chart
      - The web server, the worker, the infrastructure worker and the scheduler: the same image
        as in Docker Compose, with different commands. A fifth, a bastion pod, gives operators a
        shell inside the cluster.
-     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+     - `deployment-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-api.yaml>`__,
        `deployment-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-worker.yaml>`__,
        `deployment-worker-infrastructure.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-worker-infrastructure.yaml>`__,
        `deployment-beat.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-beat.yaml>`__,
@@ -37,12 +37,12 @@ The Helm Chart
    * - Probes
      - Liveness on ``/healthz/``, readiness on ``/readiness/``, and a startup probe, so a slow
        start is not mistaken for a failure.
-     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+     - `deployment-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-api.yaml>`__,
        `urls/console.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/urls/console.py>`__
    * - Autoscaling
      - Horizontal Pod Autoscalers for the web server and the worker, from 3 to 25 web pods at
        75% CPU by default.
-     - `hpa-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__,
+     - `hpa-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__,
        `hpa-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-worker.yaml>`__
    * - Jobs
      - A post-install and post-upgrade Job that creates the database and its user, migrates and
