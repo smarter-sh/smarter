@@ -1,80 +1,13 @@
-# pylint: disable=W0613
 """
-This module contains views to implement the React.
+The Custom Domain list page, ``/llmclient/custom-domains/``, which the single-page console serves (ADR-035).
 
-Custom Domain list view in the Smarter Dashboard.
+The console renders ``@smarter/custom-domain-list``'s list at the page's path, and the list calls its list api,
+:mod:`smarter.apps.llmclient.views.listview.api`. The page keeps its view class, named after the list api's, which
+:func:`smarter.lib.django.listview.listview_registry` pairs it with, so that the dashboard's global search links to it.
 """
 
-from django.conf import settings
-from django.core.handlers.asgi import ASGIRequest
-from django.shortcuts import render
-
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class CustomDomainListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the custom domain list view for the Smarter Workbench web console.
-
-    This view renders the root element of the @smarter/custom-domain-list React app,
-    which lists the custom domains of the llmclients available to the authenticated user.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with the React app's root element, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-    """
-
-    template_path = "react/custom-domain-list.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{CustomDomainListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the page that hosts the custom domain list React app.
-
-        :param request: The HTTP request.
-        :param args: Positional arguments (unused).
-        :param kwargs: Keyword arguments (unused).
-        :returns: The rendered template, with the React app's configuration in its context.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.llmclient.api.web.urls import LLMClientApiWebReverseNames
-
-        context = {
-            "custom_domain_list": {
-                "root_id": "smarter-custom-domain-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "custom_domain_list_api_url": reverse(
-                    LLMClientApiWebReverseNames.namespace, LLMClientApiWebReverseNames.custom_domain_listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class CustomDomainListView(ConsoleAppView):
+    """The Custom Domain list page: the single-page console's, at the path that Django served it at."""

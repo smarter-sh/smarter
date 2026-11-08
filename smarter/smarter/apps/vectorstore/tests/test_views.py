@@ -1,4 +1,7 @@
-"""Test the web console views of vectorstores: the React list's api, and the detail view."""
+"""Test the web console views of vectorstores: the React list's api, the list page, and the manifest page, which loads.
+
+the vectorstore from the dashboard's resource api.
+"""
 
 from django.test import Client
 from django.urls import reverse
@@ -8,6 +11,11 @@ from smarter.apps.vectorstore.api.web.urls import (
 )
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames as Names
+from smarter.lib.unittest.resource_views import (
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 from .base_classes import VectorstoreTestBase
 
@@ -30,9 +38,8 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.addCleanup(self.client.logout)
 
     def test_list_page(self):
-        response = self.client.get(url(Names.listview))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("smarter-vectorstore-list-root", response.content.decode())
+        """Test that the list page is the single-page console's."""
+        assert_console_page(self, url(Names.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""
@@ -123,25 +130,23 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.assertTrue(VectorstoreMeta.objects.filter(pk=protected.pk).exists())
 
     def test_detail_view(self):
-        """Test that the detail view renders the vectorstore's manifest."""
+        """Test that the manifest page is the console's, whose resource api returns the vectorstore's manifest."""
         vectorstore = self.new_vectorstore("test_views_detail")
-        response = self.client.get(url(Names.detailview, hashed_id=vectorstore.hashed_id))
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn(vectorstore.name, content)
-        self.assertIn("vectorstoreStatus", content)
+        detail = resource_detail_json(self, vectorstore.record_locator)
+        self.assertEqual(detail["kind"], "Vectorstore")
+        self.assertEqual(detail["name"], vectorstore.name)
+        self.assertIn(vectorstore.name, detail["manifest"] or "")
+        self.assertIn("vectorstoreStatus", detail["manifest"] or "")
+        assert_console_page(self, url(Names.detailview, hashed_id=vectorstore.hashed_id))
 
     def test_detail_view_shared_with_non_admin(self):
-        """Test that a non-admin user sees the detail view of a vectorstore owned by the account's admin."""
+        """Test that a non-admin user may read a vectorstore owned by the account's admin from the resource api."""
         vectorstore = self.new_vectorstore("test_views_detail_shared")
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(url(Names.detailview, hashed_id=vectorstore.hashed_id))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(vectorstore.name, response.content.decode())
+        detail = resource_detail_json(self, vectorstore.record_locator)
+        self.assertIn(vectorstore.name, detail["manifest"] or "")
 
     def test_detail_view_unknown_id(self):
-        """Test that a valid hashed id of a vectorstore that doesn't exist is not found, as is an invalid one."""
-        response = self.client.get(url(Names.detailview, hashed_id=VectorstoreMeta(id=999999999).hashed_id))
-        self.assertEqual(response.status_code, 404)
-        response = self.client.get(url(Names.detailview, hashed_id="not-a-hash"))
-        self.assertEqual(response.status_code, 404)
+        """Test that the resource api has no vectorstore for a valid hashed id of one that doesn't exist, or an invalid one."""
+        assert_no_resource(self, VectorstoreMeta(id=999999999).record_locator)
+        assert_no_resource(self, "vectorstoremeta-not-a-hash")

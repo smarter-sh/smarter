@@ -32,6 +32,7 @@ For more information about Django, see the `official Django documentation <https
    django/serializers
    django/settings
    django/signals
+   django/static-storage
    django/tasks
    django/templates
    django/token-generators

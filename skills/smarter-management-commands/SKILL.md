@@ -183,7 +183,7 @@ is expected to fail verification locally.
 ## Running
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py load_from_github --url https://github.com/smarter-sh/example-manifests --include_kind Guardrail"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py load_from_github --url https://github.com/smarter-sh/example-manifests --include_kind Guardrail"
 ```
 
 Applying or deploying infrastructure kinds queues Celery tasks that the

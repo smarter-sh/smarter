@@ -15,7 +15,7 @@ PROJECT_DIR="${SMARTER_PROJECT_DIR:-$(dirname "$ROOT")}"
 REPOSITORIES=("$@")
 if [ ${#REPOSITORIES[@]} -eq 0 ]; then
   REPOSITORIES=(smarter-cli smarter-python smarter-nodejs smarter-golang smarter-vscode-yaml
-    smarter-deploy smarter-infrastructure)
+    smarter-deploy smarter-infrastructure smarter-console)
 fi
 
 printf "%-24s %-12s %-8s %-11s %s\n" REPOSITORY BRANCH CHANGES COMMITTED REMOTE

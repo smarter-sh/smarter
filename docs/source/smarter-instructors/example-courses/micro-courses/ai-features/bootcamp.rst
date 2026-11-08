@@ -127,7 +127,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lab 3: Trust nothing.** Following ``test_editor.py``, students write tests that feed
        crafted answers through ``parse_answer()`` and ``check_decision()`` with the model
-       patched, run them in the ``smarter-app`` container, and look for an answer that passes
+       patched, run them in the ``smarter-api`` container, and look for an answer that passes
        the checks but shouldn't. Produces Assignment 3.
    * - 8
      - 45

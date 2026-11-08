@@ -8,22 +8,19 @@ resource shows its budget versus its actual spending, with the URL of its chart'
 """
 
 from http import HTTPStatus
-from typing import Any
 
-from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, JsonResponse
-from django.shortcuts import render
 from django.urls import reverse as django_reverse
 
 from smarter.apps.account.manifest.brokers.budget import resource_to_manifest
 from smarter.apps.account.models import Budget, ResourceConstraint, UserProfile
 from smarter.apps.account.models.budget import is_visible
 from smarter.apps.account.serializers import BudgetSerializer, UserProfileSerializer
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
@@ -70,40 +67,13 @@ def budget_list_item(view: SmarterAuthenticatedNeverCachedWebView, budget: Budge
     return retval
 
 
-class BudgetListView(SmarterAuthenticatedNeverCachedWebView):
-    """Render the Budget list of the Smarter web console."""
+class BudgetListView(ConsoleAppView):
+    """
+    The Budget list page, ``/budget/``, which the single-page console serves (ADR-035).
 
-    template_path = "react/budget-list.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        return f"{self.formatted_text(__name__)}.{BudgetListView.__name__}[{id(self)}]"
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the page that hosts the budget list React app.
-
-        :param request: The request.
-        :returns: The rendered template, with the app's root element settings.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.account.api.web.urls import AccountApiWebReverseNames
-
-        context = {
-            "budget_list": {
-                "root_id": "smarter-budget-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "budget_list_api_url": reverse(
-                    AccountApiWebReverseNames.namespace, AccountApiWebReverseNames.budget_listview
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-        return render(request, template_name=self.template_path, context=context)
+    The console renders ``@smarter/budget-list``'s list at the page's path, and the list calls
+    :class:`BudgetListApiView`, which applies the superuser rules above.
+    """
 
 
 class BudgetListApiView(SmarterAuthenticatedNeverCachedWebView):

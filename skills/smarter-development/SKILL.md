@@ -1,6 +1,6 @@
 ---
 name: smarter-development
-description: Start here for any change to the Smarter repository (Django backend, SAM resources, React web console apps, Sphinx docs, tests, commits). Gives the non-negotiable rules, the pattern-first workflow, and an index of the narrower smarter-* skills to load for each kind of work.
+description: Start here for any change to the Smarter repository (Django backend, SAM resources, the web console's backend side, Sphinx docs, tests, commits). Gives the non-negotiable rules, the pattern-first workflow, and an index of the narrower smarter-* skills to load for each kind of work.
 ---
 
 # Smarter Development
@@ -8,23 +8,24 @@ description: Start here for any change to the Smarter repository (Django backend
 Smarter is a Django platform for building and running LLM applications. Its
 resources (LLMClients, Plugins, Guardrails, Secrets, Custom Domains, ...) are
 declared in YAML manifests (SAM, the Smarter Application Manifest), applied with
-the `smarter` CLI or the REST API, and managed in a web console whose list
-pages are small React apps.
+the `smarter` CLI or the REST API, and managed in a web console, a single-page
+React app whose source is its own repository, smarter-sh/smarter-console. This
+repository serves a pinned release of the console's build.
 
 ## Repository map
 
-| Path                         | What lives there                                                             |
-| ---------------------------- | ---------------------------------------------------------------------------- |
-| `smarter/smarter/apps/<app>` | Django apps. One per resource family (guardrail, secret, llmclient, ...)     |
-| `smarter/smarter/lib`        | Framework code: manifest brokers, journal, unittest helpers, django helpers  |
-| `smarter/react/packages`     | npm workspace of React apps, one per web console page, plus `smarter-common` |
-| `docs/source`                | Sphinx documentation, published to docs.smarter.sh                           |
-| `.pre-commit-config.yaml`    | The authoritative lint and format standard for Python and React              |
-| `.github/workflows/`         | Pipeline: test.yml on PRs to main, then build, deploy, publish (build.yml)   |
-| `Makefile`                   | Developer commands (`make coverage`, `make react-test`, ...)                 |
+| Path                          | What lives there                                                            |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| `smarter/smarter/apps/<app>`  | Django apps. One per resource family (guardrail, secret, llmclient, ...)    |
+| `smarter/smarter/lib`         | Framework code: manifest brokers, journal, unittest helpers, django helpers |
+| `smarter-console-version.txt` | The pinned web console release, which `make console` installs               |
+| `docs/source`                 | Sphinx documentation, published to docs.smarter.sh                          |
+| `.pre-commit-config.yaml`     | The authoritative lint and format standard                                  |
+| `.github/workflows/`          | Pipeline: test.yml on PRs to main, then build, deploy, publish (build.yml)  |
+| `Makefile`                    | Developer commands (`make coverage`, `make console`, ...)                   |
 
 Host path `smarter/smarter/<path>` is `/home/smarter_user/smarter/smarter/<path>`
-inside the `smarter-app` container.
+inside the `smarter-api` container.
 
 ## Non-negotiable rules
 
@@ -32,7 +33,7 @@ inside the `smarter-app` container.
    command text. Never run `git commit`, `git add`, `git reset`, `git push`, or
    anything else that changes the repository's history or index. See
    `smarter-git-commits`.
-2. **Never touch real infrastructure from tests.** The `smarter-app` container's
+2. **Never touch real infrastructure from tests.** The `smarter-api` container's
    kubeconfig points at the real EKS cluster, and its AWS and Route53
    credentials are live. Fake or mock every Kubernetes, DNS, ACM, and AWS call.
    See `smarter-infrastructure-safety`.
@@ -313,11 +314,8 @@ reference implementations.
 | Task                                                             | Skill                                  |
 | ---------------------------------------------------------------- | -------------------------------------- |
 | Adding or changing a SAM resource (manifest, broker, kind)       | `smarter-sam-resource`                 |
-| A web console list page, or any Django-hosted React app          | `smarter-django-react`                 |
-| React stories, tests, ESLint, Prettier                           | `smarter-react-testing`                |
-| Smarter Chat (`@smarter.sh/ui-chat`), the chat UI of LLMClients  | `smarter-chat-development`             |
-| Smarter Chat's tests, stories, coverage and `check:dist`         | `smarter-chat-testing`                 |
-| Smarter Chat's embed script, its options and the integrations    | `smarter-chat-embed`                   |
+| A console page's Django view, list api, session, installed build | `smarter-django-react`                 |
+| React code, Smarter Chat, stories, tests (smarter-console repo)  | `smarter-project-repositories`         |
 | Python unit tests and coverage                                   | `smarter-python-testing`               |
 | Syncing code into the Docker containers, running anything there  | `smarter-docker-environment`           |
 | Code that calls Kubernetes, AWS, Route53, ACM, or Celery         | `smarter-infrastructure-safety`        |

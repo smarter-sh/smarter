@@ -1,10 +1,9 @@
 # pylint: disable=W0613,C0302
 """
-PromptWorkbenchView is a Django class-based view responsible for serving the main prompt application page within the Smarter dashboard web app.
+The Prompt Engineer's Workbench's page, :class:`PromptWorkbenchView`, and the chat's prompt session.
 
-It hosts Smarter Chat, the React app of the LLMClient prompt workbench, as the web console hosts all of its
-React apps: the template includes the app's Vite build assets from Django's static files, and renders the app's
-root element, whose attributes configure it. The React app then takes over the UI from there.
+:class:`SmarterPromptSession` is the chat session of a prompt, which the chat's configuration api,
+:class:`~smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView`, creates or resumes.
 """
 
 import traceback
@@ -17,6 +16,7 @@ from django.http import (
 )
 from django.shortcuts import render
 
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.apps.llmclient.models import (
     LLMClient,
     LLMClientHelper,
@@ -42,9 +42,6 @@ from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseServerError,
 )
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import (
-    SmarterAuthenticatedNeverCachedWebView,
-)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -202,314 +199,17 @@ class SmarterPromptSession(SmarterHelperMixin):
         return retval
 
 
-class PromptWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
+class PromptWorkbenchView(ConsoleAppView):
     """
-    Prompt app view for the Smarter web application.
+    The Prompt Engineer's Workbench of an LLMClient, ``/workbench/llm-clients/<hashed_id>/prompt/``: the single-page.
 
-    This view is responsible for serving the main prompt application page within the Smarter dashboard web app.
-    It hosts the Prompt Engineer's Workbench, the ``@smarter/workbench`` React app, which is built with Vite into
-    Django's static files, like every other React app of the web console. The React app then takes over the UI
-    from there.
+    console's page (ADR-035).
 
-    **Key Features:**
-
-    - **Django Template Integration:**
-      The view renders ``react/workbench.html``, whose ``react_workbench`` template tag includes the React
-      app's hashed JavaScript and CSS files, from its Vite manifest.json, and whose root div passes the app its
-      configuration as attributes.
-
-    - **ReactJS UI Bootstrapping:**
-      The workbench renders the chat, Smarter Chat (the ``@smarter.sh/ui-chat`` npm package,
-      smarter/react/packages/smarter.sh-chat in this repository), and the
-      developer Console beside it, whose Manifest and Deployment tabs fetch their data from
-      :class:`LLMClientManifestEditorView` and :class:`LLMClientDeploymentView` when they are first opened.
-
-    - **Flexible URL Patterns:**
-      The view supports both sandbox and production URL formats, allowing it to work with deployed and not-yet-deployed LLMClients.
-
-    - **Authentication Protected:**
-      This view requires the user to be authenticated. A visitor who is not signed in is redirected to the
-      sign-in page, and a signed-in user without a user profile is refused with a 403.
-
-    - **Cache Control:**
-      The view uses Django's `never_cache` decorator to ensure that the browser does not cache the prompt page itself.
-      This prevents issues where a user logs out and then logs back in without a full page refresh.
-
-    **Example Usage:**
-
-        Sandbox mode:
-            - http://smarter.sh/workbench/hr/
-            - http://127.0.0.1:9357/workbench/<str:name>/
-
-        Production mode:
-            - https://hr.3141-5926-5359.alpha.api.example.com/workbench/
-
-    **Returns:**
-        Renders the Django template for the prompt app, with the React app's assets and configuration context.
-
-    **See Also:**
-        - `PromptConfigView` — for the endpoint that provides configuration data to the React app.
+    The console renders ``@smarter/workbench``, the chat with the LLMClient, Smarter Chat (the ``@smarter.sh/ui-chat``
+    npm package), and the developer Console beside it, configured from the hashed id and the console's session: the
+    chat reads its configuration from the public api, ``/api/v1/llm-clients/<hashed_id>/config/``
+    (:class:`~smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView`), and the Console's tabs
+    call the web console's api, ``/api/web/prompt/llm-clients/<hashed_id>/``. The console first asks the resource
+    api for the LLMClient, and shows Page not found to a user who may not read it. Django keeps this view at the
+    path it served the page at, so that its url name, and ``LLMClient.workbench_url``, still reverse.
     """
-
-    template_path = "react/workbench.html"
-    root_id = "smarter-workbench-root"
-
-    llmclient: Optional[LLMClient] = None
-    llmclient_helper: Optional[LLMClientHelper] = None
-
-    @property
-    def log_stream_url(self) -> str:
-        """
-        The url of the user's server log stream, which the workbench displays in its Console.
-
-        :returns: The url of :func:`smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs`,
-            or an empty string if log viewing in the browser is disabled, in which case the Console has no
-            "Server Logs" tab. See :func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`.
-        :rtype: str
-        """
-        # pylint: disable=C0415
-        from smarter.apps.dashboard.views.terminal_emulator.api.names import (
-            DashboardLogsApiReverseNames,
-        )
-        from smarter.apps.dashboard.views.terminal_emulator.enabled import (
-            server_logs_enabled,
-        )
-
-        if not server_logs_enabled():
-            return ""
-        return reverse(
-            DashboardLogsApiReverseNames.namespace,
-            DashboardLogsApiReverseNames.stream,
-        )
-
-    @property
-    def manifest_url(self) -> str:
-        """
-        The url of the llmclient's manifest, as JSON, which the workbench's Console edits in its "Manifest" tab.
-
-        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientManifestEditorView`, or an
-            empty string if there is no llmclient, in which case the Console has no "Manifest" tab.
-        :rtype: str
-        """
-        # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
-
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.manifest_editor_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
-
-    @property
-    def architecture_url(self) -> str:
-        """
-        The url of the llmclient's architecture, as JSON, which the workbench's Console draws in its "Architecture" tab.
-
-        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientArchitectureView`, or an
-            empty string if there is no llmclient, in which case the Console has no "Architecture" tab.
-        :rtype: str
-        """
-        # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
-
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.architecture_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
-
-    @property
-    def deployment_url(self) -> str:
-        """The url of the llmclient's deployment page's data, which the workbench's Console displays in its.
-
-        "Deployment" tab.
-
-        :returns: The url of :class:`smarter.apps.prompt.views.detailviews.LLMClientDeploymentView`, or an
-            empty string if there is no llmclient, in which case the Console has no "Deployment" tab.
-        :rtype: str
-        """
-        # pylint: disable=C0415
-        from smarter.apps.prompt.urls import PromptReverseNames
-
-        if not self.llmclient:
-            return ""
-        return reverse(
-            f"{PromptReverseNames.namespace}:{PromptReverseNames.deployment_by_hashed_id}",
-            kwargs={"hashed_id": self.llmclient.hashed_id},
-        )
-
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
-        """
-        Dispatch method to handle the request for the main prompt application page.
-
-        This method is responsible for preparing and serving the Django template that bootstraps the ReactJS prompt UI
-        within the Smarter dashboard web app. It passes the React app's configuration to the template, which renders
-        it as the attributes of the app's root element.
-
-        **Key Features:**
-
-        - **Django Template Integration:**
-          Uses Django's template system to render the main prompt page, with the React app's build assets and root div.
-
-        - **ReactJS UI Bootstrapping:**
-          The template includes the React build (JavaScript and CSS) from Django's static files. The React app then
-          takes over rendering the interactive prompt UI after the initial page load.
-
-        - **Flexible URL Patterns:**
-          Supports both sandbox and production URL formats, allowing the view to work with both deployed and not-yet-deployed LLMClients.
-
-        - **Authentication Protected:**
-          Requires the user to be authenticated. A visitor who is not signed in is redirected to the sign-in page,
-          and a signed-in user without a user profile is refused with a 403.
-
-        - **Cache Control:**
-          Uses Django's `never_cache` decorator to prevent the browser from caching the prompt page, ensuring session security.
-
-        Parameters
-        ----------
-        request : HttpRequest
-            The incoming HTTP request object.
-        *args
-            Additional positional arguments.
-        **kwargs
-            Additional keyword arguments.
-
-        Returns
-        -------
-        HttpResponse
-            Renders the Django template for the prompt app, with the React app's assets and configuration context.
-
-        See Also
-        --------
-        PromptConfigView : The endpoint that provides configuration data to the React app.
-        """
-        user = getattr(request, "user", None)
-        if not (user and user.is_authenticated):
-            # the base class redirects a visitor who is not signed in to the sign-in page. Its redirect is
-            # returned as is: it isn't an error status, so the check below would let the request through.
-            return super().dispatch(request, *args, **kwargs)
-        if not self.user_profile:
-            logger.error(
-                "%s.dispatch() - user_profile is None. This should not happen. Returning 403.",
-                self.formatted_class_name,
-            )
-            return SmarterHttpResponseForbidden(request=request, error_message="Authentication required")
-        retval = super().dispatch(request, *args, **kwargs)
-        if retval.status_code >= HTTPStatus.BAD_REQUEST:
-            return retval
-
-        session_key = kwargs.pop(SMARTER_CHAT_SESSION_KEY_NAME, None)
-        if session_key is not None:
-            self._session_key = session_key
-            verbose_logger.debug(
-                "%s.dispatch() - setting session_key=%s from kwargs",
-                self.formatted_class_name,
-                self.session_key,
-            )
-
-        try:
-            verbose_logger.debug(
-                "%s.dispatch() - url=%s, account=%s, user=%s",
-                self.formatted_class_name,
-                self.url,
-                self.account,
-                self.user_profile.user,
-            )
-            # first try to avoid some quite-expensive steps by looking for the llmclient
-            # in the cache based on the request.
-            self.llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
-            if not self.llmclient:
-                self.llmclient_helper = LLMClientHelper(
-                    request=self.smarter_request,
-                    session_key=self.session_key,
-                    account=self.account,
-                    user=self.user,
-                    user_profile=self.user_profile,
-                )
-                self.llmclient = self.llmclient_helper.llmclient if self.llmclient_helper.llmclient else None
-            if self.llmclient:
-                verbose_logger.debug(
-                    "%s.dispatch() - set llmclient=%s from self.llmclient_helper",
-                    self.formatted_class_name,
-                    self.llmclient,
-                )
-            else:
-                logger.debug(
-                    "%s.dispatch() - no llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
-                    self.formatted_class_name,
-                    request.build_absolute_uri(),
-                    self.session_key,
-                )
-                return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
-        except LLMClient.DoesNotExist:
-            logger.debug(
-                "%s.dispatch() - LLMClient.DoesNotExist. No llmclient found for request. Returning 404. Request URL: %s, Session Key: %s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-                self.session_key,
-            )
-            return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
-                "%s.dispatch() - Exception occurred while getting llmclient: %s. "
-                "Request URL: %s, Session Key: %s\nStack trace: %s",
-                self.formatted_class_name,
-                str(e),
-                request.build_absolute_uri(),
-                self.session_key,
-                traceback.format_exc(),
-            )
-            return SmarterHttpResponseServerError(request=request, error_message=str(e))
-
-        if not self.llmclient:
-            logger.debug(
-                "%s.dispatch() - no llmclient found for request after exception handling. Returning 404. Request URL: %s, Session Key: %s",
-                self.formatted_class_name,
-                request.build_absolute_uri(),
-                self.session_key,
-            )
-            return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found")
-
-        # the basic idea is to pass the names of the necessary cookies to the React app, and then
-        # it is supposed to find and read the cookies to get the prompt session key, csrf token, etc.
-        # pylint: disable=C0415
-        from smarter.apps.dashboard.templatetags.react_manifest_editor import (
-            manifest_editor_context,
-        )
-        from smarter.apps.prompt.urls import PromptReverseNames
-
-        # the Manifest tab's editor saves, validates and deletes the manifest with the cli api, as every
-        # manifest page's editor does.
-        manifest_editor = manifest_editor_context()
-        context = {
-            "workbench": {
-                "root_id": self.root_id,
-                "llmclient_api_url": self.llmclient.sandbox_url,
-                "toggle_metadata": True,
-                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-                "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter prompt session, not the Django session.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN or "",
-                "react_debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-                "log_stream_url": self.log_stream_url,
-                "manifest_url": self.manifest_url,
-                "architecture_url": self.architecture_url,
-                "deployment_url": self.deployment_url,
-                "llmclient_list_url": reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-                "apply_api_url": manifest_editor["apply_api_url"],
-                "validate_api_url": manifest_editor["validate_api_url"],
-                "delete_api_url": manifest_editor["delete_api_url"],
-                "kind_placeholder": manifest_editor["kind_placeholder"],
-            }
-        }
-        verbose_logger.debug(
-            "%s.dispatch() - rendering template %s with context: %s",
-            self.formatted_class_name,
-            self.template_path,
-            SmarterFormattedText.json(context),
-        )
-        return render(request=request, template_name=self.template_path, context=context)

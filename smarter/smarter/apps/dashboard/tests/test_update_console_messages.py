@@ -2,11 +2,14 @@
 
 import io
 import os
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.test import override_settings
 from django.utils.translation import to_locale
 
 from smarter.apps.dashboard.management.commands import update_console_messages
@@ -17,6 +20,19 @@ COMMAND = "smarter.apps.dashboard.management.commands.update_console_messages"
 
 class TestUpdateConsoleMessages(SmarterTestBase):
     """Test that the command runs makemessages for both domains, then compilemessages, in the right places."""
+
+    def setUp(self):
+        """A project root of the test's own, with the console's messages.js installed, as make console does."""
+        super().setUp()
+        project = tempfile.TemporaryDirectory()
+        self.addCleanup(project.cleanup)
+        self.project_root = Path(project.name).resolve()
+        self.messages = self.project_root / update_console_messages.CONSOLE_MESSAGES_DIR / "messages.js"
+        self.messages.parent.mkdir(parents=True)
+        self.messages.write_text('gettext("Dashboard");\n', encoding="utf-8")
+        project_settings = override_settings(PROJECT_ROOT=self.project_root)
+        project_settings.enable()
+        self.addCleanup(project_settings.disable)
 
     def run_command(self, *args) -> list[tuple[str, dict, str]]:
         """Run the command with Django's commands faked, and return each call, and the directory it ran in."""
@@ -32,7 +48,7 @@ class TestUpdateConsoleMessages(SmarterTestBase):
         return calls
 
     def test_updates_both_domains_and_compiles(self):
-        """It updates django.po from the project, djangojs.po from react/i18n, then compiles them."""
+        """It updates django.po from the project, djangojs.po from console/i18n, then compiles them."""
         calls = self.run_command()
         project_root = Path(settings.PROJECT_ROOT).resolve()
         languages = [to_locale(code) for code, _ in settings.LANGUAGES]
@@ -48,7 +64,7 @@ class TestUpdateConsoleMessages(SmarterTestBase):
         _, js_kwargs, js_cwd = calls[1]
         self.assertEqual(js_kwargs["domain"], "djangojs")
         self.assertTrue(js_kwargs["no_location"])
-        self.assertEqual(Path(js_cwd).resolve(), project_root / update_console_messages.REACT_MESSAGES_DIR)
+        self.assertEqual(Path(js_cwd).resolve(), project_root / update_console_messages.CONSOLE_MESSAGES_DIR)
 
         _, compile_kwargs, compile_cwd = calls[2]
         self.assertEqual(compile_kwargs["locale"], languages)
@@ -71,6 +87,14 @@ class TestUpdateConsoleMessages(SmarterTestBase):
         """--no-compile skips compilemessages."""
         calls = self.run_command("--no-compile")
         self.assertEqual([name for name, _, _ in calls], ["makemessages", "makemessages"])
+
+    def test_needs_the_console_messages(self):
+        """Without the console release's messages.js, it says to run make console, and runs nothing."""
+        self.messages.unlink()
+        with patch(f"{COMMAND}.call_command") as fake:
+            with self.assertRaisesRegex(CommandError, "run make console"):
+                call_command("update_console_messages", stdout=io.StringIO())
+        fake.assert_not_called()
 
     def test_restores_the_working_directory_after_a_failure(self):
         """A failing makemessages doesn't leave the process in another directory."""

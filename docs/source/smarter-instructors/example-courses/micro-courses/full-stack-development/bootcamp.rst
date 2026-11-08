@@ -4,9 +4,9 @@ Full Stack Development: Classroom Bootcamp
 An eight-hour classroom bootcamp on full stack development with Django and React, taught on
 Smarter's web console, where Django hosts each React app and React calls back into Django's REST
 API. Every list page in the console is built the same way: a `Django view
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+<https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/views/listview/view.py>`__
 and `template
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+<https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
 render a root element with the session's details as data attributes, a template tag reads Vite's
 build manifest, and the React app calls back into `session-authenticated views
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
@@ -27,8 +27,9 @@ At a Glance
      - Developers who know some Python and some JavaScript, and want to connect a back end to a
        front end in a real application.
    * - **Deployment**
-     - Each student runs Smarter from source, installed and working **before** the bootcamp, with
-       ``make react-install`` done.
+     - Each student runs Smarter from source, installed and working **before** the bootcamp, and with
+       `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web console's
+       repository, cloned beside it with ``make install`` done.
    * - **Cost**
      - Free, apart from small model charges.
 
@@ -119,7 +120,8 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        study shows the platform's tests validating real responses against the document.
    * - 9
      - 45
-     - **Lab 4: Rebuild and verify.** Run ``make react-build``, restart the app, and verify the new
+     - **Lab 4: Rebuild and verify.** Run ``make build`` in smarter-console, then
+       ``make console-local``, ``make collectstatic`` and ``make build`` in smarter, restart the app, and verify the new
        column in the real console. Ungraded.
    * - 10
      - 45

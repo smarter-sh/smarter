@@ -23,6 +23,14 @@ not only improves scalability and maintainability, but also enables advanced
 features such as live updates and push notifications, which are difficult to
 achieve with traditional server-rendered templates.
 
+The dashboard is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
+``/dashboard/``, the console's home. ``@smarter/console`` renders ``@smarter/dashboard``'s ``Dashboard``
+component inside its frame, with the sidebar and the user menu, and builds its context from the console's
+session: the cookies of its requests, and the urls of its widgets' endpoints in the console's dashboard api,
+``/api/web/dashboard/``. The package has no build of its own; ``npm run dev`` in it renders the dashboard
+from its example context, against the Django dev server's api. Django answers ``/dashboard/`` with the
+console's page, and keeps the url name ``dashboard:dashboard``. See :doc:`../web-console-api`.
+
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/dashboard-react-component.png
    :alt: Dashboard Passthrough React Component Screenshot
    :class: screenshot
@@ -34,9 +42,5 @@ achieve with traditional server-rendered templates.
    :caption: Dashboard Component Technical Reference
 
    dashboard/api
-   dashboard/django-view
-   dashboard/django-template
-   dashboard/template-tags
-   dashboard/index
    dashboard/example-usage
    dashboard/react-component

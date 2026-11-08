@@ -1,6 +1,6 @@
 ---
 name: smarter-code-quality
-description: Use before finishing any Smarter code change, to lint and format Python and React with the repository's pre-commit hooks (black, flake8, isort, autoflake, bandit, codespell, pyupgrade, pydocstringformatter, Prettier, ESLint). Explains which tools are authoritative and how to run them on changed files under zsh.
+description: Use before finishing any Smarter code change, to lint and format Python, Markdown, YAML and JSON with the repository's pre-commit hooks (black, flake8, isort, autoflake, bandit, codespell, pyupgrade, pydocstringformatter, Prettier). Explains which tools are authoritative and how to run them on changed files under zsh.
 ---
 
 # Smarter Code Quality
@@ -22,7 +22,7 @@ bypass a hook (`--no-verify`, `SKIP=`, blanket `# noqa`) to make a change pass.
 | bandit               | `-ll`                               | Medium or high severity security findings fail.                                |
 | pyupgrade            |                                     | Modern syntax for Python 3.14.                                                 |
 | pydocstringformatter |                                     | Normalizes docstring layout.                                                   |
-| codespell            | `codespell.txt` ignore list         | Also runs on docs and React. Add real project words to `codespell.txt`.        |
+| codespell            | `codespell.txt` ignore list         | Also runs on docs and skills. Add real project words to `codespell.txt`.       |
 
 autoflake's hook puts `--in-place` in its default `args`, which the `args`
 here replace, so it prints a diff, changes nothing and passes. flake8 (C101
@@ -32,16 +32,10 @@ only) doesn't catch unused imports either.
 backlog (unused imports, E402) that is not the project's standard. Don't report
 ruff output as lint debt, and don't "fix" it.
 
-**React (`smarter/react`)**
-
-| Hook             | Runs                                                          |
-| ---------------- | ------------------------------------------------------------- |
-| `react-prettier` | the workspace's Prettier, `npx --no-install prettier --write` |
-| `react-eslint`   | the workspace's ESLint flat config, `--max-warnings=0`        |
-
-These are `language: system` hooks that use `npx --no-install`. They need
-`smarter/react/node_modules`, so run `make react-install` first. See
-`smarter-react-testing` for the ESLint rules.
+**Prettier** formats the Markdown, YAML and JSON outside `smarter/` (the skills, the
+workflows, the root's files). The React code, and its Prettier, ESLint and TypeScript
+checks, are in smarter-sh/smarter-console, whose own pre-commit hooks and `make lint`
+check it.
 
 **Everything**: trailing whitespace, end-of-file newline, YAML, JSON, TOML and
 XML syntax, merge conflict markers, private keys, AWS credentials, debug
@@ -72,8 +66,6 @@ git ls-files --others --exclude-standard | xargs pre-commit run --files   # new 
 - `make pre-commit-init`, and so `make init`, runs `pre-commit autoupdate`,
   which edits `.pre-commit-config.yaml`. That change is a commit of its own
   (`build:`): don't fold it into an unrelated one.
-- For React alone: `make react-lint` (Prettier check, ESLint, `tsc`), as CI's
-  `react` job does.
 
 ## Type errors (pyright and Pylance)
 

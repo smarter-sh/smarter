@@ -57,7 +57,7 @@ lab, in six themes:
 - `smarter/smarter/apps/account/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/models>`__,
   the user profile and the ownership manager.
 - `smarter/smarter/apps/dashboard/views/terminal_emulator/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/views/terminal_emulator>`__
-  and `smarter/react/packages/smarter-terminal-emulator/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-terminal-emulator>`__,
+  and `smarter/react/packages/smarter-terminal-emulator/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-terminal-emulator>`__,
   the terminal window, end to end.
 
 Each course plan lists every file that it uses, module by module, under *The Modules in the

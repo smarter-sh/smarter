@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Report whether the committed api contract is stale: regenerate it in the smarter-app container,
+# Report whether the committed api contract is stale: regenerate it in the smarter-api container,
 # into a temporary folder, and diff it against the host's committed files. Writes nothing in the
 # repository.
 #
@@ -14,10 +14,10 @@ REMOTE="/tmp/api-contract-check"
 LOCAL="$(mktemp -d)"
 trap 'rm -rf "$LOCAL"' EXIT
 
-docker exec smarter-app bash -c "rm -rf $REMOTE && mkdir -p $REMOTE/sam && cd /home/smarter_user/smarter && \
+docker exec smarter-api bash -c "rm -rf $REMOTE && mkdir -p $REMOTE/sam && cd /home/smarter_user/smarter && \
   python manage.py export_api_contract --sam-dir $REMOTE/sam --openapi $REMOTE/openapi.json > /dev/null 2>&1" \
-  || { echo "export_api_contract failed in smarter-app" >&2; exit 2; }
-docker cp -q "smarter-app:$REMOTE/." "$LOCAL/" || exit 2
+  || { echo "export_api_contract failed in smarter-api" >&2; exit 2; }
+docker cp -q "smarter-api:$REMOTE/." "$LOCAL/" || exit 2
 
 stale=0
 diff -q "$LOCAL/openapi.json" "$CONTRACT/openapi.json" > /dev/null || { echo "stale: openapi.json"; stale=1; }

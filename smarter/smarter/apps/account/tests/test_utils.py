@@ -5,8 +5,12 @@ from unittest.mock import patch
 from django.contrib.auth.models import AnonymousUser
 
 from smarter.apps.account import utils
-from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.tests.factories import platform_staff_profile_factory
+from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.apps.account.models import account_contact as account_contact_module
+from smarter.apps.account.tests.factories import (
+    mortal_user_factory,
+    platform_staff_profile_factory,
+)
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import SmarterCachedObjects, smarter_cached_objects
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
@@ -177,6 +181,44 @@ class TestGetCachedAdminUserForAccount(TestAccountMixin):
     def test_missing_account_raises(self):
         with self.assertRaises(User.DoesNotExist):
             utils.get_cached_admin_user_for_account(account=None)  # type: ignore
+
+    def test_creates_a_quiet_test_admin_for_a_test_account(self):
+        """A test account without an admin, e.g. the end-to-end tests', gets a test admin, whose welcome email is quiet."""
+        user, account, user_profile = mortal_user_factory()
+        self.addCleanup(account.delete)
+        self.addCleanup(user.delete)
+        admin_username = f"{account.account_number}-admin"
+        self.addCleanup(User.objects.filter(username=admin_username).delete)
+        self.addCleanup(AccountContact.objects.filter(account=account).delete)
+
+        with patch.object(account_contact_module, "infrastructure") as infrastructure:
+            admin = utils.get_cached_admin_user_for_account(account=account, invalidate=True)
+
+        self.assertEqual(admin.username, admin_username)
+        admin_profile = UserProfile.objects.get(user=admin, account=account)
+        self.assertTrue(admin_profile.is_test)
+        contact = AccountContact.objects.get(account=account, email=admin.email)
+        self.assertTrue(contact.is_test)
+        send_email = infrastructure.email.send_email
+        send_email.assert_called()
+        for call in send_email.call_args_list:
+            self.assertTrue(call.kwargs["quiet"])
+
+    def test_creates_a_real_admin_for_a_real_account(self):
+        """An account with a real profile and no admin gets a real admin, which isn't a test profile."""
+        user, account, user_profile = mortal_user_factory()
+        self.addCleanup(account.delete)
+        self.addCleanup(user.delete)
+        UserProfile.objects.filter(pk=user_profile.pk).update(is_test=False)
+        admin_username = f"{account.account_number}-admin"
+        self.addCleanup(User.objects.filter(username=admin_username).delete)
+        self.addCleanup(AccountContact.objects.filter(account=account).delete)
+
+        with patch.object(account_contact_module, "infrastructure"):
+            admin = utils.get_cached_admin_user_for_account(account=account, invalidate=True)
+
+        admin_profile = UserProfile.objects.get(user=admin, account=account)
+        self.assertFalse(admin_profile.is_test)
 
 
 class TestAccountNumberFromUrl(SmarterTestBase):

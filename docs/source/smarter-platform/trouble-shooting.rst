@@ -22,7 +22,7 @@ Trouble Shooting & FAQ
 
   - Verify that `SMARTER_OPENAI_API_KEY` has been set in your .env file in the root of the repository.
     Without it, the built-in LLMClients answer with an error that names it. After you set it, restart the
-    platform and run `docker exec smarter-app python manage.py initialize_providers`.
+    platform and run `docker exec smarter-api python manage.py initialize_providers`.
   - Try running `docker compose ps` to see the status of your containers.
   - Check the Docker Desktop dashboard for error logs.
   - Ask for help: `Lawrence McDaniel <https://lawrencemcdaniel.com>`__

@@ -64,13 +64,9 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_rename(self):
         super().test_rename()
 
-    def test_list_page_root(self):
-        """The page renders the React app's root, configured with the list api's url."""
-        response = self.client.get(self.url("listview"))
-        context = response.context["custom_domain_list"]
-        self.assertEqual(context["root_id"], "smarter-custom-domain-list-root")
-        self.assertEqual(context["custom_domain_list_api_url"], self.web_url("listview_all"))
-        self.assertIn(f'smarter-custom-domain-list-api-url="{self.web_url("listview_all")}"', response.content.decode())
+    def test_list_page_path(self):
+        """The page is the single-page console's, at /llmclient/custom-domains/."""
+        self.assertEqual(self.url("listview"), "/llmclient/custom-domains/")
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""

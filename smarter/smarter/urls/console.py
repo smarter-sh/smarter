@@ -18,17 +18,8 @@ from waffle import get_waffle_switch_model
 from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.urls import AccountReverseNames
-from smarter.apps.account.views.authentication import (
-    AccountRegisterView,
-    LoginView,
-    LogoutView,
-)
 from smarter.apps.account.views.budget import urls as budget_urls
 from smarter.apps.account.views.budget.const import namespace as budget_namespace
-from smarter.apps.account.views.password_management import (
-    PasswordResetRequestView,
-    PasswordResetView,
-)
 from smarter.apps.api import urls
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.connection import urls as connection_urls
@@ -39,6 +30,7 @@ from smarter.apps.dashboard.admin import (
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.apps.docs import urls as docs_urls
 from smarter.apps.docs.const import namespace as docs_namespace
 from smarter.apps.docs.views.webserver import (
@@ -166,9 +158,17 @@ name_prefix = "console"
 
 
 class ConsoleReverseNames:
-    """Reverse view names for the web console's root paths."""
+    """
+    Reverse view names for the web console's root paths.
 
-    register_view = to_snake_case(AccountRegisterView.__name__)
+    The paths that have moved into the single-page console share one view,
+    :class:`~smarter.apps.dashboard.views.console_app.ConsoleAppView`, so their names can't be derived from
+    their views. They keep the names of the views that served them before, because emails, settings and
+    templates reverse them, e.g. the password reset email's link and ``settings.LOGIN_URL``'s page.
+    """
+
+    login_view = "login_view"
+    register_view = "account_register_view"
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
 
@@ -189,8 +189,8 @@ urlpatterns = [
     path("infrastructure/", include(infrastructure_urls, namespace=infrastructure_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
-    path("login/", LoginView.as_view(), name="login_view"),
-    path("logout/", LogoutView.as_view(), name="logout_view"),
+    # the pages of the single-page console. See smarter.apps.dashboard.views.console_app.
+    path("login/", ConsoleAppView.as_view(), name=ConsoleReverseNames.login_view),
     path("llmclient/", include(llmclient_urls, namespace=llmclient_namespace)),
     path("llmhost/", include(llmhost_urls, namespace=llmhost_namespace)),
     path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
@@ -205,7 +205,7 @@ urlpatterns = [
     path("extensions/", include(extension_urls, namespace=extension_urls.namespace)),
     path("provider/", include(provider_urls, namespace=provider_namespace)),
     path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
-    path("register/", AccountRegisterView.as_view(), name=ConsoleReverseNames.register_view),
+    path("register/", ConsoleAppView.as_view(), name=ConsoleReverseNames.register_view),
     path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
     # -----------------------------------
@@ -219,12 +219,12 @@ urlpatterns = [
     # -----------------------------------
     path(
         "password-reset-request/",
-        PasswordResetRequestView.as_view(),
+        ConsoleAppView.as_view(),
         name=AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST,
     ),
     path(
         "password-reset-link/<uidb64>/<token>/",
-        PasswordResetView.as_view(),
+        ConsoleAppView.as_view(),
         name=AccountReverseNames.PASSWORD_RESET_LINK,
     ),
     # -----------------------------------

@@ -21,8 +21,9 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
     """
     Return the detail of a resource that the user may read: its manifest, what it uses, and what uses it.
 
-    The url names the resource's SAM kind and its record locator. A resource that doesn't exist, that the
-    user may not read, or that is not of the kind, is a 404.
+    The url names the resource's SAM kind and its record locator, or only its record locator, which a manifest page
+    of the console asks with: the kind is then the resource's own. A resource that doesn't exist, that the user may
+    not read, or that is not of the kind, is a 404.
 
     Response shape, a dumped :class:`~smarter.apps.dashboard.resource_detail.ResourceDetail`:
 
@@ -42,6 +43,7 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
     **Example usage**::
 
         GET /api/web/dashboard/resource/Guardrail/guardrail-rMTAwx/
+        GET /api/web/dashboard/resource/guardrail-rMTAwx/
     """
 
     http_method_names = ["get", "post"]
@@ -56,14 +58,14 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
 
         :param request: The request.
         :type request: django.http.HttpRequest
-        :param kwargs: ``kind`` and ``record_locator``, from the url.
+        :param kwargs: ``record_locator``, and ``kind`` if the url names it, from the url.
         :returns: The detail, or ``{"error": ...}``, a 404.
         :rtype: django.http.JsonResponse
         """
-        kind = kwargs.get("kind", "")
+        kind = kwargs.get("kind")
         record_locator = kwargs.get("record_locator", "")
         detail = resource_detail(request, kind, record_locator)
         if detail is None:
-            return JsonResponse({"error": f"{kind} not found."}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": f"{kind or record_locator} not found."}, status=HTTPStatus.NOT_FOUND)
         logger.debug("%s.post() detail of %s %s", self.formatted_class_name, kind, record_locator)
         return JsonResponse(detail.model_dump(mode="json"), status=HTTPStatus.OK)
