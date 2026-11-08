@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.3-alpha.1...v0.44.0-alpha.1) (2026-11-08)
+
+### Features
+
+* **account:** email users a zip of every manifest that they own ([bb70933](https://github.com/smarter-sh/smarter/commit/bb70933eedf7cab21ce81edf54c5635f09c57002))
+
 ## [0.43.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.2...v0.43.3-alpha.1) (2026-11-08)
 
 ### Bug Fixes
