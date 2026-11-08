@@ -34,6 +34,7 @@ from smarter.lib.manifest.record_locator import (
     parse_record_locator,
     record_locator_prefix,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -239,9 +240,9 @@ def instance_of_kind(broker, kind: str, instance: models.Model) -> Optional[mode
     return None
 
 
-def manifest_yaml(kind: str, instance: models.Model, reader=None) -> tuple[Optional[str], str]:
+def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optional[SmarterDictType], str]:
     """
-    Return a resource's manifest, as YAML, as ``smarter describe`` returns it to its owner.
+    Return a resource's manifest, as ``smarter describe`` returns it to its owner.
 
     The resource is described on behalf of its owner, because a broker finds a resource by its name among those of
     its own user. A resource that has no owner, e.g. a Budget, is described on behalf of the user who reads it. The
@@ -253,7 +254,7 @@ def manifest_yaml(kind: str, instance: models.Model, reader=None) -> tuple[Optio
     :type instance: models.Model
     :param reader: The user who reads it, for a resource that has no owner.
     :returns: The manifest, and an empty string, or None and why it could not be read.
-    :rtype: tuple[Optional[str], str]
+    :rtype: tuple[Optional[SmarterDictType], str]
     """
     broker_class = Brokers.get_broker(kind)
     owner = getattr(getattr(instance, "user_profile", None), "user", None)
@@ -273,7 +274,39 @@ def manifest_yaml(kind: str, instance: models.Model, reader=None) -> tuple[Optio
         return None, str(e)
     if not isinstance(data, dict):
         return None, f"The {kind} {name} has no manifest."
-    return yaml.safe_dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True), ""
+    return data, ""
+
+
+def manifest_to_yaml(data: SmarterDictType) -> str:
+    """
+    Return a manifest as YAML, in the order of its fields, as ``smarter describe`` prints it.
+
+    :param data: The manifest.
+    :type data: SmarterDictType
+    :returns: The YAML.
+    :rtype: str
+    """
+    return yaml.safe_dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+
+def manifest_yaml(kind: str, instance: models.Model, reader=None) -> tuple[Optional[str], str]:
+    """
+    Return a resource's manifest, as YAML, as ``smarter describe`` returns it to its owner.
+
+    See :func:`manifest_data`.
+
+    :param kind: The resource's SAM kind.
+    :type kind: str
+    :param instance: The resource's Django ORM instance, which has a ``name``, and usually a ``user_profile``.
+    :type instance: models.Model
+    :param reader: The user who reads it, for a resource that has no owner.
+    :returns: The manifest, and an empty string, or None and why it could not be read.
+    :rtype: tuple[Optional[str], str]
+    """
+    data, error = manifest_data(kind, instance, reader=reader)
+    if data is None:
+        return None, error
+    return manifest_to_yaml(data), ""
 
 
 def resource_detail(request, kind: Optional[str], record_locator: str) -> Optional[ResourceDetail]:

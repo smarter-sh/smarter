@@ -77,6 +77,10 @@ class LogServiceError(SmarterInfrastructureError):
     """The pod log store could not be reached, or rejected a query."""
 
 
+class StorageServiceError(SmarterInfrastructureError):
+    """The private object storage could not be reached, or rejected a request."""
+
+
 __all__ = [
     "CertificateNotFound",
     "CertificateNotIssued",
@@ -94,4 +98,5 @@ __all__ = [
     "LogServiceError",
     "SlackServiceError",
     "SmarterInfrastructureError",
+    "StorageServiceError",
 ]

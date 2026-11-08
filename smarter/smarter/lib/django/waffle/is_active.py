@@ -62,6 +62,18 @@ for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError, MariaDBP
     if _driver_error is not None:
         DB_EXCEPTIONS += (_driver_error,)
 
+DB_CONNECTION_EXCEPTIONS: tuple[type[BaseException], ...] = (OperationalError,)
+"""
+The database errors that mean the database can't be reached, e.g. while its pod restarts.
+
+They are an outage to report, not a bug to debug, so :func:`switch_is_active` logs them as one
+warning line, without a traceback (issue #951). The other :data:`DB_EXCEPTIONS`, e.g. a missing
+``waffle_switch`` table, are logged as errors.
+"""
+for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError):
+    if _driver_error is not None:
+        DB_CONNECTION_EXCEPTIONS += (_driver_error,)
+
 CACHE_EXCEPTIONS: tuple[type[BaseException], ...] = (ConnectionInterrupted, RedisError)
 """The errors of waffle's cache, Redis, e.g. while Redis restarts, after which a switch is read from the database."""
 
@@ -204,6 +216,10 @@ def switch_is_active(switch_name: str) -> bool:
             is_active = switch_from_database(switch_name)
         _switch_cache[switch_name] = (is_active, time.monotonic() + SWITCH_CACHE_SECONDS)
         return is_active
+    except DB_CONNECTION_EXCEPTIONS as e:
+        # one line, no traceback: the database being away is an outage to report, not a bug to debug.
+        logger.warning("%s the database is unavailable, assuming switch %s is inactive: %s", prefix, switch_name, e)
+        return False
     except (*DB_EXCEPTIONS, AppRegistryNotReady) as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True

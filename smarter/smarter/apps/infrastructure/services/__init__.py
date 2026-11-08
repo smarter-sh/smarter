@@ -11,11 +11,14 @@ The infrastructure service layer: the platform's only way to reach its infrastru
     certificate_id, _ = infrastructure.certificates.get_or_create_certificate("example.com")
     infrastructure.kubernetes.apply_manifest(manifest)
     infrastructure.email.send_email(subject="Hello", body="...", to="user@example.com")
+    url = infrastructure.storage.presigned_url("data-exports/42/export.zip", expires_in=86400)
     infrastructure.slack.post_message("smarter", "*Hello*")
 
 - ``dns``: :class:`~.dns.DNSService`, implemented by the cloud provider, e.g. AWS Route53.
 - ``certificates``: :class:`~.certificates.CertificateService`, implemented by the cloud
   provider, e.g. AWS Certificate Manager.
+- ``storage``: :class:`~.storage.StorageService`, private object storage, implemented by the
+  cloud provider, e.g. AWS S3.
 - ``kubernetes``: :class:`~.kubernetes.KubernetesService`, implemented with kubectl, and the
   cloud provider's kubeconfig.
 - ``email``: :class:`~.email.EmailService`, implemented with SMTP.
@@ -71,6 +74,7 @@ from .slack import (
     configure_slack,
     get_slack,
 )
+from .storage import MAX_PRESIGNED_URL_SECONDS, StorageService
 
 if TYPE_CHECKING:
     from ..providers.base import CloudProvider
@@ -104,6 +108,11 @@ class InfrastructureServices:
     def certificates(self) -> CertificateService:
         """The cloud provider's TLS certificates."""
         return self.provider.certificates
+
+    @property
+    def storage(self) -> StorageService:
+        """The cloud provider's private object storage."""
+        return self.provider.storage
 
     @property
     def kubernetes(self) -> KubernetesService:
@@ -150,10 +159,12 @@ __all__ = [
     "LogQuery",
     "LogService",
     "LokiLogService",
+    "MAX_PRESIGNED_URL_SECONDS",
     "SMTPEmailService",
     "SlackMessage",
     "SlackService",
     "SlackWebApiService",
+    "StorageService",
     "configure_email",
     "configure_kubernetes",
     "configure_logs",
