@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.0-alpha.1...v0.44.0-alpha.2) (2026-11-08)
+
+### Bug Fixes
+
+* **manifest:** log a broker without a name at debug, not as a warning ([700eac6](https://github.com/smarter-sh/smarter/commit/700eac686c6ab5e9602cc6769dfa70a7e483b4de)), closes [#952](https://github.com/smarter-sh/smarter/issues/952)
+
 ## [0.44.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.3-alpha.1...v0.44.0-alpha.1) (2026-11-08)
 
 ### Features
