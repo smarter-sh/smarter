@@ -10,10 +10,10 @@ that runs it in production. The chart deploys the same images that students ran 
 Kubernetes brings:
 
 - **The same image, as four Deployments:** the
-  `web server <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+  `web server <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-api.yaml>`__,
   the worker, the infrastructure worker and the scheduler, with liveness, readiness and startup
   probes on ``/healthz/`` and ``/readiness/``.
-- **Horizontal scaling:** `autoscalers <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__
+- **Horizontal scaling:** `autoscalers <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__
   that scale the web server from 3 to 25 pods at 75% CPU, and the worker on its own.
 - **Lifecycle Jobs:** a post-install `init Job
   <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/job-init.yaml>`__
