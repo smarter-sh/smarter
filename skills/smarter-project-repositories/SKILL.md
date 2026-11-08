@@ -1,6 +1,6 @@
 ---
 name: smarter-project-repositories
-description: Use when a task reaches beyond this repository into another smarter-sh repository - the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-deploy, smarter-infrastructure or stackademy - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the public tools of the platform's MCPServer as a fallback.
+description: Use when a task reaches beyond this repository into another smarter-sh repository - the web console (smarter-console, the React app and Smarter Chat), the smarter-cli (Go), the Python, Node.js or Go SDKs (smarter-python, smarter-nodejs, smarter-golang), smarter-vscode-yaml, smarter-deploy, smarter-infrastructure or stackademy - e.g. to check what a change to a SAM model, an example manifest, the OpenAPI document, or the chat or journal contract breaks downstream, to see how a client calls a route, or to answer a question about one of those repositories. Covers reading their local checkouts next to this one, checking that a checkout is current, each repository's copy of the platform's contracts (make contracts), and the public tools of the platform's MCPServer as a fallback.
 ---
 
 # The Other Smarter Project Repositories
@@ -35,10 +35,16 @@ loads, the command that handles that repository (`load_from_github`) fetches and
    yourself: the never-run-git-writes rule applies to every repository, not
    only this one.
 
-   Smarter Chat (`@smarter.sh/ui-chat`) is not one of them. It is a package
-   of this repository's React workspace, `smarter/react/packages/smarter.sh-chat`,
-   and is read, changed and committed here. The archived
-   `smarter-sh/smarter-chat` repository holds only its history up to 0.16.2.
+   The web console is one of them: `../smarter-console`, the npm workspace of
+   the single-page console, its packages, and Smarter Chat
+   (`@smarter.sh/ui-chat`, `packages/smarter.sh-chat`), which is read, changed
+   and committed there, and published to npm from there with the console's
+   version. Its skills (`smarter-console-development` first, then
+   `smarter-react-testing`, `smarter-chat-development`, `smarter-chat-testing`
+   and `smarter-chat-embed`) are in its `skills/`. The archived
+   `smarter-sh/smarter-chat` repository holds only Smarter Chat's history up to
+   0.16.2, and this repository's history up to v0.42.10 has the console's
+   before it moved.
 
 3. **The MCPServer's public tools**, at its public endpoint
    `/api/v1/mcp/smarter-project/`, only when a checkout is missing or
@@ -58,7 +64,7 @@ anything there, and follow its rules, not this repository's.
 
 ## The contracts they copy
 
-The SDKs, the cli and smarter-vscode-yaml each have `make contracts`, which runs
+The SDKs, the cli, smarter-vscode-yaml and smarter-console each have `make contracts`, which runs
 their `scripts/sync-contracts.sh ../smarter [git ref]` to copy this repository's
 committed contracts into their own tree. Their tests then check their models and
 requests against the copy:
@@ -70,11 +76,15 @@ requests against the copy:
 | `smarter-golang`      | the same                                                       | `testdata/contracts/`, `testdata/sam/`     |
 | `smarter-cli`         | openapi.json, the authority on its commands' routes and kinds  | `testdata/contracts/`                      |
 | `smarter-vscode-yaml` | SAM schemas and examples, openapi.json                         | `contract/`, `contract/sam/`               |
+| `smarter-console`     | the console endpoints' JSON Schemas (session, chat, ...)       | `packages/<package>/contract/`             |
 
-Smarter Chat needs no copy step of its own: `make chat-contract` regenerates the
-chat contract's JSON Schema in the backend and in its package,
-`smarter/react/packages/smarter.sh-chat/contract/`, together with the package's
-TypeScript types, all in this repository's tree.
+smarter-console's copies are the JSON Schemas of what the web console reads: the session, Smarter
+Chat's api, the Extensions console, the LLM tool list, a deployed LLMClient's page and the workbench's
+Architecture tab. Its `make contracts` regenerates each package's TypeScript types from them. This
+repository's `make chat-contract`, `make console-session-contract` and the other `*-contract` targets
+regenerate and commit the schemas here; the console copies them. Every week, smarter-sh/automation's
+API Contract Sync checks each of these repositories against this one's latest release, and opens a pull
+request where a copy is out of date.
 
 The source files are listed in each `sync-contracts.sh`. They're generated here
 by `make api-contract` and `make chat-contract` (see `smarter-api-contract`).

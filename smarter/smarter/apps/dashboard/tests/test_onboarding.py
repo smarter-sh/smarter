@@ -2,10 +2,8 @@
 
 import re
 from http import HTTPStatus
-from pathlib import Path
 from unittest import mock
 
-from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client
 from django.urls import reverse
@@ -21,9 +19,11 @@ from smarter.apps.dashboard.views.views.api import onboarding
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.console_source import console_source
 
 SWITCH = SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_ONBOARDING_HINTS
-REACT_CONST = Path(settings.PROJECT_ROOT) / "react" / "packages" / "smarter-onboarding" / "src" / "lib" / "const.ts"
+ONBOARDING_CONST = "packages/smarter-onboarding/src/lib/const.ts"
+"""@smarter/onboarding's hints and outcomes, in the web console's repository, smarter-sh/smarter-console."""
 
 
 class TestOnboardingSeenView(TestAccountMixin):
@@ -82,32 +82,12 @@ class TestOnboardingSeenView(TestAccountMixin):
         with mock.patch.object(onboarding, "get_resolved_user", return_value=None):
             self.assertEqual(self.client.post(self.url).status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_context(self):
-        """Test the page's onboarding state, for a signed-in user, with the switch on and off, and for none."""
-        with override_switch(SWITCH, active=True):
-            context = onboarding.onboarding_context(self.non_admin_user, self.url)
-        self.assertTrue(context.enabled)
-        self.assertEqual(context.seen, [])
-        self.assertEqual(context.api_url, self.url)
-        self.post({"hint": "llmclient_weather", "outcome": "dismissed"})
-        with override_switch(SWITCH, active=False):
-            context = onboarding.onboarding_context(self.non_admin_user, self.url)
-        self.assertFalse(context.enabled)
-        self.assertEqual(context.seen, [OnboardingHints.LLMCLIENT_WEATHER])
-        self.assertEqual(
-            set(context.model_dump(by_alias=True)), {"enabled", "apiUrl", "seen", "csrfCookieName", "cookieDomain"}
-        )
-        with override_switch(SWITCH, active=True):
-            context = onboarding.onboarding_context(AnonymousUser(), self.url)
-        self.assertFalse(context.enabled)
-        self.assertEqual(context.seen, [])
-
     def test_react_package_knows_the_same_hints_and_outcomes(self):
-        """Test that @smarter/onboarding's OnboardingHints and OnboardingOutcomes are the model's choices."""
-        source = REACT_CONST.read_text(encoding="utf-8")
+        """Test that the installed console release's OnboardingHints and OnboardingOutcomes are the model's choices."""
+        source = console_source(ONBOARDING_CONST)
         for name, choices in (("OnboardingHints", OnboardingHints), ("OnboardingOutcomes", OnboardingOutcomes)):
             with self.subTest(name=name):
                 block = re.search(rf"export const {name} = \{{(.*?)\}} as const;", source, re.S)
-                self.assertIsNotNone(block, f"{name} not found in {REACT_CONST}")
+                self.assertIsNotNone(block, f"{name} not found in {ONBOARDING_CONST}")
                 values = set(re.findall(r':\s*"([a-z_]+)"', block.group(1)))  # type: ignore[union-attr]
                 self.assertEqual(values, set(choices.values))

@@ -63,6 +63,7 @@ class DashboardApiReverseNames:
     quick_actions = to_snake_case(QuickActionsView.__name__)
     global_search = to_snake_case(GlobalSearchView.__name__)
     resource_detail = to_snake_case(ResourceDetailView.__name__)
+    resource_detail_by_locator = f"{resource_detail}_by_locator"
     welcome = to_snake_case(WelcomeView.__name__)
     welcome_dismiss = to_snake_case(WelcomeDismissView.__name__)
     onboarding_seen = to_snake_case(OnboardingSeenView.__name__)
@@ -86,6 +87,12 @@ urlpatterns = [
         "resource/<str:kind>/<str:record_locator>/",
         ResourceDetailView.as_view(),
         name=DashboardApiReverseNames.resource_detail,
+    ),
+    # a manifest page knows only the record locator: the kind is the resource's.
+    path(
+        "resource/<str:record_locator>/",
+        ResourceDetailView.as_view(),
+        name=DashboardApiReverseNames.resource_detail_by_locator,
     ),
     path("welcome/", WelcomeView.as_view(), name=DashboardApiReverseNames.welcome),
     path("welcome/dismiss/", WelcomeDismissView.as_view(), name=DashboardApiReverseNames.welcome_dismiss),

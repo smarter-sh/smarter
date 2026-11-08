@@ -11,6 +11,7 @@ from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.resource_views import assert_console_page
 
 
 def url(name: str) -> str:
@@ -49,23 +50,20 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         super().tearDown()
 
     def test_list_view(self):
-        """The list view renders the React app's root element, with the list API's URL."""
+        """The list page is the single-page console's; the session api's tests check that its sidebar link is a superuser's."""
         self.client.force_login(self.admin_user)
-        response = self.client.get(url(InfrastructureReverseNames.listview))
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn("smarter-infrastructure-resource-list-root", content)
-        self.assertIn(web_url(InfrastructureApiWebReverseNames.listview), content)
-        # the sidebar links to the page, for superusers.
-        self.assertIn(f'href="{url(InfrastructureReverseNames.listview)}"', content)
+        assert_console_page(self, url(InfrastructureReverseNames.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoint is in the web console's api."""
         self.assertEqual(web_url(InfrastructureApiWebReverseNames.listview), "/api/web/infrastructure/listview/")
 
     def test_list_view_is_for_superusers(self):
+        """The console shows the page to superusers only, and the list api refuses anyone else."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(url(InfrastructureReverseNames.listview))
+        response = self.client.post(
+            web_url(InfrastructureApiWebReverseNames.listview), data="{}", content_type="application/json"
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_list_api(self):

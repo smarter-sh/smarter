@@ -29,7 +29,7 @@ Configuration and Startup
        ``django.core.cache`` is imported too early.
      - `apps/dashboard/apps.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/apps.py>`__,
        `lib/django/waffle/ready.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/django/waffle/ready.py>`__,
-       `lib/cache/lazy_cache.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/cache/lazy_cache.py>`__,
+       `cache-results <https://github.com/smarter-sh/cache-results>`__,
        `common/mixins/helper_mixin.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/mixins/helper_mixin.py>`__
        (``SmarterReadyState``)
    * - 3. Python logging
@@ -203,7 +203,7 @@ Front End, Quality and the Whole
      - `lib/django/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/django/templatetags>`__,
        `apps/dashboard/templatetags/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/templatetags>`__,
        `templates/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/templates>`__,
-       `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__
+       `smarter/react/packages/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages>`__
    * - 17. Testing, pre-commit and coverage
      - Test base classes without transaction rollback, an in-memory infrastructure provider,
        pre-commit hooks as the lint standard, and coverage targets per app.
@@ -219,5 +219,5 @@ Front End, Quality and the Whole
        logging handler that publishes to that channel, and the React component that renders the
        stream.
      - `apps/dashboard/views/terminal_emulator/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/dashboard/views/terminal_emulator>`__,
-       `apps/dashboard/templatetags/react_terminal_emulator.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/dashboard/templatetags/react_terminal_emulator.py>`__,
-       `smarter-terminal-emulator <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter-terminal-emulator>`__
+       `apps/dashboard/templatetags/react_terminal_emulator.py <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/dashboard/templatetags/react_terminal_emulator.py>`__,
+       `smarter-terminal-emulator <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-terminal-emulator>`__

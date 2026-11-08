@@ -74,7 +74,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        ``.github/workflows/`` and :doc:`ADR 028 on code quality </adr/028-code-quality>`.
    * - 2
      - 45
-     - **Lab 1: Measure.** Run one Django app's tests and ``make coverage`` in the ``smarter-app``
+     - **Lab 1: Measure.** Run one Django app's tests and ``make coverage`` in the ``smarter-api``
        container, read the coverage report, and find the least covered module. Produces
        Assignment 1.
    * - 3

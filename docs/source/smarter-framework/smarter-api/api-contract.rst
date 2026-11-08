@@ -80,9 +80,11 @@ tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/mcpserve
 whose protocol the Model Context Protocol specification defines, are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
 
-Every Smarter platform serves its document, at ``/docs/openapi.json``, and renders it with
-`Scalar <https://github.com/scalar/scalar>`__, which the platform ships in its static files, at
-``/docs/openapi/``, which the web console's sidebar links to as *OpenAPI Contract*. The page calls
+Every Smarter platform serves its document, at ``/api/v1/openapi.json``
+(:mod:`smarter.apps.api.v1.contract.views`; ``/docs/openapi.json``, its earlier address, redirects
+there). The web console renders it with
+`Scalar <https://github.com/scalar/scalar>`__, which the console ships, on its public page
+``/docs/openapi/``, which its sidebar links to as *OpenAPI Contract*. The page calls
 none of Scalar's hosted services. The served document lists the platform's own ``/api/v1`` as its
 first server, so that the page's *Test Request* sends requests to the platform that you are
 reading it on. Authorize with an api key, as ``Token <api key>``.
@@ -121,7 +123,7 @@ The contract is code, in :mod:`smarter.apps.api.v1.contract`:
      - The committed OpenAPI document.
 
 After changing any of the models, or a route that the document covers, run ``make api-contract``. It runs
-``manage.py export_api_contract`` in the ``smarter-app`` container, copies the files back to your
+``manage.py export_api_contract`` in the ``smarter-api`` container, copies the files back to your
 working tree, and you commit them.
 
 The tests make the contract hard to break by accident. They fail when:

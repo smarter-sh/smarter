@@ -1,134 +1,20 @@
-# pylint: disable=W0613
 """
-This module contains views to implement the React.
+The LLM Host and LLM Host Compute list pages, which the single-page console serves (ADR-035).
 
-LLMHost list view in the Smarter Dashboard.
+The pages are ``/llmhost/`` and ``/llmhost/compute/``.
+
+The console renders each package's list at its page's path, and the lists call their list apis,
+:mod:`smarter.apps.llmhost.views.listview.api`. The pages keep their view classes, named after the list apis', which
+:func:`smarter.lib.django.listview.listview_registry` pairs them with, so that the dashboard's global search links to
+them.
 """
 
-from django.conf import settings
-from django.core.handlers.asgi import ASGIRequest
-from django.shortcuts import render
-
-from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class LLMHostListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the llmhost list view for the Smarter Workbench web console.
-
-    This view displays all llmhosts available to the authenticated user as cards, providing a quick overview and access to llmhost details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each llmhost, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-    """
-
-    template_path = "react/llmhost-list.html"
-    llmhosts: list[LLMHost]
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{LLMHostListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the page that hosts the LLMHost list React app, with its configuration.
-
-        :param request: The request.
-        :returns: The rendered page.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.llmhost.api.web.urls import LLMHostApiWebReverseNames
-
-        context = {
-            "llmhost_list": {
-                "root_id": "smarter-llmhost-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmhost_list_api_url": reverse(
-                    LLMHostApiWebReverseNames.namespace, LLMHostApiWebReverseNames.listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class LLMHostListView(ConsoleAppView):
+    """The LLM Host list page: the single-page console's, at the path that Django served it at."""
 
 
-class LLMHostComputeListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the LLMHostCompute list view for the Smarter Workbench web console.
-
-    It displays the LLMHostComputes available to the authenticated user: the kinds of node, and
-    node groups, that their LLMHosts can run on.
-
-    :returns: Rendered HTML page, in which the React app @smarter/llmhost-compute-list renders the list.
-    :rtype: HttpResponse
-    """
-
-    template_path = "react/llmhost-compute-list.html"
-    computes: list[LLMHostCompute]
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{LLMHostComputeListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the page that hosts the LLMHostCompute list React app, with its configuration.
-
-        :param request: The request.
-        :returns: The rendered page.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.llmhost.api.web.urls import LLMHostApiWebReverseNames
-
-        context = {
-            "llmhost_compute_list": {
-                "root_id": "smarter-llmhost-compute-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmhost_compute_list_api_url": reverse(
-                    LLMHostApiWebReverseNames.namespace, LLMHostApiWebReverseNames.compute_listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class LLMHostComputeListView(ConsoleAppView):
+    """The LLM Host Compute list page: the single-page console's, at the path that Django served it at."""

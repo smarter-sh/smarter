@@ -1,8 +1,8 @@
 """
 The web console's Extensions pages, and their api.
 
-Superusers manage extensions on two pages, which one React app, ``@smarter/extension-console``,
-renders, depending on the root element that the page's template provides. Every other user sees
+Superusers manage extensions on two pages of the single-page console (ADR-035), which renders
+``@smarter/extension-console``'s list or an extension's page at their paths. Every other user sees
 the same pages read-only: the extensions that their account may use, without their settings, their
 availability or the platform admin's Secrets, and without any action.
 
@@ -24,23 +24,21 @@ the person who tried it.
 from http import HTTPStatus
 from typing import Optional
 
-from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.http import JsonResponse
 from packaging.version import InvalidVersion, Version
 from pydantic import BaseModel, ValidationError
 from waffle import get_waffle_switch_model
 
 from smarter.apps.account.models import Account, User
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.apps.llmtool.models import Extension, ExtensionVersion
 from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from . import registry
 from .contract import (
@@ -265,80 +263,17 @@ def registry_extensions(index: "registry.RegistryIndex") -> list[RegistryExtensi
 # ------------------------------------------------------------------------------
 # pages
 # ------------------------------------------------------------------------------
-class ExtensionPageView(SmarterAuthenticatedNeverCachedWebView):
+class ExtensionListView(ConsoleAppView):
+    """The Extensions page, ``/extensions/``: the single-page console's, at the path that Django served it at."""
+
+
+class ExtensionDetailView(ConsoleAppView):
     """
-    The base class of the Extensions pages, and the React app's root element's attributes.
+    An extension's page, ``/extensions/<slug>/``: the single-page console's.
 
-    A superuser manages extensions on them; every other user sees them read-only.
+    The console shows anyone the page, and the api refuses an extension that the requesting user may not see, as
+    :meth:`ExtensionApiView.visible` decides.
     """
-
-    template_path: str
-    context_key: str
-    root_id: str
-
-    def page_context(self, **extra: str) -> dict:
-        """The template's context: the React app's root element's attributes."""
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmtool.extension.api.web.urls import (
-            ExtensionApiWebReverseNames,
-        )
-
-        from .urls import ExtensionReverseNames
-
-        return {
-            self.context_key: {
-                "root_id": self.root_id,
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "extension_api_url": reverse(ExtensionApiWebReverseNames.namespace, ExtensionApiWebReverseNames.root),
-                "extension_list_url": reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
-                "can_edit": "true" if self.request.user.is_superuser else "false",  # type: ignore[union-attr]
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-                **extra,
-            }
-        }
-
-
-class ExtensionListView(ExtensionPageView):
-    """Render the Extensions list of the Smarter web console."""
-
-    template_path = "react/extension-list.html"
-    context_key = "extension_list"
-    root_id = "smarter-extension-list-root"
-
-    def get(self, request: ASGIRequest, *args, **kwargs) -> HttpResponse:
-        """
-        Render the Extensions page, which hosts its React app.
-
-        :param request: The request.
-        :returns: The page.
-        """
-        return render(request, template_name=self.template_path, context=self.page_context())
-
-
-class ExtensionDetailView(ExtensionPageView):
-    """Render an extension's detail page in the Smarter web console."""
-
-    template_path = "react/extension-detail.html"
-    context_key = "extension_detail"
-    root_id = "smarter-extension-detail-root"
-
-    def get(self, request: ASGIRequest, *args, slug: str = "", **kwargs) -> HttpResponse:
-        """
-        Render an extension's detail page, which hosts its React app.
-
-        :param request: The request.
-        :param slug: The extension's slug, from the url.
-        :returns: The page, or 404 if no such extension is installed, or the requesting user may not see it.
-        """
-        extension = Extension.objects.filter(slug=slug).first()
-        if extension is None or not (
-            request.user.is_superuser or extension.is_available_to(self.account)  # type: ignore[union-attr]
-        ):
-            return SmarterHttpResponseNotFound(request=request, error_message=f"No extension {slug} is installed.")
-        return render(request, template_name=self.template_path, context=self.page_context(extension_slug=slug))
 
 
 # ------------------------------------------------------------------------------

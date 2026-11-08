@@ -84,8 +84,8 @@ An Extension's tests import Smarter, so they run in a Smarter development contai
 
 .. code-block:: console
 
-    docker cp ../smarter-extension-weather smarter-app:/tmp/
-    docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test_extension /tmp/smarter-extension-weather"
+    docker cp ../smarter-extension-weather smarter-api:/tmp/
+    docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test_extension /tmp/smarter-extension-weather"
 
 Before you publish, also check the packaged Extension as the installer will, with
 ``manage.py validate_extension``, and install it on your development platform to try it with an

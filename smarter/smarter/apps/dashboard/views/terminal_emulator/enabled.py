@@ -71,7 +71,7 @@ def require_terminal(view: Callable[..., HttpResponse]) -> Callable[..., HttpRes
     """
     Make a Terminal view a 404 while the terminal is disabled, and for every user but a superuser.
 
-    An anonymous request reaches the view, which redirects it to the login page. A signed in user
+    An anonymous request reaches the view, whose page sends it to the sign-in page. A signed in user
     who is not a superuser gets a 404, so that the page's existence is not revealed. See
     :func:`terminal_enabled`.
 

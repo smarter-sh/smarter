@@ -32,7 +32,7 @@ The template's permissions are: inject scripts from
 ``https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@*``; read and write ``SmarterChatConfig``, read
 ``SmarterChat.version`` and execute ``SmarterChat.mount``; and log to the console in Preview mode.
 It reads no cookies and sends nothing itself. The **Embed script version** field (Advanced) is the
-version that the template is tested with; set a range, such as ``0.9``, to follow patch releases.
+version that the template is tested with; set a range, such as ``1.0``, to follow patch releases.
 
 An api key, which an LLMClient needs only if it has :doc:`api keys <../smarter-platform/api-keys>`, is
 public in the page: use a key dedicated to the site.
@@ -46,5 +46,5 @@ embed script's tag works too, without the sandbox:
 
 .. code-block:: html
 
-  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js"
+  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@1/dist/embed.js"
     data-chatbot="https://stackademy.3141-5926-5359.api.example.com/" async></script>

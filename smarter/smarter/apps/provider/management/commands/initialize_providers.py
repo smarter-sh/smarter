@@ -726,7 +726,7 @@ class Command(SmarterCommand):
             "",
             "To set them, add them to .env, restart the platform, and run:",
             "",
-            "    docker exec smarter-app python manage.py initialize_providers",
+            "    docker exec smarter-api python manage.py initialize_providers",
         ]
         logger.error(
             SmarterFormattedText.banner(

@@ -2390,6 +2390,45 @@ class Settings(BaseSettings):
 
         raise SmarterConfigurationError(f"could not validate enable_web_console_terminal: {v}")
 
+    static_files_on_cdn: bool = Field(
+        settings_defaults.STATIC_FILES_ON_CDN,
+        description=(
+            "True if the platform's static files, the web console's scripts among them, are uploaded to the "
+            "environment's S3 bucket and served from its CDN. Off by default: the server serves them."
+        ),
+        title="Static Files on the CDN",
+    )
+    """Determines whether the static files are served from the environment's CDN, rather than by the server.
+
+    When true, ``initialize_platform`` uploads them to the environment's S3 bucket, under ``static/``, on each
+    deployment, and ``STATIC_URL`` is the CDN's, e.g. ``https://cdn.platform.example.com/static/``. Pages,
+    cookies and the api stay on the platform's own host: only static files come from the CDN. It needs AWS,
+    and is ignored, with a warning, without it. See :doc:`ADR-035 </adr/035-single-page-app>`.
+
+    Set with ``SMARTER_STATIC_FILES_ON_CDN``. Defaults to False.
+
+    Returns:
+        bool: True if the static files are served from the CDN, False otherwise.
+    """
+
+    @before_field_validator("static_files_on_cdn")
+    def parse_static_files_on_cdn(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'static_files_on_cdn' field.
+
+        Args:
+            v (Optional[Union[bool, str]]): the static_files_on_cdn value to validate
+        Returns:
+            bool: The validated static_files_on_cdn.
+        """
+        if isinstance(v, bool):
+            return v
+        if v in THE_EMPTY_SET:
+            return settings_defaults.STATIC_FILES_ON_CDN
+        if isinstance(v, str):
+            return v.lower() in ["true", "1", "t", "y", "yes"]
+
+        raise SmarterConfigurationError(f"could not validate static_files_on_cdn: {v}")
+
     enable_dashboard_passthrough_prompt: bool = Field(
         settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
         description="True if the passthrough prompt feature is enabled based on the current environment.",

@@ -1,12 +1,10 @@
 """
-Django URL patterns for the prompt app.
+Django URL patterns for the prompt app: the Prompt Engineer's Workbench, at ``/workbench/``.
 
-These are the
-endpoints for for the Workbench React app and prompt configuration.
-
-how we got here:
- - /
- - /workbench/<str:name>/config/
+The workbench's pages, an LLMClient's manifest page, and the LLMClient's chat configuration, which
+Smarter Chat also reads from the public api, ``/api/v1/llm-clients/<hashed_id>/config/``. The
+endpoints that the workbench's React app calls are in the web console's api, at
+``/api/web/prompt/``: see :mod:`smarter.apps.prompt.api.web.urls`.
 """
 
 from django.urls import path
@@ -15,13 +13,7 @@ from smarter.common.utils import to_snake_case
 
 from .const import namespace
 from .views.detailviews import (
-    LLMClientArchitectureView,
-    LLMClientDeploymentApiKeyAttachView,
-    LLMClientDeploymentApiKeyCreateView,
-    LLMClientDeploymentApiKeyDetachView,
-    LLMClientDeploymentView,
     LLMClientDetailView,
-    LLMClientManifestEditorView,
     PromptConfigView,
     PromptSandboxView,
     PromptWorkbenchView,
@@ -47,8 +39,8 @@ class PromptReverseNames:
     All Prompt endpoints in the Smarter platform are included as attributes
     of this class. This centralizes the reverse URL names for all Prompt endpoints,
     making it easier to maintain and reference them throughout the codebase. The
-    endpoints that the LLMClient list page's React app calls are in the web console's
-    api: see :class:`smarter.apps.prompt.api.web.urls.PromptApiWebReverseNames`.
+    endpoints that the LLMClient list page's and the workbench's React apps call are in the
+    web console's api: see :class:`smarter.apps.prompt.api.web.urls.PromptApiWebReverseNames`.
 
     Usage
     -----
@@ -70,12 +62,6 @@ class PromptReverseNames:
     namespace = namespace
 
     manifest_by_hashed_id = to_snake_case(LLMClientDetailView.__name__)
-    manifest_editor_by_hashed_id = to_snake_case(LLMClientManifestEditorView.__name__)
-    architecture_by_hashed_id = to_snake_case(LLMClientArchitectureView.__name__)
-    deployment_by_hashed_id = to_snake_case(LLMClientDeploymentView.__name__)
-    deployment_api_key_create_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyCreateView.__name__)
-    deployment_api_key_attach_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyAttachView.__name__)
-    deployment_api_key_detach_by_hashed_id = to_snake_case(LLMClientDeploymentApiKeyDetachView.__name__)
     chat_by_hashed_id = to_snake_case(PromptWorkbenchView.__name__)
     config_by_hashed_id = to_snake_case(PromptConfigView.__name__)
     sandbox_by_hashed_id = to_snake_case(PromptSandboxView.__name__)
@@ -90,36 +76,6 @@ urlpatterns = [
         "llm-clients/<str:hashed_id>/manifest/",
         LLMClientDetailView.as_view(),
         name=PromptReverseNames.manifest_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/manifest/editor/",
-        LLMClientManifestEditorView.as_view(),
-        name=PromptReverseNames.manifest_editor_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/architecture/",
-        LLMClientArchitectureView.as_view(),
-        name=PromptReverseNames.architecture_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/deployment/",
-        LLMClientDeploymentView.as_view(),
-        name=PromptReverseNames.deployment_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/deployment/api-keys/create/",
-        LLMClientDeploymentApiKeyCreateView.as_view(),
-        name=PromptReverseNames.deployment_api_key_create_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/deployment/api-keys/attach/",
-        LLMClientDeploymentApiKeyAttachView.as_view(),
-        name=PromptReverseNames.deployment_api_key_attach_by_hashed_id,
-    ),
-    path(
-        "llm-clients/<str:hashed_id>/deployment/api-keys/detach/",
-        LLMClientDeploymentApiKeyDetachView.as_view(),
-        name=PromptReverseNames.deployment_api_key_detach_by_hashed_id,
     ),
     path(
         "llm-clients/<str:hashed_id>/prompt/",

@@ -53,6 +53,15 @@ Django templates remain the default for pages that don't need client-side
 interactivity. Contributors should choose React when a page's behavior
 justifies it, not by default.
 
+.. note::
+
+  :doc:`ADR-035 <035-single-page-app>` has since made the console a single-page
+  app, and moved its npm workspace, with its tests and lint, to its own
+  repository, `smarter-sh/smarter-console
+  <https://github.com/smarter-sh/smarter-console>`__. The backend installs a
+  pinned release of its build (``smarter-console-version.txt``,
+  ``make console``).
+
 Alternatives Considered
 -----------------------
 - Limiting React to a single area of the platform (the original form of this

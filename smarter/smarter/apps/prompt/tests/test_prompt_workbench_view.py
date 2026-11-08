@@ -1,36 +1,31 @@
 """
-Test :class:`smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView`, the prompt workbench page.
+Test :class:`smarter.apps.prompt.views.detailviews.prompt_workbench_view.PromptWorkbenchView`, the workbench's page.
 
-The page's rendering for a signed-in user is tested in ``test_views.py``, with the rest of the LLMClient dashboard views.
+The page is the single-page console's. Its access check, the resource api, and its endpoints are tested in
+``test_views.py``, with the rest of the LLMClient's views, and the page itself in @smarter/console's tests.
 """
 
 from http import HTTPStatus
-from urllib.parse import parse_qs, urlparse
 
 from django.test import Client
 
+from smarter.apps.dashboard.views.console_app import console_index_html
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.prompt.urls import PromptReverseNames
-from smarter.common.conf import smarter_settings
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-PLATFORM_HOST = urlparse(smarter_settings.environment_platform_url).netloc
-
 
 class TestPromptWorkbenchView(SmarterTestBase):
-    """Test the prompt workbench page for a visitor who is not signed in."""
+    """Test the workbench's page for a visitor who is not signed in."""
 
-    def test_anonymous_visitor_is_redirected_to_sign_in(self):
-        """Test that a signed-out visitor of a workbench url is redirected to the sign-in page, not refused with a 403."""
-        # the redirect happens before the LLMClient is looked up, so an unsaved one's url is enough.
+    def test_anonymous_visitor_gets_the_console(self):
+        """A signed-out visitor of a workbench url gets the console's page, whose router sends them to sign in."""
+        # the page doesn't look the LLMClient up, so an unsaved one's url is enough.
         url = reverse(
             f"{PromptReverseNames.namespace}:{PromptReverseNames.chat_by_hashed_id}",
             kwargs={"hashed_id": LLMClient(id=999999999).hashed_id},
         )
-        response = Client().get(url, HTTP_HOST=PLATFORM_HOST)
-        self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:500])
-        # login_required adds ?next=, which returns the visitor to the workbench after signing in.
-        location = urlparse(response["Location"])
-        self.assertEqual(location.path, "/login/")
-        self.assertEqual(parse_qs(location.query).get("next"), [url])
+        response = Client().get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIsNotNone(console_index_html())
