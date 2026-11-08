@@ -4,7 +4,7 @@ Base classes and fakes of the vectorstore app's tests.
 Nothing reaches a real cluster or service:
 
 - :class:`FakeKubernetes` replaces the Kubernetes service, with :func:`configure_kubernetes`. The
-  smarter-app container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
+  smarter-api container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
   be deployed without it.
 - The Qdrant backend uses an in-memory QdrantClient, which supports everything but snapshots.
 - Embeddings are LangChain's deterministic fake.

@@ -19,7 +19,7 @@ set -euo pipefail
 
 HOST_ROOT="smarter/smarter"
 CONTAINER_ROOT="/home/smarter_user/smarter/smarter"
-CONTAINERS=(smarter-app smarter-worker smarter-worker-infrastructure smarter-beat)
+CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-beat)
 SUBPATHS=("${@:-.}")
 
 if [ ! -d "$HOST_ROOT" ]; then
@@ -57,7 +57,7 @@ for container in "${CONTAINERS[@]}"; do
   fi
 done
 
-# Several copies in a row can kill smarter-app's auto-reloading dev server,
+# Several copies in a row can kill smarter-api's auto-reloading dev server,
 # which tests that apply manifests over HTTP depend on. Wait for it.
 echo -n "waiting for http://localhost:9357/ "
 for _ in $(seq 1 60); do
@@ -69,5 +69,5 @@ for _ in $(seq 1 60); do
   echo -n "."
   sleep 2
 done
-echo " not up after 2 minutes: check docker logs smarter-app" >&2
+echo " not up after 2 minutes: check docker logs smarter-api" >&2
 exit 1

@@ -32,6 +32,68 @@ from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 
 
+def assert_console_page(testcase, url: str) -> None:
+    """
+    Assert that a page is the single-page console's (ADR-035): a ConsoleAppView, the same for anyone.
+
+    The console sends a visitor who isn't signed in to its sign-in page, so the page answers a signed-in user and an
+    anonymous one alike.
+
+    :param testcase: The test case, whose ``client`` may be signed in; it is signed out afterwards.
+    :param url: The page's url.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.dashboard.views.console_app import ConsoleAppView
+
+    view_class = resolve(url).func.view_class  # type: ignore[attr-defined]
+    testcase.assertTrue(issubclass(view_class, ConsoleAppView), view_class)
+    testcase.assertEqual(testcase.client.get(url).status_code, HTTPStatus.OK)
+    testcase.client.logout()
+    testcase.assertEqual(testcase.client.get(url).status_code, HTTPStatus.OK)
+
+
+def resource_api_url(record_locator: str) -> str:
+    """
+    The url of a resource's detail in the dashboard's resource api, by its record locator alone, as the console's.
+
+    manifest page asks for it.
+
+    :param record_locator: The resource's record locator, e.g. ``guardrail-rMTAwx``.
+    :returns: The url.
+    """
+    # pylint: disable=import-outside-toplevel
+    from django.urls import reverse as django_reverse
+
+    from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
+
+    name = f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.resource_detail_by_locator}"
+    return django_reverse(name, kwargs={"record_locator": record_locator})
+
+
+def resource_detail_json(testcase, record_locator: str) -> dict:
+    """
+    Assert that the test's client may read a resource, as its manifest page does, and return its detail.
+
+    :param testcase: The test case, whose ``client`` is signed in.
+    :param record_locator: The resource's record locator.
+    :returns: The resource api's json, with ``kind``, ``name`` and ``manifest``.
+    """
+    response = testcase.client.get(resource_api_url(record_locator))
+    testcase.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+    return response.json()
+
+
+def assert_no_resource(testcase, record_locator: str) -> None:
+    """
+    Assert that the test's client gets no resource of a record locator: there is none, or it may not read it.
+
+    :param testcase: The test case, whose ``client`` is signed in.
+    :param record_locator: The record locator.
+    """
+    response = testcase.client.get(resource_api_url(record_locator))
+    testcase.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:500])
+
+
 class ResourceViewsTestMixin:
     """
     Test the React list page, the list api, the clone, delete and rename apis, and the detail page.
@@ -207,10 +269,8 @@ class ResourceViewsTestMixin:
     # the React list page and its list api
     # -------------------------------------------------------------------------
     def test_listview_page(self):
-        """Test the React list page, and that an anonymous user is redirected to the login page."""
-        self.assertEqual(self.client.get(self.url("listview")).status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
-        self.client.logout()
-        self.assertEqual(self.client.get(self.url("listview")).status_code, HTTPStatus.FOUND)  # type: ignore[attr-defined]
+        """Test the list page: the single-page console's (ADR-035), the same for anyone."""
+        assert_console_page(self, self.url("listview"))  # type: ignore[attr-defined]
 
     def test_list_api(self):
         """Test that the list api returns the user, the smarter admin, and the resource, also for a GET."""
@@ -310,15 +370,15 @@ class ResourceViewsTestMixin:
     # the detail page
     # -------------------------------------------------------------------------
     def test_detail(self):
-        """Test that the detail page renders the resource's manifest."""
-        response = self.client.get(self.url(self.detail_view_name, hashed_id=self.resource.hashed_id))  # type: ignore[attr-defined]
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])  # type: ignore[attr-defined]
-        self.assertIn(self.resource.name.encode(), response.content)  # type: ignore[attr-defined]
+        """Test the manifest page: the single-page console's, whose resource api answers with the resource's manifest."""
+        detail = resource_detail_json(self, self.resource.record_locator)  # type: ignore[attr-defined]
+        self.assertEqual(detail["name"], self.resource.name)  # type: ignore[attr-defined]
+        self.assertIn(self.resource.name, detail["manifest"] or "")  # type: ignore[attr-defined]
+        assert_console_page(self, self.url(self.detail_view_name, hashed_id=self.resource.hashed_id))  # type: ignore[attr-defined]
 
     def test_detail_not_found(self):
-        """Test that an invalid, or unknown, hashed id is a 404."""
-        response = self.client.get(self.url(self.detail_view_name, hashed_id="not-a-hashed-id"))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)  # type: ignore[attr-defined]
-        unknown = self.model(id=999999999)
-        response = self.client.get(self.url(self.detail_view_name, hashed_id=unknown.hashed_id))  # type: ignore[attr-defined]
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)  # type: ignore[attr-defined]
+        """Test that the resource api has no resource for an invalid, or unknown, id."""
+        prefix = self.resource.record_locator.partition("-")[0]  # type: ignore[attr-defined]
+        assert_no_resource(self, f"{prefix}-not-a-hashed-id")
+        unknown = self.model(id=999999999)  # type: ignore[attr-defined]
+        assert_no_resource(self, unknown.record_locator)

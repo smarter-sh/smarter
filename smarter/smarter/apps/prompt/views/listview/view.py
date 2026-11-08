@@ -1,83 +1,13 @@
-# pylint: disable=W0613,C0302
 """
-PromptListView is a Django class-based view that serves the list of LLMClients for the Smarter workbench web console.
+The LLMClient list page, ``/workbench/``, which the single-page console serves (ADR-035).
 
-It is responsible for fetching the LLMClients associated with the authenticated user, as well as any shared
-LLMClients, and rendering them in a template. The view is protected and requires the user to be authenticated. It
-also includes caching to keep the workbench snappy while avoiding appearing stale.
+The console renders ``@smarter/llmclient-list``'s list at the page's path, and the list calls its list api,
+:mod:`smarter.apps.prompt.views.listview.api`. The page keeps its view class, named after the list api's, which
+:func:`smarter.lib.django.listview.listview_registry` pairs it with, so that the dashboard's global search links to it.
 """
 
-from django.conf import settings
-from django.http import (
-    HttpRequest,
-    HttpResponse,
-)
-from django.shortcuts import render
-
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import (
-    SmarterAuthenticatedWebView,
-)
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING])
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class PromptListView(SmarterAuthenticatedWebView):
-    """
-    List view for smarter workbench web console.
-
-    This sets up
-    the React component that will render the list of LLMClients. The React
-    component uses the views located in ./api for its data.
-
-      id="smarter-llmclient-list-root"
-      django-csrf-cookie-name="csrftoken"
-      django-session-cookie-name="sessionid"
-      smarter-llmclient-list-api-url="/prompt/api/llm-clients/"
-    """
-
-    template_path = "react/llmclient-list.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PromptListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        Render the page that hosts the LLMClient list React app, with its configuration in the context.
-
-        :param request: The request.
-        :param args: Unused positional arguments.
-        :param kwargs: Unused keyword arguments.
-        :returns: The rendered page.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
-
-        context = {
-            "llmclient_list": {
-                "root_id": "smarter-llmclient-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmclient_list_api_url": reverse(
-                    PromptApiWebReverseNames.namespace, PromptApiWebReverseNames.listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class PromptListView(ConsoleAppView):
+    """The LLMClient list page: the single-page console's, at the path that Django served it at."""

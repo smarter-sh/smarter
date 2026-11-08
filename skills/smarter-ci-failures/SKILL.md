@@ -1,6 +1,6 @@
 ---
 name: smarter-ci-failures
-description: Use when the user gives a GitHub Actions run or job url (github.com/smarter-sh/<repo>/actions/runs/<id>, optionally /job/<id>) or says a workflow run, test run, shard, CI check or pull request check failed, e.g. "python shard 4 of 8 failed", "the test run failed but I can't download the logs". Covers downloading the failed jobs' logs with the bundled script (which works around GitHub's 502s, the "terminal escape sequences" refusal, and a missing gh login), reading the failures out of them, the Tests workflow's jobs and shards, reproducing a failure in the smarter-app container, deciding whether it is new or pre-existing, fixing it, and reporting.
+description: Use when the user gives a GitHub Actions run or job url (github.com/smarter-sh/<repo>/actions/runs/<id>, optionally /job/<id>) or says a workflow run, test run, shard, CI check or pull request check failed, e.g. "python shard 4 of 8 failed", "the test run failed but I can't download the logs". Covers downloading the failed jobs' logs with the bundled script (which works around GitHub's 502s, the "terminal escape sequences" refusal, and a missing gh login), reading the failures out of them, the Tests workflow's jobs and shards, reproducing a failure in the smarter-api container, deciding whether it is new or pre-existing, fixing it, and reporting.
 ---
 
 # Investigating a Failed GitHub Actions Run
@@ -44,13 +44,13 @@ The **Tests** workflow (`.github/workflows/test.yml`, on pull requests to `main`
 | Job                     | What its failure means                                                         |
 | ----------------------- | ------------------------------------------------------------------------------ |
 | `fingerprint`           | The cache key step. Rare; read its log.                                        |
-| `react`                 | `make react-test` and lint of `smarter/react`. Vitest failures.                |
 | `python (shard N of 8)` | One eighth of the Django test suite, built from scratch in its own containers. |
 | `python-report`         | Fails whenever any shard failed. Never the cause: find the shard that failed.  |
 
 A shard's failure is either a test failure (`FAILED (failures=…, errors=…)`), or the platform failing
 to start before the tests ran (no `Ran N tests` line: read the shard's setup steps, e.g. migrations,
-`initialize_platform`). The other workflows (build, deploy, publish) are described in `build.yml`.
+`initialize_platform`, or _Install the web console_, which fails when the release that
+`smarter-console-version.txt` pins can't be downloaded). The other workflows (build, deploy, publish) are described in `build.yml`.
 
 ## 3. Is it new?
 
@@ -65,15 +65,16 @@ Compare the run's commit with the working tree: `git log --oneline -5` and `git 
 
 ## 4. Reproduce, fix, verify
 
-Run the failed test by its dotted name in the smarter-app container (see `smarter-docker-environment` and
+Run the failed test by its dotted name in the smarter-api container (see `smarter-docker-environment` and
 `smarter-python-testing`), after syncing your edits:
 
 ```console
-docker exec smarter-app bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.lib.drf.tests.test_listview_api"
+docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.lib.drf.tests.test_listview_api"
 ```
 
-Then run its whole package, and the pre-commit hooks on the files you changed. React failures:
-`npx vitest run --project <package>` in `smarter/react`.
+Then run its whole package, and the pre-commit hooks on the files you changed. React tests run in
+smarter-sh/smarter-console's own CI, not here: a failure there is that repository's (its checkout is
+`../smarter-console`, with `make test`).
 
 ## 5. Report
 

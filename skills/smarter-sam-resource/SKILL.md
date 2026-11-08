@@ -37,8 +37,9 @@ layers do the work:
    `unique_together = ("user_profile", "name")`. Ownership is what makes a
    resource "mine", "shared with my account", or invisible. Every resource has
    it. Don't invent a different ownership scheme.
-4. **The web console**: a React list page, a manifest detail page, and list,
-   clone, rename, and delete APIs.
+4. **The web console**: a list page and a manifest detail page (Django views
+   here, React in smarter-sh/smarter-console), and list, clone, rename, and
+   delete APIs.
 
 Every SAM resource is treated the same way. If a new kind lacks something the
 others have (an owner, a kind, a manifest, a broker, a list page), that's a
@@ -93,10 +94,12 @@ summary:
    `has_dependents()`, and a `manifest_url`.
 6. **Views and URLs**: `views/detailview.py`, `views/listview/view.py` and
    `views/listview/api.py`, and `urls.py` with a `<App>ReverseNames` class.
-7. **React list page**: a templatetag, a Django template, a React package, and
-   the sidebar link. See `smarter-django-react`.
-8. **Docs app**: a JSON schema view and an example manifest view in
-   `smarter/smarter/apps/docs/views/`, routed in `smarter/smarter/apps/docs/urls.py`.
+7. **List page**: the page view (a `ConsoleAppView` subclass), the list api and
+   the sidebar link here, then a list package and a `LIST_PAGES` entry in
+   smarter-console. See `smarter-django-react`.
+8. **Docs pages**: nothing to add. The console's `/docs/manifest/<kind>/` and
+   `/docs/json-schema/<kind>/` cover every kind in `SAMKinds`, from the broker's
+   `example_manifest()` and `schema()` through the cli api.
 9. **Example manifests** (if any): once the kind is released and its JSON
    Schema published, add a folder for it to
    [smarter-sh/example-manifests](https://github.com/smarter-sh/example-manifests)

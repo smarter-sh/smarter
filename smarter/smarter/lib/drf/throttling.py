@@ -20,7 +20,11 @@ from typing import Optional
 
 from cache_results import lazy_cache
 from django.http import HttpRequest
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import (
+    AnonRateThrottle,
+    SimpleRateThrottle,
+    UserRateThrottle,
+)
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
@@ -67,6 +71,71 @@ class SmarterUserRateThrottle(UserRateThrottle):
         return smarter_settings.throttle_rate_user
 
 
+CREDENTIALS_THROTTLE_RATE = "10/minute"
+"""
+The rate of :class:`SmarterCredentialsRateThrottle`: the number of sign-ins, sign-ups and password reset.
+
+requests that one IP address may make. It is far below the api's general rate, because each attempt
+guesses a password or sends an email.
+"""
+
+
+class SmarterCredentialsRateThrottle(SimpleRateThrottle):
+    """
+    Limit the rate of the actions that take a password or send an email, by IP address.
+
+    The console's account api applies it to signing in, signing up and requesting a password reset,
+    on top of the general throttles. Every such action from one address counts against the same
+    limit, :data:`CREDENTIALS_THROTTLE_RATE`, so an attacker can't spread password guesses across them.
+    """
+
+    cache = lazy_cache  # type: ignore[assignment]
+    scope = "credentials"
+
+    def get_rate(self) -> Optional[str]:
+        """
+        Return the rate.
+
+        :returns: :data:`CREDENTIALS_THROTTLE_RATE`.
+        """
+        return CREDENTIALS_THROTTLE_RATE
+
+    def get_cache_key(self, request, view) -> str:
+        """
+        Return the cache key of the request's IP address.
+
+        :param request: The request.
+        :param view: The view.
+        :returns: The key under which the address's attempts are counted.
+        """
+        ident = self.get_ident(request)
+        return self.cache_format % {"scope": self.scope, "ident": ident}
+
+
+def credentials_throttle_wait(request: HttpRequest, view) -> Optional[int]:
+    """
+    Check a request that takes a password or sends an email against :class:`SmarterCredentialsRateThrottle`.
+
+    :param request: The request.
+    :param view: The view that serves the request.
+    :returns: None if the request may proceed, or the number of seconds to wait before retrying.
+    """
+    throttle = SmarterCredentialsRateThrottle()
+    if throttle.allow_request(request, view):  # type: ignore[arg-type]
+        return None
+    wait = throttle.wait()
+    if wait is None:
+        wait = 1
+    logger.warning(
+        "%s.credentials_throttle_wait() throttled %s %s for %s seconds",
+        logger_prefix,
+        request.method,
+        request.path,
+        wait,
+    )
+    return max(1, int(wait))
+
+
 #: The throttles of every Smarter api, in the order in which they are checked.
 SMARTER_THROTTLE_CLASSES = [SmarterAnonRateThrottle, SmarterUserRateThrottle]
 
@@ -107,4 +176,12 @@ def throttle_wait(request: HttpRequest, view) -> Optional[int]:
     return max(1, int(wait))
 
 
-__all__ = ["SMARTER_THROTTLE_CLASSES", "SmarterAnonRateThrottle", "SmarterUserRateThrottle", "throttle_wait"]
+__all__ = [
+    "CREDENTIALS_THROTTLE_RATE",
+    "SMARTER_THROTTLE_CLASSES",
+    "SmarterAnonRateThrottle",
+    "SmarterCredentialsRateThrottle",
+    "SmarterUserRateThrottle",
+    "credentials_throttle_wait",
+    "throttle_wait",
+]

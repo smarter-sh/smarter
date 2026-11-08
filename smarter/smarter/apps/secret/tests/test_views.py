@@ -16,7 +16,10 @@ from smarter.apps.secret.api.web.urls import SecretApiWebReverseNames
 from smarter.apps.secret.caching import invalidate_all_cached_secrets_for_user_profile
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.urls import SecretReverseNames
-from smarter.lib.unittest.resource_views import ResourceViewsTestMixin
+from smarter.lib.unittest.resource_views import (
+    ResourceViewsTestMixin,
+    resource_api_url,
+)
 
 
 class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
@@ -36,8 +39,10 @@ class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
         )
 
     def test_detail_hides_value(self):
-        """Test that the detail page does not show the secret's value."""
-        response = self.client.get(self.url("detailview", hashed_id=self.resource.hashed_id))
+        """Test that the resource api, from which the manifest page loads the secret, does not return its value."""
+        response = self.client.get(resource_api_url(self.resource.record_locator))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        self.assertIn(self.resource.name.encode(), response.content)
         self.assertNotIn(b"test-secret-value", response.content)
 
     def test_web_api_paths(self):
@@ -60,10 +65,11 @@ class TestSecretViews(ResourceViewsTestMixin, TestAccountMixin):
 
 class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
     """
-    Test that a user outside the platform account can't clone, or open the detail page of, a platform Secret.
+    Test that a user outside the platform account can't clone, or read from the resource api, a platform Secret.
 
     The platform account owns the provider api key Secrets. Its other resources are readable by
-    every account, but a Secret holds a credential, so the clone api and the detail page must
+    every account, but a Secret holds a credential, so the clone api and the resource api, from which
+    the manifest page loads a Secret, must
     treat a platform Secret, and any other account's, as missing. A clone would otherwise put
     the platform's api key into the user's own account, where describe returns its value.
     """
@@ -111,12 +117,9 @@ class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
         return self.client.post(url)
 
     def detail(self, user, secret: Secret):
-        """GET the detail page of ``secret`` as ``user``, and return the response."""
+        """GET ``secret`` from the resource api, from which its manifest page loads it, as ``user``; return the response."""
         self.client.force_login(user)
-        url = reverse(
-            f"{SecretReverseNames.namespace}:{SecretReverseNames.detailview}", kwargs={"hashed_id": secret.hashed_id}
-        )
-        return self.client.get(url)
+        return self.client.get(resource_api_url(secret.record_locator))
 
     def test_clone_refuses_a_platform_secret(self):
         """Neither a regular user nor a staff user may clone a platform Secret into their account."""
@@ -151,7 +154,7 @@ class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
 
     def test_detail_refuses_a_platform_secret(self):
-        """Neither a regular user nor a staff user may open the detail page of a platform Secret."""
+        """Neither a regular user nor a staff user may read a platform Secret from the resource api."""
         for user in (self.non_admin_user, self.staff_user):
             with self.subTest(user=user.username):
                 response = self.detail(user, self.platform_secret)
@@ -159,6 +162,6 @@ class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
                 self.assertNotIn(self.platform_value.encode(), response.content)
 
     def test_detail_refuses_a_colleagues_secret_for_a_regular_user(self):
-        """A regular user may not open the detail page of a Secret that another user of their account owns."""
+        """A regular user may not read a Secret that another user of their account owns from the resource api."""
         response = self.detail(self.non_admin_user, self.account_secret)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, response.content[:500])

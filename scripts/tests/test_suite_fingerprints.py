@@ -31,8 +31,8 @@ BASE = [
     entry("changelogs/CHANGELOG.md"),
     entry("docs/source/index.rst"),
     entry("helm/charts/smarter/values.yaml"),
-    entry("smarter/react/packages/smarter-chat/package.json"),
-    entry("smarter/react/packages/smarter-chat/src/App.tsx"),
+    entry("smarter-console-version.txt"),
+    entry("smarter/requirements/base.txt"),
     entry("smarter/smarter/urls.py"),
 ]
 """The base branch's files."""
@@ -71,10 +71,10 @@ class TestPathMatches(unittest.TestCase):
         self.assertFalse(fingerprints.path_matches("smarter/smarter-extra/x.py", "smarter/smarter"))
 
     def test_glob(self):
-        """A glob's * matches one package's folder."""
-        pattern = "smarter/react/packages/*/package.json"
-        self.assertTrue(fingerprints.path_matches("smarter/react/packages/chat/package.json", pattern))
-        self.assertFalse(fingerprints.path_matches("smarter/react/package.json", pattern))
+        """A glob's * matches within a folder, and its folder must match."""
+        pattern = "smarter/requirements/*.txt"
+        self.assertTrue(fingerprints.path_matches("smarter/requirements/base.txt", pattern))
+        self.assertFalse(fingerprints.path_matches("smarter/base.txt", pattern))
 
 
 class TestOutputs(unittest.TestCase):
@@ -84,15 +84,18 @@ class TestOutputs(unittest.TestCase):
         """Without a base, every suite runs."""
         result = outputs_of(BASE, None)
         self.assertEqual(result["python-changed"], "true")
-        self.assertEqual(result["react-changed"], "true")
+
+    def test_only_the_python_suite(self):
+        """The web console's tests are smarter-console's: the Python suite is the only one."""
+        self.assertEqual(list(fingerprints.SUITES), ["python"])
+        self.assertNotIn("react-changed", outputs_of(BASE, None))
 
     def test_same_files(self):
-        """A change that touches neither suite's files runs neither."""
+        """A change that touches none of the suite's files runs nothing."""
         head = changed(BASE, "helm/charts/smarter/values.yaml")
         head = changed(head, "docs/source/index.rst")
         result = outputs_of(head, BASE)
         self.assertEqual(result["python-changed"], "false")
-        self.assertEqual(result["react-changed"], "false")
 
     def test_changelog_is_not_a_python_file(self):
         """A release's change log doesn't run the Python suite."""
@@ -101,25 +104,14 @@ class TestOutputs(unittest.TestCase):
         self.assertEqual(result["python-changed"], "false")
 
     def test_python_change(self):
-        """A change to the Django code runs only the Python suite."""
+        """A change to the Django code runs the Python suite."""
         head = changed(BASE, "smarter/smarter/urls.py")
-        result = outputs_of(head, BASE)
-        self.assertEqual(result["python-changed"], "true")
-        self.assertEqual(result["react-changed"], "false")
+        self.assertEqual(outputs_of(head, BASE)["python-changed"], "true")
 
-    def test_react_change(self):
-        """A change to a React app's source runs only the React suite."""
-        head = changed(BASE, "smarter/react/packages/smarter-chat/src/App.tsx")
-        result = outputs_of(head, BASE)
-        self.assertEqual(result["python-changed"], "false")
-        self.assertEqual(result["react-changed"], "true")
-
-    def test_react_file_that_python_reads(self):
-        """A package.json names built pages that the console loads, so it runs both suites."""
-        head = changed(BASE, "smarter/react/packages/smarter-chat/package.json")
-        result = outputs_of(head, BASE)
-        self.assertEqual(result["python-changed"], "true")
-        self.assertEqual(result["react-changed"], "true")
+    def test_console_pin_change(self):
+        """A new pin of the web console changes what the tests' containers install, so the Python suite runs."""
+        head = changed(BASE, "smarter-console-version.txt")
+        self.assertEqual(outputs_of(head, BASE)["python-changed"], "true")
 
     def test_added_and_removed_files(self):
         """Adding or removing a suite's file changes it."""
@@ -152,7 +144,6 @@ class TestMain(unittest.TestCase):
                 exit_code = fingerprints.main(["--base", "HEAD^1"])
         self.assertEqual(exit_code, 0)
         self.assertIn("python-changed=true", stdout.getvalue())
-        self.assertIn("react-changed=true", stdout.getvalue())
 
     def test_this_repository(self):
         """HEAD compared with itself changes nothing."""
@@ -160,7 +151,6 @@ class TestMain(unittest.TestCase):
         with redirect_stdout(stdout):
             fingerprints.main(["--base", "HEAD"])
         self.assertIn("python-changed=false", stdout.getvalue())
-        self.assertIn("react-changed=false", stdout.getvalue())
 
 
 if __name__ == "__main__":

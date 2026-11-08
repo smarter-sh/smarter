@@ -42,9 +42,16 @@ While the dialog is closed, the app shows the first of the
 **LLM Clients** link, with the note "Start building your AI masterpiece here."
 
 Unlike the other React components, which each have their own page,
-``@smarter/welcome`` is mounted on every web console page:
-``templates/dashboard/base.html`` includes ``templates/react/welcome.html`` for
-signed-in users. Its illustrations are the Keen theme's ``dozzy-1`` set, which
+``@smarter/welcome`` is part of the web console's frame. The single-page console
+(:doc:`ADR-035 </adr/035-single-page-app>`) renders ``Welcome``, from the
+package's ``src/index.ts``, in its layout, ``src/routes/Layout.tsx``, on every
+page for a signed-in user. ``welcomeContext()``, in the console's
+``src/lib/welcome.ts``, builds its props from the console's session,
+``GET /api/web/session/``: the dialog's state under ``welcome``, ``show``
+(whether it opens by itself when the console loads) and ``showAtStartup`` (the box), the
+user's first name, the logo, the onboarding state, and the urls of the welcome
+api, ``/api/web/dashboard/welcome/``, and of ``welcome/dismiss/``, which records
+the box's choice. Its illustrations are the Keen theme's ``dozzy-1`` set, which
 has a version of each for the dark theme. The dialog is a modal: Escape, its
 close button, Skip tour and a click outside of it close it, the arrow keys move
 between its steps, and Tab keeps the focus inside it.
@@ -55,11 +62,4 @@ API
 .. automodule:: smarter.apps.dashboard.views.views.api.welcome
    :members:
    :show-inheritance:
-   :no-index:
-
-Template Tags
--------------
-
-.. automodule:: smarter.apps.dashboard.templatetags.react_welcome
-   :members:
    :no-index:

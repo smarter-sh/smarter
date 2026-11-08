@@ -21,6 +21,11 @@ from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlCon
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.resource_views import (
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 from .mixins import ApiConnectionTestMixin, SqlConnectionTestMixin
 
@@ -75,10 +80,8 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
     # ConnectionListView
     # -------------------------------------------------------------------------
     def test_list_page(self):
-        """Test that the list page renders the React app's root and its api url."""
-        response = self.client.get(self.url(ConnectionReverseNames.listview))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertIn(b"smarter-connection-list-root", response.content)
+        """Test that the list page is the single-page console's."""
+        assert_console_page(self, self.url(ConnectionReverseNames.listview))
 
     def test_web_api_paths(self):
         """Test that the list page's endpoints are in the web console's api."""
@@ -229,16 +232,18 @@ class TestApiConnectionDetailView(ViewTestMixin, ApiConnectionTestMixin):
         return self.url(ConnectionReverseNames.api_detailview, hashed_id=hashed_id)
 
     def test_detail(self):
-        """Test that the detail view renders the connection's manifest, which has a proxy password."""
-        response = self.client.get(self.detail_url(self.connection_django_model.hashed_id))  # type: ignore[union-attr]
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn(self.connection_django_model.name.encode(), response.content)  # type: ignore[union-attr]
+        """Test that the manifest page is the console's, whose resource api returns the connection's manifest."""
+        connection = self.connection_django_model
+        detail = resource_detail_json(self, connection.record_locator)  # type: ignore[union-attr]
+        self.assertEqual(detail["kind"], "ApiConnection")
+        self.assertEqual(detail["name"], connection.name)  # type: ignore[union-attr]
+        self.assertIn(connection.name, detail["manifest"] or "")  # type: ignore[union-attr]
+        assert_console_page(self, self.detail_url(connection.hashed_id))  # type: ignore[union-attr]
 
     def test_detail_not_found(self):
-        """Test that an invalid, or unknown, hashed id is a 404."""
-        self.assertEqual(self.client.get(self.detail_url("not-a-hashed-id")).status_code, HTTPStatus.NOT_FOUND)
-        unknown = ApiConnection(id=999999999)
-        self.assertEqual(self.client.get(self.detail_url(unknown.hashed_id)).status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no connection for an invalid, or unknown, id."""
+        assert_no_resource(self, "apiconnection-not-a-hashed-id")
+        assert_no_resource(self, ApiConnection(id=999999999).record_locator)
 
 
 class TestSqlConnectionDetailView(ViewTestMixin, SqlConnectionTestMixin):
@@ -248,19 +253,21 @@ class TestSqlConnectionDetailView(ViewTestMixin, SqlConnectionTestMixin):
         return self.url(ConnectionReverseNames.sql_detailview, hashed_id=hashed_id)
 
     def test_detail(self):
-        """Test that the detail view renders the connection's manifest."""
-        response = self.client.get(self.detail_url(self.connection_django_model.hashed_id))  # type: ignore[union-attr]
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
-        self.assertIn(self.connection_django_model.name.encode(), response.content)  # type: ignore[union-attr]
+        """Test that the manifest page is the console's, whose resource api returns the connection's manifest."""
+        connection = self.connection_django_model
+        detail = resource_detail_json(self, connection.record_locator)  # type: ignore[union-attr]
+        self.assertEqual(detail["kind"], "SqlConnection")
+        self.assertEqual(detail["name"], connection.name)  # type: ignore[union-attr]
+        self.assertIn(connection.name, detail["manifest"] or "")  # type: ignore[union-attr]
+        assert_console_page(self, self.detail_url(connection.hashed_id))  # type: ignore[union-attr]
 
     def test_detail_non_admin_user(self):
-        """Test that another user of the account sees the connection that the account's admin owns."""
+        """Test that another user of the account may read the connection that the account's admin owns."""
         self.client.force_login(self.non_admin_user)
-        response = self.client.get(self.detail_url(self.connection_django_model.hashed_id))  # type: ignore[union-attr]
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        detail = resource_detail_json(self, self.connection_django_model.record_locator)  # type: ignore[union-attr]
+        self.assertEqual(detail["name"], self.connection_django_model.name)  # type: ignore[union-attr]
 
     def test_detail_not_found(self):
-        """Test that an invalid, or unknown, hashed id is a 404."""
-        self.assertEqual(self.client.get(self.detail_url("not-a-hashed-id")).status_code, HTTPStatus.NOT_FOUND)
-        unknown = SqlConnection(id=999999999)
-        self.assertEqual(self.client.get(self.detail_url(unknown.hashed_id)).status_code, HTTPStatus.NOT_FOUND)
+        """Test that the resource api has no connection for an invalid, or unknown, id."""
+        assert_no_resource(self, "sqlconnection-not-a-hashed-id")
+        assert_no_resource(self, SqlConnection(id=999999999).record_locator)

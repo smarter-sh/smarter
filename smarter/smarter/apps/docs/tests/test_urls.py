@@ -1,249 +1,42 @@
-"""
-Test api/v1/ base class.
-
-We have somewhere in the neighborhood of 75 api endpoints to test, so we want
-ensure that:
-- our setUp and tearDown methods are as efficient as possible.
-- we are authenticating our http requests properly and consistently.
-"""
+"""Test the docs app's urls: :mod:`smarter.apps.docs.urls`."""
 
 from http import HTTPStatus
-from logging import getLogger
 
 from django.test import Client
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-    mortal_user_factory,
-)
-from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.docs.urls import DocsReverseNames
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from ..const import namespace
-from ..urls import DocsReverseNames
-from ..utils import json_schema_name, manifest_name
-
-logger = getLogger(__name__)
+DOCS = DocsReverseNames.namespace
 
 
 class TestDocsUrls(SmarterTestBase):
-    """Test AccountMixin."""
-
-    client: Client
+    """Test the docs app's paths, which the sidebar, the sitemap and the smarter cli's help link to."""
 
     def setUp(self) -> None:
         super().setUp()
         self.client = Client()
-        self.client.force_login(self.user)
-        self.client.force_login(self.admin_user)
 
-    def tearDown(self) -> None:
-        if self.client:
-            self.client.logout()
-        super().tearDown()
+    def test_paths(self) -> None:
+        """Each page keeps the path that it had before the console showed it."""
+        self.assertEqual(reverse(DOCS, DocsReverseNames.example_manifests), "/docs/manifests/")
+        self.assertEqual(reverse(DOCS, DocsReverseNames.json_schemas), "/docs/json-schemas/")
+        self.assertEqual(reverse(DOCS, DocsReverseNames.openapi), "/docs/openapi/")
+        self.assertEqual(reverse(DOCS, DocsReverseNames.openapi_json), "/docs/openapi.json")
+        manifest = reverse(f"{DOCS}:{DocsReverseNames.example_manifest}", kwargs={"kind": "llmclient"})
+        self.assertEqual(manifest, "/docs/manifest/llmclient/")
+        schema = reverse(f"{DOCS}:{DocsReverseNames.json_schema}", kwargs={"kind": "llmclient"})
+        self.assertEqual(schema, "/docs/json-schema/llmclient/")
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.admin_user, cls.account, cls.admin_user_profile = admin_user_factory()
-        cls.user, _, cls.user_profile = mortal_user_factory(account=cls.account)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        factory_account_teardown(user=cls.user, account=None, user_profile=cls.user_profile)
-        factory_account_teardown(user=cls.admin_user, account=cls.account, user_profile=cls.admin_user_profile)
-        super().tearDownClass()
-
-    def process_url(self, url: str) -> None:
-        """Process url."""
-        self.client.logout()
-        self.client.force_login(self.user)
-        logger.debug("%s - Testing URL: %s", self.__class__.__name__, url)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-
-        self.client.logout()
-        self.client.force_login(self.admin_user)
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-
-    # -----------------------------------------------------------------------
-    # Built-in Documents pages
-    # -----------------------------------------------------------------------
-    def test_url_developer_readme(self) -> None:
-        """Test url for developer readme."""
-        url = reverse(namespace, DocsReverseNames.developer_readme)
-        self.process_url(url)
-
-    def test_url_developer_changelog(self) -> None:
-        """Test url for developer changelog."""
-        url = reverse(namespace, DocsReverseNames.developer_changelog)
-        self.process_url(url)
-
-    def test_url_developer_code_of_conduct(self) -> None:
-        """Test url for developer code of conduct."""
-        url = reverse(namespace, DocsReverseNames.developer_code_of_conduct)
-        self.process_url(url)
-
-    def test_url_developer_makefile(self) -> None:
-        """Test url for developer makefile."""
-        url = reverse(namespace, DocsReverseNames.developer_makefile)
-        self.process_url(url)
-
-    def test_url_developer_extension_protocol(self) -> None:
-        """Test url for the developer extension protocol."""
-        url = reverse(namespace, DocsReverseNames.developer_extension_protocol)
-        self.process_url(url)
-
-    def test_url_developer_requirements(self) -> None:
-        """Test url for developer requirements."""
-        url = reverse(namespace, DocsReverseNames.developer_requirements)
-        self.process_url(url)
-
-    def test_url_developer_dockerfile(self) -> None:
-        """Test url for developer dockerfile."""
-        url = reverse(namespace, DocsReverseNames.developer_dockerfile)
-        self.process_url(url)
-
-    def test_url_developer_docker_compose(self) -> None:
-        """Test url for developer docker compose."""
-        url = reverse(namespace, DocsReverseNames.developer_docker_compose)
-        self.process_url(url)
-
-    # -----------------------------------------------------------------------
-    # Documentation generators
-    # -----------------------------------------------------------------------
-    def test_url_openapi(self) -> None:
-        """Test url for the OpenAPI contract page."""
-        url = reverse(namespace, DocsReverseNames.openapi)
-        self.process_url(url)
-
-    def test_url_openapi_json(self) -> None:
-        """Test url for the OpenAPI document."""
-        url = reverse(namespace, DocsReverseNames.openapi_json)
-        self.process_url(url)
+    def test_home_redirects_to_the_example_manifests(self) -> None:
+        """/docs/ redirects to the example manifests."""
+        response = self.client.get("/docs/")
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertEqual(response["Location"], "/docs/manifests/")
 
     def test_drf_yasg_pages_are_gone(self) -> None:
         """The Swagger and Redoc pages that drf-yasg generated were replaced by the OpenAPI contract."""
-        self.client.force_login(self.user)
         for path in ("/docs/swagger/", "/docs/swagger.json", "/docs/swagger.yaml", "/docs/redoc/"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND, path)
-
-    # -----------------------------------------------------------------------
-    # Json Schemas
-    # -----------------------------------------------------------------------
-    def test_url_json_schema_account(self) -> None:
-        """Test url for account JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.ACCOUNT.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_apikey(self) -> None:
-        """Test url for apikey JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.AUTH_TOKEN.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_chat(self) -> None:
-        """Test url for prompt JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.PROMPT.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_llmclient(self) -> None:
-        """Test url for llmclient JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.LLM_CLIENT.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_static_plugin(self) -> None:
-        """Test url for static plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.STATIC_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_api_connection(self) -> None:
-        """Test url for api connection JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_CONNECTION.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_api_plugin(self) -> None:
-        """Test url for api plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.API_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_sql_connection(self) -> None:
-        """Test url for sql connection JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_CONNECTION.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_sql_plugin(self) -> None:
-        """Test url for sql plugin JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SQL_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_user(self) -> None:
-        """Test url for user JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.USER.value)}")
-        self.process_url(url)
-
-    def test_url_json_schema_secret(self) -> None:
-        """Test url for secret JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.SECRET.value)}")
-        self.process_url(url)
-
-    # -------------------------------------------------------------------------
-    # example manifests
-    # -------------------------------------------------------------------------
-    def test_url_manifest_account(self) -> None:
-        """Test url for account manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.ACCOUNT.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_apikey(self) -> None:
-        """Test url for apikey manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.AUTH_TOKEN.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_chat(self) -> None:
-        """Test url for prompt manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.PROMPT.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_llmclient(self) -> None:
-        """Test url for llmclient manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.LLM_CLIENT.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_static_plugin(self) -> None:
-        """Test url for static plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.STATIC_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_sql_connection(self) -> None:
-        """Test url for sql connection manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_CONNECTION.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_sql_plugin(self) -> None:
-        """Test url for sql plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SQL_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_api_connection(self) -> None:
-        """Test url for api connection manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_CONNECTION.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_api_plugin(self) -> None:
-        """Test url for api plugin manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.API_PLUGIN.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_user(self) -> None:
-        """Test url for user manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.USER.value)}")
-        self.process_url(url)
-
-    def test_url_manifest_secret(self) -> None:
-        """Test url for secret manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.SECRET.value)}")
-        self.process_url(url)

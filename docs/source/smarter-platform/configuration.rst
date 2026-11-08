@@ -321,11 +321,21 @@ You can test your SMTP configuration by sending a test email from the Django con
 1.   Static & Media Files Configuration
 ---------------------------------------------
 
-Smarter serves static and media files using Amazon S3 and CloudFront in AWS cloud deployments, and 'whitenoise.storage.CompressedStaticFilesStorage'
-for local development and testing environments. Static and media file settings can be found in `smarter/settings/base.py (static files config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L446>`_.
-In both case, the configuration described is known to work well for most use cases, and is generally free of the many kinds of
-fiddly details that often accompany static and media file handling in web applications. You are highly recommended to avoid modifying
-these settings if at all possible, unless you have a specific need to do so.
+Media files, the files that users upload, are stored in the environment's Amazon S3 bucket when AWS is
+configured, and served from its CloudFront CDN, ``cdn.<platform>``; otherwise they are stored on the
+server's file system.
+
+Static files, the web console's scripts, styles and images, are served by the server itself, with
+WhiteNoise, which needs no CDN and works on any installation. On AWS, set
+``SMARTER_STATIC_FILES_ON_CDN=true`` to serve them from the CDN instead: each deployment's
+``initialize_platform`` uploads them to the bucket, under ``static/``, and the console's pages load
+them from ``cdn.<platform>/static/`` once that deployment's upload is done. The pages, the api and the
+session stay on the platform's own host. The deployment's AWS user needs ``s3:PutObject``,
+``s3:PutObjectAcl``, ``s3:GetObject`` and ``s3:ListBucket`` on the bucket. See
+:doc:`/smarter-framework/developer-reference/lib/django/static-storage`.
+
+The storage settings are in `smarter/settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`_.
+Avoid changing them unless you have a specific need.
 
 .. warning::
 

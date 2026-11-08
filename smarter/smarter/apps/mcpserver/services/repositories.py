@@ -184,6 +184,15 @@ SMARTER_PROJECT_REPOSITORIES: tuple[ProjectRepository, ...] = (
         docs_url=SMARTER_PROJECT_DOCS_ROOT_URL,
     ),
     ProjectRepository(
+        name="smarter-console",
+        title="the Smarter web console",
+        description=(
+            "The Smarter platform's web console: a single-page React app and the packages it is built from, "
+            "including Smarter Chat, published to npm as @smarter.sh/ui-chat. Each release is a build that the "
+            "platform installs."
+        ),
+    ),
+    ProjectRepository(
         name="smarter-cli",
         title="the Smarter command-line interface",
         description="The smarter command-line interface, written in Go, which applies, gets, describes and deletes manifests.",

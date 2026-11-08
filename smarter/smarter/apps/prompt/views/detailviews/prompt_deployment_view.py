@@ -121,14 +121,14 @@ def api_keys_section(request: HttpRequest, llmclient: LLMClient, manage: bool) -
     :rtype: DeploymentApiKeys
     """
     # pylint: disable=C0415
-    from smarter.apps.prompt.urls import PromptReverseNames
+    from smarter.apps.prompt.api.web.urls import PromptApiWebReverseNames
 
     attached = LLMClientAPIKey.objects.filter(llmclient=llmclient).select_related("api_key").first()
     attached_key = attached.api_key if attached else None
     hashed_id = llmclient.hashed_id
 
     def url(name: str) -> str:
-        return reverse(f"{PromptReverseNames.namespace}:{name}", kwargs={"hashed_id": hashed_id})
+        return reverse(f"{PromptApiWebReverseNames.namespace}:{name}", kwargs={"hashed_id": hashed_id})
 
     return DeploymentApiKeys(
         api_keys=[
@@ -148,9 +148,9 @@ def api_keys_section(request: HttpRequest, llmclient: LLMClient, manage: bool) -
         ),
         can_manage=manage,
         can_create=bool(request.user.is_staff),  # type: ignore[union-attr]
-        create_url=url(PromptReverseNames.deployment_api_key_create_by_hashed_id),
-        attach_url=url(PromptReverseNames.deployment_api_key_attach_by_hashed_id),
-        detach_url=url(PromptReverseNames.deployment_api_key_detach_by_hashed_id),
+        create_url=url(PromptApiWebReverseNames.deployment_api_key_create_by_hashed_id),
+        attach_url=url(PromptApiWebReverseNames.deployment_api_key_attach_by_hashed_id),
+        detach_url=url(PromptApiWebReverseNames.deployment_api_key_detach_by_hashed_id),
     )
 
 
@@ -218,7 +218,7 @@ class LLMClientDeploymentView(SmarterAuthenticatedNeverCachedWebView):
 
     **Example usage**::
 
-        GET /workbench/llm-clients/<str:hashed_id>/deployment/
+        GET /api/web/prompt/llm-clients/<str:hashed_id>/deployment/
     """
 
     http_method_names = ["get"]
@@ -357,7 +357,7 @@ class LLMClientDeploymentApiKeyCreateView(LLMClientDeploymentApiView):
 
     **Example usage**::
 
-        POST /workbench/llm-clients/<str:hashed_id>/deployment/api-keys/create/
+        POST /api/web/prompt/llm-clients/<str:hashed_id>/deployment/api-keys/create/
         {"name": "my_site_chat", "description": "The chat on www.example.com", "attach": true}
     """
 
@@ -412,7 +412,7 @@ class LLMClientDeploymentApiKeyAttachView(LLMClientDeploymentApiView):
 
     **Example usage**::
 
-        POST /workbench/llm-clients/<str:hashed_id>/deployment/api-keys/attach/
+        POST /api/web/prompt/llm-clients/<str:hashed_id>/deployment/api-keys/attach/
         {"keyId": "<uuid>"}
     """
 
@@ -446,7 +446,7 @@ class LLMClientDeploymentApiKeyDetachView(LLMClientDeploymentApiView):
 
     **Example usage**::
 
-        POST /workbench/llm-clients/<str:hashed_id>/deployment/api-keys/detach/
+        POST /api/web/prompt/llm-clients/<str:hashed_id>/deployment/api-keys/detach/
     """
 
     def handle(self, request: HttpRequest, llmclient: LLMClient, body: Optional[BaseModel]) -> Optional[NewApiKey]:

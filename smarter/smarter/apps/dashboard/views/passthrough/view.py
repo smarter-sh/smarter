@@ -1,19 +1,14 @@
-# pylint: disable=W0613,C0302
 """
-View for the Dashboard prompt passthrough endpoint.
+The Prompt Passthrough page: the single-page console's (ADR-035).
 
-This module provides an authenticated Django view that renders a React-based
-page accepting raw JSON dictionaries formatted for LLM provider APIs. The
-frontend submits these payloads directly to the LLM provider via the Smarter
-prompt passthrough API, and the API response is rendered back in the template.
+The page sends a raw JSON request, formatted for an LLM provider's api, through the Smarter prompt passthrough api,
+``/api/v1/prompts/passthrough/<provider name>/``, and shows the provider's response. The console renders
+``@smarter/prompt-passthrough`` at ``/dashboard/passthrough``, with the passthrough api's url, the providers api's,
+``/api/web/dashboard/passthrough/providers/``, and, while users can view their server logs (see
+:func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`), the log stream's, from which the
+page's Server Logs tab streams the server logs of each prompt that it sends.
 
-The view resolves the correct API and provider-listing URLs at request time and
-injects them—along with CSRF and session cookie configuration—into the React
-component context.
-
-Classes:
-    PromptPassthroughView: Renders the prompt passthrough React page for
-        authenticated users.
+Django keeps :class:`PromptPassthroughView` at the path it served the page at, so that its url name still reverses.
 
 Example:
     Wire up the view in your URL configuration::
@@ -21,140 +16,17 @@ Example:
         from smarter.apps.dashboard.views.passthrough.view import PromptPassthroughView
 
         urlpatterns = [
-            path("passthrough/", PromptPassthroughView.as_view(), name="prompt_passthrough"),
+            path("", PromptPassthroughView.as_view(), name="prompt_passthrough_view"),
         ]
 """
 
-from urllib.parse import urljoin
-
-from django.conf import settings
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
-
-from smarter.apps.prompt.api.v1.urls import PromptAPINamespace
-from smarter.common.conf import smarter_settings
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import (
-    SmarterAuthenticatedNeverCachedWebView,
-)
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getLogger(__name__)
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class PromptPassthroughView(SmarterAuthenticatedNeverCachedWebView):
+class PromptPassthroughView(ConsoleAppView):
     """
-    Renders a passthrough template for the prompt app that accepts a raw JSON dict for an LLM provider, passes this directly to the LLM provider API, and renders the API response in the template.
+    The Prompt Passthrough page, ``/dashboard/passthrough/``: the single-page console's.
 
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Keyword arguments, must include 'name' (llmclient name) and 'kind' (llmclient type).
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with llmclient manifest details, or a 404 error page if the llmclient is not found or parameters are invalid.
-    :rtype: HttpResponse
-
-    **Example usage**::
-
-        GET /dashboard/passthrough/
+    The page exists only while ``smarter_settings.enable_dashboard_passthrough_prompt`` is set: otherwise its url is
+    not registered, and the console's session says that the page is off, so that the console shows its Page not found.
     """
-
-    template_path = "prompt/passthrough.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PromptPassthroughView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """
-        Render the prompt passthrough page for the authenticated user.
-
-        Resolves the LLM provider passthrough API URL and the provider-listing
-        API URL at request time, builds a context dictionary for the React
-        frontend, and renders ``react/prompt-passthrough.html``.
-
-        The passthrough API URL is derived by stripping the provider-name
-        placeholder segment from the fully-qualified URL so that the React
-        component can append any provider name dynamically.
-
-        While users can view their server logs in the browser (see
-        :func:`smarter.apps.dashboard.views.terminal_emulator.enabled.server_logs_enabled`),
-        the context includes the url of the log stream, from which the page's
-        Server Logs tab streams the server logs of each prompt that it sends.
-        Otherwise the url is empty, and the page has no Server Logs tab.
-
-        :param request: The incoming HTTP GET request from the client.
-        :type request: django.http.HttpRequest
-        :param args: Additional positional arguments forwarded by the URL dispatcher.
-        :type args: tuple
-        :param kwargs: Additional keyword arguments forwarded by the URL dispatcher.
-        :type kwargs: dict
-        :returns: An HTTP 200 response rendering ``react/prompt-passthrough.html``
-            with the passthrough context dictionary.
-        :rtype: django.http.HttpResponse
-        """
-        # pylint: disable=C0415
-        from smarter.apps.dashboard.views.passthrough.api.urls import (
-            PassthroughApiReverseNames,
-        )
-        from smarter.apps.dashboard.views.terminal_emulator.api.names import (
-            DashboardLogsApiReverseNames,
-        )
-        from smarter.apps.dashboard.views.terminal_emulator.enabled import (
-            server_logs_enabled,
-        )
-
-        api_path = reverse(
-            ":".join([PromptAPINamespace.namespace, PromptAPINamespace.passthrough]),
-            kwargs={"provider_name": "delete-me"},
-        )
-        api_path = api_path.rstrip("/").rsplit("/", 1)[0] + "/"
-
-        # example: https://alpha.ubc.smarter.sh/api/v1/prompts/passthrough/
-        api_url = urljoin(smarter_settings.environment_platform_url, api_path)
-
-        provider_api_path = reverse(
-            PassthroughApiReverseNames.namespace,
-            PassthroughApiReverseNames.api_providers,
-        )
-        # example: https://alpha.ubc.smarter.sh/api/web/dashboard/passthrough/providers/
-        provider_api_url = urljoin(smarter_settings.environment_platform_url, provider_api_path)
-
-        # example: /api/web/dashboard/logs/stream/. Empty while server logs are disabled.
-        log_stream_url = (
-            reverse(
-                DashboardLogsApiReverseNames.namespace,
-                DashboardLogsApiReverseNames.stream,
-            )
-            if server_logs_enabled()
-            else ""
-        )
-
-        context = {
-            "passthrough": {
-                "root_id": "smarter-prompt-passthrough-root",
-                "csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "api_url": api_url,  # api for this react component.
-                "llm_provider_id": "1",  # default value for the provider_id. The React component will set the user-selected provider_id here and use it when making requests to the api_url.
-                "template_id": "1",  # default value for the template_id. The React component will set the user-selected template_id here and use it when making requests to the api_url.
-                "provider_api_url": provider_api_url,  # list of providers (openai, googleai, anthropic, etc.) and their details (capabilities, pricing, etc.
-                "log_stream_url": log_stream_url,  # the server log stream, for the Server Logs tab. Empty while server logs are disabled.
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-        self.template_path = "react/prompt-passthrough.html"
-
-        logger.debug(
-            "%s.get() rendering Prompt Passthrough View with context: %s",
-            self.formatted_class_name,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, self.template_path, context=context)

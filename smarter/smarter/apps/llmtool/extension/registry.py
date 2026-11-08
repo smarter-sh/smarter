@@ -331,6 +331,23 @@ def check_for_updates(refresh: bool = False) -> list[Extension]:
     return updates
 
 
+def update_count() -> int:
+    """
+    The number of installed extensions for which the registry offers a newer version.
+
+    The sidebar shows it beside its Extensions item, for superusers. It reads what
+    :func:`check_for_updates` last recorded, without asking the registry.
+
+    :returns: The number of extensions whose ``update_available`` is True.
+    """
+    extensions = Extension.objects.select_related("installed_version").exclude(latest_version="")
+    count = 0
+    for extension in extensions:
+        if extension.update_available:
+            count += 1
+    return count
+
+
 __all__ = [
     "RegistryExtension",
     "RegistryIndex",
@@ -343,5 +360,6 @@ __all__ = [
     "install_from_registry",
     "is_enabled",
     "refresh_index",
+    "update_count",
     "verify",
 ]

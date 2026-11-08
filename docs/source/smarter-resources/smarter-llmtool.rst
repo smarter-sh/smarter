@@ -185,5 +185,4 @@ Technical Reference
    llmtool/signals
    llmtool/receivers
    llmtool/tasks
-   llmtool/templatetags
    llmtool/views

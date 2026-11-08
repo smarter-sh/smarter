@@ -1,100 +1,51 @@
-# pylint: disable=W0613
-"""This module is used to create a new plugin using manage.py."""
+"""The ``generate_example_manifests`` command: write an example manifest of every SAM kind, as YAML."""
 
 import os
-from typing import Type
 
-from django.test import RequestFactory
+import yaml
 
-from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.docs.views.manifest import (
-    DocsExampleManifestAccountView,
-    DocsExampleManifestApiConnectionView,
-    DocsExampleManifestApiKeyView,
-    DocsExampleManifestApiView,
-    DocsExampleManifestBaseView,
-    DocsExampleManifestGuardrailView,
-    DocsExampleManifestLLMClientView,
-    DocsExampleManifestPluginView,
-    DocsExampleManifestPromptView,
-    DocsExampleManifestSecretView,
-    DocsExampleManifestSqlConnectionView,
-    DocsExampleManifestSqlView,
-    DocsExampleManifestUserView,
-)
-from smarter.common.conf import smarter_settings
+from smarter.apps.api.v1.contract.sam import sam_example, sam_models
+from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logging.basicConfig(level=smarter_settings.log_level)
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
+
+OUTPUT_FOLDER = "/home/smarter_user/data/manifests/example_manifests"
+"""Where the manifests are written.
+
+The Dockerfile creates it, and the Helm chart mounts it writable.
+"""
 
 
-# pylint: disable=E1101
 class Command(SmarterCommand):
-    """Django manage.py create_plugin command.
+    """
+    Write an example manifest of every SAM kind, as YAML, into :data:`OUTPUT_FOLDER`.
 
-    This command is used to create a plugin from a yaml import file.
+    Each is the example that the cli api's ``example-manifest`` view returns, without its read-only
+    ``status`` (:func:`smarter.apps.api.v1.contract.sam.sam_example`), in a file named after the kind,
+    e.g. ``llm_client.yaml``.
     """
 
-    def handle(self, *args, **options):
-        """
-        Create example manifest files for every AI resource type.
+    help = "Write an example manifest of every SAM kind, as YAML, into " + OUTPUT_FOLDER
 
-        $ pwd
-        /home/smarter_user/smarter
-        $ pwd
-        /home/smarter_user/smarter
-        $ cd ../data/manifests/example_manifests
-        $ ls -lha
-        total 12K
-        drwx------ 1 smarter_user smarter_user 4.0K Dec  5 19:24 .
-        drwx------ 1 smarter_user smarter_user 4.0K Dec  5 19:24 ..
-        $ pwd
-        /home/smarter_user/data/manifests/example_manifests
-        $
+    def handle(self, *args, **options):
+        """Write the manifests.
+
+        A kind whose example fails is logged and skipped.
         """
         self.handle_begin()
-
-        # /home/smarter_user/data/manifests/ is created by Dockerfile
-        # and permissions are set so smarter_user can write here.
-        output_folder = "/home/smarter_user/data/manifests/example_manifests"
-
-        # the docs views broker each manifest request on behalf of request.user,
-        # and refuse an anonymous request, so the request is made as the smarter admin.
-        request = RequestFactory().post("/")
-        request.user = smarter_cached_objects.smarter_admin
-
-        def write_manifest(view_class: Type[DocsExampleManifestBaseView]):
-            """Generate example manifest YAML file."""
-            instance = view_class()
+        os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+        for kind in sam_models():
             try:
-                response = instance.post(request=request)
+                manifest = sam_example(kind)
             # pylint: disable=broad-except
             except Exception as exc:
-                logger.error("Failed to generate manifest for %s: %s", view_class.__name__, exc)
-                return
-
-            yaml_content = response.content.decode("utf-8")
-            output_path = os.path.join(output_folder, instance.file_name)
-
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(yaml_content)
-
-        manifests = [
-            DocsExampleManifestAccountView,
-            DocsExampleManifestApiConnectionView,
-            DocsExampleManifestApiView,
-            DocsExampleManifestApiKeyView,
-            DocsExampleManifestPromptView,
-            DocsExampleManifestGuardrailView,
-            DocsExampleManifestLLMClientView,
-            DocsExampleManifestPluginView,
-            DocsExampleManifestSqlConnectionView,
-            DocsExampleManifestSqlView,
-            DocsExampleManifestUserView,
-            DocsExampleManifestSecretView,
-        ]
-        for manifest_view in manifests:
-            write_manifest(manifest_view)
+                logger.error("%s.handle() failed to make the example manifest of %s: %s", logger_prefix, kind, exc)
+                continue
+            file_name = to_snake_case(kind) + ".yaml"
+            output_path = os.path.join(OUTPUT_FOLDER, file_name)
+            with open(output_path, "w", encoding="utf-8") as file:
+                yaml.dump(manifest, file, default_flow_style=False)
+        self.handle_completed_success()

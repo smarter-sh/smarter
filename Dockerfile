@@ -219,10 +219,10 @@ RUN python -m nltk.downloader -q -d /home/smarter_user/nltk_data wordnet
 FROM venv AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 #
-# The web console's React apps must be built before the Docker build, with
-# `make react-build` locally or the React build action in GitHub Actions.
-# Vite writes them into smarter/smarter/static/react/, which is ignored by
-# git, and is copied into the image with the rest of ./smarter.
+# The web console must be in smarter/smarter/static/react/ before the Docker
+# build: the release that smarter-console-version.txt pins, which `make
+# console` and CI install with scripts/fetch_console.py. That folder is
+# ignored by git, and is copied into the image with the rest of ./smarter.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 RUN mkdir -p /home/smarter_user/smarter/staticfiles
@@ -279,20 +279,7 @@ RUN if [ "$ENVIRONMENT" != "local" ] ; then \
 
 ################################# data #################################
 FROM permissions AS data
-# Add our source code and make the 'smarter' directory the working directory
-# we want this to be the last step so that we can take advantage of Docker's
-# caching mechanism.
 WORKDIR /home/smarter_user/
-
-COPY --chown=smarter_user:smarter_user ./docs ./data/docs
-COPY --chown=smarter_user:smarter_user ./README.md ./data/docs/README.md
-COPY --chown=smarter_user:smarter_user ./changelogs/CHANGELOG.md ./data/docs/CHANGELOG.md
-COPY --chown=smarter_user:smarter_user ./CODE_OF_CONDUCT.md ./data/docs/CODE_OF_CONDUCT.md
-COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
-COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
-COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
-
-
 
 ############################## collect_assets ##################################
 # This is a Django application, so we need to collect static assets.
