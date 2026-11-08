@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.43.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.2...v0.43.3-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **waffle:** log a database outage in switch_is_active() as one warning line ([ff7d343](https://github.com/smarter-sh/smarter/commit/ff7d343d55287c1fb9d8f30403c6261ee34f5103)), closes [#951](https://github.com/smarter-sh/smarter/issues/951)
+
 ## [0.43.2](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2) (2026-11-08)
 
 ### Bug Fixes
