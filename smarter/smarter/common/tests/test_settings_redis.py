@@ -5,6 +5,8 @@ Issues #940 and #941: after Redis moved to another node, the workers took no tas
 requests answered 500 on stale pooled connections, because no client checked its connections.
 """
 
+import warnings
+
 from django.conf import settings
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -35,3 +37,24 @@ class TestRedisSettings(SmarterTestBase):
 
         self.assertEqual(APP.conf.broker_transport_options, settings.CELERY_BROKER_TRANSPORT_OPTIONS)
         self.assertEqual(APP.conf.redbeat_redis_options, settings.CELERY_REDBEAT_REDIS_OPTIONS)
+
+    def test_redbeat_finds_its_own_settings(self):
+        """
+        RedBeat reads its own url and options, without falling back to the broker's (issue #945).
+
+        The fallback is removed in RedBeat 2.5.0, and RedBeat warns when it uses it.
+        """
+        # pylint: disable=import-outside-toplevel
+        from redbeat.schedulers import RedBeatConfig
+
+        from smarter.lib.celery_conf import APP
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            config = RedBeatConfig(APP)
+
+        messages = [str(warning.message) for warning in caught]
+        fallback_warnings = [message for message in messages if "RedBeat will stop falling back" in message]
+        self.assertEqual(fallback_warnings, [])
+        self.assertEqual(config.redis_url, settings.CELERY_REDBEAT_REDIS_URL)
+        self.assertEqual(config.redbeat_redis_options, settings.CELERY_REDBEAT_REDIS_OPTIONS)
