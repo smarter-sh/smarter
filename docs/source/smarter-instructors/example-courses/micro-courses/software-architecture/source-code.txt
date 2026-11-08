@@ -54,7 +54,7 @@ The Twelve Factors
    * - VII. Port binding
      - The app serves itself with uvicorn on a configured port. Nothing is injected into a
        separate web server.
-     - `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__,
+     - `deployment-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-api.yaml>`__,
        `asgi.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/asgi.py>`__
    * - VIII. Concurrency
      - Four process types (web, worker, infrastructure worker, beat), each its own Kubernetes
@@ -67,7 +67,7 @@ The Twelve Factors
      - Liveness and readiness probes on ``/healthz/`` and ``/readiness/``, and a graceful
        shutdown timeout on uvicorn, let Kubernetes replace pods freely.
      - `urls/console.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/urls/console.py>`__,
-       `deployment-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-app.yaml>`__
+       `deployment-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/deployment-api.yaml>`__
    * - X. Dev/prod parity
      - The same image, the same MariaDB and Redis, and the same Celery workers run under Docker
        Compose and under Kubernetes. Tests replace the cloud with an in-memory provider: a
@@ -110,7 +110,7 @@ Beyond the Twelve Factors
      - Stateless web pods behind Horizontal Pod Autoscalers, shared state in Redis and MariaDB, and
        slow work moved to Celery workers that scale on their own.
        :doc:`ADR 018 </adr/018-caching>`, :doc:`ADR 030 </adr/030-task-queues>`.
-     - `hpa-app.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__,
+     - `hpa-api.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__,
        `hpa-worker.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-worker.yaml>`__,
        `lib/cache/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/lib/cache>`__
    * - Zero trust

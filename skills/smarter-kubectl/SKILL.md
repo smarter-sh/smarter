@@ -64,16 +64,16 @@ state doesn't persist between Bash calls, so define the function in each call th
 
 The Helm chart (`helm/charts/smarter/templates/`) runs these, selected by `app.kubernetes.io/name`:
 
-| Label                           | What                                                                               | Pod name                                                   |
-| ------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `smarter-api`                   | the api server, `uvicorn --workers=2` (two processes each)                         | `smarter-api-<rs hash>-<id>`                               |
-| `smarter`                       | the api's old name: a twin of `smarter-api` while `app.legacyName.enabled` is true | `smarter-<rs hash>-<id>`                                   |
-| `smarter-worker`                | Celery worker, default queue                                                       | `smarter-worker-<rs hash>-<id>`                            |
-| `smarter-worker-infrastructure` | Celery worker for DNS, certificate and Kubernetes tasks                            | `smarter-worker-infrastructure-...`                        |
-| `smarter-beat`                  | Celery beat, the scheduler (exactly one)                                           | `smarter-beat-...`                                         |
-| `smarter-bastion`               | a shell for operators                                                              | `smarter-bastion-...`                                      |
-| (StatefulSets)                  | MariaDB and Redis                                                                  | `smarter-mariadb-0`, `smarter-redis-...`                   |
-| (Jobs)                          | the init job on each deploy, the daily MySQL backup                                | `smarter-smarter-job-init-...`, `smarter-mysql-backup-...` |
+| Label                           | What                                                                                                                                  | Pod name                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `smarter-api`                   | the api server, `uvicorn --workers=2` (two processes each)                                                                            | `smarter-api-<rs hash>-<id>`                               |
+| `smarter`                       | the api's name before v0.43.0: a twin of `smarter-api` only when `app.legacyName.enabled` is set for an upgrade from an older release | `smarter-<rs hash>-<id>`                                   |
+| `smarter-worker`                | Celery worker, default queue                                                                                                          | `smarter-worker-<rs hash>-<id>`                            |
+| `smarter-worker-infrastructure` | Celery worker for DNS, certificate and Kubernetes tasks                                                                               | `smarter-worker-infrastructure-...`                        |
+| `smarter-beat`                  | Celery beat, the scheduler (exactly one)                                                                                              | `smarter-beat-...`                                         |
+| `smarter-bastion`               | a shell for operators                                                                                                                 | `smarter-bastion-...`                                      |
+| (StatefulSets)                  | MariaDB and Redis                                                                                                                     | `smarter-mariadb-0`, `smarter-redis-...`                   |
+| (Jobs)                          | the init job on each deploy, the daily MySQL backup                                                                                   | `smarter-smarter-job-init-...`, `smarter-mysql-backup-...` |
 
 ## Common reads
 

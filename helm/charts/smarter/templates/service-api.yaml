@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/name: "{{ $name }}"
     app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 spec:
-  # both Deployments' pods, while the legacy name lasts. See smarter.apiNames in _helpers.tpl.
+  # both Deployments' pods while app.legacyName.enabled is on. See smarter.apiNames in _helpers.tpl.
   selector:
     app.kubernetes.io/component: api
     app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
