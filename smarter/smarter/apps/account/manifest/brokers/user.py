@@ -580,7 +580,7 @@ class SAMUserBroker(AbstractBroker):
             )
             return self._manifest
         if not self._manifest:
-            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     ###########################################################################
