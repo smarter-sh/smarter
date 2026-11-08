@@ -145,6 +145,41 @@ operations questions with the
 refuses everyone but the platform's staff, so the two checks protect each other. ``initialize_platform``
 applies it to the Smarter account only: it is never copied into other accounts, and never deployed.
 
+Model Settings
+--------------
+
+``spec.config.prompt`` chooses the model and how it answers: ``defaultModel``,
+``defaultTemperature``, ``defaultMaxTokens``, and, for a reasoning model, ``defaultReasoningEffort``,
+how much the model reasons before it answers: ``none``, ``minimal``, ``low``, ``medium``, ``high`` or
+``xhigh``. Leave it out and the model reasons at its own default effort.
+
+.. code-block:: yaml
+
+  spec:
+    config:
+      prompt:
+        defaultModel: gpt-6.1-sol
+        defaultReasoningEffort: high
+
+OpenAI's models disagree about these settings. Some reasoning models support only some efforts, and
+models that don't reason, such as gpt-4o, support none of them. A reasoning model accepts only its
+default temperature, 1.0, while it reasons. Some models use function tools (plugins, MCPClients and
+extensions) only at reasoning effort ``none``, and some, such as gpt-6.1-sol, can't use them in the
+chat completions api at all.
+
+Smarter knows these rules for every OpenAI model that it offers, and applies them in two ways:
+
+- **When a manifest is applied**, settings that the model can never honor are errors, each with the
+  settings to use instead. For example, ``defaultReasoningEffort: minimal`` on gpt-6-luna, which
+  suggests ``low``; plugins on gpt-6.1-sol, which suggests ``defaultModel: gpt-6-luna``; or
+  ``defaultTemperature: 0.2`` with ``defaultReasoningEffort: high``.
+- **When a prompt is sent**, settings that only some requests can use are changed for the requests
+  that can't, and Smarter Chat's sandbox mode shows a warning that says what to change. For example,
+  gpt-6-luna with tools and ``defaultReasoningEffort: high`` reasons at ``none`` in the requests that
+  offer its tools, and at ``high`` in the answers without them. Smarter also learns the rules of a model
+  that it doesn't know, from the provider's errors, and answers without the tools of a model that
+  can't use them, rather than fail.
+
 Styling the Chat
 ----------------
 
