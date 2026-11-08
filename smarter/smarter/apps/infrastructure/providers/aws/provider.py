@@ -7,10 +7,11 @@ authenticates with AWS, with ``smarter_settings``' AWS credentials, and implemen
 - DNS, with Route53: :class:`~smarter.apps.infrastructure.providers.aws.dns.Route53DNSService`.
 - TLS certificates, with ACM:
   :class:`~smarter.apps.infrastructure.providers.aws.certificates.ACMCertificateService`.
+- private object storage, with S3: :class:`~smarter.apps.infrastructure.providers.aws.storage.S3StorageService`.
 - the Kubernetes cluster's kubeconfig, description, add-ons and node groups, with EKS.
 
 Of the AWS services that the old helpers wrapped, only these are used by the platform. API
-Gateway, DynamoDB, IAM, Lambda, RDS, Rekognition and S3 were not, and were removed.
+Gateway, DynamoDB, IAM, Lambda, RDS and Rekognition were not, and were removed.
 
 In the unit tests, it refuses to reach AWS, unless ``allow_in_tests`` is True, because the
 Smarter containers' AWS credentials are real.
@@ -39,6 +40,7 @@ from .certificates import ACMCertificateService
 from .dns import Route53DNSService
 from .helpers.base import AWSBase
 from .helpers.eks import AWSEks
+from .storage import S3StorageService
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.INFRASTRUCTURE_LOGGING])
 
@@ -59,6 +61,7 @@ class AWSProvider(CloudProvider):
         self._eks: Optional[AWSEks] = None
         self._dns: Optional[Route53DNSService] = None
         self._certificates: Optional[ACMCertificateService] = None
+        self._storage: Optional[S3StorageService] = None
 
     def require_live(self) -> None:
         """
@@ -144,6 +147,13 @@ class AWSProvider(CloudProvider):
         if self._certificates is None:
             self._certificates = ACMCertificateService(self, self.dns)
         return self._certificates
+
+    @property
+    def storage(self) -> S3StorageService:
+        """S3, as the provider's private object storage, created when it is first used."""
+        if self._storage is None:
+            self._storage = S3StorageService(self)
+        return self._storage
 
     def update_kubeconfig(self) -> bool:
         """
