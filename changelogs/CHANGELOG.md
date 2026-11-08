@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.43.1](https://github.com/smarter-sh/smarter/compare/v0.43.0...v0.43.1) (2026-11-08)
+
+### Bug Fixes
+
+* **helm:** stop running the api twice under its old name, smarter ([08a25eb](https://github.com/smarter-sh/smarter/commit/08a25eb7cfb9086c24c4c7605f5b4e2b4dbfa604))
+
+### Refactoring
+
+* **helm:** rename the api's templates from -app to -api ([2fdb2d3](https://github.com/smarter-sh/smarter/commit/2fdb2d326292dc8a8632646b204af42f7d169fa7))
+
 ## [0.43.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.0...v0.43.1-alpha.1) (2026-11-08)
 
 ### Bug Fixes
