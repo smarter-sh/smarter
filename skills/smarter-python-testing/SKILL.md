@@ -188,6 +188,21 @@ Redis, dev server and workers without rollback, and break each other. It needs
 about 4 GB of Docker's memory per shard. Run it in the background, like any
 long suite.
 
+**Prefer the sharded full suite to a serial run of several apps.** Eight shards
+run the whole suite about five times faster than one process, so once a change
+touches more than one or two test modules, `make docker-test-sharded` is
+quicker than `manage.py test smarter.apps.a smarter.apps.b ...` in the dev
+container, and it checks everything, not only the apps you guessed. A serial
+run of five or six apps can pass ten minutes and hit the Bash timeout. The
+shard stacks run the **image**, not the dev container that
+`sync-changed-files.sh` updates, so run `make build` first, in the same
+background command: `make build && make docker-test-sharded`. Keep the single
+module runs in the dev container for quick iteration on one test file.
+
+Don't use `manage.py test --parallel` instead: Django's parallel runner pickles
+each failure's traceback, and with this suite it fails with "cannot pickle
+'traceback' object", which hides the real failures.
+
 A full run takes a long time, so to raise coverage efficiently:
 
 1. Work from an existing report (`coverage report -m` output) rather than
@@ -197,7 +212,8 @@ A full run takes a long time, so to raise coverage efficiently:
    describe/get, management commands) are the cheapest wins.
 3. Test behavior through the public interface: the broker, the view, the
    command, the task function. Don't call private helpers just to touch lines.
-4. Run only the modules you touched while iterating. Do one full coverage run at
+4. Run only the modules you touched while iterating, and the sharded full suite
+   (`make build && make docker-test-sharded`) to verify. Do one full coverage run at
    the end.
 
 ## Reporting

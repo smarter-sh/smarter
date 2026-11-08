@@ -26,7 +26,10 @@ from smarter.apps.guardrail.services.exceptions import (
 )
 from smarter.lib import json, logging
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
-from smarter.lib.openai.model_quirks import DEFAULT_TEMPERATURE_ONLY_MODELS
+from smarter.lib.openai.model_quirks import (
+    DEFAULT_TEMPERATURE_ONLY_MODELS,
+    rejected_parameter,
+)
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -230,7 +233,7 @@ class OpenAIGuardrailClient:
         try:
             return self._client.chat.completions.create(**kwargs)
         except openai.BadRequestError as e:
-            if "temperature" not in kwargs or e.param != "temperature":
+            if "temperature" not in kwargs or rejected_parameter(e) != "temperature":
                 raise
             logger.warning(
                 "%s.create_judge_completion() model %s rejected temperature=%s. Retrying with its default temperature.",

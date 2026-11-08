@@ -12,6 +12,14 @@ credentials. They are tagged :data:`INFRASTRUCTURE`, and skipped unless they are
     python manage.py test --tag infrastructure               # only the infrastructure tests
     SMARTER_TEST_INFRASTRUCTURE=true python manage.py test   # everything
 
+Tests that send real requests to LLM providers, to find what each vendor's models accept, are
+tagged :data:`VENDOR`. They cost a little money, so they are skipped the same way:
+
+.. code-block:: console
+
+    python manage.py test --tag vendor               # only the vendor tests
+    SMARTER_TEST_VENDOR=true python manage.py test   # everything, with the vendor tests
+
 Tag a test, or a whole TestCase, that uses real infrastructure:
 
 .. code-block:: python
@@ -58,10 +66,37 @@ INFRASTRUCTURE = "infrastructure"
 """The tag of tests that use real infrastructure: Kubernetes, AWS Route53, ACM, and so on."""
 ENVIRONMENT_VARIABLE = "SMARTER_TEST_INFRASTRUCTURE"
 """The environment variable that, set to ``true``, ``yes`` or ``1``, runs the infrastructure tests too."""
+VENDOR = "vendor"
+"""The tag of tests that send real, billed requests to LLM providers, e.g. to probe what OpenAI's models accept."""
+VENDOR_ENVIRONMENT_VARIABLE = "SMARTER_TEST_VENDOR"
+"""The environment variable that, set to ``true``, ``yes`` or ``1``, runs the vendor tests too."""
+OPT_IN_TAGS: dict[str, str] = {
+    INFRASTRUCTURE: ENVIRONMENT_VARIABLE,
+    VENDOR: VENDOR_ENVIRONMENT_VARIABLE,
+}
+"""The tags that are skipped unless they are asked for, and the environment variable that asks for each."""
+OPT_IN_TAG_DESCRIPTIONS: dict[str, str] = {
+    INFRASTRUCTURE: "use real Kubernetes and AWS",
+    VENDOR: "send real, billed requests to LLM providers",
+}
 JUNIT_XML_ENVIRONMENT_VARIABLE = "SMARTER_TEST_JUNIT_XML"
 """The environment variable that names the file to write a JUnit XML report of the test results to."""
 SHARD_ENVIRONMENT_VARIABLE = "SMARTER_TEST_SHARD"
 """The environment variable that picks the part of the suite to run, as ``<shard>/<shards>``, e.g. ``2/8``."""
+
+
+def include_tag(tag: str) -> bool:
+    """
+    Return whether an opt-in tag's environment variable, in :data:`OPT_IN_TAGS`, asks for its tests to run too.
+
+    :param tag: An opt-in tag, e.g. :data:`VENDOR`.
+    :returns: True if the variable is ``1``, ``true`` or ``yes``, in any case.
+    """
+    variable = OPT_IN_TAGS[tag]
+    value = os.environ.get(variable, "")
+    normalized_value = value.strip().lower()
+    included = normalized_value in ("1", "true", "yes")
+    return included
 
 
 def include_infrastructure() -> bool:
@@ -70,9 +105,7 @@ def include_infrastructure() -> bool:
 
     :returns: True if the variable is ``1``, ``true`` or ``yes``, in any case.
     """
-    value = os.environ.get(ENVIRONMENT_VARIABLE, "")
-    normalized_value = value.strip().lower()
-    included = normalized_value in ("1", "true", "yes")
+    included = include_tag(INFRASTRUCTURE)
     return included
 
 
@@ -152,16 +185,17 @@ class SmarterTestRunner(DiscoverRunner):
     """
     Django's test runner, with three additions for Smarter's suite.
 
-    It skips the infrastructure tests unless they are asked for, writes a JUnit XML report when
+    It skips the infrastructure and vendor tests unless they are asked for, writes a JUnit XML report when
     :data:`JUNIT_XML_ENVIRONMENT_VARIABLE` names a file, and runs only one shard of the suite
     when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
     """
 
     def __init__(self, *args, tags: list[str] | None = None, exclude_tags: list[str] | None = None, **kwargs):
         """
-        Create the runner, excluding the :data:`INFRASTRUCTURE` tag unless the tests are asked for.
+        Create the runner, excluding each tag of :data:`OPT_IN_TAGS` unless its tests are asked for.
 
-        They are asked for by ``--tag infrastructure``, or by :data:`ENVIRONMENT_VARIABLE`.
+        They are asked for by ``--tag <tag>``, e.g. ``--tag infrastructure``, or by the tag's
+        environment variable, e.g. :data:`ENVIRONMENT_VARIABLE`.
 
         :param args: Passed to Django's ``DiscoverRunner``.
         :param tags: The tags to run, from ``--tag``.
@@ -170,12 +204,16 @@ class SmarterTestRunner(DiscoverRunner):
         """
         tags = list(tags or [])
         exclude_tags = list(exclude_tags or [])
-        if INFRASTRUCTURE in tags:
-            self.skipping_infrastructure = False
-        else:
-            self.skipping_infrastructure = not include_infrastructure()
-        if self.skipping_infrastructure and INFRASTRUCTURE not in exclude_tags:
-            exclude_tags.append(INFRASTRUCTURE)
+        self.skipped_tags: list[str] = []
+        for tag in OPT_IN_TAGS:
+            if tag in tags:
+                continue
+            if include_tag(tag):
+                continue
+            self.skipped_tags.append(tag)
+            if tag not in exclude_tags:
+                exclude_tags.append(tag)
+        self.skipping_infrastructure = INFRASTRUCTURE in self.skipped_tags
         runner_tags = None
         if tags:
             runner_tags = tags
@@ -183,15 +221,19 @@ class SmarterTestRunner(DiscoverRunner):
 
     def setup_test_environment(self, **kwargs):
         """
-        Set up Django's test environment, and say when the infrastructure tests are skipped.
+        Set up Django's test environment, and say which opt-in tests are skipped.
 
         :param kwargs: Passed to Django's ``setup_test_environment()``.
         """
         super().setup_test_environment(**kwargs)
-        if self.skipping_infrastructure and self.verbosity > 0:
+        if self.verbosity <= 0:
+            return
+        for tag in self.skipped_tags:
+            description = OPT_IN_TAG_DESCRIPTIONS[tag]
+            variable = OPT_IN_TAGS[tag]
             print(
-                f"Skipping the tests tagged '{INFRASTRUCTURE}', which use real Kubernetes and AWS. "
-                f"Run them with --tag {INFRASTRUCTURE}, or all tests with {ENVIRONMENT_VARIABLE}=true."
+                f"Skipping the tests tagged '{tag}', which {description}. "
+                f"Run them with --tag {tag}, or all tests with {variable}=true."
             )
 
     def build_suite(self, test_labels=None, **kwargs):
