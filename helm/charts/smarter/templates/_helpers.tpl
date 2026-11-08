@@ -49,11 +49,12 @@ The names of the api's Deployments, and of their Services, HorizontalPodAutoscal
 PodDisruptionBudgets, comma-separated: <appName>-api, and while app.legacyName.enabled is true,
 <appName> too, the name that they had before.
 
-The api was renamed from <appName> to <appName>-api. One release runs both Deployments, whose pods
-share the label app.kubernetes.io/component: api, which both Services select, so that the rename
-drops no request: Helm creates the new Deployment before the next release deletes the old one, and
-the Ingresses that still name the old Service keep working until they are updated. The next release
-sets app.legacyName.enabled to false.
+The api was renamed from <appName> to <appName>-api in v0.43.0. With app.legacyName.enabled, a release
+runs both Deployments, whose pods share the label app.kubernetes.io/component: api, which both
+Services select, so that the rename drops no request: Helm creates the new Deployment before an
+upgrade with the flag off deletes the old one, and the Ingresses that still name the old Service keep
+working until they are updated. It is off by default, since v0.43.0 has been deployed: an install
+that upgrades from an older release turns it on for one upgrade (see values.yaml).
 
   {{- range $name := splitList "," (include "smarter.apiNames" .) }} ... {{- end }}
 */}}
