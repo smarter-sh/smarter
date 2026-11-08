@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, patch
 
+from django.contrib.staticfiles.management.commands import collectstatic
 from django.core.management.base import CommandError
 from pydantic import SecretStr
 
@@ -14,6 +15,14 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from .base import CommandTestBase
 
 MODULE = "smarter.apps.account.management.commands.initialize_platform"
+
+
+def command_name(command) -> str:
+    """The name of a command that call_command received, either as its name or as an instance."""
+    if isinstance(command, str):
+        return command
+    name = command.__module__.rsplit(".", 1)[-1]
+    return name
 
 
 class TestInitializePlatform(CommandTestBase):
@@ -199,7 +208,7 @@ class TestInitializePlatform(CommandTestBase):
             settings.admin_password = None
             settings.static_files_on_cdn = on_cdn
             self.run_command("initialize_platform")
-        return [c.args[0] for c in called.call_args_list]
+        return [command_name(c.args[0]) for c in called.call_args_list]
 
     def test_uploads_the_static_files_while_they_are_on_the_cdn(self):
         """While the static files are on the CDN, collectstatic uploads them, before the platform's other steps."""
@@ -218,11 +227,38 @@ class TestInitializePlatform(CommandTestBase):
     def test_static_files_upload_failure_is_fatal(self):
         """A failed upload lets the remaining steps run, then fails: the pages would load missing scripts."""
 
-        def call(name, **kwargs):
-            if name == "collectstatic":
+        def call(command, **kwargs):
+            if command_name(command) == "collectstatic":
                 raise RuntimeError("bucket")
 
         with self.assertRaisesRegex(CommandError, "these steps failed: collectstatic"):
             self.run_with_static_files_on_cdn(True, call)
         # the pages keep loading this build from the server.
         self.mark_console_uploaded.assert_not_called()
+
+    def test_logs_the_static_files_upload(self):
+        """The upload, which runs silently for minutes, is logged before it starts and after it ends, with its counts."""
+
+        def call(command, **kwargs):
+            if command_name(command) == "collectstatic":
+                command.copied_files = ["new.js", "changed.css"]
+                command.symlinked_files = []
+                command.unmodified_files = ["a.js", "b.js", "c.png"]
+
+        with patch(f"{MODULE}.logger") as logger:
+            self.run_with_static_files_on_cdn(True, call)
+        logger.info.assert_any_call("%s.upload_static_files() uploading the static files to the CDN's bucket", ANY)
+        logger.info.assert_any_call(
+            "%s.upload_static_files() checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
+            ANY,
+            5,
+            2,
+            ANY,
+        )
+
+    def test_collectstatic_keeps_what_it_collected(self):
+        """The counts are read from the lists that Django's collectstatic keeps: a Django upgrade mustn't rename them."""
+        command = collectstatic.Command()
+        self.assertEqual(command.copied_files, [])
+        self.assertEqual(command.symlinked_files, [])
+        self.assertEqual(command.unmodified_files, [])

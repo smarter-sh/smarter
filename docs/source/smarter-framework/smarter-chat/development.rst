@@ -159,10 +159,14 @@ Source layout
      - The chat thread: building it from the configuration, turning api messages into displayable
        ones and back, and rendering markdown to sanitized html.
    * - ``src/lib/code.ts``, ``math.ts``, ``mermaid.ts``
-     - Code blocks (highlight.js), math (KaTeX, as a ``marked`` extension) and diagrams (Mermaid).
+     - Code blocks (highlight.js, collapsed when long), math (KaTeX, as a ``marked`` extension) and
+       diagrams (Mermaid).
+   * - ``src/lib/data.ts``
+     - Messages that are data: pretty printed JSON, Smarter manifests, and CSV or TSV tables. Each
+       detector is strict, so that prose stays markdown.
    * - ``src/lib/media.ts``
-     - SVG graphics (a ``marked`` extension, sanitized, displayed as data url images), audio players,
-       and the media's download buttons.
+     - SVG graphics (a ``marked`` extension, sanitized, displayed as data url images), audio and
+       video players, and the download buttons of media and of code blocks that have a file name.
    * - ``src/lib/cookie.ts``
      - Reading Django's CSRF cookie, and the chat session and debug cookies.
    * - ``src/lib/enums.ts``
@@ -246,18 +250,22 @@ Messages are displayed by `chatscope <https://github.com/chatscope/chat-ui-kit-r
 ``Message`` component, which takes html strings, not React elements. So message rendering is a
 pipeline of strings, in ``messages.ts``:
 
-1. ``messageFactory()`` turns an api message into a ``ChatMessage``. The user's messages go through
-   ``convertMarkdownLinksToHTML()``, which escapes them and converts only links and images. Every
-   other role goes through ``convertMarkdownToHTML()``.
+1. ``messageFactory()`` turns an api message into a ``ChatMessage``. A message from anyone that is
+   only data goes through ``dataHtml()`` in ``data.ts``. Otherwise, the user's messages go through
+   ``convertMarkdownLinksToHTML()``, which escapes them and converts only links and images, and every
+   other role goes through ``convertMarkdownToHTML()``. An assistant message that only calls tools
+   goes through ``toolCallsHtml()``, and is marked ``metadata``, so that ``toggleMetadataMessages()``
+   displays it only in sandbox mode, as it does the backend's own messages.
 2. ``convertMarkdownToHTML()`` parses GitHub flavored markdown with ``marked``, with the math
    extension from ``math.ts``, and custom renderers that escape raw html, restrict link and image
    urls, and render code blocks with ``code.ts``.
 3. The html is sanitized with DOMPurify, and only then displayed.
 
 Because messages are html strings, their interactive parts can't have React event handlers. The
-code blocks' **Copy** buttons, the diagrams' and svg images' **Code** buttons and the media's
-**Download** buttons are handled by one click listener on the chat, by event delegation
-(``copyCodeBlock()``, ``toggleMermaidDiagram()``, ``toggleSvgCode()`` and ``downloadMedia()``). Mermaid renders
+code blocks' **Copy** and **Show all lines** buttons, the diagrams' and svg images' **Code** buttons
+and the media's **Download** buttons are handled by one click listener on the chat, by event delegation
+(``copyCodeBlock()``, ``toggleCodeBlock()``, ``toggleMermaidDiagram()``, ``toggleSvgCode()`` and
+``downloadMedia()``). Mermaid renders
 asynchronously, so a ``mermaid`` block is first rendered as a code block, and
 ``renderMermaidDiagrams()``, called in a layout effect whenever the messages change, replaces it in
 the page with its diagram. Diagrams are cached by their source, so a re-render doesn't redraw them.
