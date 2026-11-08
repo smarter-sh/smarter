@@ -257,7 +257,7 @@ app:
   extraVolumeMounts: []
   # A PodDisruptionBudget that keeps voluntary disruptions (node drains, cluster
   # upgrades, Karpenter or cluster-autoscaler consolidation) from evicting more than
-  # maxUnavailable app pods at a time. See templates/pdb-app.yaml.
+  # maxUnavailable app pods at a time. See templates/pdb-api.yaml.
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
@@ -330,7 +330,7 @@ deployment:
 # Horizontal Pod Autoscaler Configuration
 # ----------------------------------------------------------------------------
 # minReplicas, targetMemoryUtilizationPercentage and behavior apply to the app's
-# HorizontalPodAutoscaler (templates/hpa-app.yaml); maxReplicas and
+# HorizontalPodAutoscaler (templates/hpa-api.yaml); maxReplicas and
 # targetCPUUtilizationPercentage apply to it and to the Celery worker's
 # (templates/hpa-worker.yaml).
 hpa:

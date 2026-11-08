@@ -10,7 +10,7 @@ answers without a thread, a query or a cache lookup. Whether the pod can serve r
 readiness probe's question, ``/readiness/``, which still goes through Django, so a pod that can't
 is taken out of the service rather than restarted.
 
-See ``helm/charts/smarter/templates/deployment-app.yaml``.
+See ``helm/charts/smarter/templates/deployment-api.yaml``.
 """
 
 from asgiref.typing import (
