@@ -58,9 +58,6 @@ staticfiles
 # -------------------------------------
 **/.coverage
 **/.coverage.*
-# React test coverage reports (make react-test), and Storybook builds
-smarter/react/coverage/
-smarter/react/packages/*/coverage/
 **/storybook-static/
 htmlcov
 
@@ -124,3 +121,9 @@ smarter/smarter/locale/**/*.mo
 *.tfstate
 *.tfstate.*
 tfplan
+
+# the web console's messages.js, which make console installs from the pinned release
+smarter/console/
+
+# make docker-test-sharded logs, scripts/run_test_shards.py
+.test-shards/

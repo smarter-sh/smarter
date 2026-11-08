@@ -275,6 +275,35 @@ class Budget(MetaDataModel):
     def __str__(self) -> str:
         return str(self.name)
 
+    def is_readable_by(self, user) -> bool:
+        """
+        Whether a user may read this budget.
+
+        A superuser may read every one, and anyone else one that is attached to a resource whose budgets they may
+        see, as :func:`is_visible` decides for their selected UserProfile.
+
+        A Budget has no owner, so :func:`smarter.apps.dashboard.resource_detail.readable_instance` asks it.
+
+        :param user: The user.
+        :returns: True if they may read it.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .user_profile import UserProfile
+
+        if not getattr(user, "is_authenticated", False):
+            return False
+        if user.is_superuser:
+            return True
+        try:
+            user_profile = UserProfile.get_cached_object(user=user)
+        except UserProfile.DoesNotExist:
+            return False
+        locators = self.constraints.values_list("resource_locator", flat=True)  # type: ignore[attr-defined]
+        for locator in locators:
+            if is_visible(user_profile, locator):
+                return True
+        return False
+
     def validate(self):
         """
         Validate the Budget: its limits may not be negative, and its warning threshold is at most 100.

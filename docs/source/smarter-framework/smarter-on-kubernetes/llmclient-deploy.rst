@@ -147,7 +147,7 @@ Unless ``SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST`` is false, the task r
          paths:
          - backend:
              service:
-               name: smarter
+               name: smarter-api
                port:
                  number: 8000
            path: /
@@ -157,7 +157,10 @@ Unless ``SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST`` is false, the task r
        - stackademy.3141-5926-5359.api.platform.example.com
        secretName: stackademy.3141-5926-5359.api.platform.example.com-tls
 
-``kubectl apply`` is idempotent: applying it again to an existing Ingress changes nothing. A failure
+``kubectl apply`` is idempotent: applying it again to an existing Ingress changes nothing. The
+Ingresses created before the api's Service was renamed name ``smarter``;
+``manage.py retarget_llmclient_ingresses``, which ``initialize_platform`` runs on each deployment, re-applies
+them with ``smarter-api``. A failure
 (the cluster rejects the manifest, or kubectl is not configured) sets the LLMClient's
 ``tls_certificate_issuance_status`` to ``Failed`` and ends the deployment.
 

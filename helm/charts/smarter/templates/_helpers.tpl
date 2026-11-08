@@ -12,7 +12,7 @@ container's own filesystem, lasts as long as the pod.
 - data/media: Django's media storage, when the platform is not configured for S3
 - data/manifests/example_manifests: the output of manage.py generate_example_manifests
 
-The rest of data/, e.g. data/docs, stays the image's own, read from the image.
+The rest of data/ stays the image's own, read from the image.
 */}}
 {{- define "smarter.writableVolumes" -}}
 - name: smarter-tmp
@@ -42,4 +42,25 @@ The rest of data/, e.g. data/docs, stays the image's own, read from the image.
   mountPath: /home/smarter_user/data/media
 - name: smarter-data-example-manifests
   mountPath: /home/smarter_user/data/manifests/example_manifests
+{{- end }}
+
+{{/*
+The names of the api's Deployments, and of their Services, HorizontalPodAutoscalers and
+PodDisruptionBudgets, comma-separated: <appName>-api, and while app.legacyName.enabled is true,
+<appName> too, the name that they had before.
+
+The api was renamed from <appName> to <appName>-api. One release runs both Deployments, whose pods
+share the label app.kubernetes.io/component: api, which both Services select, so that the rename
+drops no request: Helm creates the new Deployment before the next release deletes the old one, and
+the Ingresses that still name the old Service keep working until they are updated. The next release
+sets app.legacyName.enabled to false.
+
+  {{- range $name := splitList "," (include "smarter.apiNames" .) }} ... {{- end }}
+*/}}
+{{- define "smarter.apiNames" -}}
+{{- $names := list (printf "%s-api" .Values.global.appName) -}}
+{{- if .Values.app.legacyName.enabled -}}
+{{- $names = append $names .Values.global.appName -}}
+{{- end -}}
+{{- join "," $names -}}
 {{- end }}

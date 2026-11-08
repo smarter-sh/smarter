@@ -43,8 +43,10 @@ The models are used, not just documented:
   (``src/contract.test.ts``), so its tests can't pass against responses that the backend never sends.
 
 After changing a model, run ``make chat-contract``, which regenerates the schema and the examples in
-the ``smarter-app`` container, copies it into Smarter Chat, and regenerates the TypeScript types. Commit
-both repositories.
+the ``smarter-api`` container, and commit them. Then, in
+`smarter-console <https://github.com/smarter-sh/smarter-console>`__, Smarter Chat's repository,
+``make contracts`` copies the schema into Smarter Chat and regenerates the TypeScript types;
+smarter-sh/automation's weekly API Contract Sync proposes the same copy as a pull request.
 
 .. literalinclude:: ../../../../smarter/smarter/apps/prompt/contract/chat-contract.schema.json
    :language: json
@@ -152,7 +154,10 @@ Endpoints
      - Url
      - Served by
    * - Configuration, workbench
-     - ``https://<platform>/workbench/llm-clients/<hashed_id>/config/``
+     - The workbench's ``apiUrl`` is the LLMClient in the platform api, ``/api/v1/llm-clients/<hashed_id>/``,
+       so it reads ``/api/v1/llm-clients/<hashed_id>/config/``, below. The older
+       ``https://<platform>/workbench/llm-clients/<hashed_id>/config/`` is still served, and is the only
+       url whose configuration has ``sandbox_mode`` true
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView`
    * - Configuration, deployed LLMClient
      - ``https://<name>.<account-number>.api.<domain>/config/`` (and ``/``), or the same paths on its
@@ -175,15 +180,16 @@ Endpoints
      - ``smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs``
    * - Manifest, workbench only
      - The ``smarter-manifest-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/manifest/editor/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/manifest/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_manifest_view.LLMClientManifestEditorView`
    * - Architecture, workbench only
      - The ``smarter-architecture-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/architecture/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/architecture/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_architecture_view.LLMClientArchitectureView`
    * - Deployment page, workbench only
      - The ``smarter-deployment-url`` that Django passes the workbench:
-       ``/workbench/llm-clients/<hashed_id>/deployment/``
+       ``/api/web/prompt/llm-clients/<hashed_id>/deployment/``, whose api key actions are its
+       ``api-keys/create/``, ``api-keys/attach/`` and ``api-keys/detach/``
      - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_deployment_view.LLMClientDeploymentView`
 
 A page that embeds the chat therefore calls one host only: its LLMClient's.
@@ -672,8 +678,8 @@ Changing the Contract Safely
    the chat. Add the new shape beside the old one, and remove the old one only in a new version of
    the contract, which clients ask for with a new capability.
 4. **A new request header** must be added to ``CORS_ALLOW_HEADERS``, or pages on other domains break.
-5. Run ``make chat-contract``, and update Smarter Chat's code and fixtures until ``make test`` passes
-   there, then update this page.
+5. Run ``make chat-contract``, then ``make contracts`` in smarter-console, and update Smarter Chat's
+   code and fixtures until ``make test`` passes there, then update this page.
 
 
 Technical Reference

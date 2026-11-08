@@ -5,23 +5,25 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.utils.translation import to_locale
 
 from smarter.lib.django.management.base import SmarterCommand
 
-DJANGO_IGNORE_PATTERNS = ["react", "static", "staticfiles", "node_modules", "requirements", "venv"]
+DJANGO_IGNORE_PATTERNS = ["console", "react", "static", "staticfiles", "node_modules", "requirements", "venv"]
 """
-Directories, under the project root, that makemessages skips for the django domain: the.
+Directories, under the project root, that makemessages skips for the django domain.
 
-React workspace (the djangojs domain), and static and third-party files, which hold no
-web console messages.
+The web console's messages (the djangojs domain), and static and third-party files, which hold no messages of
+Django's own.
 """
 
-REACT_MESSAGES_DIR = Path("react") / "i18n"
+CONSOLE_MESSAGES_DIR = Path("console") / "i18n"
 """
-Where ``npm run i18n:extract`` writes ``messages.js``, the React apps' messages, relative to.
+Where ``scripts/fetch_console.py`` installs ``messages.js``, the web console's messages, relative to the project root.
 
-the project root. makemessages reads only this directory for the djangojs domain.
+Each release of smarter-sh/smarter-console carries it, and ``make console`` installs the pinned release's.
+makemessages reads only this directory for the djangojs domain.
 """
 
 
@@ -30,13 +32,14 @@ class Command(SmarterCommand):
     Django manage.py update_console_messages command.
 
     Regenerates ``smarter/smarter/locale/<language>/LC_MESSAGES/django.po``, from the Django
-    templates and Python code, and ``djangojs.po``, from the React apps' messages in
-    ``react/i18n/messages.js``, for each language in ``settings.LANGUAGES``, then compiles
+    templates and Python code, and ``djangojs.po``, from the web console's messages in
+    ``console/i18n/messages.js``, for each language in ``settings.LANGUAGES``, then compiles
     them to ``.mo`` files. A regional language code is written to its locale name's directory,
     e.g. ``pt-br`` to ``locale/pt_BR``. Translations already in the ``.po`` files are kept.
 
-    Run ``npm run i18n:extract`` in ``smarter/react`` first, or ``make i18n-messages``, which
-    does both.
+    ``make console`` installs the pinned console release's ``messages.js`` first, and
+    ``make i18n-messages`` runs this command in the smarter-api container. Without
+    ``messages.js``, it exits with an error that says so.
     """
 
     help = (
@@ -80,6 +83,9 @@ class Command(SmarterCommand):
         # names: pt-br is pt_BR.
         languages = [to_locale(language) for language in languages]
         project_root = Path(settings.PROJECT_ROOT)
+        console_messages = project_root / CONSOLE_MESSAGES_DIR / "messages.js"
+        if not console_messages.is_file():
+            raise CommandError(f"{console_messages} is missing: run make console, which installs it.")
         cwd = os.getcwd()
         try:
             # makemessages scans the current directory, and writes to settings.LOCALE_PATHS[0].
@@ -93,9 +99,9 @@ class Command(SmarterCommand):
                 add_location="file",
                 verbosity=options["verbosity"],
             )
-            os.chdir(project_root / REACT_MESSAGES_DIR)
+            os.chdir(project_root / CONSOLE_MESSAGES_DIR)
             self.stdout.write(f"Updating djangojs.po for {', '.join(languages)} ...")
-            # messages.js lists each message's React source files in a translator comment, so its
+            # messages.js lists each message's source files in the console's repository in a translator comment, so its
             # own line numbers would only add noise to the .po file.
             call_command(
                 "makemessages",

@@ -3,12 +3,12 @@ Front End Development: Two-Week Online Course
 
 A two-week online course on front end development with React, TypeScript, Vite and Bootstrap, taught
 on the pages of Smarter's web console. The console is an npm workspace of `twenty-four React apps
-<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__, one per page, with
+<https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages>`__, one per page, with
 shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and styled with the Keen
 Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker, ESLint and Prettier are
 already set up, with about 150 test files and every story run as a test. Each app is hosted by a
 Django template, and the chat interface, `@smarter.sh/ui-chat
-<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
+<https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
 from the server's Pydantic contract. There are six 30-minute recorded lectures and a 90-minute live
 session each week. Week 1 covers React and components in isolation, and week 2 covers styling,
 testing and integration. See :doc:`../course-formats` for the format, the grading scale and the
@@ -23,7 +23,8 @@ At a Glance
    * - **Students**
      - Developers who know JavaScript and want to learn React and professional front end tooling.
    * - **Deployment**
-     - Each student has a clone of the repository with ``make react-install`` done. A running
+     - Each student has a clone of `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web
+       console's repository, with ``make install`` done. A running
        Smarter is needed in week 2; students may install it from source, or the instructor can
        provide a shared one with a deployed LLMClient.
    * - **Workload**
@@ -50,8 +51,8 @@ Technical Prerequisites
 - **Required:** HTML and CSS basics, and the browser's developer tools.
 - **Required:** Git and GitHub: clone, branch, commit, push and pull requests.
 - **Required:** Node.js 24 or later and npm, and the command line.
-- **Required before Live session 1:** the repository cloned, ``make react-install`` run, and
-  Storybook opening with ``make react-storybook``.
+- **Required before Live session 1:** smarter-console cloned, ``make install`` run, and
+  Storybook opening with ``make storybook``.
 - **Helpful:** TypeScript basics, JSON and REST APIs, and Docker (for running Smarter in week 2).
 
 Schedule
@@ -71,7 +72,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **React in one picture.** Components, JSX, props, state, effects, hooks and TypeScript props.
    * - 1
      - Lecture 2 (30 min)
-     - **The web console's workspace.** One React app per page in ``smarter/react/packages/``,
+     - **The web console's workspace.** One React app per page in smarter-console's ``packages/``,
        shared code in ``smarter-common``, and a tour of a list page.
    * - 1
      - Lecture 3 (30 min)
@@ -181,7 +182,7 @@ Assignment 3: A List Page Feature with Tests
 
 Students add a column, a filter or a sort to a list page, with Vitest tests.
 
-**Turn in:** a pull request against their fork, with ``make react-test`` and ``make react-lint``
+**Turn in:** a pull request against their fork, with ``make test`` and ``make lint``
 passing.
 
 .. list-table::

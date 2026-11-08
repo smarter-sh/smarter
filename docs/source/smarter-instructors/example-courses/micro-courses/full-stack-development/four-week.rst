@@ -4,9 +4,9 @@ Full Stack Development: Four-Week Online Course
 A four-week online course on full stack development with Django and React, taught on Smarter's web
 console, where Django hosts each React app and React calls back into Django. Every list page in the
 console is built the same way: a `Django view
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/view.py>`__
+<https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/apps/guardrail/views/listview/view.py>`__
 and `template
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/react/guardrail-list.html>`__
+<https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/smarter/templates/react/guardrail-list.html>`__
 render a root element with the session's details as data attributes, a template tag reads Vite's
 build manifest, and the React app calls back into `session-authenticated views
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/views/listview/api.py>`__
@@ -86,7 +86,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - Installation triage. Live trace of a list page from URL to component. Start Assignment 1.
    * - 2
      - Lecture 4
-     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make react-build``, and
+     - **Builds and static files.** The Vite manifest, ``collectstatic``, ``make console``, ``make console-local``, and
        failure modes.
    * - 2
      - Lecture 5
@@ -304,7 +304,7 @@ template tag, the sidebar link, a new React package, and the list, clone, rename
 **What students turn in:**
 
 - A pull request with the Django and React changes, Django tests, Vitest tests and stories.
-- The page working in the console after ``make react-build``, shown in a recording.
+- The page working in the console after ``make console-local``, shown in a recording.
 - A six-minute demonstration in Live session 4.
 
 **How it is graded (100 points):**

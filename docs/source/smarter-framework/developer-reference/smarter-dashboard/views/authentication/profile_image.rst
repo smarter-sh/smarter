@@ -21,7 +21,7 @@ for a user with more than one, it is that of the profile that the console acts
 as, which they choose with the user menu's **Change Profile** item. See
 :doc:`../../../react-integration/dashboard-user-menu`.
 
-.. automodule:: smarter.apps.account.views.dashboard.profile_image
+.. automodule:: smarter.apps.account.api.web.profile_image
     :members:
     :undoc-members:
     :show-inheritance:

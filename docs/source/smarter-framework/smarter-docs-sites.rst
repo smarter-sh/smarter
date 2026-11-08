@@ -74,7 +74,7 @@ VitePress needs no package: one ``head`` entry in ``.vitepress/config.mts``.
 
   export default defineConfig({
     head: [["script", {
-      src: "https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0.9.0/dist/embed.js",
+      src: "https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@1/dist/embed.js",
       "data-chatbot": "https://docs-bot.example.com/",
       async: "",
     }]],
@@ -129,5 +129,5 @@ template, before ``</body>``:
 
 .. code-block:: html
 
-  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js"
+  <script src="https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@1/dist/embed.js"
     data-chatbot="https://docs-bot.example.com/" async></script>

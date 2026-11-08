@@ -144,7 +144,7 @@ Prompt frontends pass the Smarter API key in the 'x-api-key' header.
 See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
-# Smarter React common custom headers. See smarter/react/packages/smarter-common/src/lib/django.tsx
+# The web console's custom headers. See smarter-sh/smarter-console's packages/smarter-common/src/lib/django.tsx
 CORS_ALLOW_HEADERS += [
     "x-smarter-client",
     "x-smarter-clientversion",
@@ -1076,7 +1076,6 @@ TEMPLATES = [
                 "smarter.apps.dashboard.context_processors.static_version",
                 "smarter.apps.dashboard.context_processors.base",
                 "smarter.apps.dashboard.context_processors.footer",
-                "smarter.apps.dashboard.context_processors.sidebar",
             ],
         },
     },
@@ -1601,6 +1600,26 @@ is used by the 'collectstatic' management command to gather all static files
 from the various Django apps and store them in a single location for serving.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#static-root
+"""
+
+if smarter_settings.static_files_on_cdn:
+    if smarter_settings.aws_is_configured:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "smarter.lib.django.static_storage.SmarterStaticFilesStorage",
+            "OPTIONS": {**STORAGES["default"]["OPTIONS"], "location": "static"},
+        }
+        cdn_url = smarter_settings.environment_cdn_url.rstrip("/")
+        STATIC_URL = f"{cdn_url}/static/"
+    else:
+        logger.warning(
+            "%s SMARTER_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
+            logger_prefix,
+        )
+"""
+While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the static files are on the environment's S3 bucket, under ``static/``,
+and ``STATIC_URL`` is its CDN's, e.g. ``https://cdn.platform.example.com/static/``.
+``initialize_platform`` uploads them on each deployment. Pages, cookies and the api stay on the platform's
+own host. See :mod:`smarter.lib.django.static_storage` and :doc:`ADR-035 </adr/035-single-page-app>`.
 """
 
 STATICFILES_DIRS = [BASE_DIR / "static"]

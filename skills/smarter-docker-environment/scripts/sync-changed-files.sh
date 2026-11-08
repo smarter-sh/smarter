@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copy the files that git sees as changed or new under smarter/smarter into every app container,
-# fix their ownership, restart smarter-app, and wait for the dev server.
+# fix their ownership, restart smarter-api, and wait for the dev server.
 #
 # Fast (seconds), because it copies only what git lists, rather than comparing every file's md5
 # as sync-to-containers.sh does. Run it from anywhere:
@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 HOST_ROOT="smarter/smarter"
 CONTAINER_ROOT="/home/smarter_user/smarter/smarter"
-CONTAINERS=(smarter-app smarter-worker smarter-worker-infrastructure smarter-beat)
+CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-beat)
 
 LIST="$(mktemp)"
 trap 'rm -f "$LIST"' EXIT
@@ -47,6 +47,6 @@ for container in "${CONTAINERS[@]}"; do
   echo "$container: synced$([ $failed -eq 1 ] && echo ', with failures')"
 done
 
-docker restart smarter-app >/dev/null
+docker restart smarter-api >/dev/null
 until [ "$(curl -s -o /dev/null -w '%{http_code}' localhost:9357/)" = "302" ]; do sleep 2; done
-echo "smarter-app is up"
+echo "smarter-api is up"

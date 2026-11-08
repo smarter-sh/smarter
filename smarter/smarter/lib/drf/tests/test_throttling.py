@@ -9,9 +9,11 @@ from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.throttling import (
+    CREDENTIALS_THROTTLE_RATE,
     SMARTER_THROTTLE_CLASSES,
     SmarterAnonRateThrottle,
     SmarterUserRateThrottle,
+    credentials_throttle_wait,
     throttle_wait,
 )
 
@@ -86,3 +88,30 @@ class TestThrottling(TestAccountMixin):
             for _ in range(5):
                 self.assertIsNone(throttle_wait(self.request(), self.view))
                 self.assertIsNone(throttle_wait(self.request(user=self.non_admin_user), self.view))
+
+
+#: Another documentation address, so that the credentials counter is this test's own.
+CREDENTIALS_CLIENT_IP = "192.0.2.18"
+
+
+class TestCredentialsThrottle(TestAccountMixin):
+    """Test the per-address limit of sign-ins, sign-ups and password reset requests."""
+
+    def tearDown(self):
+        lazy_cache.delete(f"throttle_credentials_{CREDENTIALS_CLIENT_IP}")
+        super().tearDown()
+
+    def test_rate_is_strict(self):
+        """The limit is far below the api's general rate."""
+        self.assertEqual(CREDENTIALS_THROTTLE_RATE, "10/minute")
+
+    def test_throttles_an_address_after_its_limit(self):
+        """An address may make the limit's attempts, and then waits; signing in doesn't reset it."""
+        request = RequestFactory().post("/api/web/account/login/", REMOTE_ADDR=CREDENTIALS_CLIENT_IP)
+        request.user = self.non_admin_user
+        with patch(f"{MODULE}.CREDENTIALS_THROTTLE_RATE", "2/minute"):
+            self.assertIsNone(credentials_throttle_wait(request, Mock()))
+            self.assertIsNone(credentials_throttle_wait(request, Mock()))
+            wait = credentials_throttle_wait(request, Mock())
+        self.assertIsNotNone(wait)
+        self.assertGreaterEqual(wait, 1)  # type: ignore[arg-type]

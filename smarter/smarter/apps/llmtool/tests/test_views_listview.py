@@ -7,6 +7,7 @@ from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.unittest.resource_views import assert_console_page
 
 from .base_classes import PluginAppTestBase
 
@@ -23,19 +24,10 @@ class TestPluginListView(PluginAppTestBase):
         self.url = reverse(PluginReverseNames.namespace, PluginReverseNames.listview)
 
     def test_get(self):
-        """Test that an authenticated user gets the React app's root and configuration."""
+        """Test that the page is the single-page console's, at /llm-tools/, for anyone."""
+        self.assertEqual(self.url, "/llm-tools/")
         self.client.force_login(self.admin_user)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        llmtool_list = response.context["llmtool_list"]
-        self.assertEqual(llmtool_list["root_id"], "smarter-llmtool-list-root")
-        self.assertEqual(
-            llmtool_list["llmtool_list_api_url"],
-            reverse(PluginApiWebReverseNames.namespace, PluginApiWebReverseNames.listview_all),
-        )
-        for key in ("django_csrf_cookie_name", "django_session_cookie_name", "react_debug_mode", "smarter_request_id"):
-            self.assertIn(key, llmtool_list)
-        self.assertIn("smarter-llmtool-list-root", response.content.decode())
+        assert_console_page(self, self.url)
 
     def test_get_non_admin_user(self):
         """Test that a non-admin user gets the page."""
@@ -50,7 +42,6 @@ class TestPluginListView(PluginAppTestBase):
         self.assertIn("no-cache", response.get("Cache-Control", ""))
 
     def test_anonymous_user(self):
-        """Test that an anonymous user is redirected to the login page."""
+        """Test that an anonymous user gets the console's page, which sends them to its sign-in page."""
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response["Location"])
+        self.assertEqual(response.status_code, 200)

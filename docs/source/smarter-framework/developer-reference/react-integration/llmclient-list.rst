@@ -17,6 +17,13 @@ experience for exploring both personal and shared llmclients made possible via
 Smarter's role-based access control, which makes it easy to find and interact
 with the resources you need—all without requiring a page reload or manual refresh.
 
+The list is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
+``/workbench/``. The console renders ``@smarter/llmclient-list``'s list there, with a session context
+whose api url is the list's, and the onboarding hints' state for its weather hint; the package has no
+build of its own. Django answers ``/workbench/`` with the console's page, keeping its view class and url
+name, so that the dashboard's global search still links to it. Every resource list works this way: see
+:doc:`../web-console-api`.
+
 A list that you have seen before paints at once, from the browser's cache, while it asks the api
 for a fresh page, and the api answers from its own cache: see :doc:`../lib/django/listview`.
 
@@ -32,6 +39,3 @@ for a fresh page, and the api answers from its own cache: see :doc:`../lib/djang
 
    llmclient-list/api
    llmclient-list/django-view
-   llmclient-list/django-template
-   llmclient-list/template-tags
-   llmclient-list/index

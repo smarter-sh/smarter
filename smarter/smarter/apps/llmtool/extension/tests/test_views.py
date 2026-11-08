@@ -14,6 +14,7 @@ from smarter.apps.llmtool.extension.api.web.urls import (
 from smarter.apps.llmtool.models import Extension, ExtensionSetting
 from smarter.apps.secret.models import Secret
 from smarter.lib.django.shortcuts import reverse
+from smarter.lib.unittest.resource_views import assert_console_page
 
 from .mixins import ECHO_SECRET, ExtensionTestMixin, fixture_archive
 from .test_registry import RegistryTestMixin
@@ -46,42 +47,25 @@ class ConsoleClientMixin:
 
 
 class TestExtensionPages(ConsoleClientMixin, ExtensionTestMixin):
-    """Test the pages that host the React app."""
+    """
+    Test the Extensions pages: the single-page console's.
+
+    The console tells the React app whether the user may manage extensions, from its session, and the api refuses
+    an extension that the user's account may not use (see test_restricted_detail).
+    """
 
     def test_list_page(self):
-        """The list page renders the React app's root element with the api's url."""
-        response = self.client.get(PAGE)
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn('id="smarter-extension-list-root"', content)
-        self.assertIn(f'smarter-extension-api-url="{BASE}"', content)
+        """The list page is the console's, at /extensions/, for anyone."""
+        self.assertEqual(PAGE, "/extensions/")
+        assert_console_page(self, PAGE)
 
     def test_detail_page(self):
-        """An installed extension's page renders the React app with its slug; an unknown one is a 404."""
+        """An extension's page is the console's, whatever the slug: the api answers whether it exists."""
         self.install_echo()
-        content = self.client.get(PAGE + "echo/").content.decode()
-        self.assertIn('id="smarter-extension-detail-root"', content)
-        self.assertIn('smarter-extension-slug="echo"', content)
-        self.assertEqual(self.client.get(PAGE + "nope/").status_code, 404)
-
-    def test_can_edit(self):
-        """The pages tell the React app whether the user may manage extensions."""
-        self.install_echo()
-        self.assertIn('smarter-extension-can-edit="true"', self.client.get(PAGE).content.decode())
-        client = self.client_for(self.non_admin_user)
-        self.assertIn('smarter-extension-can-edit="false"', client.get(PAGE).content.decode())
-        self.assertIn('smarter-extension-can-edit="false"', client.get(PAGE + "echo/").content.decode())
-
-    def test_restricted_extension_page(self):
-        """A user who is not a superuser can't see the page of an extension that their account may not use."""
-        extension = self.install_echo()
-        extension.all_accounts = False
-        extension.save()
-        self.assertEqual(self.client_for(self.non_admin_user).get(PAGE + "echo/").status_code, 404)
-        self.assertEqual(self.client.get(PAGE + "echo/").status_code, 200)
+        assert_console_page(self, PAGE + "echo/")
 
     def test_web_api_paths(self):
-        """The api is in the web console's api, and the page gives the React app its root."""
+        """The api is in the web console's api."""
         self.assertEqual(reverse(WebNames.namespace, WebNames.root), BASE)
         self.assertEqual(reverse(WebNames.namespace, WebNames.list), BASE + "list/")
         self.assertEqual(reverse(WebNames.namespace, WebNames.check_updates), BASE + "check-updates/")

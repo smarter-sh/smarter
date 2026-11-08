@@ -9,6 +9,11 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.const import namespace
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.urls import AuthTokenReverseNames
+from smarter.lib.unittest.resource_views import (
+    assert_console_page,
+    assert_no_resource,
+    resource_detail_json,
+)
 
 
 class TestAuthTokenViews(TestAccountMixin):
@@ -25,11 +30,15 @@ class TestAuthTokenViews(TestAccountMixin):
         self.addCleanup(self.client.logout)
 
     def test_detail_view(self):
-        """Test that the detail page renders the token's manifest."""
+        """Test that the manifest page is the console's, whose resource api returns the token's manifest."""
+        self.assertEqual(self.token.record_locator, f"smarterauthtoken-{self.token.key_id}")
+        detail = resource_detail_json(self, self.token.record_locator)
+        self.assertEqual(detail["kind"], "SmarterAuthToken")
+        self.assertEqual(detail["name"], self.token.name)
+        self.assertIn(self.token.name, detail["manifest"] or "")
+        assert_no_resource(self, "smarterauthtoken-not-a-key-id")
         url = reverse(f"{namespace}:{AuthTokenReverseNames.detailview}", kwargs={"authtoken_id": self.token.key_id})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
-        self.assertIn(self.token.name, response.content.decode())
+        assert_console_page(self, url)
 
     def test_list_view(self):
         """Test that the list page renders."""
