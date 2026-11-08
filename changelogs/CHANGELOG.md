@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.43.2](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2) (2026-11-08)
+
+### Bug Fixes
+
+* bump smarter-console to v1.0.18 ([37b42c5](https://github.com/smarter-sh/smarter/commit/37b42c57be8653485d4c34eeac16985a25739c4d))
+* **celery:** set RedBeat's url and options where RedBeat reads them ([f26f71d](https://github.com/smarter-sh/smarter/commit/f26f71db3d6a1b46c7b66a3585830e8470703c36))
+* **plugin:** log the manifest-not-initialized broker state at debug ([bdf69d8](https://github.com/smarter-sh/smarter/commit/bdf69d895735d8523eec3bf004c72c0470ee357b))
+
+## [0.43.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.43.2-alpha.2...v0.43.2-alpha.3) (2026-11-08)
+
+### Bug Fixes
+
+* bump smarter-console to v1.0.18 ([37b42c5](https://github.com/smarter-sh/smarter/commit/37b42c57be8653485d4c34eeac16985a25739c4d))
+
+## [0.43.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.43.2-alpha.1...v0.43.2-alpha.2) (2026-11-08)
+
+### Bug Fixes
+
+* **plugin:** log the manifest-not-initialized broker state at debug ([bdf69d8](https://github.com/smarter-sh/smarter/commit/bdf69d895735d8523eec3bf004c72c0470ee357b))
+
+## [0.43.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **celery:** set RedBeat's url and options where RedBeat reads them ([f26f71d](https://github.com/smarter-sh/smarter/commit/f26f71db3d6a1b46c7b66a3585830e8470703c36))
+
 ## [0.43.1](https://github.com/smarter-sh/smarter/compare/v0.43.0...v0.43.1) (2026-11-08)
 
 ### Bug Fixes

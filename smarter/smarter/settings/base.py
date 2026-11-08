@@ -806,6 +806,16 @@ by default. TCP keepalive and the health check find dead connections sooner.
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#broker-transport-options
 """
 
+CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
+"""
+The Redis url of RedBeat, the scheduler of Celery Beat: the broker's.
+
+RedBeat 2.5.0 no longer falls back to the broker url, so it is set explicitly (issue #945).
+Settings modules that change :data:`CELERY_BROKER_URL` set it again.
+
+See: https://redbeat.readthedocs.io/en/latest/config.html
+"""
+
 CELERY_REDBEAT_REDIS_OPTIONS = {
     "socket_timeout": 30,
     "socket_connect_timeout": 5,
