@@ -74,8 +74,26 @@ and the tokens it charged, and the prompt's progress. In production mode, the th
 conversation as the LLMClient's users see it, and the Console, the button that shows and hides
 it, and the **Help** menu are hidden too. Switching back to sandbox mode restores the Console as you left it.
 
-The header puts the switch first, then a divider, then the buttons: **New chat** and, in the workbench,
-**Help** and the Console's button at the right end. When the chat is narrow, for example beside the
+In sandbox mode, the **Download request** button, an arrow into a tray, saves the conversation as a JSON file:
+the request body that Smarter sends to the LLM provider's ``v1/chat/completions`` api. It has the model,
+temperature, token limit and tools of the latest prompt (or the LLMClient's own, before the first prompt), and
+the system, user, assistant and tool messages, with the system prompt as the LLM receives it. Smarter's own
+messages and fields, and the provider's url and api key, are left out. Paste the file into the Prompt
+Passthrough page (:doc:`/smarter-framework/developer-reference/react-integration/prompt-passthrough`), or send
+it with curl and your own api key:
+
+.. code-block:: console
+
+  curl https://api.openai.com/v1/chat/completions \
+    -H "Authorization: Bearer $OPENAI_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d @stackademy_sql-request.json
+
+The file holds the LLMClient's system prompt and tool definitions, so only a user who may read the LLMClient
+can download it, and only from the workbench: a deployed LLMClient's own host never serves it.
+
+The header puts the switch first, then a divider, then the buttons: **Download request** (in sandbox
+mode), **New chat** and, in the workbench, **Help** and the Console's button at the right end. When the chat is narrow, for example beside the
 Console, the header shows only the buttons' icons. Their names are still read by screen readers, and
 each button's tooltip explains it.
 

@@ -2606,6 +2606,128 @@
       "title": "PromptChatApiProviderErrorV1",
       "type": "object"
     },
+    "PromptChatApiProviderRequest": {
+      "additionalProperties": true,
+      "description": "The chat session's conversation, as the request body that Smarter sends to the LLM provider.\n\nIt is a request to an OpenAI-compatible ``v1/chat/completions`` api, without any of Smarter's own\ncontent: no ``smarter`` or ``smarter_error`` messages, no ``smarter_*`` fields, no api url or key.\nIt can be sent with curl, or pasted into the Prompt Passthrough page. Its messages are the whole\nconversation, including the latest answer, so that a prompt engineer can add the next user\nmessage. Its model, temperature, token limit and tools are those of the session's latest\nprompt, or the LLMClient's, before its first prompt.\n\nThe provider request api, ``/api/v1/llm-clients/<hashed_id>/provider-request/``, returns it, to\nthe workbench only. Fields without a value are left out.",
+      "properties": {
+        "max_completion_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Completion Tokens"
+        },
+        "messages": {
+          "description": "The conversation's system, user, assistant and tool messages.",
+          "items": {
+            "$ref": "#/$defs/PromptChatApiMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The LLM's model, e.g. gpt-4o-mini.",
+          "title": "Model"
+        },
+        "reasoning_effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "none, for a model that requires it with tools.",
+          "title": "Reasoning Effort"
+        },
+        "temperature": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature"
+        },
+        "tool_choice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "auto, when the request has tools.",
+          "title": "Tool Choice"
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The function definitions that the LLM may call, in the OpenAI format.",
+          "title": "Tools"
+        }
+      },
+      "title": "PromptChatApiProviderRequest",
+      "type": "object"
+    },
+    "PromptChatApiProviderRequestResponse": {
+      "additionalProperties": true,
+      "description": "The provider request api's response.",
+      "properties": {
+        "api": {
+          "description": "The api version, e.g. \"smarter.sh/v1\".",
+          "title": "Api",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/PromptChatApiProviderRequest"
+        },
+        "metadata": {
+          "$ref": "#/$defs/PromptChatApiJournalMetadata",
+          "description": "The journal's command and thing."
+        }
+      },
+      "required": [
+        "api",
+        "data"
+      ],
+      "title": "PromptChatApiProviderRequestResponse",
+      "type": "object"
+    },
     "PromptChatApiRefusalPart": {
       "additionalProperties": true,
       "description": "An assistant message's refusal part.",

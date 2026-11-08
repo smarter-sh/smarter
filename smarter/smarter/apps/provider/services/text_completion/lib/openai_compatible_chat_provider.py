@@ -74,7 +74,9 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.openai.model_quirks import (
     DEFAULT_TEMPERATURE_ONLY_MODELS,
+    REASONING_EFFORT_NONE,
     TOOLS_REQUIRE_NO_REASONING_MODELS,
+    apply_model_quirks,
 )
 from smarter.lib.typing import SmarterDictType
 
@@ -108,8 +110,6 @@ so that a long chat grows slower and more expensive with each prompt. The oldest
 of the request first, never the system prompt or the current turn. See
 :func:`~smarter.apps.provider.services.text_completion.utils.cap_message_history`.
 """
-REASONING_EFFORT_NONE = "none"
-
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
@@ -141,6 +141,77 @@ need not repeat them, and should only describe the formatting that suits its own
 It is added to the request's messages only (see :attr:`OpenAISmarterClient.openai_messages`), and is
 never saved in the conversation's history, nor displayed in the chat.
 """
+
+
+def add_markdown_system_prompt(messages: list[SmarterDictType]) -> list[SmarterDictType]:
+    """
+    Tell the LLM that its responses may use Markdown.
+
+    :data:`MARKDOWN_SYSTEM_PROMPT` is appended to the first system message, or is the system
+    message of a thread that has none. The messages are copies, so the conversation's history
+    is unchanged.
+
+    :param messages: The request's messages.
+    :type messages: list[SmarterDictType]
+
+    :returns: The request's messages, with the Markdown instructions.
+    :rtype: list[SmarterDictType]
+    """
+    for i, message in enumerate(messages):
+        if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+            content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
+            if MARKDOWN_SYSTEM_PROMPT not in content:
+                messages[i] = {
+                    **message,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{MARKDOWN_SYSTEM_PROMPT}".strip(),
+                }
+            return messages
+    return [
+        {
+            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: MARKDOWN_SYSTEM_PROMPT,
+        },
+        *messages,
+    ]
+
+
+def provider_messages(messages: list[SmarterDictType]) -> list[SmarterDictType]:
+    """
+    Return a conversation's messages as they are sent to the LLM provider.
+
+    The conversation's history holds Smarter's own messages and fields, which are only displayed
+    in the chat, and which an OpenAI-compatible api would reject. This is the one place that
+    removes them, for every request that Smarter sends, and for the request that the workbench
+    downloads (see :class:`~smarter.apps.prompt.views.detailviews.prompt_provider_request_view.PromptProviderRequestView`):
+
+    - only the messages whose role is in :attr:`OpenAIMessageKeys.all` are kept, so the ``smarter``
+      and ``smarter_error`` messages are left out.
+    - the ``smarter_is_new`` field is removed.
+    - :data:`MARKDOWN_SYSTEM_PROMPT` is added to the system prompt.
+    - the oldest turns are left out of a long conversation (:data:`MAX_HISTORY_CHARACTERS`).
+    - every tool call is paired with its reply.
+
+    The messages are copies, so the conversation's history is unchanged.
+
+    :param messages: The conversation's messages, as they are saved in its history.
+    :type messages: list[SmarterDictType]
+    :returns: The request's messages.
+    :rtype: list[SmarterDictType]
+    """
+    retval = []
+    for message in messages:
+        role = message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY)
+        if role not in OpenAIMessageKeys.all:
+            continue
+        message_copy = message.copy()
+        message_copy.pop(_InternalKeys.SMARTER_IS_NEW, None)
+        retval.append(message_copy)
+    retval = add_markdown_system_prompt(retval)
+    retval = cap_message_history(retval, MAX_HISTORY_CHARACTERS)
+    # the thread may come from the client, which keeps the tool replies but not the
+    # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
+    retval = pair_tool_messages(retval)
+    return retval
 
 
 class OpenAISmarterClient(SmarterChatProviderBase):
@@ -263,42 +334,14 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
-
-        if self.iteration == 1:
-            # ensure that we're not passing any tool call responses to the first request.
-            # mcdaniel 2025-09-26: this was causing issues with OpenAI's API.
-            filtered_messages = [
-                message
-                for message in self.messages
-                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
-            ]
-        else:
-            filtered_messages = [
-                message
-                for message in self.messages
-                if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
-            ]
-
-        retval = []
-        for message in filtered_messages:
-            message_copy = message.copy()
-            if _InternalKeys.SMARTER_IS_NEW in message_copy:
-                del message_copy[_InternalKeys.SMARTER_IS_NEW]
-            retval.append(message_copy)
-        retval = self.add_markdown_system_prompt(retval)
-        retval = cap_message_history(retval, MAX_HISTORY_CHARACTERS)
-        # the thread may come from the client, which keeps the tool replies but not the
-        # assistant's tool_calls, and OpenAI refuses a tool reply without its tool call.
-        return pair_tool_messages(retval)
+        return provider_messages(self.messages)
 
     @staticmethod
     def add_markdown_system_prompt(messages: list[SmarterDictType]) -> list[SmarterDictType]:
         """
         Tell the LLM that its responses may use Markdown.
 
-        :data:`MARKDOWN_SYSTEM_PROMPT` is appended to the first system message, or is the system
-        message of a thread that has none. The messages are copies, so the conversation's history
-        is unchanged.
+        See :func:`add_markdown_system_prompt`.
 
         :param messages: The request's messages.
         :type messages: list[SmarterDictType]
@@ -306,22 +349,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: The request's messages, with the Markdown instructions.
         :rtype: list[SmarterDictType]
         """
-        for i, message in enumerate(messages):
-            if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
-                content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) or ""
-                if MARKDOWN_SYSTEM_PROMPT not in content:
-                    messages[i] = {
-                        **message,
-                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{content}\n\n{MARKDOWN_SYSTEM_PROMPT}".strip(),
-                    }
-                return messages
-        return [
-            {
-                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: MARKDOWN_SYSTEM_PROMPT,
-            },
-            *messages,
-        ]
+        return add_markdown_system_prompt(messages)
 
     @property
     def new_messages(self) -> list[SmarterDictType]:
@@ -1314,9 +1342,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :rtype: ChatCompletion
         :raises openai.BadRequestError: When the provider rejects the request for another reason.
         """
+        apply_model_quirks(completions_kwargs, self.model)
         sends_reasoning_effort = _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
-        if not sends_reasoning_effort and self.model in DEFAULT_TEMPERATURE_ONLY_MODELS:
-            completions_kwargs.pop(_InternalKeys.TEMPERATURE_KEY, None)
         try:
             return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
         except openai.BadRequestError as e:
@@ -1348,8 +1375,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         Each request is sent with :meth:`create_completion`.
         """
         has_tools = bool(completions_kwargs.get(_InternalKeys.TOOLS_KEY))
-        if has_tools and self.model in TOOLS_REQUIRE_NO_REASONING_MODELS:
-            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+        apply_model_quirks(completions_kwargs, self.model)
         try:
             return self.create_completion(completions_kwargs)
         except openai.BadRequestError as e:
