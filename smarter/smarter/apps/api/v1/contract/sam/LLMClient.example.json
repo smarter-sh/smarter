@@ -35,6 +35,7 @@
         "customDomain": null,
         "defaultMaxTokens": 2048,
         "defaultModel": "gpt-6-luna",
+        "defaultReasoningEffort": null,
         "defaultSystemRole": "You are a helpful llmclient. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
         "defaultTemperature": 1.0,
         "deployed": false,

@@ -39,7 +39,10 @@ inside the `smarter-api` container.
    See `smarter-infrastructure-safety`.
 3. **Run the tests yourself.** Get your changes into the containers (`make build
 && make run`) and run the test modules you touched. Never ask the user to
-   re-run them. Leave the full suite to the user unless they ask. See
+   re-run them. When a change touches more than one or two test modules,
+   run the whole suite in eight shards instead (`make build && make
+   docker-test-sharded`, in the background): it is about five times faster
+   than one process, and faster than a serial run of several apps. See
    `smarter-python-testing` and `smarter-docker-environment`. The host shell
    is zsh, which doesn't word-split variables: a file list in `$FILES` or flags
    in `$args` reach the command as one argument, and the result looks like a

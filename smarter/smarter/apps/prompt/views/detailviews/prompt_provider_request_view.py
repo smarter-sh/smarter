@@ -85,7 +85,7 @@ def provider_request_messages(history: Optional[PromptHistory], llmclient: LLMCl
 
 def llmclient_request_settings(llmclient: LLMClient) -> SmarterDictType:
     """
-    Return the model, temperature and token limit that the LLMClient's next prompt is sent with.
+    Return the model, temperature, token limit and reasoning effort that the LLMClient's next prompt is sent with.
 
     They are the LLMClient's own, or else its provider's default model and the platform's defaults, as
     :meth:`~smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.OpenAISmarterClient.handler`
@@ -121,6 +121,8 @@ def llmclient_request_settings(llmclient: LLMClient) -> SmarterDictType:
         _InternalKeys.TEMPERATURE_KEY: temperature,
         _InternalKeys.MAX_COMPLETION_TOKENS_KEY: max_completion_tokens,
     }
+    if llmclient.default_reasoning_effort:
+        retval[_InternalKeys.REASONING_EFFORT_KEY] = llmclient.default_reasoning_effort
     return retval
 
 
