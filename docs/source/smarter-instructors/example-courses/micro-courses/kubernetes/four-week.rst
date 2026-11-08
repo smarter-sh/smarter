@@ -6,7 +6,7 @@ chart and on Smarter's own use of the Kubernetes API. Smarter's `Helm chart
 <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
 production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
 probes, `autoscalers
-<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__ that
 scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
 database, Redis and monitoring, and `values
 <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
