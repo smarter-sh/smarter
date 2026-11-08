@@ -1,480 +1,283 @@
-{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}
+{% load i18n smarter_email %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
+  The welcome email, which account contacts are sent when their account is created. See
+  smarter.apps.account.models.welcome_email_context. Mail clients strip <style> blocks, scripts and
+  external stylesheets, and few play video, so the layout is tables with inline styles, the images are
+  PNGs, and the video is a poster image that links to it.
+  Context: branding, environment_platform_domain, first_name, send_password_email, unsubscribe_url.
+{% endcomment %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
-<!--begin::Head-->
 
 <head>
-  <base href="{{ branding.smarter_project_website_url }}" />
-  <title>{{ branding.smarter_product_name }}</title>
   <meta charset="utf-8" />
-  <meta content="{{ branding.primary_contact }}" name="author"/>
-  <meta content="{{ branding.smarter_marketing_site_url }}" name="author-url"/>
-  <meta content="Python, Django, Django Rest Framework" name="generator"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-    content="{{ branding.smarter_product_description }}" />
-  <meta name="keywords"
-    content="Smarter, generative AI, LLMClients, prompt engineering, documentation, chatGPT" />
-  <meta property="og:image" content="{{ branding.og_image }}" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="{{ branding.smarter_product_name }}" />
-  <meta property="og:locale" content="en_US" />
-  <meta property="og:type" content="article" />
-  <meta property="og:title" content="{{ branding.smarter_product_name }}" />
-  <meta property="og:site_name" content="{{ branding.smarter_product_name }}" />
-
-  <link rel="canonical" href="{% url 'console_home' %}" />
-  <link rel="shortcut icon" href="/static/images/logo/favicon.ico"
-    type="image/x-icon" />
-  <!--begin::Fonts(mandatory for all pages)-->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
-  <!--end::Fonts-->
-  <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-  <link href="/static/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-  <link href="/static/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
-  <!--end::Global Stylesheets Bundle-->
-  <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
-  <style>
-    a {
-      text-decoration: underline;
-      text-decoration-color: rgba(255, 87, 51, .90);
-      color: rgba(255, 87, 51, .75);
-    }
-
-  .body-text {
-    font-size:14px;
-    text-align:left;
-    font-weight:500;
-    margin:0 60px 33px 60px;
-    font-family:Arial,Helvetica,sans-serif;
-  }
-
-  .title-text {
-    color:#181C32;
-    font-size: 18px;
-    font-weight:600;
-    margin-bottom:27px;
-  }
-
-  .enterprise-ready-list ul {
-    list-style-type: disc;   /* normal bullet */
-    margin-left: 1.5em;      /* standard indent */
-    padding-left: 0;         /* remove extra padding */
-  }
-  .enterprise-ready-list ul li {
-    margin-bottom: 0.5em;    /* space between items */
-    font-size: 1em;          /* normal text size */
-  }
-
-  .social-media-icons img {
-    height:24px;
-    width:auto;
-  }
-  .social-media-icons {
-    text-decoration: none !important;
-  }
-  .polygon-icon img {
-    height:40px;
-    width:auto;
-  }
-  </style>
+  <meta name="color-scheme" content="light only" />
+  <title>{{ branding.smarter_product_name }}</title>
 </head>
-<!--end::Head-->
-<!--begin::Body-->
 
-<body id="kt_body" class="app-blank app-blank">
-  <!--begin::Theme mode setup on page load-->
-  <script>var defaultThemeMode = "light"; var themeMode; if (document.documentElement) { if (document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if (localStorage.getItem("data-bs-theme") !== null) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
-  <!--end::Theme mode setup on page load-->
-  <!--begin::Root-->
-  <div class="d-flex flex-column flex-root" id="kt_app_root">
-    <!--begin::Wrapper-->
-    <div class="d-flex flex-column flex-column-fluid">
-      <!--begin::Body-->
-      <div class="scroll-y flex-column-fluid px-10 py-10" data-kt-scroll="true" data-kt-scroll-activate="true"
-        data-kt-scroll-height="auto" data-kt-scroll-dependencies="#kt_app_header_nav" data-kt-scroll-offset="5px"
-        data-kt-scroll-save-state="true"
-        style="background-color:#D5D9E2; --kt-scrollbar-color: #d9d0cc; --kt-scrollbar-hover-color: #d9d0cc">
-        <!--begin::Email template-->
-        <style>
-          html,
-          body {
-            padding: 0;
-            margin: 0;
-            font-family: Inter, Helvetica, "sans-serif";
-          }
+<body style="margin:0; padding:0; background-color:#D5D9E2; font-family:Arial,Helvetica,sans-serif; color:#3F4254">
+  <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%"
+    style="border-collapse:collapse; background-color:#D5D9E2">
+    <tr>
+      <td align="center" style="padding:40px 10px">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600"
+          style="border-collapse:separate; width:100%; max-width:600px; background-color:#FFFFFF; border-radius:24px; overflow:hidden">
 
-          a:hover {
-            color: orange;
-          }
-        </style>
-        <div id="#kt_app_body_content"
-          style="background-color:#D5D9E2; font-family:Arial,Helvetica,sans-serif; line-height: 1.5; min-height: 100%; font-weight: normal; font-size: 15px; color: #2F3044; margin:0; padding:0; width:100%;">
-          <div
-            style="background-color:#ffffff; padding: 45px 0 34px 0; border-radius: 24px; margin:40px auto; max-width: 600px;">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" height="auto"
-              style="border-collapse:collapse">
-              <tbody>
+          <!-- logo -->
+          <tr>
+            <td align="center" style="padding:36px 40px 28px 40px">
+              <a href="{{ branding.smarter_project_website_url }}" rel="noopener" target="_blank">
+                <img alt="{{ branding.smarter_product_name }}" height="60"
+                  src="{% smarter_logo_url %}" style="height:60px; border:0" />
+              </a>
+            </td>
+          </tr>
+
+          <!-- hero -->
+          <tr>
+            <td align="center" style="background-color:#1E1E2D; padding:40px 40px 36px 40px; text-align:center">
+              <p style="margin:0 0 14px 0; color:#FFFFFF; font-size:30px; font-weight:700; line-height:1.25">
+                {% blocktranslate with product_name=branding.smarter_product_name trimmed %}Welcome to {{ product_name }}!{% endblocktranslate %}</p>
+              <p style="margin:0; color:#B5B5C3; font-size:15px; line-height:1.6">{{ branding.smarter_product_description }}</p>
+            </td>
+          </tr>
+
+          <!-- illustration -->
+          <tr>
+            <td align="center" style="padding:32px 40px 8px 40px">
+              <img alt="" width="520" src="{{ branding.smarter_project_cdn_url }}/images/smarter-welcome-email.png"
+                style="width:100%; max-width:520px; height:auto; border:0" />
+            </td>
+          </tr>
+
+          <!-- greeting -->
+          <tr>
+            <td style="padding:24px 50px 8px 50px; font-size:15px; line-height:1.6; color:#3F4254">
+              <p style="margin:0 0 16px 0; color:#181C32; font-size:18px; font-weight:600">{% if first_name %}{% blocktranslate trimmed %}Howdy {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Howdy," %}{% endif %}</p>
+              <p style="margin:0 0 16px 0">
+                {% blocktranslate with primary_contact=branding.primary_contact product_name=branding.smarter_product_name trimmed %}
+                  I'm {{ primary_contact }}, the technical point of contact for {{ product_name }},
+                  and I just created a new account for you. To get started, sign in with the
+                  button below. Your username is this email address.
+                {% endblocktranslate %}
+                {% if send_password_email %}
+                  {% translate "You should receive your password in a separate text-only email." %}
+                {% endif %}
+                {% translate "You can use the 'Forgot Password' link on the sign-in page to change your password at any time." %}
+                {% blocktranslate with support_email=branding.support_email trimmed %}
+                  If you have any questions, email me at
+                  <a href="mailto:{{ support_email }}" style="font-weight:600">{{ support_email }}</a>.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- call to action -->
+          <tr>
+            <td align="center" style="padding:8px 50px 12px 50px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" valign="center" style="text-align:center; padding-bottom: 10px">
-                    <!--begin:Email content-->
-                    <div style="margin-bottom:55px; text-align:left">
-                      <!--begin:Logo-->
-                      <div style="margin:-10px 60px 54px 60px; text-align:center;">
-                        <a href="{{ branding.smarter_project_website_url }}" rel="noopener" target="_blank">
-                          <img alt="Smarter Branding Image" src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}"
-                            style="height: 75px" />
-                        </a>
-                      </div>
-                      <!--end:Logo-->
-                      <!--begin:Text-->
-                      <div
-                        style="font-size: 14px; text-align:center; font-weight: 500; margin:0 60px 38px 60px; font-family:Arial,Helvetica,sans-serif">
-                        <p style="color:#181C32; font-size: 30px; font-weight:700; line-height:1.4; margin-bottom:6px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Welcome to {{ product_name }}!{% endblocktranslate %}</p>
-                        <p style="margin-bottom:2px; color:#3F4254; line-height:1.6">{{ branding.smarter_product_description }}</p>
-                      </div>
-                      <!--end:Text-->
-                      <!--begin:Media-->
-                      <div style="margin:0 60px 38px 60px">
-                        <img alt="" style="width:100%" src="{{ branding.smarter_project_cdn_url }}/images/smarter-welcome-email.png" />
-                      </div>
-                      <!--end:Media-->
-                      <!--begin:Text-->
-                      <div class="body-text">
-                        <p class="title-text">{% if first_name %}{% blocktranslate trimmed %}Howdy {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Howdy," %}{% endif %}</p>
-                        <p style="color:#3F4254; line-height:1.6">
-                          {% blocktranslate with primary_contact=branding.primary_contact product_name=branding.smarter_product_name trimmed %}
-                            I'm {{ primary_contact }}, the technical point of contact for {{ product_name }},
-                            and I just created a new account for you. To get started, sign in with the
-                            button below. Your username is this email address.
-                          {% endblocktranslate %}
-                          {% if send_password_email %}
-                            {% translate "You should receive your password in a separate text-only email." %}
-                          {% endif %}
-                          {% translate "You can use the 'Forgot Password' link on the sign-in page to change your password at any time." %}
-                          {% blocktranslate with support_email=branding.support_email trimmed %}
-                            If you have any questions, email me at
-                            <a href="mailto:{{ support_email }}" style="font-weight:600">{{ support_email }}</a>.
-                          {% endblocktranslate %}
-                        </p>
-                      </div>
-                      <!--end:Text-->
-                      <!--begin:Action-->
-                      <a href="{{ branding.login_url }}" target="_blank" rel="noopener"
-                        style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-bottom:30px; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">{% translate "Sign In" %}</a>
-                      <!--end:Action-->
-                      <!--begin:Text-->
-                      <div class="body-text">
-                        <p class="title-text">{% translate "What's included:" %}</p>
-                        <p style="color:#3F4254; line-height:1.6">
-                          <ul>
-                            <li>
-                              {% blocktranslate with product_name=branding.smarter_product_name login_url=branding.login_url trimmed %}
-                                <strong>An account on {{ product_name }}
-                                <a href="{{ login_url }}" target="_blank" rel="noopener">platform</a></strong>
-                                for the duration of this course. Every prompt is a real, billable request to an LLM
-                                provider, so please experiment freely, but don't run automated load against it.
-                              {% endblocktranslate %}
-                            </li>
-                            <li>
-                              {% blocktranslate trimmed %}
-                                <strong>Your own AI resources.</strong> You can create, change and delete your own
-                                LLMClients, plugins, connections and secrets, and you are encouraged to experiment
-                                with them while you are attending this course.
-                              {% endblocktranslate %}
-                            </li>
-                            <li>
-                              {% blocktranslate trimmed %}
-                                <strong>Thousands of LLMs from nine providers:</strong> Anthropic, Cohere, Fireworks AI,
-                                Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, OpenAI and Together AI, all
-                                through a single interface, so that you can compare models hands-on.
-                              {% endblocktranslate %}
-                            </li>
-                            <li>
-                              {% blocktranslate trimmed %}
-                                <strong><a href="https://docs.smarter.sh/smarter-resources/smarter-llmtool.html" rel="noopener" target="_blank">Plugins</a>
-                                for LLM tool calling</strong> that connect an LLM to SQL databases, remote REST APIs,
-                                web search, image search, Agent Skills and static data. Your data stays where it is:
-                                the LLM only sees the query results and responses that it asks for.
-                                <a href="https://docs.smarter.sh/smarter-framework/smarter-extensions.html" rel="noopener" target="_blank">Extensions</a>,
-                                which the platform administrator installs, add tools written in Python.
-                              {% endblocktranslate %}
-                            </li>
-                            <li>
-                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
-                                <strong>A no-code approach to authoring AI resources.</strong> Every resource in {{ product_name }}
-                                is a short
-                                <a href="https://docs.smarter.sh/smarter-framework/smarter-manifests.html" rel="noopener" target="_blank">YAML manifest</a>,
-                                so you can build and manage a working AI application without writing code.
-                              {% endblocktranslate %}
-                            </li>
-                            <li>
-                              {% blocktranslate trimmed %}
-                                <strong>A web Prompt Engineering Workbench</strong> for designing, testing and debugging
-                                the prompts of your AI applications interactively.
-                              {% endblocktranslate %}
-                            </li>
-                          </ul>
-                        </p>
-                        <div class="enterprise-ready-list">
-                          <p class="title-text">{% translate "Open Source, Built for Production" %}</p>
-                          <p>
-                            {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
-                              <strong>{{ product_name }} is more than a teaching tool.</strong>
-                              It is free, open source software, licensed under the GNU AGPL v3, and it was built to run
-                              in production: on Kubernetes, with cost accounting, secrets management and per-account
-                              access control. Running at scale, security and cost management may be out of scope for
-                              this course, but you will face them once you complete it, and the source code and
-                              documentation are there for you to explore, during the course and after.
-                            {% endblocktranslate %}
-                          </p>
-                          <p>
-                            {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
-                              Some links to help you get started
-                              on your journey to mastering {{ product_name }}:
-                            {% endblocktranslate %}
-                            <ul>
-                              <li>{% blocktranslate trimmed %}<strong>Online documentation</strong> - <a href="https://docs.smarter.sh/" rel="noopener" target="_blank">https://docs.smarter.sh/</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate with slack_url=branding.url_slack trimmed %}<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-time questions and discussion with other users and contributors <a href="{{ slack_url }}" rel="noopener" target="_blank">[join]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
-                              <li>{% blocktranslate trimmed %}<strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.{% endblocktranslate %}</li>
-                            </ul>
-                          </p>
-                        </div>
-                      </div>
-                      <!--end:Text-->
-                      <!--begin:Text-->
-                      <div class="body-text">
-                        <video playsinline controls width="100%" style="object-fit: cover;" preload="auto" poster="{{ branding.smarter_project_cdn_url }}/videos/about-poster.png">
-                          <source src="{{ branding.smarter_project_cdn_url }}/videos/about.mp4" type="video/mp4">
-                          {% translate "Sorry, your browser doesn't support embedded videos." %}
-                        </video>
-                      </div>
-                      <!--end:Text-->
-                    </div>
-                    <!--end:Email content-->
+                  <td align="center" style="background-color:#F1416C; border-radius:8px">
+                    <a href="{{ branding.login_url }}" target="_blank" rel="noopener"
+                      style="display:inline-block; padding:14px 30px; color:#FFFFFF; font-size:16px; font-weight:700; text-decoration:none; font-family:Arial,Helvetica,sans-serif">{% translate "Sign In" %}</a>
                   </td>
                 </tr>
-                <tr style="display: flex; justify-content: center; margin:0 60px 35px 60px">
-                  <td align="start" valign="start" style="padding-bottom: 10px;">
-                    <p style="color:#181C32; font-size: 18px; font-weight: 600; margin-bottom:13px">{% translate "Getting Started" %}</p>
-                    <!--begin::Wrapper-->
-                    <div style="background: #F9F9F9; border-radius: 12px; padding:35px 30px">
-                      <!--begin::Item-->
-                      <div style="display:flex">
-                        <!--begin::Media-->
-                        <div class="polygon-icon"
-                          style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Icon Polygon" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.png' %}" />
-                          <span style="position: absolute">
-                            <i class="ki-duotone ki-element-11 fs-3">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                              <span class="path3"></span>
-                              <span class="path4"></span>
-                            </i>
-                          </span>
-                        </div>
-                        <!--end::Media-->
-                        <!--begin::Block-->
-                        <div>
-                          <!--begin::Content-->
-                          <div>
-                            <!--begin::Title-->
-                            <a href="{{ branding.learn_url }}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Quick Start Tutorial" %}</a>
-                            <!--end::Title-->
-                            <!--begin::Desc-->
-                            <p
-                              style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              {% blocktranslate with product_name=branding.smarter_product_name percent="80%" trimmed %}
-                                This page will give you an introduction to the {{ percent }} of {{ product_name }} concepts that you will use
-                                on a daily basis.
-                              {% endblocktranslate %}</p>
-                            <!--end::Desc-->
-                          </div>
-                          <!--end::Content-->
-                          <!--begin::Separator-->
-                          <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
-                          <!--end::Separator-->
-                        </div>
-                        <!--end::Block-->
-                      </div>
-                      <!--end::Item-->
-                      <!--begin::Item-->
-                      <div style="display:flex">
-                        <!--begin::Media-->
-                        <div class="polygon-icon"
-                          style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Icon Polygon" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.png' %}" />
-                          <span style="position: absolute">
-                            <i class="ki-duotone ki-message-text-2 fs-3">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                              <span class="path3"></span>
-                            </i>
-                          </span>
-                        </div>
-                        <!--end::Media-->
-                        <!--begin::Block-->
-                        <div>
-                          <!--begin::Content-->
-                          <div>
-                            <!--begin::Title-->
-                            <a href="{{ branding.workbench_exmample_url}}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Example LLMClients" %}</a>
-                            <!--end::Title-->
-                            <!--begin::Desc-->
-                            <p
-                              style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              {% blocktranslate trimmed %}
-                                Try the example LLMClients in your account, such as the Stackademy course catalog
-                                assistants, which answer questions from a SQL database and from a REST API.
-                              {% endblocktranslate %}</p>
-                            <!--end::Desc-->
-                          </div>
-                          <!--end::Content-->
-                          <!--begin::Separator-->
-                          <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
-                          <!--end::Separator-->
-                        </div>
-                        <!--end::Block-->
-                      </div>
-                      <!--end::Item-->
-                      <!--begin::Item-->
-                      <div style="display:flex">
-                        <!--begin::Media-->
-                        <div class="polygon-icon"
-                          style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Icon Polygon" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.png' %}" />
-                          <span style="position: absolute">
-                            <i class="ki-duotone ki-book fs-3">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                              <span class="path3"></span>
-                              <span class="path4"></span>
-                              <span class="path5"></span>
-                              <span class="path6"></span>
-                            </i>
-                          </span>
-                        </div>
-                        <!--end::Media-->
-                        <!--begin::Block-->
-                        <div>
-                          <!--begin::Content-->
-                          <div>
-                            <!--begin::Title-->
-                            <a href="{{ branding.smarter_project_docs_url }}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Documentation" %}</a>
-                            <!--end::Title-->
-                            <!--begin::Desc-->
-                            <p
-                              style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
-                                Learn more about {{ product_name }} manifests, plugins, extensions, the command-line interface, and
-                                the API.
-                              {% endblocktranslate %}</p>
-                            <!--end::Desc-->
-                          </div>
-                          <!--end::Content-->
-                          <!--begin::Separator-->
-                          <div class="separator separator-dashed" style="margin:17px 0 15px 0"></div>
-                          <!--end::Separator-->
-                        </div>
-                        <!--end::Block-->
-                      </div>
-                      <!--end::Item-->
-                      <!--begin::Item-->
-                      <div style="display:flex">
-                        <!--begin::Media-->
-                        <div class="polygon-icon"
-                          style="display: flex; justify-content: center; align-items: center; width:40px; height:40px; margin-right:13px">
-                          <img alt="Icon Polygon" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-polygon.png' %}" />
-                          <span style="position: absolute">
-                            <i class="ki-duotone ki-messages fs-3">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                              <span class="path3"></span>
-                              <span class="path4"></span>
-                              <span class="path5"></span>
-                            </i>
-                          </span>
-                        </div>
-                        <!--end::Media-->
-                        <!--begin::Block-->
-                        <div>
-                          <!--begin::Content-->
-                          <div>
-                            <!--begin::Title-->
-                            <a href="{{ branding.url_slack }}" target="_blank" rel="noopener"
-                              style="color:#181C32; font-size: 14px; font-weight: 600;font-family:Arial,Helvetica,sans-serif">{% translate "Slack Community" %}</a>
-                            <!--end::Title-->
-                            <!--begin::Desc-->
-                            <p
-                              style="color:#5E6278; font-size: 13px; font-weight: 500; padding-top:3px; margin:0;font-family:Arial,Helvetica,sans-serif">
-                              {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
-                                Ask questions and talk with other {{ product_name }} users and contributors in real time,
-                                in The Smarter Project's Slack workspace.
-                              {% endblocktranslate %}</p>
-                            <!--end::Desc-->
-                          </div>
-                          <!--end::Content-->
-                        </div>
-                        <!--end::Block-->
-                      </div>
-                      <!--end::Item-->
-                    </div>
-                    <!--end::Wrapper-->
+              </table>
+            </td>
+          </tr>
+
+          <!-- what's included -->
+          <tr>
+            <td style="padding:24px 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+                style="background-color:#F5F8FA; border-radius:16px">
+                <tr>
+                  <td style="padding:22px 24px 8px 24px; font-size:14px; line-height:1.6; color:#3F4254">
+                    <p style="margin:0 0 8px 0; color:#181C32; font-size:18px; font-weight:600">{% translate "What's included:" %}</p>
+                    <ul style="margin:0 0 12px 0; padding-left:20px">
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate with product_name=branding.smarter_product_name login_url=branding.login_url trimmed %}
+                          <strong>An account on {{ product_name }}
+                          <a href="{{ login_url }}" target="_blank" rel="noopener">platform</a></strong>
+                          for the duration of this course. Every prompt is a real, billable request to an LLM
+                          provider, so please experiment freely, but don't run automated load against it.
+                        {% endblocktranslate %}
+                      </li>
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate trimmed %}
+                          <strong>Your own AI resources.</strong> You can create, change and delete your own
+                          LLMClients, plugins, connections and secrets, and you are encouraged to experiment
+                          with them while you are attending this course.
+                        {% endblocktranslate %}
+                      </li>
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate trimmed %}
+                          <strong>Thousands of LLMs from nine providers:</strong> Anthropic, Cohere, Fireworks AI,
+                          Google AI (Gemini), Hugging Face, Meta AI (Llama), Mistral, OpenAI and Together AI, all
+                          through a single interface, so that you can compare models hands-on.
+                        {% endblocktranslate %}
+                      </li>
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate trimmed %}
+                          <strong><a href="https://docs.smarter.sh/smarter-resources/smarter-llmtool.html" rel="noopener" target="_blank">Plugins</a>
+                          for LLM tool calling</strong> that connect an LLM to SQL databases, remote REST APIs,
+                          web search, image search, Agent Skills and static data. Your data stays where it is:
+                          the LLM only sees the query results and responses that it asks for.
+                          <a href="https://docs.smarter.sh/smarter-framework/smarter-extensions.html" rel="noopener" target="_blank">Extensions</a>,
+                          which the platform administrator installs, add tools written in Python.
+                        {% endblocktranslate %}
+                      </li>
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                          <strong>A no-code approach to authoring AI resources.</strong> Every resource in {{ product_name }}
+                          is a short
+                          <a href="https://docs.smarter.sh/smarter-framework/smarter-manifests.html" rel="noopener" target="_blank">YAML manifest</a>,
+                          so you can build and manage a working AI application without writing code.
+                        {% endblocktranslate %}
+                      </li>
+                      <li style="margin-bottom:8px">
+                        {% blocktranslate trimmed %}
+                          <strong>A web Prompt Engineering Workbench</strong> for designing, testing and debugging
+                          the prompts of your AI applications interactively.
+                        {% endblocktranslate %}
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- open source, built for production -->
+          <tr>
+            <td style="padding:28px 50px 8px 50px; font-size:14px; line-height:1.6; color:#3F4254">
+              <p style="margin:0 0 8px 0; color:#181C32; font-size:18px; font-weight:600">{% translate "Open Source, Built for Production" %}</p>
+              <p style="margin:0 0 12px 0">
+                {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                  <strong>{{ product_name }} is more than a teaching tool.</strong>
+                  It is free, open source software, licensed under the GNU AGPL v3, and it was built to run
+                  in production: on Kubernetes, with cost accounting, secrets management and per-account
+                  access control. Running at scale, security and cost management may be out of scope for
+                  this course, but you will face them once you complete it, and the source code and
+                  documentation are there for you to explore, during the course and after.
+                {% endblocktranslate %}</p>
+              <p style="margin:0 0 8px 0">
+                {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                  Some links to help you get started
+                  on your journey to mastering {{ product_name }}:
+                {% endblocktranslate %}</p>
+              <ul style="margin:0 0 8px 0; padding-left:20px">
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Online documentation</strong> - <a href="https://docs.smarter.sh/" rel="noopener" target="_blank">https://docs.smarter.sh/</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Cost accounting</strong> of every LLM request, by account, user and chat session <a href="https://docs.smarter.sh/smarter-platform/cost-accounting.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Runs on Kubernetes</strong>, on-premise or in the cloud <a href="https://docs.smarter.sh/smarter-framework/technologies/kubernetes.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Developer tools</strong>: a command-line interface, a REST API, and SDKs for Python, Node.js and Go <a href="https://docs.smarter.sh/smarter-framework/apis-and-sdks.html" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate with slack_url=branding.url_slack trimmed %}<strong>Slack</strong> - join The Smarter Project's Slack workspace for real-time questions and discussion with other users and contributors <a href="{{ slack_url }}" rel="noopener" target="_blank">[join]</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Source code</strong> on GitHub, where contributions are welcome <a href="https://github.com/smarter-sh/" rel="noopener" target="_blank">[learn more]</a>{% endblocktranslate %}</li>
+                <li style="margin-bottom:6px">{% blocktranslate trimmed %}<strong>Deployment guides</strong> for <a href="https://docs.smarter.sh/smarter-platform/installation/production-deployment.html" rel="noopener" target="_blank">production</a>, a <a href="https://docs.smarter.sh/smarter-platform/installation/quick-start.html" rel="noopener" target="_blank">Quick Start</a> for evaluation, and <a href="https://docs.smarter.sh/smarter-framework/guides/developer-setup.html" rel="noopener" target="_blank">running from source</a> for developers.{% endblocktranslate %}</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- video -->
+          <tr>
+            <td align="center" style="padding:16px 50px 8px 50px">
+              <a href="{{ branding.smarter_project_cdn_url }}/videos/about.mp4" rel="noopener" target="_blank">
+                <img alt="" width="500" src="{{ branding.smarter_project_cdn_url }}/videos/about-poster.png"
+                  style="width:100%; max-width:500px; height:auto; border:0; border-radius:8px" />
+              </a>
+            </td>
+          </tr>
+
+          <!-- getting started -->
+          <tr>
+            <td style="padding:28px 50px 4px 50px">
+              <p style="margin:0; color:#181C32; font-size:18px; font-weight:600">{% translate "Getting Started" %}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+                style="border-collapse:separate; background-color:#F5F8FA; border-radius:16px">
+                <tr>
+                  <td style="padding:18px 24px 14px 24px; border-bottom:1px dashed #E4E6EF; font-size:13px; line-height:1.5; color:#5E6278">
+                    <a href="{{ branding.learn_url }}" target="_blank" rel="noopener"
+                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Quick Start Tutorial" %}</a>
+                    <p style="margin:3px 0 0 0">
+                      {% blocktranslate with product_name=branding.smarter_product_name percent="80%" trimmed %}
+                        This page will give you an introduction to the {{ percent }} of {{ product_name }} concepts that you will use
+                        on a daily basis.
+                      {% endblocktranslate %}</p>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" valign="center"
-                    style="font-size: 13px; text-align:center; padding: 0 10px 10px 10px; font-weight: 500; color: #A1A5B7; font-family:Arial,Helvetica,sans-serif">
-                    <p style="color:#181C32; font-size: 16px; font-weight: 600; margin-bottom:9px">{{ branding.primary_contact }}</p>
-                    <p style="margin-bottom:2px">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for {{ product_name }}.{% endblocktranslate %}</p>
-                    <p>{% blocktranslate with support_email=branding.support_email contact_url=branding.contact_url trimmed %}Email me at <a href="mailto:{{ support_email }}" style="font-weight: 600">{{ support_email }}</a>, or visit <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.{% endblocktranslate %}</p>
+                  <td style="padding:14px 24px; border-bottom:1px dashed #E4E6EF; font-size:13px; line-height:1.5; color:#5E6278">
+                    <a href="{{ branding.workbench_exmample_url }}" target="_blank" rel="noopener"
+                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Example LLMClients" %}</a>
+                    <p style="margin:3px 0 0 0">
+                      {% blocktranslate trimmed %}
+                        Try the example LLMClients in your account, such as the Stackademy course catalog
+                        assistants, which answer questions from a SQL database and from a REST API.
+                      {% endblocktranslate %}</p>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" valign="center" style="text-align:center; padding-bottom: 20px;">
-                    <a class="social-media-icons" href="{{ branding.url_linkedin }}" target="_blank" rel="noopener" style="margin-right:10px">
-                      <img alt="LinkedInLogo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-linkedin.png' %}" />
-                    </a>
-                    <a class="social-media-icons" href="{{ branding.url_twitter }}" target="_blank" rel="noopener" style="margin-right:10px">
-                      <img alt="TwitterLogo" src="{{ environment_platform_domain }}{% static 'assets/media/email/icon-twitter.png' %}" />
-                    </a>
+                  <td style="padding:14px 24px; border-bottom:1px dashed #E4E6EF; font-size:13px; line-height:1.5; color:#5E6278">
+                    <a href="{{ branding.smarter_project_docs_url }}" target="_blank" rel="noopener"
+                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Documentation" %}</a>
+                    <p style="margin:3px 0 0 0">
+                      {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                        Learn more about {{ product_name }} manifests, plugins, extensions, the command-line interface, and
+                        the API.
+                      {% endblocktranslate %}</p>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" valign="center"
-                    style="font-size: 13px; padding:0 15px; text-align:center; font-weight: 500; color: #A1A5B7;font-family:Arial,Helvetica,sans-serif">
-                    <p>{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
+                  <td style="padding:14px 24px 18px 24px; font-size:13px; line-height:1.5; color:#5E6278">
+                    <a href="{{ branding.url_slack }}" target="_blank" rel="noopener"
+                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Slack Community" %}</a>
+                    <p style="margin:3px 0 0 0">
+                      {% blocktranslate with product_name=branding.smarter_product_name trimmed %}
+                        Ask questions and talk with other {{ product_name }} users and contributors in real time,
+                        in The Smarter Project's Slack workspace.
+                      {% endblocktranslate %}</p>
                   </td>
                 </tr>
-                {% include "account/email/unsubscribe-footer.html" %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <!--end::Email template-->
-      </div>
-      <!--end::Body-->
-    </div>
-    <!--end::Wrapper-->
-  </div>
-  <!--end::Root-->
-  <!--begin::Javascript-->
-  <script>var hostUrl = "assets/";</script>
-  <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-  <script src="{{ environment_platform_domain }}{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
-  <script src="{{ environment_platform_domain }}{% static 'assets/js/scripts.bundle.js' %}"></script>
-  <!--end::Global Javascript Bundle-->
-  <!--end::Javascript-->
+              </table>
+            </td>
+          </tr>
+
+          <!-- signature -->
+          <tr>
+            <td align="center"
+              style="font-size:13px; text-align:center; padding:28px 30px 10px 30px; font-weight:500; color:#A1A5B7; font-family:Arial,Helvetica,sans-serif">
+              <p style="margin:0 0 6px 0; color:#181C32; font-size:16px; font-weight:600">{{ branding.primary_contact }}</p>
+              <p style="margin:0 0 4px 0">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Technical point of contact for {{ product_name }}.{% endblocktranslate %}</p>
+              <p style="margin:0">{% blocktranslate with support_email=branding.support_email contact_url=branding.contact_url trimmed %}Email me at <a href="mailto:{{ support_email }}" style="font-weight: 600">{{ support_email }}</a>, or visit <a href="{{ contact_url }}" rel="noopener" target="_blank" style="font-weight: 600">my website</a>.{% endblocktranslate %}</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="text-align:center; padding:10px 0 6px 0">
+              <a href="{{ branding.url_linkedin }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
+                <img alt="LinkedIn" height="24" src="{% absolute_static 'assets/media/email/icon-linkedin.png' %}" style="height:24px; border:0" /></a>
+              <a href="{{ branding.url_twitter }}" target="_blank" rel="noopener" style="text-decoration:none; margin-right:10px">
+                <img alt="X" height="24" src="{% absolute_static 'assets/media/email/icon-twitter.png' %}" style="height:24px; border:0" /></a>
+              <a href="{{ branding.url_slack }}" target="_blank" rel="noopener" style="text-decoration:none">
+                <img alt="Slack" height="24" src="{% absolute_static 'assets/media/email/icon-slack.png' %}" style="height:24px; border:0" /></a>
+            </td>
+          </tr>
+          <tr>
+            <td align="center"
+              style="font-size:12px; padding:6px 30px 0 30px; text-align:center; font-weight:500; color:#A1A5B7; font-family:Arial,Helvetica,sans-serif">
+              <p style="margin:0">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
+            </td>
+          </tr>
+          {% include "account/email/unsubscribe-footer.html" %}
+          <tr>
+            <td style="padding:0 0 30px 0; font-size:0; line-height:0">&nbsp;</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
-<!--end::Body-->
+
 </html>

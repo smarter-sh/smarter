@@ -10,7 +10,7 @@ off, the registered routes are a 404. See :func:`.enabled.require_server_logs`.
 
 Attributes:
     app_name (str): The Django application namespace, taken from
-        :data:`.const.namespace`.
+        :data:`~smarter.apps.dashboard.views.terminal_emulator.const.namespace`.
     urlpatterns (list): The list of URL patterns registered for this app.
         Empty when ``smarter_settings.enable_dashboard_server_logs`` is
         ``False``.

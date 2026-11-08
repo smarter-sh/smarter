@@ -1,4 +1,4 @@
-{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
+{% load i18n smarter_email %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
   The email that a user's data export sends them, with the link to the zip file of their manifests.
   See smarter.apps.account.data_export.send_data_export_email. Mail clients strip <style> blocks,
   scripts and external stylesheets, so the layout is tables with inline styles, and the images
@@ -29,7 +29,7 @@
             <td align="center" style="padding:36px 40px 28px 40px">
               <a href="{{ environment_platform_domain }}" rel="noopener" target="_blank">
                 <img alt="{{ branding.smarter_product_name }}" height="60"
-                  src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}" style="height:60px; border:0" />
+                  src="{% smarter_logo_url %}" style="height:60px; border:0" />
               </a>
             </td>
           </tr>

@@ -298,6 +298,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _loader: Optional[SAMLoader] = None
     _manifest_data: Optional[SmarterDictType] = None
     _manifest_kind: Optional[str] = None
+    _manifest_kind_url_parsed: bool = False
     _manifest_name: Optional[str] = None
     _manifest_load_failed: bool = False
     _params: Optional[SmarterDictType] = None
@@ -537,11 +538,13 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # urls:
         # - http://testserver/api/v1/cli/logs/LLMClient/?name=TestLLMClient
         # - http://testserver/api/v1/cli/prompt/config/TestLLMClient/
-        if not self._manifest_kind:
+        if not self._manifest_kind and not self._manifest_kind_url_parsed:
             url = self.url
             # from_url() raises TypeError on None, so a request without a url has no kind.
+            # It logs a warning whenever the url has no kind, so it is called once per request.
             if url is not None:
                 self._manifest_kind = SAMKinds.from_url(url)
+                self._manifest_kind_url_parsed = True
             if self._manifest_kind:
                 logger.warning(
                     "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",
@@ -813,20 +816,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None) if self.params else kwargs.get("name", None)
 
+        # DRF ignores what initial() returns, so an unsupported kind is raised, and dispatch()
+        # answers it with a 400. The url's kind is unsupported, so there is none to find in it.
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = Brokers.get_broker_kind(kind)
-            if not self.manifest_kind:
-                return SmarterJournaledJsonErrorResponse(
-                    request=request,
-                    thing=self.manifest_kind,
-                    command=self.command,
-                    e=SAMBadRequestError(
-                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all()}"
-                    ),
-                    status=HTTPStatus.BAD_REQUEST.value,
-                    stack_trace=traceback.format_exc(),
-                )
+            if not self._manifest_kind:
+                self._manifest_kind_url_parsed = True
+                raise SAMBadRequestError(f"Unsupported manifest kind: {kind}. should be one of {SAMKinds.all()}")
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request: Request, *args, **kwargs):
