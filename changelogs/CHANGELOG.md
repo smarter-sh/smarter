@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.43.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.43.2-alpha.1...v0.43.2-alpha.2) (2026-11-08)
+
+### Bug Fixes
+
+* **plugin:** log the manifest-not-initialized broker state at debug ([bdf69d8](https://github.com/smarter-sh/smarter/commit/bdf69d895735d8523eec3bf004c72c0470ee357b))
+
 ## [0.43.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2-alpha.1) (2026-11-08)
 
 ### Bug Fixes
