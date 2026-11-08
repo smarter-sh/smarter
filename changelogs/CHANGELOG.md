@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.1...v0.44.2-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **prompt:** add a provider request api for the chat's sandbox mode ([994f00e](https://github.com/smarter-sh/smarter/commit/994f00eca2f7c05d51697a00aad196449f4af339))
+
 ## [0.44.1](https://github.com/smarter-sh/smarter/compare/v0.44.0...v0.44.1) (2026-11-08)
 
 ### Bug Fixes
