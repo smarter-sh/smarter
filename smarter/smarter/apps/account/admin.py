@@ -26,6 +26,7 @@ from .models import (
     AggregatedCharges,
     Budget,
     Charge,
+    DataExport,
     ResourceConstraint,
     ResourceLock,
     UserProfile,
@@ -277,6 +278,39 @@ class ResourceConstraintAdmin(SmarterSuperUserOnlyModelAdmin):
             user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
             qs=qs,
         )
+
+
+class DataExportAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    DataExport model admin: who downloaded their data, and when.
+
+    Read-only, because the Celery task :func:`smarter.apps.account.tasks.create_data_export` writes it.
+    """
+
+    model = DataExport
+
+    list_display = ("user", "status", "step", "manifest_count", "failed_count", "size_bytes", "created_at")
+    list_filter = ("status",)
+    search_fields = ("user__username", "user__email")
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make every field read-only.
+
+        :param request: The admin request.
+        :param obj: The export, or None.
+        :returns: Every field's name.
+        """
+        return [field.name for field in self.model._meta.fields]  # pylint: disable=protected-access
+
+    def has_add_permission(self, request):
+        """
+        Refuse to add exports in the admin: users start them from the user menu.
+
+        :param request: The admin request.
+        :returns: False.
+        """
+        return False
 
 
 class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
@@ -626,6 +660,7 @@ smarter_restricted_admin_site.register(Budget, BudgetAdmin)
 smarter_restricted_admin_site.register(ResourceConstraint, ResourceConstraintAdmin)
 smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
+smarter_restricted_admin_site.register(DataExport, DataExportAdmin)
 smarter_restricted_admin_site.register(AggregatedCharges, AggregatedChargesAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

@@ -4697,6 +4697,25 @@ class Settings(BaseSettings):
             return self.root_proxy_domain
         return self.environment_platform_domain
 
+    @cached_property
+    def aws_s3_exports_bucket_name(self) -> str:
+        """
+        Returns the name of the environment's private AWS S3 bucket for users' data exports.
+
+        The environment's bucket, :attr:`aws_s3_bucket_name`, is public: it serves the web console and
+        the chat widget through the CDN. A user's data export is private, so it goes to this bucket,
+        which smarter-infrastructure creates beside it, and is downloaded with a presigned url.
+
+        Example:
+            >>> print(smarter_settings.aws_s3_exports_bucket_name)
+            'exports.alpha.platform.example.com'
+
+        See Also:
+            - smarter_settings.aws_s3_bucket_name
+            - smarter.apps.infrastructure.providers.aws.storage.S3StorageService
+        """
+        return f"exports.{self.aws_s3_bucket_name}"
+
     @property
     def smtp_from_email(self) -> str:
         """

@@ -39,6 +39,7 @@ class InfrastructureServiceNames(str, SmarterEnumAbstract):
     EMAIL = "email"
     SLACK = "slack"
     LOGS = "logs"
+    STORAGE = "storage"
 
 
 class CertificateStatus(str, SmarterEnumAbstract):
