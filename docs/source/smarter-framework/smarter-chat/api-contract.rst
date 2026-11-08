@@ -175,6 +175,13 @@ Endpoints
        else ``https://<platform>/api/v1/llm-clients/<hashed_id>/prompt/`` (``LLMClient.url_llmclient``)
      - :py:class:`~smarter.apps.llmclient.api.v1.views.default.DefaultLLMClientApiView`, a
        :py:class:`~smarter.apps.llmclient.api.v1.views.base.LLMClientApiBaseViewSet`
+   * - Provider request, workbench only
+     - ``<apiUrl>provider-request/?session_key=<key>``, i.e.
+       ``https://<platform>/api/v1/llm-clients/<hashed_id>/provider-request/``. Sandbox mode's
+       **Download request** button POSTs to it, and saves its ``data``, a ``PromptChatApiProviderRequest``:
+       the session's conversation as the request body that Smarter sends to the LLM provider. Only a user who
+       may read the LLMClient receives it; any other request, and a deployed LLMClient's own host, gets a 404
+     - :py:class:`~smarter.apps.prompt.views.detailviews.prompt_provider_request_view.PromptProviderRequestView`
    * - Server logs, workbench only
      - The ``smarter-log-stream-url`` that Django passes the workbench
      - ``smarter.apps.dashboard.views.terminal_emulator.api.streams.stream_user_logs``

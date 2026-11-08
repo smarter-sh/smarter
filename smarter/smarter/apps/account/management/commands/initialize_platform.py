@@ -1,5 +1,6 @@
-import logging
+import time
 
+from django.contrib.staticfiles.management.commands import collectstatic
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -10,9 +11,11 @@ from smarter.apps.llmclient.const import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class Command(SmarterCommand):
@@ -34,6 +37,33 @@ class Command(SmarterCommand):
             "--password",
             type=str,
             help="The password of the superuser and the example users. Default: smarter_settings.admin_password (SMARTER_ADMIN_PASSWORD), or 'smarter' when running locally.",
+        )
+
+    def upload_static_files(self) -> None:
+        """
+        Upload the static files to the CDN's bucket with collectstatic, and log what it did.
+
+        collectstatic runs silently: at verbosity 1 it prints a line for every unchanged file. It
+        can take minutes, so the log says when it starts, and then how many files it checked, how
+        many of them it uploaded, and how long that took.
+
+        :raises Exception: Whatever collectstatic raises; the caller decides what a failure means.
+        """
+        logger.info("%s.upload_static_files() uploading the static files to the CDN's bucket", logger_prefix)
+        started = time.monotonic()
+        # an instance, not the command's name, so that its lists of files can be read afterwards.
+        command = collectstatic.Command()
+        call_command(command, interactive=False, verbosity=0)
+        seconds = time.monotonic() - started
+        changed_count = len(command.copied_files) + len(command.symlinked_files)
+        unchanged_count = len(command.unmodified_files)
+        total_count = changed_count + unchanged_count
+        logger.info(
+            "%s.upload_static_files() checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
+            logger_prefix,
+            total_count,
+            changed_count,
+            seconds,
         )
 
     # pylint: disable=broad-except
@@ -116,7 +146,7 @@ class Command(SmarterCommand):
                 # the static files, the web console's scripts among them, to the environment's S3 bucket, which
                 # its CDN serves. It adds and replaces files, and deletes none, so a page that a browser opened
                 # before this deployment keeps loading its scripts. See smarter.lib.django.static_storage.
-                call_command("collectstatic", interactive=False, verbosity=0)
+                self.upload_static_files()
                 # only now do the console's pages point at the CDN: until then, the server serves this build.
                 mark_console_uploaded()
             except (Exception, SystemExit) as e:
