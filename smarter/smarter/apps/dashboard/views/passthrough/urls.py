@@ -9,7 +9,7 @@ registered and an informational log message is emitted.
 
 Attributes:
     app_name (str): The Django application namespace, taken from
-        :data:`.const.namespace`.
+        :data:`~smarter.apps.dashboard.views.passthrough.const.namespace`.
     urlpatterns (list): The list of URL patterns registered for this app.
         Empty when ``smarter_settings.enable_dashboard_passthrough_prompt`` is
         ``False``.

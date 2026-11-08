@@ -160,6 +160,9 @@ Source layout
        ones and back, and rendering markdown to sanitized html.
    * - ``src/lib/code.ts``, ``math.ts``, ``mermaid.ts``
      - Code blocks (highlight.js), math (KaTeX, as a ``marked`` extension) and diagrams (Mermaid).
+   * - ``src/lib/media.ts``
+     - SVG graphics (a ``marked`` extension, sanitized, displayed as data url images), audio players,
+       and the media's download buttons.
    * - ``src/lib/cookie.ts``
      - Reading Django's CSRF cookie, and the chat session and debug cookies.
    * - ``src/lib/enums.ts``
@@ -252,8 +255,9 @@ pipeline of strings, in ``messages.ts``:
 3. The html is sanitized with DOMPurify, and only then displayed.
 
 Because messages are html strings, their interactive parts can't have React event handlers. The
-code blocks' **Copy** buttons and the diagrams' **Code** buttons are handled by one click listener on
-the chat, by event delegation (``copyCodeBlock()`` and ``toggleMermaidDiagram()``). Mermaid renders
+code blocks' **Copy** buttons, the diagrams' and svg images' **Code** buttons and the media's
+**Download** buttons are handled by one click listener on the chat, by event delegation
+(``copyCodeBlock()``, ``toggleMermaidDiagram()``, ``toggleSvgCode()`` and ``downloadMedia()``). Mermaid renders
 asynchronously, so a ``mermaid`` block is first rendered as a code block, and
 ``renderMermaidDiagrams()``, called in a layout effect whenever the messages change, replaces it in
 the page with its diagram. Diagrams are cached by their source, so a re-render doesn't redraw them.

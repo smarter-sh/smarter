@@ -5,9 +5,9 @@ Smarter Chat is Smarter's chat user interface: a React component that holds a co
 :doc:`LLMClient <../smarter-resources/smarter-llmclient>`. It renders the LLMClient's welcome message
 and example prompts, sends each new message to the LLMClient's prompt api, shows the prompt's
 progress while the LLM calls tools, plugins and MCP servers, and renders the response as GitHub
-flavored markdown, with highlighted code, LaTeX math and Mermaid diagrams. An optional Console beside
-the chat shows the LLMClient's configuration, the chat session's api calls, tool calls and plugin
-usage, and a live stream of your server logs.
+flavored markdown, with highlighted code, LaTeX math, Mermaid diagrams, SVG graphics and audio,
+which can be downloaded. An optional Console beside the chat shows the LLMClient's configuration,
+the chat session's api calls, tool calls and plugin usage, and a live stream of your server logs.
 
 .. raw:: html
 
