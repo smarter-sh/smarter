@@ -388,4 +388,29 @@ class PluginBrokerEdgeCasesMixin:
         self._patch_broker_property("loader", None)
         broker._manifest = None
         broker._plugin_meta = None
-        self.assertIsNone(broker.manifest)
+        with self.assertNoLogs("smarter.apps.llmtool", level="WARNING"):  # type: ignore[attr-defined]
+            manifest = broker.manifest
+        self.assertIsNone(manifest)
+
+    def test_broker_by_name_writes_no_warning(self):
+        """
+        A broker built by name, as the console builds it, is ready and has a manifest, with no WARNING.
+
+        Its manifest property is read before the PluginMeta row is looked up, so it takes the
+        "could not be initialized" branch first. That is a transient state, not a problem.
+        See https://github.com/smarter-sh/smarter/issues/946.
+        """
+        if not self.orm_spec_method:
+            return
+        response = self.broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))  # type: ignore[attr-defined]
+        name = self.broker.manifest.metadata.name  # type: ignore[attr-defined]
+        kind = self.broker.kind  # type: ignore[attr-defined]
+
+        with self.assertNoLogs("smarter.apps.llmtool", level="WARNING"):  # type: ignore[attr-defined]
+            broker = self.SAMBrokerClass(self.request, name=name, kind=kind)  # type: ignore[attr-defined]
+            ready = broker.ready
+            manifest = broker.manifest
+        self.assertTrue(ready)  # type: ignore[attr-defined]
+        self.assertIsNotNone(manifest)  # type: ignore[attr-defined]
+        self.assertEqual(manifest.metadata.name, name)  # type: ignore[attr-defined]
