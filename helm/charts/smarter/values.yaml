@@ -257,18 +257,19 @@ app:
   extraVolumeMounts: []
   # A PodDisruptionBudget that keeps voluntary disruptions (node drains, cluster
   # upgrades, Karpenter or cluster-autoscaler consolidation) from evicting more than
-  # maxUnavailable app pods at a time. See templates/pdb-app.yaml.
+  # maxUnavailable app pods at a time. See templates/pdb-api.yaml.
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
   # The api's Deployment, Service, HorizontalPodAutoscaler and PodDisruptionBudget are named
-  # <appName>-api. While legacyName is enabled, each also has a twin under the old name,
-  # <appName>, and both Services reach both Deployments' pods, so that renaming them drops no
-  # request, and the Ingresses that still name the old Service keep working. Turn it off in the
-  # release after the rename, once smarter-infrastructure's ingress and every LLMClient's ingress
-  # name <appName>-api. See smarter.apiNames in _helpers.tpl.
+  # <appName>-api. They were named <appName> before v0.43.0. Enabled, legacyName also renders a
+  # twin of each under the old name, and both Services reach both Deployments' pods, so that an
+  # install upgrading from an older release drops no request while its Ingresses still name the
+  # old Service. Such an install upgrades once with it enabled, points its Ingresses at
+  # <appName>-api (smarter-infrastructure's do; the init job retargets every LLMClient's), then
+  # upgrades again with it disabled, which deletes the twins. See smarter.apiNames in _helpers.tpl.
   legacyName:
-    enabled: true
+    enabled: false
 
 names:
   mysqlName: mysql
@@ -330,7 +331,7 @@ deployment:
 # Horizontal Pod Autoscaler Configuration
 # ----------------------------------------------------------------------------
 # minReplicas, targetMemoryUtilizationPercentage and behavior apply to the app's
-# HorizontalPodAutoscaler (templates/hpa-app.yaml); maxReplicas and
+# HorizontalPodAutoscaler (templates/hpa-api.yaml); maxReplicas and
 # targetCPUUtilizationPercentage apply to it and to the Celery worker's
 # (templates/hpa-worker.yaml).
 hpa:

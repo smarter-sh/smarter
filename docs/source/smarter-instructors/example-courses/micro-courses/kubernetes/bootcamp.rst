@@ -8,7 +8,7 @@ network policies. Smarter's `Helm chart
 <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter>`__ is the one that runs it in
 production: four Deployments from the same image as Docker Compose, liveness, readiness and startup
 probes, `autoscalers
-<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-app.yaml>`__ that
+<https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/templates/hpa-api.yaml>`__ that
 scale the web server from 3 to 25 pods, an init Job, a backup CronJob, Bitnami subcharts for the
 database, Redis and monitoring, and `values
 <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ validated by a
@@ -103,7 +103,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 6
      - 45
      - **Lecture 4: Scaling.** Requests and limits, the Horizontal Pod Autoscaler, readiness and
-       liveness probes, and how Smarter's ``hpa-app`` and ``hpa-worker`` templates scale the web
+       liveness probes, and how Smarter's ``hpa-api`` and ``hpa-worker`` templates scale the web
        and worker pods.
    * - 7
      - 45
