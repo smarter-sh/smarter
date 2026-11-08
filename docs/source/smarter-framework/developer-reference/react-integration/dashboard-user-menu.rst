@@ -15,13 +15,22 @@ badge), and these items:
   :doc:`../smarter-dashboard/views/authentication/profile_image`.
 - **Change Profile**, for a user with more than one UserProfile, below.
 - **Welcome Tour**, which opens the :doc:`welcome dialog <welcome>`.
-- **Sign Out**. An anonymous request gets **Sign In**, and the Language item.
+- **Sign Out**, which posts to the account api, ``/api/web/account/logout/``, then goes to the sign-in
+  page. An anonymous request gets **Sign In**, and the Language item.
 
-The menu is the ``@smarter/dashboard-user-menu`` React app, which
-``templates/dashboard/navbar.html`` includes on every page, through
-``templates/react/dashboard-user-menu.html``. It renders the Keen theme's menu
-classes itself, rather than through the theme's JavaScript: the profile image is
-a button that opens and closes it, and Escape or a click outside it closes it.
+The menu is ``UserMenu``, which the ``@smarter/dashboard-user-menu`` package
+exports from ``src/index.ts``. The single-page console
+(:doc:`ADR-035 </adr/035-single-page-app>`) renders it at the right of its
+header, ``src/components/Header.tsx``. The package is import-only: its source
+uses relative imports so that the console's build can bundle it, and it has no
+build of its own. ``src/lib/userMenu.ts`` builds the menu's context from the
+console's session, ``GET /api/web/session/``: the user, their profile image and
+number of UserProfiles, their account, the languages, the cookie names and
+domain, and the urls of the menu's apis under ``/api/web/account/``. After the
+user signs out or switches profiles, the header reloads the session. The menu
+renders the Keen theme's menu classes itself, rather than through the theme's
+JavaScript: the profile image is a button that opens and closes it, and Escape
+or a click outside it closes it. See :doc:`../web-console-api`.
 
 Change Profile
 --------------
@@ -54,7 +63,7 @@ ignores it: the key acts as its own user.
 API
 ---
 
-.. automodule:: smarter.apps.account.views.dashboard.user_profiles
+.. automodule:: smarter.apps.account.api.web.user_profiles
    :members:
    :show-inheritance:
    :no-index:
@@ -66,11 +75,4 @@ API
 .. automodule:: smarter.apps.account.middleware
    :members:
    :show-inheritance:
-   :no-index:
-
-Template Tags
--------------
-
-.. automodule:: smarter.apps.dashboard.templatetags.react_dashboard_user_menu
-   :members:
    :no-index:

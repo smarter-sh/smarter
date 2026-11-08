@@ -4,12 +4,14 @@
 from http import HTTPStatus
 
 from django.test import Client
-from waffle.testutils import override_switch
+from django.urls import resolve
+from django.urls import reverse as django_reverse
 
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.urls import AccountReverseNames
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.urls.console import ConsoleReverseNames
 
 
@@ -31,13 +33,31 @@ class TestUrls(TestAccountMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status_code, url)
 
-    def test_root_account_urls(self):
-        """Sign-in, sign-out, registration and password reset are served at the root."""
-        self.verify_response("login_view", HTTPStatus.OK)
-        self.verify_response("logout_view", HTTPStatus.FOUND)
-        with override_switch(SmarterWaffleSwitches.ENABLE_ACCOUNT_REGISTRATION, active=True):
-            self.verify_response(ConsoleReverseNames.register_view, HTTPStatus.OK)
-        self.verify_response("account_password_reset_request", HTTPStatus.OK)
+    def test_console_pages(self):
+        """
+        Sign-in, registration, password reset, the account's lifecycle pages and the dashboard are the.
+
+        single-page console's.
+
+        See smarter.apps.dashboard.tests.test_console_app for the pages themselves.
+        """
+        for name in (
+            ConsoleReverseNames.login_view,
+            ConsoleReverseNames.register_view,
+            "account_password_reset_request",
+            f"{AccountReverseNames.namespace}:{AccountReverseNames.ACCOUNT_INACTIVE}",
+            f"{AccountReverseNames.namespace}:{AccountReverseNames.ACCOUNT_ALREADY_ASSOCIATED}",
+            "dashboard:dashboard",
+        ):
+            with self.subTest(name=name):
+                view = resolve(reverse(name)).func
+                self.assertIs(view.view_class, ConsoleAppView)  # type: ignore[attr-defined]
+        activate = django_reverse(
+            f"{AccountReverseNames.namespace}:{AccountReverseNames.ACCOUNT_ACTIVATE}",
+            kwargs={"uidb64": "MQ", "token": "a-token"},
+        )
+        self.assertEqual(activate, "/account/activate/MQ/a-token/")
+        self.assertIs(resolve(activate).func.view_class, ConsoleAppView)  # type: ignore[attr-defined]
 
     def test_retired_urls_are_gone(self):
         """
@@ -49,6 +69,10 @@ class TestUrls(TestAccountMixin):
         retired_paths = [
             "/account/login/",
             "/account/logout/",
+            "/logout/",
+            "/account/activation/",
+            "/account/dashboard/profile-image/",
+            "/account/dashboard/user-profiles/",
             "/account/register/",
             "/account/api-keys/",
             "/account/users/",

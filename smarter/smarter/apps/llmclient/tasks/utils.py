@@ -20,6 +20,21 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 INGRESS_TEMPLATE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../k8s/ingress.yaml.tpl"))
 
+API_SERVICE_NAME = "smarter-api"
+"""
+The Kubernetes Service of the platform's api, which an LLMClient's ingress sends its requests to.
+
+The Helm chart names it ``<global.appName>-api`` (see ``smarter.apiNames`` in ``helm/charts/smarter/templates/_helpers.tpl``).
+"""
+
+LEGACY_API_SERVICE_NAME = "smarter"
+"""
+The api's Service's name before it was renamed to :data:`API_SERVICE_NAME`.
+
+The Helm chart keeps a Service of this name, an alias, until every LLMClient's ingress has been
+retargeted by :func:`smarter.apps.llmclient.tasks.retarget_ingresses.retarget_llmclient_ingresses`.
+"""
+
 
 def is_taskable() -> bool:
     """Whether the cloud's DNS and certificate services are ready for task processing."""
@@ -55,7 +70,7 @@ def apply_ingress_manifest(domain: str) -> None:
         "cluster_issuer": smarter_settings.environment_api_domain,
         "environment_namespace": smarter_settings.environment_namespace,
         "domain": domain,
-        "service_name": "smarter",
+        "service_name": API_SERVICE_NAME,
     }
     with open(INGRESS_TEMPLATE_PATH, encoding="utf-8") as ingress_template:
         manifest = Template(ingress_template.read()).substitute(ingress_values)

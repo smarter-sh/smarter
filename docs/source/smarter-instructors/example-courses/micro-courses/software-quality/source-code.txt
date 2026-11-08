@@ -35,13 +35,13 @@ Tests
    * - The front end suite
      - About 150 Vitest and Testing Library test files, with every Storybook story rendered as a
        test, and MSW mocks of the API.
-     - `smarter/react/vitest.shared.ts <https://github.com/smarter-sh/smarter/blob/main/smarter/react/vitest.shared.ts>`__,
-       `smarter/react/test/ <https://github.com/smarter-sh/smarter/tree/main/smarter/react/test>`__
+     - `smarter/react/vitest.shared.ts <https://github.com/smarter-sh/smarter/blob/v0.42.10/smarter/react/vitest.shared.ts>`__,
+       `smarter/react/test/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/test>`__
    * - The traps, written down
      - What goes wrong in Smarter's tests and why, from cleanup without rollback to Celery tasks
        that are not eager.
      - `smarter-python-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-python-testing/SKILL.md>`__,
-       `smarter-react-testing/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-react-testing/SKILL.md>`__
+       `smarter-react-testing/SKILL.md <https://github.com/smarter-sh/smarter-console/blob/main/skills/smarter-react-testing/SKILL.md>`__
 
 Coverage and Checks
 ~~~~~~~~~~~~~~~~~~~

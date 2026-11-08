@@ -352,7 +352,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         )
         message = (
             f"The {self.provider_name} Provider has no API key. Add SMARTER_{env_var} to .env, restart the "
-            "platform, and run: docker exec smarter-app python manage.py initialize_providers. "
+            "platform, and run: docker exec smarter-api python manage.py initialize_providers. "
             "Or set the Provider's API key Secret in the web console."
         )
         base_logger.error(
@@ -361,7 +361,7 @@ class SmarterChatProviderBase(ChatDbMixin):
                 "To set it, add the key to .env, restart the platform, and run:",
                 "",
                 f"    SMARTER_{env_var}=<your key>",
-                "    docker exec smarter-app python manage.py initialize_providers",
+                "    docker exec smarter-api python manage.py initialize_providers",
                 "",
                 "Or set the Provider's API key Secret in the web console.",
             )

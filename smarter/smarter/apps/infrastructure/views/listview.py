@@ -10,18 +10,15 @@ by the infrastructure signals' receivers, so the list is read-only.
 from http import HTTPStatus
 from typing import Any, Optional
 
-from django.conf import settings
 from django.core.handlers.asgi import ASGIRequest
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, QuerySet
 from django.http import JsonResponse
-from django.shortcuts import render
 
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.lib import json, logging
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseForbidden
-from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 from ..models import InfrastructureResource
@@ -107,47 +104,14 @@ def positive_int(value: Any, default: int, maximum: Optional[int] = None) -> int
     return value
 
 
-class InfrastructureResourceListView(SmarterAuthenticatedNeverCachedWebView):
-    """Render the Infrastructure Resource list of the Smarter web console."""
+class InfrastructureResourceListView(ConsoleAppView):
+    """
+    The Infrastructure Resource list page, ``/infrastructure/``, which the single-page console serves (ADR-035).
 
-    template_path = "react/infrastructure-resource-list.html"
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        return f"{self.formatted_text(__name__)}.{InfrastructureResourceListView.__name__}[{id(self)}]"
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the React app of the Infrastructure Resource list.
-
-        Only superusers may see it.
-
-        :param request: The request.
-        :returns: The page, or 403 Forbidden for a user who is not a superuser.
-        """
-        if not request.user.is_superuser:  # type: ignore[union-attr]
-            return SmarterHttpResponseForbidden(request=request, error_message=FORBIDDEN)
-
-        # pylint: disable=C0415
-        from smarter.apps.infrastructure.api.web.urls import (
-            InfrastructureApiWebReverseNames,
-        )
-
-        context = {
-            "infrastructure_resource_list": {
-                "root_id": "smarter-infrastructure-resource-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "infrastructure_resource_list_api_url": reverse(
-                    InfrastructureApiWebReverseNames.namespace, InfrastructureApiWebReverseNames.listview
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-        return render(request, template_name=self.template_path, context=context)
+    The console renders ``@smarter/infrastructure-resource-list``'s list at the page's path for a superuser, and shows
+    anyone else that the page is not found; the list calls :class:`InfrastructureResourceListApiView`, which answers
+    403 Forbidden to a user who is not a superuser.
+    """
 
 
 class InfrastructureResourceListApiView(SmarterAuthenticatedNeverCachedWebView):

@@ -22,22 +22,27 @@
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if .Values.app.podDisruptionBudget.enabled }}
+{{- range $index, $name := splitList "," (include "smarter.apiNames" .) }}
+{{- if $index }}
+---
+{{- end }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: "{{ .Values.global.appName }}"
-  namespace: "{{ .Values.namespace }}"
+  name: "{{ $name }}"
+  namespace: "{{ $.Values.namespace }}"
   annotations:
-    meta.helm.sh/release-name: "{{ .Values.global.appName }}"
-    meta.helm.sh/release-namespace: "{{ .Values.namespace }}"
-    meta.helm.sh/application-version: "{{ .Chart.Version }}"
+    meta.helm.sh/release-name: "{{ $.Values.global.appName }}"
+    meta.helm.sh/release-namespace: "{{ $.Values.namespace }}"
+    meta.helm.sh/application-version: "{{ $.Chart.Version }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $name }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 spec:
-  maxUnavailable: {{ .Values.app.podDisruptionBudget.maxUnavailable | default 1 }}
+  maxUnavailable: {{ $.Values.app.podDisruptionBudget.maxUnavailable | default 1 }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{ .Values.global.appName }}"
+      app.kubernetes.io/name: "{{ $name }}"
+{{- end }}
 {{- end }}

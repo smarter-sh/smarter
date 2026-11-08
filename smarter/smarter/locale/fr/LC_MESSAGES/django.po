@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 21:46+0000\n"
+"POT-Creation-Date: 2026-11-07 13:39+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -15,6 +15,98 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: smarter/apps/account/activation.py
+msgid "Activate your account."
+msgstr "Activez votre compte."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "Choose an image to upload."
+msgstr "Choisissez une image à téléverser."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "The image must be 2 MB or smaller."
+msgstr "L’image doit faire 2 Mo ou moins."
+
+#: smarter/apps/account/api/web/profile_image.py
+msgid "The image must be a PNG, JPEG, GIF or WebP file."
+msgstr "L’image doit être un fichier PNG, JPEG, GIF ou WebP."
+
+#: smarter/apps/account/api/web/views.py
+msgid "An unknown error occurred. Please try again later."
+msgstr "Une erreur inconnue est survenue. Veuillez réessayer plus tard."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Too many attempts. Try again in a minute."
+msgstr "Trop de tentatives. Réessayez dans une minute."
+
+#: smarter/apps/account/api/web/views.py
+msgid "The request is invalid."
+msgstr "La requête n'est pas valide."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"Your account isn't activated yet. Follow the link that we emailed you, or "
+"ask for a new one."
+msgstr ""
+"Votre compte n'est pas encore activé. Suivez le lien que nous vous avons "
+"envoyé par e-mail, ou demandez-en un nouveau."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Email and/or password do not match."
+msgstr "L'adresse e-mail et/ou le mot de passe ne correspondent pas."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Registration is closed."
+msgstr "Les inscriptions sont fermées."
+
+#: smarter/apps/account/api/web/views.py
+msgid "An account with this email address already exists. Please sign in."
+msgstr ""
+"Un compte existe déjà avec cette adresse e-mail. Veuillez vous connecter."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Please correct the errors below."
+msgstr "Veuillez corriger les erreurs ci-dessous."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"We have emailed you a link to activate your account. Follow it to sign in."
+msgstr ""
+"Nous vous avons envoyé par e-mail un lien pour activer votre compte. Suivez-"
+"le pour vous connecter."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account with this email address is waiting to be activated, we have "
+"sent it a new link."
+msgstr ""
+"Si un compte associé à cette adresse e-mail attend d'être activé, nous lui "
+"avons envoyé un nouveau lien."
+
+#: smarter/apps/account/api/web/views.py
+msgid ""
+"If an account has this email address, we have sent it a link to reset the "
+"password."
+msgstr ""
+"Si un compte a cette adresse e-mail, nous lui avons envoyé un lien pour "
+"réinitialiser le mot de passe."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Choose a new password."
+msgstr "Choisissez un nouveau mot de passe."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Passwords do not match."
+msgstr "Les mots de passe ne correspondent pas."
+
+#: smarter/apps/account/api/web/views.py
+msgid "Your password has been changed. Sign in with it."
+msgstr "Votre mot de passe a été modifié. Connectez-vous avec."
+
+#: smarter/apps/account/email_links.py
+msgid "Invalid link. The user does not exist."
+msgstr "Lien non valide. L'utilisateur n'existe pas."
 
 #: smarter/apps/account/management/commands/create_user.py
 msgid "Your Smarter user account has been created"
@@ -40,7 +132,6 @@ msgstr ""
 "Mot de passe : %(password)s\n"
 
 #: smarter/apps/account/models/account_contact.py
-#: smarter/templates/account/welcome.html
 msgid "Welcome to Smarter!"
 msgstr "Bienvenue sur Smarter !"
 
@@ -49,77 +140,9 @@ msgstr "Bienvenue sur Smarter !"
 msgid "Join the Smarter community on Slack"
 msgstr "Rejoignez la communauté Smarter sur Slack"
 
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "An account with this email address already exists. Please sign in."
-msgstr ""
-"Un compte existe déjà avec cette adresse e-mail. Veuillez vous connecter."
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Registration is closed."
-msgstr "Les inscriptions sont fermées."
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "User not found. Please log in to activate your account."
-msgstr "Utilisateur introuvable. Connectez-vous pour activer votre compte."
-
-#: smarter/apps/account/views/authentication/account_views.py
-msgid "Activate your account."
-msgstr "Activez votre compte."
-
-#: smarter/apps/account/views/authentication/account_views.py
-#: smarter/apps/account/views/password_management.py
-msgid "Invalid password reset link. User does not exist."
-msgstr ""
-"Lien de réinitialisation du mot de passe non valide. L'utilisateur n'existe "
-"pas."
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Email and/or password do not match."
-msgstr "L'adresse e-mail et/ou le mot de passe ne correspondent pas."
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "An unknown error occurred. Please try again later."
-msgstr "Une erreur inconnue est survenue. Veuillez réessayer plus tard."
-
-#: smarter/apps/account/views/authentication/login_view.py
-msgid "Received invalid responses."
-msgstr "Réponses non valides reçues."
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "Choose an image to upload."
-msgstr "Choisissez une image à téléverser."
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "The image must be 2 MB or smaller."
-msgstr "L’image doit faire 2 Mo ou moins."
-
-#: smarter/apps/account/views/dashboard/profile_image.py
-msgid "The image must be a PNG, JPEG, GIF or WebP file."
-msgstr "L’image doit être un fichier PNG, JPEG, GIF ou WebP."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email address is invalid."
-msgstr "L'adresse e-mail n'est pas valide."
-
-#: smarter/apps/account/views/password_management.py
+#: smarter/apps/account/password_reset.py
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
-
-#: smarter/apps/account/views/password_management.py
-msgid "Email sent."
-msgstr "E-mail envoyé."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Missing uidb64 or token in URL."
-msgstr "uidb64 ou le jeton est absent de l'URL."
-
-#: smarter/apps/account/views/password_management.py
-msgid "input form is invalid."
-msgstr "le formulaire n'est pas valide."
-
-#: smarter/apps/account/views/password_management.py
-msgid "Passwords do not match."
-msgstr "Les mots de passe ne correspondent pas."
 
 #: smarter/apps/account/views/unsubscribe.py
 msgid ""
@@ -173,53 +196,6 @@ msgstr "Erreur système"
 #: smarter/templates/500.html
 msgid "A system error has occurred."
 msgstr "Une erreur système s'est produite."
-
-#: smarter/templates/account/account-inactive.html
-msgid "Your Account is Inactive."
-msgstr "Votre compte est inactif."
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/activation.html
-msgid ""
-"Look for an email from us with instructions on how to activate your account."
-msgstr ""
-"Cherchez un e-mail de notre part contenant les instructions pour activer "
-"votre compte."
-
-#: smarter/templates/account/account-inactive.html
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-#: smarter/templates/cms/base/menu/authentication.html
-msgid "Login"
-msgstr "Connexion"
-
-#: smarter/templates/account/activation.html
-msgid "Activate Your Account."
-msgstr "Activez votre compte."
-
-#: smarter/templates/account/activation.html
-msgid "Didn't receive an email?"
-msgstr "Vous n'avez pas reçu d'e-mail ?"
-
-#: smarter/templates/account/activation.html
-msgid "Try Again"
-msgstr "Réessayer"
-
-#: smarter/templates/account/activation.html
-msgid "Skip for now"
-msgstr "Ignorer pour l'instant"
-
-#: smarter/templates/account/authentication/base.html
-#: smarter/templates/dashboard/footer.html
-msgid "Legal"
-msgstr "Mentions légales"
-
-#: smarter/templates/account/authentication/base.html
-msgid "Plans"
-msgstr "Forfaits"
-
-#: smarter/templates/account/authentication/base.html
-msgid "Contact Us"
-msgstr "Nous contacter"
 
 #: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Your Account"
@@ -302,114 +278,6 @@ msgstr "Réinitialiser le mot de passe"
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Or, talk to a human!"
 msgstr "Ou parlez à un humain !"
-
-#: smarter/templates/account/authentication/new-password.html
-msgid "Password Reset"
-msgstr "Réinitialisation du mot de passe"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Password"
-msgstr "Mot de passe"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
-msgstr "Utilisez au moins 8 caractères mêlant lettres, chiffres et symboles."
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Repeat Password"
-msgstr "Répétez le mot de passe"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Submit"
-msgstr "Envoyer"
-
-#: smarter/templates/account/authentication/new-password.html
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Please wait..."
-msgstr "Veuillez patienter..."
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Forgot Password ?"
-msgstr "Mot de passe oublié ?"
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Enter your email to reset your password."
-msgstr "Saisissez votre e-mail pour réinitialiser votre mot de passe."
-
-#: smarter/templates/account/authentication/password-reset-request.html
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Email"
-msgstr "E-mail"
-
-#: smarter/templates/account/authentication/password-reset-request.html
-msgid "Cancel"
-msgstr "Annuler"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/email/welcome.html
-msgid "Sign In"
-msgstr "Se connecter"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with Google"
-msgstr "Se connecter avec Google"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in with GitHub"
-msgstr "Se connecter avec GitHub"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Or with email"
-msgstr "Ou par e-mail"
-
-#: smarter/templates/account/authentication/sign-in.html
-msgid "Not a Member yet?"
-msgstr "Pas encore membre ?"
-
-#: smarter/templates/account/authentication/sign-in.html
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign up"
-msgstr "S'inscrire"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign Up"
-msgstr "S'inscrire"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
-msgstr "J'accepte les <a href=\"#\" class=\"ms-1 link-primary\">Conditions</a>"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Already have an Account?"
-msgstr "Vous avez déjà un compte ?"
-
-#: smarter/templates/account/authentication/sign-up.html
-msgid "Sign in"
-msgstr "Se connecter"
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid "Social Account Already Associated"
-msgstr "Compte social déjà associé"
-
-#: smarter/templates/account/authentication/social-auth-already-associated.html
-msgid ""
-"The social account you tried to associate is already linked to another user "
-"on this platform."
-msgstr ""
-"Le compte social que vous avez tenté d'associer est déjà lié à un autre "
-"utilisateur de cette plateforme."
 
 #: smarter/templates/account/email/slack-invitation.html
 msgid "The Smarter Project on Slack"
@@ -676,6 +544,10 @@ msgstr ""
 "style=\"font-weight:600\">%(support_email)s</a>."
 
 #: smarter/templates/account/email/welcome.html
+msgid "Sign In"
+msgstr "Se connecter"
+
+#: smarter/templates/account/email/welcome.html
 msgid "What's included:"
 msgstr "Ce qui est inclus :"
 
@@ -746,10 +618,10 @@ msgid ""
 "AI application without writing code."
 msgstr ""
 "<strong>Une approche sans code pour créer des ressources d'IA.</strong> "
-"Chaque ressource de %(product_name)s est un court <a "
-"href=\"https://docs.smarter.sh/smarter-framework/smarter-manifests.html\" "
-"rel=\"noopener\" target=\"_blank\">manifeste YAML</a> : vous pouvez donc "
-"créer et gérer une application d'IA fonctionnelle sans écrire de code."
+"Chaque ressource de %(product_name)s est un court <a href=\"https://"
+"docs.smarter.sh/smarter-framework/smarter-manifests.html\" rel=\"noopener\" "
+"target=\"_blank\">manifeste YAML</a> : vous pouvez donc créer et gérer une "
+"application d'IA fonctionnelle sans écrire de code."
 
 #: smarter/templates/account/email/welcome.html
 msgid ""
@@ -864,15 +736,14 @@ msgid ""
 "docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
 "rel=\"noopener\" target=\"_blank\">running from source</a> for developers."
 msgstr ""
-"<strong>Guides de déploiement</strong> pour la <a "
-"href=\"https://docs.smarter.sh/smarter-platform/installation/production-deployment.html\" "
-"rel=\"noopener\" target=\"_blank\">production</a>, un <a "
-"href=\"https://docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
+"<strong>Guides de déploiement</strong> pour la <a href=\"https://"
+"docs.smarter.sh/smarter-platform/installation/production-deployment.html\" "
+"rel=\"noopener\" target=\"_blank\">production</a>, un <a href=\"https://"
+"docs.smarter.sh/smarter-platform/installation/quick-start.html\" "
 "rel=\"noopener\" target=\"_blank\">Quick Start</a> pour l'évaluation, et "
-"l'<a "
-"href=\"https://docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
-"rel=\"noopener\" target=\"_blank\">exécution à partir des sources</a> pour "
-"les développeurs."
+"l'<a href=\"https://docs.smarter.sh/smarter-framework/guides/developer-"
+"setup.html\" rel=\"noopener\" target=\"_blank\">exécution à partir des "
+"sources</a> pour les développeurs."
 
 #: smarter/templates/account/email/welcome.html
 msgid "Sorry, your browser doesn't support embedded videos."
@@ -909,9 +780,7 @@ msgstr ""
 "catalogue de cours Stackademy, qui répondent aux questions à partir d'une "
 "base de données SQL et d'une API REST."
 
-#: smarter/templates/account/email/welcome.html smarter/templates/cms/base.html
-#: smarter/templates/dashboard/sidebar.html
-#: smarter/templates/docs/json-schemas.html
+#: smarter/templates/account/email/welcome.html
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -974,17 +843,6 @@ msgstr ""
 msgid "Unsubscribe"
 msgstr "Se désabonner"
 
-#: smarter/templates/account/welcome.html
-msgid ""
-"This is your opportunity to take prompt engineering <br />to the next level!"
-msgstr ""
-"Voici l'occasion de faire passer l'ingénierie de prompts <br />au niveau "
-"supérieur !"
-
-#: smarter/templates/account/welcome.html
-msgid "Go To Dashboard"
-msgstr "Aller au tableau de bord"
-
 #: smarter/templates/admin/base_site.html
 msgid "Django site admin"
 msgstr "Site d'administration de Django"
@@ -992,60 +850,6 @@ msgstr "Site d'administration de Django"
 #: smarter/templates/admin/base_site.html
 msgid "Django administration"
 msgstr "Administration de Django"
-
-#: smarter/templates/cms/base/footer.html
-msgid "The Smarter Project"
-msgstr "The Smarter Project"
-
-#: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
-msgid "About"
-msgstr "À propos"
-
-#: smarter/templates/cms/base/footer.html
-#: smarter/templates/dashboard/footer.html
-msgid "Support"
-msgstr "Assistance"
-
-#: smarter/templates/cms/base/footer.html
-msgid "Sales"
-msgstr "Ventes"
-
-#: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/header.html
-msgid "Show sidebar menu"
-msgstr "Afficher le menu latéral"
-
-#: smarter/templates/cms/base/header.html
-#: smarter/templates/dashboard/navbar.html
-msgid "Show header menu"
-msgstr "Afficher le menu d'en-tête"
-
-#: smarter/templates/cms/base/menu/api.html
-msgid "API"
-msgstr "API"
-
-#: smarter/templates/cms/base/menu/api.html
-#: smarter/templates/dashboard/sidebar.html
-msgid "OpenAPI Contract"
-msgstr "Contrat OpenAPI"
-
-#: smarter/templates/cms/base/menu/authentication.html
-msgid "Logout"
-msgstr "Déconnexion"
-
-#: smarter/templates/cms/base/menu/cli.html
-#: smarter/templates/docs/base/sidebar/widget-cli.html
-msgid "CLI"
-msgstr "CLI"
-
-#: smarter/templates/cms/base/menu/json-schemas.html
-msgid "Schemas"
-msgstr "Schémas"
-
-#: smarter/templates/cms/base/menu/manifests.html
-msgid "Manifests"
-msgstr "Manifestes"
 
 #: smarter/templates/common/cookie-notice.html
 msgid "Cookie notice"
@@ -1063,447 +867,542 @@ msgstr "Politique de confidentialité"
 msgid "Close"
 msgstr "Fermer"
 
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Light"
-msgstr "Clair"
+#~ msgid "The Smarter Project"
+#~ msgstr "The Smarter Project"
 
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "Dark"
-msgstr "Sombre"
+#~ msgid "About"
+#~ msgstr "À propos"
 
-#: smarter/templates/dashboard/navbar/theme-mode-menu-item.html
-msgid "System"
-msgstr "Système"
+#~ msgid "Support"
+#~ msgstr "Assistance"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Workbench"
-msgstr "Atelier"
+#~ msgid "Sales"
+#~ msgstr "Ventes"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Dashboard"
-msgstr "Tableau de bord"
+#~ msgid "Show sidebar menu"
+#~ msgstr "Afficher le menu latéral"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Prompt Passthrough"
-msgstr "Prompt direct"
+#~ msgid "Show header menu"
+#~ msgstr "Afficher le menu d'en-tête"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Apply Manifest"
-msgstr "Appliquer un manifeste"
+#~ msgid "API"
+#~ msgstr "API"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Terminal"
-msgstr "Terminal"
+#~ msgid "OpenAPI Contract"
+#~ msgstr "Contrat OpenAPI"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Models"
-msgstr "Modèles"
+#~ msgid "Login"
+#~ msgstr "Connexion"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Providers"
-msgstr "Fournisseurs"
+#~ msgid "Logout"
+#~ msgstr "Déconnexion"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Proxies"
-msgstr "Proxys"
+#~ msgid "CLI"
+#~ msgstr "CLI"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Hosts"
-msgstr "Hôtes LLM"
+#~ msgid "Schemas"
+#~ msgstr "Schémas"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Host Compute"
-msgstr "Calcul des hôtes LLM"
+#~ msgid "Manifests"
+#~ msgstr "Manifestes"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Harnesses"
-msgstr "Harnais"
+#~ msgid "Stay <br> Connected"
+#~ msgstr "Restez <br> connecté"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Clients"
-msgstr "Clients LLM"
+#~ msgid "NPM React Chat Component"
+#~ msgstr "Composant de chat React sur NPM"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Orchestrators"
-msgstr "Orchestrateurs"
+#~ msgid "PyPi Package"
+#~ msgstr "Paquet PyPI"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "API Keys"
-msgstr "Clés d'API"
+#~ msgid "VS Code Extension"
+#~ msgstr "Extension VS Code"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Custom Domains"
-msgstr "Domaines personnalisés"
+#~ msgid "smarter.sh/v1 Manifest JSON Schemas"
+#~ msgstr "Schémas JSON des manifestes smarter.sh/v1"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Tools"
-msgstr "Outils"
+#~ msgid "We've already obsessed over the details. Why should you?"
+#~ msgstr ""
+#~ "Nous nous sommes déjà souciés de chaque détail. Pourquoi le feriez-vous ?"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Extensions"
-msgstr "Extensions"
+#~ msgid ""
+#~ "The smarter.sh/v1 published JSON Schemas are a rock solid foundation for "
+#~ "your OEM product. Leverage our JSON Schemas to turn your OEM product into "
+#~ "your customers' Rock of Gibralter. Smarter takes care of the details for "
+#~ "you. The only thing you have to do is to take advantage of our own "
+#~ "attention to detail."
+#~ msgstr ""
+#~ "Les schémas JSON publiés de smarter.sh/v1 sont une base solide comme le "
+#~ "roc pour votre produit OEM. Appuyez-vous sur nos schémas JSON pour faire "
+#~ "de votre produit OEM le rocher de Gibraltar de vos clients. Smarter "
+#~ "s'occupe des détails pour vous. Il ne vous reste qu'à profiter de notre "
+#~ "propre souci du détail."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Updates available"
-msgstr "Mises à jour disponibles"
+#~ msgid ""
+#~ "Check out our <a href=\"https://marketplace.visualstudio.com/items?"
+#~ "itemName=Querium.smarter-manifest\" target=\"_blank\">VS Code extension</"
+#~ "a> for Smarter manifests to get an idea of what you can create our "
+#~ "published json schemas. This extension provides a rich editing experience "
+#~ "for Smarter yaml manifest files, including syntax highlighting, "
+#~ "autocompletion, context sensitive micro help, and validation against the "
+#~ "JSON schema."
+#~ msgstr ""
+#~ "Découvrez notre <a href=\"https://marketplace.visualstudio.com/items?"
+#~ "itemName=Querium.smarter-manifest\" target=\"_blank\">extension VS Code</"
+#~ "a> pour les manifestes Smarter et voyez ce que vous pouvez créer avec nos "
+#~ "schémas JSON publiés. Cette extension offre une expérience d'édition "
+#~ "riche pour les fichiers de manifeste YAML de Smarter : coloration "
+#~ "syntaxique, autocomplétion, aide contextuelle et validation par rapport "
+#~ "au schéma JSON."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "LLM Tools"
-msgstr "Outils LLM"
+#~ msgid "Validation"
+#~ msgstr "Validation"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "MCP Clients"
-msgstr "Clients MCP"
+#~ msgid ""
+#~ "Leverage our JSON Schemas to validate your inbound requests against our "
+#~ "data models. There's no better way to maximize your product's resiliency "
+#~ "than by building on top of the JSON Schemas that we publish for all of "
+#~ "our models."
+#~ msgstr ""
+#~ "Utilisez nos schémas JSON pour valider vos requêtes entrantes par rapport "
+#~ "à nos modèles de données. Il n'y a pas de meilleur moyen de maximiser la "
+#~ "résilience de votre produit que de vous appuyer sur les schémas JSON que "
+#~ "nous publions pour tous nos modèles."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Connections"
-msgstr "Connexions"
+#~ msgid "Data Modeling"
+#~ msgstr "Modélisation des données"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "RAG"
-msgstr "RAG"
+#~ msgid ""
+#~ "Our JSON Schemas act as a blueprint for your application's data models, "
+#~ "ensuring consistency and correctness across different parts of your "
+#~ "customers' systems."
+#~ msgstr ""
+#~ "Nos schémas JSON servent de plan pour les modèles de données de votre "
+#~ "application et garantissent cohérence et exactitude dans les différentes "
+#~ "parties des systèmes de vos clients."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorsearches"
-msgstr "Recherches vectorielles"
+#~ msgid "Code Generation"
+#~ msgstr "Génération de code"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Vectorstores"
-msgstr "Bases vectorielles"
+#~ msgid ""
+#~ "Confidently and dynamically generate code for your data bindings, "
+#~ "reducing the need to manually code data validations, and most importantly "
+#~ "of all, reducing the potential for human error."
+#~ msgstr ""
+#~ "Générez en toute confiance et de façon dynamique le code de vos liaisons "
+#~ "de données, réduisez le besoin de coder à la main les validations et, "
+#~ "surtout, réduisez le risque d'erreur humaine."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Governance"
-msgstr "Gouvernance"
+#~ msgid ""
+#~ "Providing a clear specification of the JSON data format, which helps in "
+#~ "understanding the structure and purpose of the data."
+#~ msgstr ""
+#~ "Fournit une spécification claire du format de données JSON, qui aide à "
+#~ "comprendre la structure et l'objectif des données."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Budgets"
-msgstr "Budgets"
+#~ msgid "IDE Extension Development"
+#~ msgstr "Développement d'extensions d'IDE"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Guardrails"
-msgstr "Garde-fous"
+#~ msgid ""
+#~ "Smarter JSON Schemas speed the development of IDE add-ons and extensions, "
+#~ "like for VS Code for example. Use our JSON Schemas to create in-editor "
+#~ "Smarter extensions for syntax auto-completion, tooltips, and error "
+#~ "highlighting."
+#~ msgstr ""
+#~ "Les schémas JSON de Smarter accélèrent le développement de modules et "
+#~ "d'extensions d'IDE, par exemple pour VS Code. Utilisez nos schémas JSON "
+#~ "pour créer des extensions Smarter intégrées à l'éditeur, avec "
+#~ "autocomplétion, infobulles et mise en évidence des erreurs."
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Secrets"
-msgstr "Secrets"
+#~ msgid "smarter.sh/v1 JSON Schemas"
+#~ msgstr "Schémas JSON smarter.sh/v1"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Read the Docs"
-msgstr "Lire la documentation"
+#~ msgid "Smarter Manifests"
+#~ msgstr "Manifestes Smarter"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Project Web Site"
-msgstr "Site web du projet"
+#~ msgid "A Human-to-Cloud Interface"
+#~ msgstr "Une interface entre l'humain et le cloud"
 
-#: smarter/templates/dashboard/sidebar.html
-#: smarter/templates/docs/manifests.html
-msgid "Example Manifests"
-msgstr "Exemples de manifestes"
+#~ msgid ""
+#~ "In a word, cloud is <strong>COMPLICATED</strong>. Add data science, "
+#~ "artificial intelligence and your customer's demands to that and, well, "
+#~ "things get messy. Introduce Smarter Manifests: a better, simpler, cleaner "
+#~ "way to manage your AI resources in the cloud. Smarter Manifests are very "
+#~ "much inspired by Kubernetes manifests. In fact, we did everything in our "
+#~ "power to make ours resemble theirs theirs in every way possible. Because, "
+#~ "why mess with perfection?"
+#~ msgstr ""
+#~ "En un mot, le cloud est <strong>COMPLIQUÉ</strong>. Ajoutez-y la science "
+#~ "des données, l'intelligence artificielle et les exigences de vos clients, "
+#~ "et les choses se compliquent vite. Voici les manifestes Smarter : une "
+#~ "façon meilleure, plus simple et plus propre de gérer vos ressources d'IA "
+#~ "dans le cloud. Les manifestes Smarter s'inspirent largement des "
+#~ "manifestes Kubernetes. Nous avons d'ailleurs tout fait pour que les "
+#~ "nôtres leur ressemblent en tous points. Car pourquoi toucher à la "
+#~ "perfection ?"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Json Schemas"
-msgstr "Schémas JSON"
+#~ msgid "Anatomy of a Manifest Document"
+#~ msgstr "Anatomie d'un manifeste"
 
-#: smarter/templates/dashboard/sidebar.html
+#~ msgid ""
+#~ "A Smarter Manifest is a <a href=\"https://en.wikipedia.org/wiki/"
+#~ "YAML\">YAML</a> document that describes a resource that makes up your AI "
+#~ "solution. It has four main parts: <code>apiVersion</code>, <code>kind</"
+#~ "code>, <code>spec</code> and <code>status</code>. Each of these section "
+#~ "plays a specific role in the lifecycle of your AI resources. The "
+#~ "<code>apiVersion</code> identifies the Manifest document to the Smarter "
+#~ "API. The <code>kind</code> identifies the type of resource being "
+#~ "described. The <code>spec</code> section contains the configuration of "
+#~ "the resource. And lastly, the <code>status</code> section contains read-"
+#~ "only data about the state of resource. Here is the layout of a generic "
+#~ "Manifest:"
+#~ msgstr ""
+#~ "Un manifeste Smarter est un document <a href=\"https://en.wikipedia.org/"
+#~ "wiki/YAML\">YAML</a> qui décrit une ressource de votre solution d'IA. Il "
+#~ "comporte quatre parties principales : <code>apiVersion</code>, "
+#~ "<code>kind</code>, <code>spec</code> et <code>status</code>. Chacune joue "
+#~ "un rôle précis dans le cycle de vie de vos ressources d'IA. "
+#~ "<code>apiVersion</code> identifie le manifeste auprès de l'API Smarter. "
+#~ "<code>kind</code> identifie le type de ressource décrite. La section "
+#~ "<code>spec</code> contient la configuration de la ressource. Enfin, la "
+#~ "section <code>status</code> contient des données en lecture seule sur "
+#~ "l'état de la ressource. Voici la structure d'un manifeste générique :"
+
+#~ msgid ""
+#~ "You use the Smarter CLI to apply your Manifests. The Smarter CLI reads "
+#~ "your Manifests, and then creates and executes a work plan to create, "
+#~ "update, or delete your AI resources, to synchronize the state of the "
+#~ "resources in your account with those of your Manifest(s). It's a simple "
+#~ "and powerful way to manage your AI cloud resources."
+#~ msgstr ""
+#~ "Vous appliquez vos manifestes avec la CLI Smarter. La CLI Smarter lit vos "
+#~ "manifestes, puis crée et exécute un plan de travail pour créer, mettre à "
+#~ "jour ou supprimer vos ressources d'IA, afin d'aligner l'état des "
+#~ "ressources de votre compte sur celui de vos manifestes. C'est une façon "
+#~ "simple et puissante de gérer vos ressources d'IA dans le cloud."
+
+#~ msgid "Usage"
+#~ msgstr "Utilisation"
+
+#~ msgid ""
+#~ "Here's an example of how you would apply a Manifest using the Smarter "
+#~ "CLI: <code>smarter apply -f my-manifest.yaml</code>"
+#~ msgstr ""
+#~ "Voici comment appliquer un manifeste avec la CLI Smarter : <code>smarter "
+#~ "apply -f my-manifest.yaml</code>"
+
+#~ msgid "Design, Train, Test, Deploy"
+#~ msgstr "Concevoir, entraîner, tester, déployer"
+
+#~ msgid ""
+#~ "A Smarter Manifest describes, in a human-readle format, the resources "
+#~ "that makeup your LLMClient solution. You use manifests to creates, "
+#~ "manage, deploy, and destroy your AI resources. Manifests are simple text "
+#~ "files in YAML format. Start with an example manifest, here or from the "
+#~ "Smarter CLI. Tweak it to suit your needs. Then use the Smarter CLI to "
+#~ "apply it. That's it! It doesn't get any simpler."
+#~ msgstr ""
+#~ "Un manifeste Smarter décrit, dans un format lisible par l'humain, les "
+#~ "ressources qui composent votre solution LLMClient. Les manifestes vous "
+#~ "permettent de créer, gérer, déployer et détruire vos ressources d'IA. Ce "
+#~ "sont de simples fichiers texte au format YAML. Partez d'un exemple de "
+#~ "manifeste, d'ici ou de la CLI Smarter. Adaptez-le à vos besoins. Puis "
+#~ "appliquez-le avec la CLI Smarter. C'est tout ! On ne peut pas faire plus "
+#~ "simple."
+
+#~ msgid "Example Manifests"
+#~ msgstr "Exemples de manifestes"
+
+#~ msgid "There are nearly two dozen kinds of Smarter resources."
+#~ msgstr "Il existe près de deux douzaines de types de ressources Smarter."
+
+#~ msgid "smarter.sh/v1 Specification"
+#~ msgstr "Spécification smarter.sh/v1"
+
+#~ msgid ""
+#~ "We published technical specifications for all of our manifests, so that "
+#~ "other platforms can adopt these, making your AI resources cross-platform "
+#~ "compatible. Additionally, this opens up the potential for a marketplace "
+#~ "of AI resources, where you can share your manifests with others, and "
+#~ "where third party developers can create exciting new value-added services "
+#~ "for the Smarter platform."
+#~ msgstr ""
+#~ "Nous avons publié les spécifications techniques de tous nos manifestes "
+#~ "afin que d'autres plateformes puissent les adopter et rendre vos "
+#~ "ressources d'IA compatibles entre plateformes. Cela ouvre en outre la "
+#~ "voie à une place de marché de ressources d'IA, où vous pourrez partager "
+#~ "vos manifestes et où des développeurs tiers pourront créer de nouveaux "
+#~ "services à valeur ajoutée pour la plateforme Smarter."
+
+#~ msgid "Learn More"
+#~ msgstr "En savoir plus"
+
+#~ msgid "Smarter OpenAPI Contract"
+#~ msgstr "Contrat OpenAPI de Smarter"
+
+#~ msgid ""
+#~ "The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat "
+#~ "api, and the REST reads. Generate a client or an SDK from it, in any "
+#~ "language. Authorize with an api key, as <code>Token &lt;api key&gt;</"
+#~ "code>, to try the operations against this platform."
+#~ msgstr ""
+#~ "Le document OpenAPI 3.1 typé de l'API Smarter : l'API de la CLI, l'API de "
+#~ "chat et les lectures REST. Générez-en un client ou un SDK, dans n'importe "
+#~ "quel langage. Authentifiez-vous avec une clé d'API, sous la forme "
+#~ "<code>Token &lt;api key&gt;</code>, pour essayer les opérations sur cette "
+#~ "plateforme."
+
+#~ msgid "Download openapi.json"
+#~ msgstr "Télécharger openapi.json"
+
+#~ msgid "SAM JSON Schemas"
+#~ msgstr "Schémas JSON SAM"
+
+#~ msgid "About the contract"
+#~ msgstr "À propos du contrat"
+
+#~ msgid "Legal"
+#~ msgstr "Mentions légales"
+
+#~ msgid "Light"
+#~ msgstr "Clair"
+
+#~ msgid "Dark"
+#~ msgstr "Sombre"
+
+#~ msgid "System"
+#~ msgstr "Système"
+
+#~ msgid "Workbench"
+#~ msgstr "Atelier"
+
+#~ msgid "Dashboard"
+#~ msgstr "Tableau de bord"
+
+#~ msgid "Prompt Passthrough"
+#~ msgstr "Prompt direct"
+
+#~ msgid "Apply Manifest"
+#~ msgstr "Appliquer un manifeste"
+
+#~ msgid "Terminal"
+#~ msgstr "Terminal"
+
+#~ msgid "Models"
+#~ msgstr "Modèles"
+
+#~ msgid "Providers"
+#~ msgstr "Fournisseurs"
+
+#~ msgid "Proxies"
+#~ msgstr "Proxys"
+
+#~ msgid "LLM Hosts"
+#~ msgstr "Hôtes LLM"
+
+#~ msgid "LLM Host Compute"
+#~ msgstr "Calcul des hôtes LLM"
+
+#~ msgid "Harnesses"
+#~ msgstr "Harnais"
+
+#~ msgid "LLM Clients"
+#~ msgstr "Clients LLM"
+
+#~ msgid "Orchestrators"
+#~ msgstr "Orchestrateurs"
+
+#~ msgid "API Keys"
+#~ msgstr "Clés d'API"
+
+#~ msgid "Custom Domains"
+#~ msgstr "Domaines personnalisés"
+
+#~ msgid "Tools"
+#~ msgstr "Outils"
+
+#~ msgid "Extensions"
+#~ msgstr "Extensions"
+
+#~ msgid "Updates available"
+#~ msgstr "Mises à jour disponibles"
+
+#~ msgid "LLM Tools"
+#~ msgstr "Outils LLM"
+
+#~ msgid "MCP Clients"
+#~ msgstr "Clients MCP"
+
+#~ msgid "Connections"
+#~ msgstr "Connexions"
+
+#~ msgid "RAG"
+#~ msgstr "RAG"
+
+#~ msgid "Vectorsearches"
+#~ msgstr "Recherches vectorielles"
+
+#~ msgid "Vectorstores"
+#~ msgstr "Bases vectorielles"
+
+#~ msgid "Governance"
+#~ msgstr "Gouvernance"
+
+#~ msgid "Budgets"
+#~ msgstr "Budgets"
+
+#~ msgid "Guardrails"
+#~ msgstr "Garde-fous"
+
+#~ msgid "Secrets"
+#~ msgstr "Secrets"
+
+#~ msgid "Read the Docs"
+#~ msgstr "Lire la documentation"
+
+#~ msgid "Project Web Site"
+#~ msgstr "Site web du projet"
+
+#~ msgid "Json Schemas"
+#~ msgstr "Schémas JSON"
+
 #, python-format
-msgid "GitHub Change Log %(version)s"
-msgstr "Journal des modifications GitHub %(version)s"
+#~ msgid "GitHub Change Log %(version)s"
+#~ msgstr "Journal des modifications GitHub %(version)s"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Settings"
-msgstr "Paramètres"
+#~ msgid "Settings"
+#~ msgstr "Paramètres"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Infrastructure Resources"
-msgstr "Ressources d'infrastructure"
+#~ msgid "Infrastructure Resources"
+#~ msgstr "Ressources d'infrastructure"
 
-#: smarter/templates/dashboard/sidebar.html
-msgid "Django Admin"
-msgstr "Administration Django"
+#~ msgid "Django Admin"
+#~ msgstr "Administration Django"
 
-#: smarter/templates/docs/base/sidebar/stay-connected.html
-msgid "Stay <br> Connected"
-msgstr "Restez <br> connecté"
+#~ msgid "User not found. Please log in to activate your account."
+#~ msgstr "Utilisateur introuvable. Connectez-vous pour activer votre compte."
 
-#: smarter/templates/docs/base/sidebar/widget-npm.html
-msgid "NPM React Chat Component"
-msgstr "Composant de chat React sur NPM"
+#~ msgid "Your Account is Inactive."
+#~ msgstr "Votre compte est inactif."
 
-#: smarter/templates/docs/base/sidebar/widget-pypi.html
-msgid "PyPi Package"
-msgstr "Paquet PyPI"
+#~ msgid ""
+#~ "Look for an email from us with instructions on how to activate your "
+#~ "account."
+#~ msgstr ""
+#~ "Cherchez un e-mail de notre part contenant les instructions pour activer "
+#~ "votre compte."
 
-#: smarter/templates/docs/base/sidebar/widget-vscode.html
-msgid "VS Code Extension"
-msgstr "Extension VS Code"
+#~ msgid "Activate Your Account."
+#~ msgstr "Activez votre compte."
 
-#: smarter/templates/docs/json-schemas.html
-msgid "smarter.sh/v1 Manifest JSON Schemas"
-msgstr "Schémas JSON des manifestes smarter.sh/v1"
+#~ msgid "Didn't receive an email?"
+#~ msgstr "Vous n'avez pas reçu d'e-mail ?"
 
-#: smarter/templates/docs/json-schemas.html
-msgid "We've already obsessed over the details. Why should you?"
-msgstr ""
-"Nous nous sommes déjà souciés de chaque détail. Pourquoi le feriez-vous ?"
+#~ msgid "Try Again"
+#~ msgstr "Réessayer"
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"The smarter.sh/v1 published JSON Schemas are a rock solid foundation for "
-"your OEM product. Leverage our JSON Schemas to turn your OEM product into "
-"your customers' Rock of Gibralter. Smarter takes care of the details for "
-"you. The only thing you have to do is to take advantage of our own attention "
-"to detail."
-msgstr ""
-"Les schémas JSON publiés de smarter.sh/v1 sont une base solide comme le roc "
-"pour votre produit OEM. Appuyez-vous sur nos schémas JSON pour faire de "
-"votre produit OEM le rocher de Gibraltar de vos clients. Smarter s'occupe "
-"des détails pour vous. Il ne vous reste qu'à profiter de notre propre souci "
-"du détail."
+#~ msgid "Skip for now"
+#~ msgstr "Ignorer pour l'instant"
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Check out our <a href=\"https://marketplace.visualstudio.com/items?"
-"itemName=Querium.smarter-manifest\" target=\"_blank\">VS Code extension</a> "
-"for Smarter manifests to get an idea of what you can create our published "
-"json schemas. This extension provides a rich editing experience for Smarter "
-"yaml manifest files, including syntax highlighting, autocompletion, context "
-"sensitive micro help, and validation against the JSON schema."
-msgstr ""
-"Découvrez notre <a href=\"https://marketplace.visualstudio.com/items?"
-"itemName=Querium.smarter-manifest\" target=\"_blank\">extension VS Code</a> "
-"pour les manifestes Smarter et voyez ce que vous pouvez créer avec nos "
-"schémas JSON publiés. Cette extension offre une expérience d'édition riche "
-"pour les fichiers de manifeste YAML de Smarter : coloration syntaxique, "
-"autocomplétion, aide contextuelle et validation par rapport au schéma JSON."
+#~ msgid "Social Account Already Associated"
+#~ msgstr "Compte social déjà associé"
 
-#: smarter/templates/docs/json-schemas.html
-msgid "Validation"
-msgstr "Validation"
+#~ msgid ""
+#~ "The social account you tried to associate is already linked to another "
+#~ "user on this platform."
+#~ msgstr ""
+#~ "Le compte social que vous avez tenté d'associer est déjà lié à un autre "
+#~ "utilisateur de cette plateforme."
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Leverage our JSON Schemas to validate your inbound requests against our data "
-"models. There's no better way to maximize your product's resiliency than by "
-"building on top of the JSON Schemas that we publish for all of our models."
-msgstr ""
-"Utilisez nos schémas JSON pour valider vos requêtes entrantes par rapport à "
-"nos modèles de données. Il n'y a pas de meilleur moyen de maximiser la "
-"résilience de votre produit que de vous appuyer sur les schémas JSON que "
-"nous publions pour tous nos modèles."
+#~ msgid ""
+#~ "This is your opportunity to take prompt engineering <br />to the next "
+#~ "level!"
+#~ msgstr ""
+#~ "Voici l'occasion de faire passer l'ingénierie de prompts <br />au niveau "
+#~ "supérieur !"
 
-#: smarter/templates/docs/json-schemas.html
-msgid "Data Modeling"
-msgstr "Modélisation des données"
+#~ msgid "Go To Dashboard"
+#~ msgstr "Aller au tableau de bord"
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Our JSON Schemas act as a blueprint for your application's data models, "
-"ensuring consistency and correctness across different parts of your "
-"customers' systems."
-msgstr ""
-"Nos schémas JSON servent de plan pour les modèles de données de votre "
-"application et garantissent cohérence et exactitude dans les différentes "
-"parties des systèmes de vos clients."
+#~ msgid "Received invalid responses."
+#~ msgstr "Réponses non valides reçues."
 
-#: smarter/templates/docs/json-schemas.html
-msgid "Code Generation"
-msgstr "Génération de code"
+#~ msgid "Email address is invalid."
+#~ msgstr "L'adresse e-mail n'est pas valide."
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Confidently and dynamically generate code for your data bindings, reducing "
-"the need to manually code data validations, and most importantly of all, "
-"reducing the potential for human error."
-msgstr ""
-"Générez en toute confiance et de façon dynamique le code de vos liaisons de "
-"données, réduisez le besoin de coder à la main les validations et, surtout, "
-"réduisez le risque d'erreur humaine."
+#~ msgid "Email sent."
+#~ msgstr "E-mail envoyé."
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Providing a clear specification of the JSON data format, which helps in "
-"understanding the structure and purpose of the data."
-msgstr ""
-"Fournit une spécification claire du format de données JSON, qui aide à "
-"comprendre la structure et l'objectif des données."
+#~ msgid "Missing uidb64 or token in URL."
+#~ msgstr "uidb64 ou le jeton est absent de l'URL."
 
-#: smarter/templates/docs/json-schemas.html
-msgid "IDE Extension Development"
-msgstr "Développement d'extensions d'IDE"
+#~ msgid "input form is invalid."
+#~ msgstr "le formulaire n'est pas valide."
 
-#: smarter/templates/docs/json-schemas.html
-msgid ""
-"Smarter JSON Schemas speed the development of IDE add-ons and extensions, "
-"like for VS Code for example. Use our JSON Schemas to create in-editor "
-"Smarter extensions for syntax auto-completion, tooltips, and error "
-"highlighting."
-msgstr ""
-"Les schémas JSON de Smarter accélèrent le développement de modules et "
-"d'extensions d'IDE, par exemple pour VS Code. Utilisez nos schémas JSON pour "
-"créer des extensions Smarter intégrées à l'éditeur, avec autocomplétion, "
-"infobulles et mise en évidence des erreurs."
+#~ msgid "Plans"
+#~ msgstr "Forfaits"
 
-#: smarter/templates/docs/json-schemas.html
-msgid "smarter.sh/v1 JSON Schemas"
-msgstr "Schémas JSON smarter.sh/v1"
+#~ msgid "Contact Us"
+#~ msgstr "Nous contacter"
 
-#: smarter/templates/docs/manifests.html
-msgid "Smarter Manifests"
-msgstr "Manifestes Smarter"
+#~ msgid "Password Reset"
+#~ msgstr "Réinitialisation du mot de passe"
 
-#: smarter/templates/docs/manifests.html
-msgid "A Human-to-Cloud Interface"
-msgstr "Une interface entre l'humain et le cloud"
+#~ msgid "Password"
+#~ msgstr "Mot de passe"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"In a word, cloud is <strong>COMPLICATED</strong>. Add data science, "
-"artificial intelligence and your customer's demands to that and, well, "
-"things get messy. Introduce Smarter Manifests: a better, simpler, cleaner "
-"way to manage your AI resources in the cloud. Smarter Manifests are very "
-"much inspired by Kubernetes manifests. In fact, we did everything in our "
-"power to make ours resemble theirs theirs in every way possible. Because, "
-"why mess with perfection?"
-msgstr ""
-"En un mot, le cloud est <strong>COMPLIQUÉ</strong>. Ajoutez-y la science des "
-"données, l'intelligence artificielle et les exigences de vos clients, et les "
-"choses se compliquent vite. Voici les manifestes Smarter : une façon "
-"meilleure, plus simple et plus propre de gérer vos ressources d'IA dans le "
-"cloud. Les manifestes Smarter s'inspirent largement des manifestes "
-"Kubernetes. Nous avons d'ailleurs tout fait pour que les nôtres leur "
-"ressemblent en tous points. Car pourquoi toucher à la perfection ?"
+#~ msgid "Use 8 or more characters with a mix of letters, numbers & symbols."
+#~ msgstr ""
+#~ "Utilisez au moins 8 caractères mêlant lettres, chiffres et symboles."
 
-#: smarter/templates/docs/manifests.html
-msgid "Anatomy of a Manifest Document"
-msgstr "Anatomie d'un manifeste"
+#~ msgid "Repeat Password"
+#~ msgstr "Répétez le mot de passe"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"A Smarter Manifest is a <a href=\"https://en.wikipedia.org/wiki/YAML\">YAML</"
-"a> document that describes a resource that makes up your AI solution. It has "
-"four main parts: <code>apiVersion</code>, <code>kind</code>, <code>spec</"
-"code> and <code>status</code>. Each of these section plays a specific role "
-"in the lifecycle of your AI resources. The <code>apiVersion</code> "
-"identifies the Manifest document to the Smarter API. The <code>kind</code> "
-"identifies the type of resource being described. The <code>spec</code> "
-"section contains the configuration of the resource. And lastly, the "
-"<code>status</code> section contains read-only data about the state of "
-"resource. Here is the layout of a generic Manifest:"
-msgstr ""
-"Un manifeste Smarter est un document <a href=\"https://en.wikipedia.org/wiki/"
-"YAML\">YAML</a> qui décrit une ressource de votre solution d'IA. Il comporte "
-"quatre parties principales : <code>apiVersion</code>, <code>kind</code>, "
-"<code>spec</code> et <code>status</code>. Chacune joue un rôle précis dans "
-"le cycle de vie de vos ressources d'IA. <code>apiVersion</code> identifie le "
-"manifeste auprès de l'API Smarter. <code>kind</code> identifie le type de "
-"ressource décrite. La section <code>spec</code> contient la configuration de "
-"la ressource. Enfin, la section <code>status</code> contient des données en "
-"lecture seule sur l'état de la ressource. Voici la structure d'un manifeste "
-"générique :"
+#~ msgid "Submit"
+#~ msgstr "Envoyer"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"You use the Smarter CLI to apply your Manifests. The Smarter CLI reads your "
-"Manifests, and then creates and executes a work plan to create, update, or "
-"delete your AI resources, to synchronize the state of the resources in your "
-"account with those of your Manifest(s). It's a simple and powerful way to "
-"manage your AI cloud resources."
-msgstr ""
-"Vous appliquez vos manifestes avec la CLI Smarter. La CLI Smarter lit vos "
-"manifestes, puis crée et exécute un plan de travail pour créer, mettre à "
-"jour ou supprimer vos ressources d'IA, afin d'aligner l'état des ressources "
-"de votre compte sur celui de vos manifestes. C'est une façon simple et "
-"puissante de gérer vos ressources d'IA dans le cloud."
+#~ msgid "Please wait..."
+#~ msgstr "Veuillez patienter..."
 
-#: smarter/templates/docs/manifests.html
-msgid "Usage"
-msgstr "Utilisation"
+#~ msgid "Forgot Password ?"
+#~ msgstr "Mot de passe oublié ?"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"Here's an example of how you would apply a Manifest using the Smarter CLI: "
-"<code>smarter apply -f my-manifest.yaml</code>"
-msgstr ""
-"Voici comment appliquer un manifeste avec la CLI Smarter : <code>smarter "
-"apply -f my-manifest.yaml</code>"
+#~ msgid "Enter your email to reset your password."
+#~ msgstr "Saisissez votre e-mail pour réinitialiser votre mot de passe."
 
-#: smarter/templates/docs/manifests.html
-msgid "Design, Train, Test, Deploy"
-msgstr "Concevoir, entraîner, tester, déployer"
+#~ msgid "Email"
+#~ msgstr "E-mail"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"A Smarter Manifest describes, in a human-readle format, the resources that "
-"makeup your LLMClient solution. You use manifests to creates, manage, "
-"deploy, and destroy your AI resources. Manifests are simple text files in "
-"YAML format. Start with an example manifest, here or from the Smarter CLI. "
-"Tweak it to suit your needs. Then use the Smarter CLI to apply it. That's "
-"it! It doesn't get any simpler."
-msgstr ""
-"Un manifeste Smarter décrit, dans un format lisible par l'humain, les "
-"ressources qui composent votre solution LLMClient. Les manifestes vous "
-"permettent de créer, gérer, déployer et détruire vos ressources d'IA. Ce "
-"sont de simples fichiers texte au format YAML. Partez d'un exemple de "
-"manifeste, d'ici ou de la CLI Smarter. Adaptez-le à vos besoins. Puis "
-"appliquez-le avec la CLI Smarter. C'est tout ! On ne peut pas faire plus "
-"simple."
+#~ msgid "Cancel"
+#~ msgstr "Annuler"
 
-#: smarter/templates/docs/manifests.html
-msgid "There are nearly two dozen kinds of Smarter resources."
-msgstr "Il existe près de deux douzaines de types de ressources Smarter."
+#~ msgid "Sign in with Google"
+#~ msgstr "Se connecter avec Google"
 
-#: smarter/templates/docs/manifests.html
-msgid "smarter.sh/v1 Specification"
-msgstr "Spécification smarter.sh/v1"
+#~ msgid "Sign in with GitHub"
+#~ msgstr "Se connecter avec GitHub"
 
-#: smarter/templates/docs/manifests.html
-msgid ""
-"We published technical specifications for all of our manifests, so that "
-"other platforms can adopt these, making your AI resources cross-platform "
-"compatible. Additionally, this opens up the potential for a marketplace of "
-"AI resources, where you can share your manifests with others, and where "
-"third party developers can create exciting new value-added services for the "
-"Smarter platform."
-msgstr ""
-"Nous avons publié les spécifications techniques de tous nos manifestes afin "
-"que d'autres plateformes puissent les adopter et rendre vos ressources d'IA "
-"compatibles entre plateformes. Cela ouvre en outre la voie à une place de "
-"marché de ressources d'IA, où vous pourrez partager vos manifestes et où des "
-"développeurs tiers pourront créer de nouveaux services à valeur ajoutée pour "
-"la plateforme Smarter."
+#~ msgid "Or with email"
+#~ msgstr "Ou par e-mail"
 
-#: smarter/templates/docs/manifests.html
-msgid "Learn More"
-msgstr "En savoir plus"
+#~ msgid "Not a Member yet?"
+#~ msgstr "Pas encore membre ?"
 
-#: smarter/templates/docs/openapi.html
-msgid "Smarter OpenAPI Contract"
-msgstr "Contrat OpenAPI de Smarter"
+#~ msgid "Sign up"
+#~ msgstr "S'inscrire"
 
-#: smarter/templates/docs/openapi.html
-msgid ""
-"The typed OpenAPI 3.1 document of the Smarter api: the cli api, the chat "
-"api, and the REST reads. Generate a client or an SDK from it, in any "
-"language. Authorize with an api key, as <code>Token &lt;api key&gt;</code>, "
-"to try the operations against this platform."
-msgstr ""
-"Le document OpenAPI 3.1 typé de l'API Smarter : l'API de la CLI, l'API de "
-"chat et les lectures REST. Générez-en un client ou un SDK, dans n'importe "
-"quel langage. Authentifiez-vous avec une clé d'API, sous la forme "
-"<code>Token &lt;api key&gt;</code>, pour essayer les opérations sur cette "
-"plateforme."
+#~ msgid "Sign Up"
+#~ msgstr "S'inscrire"
 
-#: smarter/templates/docs/openapi.html
-msgid "Download openapi.json"
-msgstr "Télécharger openapi.json"
+#~ msgid "I Accept the <a href=\"#\" class=\"ms-1 link-primary\">Terms</a>"
+#~ msgstr ""
+#~ "J'accepte les <a href=\"#\" class=\"ms-1 link-primary\">Conditions</a>"
 
-#: smarter/templates/docs/openapi.html
-msgid "SAM JSON Schemas"
-msgstr "Schémas JSON SAM"
+#~ msgid "Already have an Account?"
+#~ msgstr "Vous avez déjà un compte ?"
 
-#: smarter/templates/docs/openapi.html
-msgid "About the contract"
-msgstr "À propos du contrat"
+#~ msgid "Sign in"
+#~ msgstr "Se connecter"
 
 #, python-format
 #~ msgid "Invalid login attempt. Unknown user %(email)s"

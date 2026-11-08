@@ -33,9 +33,9 @@ Where to Find It
      - The document, rendered with Scalar. The web console's sidebar links to it as
        *OpenAPI Contract*. Its *Test Request* sends requests to the platform that you are reading it on.
        Authorize with ``Token <api key>``.
-   * - ``https://<your platform>/docs/openapi.json``
+   * - ``https://<your platform>/api/v1/openapi.json``
      - The document itself, to generate clients from. Its first server is the platform's own
-       ``/api/v1``.
+       ``/api/v1``. ``/docs/openapi.json``, its earlier address, redirects here.
    * - `openapi.json <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/contract/openapi.json>`__
      - The committed document, in the platform's repository, at any commit or release tag.
    * - `sam/<Kind>.schema.json <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/api/v1/contract/sam>`__
@@ -44,7 +44,7 @@ Where to Find It
        ``sam/<Kind>.example.json``.
 
 Every Smarter platform serves the document of its own version, so a client generated from your
-platform's ``/docs/openapi.json`` matches that platform exactly.
+platform's ``/api/v1/openapi.json`` matches that platform exactly.
 
 
 What It Covers
@@ -108,7 +108,7 @@ or from a running platform. For example, the TypeScript types of the whole api:
 .. code-block:: console
 
    npx openapi-typescript smarter/smarter/apps/api/v1/contract/openapi.json -o smarter.d.ts
-   npx openapi-typescript https://platform.example.com/docs/openapi.json -o smarter.d.ts
+   npx openapi-typescript https://platform.example.com/api/v1/openapi.json -o smarter.d.ts
 
 The Python SDK copies the contract from a checkout of the platform, at a commit or a release tag
 (``make contracts SMARTER_REF=v0.20.0``), and generates its manifest models from the SAM schemas

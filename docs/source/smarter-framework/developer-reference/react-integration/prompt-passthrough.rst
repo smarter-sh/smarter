@@ -30,6 +30,15 @@ shared resource management, and advanced logging and usage tracking, ensuring
 secure and efficient operation within your organization's AI ecosystem. The underlying
 API endpoints themselves are provisioned via Smarter's LLM Provider resource module.
 
+The Prompt Passthrough is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
+``/dashboard/passthrough/``, while ``smarter_settings.enable_dashboard_passthrough_prompt`` is on.
+``@smarter/console`` renders ``@smarter/prompt-passthrough``'s ``PromptPassthrough`` inside its frame, with the
+urls of the passthrough api, ``/api/v1/prompts/passthrough/``, and of the providers api,
+``/api/web/dashboard/passthrough/providers/``, and, while users can view their server logs, the url of the log
+stream, from which its Server Logs tab streams the server logs of each prompt that it sends. The package has no
+build of its own; ``npm run dev`` in it renders the page against the Django dev server's api. Django answers the
+path with the console's page, and keeps its url name.
+
 .. image:: https://cdn.smarter.sh/docs/smarter-framework/react-integration/prompt-passthrough-react-component.png
    :alt: Prompt Passthrough React Component Screenshot
    :class: screenshot
@@ -42,8 +51,5 @@ API endpoints themselves are provisioned via Smarter's LLM Provider resource mod
 
    prompt-passthrough/api
    prompt-passthrough/django-view
-   prompt-passthrough/django-template
-   prompt-passthrough/template-tags
-   prompt-passthrough/index
    prompt-passthrough/example-usage
    prompt-passthrough/react-component

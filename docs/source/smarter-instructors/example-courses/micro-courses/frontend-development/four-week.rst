@@ -3,12 +3,12 @@ Front End Development: Four-Week Online Course
 
 A four-week online course on front end development with React, TypeScript, Vite and Bootstrap,
 taught on the pages of Smarter's web console. The console is an npm workspace of `twenty-four React
-apps <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__, one per page, with
+apps <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages>`__, one per page, with
 shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and styled with the Keen
 Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker, ESLint and Prettier are
 already set up, with about 150 test files and every story run as a test. Each app is hosted by a
 Django template, and the chat interface, `@smarter.sh/ui-chat
-<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
+<https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
 from the server's Pydantic contract. There are twelve 30-minute recorded lectures and a 90-minute
 live session each week. Week 1 covers React and TypeScript, week 2 components and styling, week 3
 data and testing, and week 4 build, integration and the chat interface. See :doc:`../course-formats`
@@ -24,7 +24,8 @@ At a Glance
    * - **Students**
      - Developers who know JavaScript and want to learn React and professional front end tooling.
    * - **Deployment**
-     - Each student has a clone of the repository with ``make react-install`` done, and installs
+     - Each student has a clone of `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web
+       console's repository, with ``make install`` done, and installs
        Smarter from source by week 3, when pages are tested against the real API.
    * - **Workload**
      - 3 hours of instruction and 4 to 6 hours of assignments each week.
@@ -79,7 +80,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        ``any``.
    * - 1
      - Live session 1
-     - Tour of ``smarter/react/packages/`` and ``smarter-common``. Pairs build a small component
+     - Tour of smarter-console's ``packages/`` and ``smarter-common``. Pairs build a small component
        together. Start Assignment 1.
    * - 2
      - Lecture 4
@@ -215,7 +216,7 @@ Assignment 3: A Data-Driven Feature with Tests
 Students add a filter, a sort or a new column to a list page that uses data from the API, with
 loading and error states, Vitest tests with MSW, and stories.
 
-**Turn in:** a pull request against their fork, with ``make react-test`` and ``make react-lint``
+**Turn in:** a pull request against their fork, with ``make test`` and ``make lint``
 passing, and a screenshot against a running Smarter.
 
 .. list-table::
@@ -297,7 +298,7 @@ optional, and is the subject of the :doc:`full stack <../full-stack-development>
 
 - A pull request with the new package, components, stories for every state, tests and a
   ``README.md``.
-- Passing ``make react-test`` and ``make react-lint``.
+- Passing ``make test`` and ``make lint``.
 - A screen recording, and a six-minute demonstration in Live session 4.
 
 **How it is graded (100 points):**

@@ -3,12 +3,12 @@ Front End Development: Classroom Bootcamp
 
 An eight-hour classroom bootcamp on front end development with React, TypeScript, Vite and
 Bootstrap, taught on the pages of Smarter's web console. The console is an npm workspace of
-`twenty-four React apps <https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages>`__,
+`twenty-four React apps <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages>`__,
 one per page, with shared code in ``@smarter/common``, built on React 19, TypeScript and Vite, and
 styled with the Keen Bootstrap theme. Storybook, Vitest, Testing Library, Mock Service Worker,
 ESLint and Prettier are already set up, with about 150 test files and every story run as a test.
 Each app is hosted by a Django template, and the chat interface, `@smarter.sh/ui-chat
-<https://github.com/smarter-sh/smarter/tree/main/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
+<https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter.sh-chat>`__, is published to npm with TypeScript types generated
 from the server's Pydantic contract. Students study components in Storybook, add a feature to a list
 page with a test, and embed a chat in a page of their own. See :doc:`../course-formats` for the
 standard bootcamp day, the grading scale and the course policies, and :doc:`../frontend-development`
@@ -23,7 +23,8 @@ At a Glance
    * - **Students**
      - Developers who know JavaScript and want to learn React and professional front end tooling.
    * - **Deployment**
-     - Each student has a clone of the repository with ``make react-install`` done, so that
+     - Each student has a clone of `smarter-console <https://github.com/smarter-sh/smarter-console>`__, the web
+       console's repository, with ``make install`` done, so that
        Storybook and the tests run. A running Smarter (from source) is needed only for Lab 4 and
        the chat embedding capstone; the instructor can provide a shared one with a deployed
        LLMClient.
@@ -49,8 +50,8 @@ Technical Prerequisites
 - **Required:** HTML and CSS basics, and using the browser's developer tools.
 - **Required:** Git: clone, branch, commit and push, and a GitHub account.
 - **Required:** Node.js 24 or later and npm installed, and the command line.
-- **Required:** the repository cloned and ``make react-install`` run before the bootcamp, with
-  ``make react-storybook`` opening Storybook in the browser.
+- **Required:** smarter-console cloned and ``make install`` run before the bootcamp, with
+  ``make storybook`` opening Storybook in the browser.
 - **Helpful:** TypeScript basics, JSON, and REST APIs.
 
 Schedule
@@ -69,7 +70,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 1: React in one picture.** Components, JSX, props, state, effects and hooks, and
        TypeScript types for props. How the web console is built: one small React app per page in
-       ``smarter/react/packages/``, with shared code in ``smarter-common``.
+       smarter-console's ``packages/``, with shared code in ``smarter-common``.
    * - 2
      - 45
      - **Lab 1: Read a list page.** Take the ``smarter-guardrail-list`` app apart: its entry point,
@@ -97,7 +98,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 7
      - 45
      - **Lab 3: Add a feature.** Add a column, a filter or a sort to a list page, with a test, and
-       get ``make react-test`` and ``make react-lint`` passing. Produces Assignment 3.
+       get ``make test`` and ``make lint`` passing. Produces Assignment 3.
    * - 8
      - 45
      - **Lecture 5: Build and integration.** Vite, its dev server and production build, the build
@@ -204,7 +205,7 @@ Assignment 3: A List Page Feature
 
 Students add a column, a filter or a sort to a list page, with a Vitest test.
 
-**Turn in:** a pull request against their fork, with ``make react-test`` and ``make react-lint``
+**Turn in:** a pull request against their fork, with ``make test`` and ``make lint``
 passing.
 
 .. list-table::
@@ -250,7 +251,7 @@ selection with a confirmation dialog.
 **What students turn in:**
 
 - A pull request with the code, stories for every state, and tests.
-- Passing ``make react-test`` and ``make react-lint``.
+- Passing ``make test`` and ``make lint``.
 - A short screen recording of the feature, including keyboard use.
 
 **How it is graded (100 points):**

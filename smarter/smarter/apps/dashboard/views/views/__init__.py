@@ -1,7 +1,1 @@
-"""This module contains the view classes for the dashboard application."""
-
-from .dashboard import DashboardView
-
-__all__ = [
-    "DashboardView",
-]
+"""The dashboard's page, which the single-page console serves, and its api, :mod:`smarter.apps.dashboard.views.views.api`."""

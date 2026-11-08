@@ -75,8 +75,13 @@ EXAMPLE_RESPONSE_CONTENT = (
 )
 """The assistant message's content in the page's example ``/prompt/`` response."""
 
-EMBED_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@0/dist/embed.js"
-"""Smarter Chat's embed script, on jsDelivr, which the page's html snippet loads."""
+EMBED_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/@smarter.sh/ui-chat@1/dist/embed.js"
+"""
+Smarter Chat's embed script, on jsDelivr, which the page's html snippet loads.
+
+``@1`` follows the latest 1.x release of ``@smarter.sh/ui-chat``, which smarter-sh/smarter-console publishes
+with its own version. The 0.x versions were this platform's; ``@0`` stays on the last of them.
+"""
 
 ALLOWED_ORIGINS_YAML = """spec:
   config:

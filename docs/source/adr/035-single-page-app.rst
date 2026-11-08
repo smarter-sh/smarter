@@ -68,14 +68,27 @@ The web console becomes a single-page app (SPA), and Django serves only the back
    SPA pages share the session cookie, so navigating between them just works. In development, the
    Vite dev server proxies the backend's paths to ``localhost:9357``, so the browser sees one origin
    there too.
-8. **Separate hosts last.** Once no console page is left in Django, the backend moves to
-   ``api.<platform>`` and the SPA becomes static files on a CDN at the platform host. That step
-   brings a cookie domain both hosts share, trusted CSRF origins, CORS with credentials, and host
-   routing for the api host. Then the repository splits.
+8. **One origin, static files on a CDN.** The console stays on the platform host, which keeps
+   serving its small ``index.html``, the api, the session and the Terminal's WebSocket. Only static
+   files move: while ``SMARTER_STATIC_FILES_ON_CDN`` is on, each deployment uploads them to the
+   environment's S3 bucket, and pages load the console's scripts and styles from its CDN,
+   ``cdn.<platform>``, once this build's upload is done. Without it, or on an install with no CDN,
+   the server serves them, as before. Cookies, CSRF, CORS and host routing don't change. Then the
+   repository splits: the console's build becomes an artifact that its own pipeline uploads, and
+   that the backend serves the page of.
 9. **Fix, don't port.** A page is ported for what it should do. Dead pages are deleted, not ported.
    Ported endpoints fix the known problems of the views they replace: one generic sign-in error,
    registration gated by its switch on the server, no side effects on GET, and rate limits on
    password reset.
+
+.. note::
+
+   The repository split is done. The console's npm workspace is
+   `smarter-sh/smarter-console <https://github.com/smarter-sh/smarter-console>`__, where
+   ``@smarter/console`` is ``packages/smarter-console``, and Smarter Chat and
+   ``@smarter.sh/ui-widgets`` are published to npm from there, with the console's version. Each
+   console release attaches its build, and this repository pins one in
+   ``smarter-console-version.txt``, which ``make console`` and CI install into Django's static files.
 
 Alternatives Considered
 -----------------------
@@ -85,8 +98,14 @@ Alternatives Considered
   still couples releases through server-side rendering.
 - **Rewrite the console all at once.** Freezes console work until it ships, and ships every risk at
   once.
-- **Token authentication for the console.** The SPA and the backend share a site, so session cookies
-  keep working across hosts. Tokens in the browser would need a new security design for no gain.
+- **Token authentication for the console.** The SPA and the backend share an origin, so session
+  cookies just work. Tokens in the browser would need a new security design for no gain.
+- **Separate hosts.** This ADR first planned to move the backend to ``api.<platform>`` and serve the
+  SPA from a CDN at the platform host. The session cookie would need a parent domain, which would also
+  reach the deployed LLMClients under ``*.api.platform.<root>``; every console request would be
+  cross-origin, with a CORS preflight before each POST; the Terminal's WebSocket origin check and the
+  host routing would change; and every install would need a CDN to show the console. Serving only
+  the static files from the CDN gets its caching and bandwidth without any of that.
 
 Consequences
 ------------
@@ -106,8 +125,8 @@ Consequences
   - Strings in the frame templates move from Django's translation domain to the React one.
   - While the move is under way, the console is half Django and half SPA, and a contributor must
     know which half a page is in.
-  - The final move to separate hosts changes cookie, CSRF, CORS and ingress configuration in this
-    repository and in smarter-infrastructure.
+  - A deployment's new pods serve pages before its init job uploads their build, so the console's
+    page must check that its build is on the CDN, and is served from the pods until it is.
 
 Related ADRs
 ------------

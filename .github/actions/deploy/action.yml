@@ -149,6 +149,9 @@ inputs:
   smarter-enable-web-console-terminal:
     description: "True to enable the web console terminal feature in the Smarter platform"
     required: true
+  smarter-static-files-on-cdn:
+    description: "True to upload the static files to the environment's S3 bucket on each deployment, and serve them from its CDN, cdn.<platform>. Empty: the chart's default, false, where the server serves them"
+    required: false
   smarter-logo:
     description: "The URL to the Smarter logo image"
     required: true
@@ -510,6 +513,7 @@ runs:
             "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
             "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
             "SMARTER_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
+            "SMARTER_STATIC_FILES_ON_CDN": ${{ inputs.smarter-static-files-on-cdn && format('"{0}"', inputs.smarter-static-files-on-cdn) || 'null' }},
             "SMARTER_SLACK_APP_TOKEN": ${{ inputs.slack-app-token && format('"{0}"', inputs.slack-app-token) || 'null' }},
             "SMARTER_SLACK_BOT_TOKEN": ${{ inputs.slack-bot-token && format('"{0}"', inputs.slack-bot-token) || 'null' }},
             "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},

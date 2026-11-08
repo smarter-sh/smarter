@@ -29,7 +29,6 @@ def base(request):
     account_authentication_context = {
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
-            "logout_url": "/logout/",
             "forgot_password_url": reverse(
                 AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST, urlconf=settings.ROOT_URLCONF
             ),

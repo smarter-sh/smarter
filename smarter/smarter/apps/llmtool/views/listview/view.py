@@ -1,81 +1,13 @@
-# pylint: disable=W0613
 """
-This module contains views to implement the React.
+The LLM Tool list page, ``/llm-tools/``, which the single-page console serves (ADR-035).
 
-Plugin list view in the Smarter Dashboard.
+The console renders ``@smarter/llmtool-list``'s list at the page's path, and the list calls its list api,
+:mod:`smarter.apps.llmtool.views.listview.api`. The page keeps its view class, named after the list api's, which
+:func:`smarter.lib.django.listview.listview_registry` pairs it with, so that the dashboard's global search links to it.
 """
 
-from django.conf import settings
-from django.core.handlers.asgi import ASGIRequest
-from django.shortcuts import render
-
-from smarter.apps.llmtool.models import PluginMeta
-from smarter.lib import logging
-from smarter.lib.django.shortcuts import reverse
-from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
+from smarter.apps.dashboard.views.console_app import ConsoleAppView
 
 
-class PluginListView(SmarterAuthenticatedNeverCachedWebView):
-    """
-    Render the plugin list view for the Smarter Workbench web console.
-
-    This view displays all plugins available to the authenticated user as cards, providing a quick overview and access to plugin details.
-
-    :param request: Django HTTP request object.
-    :type request: ASGIRequest
-    :param args: Additional positional arguments.
-    :type args: tuple
-    :param kwargs: Additional keyword arguments.
-    :type kwargs: dict
-
-    :returns: Rendered HTML page with a card for each plugin, or a 404 error page if the user is not authenticated.
-    :rtype: HttpResponse
-    """
-
-    template_path = "react/llmtool-list.html"
-    plugins: list[PluginMeta]
-
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        class_name = f"{__name__}.{PluginListView.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    def get(self, request: ASGIRequest, *args, **kwargs):
-        """
-        Render the LLMTool list page, which hosts its React app, with the app's configuration in the template context.
-
-        :param request: The request.
-        :param args: Positional arguments from the url, which are only logged.
-        :param kwargs: Keyword arguments from the url, which are only logged.
-        :returns: The page.
-        """
-        # pylint: disable=C0415
-        from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
-
-        context = {
-            "llmtool_list": {
-                "root_id": "smarter-llmtool-list-root",
-                "django_csrf_cookie_name": settings.CSRF_COOKIE_NAME,  # this is the CSRF token cookie that should be included in the header of the POST request from the frontend.
-                "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
-                "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-                "llmtool_list_api_url": reverse(
-                    PluginApiWebReverseNames.namespace, PluginApiWebReverseNames.listview_all
-                ),
-                "react_debug_mode": switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),
-                "smarter_request_id": self.generate_smarter_request_id(),
-            }
-        }
-
-        logger.debug(
-            "%s.get() called for %s with args %s, kwargs %s with context %s",
-            self.formatted_class_name,
-            request,
-            args,
-            kwargs,
-            logging.SmarterFormattedText.json(context),
-        )
-        return render(request, template_name=self.template_path, context=context)
+class PluginListView(ConsoleAppView):
+    """The LLM Tool list page: the single-page console's, at the path that Django served it at."""
