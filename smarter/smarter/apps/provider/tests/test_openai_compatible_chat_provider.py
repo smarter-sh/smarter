@@ -14,7 +14,7 @@ The openai client is mocked, so no request leaves the test.
 import json
 import secrets
 from http import HTTPStatus
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import httpx
 import openai
@@ -51,15 +51,36 @@ TOOLS = [{"type": "function", "function": {"name": "get_current_weather", "param
 UNKNOWN_MODEL = "test-reasoning-model"
 
 
-def bad_request(param: str) -> openai.BadRequestError:
+def bad_request(param: str, message: str = "rejected") -> openai.BadRequestError:
     """A 400 from OpenAI that names the rejected parameter."""
     request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
     response = httpx.Response(400, request=request)
-    body = {"message": "rejected", "type": "invalid_request_error", "param": param, "code": None}
-    return openai.BadRequestError("rejected", response=response, body=body)
+    body = {"message": message, "type": "invalid_request_error", "param": param, "code": None}
+    return openai.BadRequestError(message, response=response, body=body)
 
 
-def patch_model_set(test: SmarterTestBase, name: str, models: set[str]) -> None:
+def tools_at_effort() -> openai.BadRequestError:
+    """OpenAI's 400 for tools at a reasoning effort other than 'none'."""
+    message = (
+        f"Function tools with reasoning_effort are not supported for {UNKNOWN_MODEL} in /v1/chat/completions. "
+        "To use function tools, use /v1/responses or set reasoning_effort to 'none'."
+    )
+    return bad_request("reasoning_effort", message)
+
+
+def effort_unsupported(effort: str, supported: str) -> openai.BadRequestError:
+    """OpenAI's 400 for a reasoning effort that the model doesn't support."""
+    message = (
+        f"Unsupported value: 'reasoning_effort' does not support '{effort}' with this model. "
+        f"Supported values are: {supported}."
+    )
+    return bad_request("reasoning_effort", message)
+
+
+NO_NONE = "'low', 'medium', 'high', and 'xhigh'"
+
+
+def patch_model_set(test: SmarterTestBase, name: str, models) -> None:
     """
     Replace a set of smarter.lib.openai.model_quirks for a test.
 
@@ -79,7 +100,11 @@ class TestCreateFirstCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send the first request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
+        self.client.append_message = MagicMock()
         patch_model_set(self, "TOOLS_REQUIRE_NO_REASONING_MODELS", {"gpt-6-luna"})
+        patch_model_set(self, "TOOLS_UNSUPPORTED_MODELS", {"gpt-6.1-sol"})
+        patch_model_set(self, "TOOLS_REJECT_REASONING_EFFORT_MODELS", set())
+        patch_model_set(self, "SUPPORTED_REASONING_EFFORTS", {})
 
     def kwargs(self, model: str, tools: bool = True) -> SmarterDictType:
         self.client.model = model
@@ -106,7 +131,7 @@ class TestCreateFirstCompletion(SmarterTestBase):
 
     def test_unknown_model_is_retried_and_remembered(self):
         response = MagicMock()
-        with patch(CREATE_PATCH, side_effect=[bad_request("reasoning_effort"), response]) as create:
+        with patch(CREATE_PATCH, side_effect=[tools_at_effort(), response]) as create:
             result = self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL))
         self.assertIs(result, response)
         self.assertEqual(create.call_count, 2)
@@ -126,10 +151,114 @@ class TestCreateFirstCompletion(SmarterTestBase):
         create.assert_called_once()
         self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_REQUIRE_NO_REASONING_MODELS)
 
-    def test_rejection_with_none_already_sent_is_not_retried(self):
+    def test_failed_retry_is_not_remembered(self):
+        """A model that rejects the retry for another reason is not remembered as needing 'none'."""
+        side_effect = [tools_at_effort(), bad_request("max_completion_tokens")]
+        with patch(CREATE_PATCH, side_effect=side_effect) as create:
+            with self.assertRaises(openai.BadRequestError):
+                self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL))
+        self.assertEqual(create.call_count, 2)
+        self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_REQUIRE_NO_REASONING_MODELS)
+
+    def test_rejection_with_none_already_sent_is_sent_without_tools(self):
+        """A known model that rejects 'none' too answers without its tools, and is remembered."""
+        response = MagicMock()
+        side_effect = [effort_unsupported("none", NO_NONE), tools_at_effort(), response]
+        with patch(CREATE_PATCH, side_effect=side_effect) as create:
+            result = self.client.create_first_completion(self.kwargs("gpt-6-luna"))
+        self.assertIs(result, response)
+        self.assertEqual(create.call_count, 3)
+        self.assertNotIn("tools", create.call_args.kwargs)
+        self.assertNotIn("reasoning_effort", create.call_args.kwargs)
+        self.assertNotIn("gpt-6-luna", module.TOOLS_REQUIRE_NO_REASONING_MODELS)
+        self.assertIn("gpt-6-luna", module.TOOLS_UNSUPPORTED_MODELS)
+
+    def test_model_that_rejects_none_answers_without_tools(self):
+        """
+        A model that rejects tools at its default reasoning effort, and rejects 'none' too, as.
+
+        gpt-6.1-sol does, answers without its tools, with a smarter message that names them.
+        """
+        response = MagicMock()
+        kwargs = self.kwargs(UNKNOWN_MODEL)
+        kwargs["tool_choice"] = "auto"
+        side_effect = [tools_at_effort(), effort_unsupported("none", NO_NONE), response]
+        with patch(CREATE_PATCH, side_effect=side_effect) as create:
+            result = self.client.create_first_completion(kwargs)
+        self.assertIs(result, response)
+        self.assertEqual(create.call_count, 3)
+        sent = create.call_args.kwargs
+        self.assertNotIn("tools", sent)
+        self.assertNotIn("tool_choice", sent)
+        self.assertNotIn("reasoning_effort", sent)
+        self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_REQUIRE_NO_REASONING_MODELS)
+        self.assertIn(UNKNOWN_MODEL, module.TOOLS_UNSUPPORTED_MODELS)
+        self.client.append_message.assert_called_once()
+        notice = self.client.append_message.call_args.kwargs["content"]
+        self.assertIn(UNKNOWN_MODEL, notice)
+        self.assertIn("get_current_weather", notice)
+
+        # the next prompt's request leaves out its tools up front
+        self.client.append_message.reset_mock()
+        self.client.model_warnings = set()
+        with patch(CREATE_PATCH) as create:
+            self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL))
+        create.assert_called_once()
+        self.assertNotIn("tools", create.call_args.kwargs)
+        self.client.append_message.assert_called_once()
+
+    def test_known_unsupported_model_answers_without_tools(self):
+        with patch(CREATE_PATCH) as create:
+            self.client.create_first_completion(self.kwargs("gpt-6.1-sol"))
+        create.assert_called_once()
+        self.assertNotIn("tools", create.call_args.kwargs)
+        self.assertNotIn("reasoning_effort", create.call_args.kwargs)
+        self.client.append_message.assert_called_once()
+
+    def test_known_unsupported_model_without_tools_has_no_notice(self):
+        with patch(CREATE_PATCH) as create:
+            self.client.create_first_completion(self.kwargs("gpt-6.1-sol", tools=False))
+        create.assert_called_once()
+        self.client.append_message.assert_not_called()
+
+    def test_llmclient_effort_with_tools_is_retried_with_none(self):
+        """A model that rejects tools at the LLMClient's effort uses 'none' with tools, and is remembered for it."""
+        response = MagicMock()
+        kwargs = self.kwargs(UNKNOWN_MODEL)
+        kwargs["reasoning_effort"] = "high"
+        with patch(CREATE_PATCH, side_effect=[tools_at_effort(), response]) as create:
+            result = self.client.create_first_completion(kwargs)
+        self.assertIs(result, response)
+        self.assertEqual(create.call_args.kwargs["reasoning_effort"], REASONING_EFFORT_NONE)
+        self.assertIn(UNKNOWN_MODEL, module.TOOLS_REJECT_REASONING_EFFORT_MODELS)
+        self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_REQUIRE_NO_REASONING_MODELS)
+
+    def test_model_without_none_answers_at_the_llmclients_effort(self):
+        """A model without 'none' answers without tools, at the LLMClient's own effort."""
+        response = MagicMock()
+        self.client.reasoning_effort = "high"
+        kwargs = self.kwargs(UNKNOWN_MODEL)
+        kwargs["reasoning_effort"] = "high"
+        side_effect = [tools_at_effort(), effort_unsupported("none", NO_NONE), response]
+        with patch(CREATE_PATCH, side_effect=side_effect) as create:
+            self.client.create_first_completion(kwargs)
+        self.assertEqual(create.call_count, 3)
+        self.assertNotIn("tools", create.call_args.kwargs)
+        self.assertEqual(create.call_args.kwargs["reasoning_effort"], "high")
+
+    def test_reasoning_effort_set_by_the_caller_is_not_changed(self):
+        kwargs = self.kwargs(UNKNOWN_MODEL)
+        kwargs["reasoning_effort"] = "low"
         with patch(CREATE_PATCH, side_effect=bad_request("reasoning_effort")) as create:
             with self.assertRaises(openai.BadRequestError):
-                self.client.create_first_completion(self.kwargs("gpt-6-luna"))
+                self.client.create_first_completion(kwargs)
+        create.assert_called_once()
+        self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_UNSUPPORTED_MODELS)
+
+    def test_rejection_without_tools_is_not_retried(self):
+        with patch(CREATE_PATCH, side_effect=bad_request("reasoning_effort")) as create:
+            with self.assertRaises(openai.BadRequestError):
+                self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL, tools=False))
         create.assert_called_once()
 
 
@@ -140,7 +269,34 @@ class TestCreateCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send a request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
+        self.client.append_message = MagicMock()
         patch_model_set(self, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
+        patch_model_set(self, "SUPPORTED_REASONING_EFFORTS", {})
+
+    def test_unsupported_reasoning_effort_is_learned(self):
+        """A rejected reasoning effort is left out, with the request's temperature, and the model's efforts are remembered."""
+        response = MagicMock()
+        kwargs = self.kwargs(UNKNOWN_MODEL)
+        kwargs["reasoning_effort"] = "minimal"
+        rejection = effort_unsupported("minimal", "'none', 'low', and 'high'")
+        with patch(CREATE_PATCH, side_effect=[rejection, response]) as create:
+            result = self.client.create_completion(kwargs)
+        self.assertIs(result, response)
+        self.assertNotIn("temperature", create.call_args_list[0].kwargs)
+        self.assertNotIn("reasoning_effort", create.call_args.kwargs)
+        self.assertEqual(create.call_args.kwargs["temperature"], 0.2)
+        self.assertEqual(module.SUPPORTED_REASONING_EFFORTS[UNKNOWN_MODEL], ("none", "low", "high"))
+
+    def test_rejections_are_retried_a_few_times_at_most(self):
+        """A model that keeps rejecting what Smarter learns fails after MAX_REQUEST_ATTEMPTS requests."""
+        rejections = [bad_request("temperature")] * (module.MAX_REQUEST_ATTEMPTS + 1)
+        self.client.model = UNKNOWN_MODEL
+        with patch.object(model_quirks, "apply_model_quirks"), patch.object(module, "apply_model_quirks"):
+            with patch(CREATE_PATCH, side_effect=rejections) as create:
+                with patch.object(OpenAISmarterClient, "learn_from_rejection", return_value=True):
+                    with self.assertRaises(openai.BadRequestError):
+                        self.client.create_completion(self.kwargs(UNKNOWN_MODEL))
+        self.assertEqual(create.call_count, module.MAX_REQUEST_ATTEMPTS)
 
     def kwargs(self, model: str, reasoning_effort: bool = False) -> SmarterDictType:
         self.client.model = model
@@ -302,3 +458,126 @@ class TestHandlePluginSelected(SmarterTestBase):
         self.assertEqual(client.temperature, 0.3)
         self.assertEqual(client.max_completion_tokens, 1000)
         self.assertEqual(client.tools, [plugin.custom_tool])
+
+
+class TestModelWarnings(SmarterTestBase):
+    """
+    Test the smarter messages that warn, in Smarter Chat's sandbox mode, that an LLMClient's settings.
+
+    don't suit its model, and say what they should be.
+    """
+
+    def setUp(self):
+        super().setUp()
+        # the handler's other state is not needed to send a request
+        self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
+        self.client.append_message = MagicMock()
+        self.prompt = MagicMock()
+        self.prompt.llmclient.default_temperature = 0.2
+        self.prompt.llmclient.default_reasoning_effort = None
+        patcher = patch.object(OpenAISmarterClient, "prompt", new_callable=PropertyMock, return_value=self.prompt)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        patch_model_set(self, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
+        patch_model_set(self, "TOOLS_UNSUPPORTED_MODELS", {"gpt-6.1-sol"})
+        patch_model_set(self, "TOOLS_REQUIRE_NO_REASONING_MODELS", {"gpt-6-luna"})
+        patch_model_set(self, "TOOLS_REJECT_REASONING_EFFORT_MODELS", set())
+        efforts = {"gpt-6-luna": ("none", "low", "medium", "high", "xhigh"), "gpt-4o": ()}
+        patch_model_set(self, "SUPPORTED_REASONING_EFFORTS", efforts)
+
+    def test_unsupported_reasoning_effort_warns_with_the_closest(self):
+        self.prompt.llmclient.default_temperature = None
+        self.prompt.llmclient.default_reasoning_effort = "minimal"
+        kwargs = self.kwargs("gpt-6-luna")
+        kwargs["reasoning_effort"] = "minimal"
+        with patch(CREATE_PATCH):
+            self.client.create_completion(kwargs)
+        warnings = self.warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("defaultReasoningEffort: low", warnings[0])
+
+    def test_reasoning_effort_on_a_model_that_does_not_reason(self):
+        self.prompt.llmclient.default_temperature = None
+        self.prompt.llmclient.default_reasoning_effort = "high"
+        kwargs = self.kwargs("gpt-4o")
+        kwargs["reasoning_effort"] = "high"
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(kwargs)
+        self.assertNotIn("reasoning_effort", create.call_args.kwargs)
+        self.assertIn("doesn't reason", self.warnings()[0])
+
+    def test_tools_at_none_warn_about_the_llmclients_effort(self):
+        self.prompt.llmclient.default_temperature = None
+        self.prompt.llmclient.default_reasoning_effort = "high"
+        kwargs = self.kwargs("gpt-6-luna")
+        kwargs["tools"] = TOOLS
+        kwargs["reasoning_effort"] = "high"
+        with patch(CREATE_PATCH) as create:
+            self.client.create_first_completion(kwargs)
+        self.assertEqual(create.call_args.kwargs["reasoning_effort"], "none")
+        warnings = self.warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("defaultModel: gpt-5.2", warnings[0])
+
+    def test_temperature_while_reasoning_warns(self):
+        self.prompt.llmclient.default_reasoning_effort = "high"
+        kwargs = self.kwargs("gpt-6-luna")
+        kwargs["reasoning_effort"] = "high"
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(kwargs)
+        self.assertNotIn("temperature", create.call_args.kwargs)
+        self.assertIn("defaultReasoningEffort: none", self.warnings()[0])
+
+    def kwargs(self, model: str) -> SmarterDictType:
+        self.client.model = model
+        return {"model": model, "messages": [{"role": "user", "content": "hi"}], "temperature": 0.2}
+
+    def warnings(self) -> list[str]:
+        return [call.kwargs["content"] for call in self.client.append_message.call_args_list]
+
+    def test_known_model_warns_about_the_llmclients_temperature(self):
+        with patch(CREATE_PATCH):
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        warnings = self.warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("defaultTemperature: 0.2", warnings[0])
+        self.assertIn("defaultTemperature: 1.0", warnings[0])
+        self.assertIn("defaultReasoningEffort: none", warnings[0])
+        role = self.client.append_message.call_args.kwargs["role"]
+        self.assertEqual(role, "smarter")
+
+    def test_rejected_temperature_warns(self):
+        with patch(CREATE_PATCH, side_effect=[bad_request("temperature"), MagicMock()]):
+            self.client.create_completion(self.kwargs(UNKNOWN_MODEL))
+        self.assertEqual(len(self.warnings()), 1)
+        self.assertIn(UNKNOWN_MODEL, self.warnings()[0])
+
+    def test_platform_default_temperature_does_not_warn(self):
+        """The platform's default temperature isn't the LLMClient's setting, so it's left out silently."""
+        self.prompt.llmclient.default_temperature = None
+        with patch(CREATE_PATCH):
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        self.client.append_message.assert_not_called()
+
+    def test_a_warning_is_shown_once_per_prompt(self):
+        """A prompt's later requests, e.g. after tool calls, don't repeat a warning."""
+        with patch(CREATE_PATCH):
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        self.assertEqual(len(self.warnings()), 1)
+
+        # the handler starts each prompt with no warnings
+        self.client.model_warnings = set()
+        with patch(CREATE_PATCH):
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        self.assertEqual(len(self.warnings()), 2)
+
+    def test_tools_warning_says_which_model_to_use(self):
+        kwargs = self.kwargs("gpt-6.1-sol")
+        kwargs["tools"] = TOOLS
+        with patch(CREATE_PATCH):
+            self.client.create_first_completion(kwargs)
+        warnings = self.warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("get_current_weather", warnings[0])
+        self.assertIn("defaultModel: gpt-6-luna", warnings[0])

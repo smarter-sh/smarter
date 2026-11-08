@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.2...v0.44.3-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **llmclient:** honor what each openai model accepts, and validate it ([dc4da40](https://github.com/smarter-sh/smarter/commit/dc4da40f3660a4bcf3dad19d1b7181cffdd58eb7))
+
 ## [0.44.2](https://github.com/smarter-sh/smarter/compare/v0.44.1...v0.44.2) (2026-11-08)
 
 ### Bug Fixes

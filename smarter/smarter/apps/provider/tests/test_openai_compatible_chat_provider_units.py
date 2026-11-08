@@ -65,19 +65,46 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
     # append_openai_error_response
     # -------------------------------------------------------------------------
     def test_error_response_with_an_embedded_error_object(self):
-        """An error object embedded in the provider's message is pretty-printed."""
+        """The error message is the provider's own message, without a stack trace."""
         response = chat_completion("Error code: 400 - {'error': {'message': 'bad request'}}")
-        self.client.append_openai_error_response(response, e=ValueError("bad"))
-        content = self.appended()[0]
-        self.assertIn("raised the following ValueError exception", content)
-        self.assertIn('"message": "bad request"', content)
-        self.assertIn("Python Stack trace", content)
+        with patch.object(module, "smarter_settings", MagicMock(debug_mode=False)):
+            self.client.append_openai_error_response(response, e=ValueError("bad"))
+        self.assertEqual(self.appended(), ["The LLM provider rejected the request: bad request"])
+        role = self.append_message.call_args.kwargs["role"]
+        self.assertEqual(role, "smarter_error")
+
+    def test_error_response_in_debug_mode_has_details(self):
+        """In debug mode, a smarter message, which the chat shows in sandbox mode only, has the details and the stack trace."""
+        response = chat_completion("Error code: 400 - {'error': {'message': 'bad request'}}")
+        with patch.object(module, "smarter_settings", MagicMock(debug_mode=True)):
+            self.client.append_openai_error_response(response, e=ValueError("bad"))
+        error, details = self.appended()
+        self.assertNotIn("Python Stack trace", error)
+        self.assertIn("raised the following ValueError exception", details)
+        self.assertIn('"message": "bad request"', details)
+        self.assertIn("Python Stack trace", details)
+        role = self.append_message.call_args.kwargs["role"]
+        self.assertEqual(role, "smarter")
+
+    def test_error_response_with_an_object_without_a_message(self):
+        """An error object without a message is pretty-printed."""
+        response = chat_completion("Error code: 400 - {'error': {'code': 'x'}}")
+        with patch.object(module, "smarter_settings", MagicMock(debug_mode=False)):
+            self.client.append_openai_error_response(response, e=ValueError("bad"))
+        self.assertIn('"code": "x"', self.appended()[0])
 
     def test_error_response_without_an_error_object(self):
         """A message without a parseable object is kept as is."""
         response = chat_completion("Error code: 500 - {not a python literal}")
-        self.client.append_openai_error_response(response, e=ValueError("bad"))
-        self.assertTrue(self.appended()[0].startswith("Error code: 500 - {not a python literal}"))
+        with patch.object(module, "smarter_settings", MagicMock(debug_mode=False)):
+            self.client.append_openai_error_response(response, e=ValueError("bad"))
+        self.assertEqual(self.appended(), ["Error code: 500 - {not a python literal}"])
+
+    def test_provider_error_text(self):
+        self.assertEqual(OpenAISmarterClient.provider_error_text({"error": {"message": "m"}}), "m")
+        self.assertIsNone(OpenAISmarterClient.provider_error_text({"error": "m"}))
+        self.assertIsNone(OpenAISmarterClient.provider_error_text({"error": {"message": ""}}))
+        self.assertIsNone(OpenAISmarterClient.provider_error_text({"error": {"message": 1}}))
 
     # -------------------------------------------------------------------------
     # tool_budget_refusal
