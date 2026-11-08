@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.43.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.43.1...v0.43.2-alpha.1) (2026-11-08)
+
+### Bug Fixes
+
+* **celery:** set RedBeat's url and options where RedBeat reads them ([f26f71d](https://github.com/smarter-sh/smarter/commit/f26f71db3d6a1b46c7b66a3585830e8470703c36))
+
 ## [0.43.1](https://github.com/smarter-sh/smarter/compare/v0.43.0...v0.43.1) (2026-11-08)
 
 ### Bug Fixes
