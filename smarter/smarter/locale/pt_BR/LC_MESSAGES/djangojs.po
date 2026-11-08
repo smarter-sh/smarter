@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 16:02+0000\n"
+"POT-Creation-Date: 2026-11-08 14:58+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -91,10 +91,6 @@ msgstr ""
 "O Smarter guarda apenas um hash da chave, por isso ela não pode ser exibida "
 "novamente. O ID dela é o seu identificador público."
 
-#. Translators: used in packages/smarter-authtoken-list/src/components/ListView/Component.tsx, packages/smarter-common/src/components/Loading/Component.tsx, packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-connection-list/src/components/ListView/Component.tsx, packages/smarter-console/src/App.tsx, packages/smarter-console/src/routes/ManifestPage.tsx, packages/smarter-console/src/routes/PasswordResetPage.tsx, packages/smarter-console/src/routes/WorkbenchPage.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-extension-console/src/components/ExtensionList.tsx, packages/smarter-extension-console/src/components/ExtensionPage.tsx, packages/smarter-guardrail-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-list/src/components/ListView/Component.tsx, packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, packages/smarter-llmtool-list/src/components/ListView/Component.tsx, packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, packages/smarter-provider-list/src/components/ListView/Component.tsx, packages/smarter-proxy-list/src/components/ListView/Component.tsx, packages/smarter-secret-list/src/components/ListView/Component.tsx, packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
-msgid "Loading..."
-msgstr "Carregando..."
-
 #. Translators: used in packages/smarter-authtoken-list/src/components/ListView/Component.tsx, packages/smarter-budget-list/src/components/BudgetList/Component.tsx, packages/smarter-connection-list/src/components/ListView/Component.tsx, packages/smarter-custom-domain-list/src/components/DetailView/Component.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-guardrail-list/src/components/ListView/Component.tsx, packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, packages/smarter-llmclient-deployment/src/components/Hero.tsx, packages/smarter-llmclient-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx, packages/smarter-llmhost-compute-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-list/src/components/ListView/Component.tsx, packages/smarter-llmtool-list/src/components/ExtensionDetailView/Component.tsx, packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, packages/smarter-llmtool-list/src/components/ListView/Component.tsx, packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, packages/smarter-provider-list/src/components/ListView/Component.tsx, packages/smarter-proxy-list/src/components/ListView/Component.tsx, packages/smarter-secret-list/src/components/ListView/Component.tsx, packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Name"
 msgstr "Nome"
@@ -148,6 +144,30 @@ msgid "Custom domain: example.com"
 msgstr "Domínio personalizado: example.com"
 
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this authtoken resource"
+msgstr "Editar: abrir o manifesto YAML que define este authtoken"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this authtoken resource to a new resource owned by you"
+msgstr "Clonar: clonar este authtoken em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this authtoken resource"
+msgstr "Renomear: renomear este authtoken"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this authtoken resource"
+msgstr "Excluir: excluir este authtoken"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this authtoken, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este authtoken, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Clone AuthToken"
 msgstr "Clonar AuthToken"
 
@@ -158,10 +178,6 @@ msgstr "Clonar o authtoken %(name)s em um novo recurso de sua propriedade."
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the cloned authtoken."
 msgstr "Informe o novo nome do authtoken clonado."
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Enter new authtoken name"
-msgstr "Digite o novo nome do authtoken"
 
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Rename AuthToken"
@@ -176,6 +192,10 @@ msgid "Provide the new name for the authtoken."
 msgstr "Informe o novo nome do authtoken."
 
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
+msgid "Enter new authtoken name"
+msgstr "Digite o novo nome do authtoken"
+
+#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Delete AuthToken"
 msgstr "Excluir AuthToken"
 
@@ -183,29 +203,9 @@ msgstr "Excluir AuthToken"
 msgid "Are you sure you want to delete authtoken %(name)s?"
 msgstr "Tem certeza de que deseja excluir o authtoken %(name)s?"
 
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Data is not recoverable."
-msgstr "Os dados não podem ser recuperados."
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "❌ Error"
-msgstr "❌ Erro"
-
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "An error occurred while performing the operation on authtoken %(name)s."
 msgstr "Ocorreu um erro ao executar a operação no authtoken %(name)s."
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "An unknown error occurred."
-msgstr "Ocorreu um erro desconhecido."
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "✅ Success"
-msgstr "✅ Sucesso"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Operation completed successfully."
-msgstr "Operação concluída com sucesso."
 
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Failed to clone authtoken (%(status)s): %(error)s"
@@ -230,38 +230,6 @@ msgstr "Falha ao excluir o authtoken (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted authtoken"
 msgstr "Authtoken excluído com sucesso"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx, packages/smarter-connection-list/src/components/Toolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx, packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx, packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx, packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx, packages/smarter-provider-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx, packages/smarter-secret-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx, packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Actions"
-msgstr "Ações"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the authtoken workbench"
-msgstr "Chat: abrir a área de trabalho do authtoken"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this authtoken resource"
-msgstr "Editar: abrir o manifesto YAML que define este authtoken"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this authtoken resource to a new resource owned by you"
-msgstr "Clonar: clonar este authtoken em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this authtoken resource"
-msgstr "Renomear: renomear este authtoken"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this authtoken, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este authtoken, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-authtoken-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this authtoken resource"
-msgstr "Excluir: excluir este authtoken"
 
 #. Translators: used in packages/smarter-budget-list/src/App.tsx, packages/smarter-console/src/lib/sidebar.ts, packages/smarter-llmclient-deployment/src/components/Hero.tsx, packages/smarter-llmclient-deployment/src/components/SecureUrl.tsx
 msgid "Budgets"
@@ -421,13 +389,13 @@ msgstr "Semana de %(date)s"
 msgid "Failed to load the budget series (%(status)s)."
 msgstr "Falha ao carregar a série do orçamento (%(status)s)."
 
-#. Translators: used in packages/smarter-budget-list/src/components/BudgetList/ResourceChart.tsx, packages/smarter-console/src/routes/DocsPages.tsx, packages/smarter-dashboard/src/components/BudgetVsActual/Chart.tsx, packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
-msgid "Loading…"
-msgstr "Carregando…"
-
-#. Translators: used in packages/smarter-common/src/components/Loading/Component.tsx
+#. Translators: used in packages/smarter-common/src/components/Loading/Component.tsx, packages/smarter-common/src/components/Skeleton/Component.tsx
 msgid "Loading"
 msgstr "Carregando"
+
+#. Translators: used in packages/smarter-common/src/components/Loading/Component.tsx, packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-common/src/components/Skeleton/Component.tsx, packages/smarter-console/src/App.tsx, packages/smarter-console/src/routes/PasswordResetPage.tsx, packages/smarter-console/src/routes/RouteError.tsx
+msgid "Loading..."
+msgstr "Carregando..."
 
 #. Translators: used in packages/smarter-common/src/components/MetadataChips/Component.tsx, packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx
 msgid "No value"
@@ -472,7 +440,7 @@ msgstr "Dependências"
 msgid "The detail of %(name)s could not be loaded: %(error)s"
 msgstr "Não foi possível carregar o detalhe de %(name)s: %(error)s"
 
-#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-console/src/App.tsx
+#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-console/src/App.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
 msgid "Try again"
 msgstr "Tentar de novo"
 
@@ -508,7 +476,7 @@ msgstr "Próximo"
 msgid "Close (Esc)"
 msgstr "Fechar (Esc)"
 
-#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 msgid "Close"
 msgstr "Fechar"
 
@@ -644,6 +612,30 @@ msgstr[1] ""
 msgid "What uses %(name)s"
 msgstr "O que usa %(name)s"
 
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "Actions"
+msgstr "Ações"
+
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "Data is not recoverable."
+msgstr "Os dados não podem ser recuperados."
+
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "❌ Error"
+msgstr "❌ Erro"
+
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "An unknown error occurred."
+msgstr "Ocorreu um erro desconhecido."
+
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "✅ Success"
+msgstr "✅ Sucesso"
+
+#. Translators: used in packages/smarter-common/src/components/ResourceToolbar/Component.tsx, packages/smarter-custom-domain-list/src/components/Toolbar/Component.tsx, packages/smarter-llmhost-compute-list/src/components/Toolbar/Component.tsx, packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
+msgid "Operation completed successfully."
+msgstr "Operação concluída com sucesso."
+
 #. Translators: used in packages/smarter-common/src/components/ResourceTree/Component.tsx
 msgid "Hide what %(name)s uses"
 msgstr "Ocultar o que %(name)s usa"
@@ -750,6 +742,10 @@ msgstr "Mostrar o detalhe de %(name)s"
 msgid "Open the manifest of %(name)s in a new tab"
 msgstr "Abrir o manifesto de %(name)s em uma nova aba"
 
+#. Translators: used in packages/smarter-common/src/components/Skeleton/Component.tsx, packages/smarter-dashboard/src/components/TokenUsage/Chart.tsx, packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
+msgid "Loading…"
+msgstr "Carregando…"
+
 #. Translators: used in packages/smarter-common/src/components/TabbedListView/AnnotationSelectorBox.tsx
 msgid "Annotation, e.g. acme.com/id=42"
 msgstr "Anotação, por exemplo, acme.com/id=42"
@@ -840,18 +836,18 @@ msgid "Failed to load objects (%(status)s)"
 msgstr "Falha ao carregar os objetos (%(status)s)"
 
 #. Translators: used in packages/smarter-common/src/lib/load.tsx
-msgid "Invalid response payload: expected objects array."
-msgstr "Payload de resposta inválido: era esperado um array de objetos."
-
-#. Translators: used in packages/smarter-common/src/lib/load.tsx
 msgid "Unable to load objects."
 msgstr "Não foi possível carregar os objetos."
+
+#. Translators: used in packages/smarter-common/src/lib/load.tsx
+msgid "Invalid response payload: expected objects array."
+msgstr "Payload de resposta inválido: era esperado um array de objetos."
 
 #. Translators: used in packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-llmclient-deployment/src/components/NextSteps.tsx
 msgid "OK"
 msgstr "OK"
 
-#. Translators: used in packages/smarter-common/src/lib/modalDialogue.tsx
+#. Translators: used in packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -947,6 +943,30 @@ msgid "Authentication required to access this connection"
 msgstr "É necessário autenticar-se para acessar esta conexão"
 
 #. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this connection resource"
+msgstr "Editar: abrir o manifesto YAML que define esta conexão"
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this connection resource to a new resource owned by you"
+msgstr "Clonar: clonar esta conexão em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this connection resource"
+msgstr "Renomear: renomear esta conexão"
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this connection resource"
+msgstr "Excluir: excluir esta conexão"
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this connection, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir esta conexão, porque outros recursos dependem "
+"dela, ou você não tem permissão para excluí-la"
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Clone Connection"
 msgstr "Clonar conexão"
 
@@ -959,10 +979,6 @@ msgid "Provide the new name for the cloned connection."
 msgstr "Informe o novo nome da conexão clonada."
 
 #. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Enter new connection name"
-msgstr "Digite o novo nome da conexão"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Rename Connection"
 msgstr "Renomear conexão"
 
@@ -973,6 +989,10 @@ msgstr "Renomear a conexão %(name)s."
 #. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the connection."
 msgstr "Informe o novo nome da conexão."
+
+#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
+msgid "Enter new connection name"
+msgstr "Digite o novo nome da conexão"
 
 #. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Delete Connection"
@@ -1010,34 +1030,6 @@ msgstr "Falha ao excluir a conexão (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted connection"
 msgstr "Conexão excluída com sucesso"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the connection workbench"
-msgstr "Chat: abrir a área de trabalho da conexão"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this connection resource"
-msgstr "Editar: abrir o manifesto YAML que define esta conexão"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this connection resource to a new resource owned by you"
-msgstr "Clonar: clonar esta conexão em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this connection resource"
-msgstr "Renomear: renomear esta conexão"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this connection, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir esta conexão, porque outros recursos dependem "
-"dela, ou você não tem permissão para excluí-la"
-
-#. Translators: used in packages/smarter-connection-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this connection resource"
-msgstr "Excluir: excluir esta conexão"
 
 #. Translators: used in packages/smarter-console/src/App.tsx
 msgid "The console couldn't reach the server."
@@ -1525,7 +1517,7 @@ msgstr "Não foi possível carregar o manifesto."
 msgid "Page not found"
 msgstr "Página não encontrada"
 
-#. Translators: used in packages/smarter-console/src/routes/NotFoundPage.tsx
+#. Translators: used in packages/smarter-console/src/routes/NotFoundPage.tsx, packages/smarter-console/src/routes/RouteError.tsx
 msgid "Return Home"
 msgstr "Voltar ao início"
 
@@ -1612,6 +1604,14 @@ msgstr "Não recebeu o e-mail?"
 #. Translators: used in packages/smarter-console/src/routes/RegisterPage.tsx
 msgid "Already have an account?"
 msgstr "Já tem uma conta?"
+
+#. Translators: used in packages/smarter-console/src/routes/RouteError.tsx, packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
+msgid "Something went wrong."
+msgstr "Algo deu errado."
+
+#. Translators: used in packages/smarter-console/src/routes/RouteError.tsx, packages/smarter-llmclient-architecture/src/App.tsx
+msgid "Reload"
+msgstr "Recarregar"
 
 #. Translators: used in packages/smarter-console/src/routes/WorkbenchPage.tsx
 msgid "The LLMClient could not be loaded."
@@ -1988,7 +1988,7 @@ msgstr "%(doneCount)s de %(length)s etapas concluídas"
 msgid "to do"
 msgstr "a fazer"
 
-#. Translators: used in packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx, packages/smarter-dashboard/src/components/MyResources/Component.tsx, packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, packages/smarter-dashboard-user-menu/src/lib/api.ts, packages/smarter-welcome/src/App.tsx
+#. Translators: used in packages/smarter-dashboard/src/components/GlobalSearch/Component.tsx, packages/smarter-dashboard/src/hooks/useDashboardApi.tsx, packages/smarter-dashboard-user-menu/src/lib/api.ts, packages/smarter-welcome/src/App.tsx
 msgid "Request failed: %(status)s"
 msgstr "A solicitação falhou: %(status)s"
 
@@ -2034,10 +2034,6 @@ msgstr "VectorStores"
 #. Translators: used in packages/smarter-dashboard/src/components/MyResources/Component.tsx, packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx
 msgid "LLMHosts"
 msgstr "LLMHosts"
-
-#. Translators: used in packages/smarter-dashboard/src/components/MyResources/Component.tsx, packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Unknown error"
-msgstr "Erro desconhecido"
 
 #. Translators: used in packages/smarter-dashboard/src/components/MyResources/Component.tsx
 msgid "Failed to load resources: %(error)s"
@@ -2322,6 +2318,209 @@ msgstr "Trocar para %(account)s"
 #. Translators: used in packages/smarter-dashboard-user-menu/src/components/ChangeProfile/Component.tsx
 msgid "Switching…"
 msgstr "Trocando…"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-dashboard-user-menu/src/components/UserMenu/Component.tsx
+msgid "Download My Data"
+msgstr "Baixar meus dados"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Get a copy of your data"
+msgstr "Obtenha uma cópia dos seus dados"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"Everything that you've built on Smarter is described by manifests. Download "
+"them all, to keep, to put under version control, or to apply to another "
+"Smarter platform."
+msgstr ""
+"Tudo o que você criou no Smarter é descrito por manifestos. Baixe todos "
+"eles, para guardar, colocar sob controle de versão ou aplicar em outra "
+"plataforma Smarter."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "What you'll get"
+msgstr "O que você vai receber"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"A zip file with the manifest of every resource that you own, in every "
+"account that you belong to: one YAML file per resource, and a README."
+msgstr ""
+"Um arquivo zip com o manifesto de cada recurso que pertence a você, em cada "
+"conta da qual você faz parte: um arquivo YAML por recurso e um README."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "How long it takes"
+msgstr "Quanto tempo leva"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"Usually a few seconds. You can close this window at any time: the email "
+"comes either way."
+msgstr ""
+"Normalmente alguns segundos. Você pode fechar esta janela a qualquer "
+"momento: o e-mail chega de qualquer forma."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Where it goes"
+msgstr "Para onde vai"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "A download link is emailed to %(email)s. It works for %(hours)s hours."
+msgstr ""
+"Um link de download é enviado para %(email)s. Ele funciona por %(hours)s "
+"horas."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "A download link is emailed to you. It works for %(hours)s hours."
+msgstr ""
+"Um link de download é enviado a você por e-mail. Ele funciona por %(hours)s "
+"horas."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Your secrets stay secret"
+msgstr "Seus segredos continuam secretos"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"Secrets' values are left out, because the link travels by email. Their names "
+"and settings are included."
+msgstr ""
+"Os valores dos segredos ficam de fora, porque o link viaja por e-mail. Seus "
+"nomes e configurações são incluídos."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Your account has no email address to send the download link to."
+msgstr ""
+"Sua conta não tem um endereço de e-mail para onde enviar o link de download."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"You can download your data %(count)s times a day. Please try again tomorrow."
+msgstr ""
+"Você pode baixar seus dados %(count)s vezes por dia. Tente novamente amanhã."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Preparing your data…"
+msgstr "Preparando seus dados…"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "You can close this window. The email comes either way."
+msgstr "Você pode fechar esta janela. O e-mail chega de qualquer forma."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Manifests written"
+msgstr "Manifestos escritos"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "%(done)s of %(total)s"
+msgstr "%(done)s de %(total)s"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Check your inbox"
+msgstr "Confira sua caixa de entrada"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"A link to your data is on its way to %(email)s. It works for %(hours)s hours."
+msgstr ""
+"Um link para os seus dados está a caminho de %(email)s. Ele funciona por %"
+"(hours)s horas."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "manifest"
+msgid_plural "manifests"
+msgstr[0] "manifesto"
+msgstr[1] "manifestos"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "zip file"
+msgstr "arquivo zip"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"%(count)s resource could not be exported. The README says which, and why."
+msgid_plural ""
+"%(count)s resources could not be exported. The README says which, and why."
+msgstr[0] ""
+"%(count)s recurso não pôde ser exportado. O README diz qual e por quê."
+msgstr[1] ""
+"%(count)s recursos não puderam ser exportados. O README diz quais e por quê."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Didn't get it? Look in your spam folder, or request your data again."
+msgstr ""
+"Não recebeu? Procure na sua pasta de spam ou solicite seus dados novamente."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Your data couldn't be exported"
+msgstr "Não foi possível exportar seus dados"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid ""
+"Something went wrong while your data was being prepared, and no email was "
+"sent."
+msgstr ""
+"Algo deu errado enquanto seus dados eram preparados, e nenhum e-mail foi "
+"enviado."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "%(left)s of %(count)s requests left today"
+msgstr "Restam %(left)s de %(count)s solicitações hoje"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Starting…"
+msgstr "Iniciando…"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx
+msgid "Request my data"
+msgstr "Solicitar meus dados"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-onboarding/src/components/Tour/Component.tsx
+msgid "Done"
+msgstr "Concluir"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Find your resources"
+msgstr "Encontrar seus recursos"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Every resource that you own, in every account that you belong to."
+msgstr ""
+"Cada recurso que pertence a você, em cada conta da qual você faz parte."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Write their manifests"
+msgstr "Escrever seus manifestos"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "One YAML file per resource, as smarter describe prints it."
+msgstr "Um arquivo YAML por recurso, como o smarter describe o imprime."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Zip them up"
+msgstr "Compactá-los"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "The manifests and a README, in a single zip file."
+msgstr "Os manifestos e um README, em um único arquivo zip."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Store the zip file privately"
+msgstr "Guardar o arquivo zip de forma privada"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "In this platform's private storage, which deletes it after a day."
+msgstr ""
+"No armazenamento privado desta plataforma, que o exclui depois de um dia."
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "Email you a link"
+msgstr "Enviar um link para você por e-mail"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/DataExport/steps.ts
+msgid "A download link that expires, sent to your email address."
+msgstr "Um link de download que expira, enviado para o seu endereço de e-mail."
 
 #. Translators: used in packages/smarter-dashboard-user-menu/src/components/LanguageMenu/Component.tsx
 msgid "Language"
@@ -3468,6 +3667,30 @@ msgid "Authentication required to access this guardrail"
 msgstr "É necessário autenticar-se para acessar este guardrail"
 
 #. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this guardrail resource"
+msgstr "Editar: abrir o manifesto YAML que define este guardrail"
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this guardrail resource to a new resource owned by you"
+msgstr "Clonar: clonar este guardrail em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this guardrail resource"
+msgstr "Renomear: renomear este guardrail"
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this guardrail resource"
+msgstr "Excluir: excluir este guardrail"
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this guardrail, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este guardrail, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
 msgid "Clone Guardrail"
 msgstr "Clonar guardrail"
 
@@ -3480,10 +3703,6 @@ msgid "Provide the new name for the cloned guardrail."
 msgstr "Informe o novo nome do guardrail clonado."
 
 #. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Enter new guardrail name"
-msgstr "Digite o novo nome do guardrail"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
 msgid "Rename Guardrail"
 msgstr "Renomear guardrail"
 
@@ -3494,6 +3713,10 @@ msgstr "Renomear o guardrail %(name)s."
 #. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the guardrail."
 msgstr "Informe o novo nome do guardrail."
+
+#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
+msgid "Enter new guardrail name"
+msgstr "Digite o novo nome do guardrail"
 
 #. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
 msgid "Delete Guardrail"
@@ -3530,34 +3753,6 @@ msgstr "Falha ao excluir o guardrail (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted guardrail"
 msgstr "Guardrail excluído com sucesso"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the guardrail workbench"
-msgstr "Chat: abrir a área de trabalho do guardrail"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this guardrail resource"
-msgstr "Editar: abrir o manifesto YAML que define este guardrail"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this guardrail resource to a new resource owned by you"
-msgstr "Clonar: clonar este guardrail em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this guardrail resource"
-msgstr "Renomear: renomear este guardrail"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this guardrail, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este guardrail, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-guardrail-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this guardrail resource"
-msgstr "Excluir: excluir este guardrail"
 
 #. Translators: used in packages/smarter-infrastructure-resource-list/src/App.tsx
 msgid ""
@@ -3665,10 +3860,6 @@ msgstr[1] "%(count)s níveis de profundidade"
 #. Translators: used in packages/smarter-llmclient-architecture/src/App.tsx
 msgid "Fetch the tree again, after a manifest was changed"
 msgstr "Buscar a árvore novamente, depois de alterar um manifesto"
-
-#. Translators: used in packages/smarter-llmclient-architecture/src/App.tsx
-msgid "Reload"
-msgstr "Recarregar"
 
 #. Translators: used in packages/smarter-llmclient-architecture/src/App.tsx
 msgid ""
@@ -5583,6 +5774,30 @@ msgid "Custom domain: %(customDomain)s"
 msgstr "Domínio personalizado: %(customDomain)s"
 
 #. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this llmclient resource"
+msgstr "Editar: abrir o manifesto YAML que define este llmclient"
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this llmclient resource to a new resource owned by you"
+msgstr "Clonar: clonar este llmclient em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this llmclient resource"
+msgstr "Renomear: renomear este llmclient"
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this llmclient resource"
+msgstr "Excluir: excluir este llmclient"
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this llmclient, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este llmclient, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Clone LLMClient"
 msgstr "Clonar LLMClient"
 
@@ -5595,10 +5810,6 @@ msgid "Provide the new name for the cloned llmclient."
 msgstr "Informe o novo nome do llmclient clonado."
 
 #. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid "Enter new llmclient name"
-msgstr "Digite o novo nome do llmclient"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Rename LLMClient"
 msgstr "Renomear LLMClient"
 
@@ -5609,6 +5820,10 @@ msgstr "Renomear o llmclient %(name)s."
 #. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the llmclient."
 msgstr "Informe o novo nome do llmclient."
+
+#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
+msgid "Enter new llmclient name"
+msgstr "Digite o novo nome do llmclient"
 
 #. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Delete LLMClient"
@@ -5649,30 +5864,6 @@ msgstr "Llmclient excluído com sucesso"
 #. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
 msgid "Chat: Open the prompt workbench"
 msgstr "Chat: abrir a área de trabalho de prompts"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this llmclient resource"
-msgstr "Editar: abrir o manifesto YAML que define este llmclient"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this llmclient resource to a new resource owned by you"
-msgstr "Clonar: clonar este llmclient em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this llmclient resource"
-msgstr "Renomear: renomear este llmclient"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this llmclient, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este llmclient, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-llmclient-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this llmclient resource"
-msgstr "Excluir: excluir este llmclient"
 
 #. Translators: used in packages/smarter-llmclient-list/src/components/WeatherHint/Component.tsx
 msgid "Start with the weather LLMClient"
@@ -6186,6 +6377,30 @@ msgid "Authentication required to access this llmhost"
 msgstr "É necessário autenticar-se para acessar este llmhost"
 
 #. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this llmhost resource"
+msgstr "Editar: abrir o manifesto YAML que define este llmhost"
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this llmhost resource to a new resource owned by you"
+msgstr "Clonar: clonar este llmhost em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this llmhost resource"
+msgstr "Renomear: renomear este llmhost"
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this llmhost resource"
+msgstr "Excluir: excluir este llmhost"
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this llmhost, because other resources depend on it, "
+"or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este llmhost, porque outros recursos dependem "
+"dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
 msgid "Clone LLMHost"
 msgstr "Clonar LLMHost"
 
@@ -6198,10 +6413,6 @@ msgid "Provide the new name for the cloned llmhost."
 msgstr "Informe o novo nome do llmhost clonado."
 
 #. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Enter new llmhost name"
-msgstr "Digite o novo nome do llmhost"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
 msgid "Rename LLMHost"
 msgstr "Renomear LLMHost"
 
@@ -6212,6 +6423,10 @@ msgstr "Renomear o llmhost %(name)s."
 #. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the llmhost."
 msgstr "Informe o novo nome do llmhost."
+
+#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
+msgid "Enter new llmhost name"
+msgstr "Digite o novo nome do llmhost"
 
 #. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
 msgid "Delete LLMHost"
@@ -6248,34 +6463,6 @@ msgstr "Falha ao excluir o llmhost (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted llmhost"
 msgstr "Llmhost excluído com sucesso"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the llmhost workbench"
-msgstr "Chat: abrir a área de trabalho do llmhost"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this llmhost resource"
-msgstr "Editar: abrir o manifesto YAML que define este llmhost"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this llmhost resource to a new resource owned by you"
-msgstr "Clonar: clonar este llmhost em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this llmhost resource"
-msgstr "Renomear: renomear este llmhost"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this llmhost, because other resources depend on it, "
-"or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este llmhost, porque outros recursos dependem "
-"dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-llmhost-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this llmhost resource"
-msgstr "Excluir: excluir este llmhost"
 
 #. Translators: used in packages/smarter-llmtool-list/src/App.tsx
 msgid "Your Tool Plugins"
@@ -6520,6 +6707,30 @@ msgid "Authentication required to access this LLMTool"
 msgstr "É necessário autenticar-se para acessar este LLMTool"
 
 #. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this LLMTool resource"
+msgstr "Editar: abrir o manifesto YAML que define este LLMTool"
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this LLMTool resource to a new resource owned by you"
+msgstr "Clonar: clonar este LLMTool em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this LLMTool resource"
+msgstr "Renomear: renomear este LLMTool"
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this LLMTool resource"
+msgstr "Excluir: excluir este LLMTool"
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this LLMTool, because other resources depend on it, "
+"or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este LLMTool, porque outros recursos dependem "
+"dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
 msgid "Clone LLMTool"
 msgstr "Clonar LLMTool"
 
@@ -6532,10 +6743,6 @@ msgid "Provide the new name for the cloned LLMTool."
 msgstr "Informe o novo nome do LLMTool clonado."
 
 #. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Enter new LLMTool name"
-msgstr "Digite o novo nome do LLMTool"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
 msgid "Rename LLMTool"
 msgstr "Renomear LLMTool"
 
@@ -6546,6 +6753,10 @@ msgstr "Renomear o LLMTool %(name)s."
 #. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the LLMTool."
 msgstr "Informe o novo nome do LLMTool."
+
+#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
+msgid "Enter new LLMTool name"
+msgstr "Digite o novo nome do LLMTool"
 
 #. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
 msgid "Delete LLMTool"
@@ -6583,34 +6794,6 @@ msgstr "Falha ao excluir o LLMTool (%(status)s): %(error)s"
 msgid "Successfully deleted LLMTool"
 msgstr "LLMTool excluído com sucesso"
 
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the LLMTool workbench"
-msgstr "Chat: abrir a área de trabalho do LLMTool"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this LLMTool resource"
-msgstr "Editar: abrir o manifesto YAML que define este LLMTool"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this LLMTool resource to a new resource owned by you"
-msgstr "Clonar: clonar este LLMTool em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this LLMTool resource"
-msgstr "Renomear: renomear este LLMTool"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this LLMTool, because other resources depend on it, "
-"or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este LLMTool, porque outros recursos dependem "
-"dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-llmtool-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this LLMTool resource"
-msgstr "Excluir: excluir este LLMTool"
-
 #. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 msgid "Manifest is not a valid object"
 msgstr "O manifesto não é um objeto válido"
@@ -6642,6 +6825,10 @@ msgstr "Manifesto aplicado"
 #. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 msgid "Manifest Apply Failed"
 msgstr "Falha ao aplicar o manifesto"
+
+#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
+msgid "Unknown error"
+msgstr "Erro desconhecido"
 
 #. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
 msgid "Apply Smarter YAML Manifest"
@@ -7090,6 +7277,30 @@ msgid "Authentication required to access this mcpclient"
 msgstr "É necessário autenticar-se para acessar este mcpclient"
 
 #. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this mcpclient resource"
+msgstr "Editar: abrir o manifesto YAML que define este mcpclient"
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this mcpclient resource to a new resource owned by you"
+msgstr "Clonar: clonar este mcpclient em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this mcpclient resource"
+msgstr "Renomear: renomear este mcpclient"
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this mcpclient resource"
+msgstr "Excluir: excluir este mcpclient"
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this mcpclient, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este mcpclient, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 msgid "Clone MCPClient"
 msgstr "Clonar MCPClient"
 
@@ -7102,10 +7313,6 @@ msgid "Provide the new name for the cloned mcpclient."
 msgstr "Informe o novo nome do mcpclient clonado."
 
 #. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Enter new mcpclient name"
-msgstr "Digite o novo nome do mcpclient"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 msgid "Rename MCPClient"
 msgstr "Renomear MCPClient"
 
@@ -7116,6 +7323,10 @@ msgstr "Renomear o mcpclient %(name)s."
 #. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the mcpclient."
 msgstr "Informe o novo nome do mcpclient."
+
+#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
+msgid "Enter new mcpclient name"
+msgstr "Digite o novo nome do mcpclient"
 
 #. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
 msgid "Delete MCPClient"
@@ -7153,34 +7364,6 @@ msgstr "Falha ao excluir o mcpclient (%(status)s): %(error)s"
 msgid "Successfully deleted mcpclient"
 msgstr "Mcpclient excluído com sucesso"
 
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the mcpclient workbench"
-msgstr "Chat: abrir a área de trabalho do mcpclient"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this mcpclient resource"
-msgstr "Editar: abrir o manifesto YAML que define este mcpclient"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this mcpclient resource to a new resource owned by you"
-msgstr "Clonar: clonar este mcpclient em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this mcpclient resource"
-msgstr "Renomear: renomear este mcpclient"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this mcpclient, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este mcpclient, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-mcpclient-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this mcpclient resource"
-msgstr "Excluir: excluir este mcpclient"
-
 #. Translators: used in packages/smarter-onboarding/src/components/Spotlight/Component.tsx
 msgid "Got it"
 msgstr "Entendi"
@@ -7196,10 +7379,6 @@ msgstr "Pular tour"
 #. Translators: used in packages/smarter-onboarding/src/components/Tour/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx
 msgid "Back"
 msgstr "Voltar"
-
-#. Translators: used in packages/smarter-onboarding/src/components/Tour/Component.tsx
-msgid "Done"
-msgstr "Concluir"
 
 #. Translators: used in packages/smarter-orchestrator-list/src/App.tsx
 msgid "Your Orchestrators"
@@ -7295,6 +7474,30 @@ msgid "Authentication required to access this orchestrator"
 msgstr "É necessário autenticar-se para acessar este orquestrador"
 
 #. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this orchestrator resource"
+msgstr "Editar: abrir o manifesto YAML que define este orquestrador"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this orchestrator resource to a new resource owned by you"
+msgstr "Clonar: clonar este orquestrador em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this orchestrator resource"
+msgstr "Renomear: renomear este orquestrador"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this orchestrator resource"
+msgstr "Excluir: excluir este orquestrador"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this orchestrator, because other resources depend "
+"on it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este orquestrador, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 msgid "Clone Orchestrator"
 msgstr "Clonar orquestrador"
 
@@ -7307,10 +7510,6 @@ msgid "Provide the new name for the cloned orchestrator."
 msgstr "Informe o novo nome do orquestrador clonado."
 
 #. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Enter new orchestrator name"
-msgstr "Digite o novo nome do orquestrador"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 msgid "Rename Orchestrator"
 msgstr "Renomear orquestrador"
 
@@ -7321,6 +7520,10 @@ msgstr "Renomear o orquestrador %(name)s."
 #. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the orchestrator."
 msgstr "Informe o novo nome do orquestrador."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
+msgid "Enter new orchestrator name"
+msgstr "Digite o novo nome do orquestrador"
 
 #. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 msgid "Delete Orchestrator"
@@ -7358,34 +7561,6 @@ msgstr "Falha ao excluir o orquestrador (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted orchestrator"
 msgstr "Orquestrador excluído com sucesso"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the orchestrator workbench"
-msgstr "Chat: abrir a área de trabalho do orquestrador"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this orchestrator resource"
-msgstr "Editar: abrir o manifesto YAML que define este orquestrador"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this orchestrator resource to a new resource owned by you"
-msgstr "Clonar: clonar este orquestrador em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this orchestrator resource"
-msgstr "Renomear: renomear este orquestrador"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this orchestrator, because other resources depend "
-"on it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este orquestrador, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-orchestrator-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this orchestrator resource"
-msgstr "Excluir: excluir este orquestrador"
 
 #. Translators: used in packages/smarter-prompt-passthrough/src/components/EditorViewToolbar/Component.tsx, packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Wrap lines"
@@ -7786,6 +7961,30 @@ msgid "Authentication required to access this provider"
 msgstr "É necessário autenticar-se para acessar este provedor"
 
 #. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this provider resource"
+msgstr "Editar: abrir o manifesto YAML que define este provedor"
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this provider resource to a new resource owned by you"
+msgstr "Clonar: clonar este provedor em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this provider resource"
+msgstr "Renomear: renomear este provedor"
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this provider resource"
+msgstr "Excluir: excluir este provedor"
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this provider, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este provedor, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
 msgid "Clone Provider"
 msgstr "Clonar provedor"
 
@@ -7798,10 +7997,6 @@ msgid "Provide the new name for the cloned provider."
 msgstr "Informe o novo nome do provedor clonado."
 
 #. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Enter new provider name"
-msgstr "Digite o novo nome do provedor"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
 msgid "Rename Provider"
 msgstr "Renomear provedor"
 
@@ -7812,6 +8007,10 @@ msgstr "Renomear o provedor %(name)s."
 #. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the provider."
 msgstr "Informe o novo nome do provedor."
+
+#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
+msgid "Enter new provider name"
+msgstr "Digite o novo nome do provedor"
 
 #. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
 msgid "Delete Provider"
@@ -7848,34 +8047,6 @@ msgstr "Falha ao excluir o provedor (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted provider"
 msgstr "Provedor excluído com sucesso"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the provider workbench"
-msgstr "Chat: abrir a área de trabalho do provedor"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this provider resource"
-msgstr "Editar: abrir o manifesto YAML que define este provedor"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this provider resource to a new resource owned by you"
-msgstr "Clonar: clonar este provedor em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this provider resource"
-msgstr "Renomear: renomear este provedor"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this provider, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este provedor, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-provider-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this provider resource"
-msgstr "Excluir: excluir este provedor"
 
 #. Translators: used in packages/smarter-proxy-list/src/App.tsx
 msgid "Your Proxies"
@@ -8200,6 +8371,30 @@ msgid "Authentication required to access this secret"
 msgstr "É necessário autenticar-se para acessar este segredo"
 
 #. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this secret resource"
+msgstr "Editar: abrir o manifesto YAML que define este segredo"
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this secret resource to a new resource owned by you"
+msgstr "Clonar: clonar este segredo em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this secret resource"
+msgstr "Renomear: renomear este segredo"
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this secret resource"
+msgstr "Excluir: excluir este segredo"
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this secret, because other resources depend on it, "
+"or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este segredo, porque outros recursos dependem "
+"dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Clone Secret"
 msgstr "Clonar segredo"
 
@@ -8212,10 +8407,6 @@ msgid "Provide the new name for the cloned secret."
 msgstr "Informe o novo nome do segredo clonado."
 
 #. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Enter new secret name"
-msgstr "Digite o novo nome do segredo"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Rename Secret"
 msgstr "Renomear segredo"
 
@@ -8226,6 +8417,10 @@ msgstr "Renomear o segredo %(name)s."
 #. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the secret."
 msgstr "Informe o novo nome do segredo."
+
+#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
+msgid "Enter new secret name"
+msgstr "Digite o novo nome do segredo"
 
 #. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Delete Secret"
@@ -8262,34 +8457,6 @@ msgstr "Falha ao excluir o segredo (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted secret"
 msgstr "Segredo excluído com sucesso"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the secret workbench"
-msgstr "Chat: abrir a área de trabalho do segredo"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this secret resource"
-msgstr "Editar: abrir o manifesto YAML que define este segredo"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this secret resource to a new resource owned by you"
-msgstr "Clonar: clonar este segredo em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this secret resource"
-msgstr "Renomear: renomear este segredo"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this secret, because other resources depend on it, "
-"or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este segredo, porque outros recursos dependem "
-"dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-secret-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this secret resource"
-msgstr "Excluir: excluir este segredo"
 
 #. Translators: used in packages/smarter-serverlogs/src/components/ServerLogs.tsx
 msgid "Top"
@@ -8713,6 +8880,31 @@ msgid "Authentication required to access this vectorsearch"
 msgstr "É necessário autenticar-se para acessar esta pesquisa vetorial"
 
 #. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this vectorsearch resource"
+msgstr "Editar: abrir o manifesto YAML que define esta pesquisa vetorial"
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this vectorsearch resource to a new resource owned by you"
+msgstr ""
+"Clonar: clonar esta pesquisa vetorial em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this vectorsearch resource"
+msgstr "Renomear: renomear esta pesquisa vetorial"
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this vectorsearch resource"
+msgstr "Excluir: excluir esta pesquisa vetorial"
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this vectorsearch, because other resources depend "
+"on it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir esta pesquisa vetorial, porque outros "
+"recursos dependem dela, ou você não tem permissão para excluí-la"
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
 msgid "Clone Vectorsearch"
 msgstr "Clonar pesquisa vetorial"
 
@@ -8726,10 +8918,6 @@ msgid "Provide the new name for the cloned vectorsearch."
 msgstr "Informe o novo nome da pesquisa vetorial clonada."
 
 #. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Enter new vectorsearch name"
-msgstr "Digite o novo nome da pesquisa vetorial"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
 msgid "Rename Vectorsearch"
 msgstr "Renomear pesquisa vetorial"
 
@@ -8740,6 +8928,10 @@ msgstr "Renomear a pesquisa vetorial %(name)s."
 #. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the vectorsearch."
 msgstr "Informe o novo nome da pesquisa vetorial."
+
+#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
+msgid "Enter new vectorsearch name"
+msgstr "Digite o novo nome da pesquisa vetorial"
 
 #. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
 msgid "Delete Vectorsearch"
@@ -8777,35 +8969,6 @@ msgstr "Falha ao excluir a pesquisa vetorial (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted vectorsearch"
 msgstr "Pesquisa vetorial excluída com sucesso"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the vectorsearch workbench"
-msgstr "Chat: abrir a área de trabalho da pesquisa vetorial"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this vectorsearch resource"
-msgstr "Editar: abrir o manifesto YAML que define esta pesquisa vetorial"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this vectorsearch resource to a new resource owned by you"
-msgstr ""
-"Clonar: clonar esta pesquisa vetorial em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this vectorsearch resource"
-msgstr "Renomear: renomear esta pesquisa vetorial"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this vectorsearch, because other resources depend "
-"on it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir esta pesquisa vetorial, porque outros "
-"recursos dependem dela, ou você não tem permissão para excluí-la"
-
-#. Translators: used in packages/smarter-vectorsearch-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this vectorsearch resource"
-msgstr "Excluir: excluir esta pesquisa vetorial"
 
 #. Translators: used in packages/smarter-vectorstore-list/src/App.tsx
 msgid "Your Vectorstores"
@@ -8958,6 +9121,31 @@ msgid "Scheduled snapshots: %(snapshotCount)s kept."
 msgstr "Snapshots agendados: %(snapshotCount)s mantidos."
 
 #. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid "Edit: Open the YAML manifest that defines this vectorstore resource"
+msgstr "Editar: abrir o manifesto YAML que define este banco vetorial"
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid "Clone: Clone this vectorstore resource to a new resource owned by you"
+msgstr ""
+"Clonar: clonar este banco vetorial em um novo recurso de sua propriedade"
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid "Rename: Rename this vectorstore resource"
+msgstr "Renomear: renomear este banco vetorial"
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid "Delete: Delete this vectorstore resource"
+msgstr "Excluir: excluir este banco vetorial"
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid ""
+"Delete: You can't delete this vectorstore, because other resources depend on "
+"it, or you don't have permission to delete it"
+msgstr ""
+"Excluir: você não pode excluir este banco vetorial, porque outros recursos "
+"dependem dele, ou você não tem permissão para excluí-lo"
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Clone Vectorstore"
 msgstr "Clonar banco vetorial"
 
@@ -8971,10 +9159,6 @@ msgid "Provide the new name for the cloned vectorstore."
 msgstr "Informe o novo nome do banco vetorial clonado."
 
 #. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Enter new vectorstore name"
-msgstr "Digite o novo nome do banco vetorial"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Rename Vectorstore"
 msgstr "Renomear banco vetorial"
 
@@ -8985,6 +9169,10 @@ msgstr "Renomear o banco vetorial %(name)s."
 #. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Provide the new name for the vectorstore."
 msgstr "Informe o novo nome do banco vetorial."
+
+#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
+msgid "Enter new vectorstore name"
+msgstr "Digite o novo nome do banco vetorial"
 
 #. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Delete Vectorstore"
@@ -9031,35 +9219,6 @@ msgstr "Falha ao excluir o banco vetorial (%(status)s): %(error)s"
 #. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
 msgid "Successfully deleted vectorstore"
 msgstr "Banco vetorial excluído com sucesso"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Chat: Open the vectorstore workbench"
-msgstr "Chat: abrir a área de trabalho do banco vetorial"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Edit: Open the YAML manifest that defines this vectorstore resource"
-msgstr "Editar: abrir o manifesto YAML que define este banco vetorial"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Clone: Clone this vectorstore resource to a new resource owned by you"
-msgstr ""
-"Clonar: clonar este banco vetorial em um novo recurso de sua propriedade"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Rename: Rename this vectorstore resource"
-msgstr "Renomear: renomear este banco vetorial"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid ""
-"Delete: You can't delete this vectorstore, because other resources depend on "
-"it, or you don't have permission to delete it"
-msgstr ""
-"Excluir: você não pode excluir este banco vetorial, porque outros recursos "
-"dependem dele, ou você não tem permissão para excluí-lo"
-
-#. Translators: used in packages/smarter-vectorstore-list/src/components/Toolbar/Component.tsx
-msgid "Delete: Delete this vectorstore resource"
-msgstr "Excluir: excluir este banco vetorial"
 
 #. Translators: used in packages/smarter-vectorstore-list/src/lib/format.tsx
 msgid "Self-hosted"
@@ -9609,10 +9768,6 @@ msgstr "Engenheiro de software"
 #. Translators: used in packages/smarter-workbench/src/components/DocsDialog/data.ts
 msgid "Hosting an LLMClient in your own application."
 msgstr "Hospedar um LLMClient na sua própria aplicação."
-
-#. Translators: used in packages/smarter-workbench/src/components/ErrorBoundary/Component.tsx
-msgid "Something went wrong."
-msgstr "Algo deu errado."
 
 #. Translators: used in packages/smarter-workbench/src/components/HelpMenu/Component.tsx
 msgid "The documentation, and a guided tour of the workbench"
@@ -10373,6 +10528,39 @@ msgstr "Novidades"
 #. Translators: used in packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Recently added Smarter features"
 msgstr "Recursos do Smarter adicionados recentemente"
+
+#~ msgid "Chat: Open the authtoken workbench"
+#~ msgstr "Chat: abrir a área de trabalho do authtoken"
+
+#~ msgid "Chat: Open the connection workbench"
+#~ msgstr "Chat: abrir a área de trabalho da conexão"
+
+#~ msgid "Chat: Open the guardrail workbench"
+#~ msgstr "Chat: abrir a área de trabalho do guardrail"
+
+#~ msgid "Chat: Open the llmhost workbench"
+#~ msgstr "Chat: abrir a área de trabalho do llmhost"
+
+#~ msgid "Chat: Open the LLMTool workbench"
+#~ msgstr "Chat: abrir a área de trabalho do LLMTool"
+
+#~ msgid "Chat: Open the mcpclient workbench"
+#~ msgstr "Chat: abrir a área de trabalho do mcpclient"
+
+#~ msgid "Chat: Open the orchestrator workbench"
+#~ msgstr "Chat: abrir a área de trabalho do orquestrador"
+
+#~ msgid "Chat: Open the provider workbench"
+#~ msgstr "Chat: abrir a área de trabalho do provedor"
+
+#~ msgid "Chat: Open the secret workbench"
+#~ msgstr "Chat: abrir a área de trabalho do segredo"
+
+#~ msgid "Chat: Open the vectorsearch workbench"
+#~ msgstr "Chat: abrir a área de trabalho da pesquisa vetorial"
+
+#~ msgid "Chat: Open the vectorstore workbench"
+#~ msgstr "Chat: abrir a área de trabalho do banco vetorial"
 
 #~ msgid "Welcome, %(name)s"
 #~ msgstr "Boas-vindas, %(name)s"

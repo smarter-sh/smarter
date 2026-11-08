@@ -14,6 +14,10 @@ its root element, and the app calls them with the browser's Django session and C
 
 from django.urls import path
 
+from smarter.apps.account.api.web.data_export import (
+    DataExportDetailView,
+    DataExportView,
+)
 from smarter.apps.account.api.web.profile_image import ProfileImageView
 from smarter.apps.account.api.web.user_profiles import (
     UserProfileSelectView,
@@ -66,6 +70,8 @@ class AccountApiWebReverseNames:
     password_reset_request = to_snake_case(PasswordResetRequestApiView.__name__)
     password_reset = to_snake_case(PasswordResetApiView.__name__)
     profile_image = to_snake_case(ProfileImageView.__name__)
+    data_export = to_snake_case(DataExportView.__name__)
+    data_export_detail = to_snake_case(DataExportDetailView.__name__)
     user_profiles = to_snake_case(UserProfilesView.__name__)
     user_profile_select = to_snake_case(UserProfileSelectView.__name__)
 
@@ -90,8 +96,14 @@ urlpatterns = [
         PasswordResetApiView.as_view(),
         name=AccountApiWebReverseNames.password_reset,
     ),
-    # the user menu's: see smarter.apps.account.api.web.profile_image and user_profiles.
+    # the user menu's: see smarter.apps.account.api.web.profile_image, data_export and user_profiles.
     path("profile-image/", ProfileImageView.as_view(), name=AccountApiWebReverseNames.profile_image),
+    path("data-export/", DataExportView.as_view(), name=AccountApiWebReverseNames.data_export),
+    path(
+        "data-export/<int:export_id>/",
+        DataExportDetailView.as_view(),
+        name=AccountApiWebReverseNames.data_export_detail,
+    ),
     path("user-profiles/", UserProfilesView.as_view(), name=AccountApiWebReverseNames.user_profiles),
     path(
         "user-profiles/select/",
