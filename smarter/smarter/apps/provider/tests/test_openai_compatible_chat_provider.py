@@ -32,6 +32,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
     REASONING_EFFORT_NONE,
     OpenAISmarterClient,
 )
+from smarter.lib.openai import model_quirks
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -58,6 +59,19 @@ def bad_request(param: str) -> openai.BadRequestError:
     return openai.BadRequestError("rejected", response=response, body=body)
 
 
+def patch_model_set(test: SmarterTestBase, name: str, models: set[str]) -> None:
+    """
+    Replace a set of smarter.lib.openai.model_quirks for a test.
+
+    The chat provider and apply_model_quirks() share one set, which the provider imports by name, so the
+    same set replaces both.
+    """
+    for target in (module, model_quirks):
+        patcher = patch.object(target, name, models)
+        patcher.start()
+        test.addCleanup(patcher.stop)
+
+
 class TestCreateFirstCompletion(SmarterTestBase):
     """Test that reasoning_effort is 'none' only when a model needs it for function tools."""
 
@@ -65,9 +79,7 @@ class TestCreateFirstCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send the first request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        models = patch.object(module, "TOOLS_REQUIRE_NO_REASONING_MODELS", {"gpt-6-luna"})
-        models.start()
-        self.addCleanup(models.stop)
+        patch_model_set(self, "TOOLS_REQUIRE_NO_REASONING_MODELS", {"gpt-6-luna"})
 
     def kwargs(self, model: str, tools: bool = True) -> SmarterDictType:
         self.client.model = model
@@ -128,9 +140,7 @@ class TestCreateCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send a request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        models = patch.object(module, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
-        models.start()
-        self.addCleanup(models.stop)
+        patch_model_set(self, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
 
     def kwargs(self, model: str, reasoning_effort: bool = False) -> SmarterDictType:
         self.client.model = model

@@ -1,7 +1,7 @@
 """Base class for prompt providers."""
 
 from functools import cached_property
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message_tool_call import (
@@ -39,6 +39,9 @@ from smarter.lib.typing import SmarterDictType
 from .internal_keys import _InternalKeys
 from .mixins import ChatDbMixin
 
+if TYPE_CHECKING:
+    from smarter.apps.llmclient.models import LLMClient
+
 
 # pylint: disable=W0613
 def should_log(level):
@@ -67,6 +70,72 @@ def example_prompts_message(prompts: Optional[list[str]]) -> str:
     if not prompts:
         return ""
     return EXAMPLE_PROMPTS_HEADING + "\n\n" + "".join(f"- {prompt}\n" for prompt in prompts)
+
+
+def llmclient_welcome_message(llmclient: Optional["LLMClient"]) -> str:
+    """
+    Return an LLMClient's welcome message.
+
+    :param llmclient: The LLMClient, or None.
+    :type llmclient: Optional[LLMClient]
+    :returns: The welcome message, or an empty string if it has none.
+    :rtype: str
+    """
+    welcome_message = getattr(llmclient, "app_welcome_message", None) if llmclient else None
+    if not isinstance(welcome_message, str):
+        return ""
+    return welcome_message
+
+
+def llmclient_example_prompts(llmclient: Optional["LLMClient"]) -> list[str]:
+    """
+    Return an LLMClient's example prompts.
+
+    :param llmclient: The LLMClient, or None.
+    :type llmclient: Optional[LLMClient]
+    :returns: The example prompts that are strings, or an empty list.
+    :rtype: list[str]
+    """
+    example_prompts = getattr(llmclient, "app_example_prompts", None) if llmclient else None
+    if not isinstance(example_prompts, list):
+        return []
+    return [prompt for prompt in example_prompts if isinstance(prompt, str)]
+
+
+def introduction_messages(llmclient: Optional["LLMClient"]) -> list[SmarterDictType]:
+    """
+    Return the messages that start a new session's thread, before its first user message.
+
+    They are the LLMClient's system role, which starts with the date and time (the date and time
+    only, without an LLMClient or a system role), then its welcome message and its example prompts,
+    as assistant messages, which is the introduction that Smarter Chat displays.
+
+    :param llmclient: The LLMClient, or None.
+    :type llmclient: Optional[LLMClient]
+    :returns: The messages.
+    :rtype: list[SmarterDictType]
+    """
+    # default_system_role_enhanced already starts with the date/time string.
+    default_system_role = get_date_time_string()
+    if llmclient and llmclient.default_system_role:
+        default_system_role = llmclient.default_system_role_enhanced
+    thread: list[SmarterDictType] = [
+        {
+            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: default_system_role,
+        }
+    ]
+    welcome_message = llmclient_welcome_message(llmclient)
+    example_prompts = example_prompts_message(llmclient_example_prompts(llmclient))
+    for introduction in (welcome_message, example_prompts):
+        if introduction:
+            thread.append(
+                {
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: introduction,
+                }
+            )
+    return thread
 
 
 class SmarterChatProviderBase(ChatDbMixin):
@@ -586,10 +655,6 @@ class SmarterChatProviderBase(ChatDbMixin):
         :rtype: List[Dict[str, str]]
         """
         llmclient = self.prompt.llmclient if self.prompt else None
-        # default_system_role_enhanced already starts with the date/time string.
-        default_system_role = get_date_time_string()
-        if llmclient and llmclient.default_system_role:
-            default_system_role = llmclient.default_system_role_enhanced
         request_body = get_request_body(data=data)
         client_message_thread, input_text = parse_request(request_body)
         if not isinstance(client_message_thread, list):
@@ -599,28 +664,9 @@ class SmarterChatProviderBase(ChatDbMixin):
         if not input_text or not isinstance(input_text, str):
             raise SmarterValueError(f"{self.formatted_class_name}: Invalid request body. A user message is required.")
 
-        welcome_message = getattr(llmclient, "app_welcome_message", None) if llmclient else None
-        welcome_message = welcome_message if isinstance(welcome_message, str) else ""
-        example_prompts = getattr(llmclient, "app_example_prompts", None) if llmclient else None
-        example_prompts = (
-            [prompt for prompt in example_prompts if isinstance(prompt, str)]
-            if isinstance(example_prompts, list)
-            else []
-        )
-        thread: list[SmarterDictType] = [
-            {
-                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: default_system_role,
-            }
-        ]
-        for introduction in (welcome_message, example_prompts_message(example_prompts)):
-            if introduction:
-                thread.append(
-                    {
-                        OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
-                        OpenAIMessageKeys.MESSAGE_CONTENT_KEY: introduction,
-                    }
-                )
+        welcome_message = llmclient_welcome_message(llmclient)
+        example_prompts = llmclient_example_prompts(llmclient)
+        thread = introduction_messages(llmclient)
         thread.append(
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,

@@ -860,5 +860,42 @@
       "command": "command",
       "thing": "thing"
     }
+  },
+  "PromptChatApiProviderRequestResponse": {
+    "api": "api",
+    "data": {
+      "max_completion_tokens": 0,
+      "messages": [
+        {
+          "content": "content",
+          "name": "name",
+          "role": "role",
+          "tool_call_id": "tool_call_id",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "arguments",
+                "name": "name"
+              },
+              "id": "id",
+              "type": "function"
+            }
+          ]
+        }
+      ],
+      "model": "model",
+      "reasoning_effort": "reasoning_effort",
+      "temperature": 0.0,
+      "tool_choice": "tool_choice",
+      "tools": [
+        {
+          "key": "value"
+        }
+      ]
+    },
+    "metadata": {
+      "command": "command",
+      "thing": "thing"
+    }
   }
 }

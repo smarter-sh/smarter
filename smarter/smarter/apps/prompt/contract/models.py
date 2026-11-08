@@ -942,6 +942,45 @@ class PromptChatApiPromptResponseV1(PromptChatApiEnvelope):
 
 
 # ------------------------------------------------------------------------------
+# the provider request api
+# ------------------------------------------------------------------------------
+
+
+class PromptChatApiProviderRequest(PromptChatApiModel):
+    """
+    The chat session's conversation, as the request body that Smarter sends to the LLM provider.
+
+    It is a request to an OpenAI-compatible ``v1/chat/completions`` api, without any of Smarter's own
+    content: no ``smarter`` or ``smarter_error`` messages, no ``smarter_*`` fields, no api url or key.
+    It can be sent with curl, or pasted into the Prompt Passthrough page. Its messages are the whole
+    conversation, including the latest answer, so that a prompt engineer can add the next user
+    message. Its model, temperature, token limit and tools are those of the session's latest
+    prompt, or the LLMClient's, before its first prompt.
+
+    The provider request api, ``/api/v1/llm-clients/<hashed_id>/provider-request/``, returns it, to
+    the workbench only. Fields without a value are left out.
+    """
+
+    model: Optional[str] = Field(default=None, description="The LLM's model, e.g. gpt-4o-mini.")
+    messages: list[PromptChatApiMessage] = Field(
+        default_factory=list, description="The conversation's system, user, assistant and tool messages."
+    )
+    temperature: Optional[float] = None
+    max_completion_tokens: Optional[int] = None
+    tools: Optional[list[dict[str, JsonValue]]] = Field(
+        default=None, description="The function definitions that the LLM may call, in the OpenAI format."
+    )
+    tool_choice: Optional[str] = Field(default=None, description="auto, when the request has tools.")
+    reasoning_effort: Optional[str] = Field(default=None, description="none, for a model that requires it with tools.")
+
+
+class PromptChatApiProviderRequestResponse(PromptChatApiEnvelope):
+    """The provider request api's response."""
+
+    data: PromptChatApiProviderRequest
+
+
+# ------------------------------------------------------------------------------
 # the prompt's Server-Sent Events
 # ------------------------------------------------------------------------------
 
@@ -976,6 +1015,7 @@ CONTRACT_MODELS: tuple[type[BaseModel], ...] = (
     PromptChatApiFailureV1,
     PromptChatApiProgressEvent,
     PromptChatApiProgressResult,
+    PromptChatApiProviderRequestResponse,
 )
 """The models whose JSON Schema is exported.
 
@@ -1015,6 +1055,8 @@ __all__ = [
     "PromptChatApiProgressEvent",
     "PromptChatApiProgressEventType",
     "PromptChatApiProgressResult",
+    "PromptChatApiProviderRequest",
+    "PromptChatApiProviderRequestResponse",
     "PromptChatApiCompletionV1",
     "PromptChatApiFailureV1",
     "PromptChatApiProviderErrorV1",
