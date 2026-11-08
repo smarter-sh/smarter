@@ -11,13 +11,14 @@ host, and a Kubernetes Ingress whose TLS certificate is issued automatically. Re
 TLS certificate. A self-hosted :doc:`vectorstore <../../smarter-resources/smarter-vectorstore>`
 runs in Kubernetes, with a persistent volume for its data. And the platform sends email, for
 example to activate an account or to reset a password, and posts to Slack, for example the outcome
-of each deployment.
+of each deployment. A user's data export, from **Download My Data** in the user menu, is saved to
+private storage, and shared with a link that expires.
 
 All of this is done through one layer of Python code, the **infrastructure services**, in the
 Django app ``smarter.apps.infrastructure``. The rest of the platform never calls a cloud
 provider's SDK, such as AWS's boto3. It asks the infrastructure services for what it needs, in
 terms that do not depend on the cloud: a DNS zone, a DNS record, a TLS certificate, a
-Kubernetes manifest, an email, a Slack message.
+Kubernetes manifest, an email, a Slack message, a private file.
 
 .. code-block:: python
 
@@ -29,6 +30,7 @@ Kubernetes manifest, an email, a Slack message.
     infrastructure.kubernetes.apply_manifest(manifest)
     infrastructure.email.send_email(subject="Welcome!", body="<p>Hello</p>", to="user@example.com", html=True)
     infrastructure.slack.post_message("smarter", "*Deployed*")
+    url = infrastructure.storage.presigned_url("data-exports/42/7/export.zip", expires_in=86400)
 
 Smarter runs on :doc:`Amazon Web Services <aws>` today. Because the platform depends only on
 the infrastructure services, supporting another cloud, such as Microsoft Azure, Google Cloud
@@ -37,7 +39,7 @@ or DigitalOcean, means adding a cloud provider, not changing the platform.
 The Services
 ------------
 
-``infrastructure`` gives the platform six services:
+``infrastructure`` gives the platform seven services:
 
 - ``dns``: DNS zones and records. A zone, for example an AWS Route53 hosted zone, holds the
   records of a domain and its subdomains. Zones and records are described by the
@@ -47,6 +49,14 @@ The Services
   subdomains. The provider issues a certificate once DNS records prove that the domain is
   under Smarter's control, so the certificate service creates those validation records with
   the DNS service.
+- ``storage``: private object storage, for files that belong to one person, such as the zip file of a
+  user's :doc:`data export <../developer-reference/smarter-dashboard/views/authentication/data_export>`.
+  The environment's public bucket serves the web console and the chat widget through the CDN, so
+  nothing private can go there. An object is shared with a presigned url, which works without
+  credentials until it expires, at most seven days later. On AWS, it is S3, in the environment's
+  private ``exports.<environment bucket>`` bucket, ``smarter_settings.aws_s3_exports_bucket_name``,
+  which smarter-infrastructure creates: it blocks all public access, encrypts its objects, refuses
+  requests without TLS, and deletes data exports a day after they were saved.
 - ``kubernetes``: the resources of the platform's Kubernetes cluster, through
   `kubectl <https://kubernetes.io/docs/reference/kubectl/>`__.
 - ``email``: the platform's outgoing email, through SMTP. See :doc:`smtp`.
@@ -72,8 +82,8 @@ Cloud Providers
 
 Some services depend on a cloud, and some do not:
 
-- **DNS and TLS certificates** are implemented by each cloud provider. On AWS, DNS is Route53,
-  and certificates come from AWS Certificate Manager (ACM).
+- **DNS, TLS certificates and private storage** are implemented by each cloud provider. On AWS, DNS
+  is Route53, certificates come from AWS Certificate Manager (ACM), and private storage is S3.
 - **Kubernetes** does not depend on a cloud: only the cluster's credentials do. kubectl works
   the same with any cluster, so the Kubernetes service is implemented once, and the cloud
   provider contributes only the kubeconfig, for example with ``aws eks update-kubeconfig``.
@@ -82,8 +92,8 @@ Some services depend on a cloud, and some do not:
 - **Slack** does not depend on a cloud: it is Slack's own Web API.
 
 ``SMARTER_CLOUD_PROVIDER``, which is ``smarter_settings.cloud_provider``, selects the provider.
-It is ``aws`` by default. ``memory`` selects a provider that keeps DNS zones, records and
-certificates in memory, for local development without a cloud account, and for the unit tests.
+It is ``aws`` by default. ``memory`` selects a provider that keeps DNS zones, records,
+certificates and private objects in memory, for local development without a cloud account, and for the unit tests.
 
 .. code-block:: bash
 
@@ -239,6 +249,7 @@ Technical Reference
    infrastructure/kubernetes
    infrastructure/email
    infrastructure/slack
+   infrastructure/storage
    infrastructure/logs
    infrastructure/cluster-health
    infrastructure/inventory

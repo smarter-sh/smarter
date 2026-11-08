@@ -1,0 +1,129 @@
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% comment %}
+  The email that a user's data export sends them, with the link to the zip file of their manifests.
+  See smarter.apps.account.data_export.send_data_export_email. Mail clients strip <style> blocks,
+  scripts and external stylesheets, so the layout is tables with inline styles, and the images
+  are PNGs. It is sent because the user asked for it, so it has no unsubscribe link.
+  Context: branding, environment_platform_domain, first_name, data_export (url, manifest_count,
+  failed_count, size, hours).
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <title>{% translate "Your Smarter data is ready to download" %}</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#D5D9E2; font-family:Arial,Helvetica,sans-serif; color:#3F4254">
+  <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%"
+    style="border-collapse:collapse; background-color:#D5D9E2">
+    <tr>
+      <td align="center" style="padding:40px 10px">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600"
+          style="border-collapse:separate; width:100%; max-width:600px; background-color:#FFFFFF; border-radius:24px; overflow:hidden">
+
+          <!-- logo -->
+          <tr>
+            <td align="center" style="padding:36px 40px 28px 40px">
+              <a href="{{ environment_platform_domain }}" rel="noopener" target="_blank">
+                <img alt="{{ branding.smarter_product_name }}" height="60"
+                  src="{{ environment_platform_domain }}{% static 'images/logo/smarter-crop.png' %}" style="height:60px; border:0" />
+              </a>
+            </td>
+          </tr>
+
+          <!-- hero -->
+          <tr>
+            <td align="center" style="background-color:#1E1E2D; padding:40px 40px 36px 40px; text-align:center">
+              <p style="margin:0 0 8px 0; color:#FF8A65; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase">
+                {% translate "Download My Data" %}</p>
+              <p style="margin:0 0 14px 0; color:#FFFFFF; font-size:30px; font-weight:700; line-height:1.25">
+                {% translate "Your data is ready" %}</p>
+              <p style="margin:0; color:#B5B5C3; font-size:15px; line-height:1.6">
+                {% blocktranslate count counter=data_export.manifest_count trimmed %}
+                  One manifest, zipped into a single file.
+                {% plural %}
+                  {{ counter }} manifests, one per resource, zipped into a single file.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- greeting -->
+          <tr>
+            <td style="padding:32px 50px 8px 50px; font-size:15px; line-height:1.6; color:#3F4254">
+              <p style="margin:0 0 16px 0; color:#181C32; font-size:18px; font-weight:600">{% if first_name %}{% blocktranslate trimmed %}Hi {{ first_name }},{% endblocktranslate %}{% else %}{% translate "Hi," %}{% endif %}</p>
+              <p style="margin:0 0 16px 0">
+                {% blocktranslate trimmed %}
+                  You asked for a copy of your data, and here it is: the manifest of every resource that you own,
+                  in every account that you belong to, as YAML. Each one is exactly what <code>smarter describe</code>
+                  prints, so you can keep it, read it, put it under version control, or apply it to any Smarter
+                  platform with <code>smarter apply -f</code>.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- call to action -->
+          <tr>
+            <td align="center" style="padding:8px 50px 12px 50px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="background-color:#F1416C; border-radius:8px">
+                    <a href="{{ data_export.url }}" target="_blank" rel="noopener"
+                      style="display:inline-block; padding:14px 30px; color:#FFFFFF; font-size:16px; font-weight:700; text-decoration:none; font-family:Arial,Helvetica,sans-serif">{% blocktranslate with size=data_export.size trimmed %}Download your data ({{ size }}){% endblocktranslate %}</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:14px 0 0 0; color:#7E8299; font-size:13px">
+                {% blocktranslate with hours=data_export.hours trimmed %}
+                  The link works for {{ hours }} hours. After that, the file is deleted, and you can ask for a new one
+                  from the user menu.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- what's inside -->
+          <tr>
+            <td style="padding:24px 40px 8px 40px">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"
+                style="background-color:#F5F8FA; border-radius:16px">
+                <tr>
+                  <td style="padding:22px 24px; font-size:14px; line-height:1.6; color:#3F4254">
+                    <p style="margin:0 0 8px 0; color:#181C32; font-size:16px; font-weight:600">{% translate "What's inside" %}</p>
+                    <p style="margin:0 0 6px 0">{% translate "A README, and one YAML file per resource, at <code>&lt;account number&gt;/&lt;kind&gt;/&lt;name&gt;.yaml</code>." %}</p>
+                    <p style="margin:0 0 6px 0">{% translate "Secrets' values are redacted, because this email could be forwarded. Set them again before you apply a Secret's manifest." %}</p>
+                    {% if data_export.failed_count %}
+                    <p style="margin:0">{% blocktranslate count counter=data_export.failed_count trimmed %}One resource could not be exported. The README says which, and why.{% plural %}{{ counter }} resources could not be exported. The README says which, and why.{% endblocktranslate %}</p>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- not you -->
+          <tr>
+            <td style="padding:20px 50px 8px 50px; font-size:13px; line-height:1.6; color:#7E8299">
+              <p style="margin:0">
+                {% blocktranslate with support_email=branding.support_email trimmed %}
+                  Didn't ask for this? Someone signed in to your account and asked for your data. Change your password,
+                  and tell the platform's administrator at <a href="mailto:{{ support_email }}" style="color:#7E8299; font-weight:600">{{ support_email }}</a>.
+                {% endblocktranslate %}</p>
+            </td>
+          </tr>
+
+          <!-- footer -->
+          <tr>
+            <td align="center"
+              style="font-size:12px; padding:20px 30px 30px 30px; text-align:center; font-weight:500; color:#A1A5B7; font-family:Arial,Helvetica,sans-serif">
+              <p style="margin:0">{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} is free, open source software, licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener" target="_blank">GNU AGPL v3</a>.{% endblocktranslate %}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

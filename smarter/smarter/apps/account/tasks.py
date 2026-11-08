@@ -177,3 +177,56 @@ def send_slack_invitation_emails() -> int:
         logger.warning("%s the email service is not configured. Sending no Slack invitation emails.", prefix)
         return 0
     return AccountContact.send_slack_invitation_emails()
+
+
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def create_data_export(export_id: int) -> str:
+    """
+    Top-level Celery task for a user's data export: Download My Data in the user menu.
+
+    Runs :func:`smarter.apps.account.data_export.run_data_export`, which writes the manifest of every
+    resource that the user owns, zips them, saves the zip file to private storage, and emails the user a
+    link to it, recording each step in the export's row for the web console. It is not retried: a failure
+    is recorded in the export, and the user can start another.
+
+    :param export_id: The id of the :class:`~smarter.apps.account.models.DataExport`.
+    :returns: The export's status, e.g. ``succeeded``.
+
+    **Example usage**::
+
+        create_data_export.delay(export.pk)
+    """
+    # pylint: disable=import-outside-toplevel
+    from .data_export import run_data_export
+
+    prefix = logging.SmarterFormattedText.text(module_prefix + "create_data_export()")
+    logger.info("%s export %s", prefix, export_id)
+    export = run_data_export(export_id)
+    return str(export.status)
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+)
+def delete_expired_data_exports() -> int:
+    """
+    Top-level Celery task for deleting the zip files of data exports whose links have expired.
+
+    Calls :func:`smarter.apps.account.data_export.delete_expired_data_exports`. Scheduled every six hours via
+    Celery Beat. Private storage deletes them after a day as well, so this catches what that misses.
+
+    :returns: How many zip files were deleted.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .data_export import delete_expired_data_exports as delete_expired
+
+    prefix = logging.SmarterFormattedText.text(module_prefix + "delete_expired_data_exports()")
+    if not infrastructure.storage.ready:
+        logger.debug("%s private storage is not ready. Deleting nothing.", prefix)
+        return 0
+    deleted = delete_expired()
+    logger.info("%s deleted %s expired data exports.", prefix, deleted)
+    return deleted
