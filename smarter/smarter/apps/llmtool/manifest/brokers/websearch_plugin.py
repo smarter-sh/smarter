@@ -397,7 +397,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             )
             return self._manifest
         else:
-            logger.warning("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
         return self._manifest
 
     @property
