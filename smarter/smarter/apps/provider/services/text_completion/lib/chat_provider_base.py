@@ -187,6 +187,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         "functions",
         "model",
         "temperature",
+        "reasoning_effort",
+        "model_warnings",
         "max_completion_tokens",
         "input_text",
         "completion_tokens",
@@ -222,6 +224,8 @@ class SmarterChatProviderBase(ChatDbMixin):
 
     model: Optional[str]
     temperature: Optional[float]
+    reasoning_effort: Optional[str]
+    model_warnings: set[str]
     max_completion_tokens: Optional[int]
     input_text: Optional[str]
 
@@ -302,6 +306,8 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         self.model = None
         self.temperature = None
+        self.reasoning_effort = None
+        self.model_warnings = set()
         self.max_completion_tokens = None
         self.input_text = None
 

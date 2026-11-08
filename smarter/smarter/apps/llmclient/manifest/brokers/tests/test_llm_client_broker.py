@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test SAMLLMClientBroker."""
 
+import copy
 import os
 
 from django.http import HttpRequest
@@ -223,6 +224,38 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
         is_valid_response = self.validate_get(response)
         self.assertTrue(is_valid_response)
+
+    def broker_with_prompt(self, **prompt) -> SAMLLMClientBroker:
+        """A broker of the test manifest, with spec.config.prompt changed."""
+        manifest = copy.deepcopy(self.loader.json_data)
+        manifest["spec"]["config"]["prompt"].update(prompt)
+        loader = SAMLoader(manifest=manifest)
+        broker = SAMLLMClientBroker(self.request, loader)
+        return broker
+
+    def test_apply_saves_the_reasoning_effort(self):
+        """DefaultReasoningEffort is saved, and described."""
+        broker = self.broker_with_prompt(defaultModel="gpt-6-luna", defaultReasoningEffort="high")
+        broker.apply(self.request, **self.kwargs)
+        broker.llmclient.refresh_from_db()
+        self.assertEqual(broker.llmclient.default_reasoning_effort, "high")
+        described = self.broker_with_prompt().django_orm_to_manifest_dict()
+        self.assertEqual(described["spec"]["config"]["prompt"]["defaultReasoningEffort"], "high")
+
+    def test_settings_that_the_model_cant_honor_are_rejected(self):
+        """A manifest with settings that its model can never honor is invalid, with the settings to use."""
+        with self.assertRaisesRegex(ValidationError, "defaultReasoningEffort: low"):
+            broker = self.broker_with_prompt(defaultModel="gpt-6-luna", defaultReasoningEffort="minimal")
+            _ = broker.manifest
+
+    def test_an_llmclient_that_its_model_cant_honor_is_described(self):
+        """An LLMClient in the database is described as it is, e.g. one that was applied before the check."""
+        self.broker.apply(self.request, **self.kwargs)
+        LLMClient.objects.filter(pk=self.broker.llmclient.pk).update(
+            default_model="gpt-6-luna", default_reasoning_effort="minimal"
+        )
+        described = self.broker_with_prompt().django_orm_to_manifest_dict()
+        self.assertEqual(described["spec"]["config"]["prompt"]["defaultReasoningEffort"], "minimal")
 
     def test_apply_updates_the_tags_of_an_existing_llmclient(self):
         """

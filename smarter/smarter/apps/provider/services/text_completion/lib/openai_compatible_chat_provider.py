@@ -72,11 +72,21 @@ from smarter.lib.cache.tool_results import is_error_result
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.openai.model_capabilities import closest_reasoning_effort
 from smarter.lib.openai.model_quirks import (
     DEFAULT_TEMPERATURE_ONLY_MODELS,
     REASONING_EFFORT_NONE,
+    REASONING_MODEL_DEFAULT_TEMPERATURE,
+    SUPPORTED_REASONING_EFFORTS,
+    TOOLS_MODEL_SUGGESTION,
+    TOOLS_REJECT_REASONING_EFFORT_MODELS,
     TOOLS_REQUIRE_NO_REASONING_MODELS,
+    TOOLS_UNSUPPORTED_MODELS,
+    TOOLS_WITH_REASONING_MODEL_SUGGESTION,
     apply_model_quirks,
+    rejected_parameter,
+    rejects_tools_at_reasoning_effort,
+    supported_reasoning_efforts,
 )
 from smarter.lib.typing import SmarterDictType
 
@@ -100,6 +110,9 @@ def should_log(level):
 
 
 OPENAI_TOOL_CHOICE = "auto"
+MAX_REQUEST_ATTEMPTS = 4
+"""The most times that one request is sent while the vendor's rejections teach Smarter what its model accepts."""
+
 
 MAX_HISTORY_CHARACTERS = 100_000
 """
@@ -400,9 +413,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             _InternalKeys.TOOLS_KEY: self.tools,
         }
+        reasoning_effort = getattr(self, "reasoning_effort", None)
+        if reasoning_effort:
+            # pylint: disable=E1137
+            self.first_iteration[_InternalKeys.REQUEST_KEY][_InternalKeys.REASONING_EFFORT_KEY] = reasoning_effort
 
         # create a Smarter UI message with the established configuration
         content = f"Prompt configuration: llm={self.provider_name}, url={self.url} api_key={self.mask_string(self.api_key)} model={self.model}, temperature={self.temperature}, max_completion_tokens={self.max_completion_tokens}"
+        if reasoning_effort:
+            content = content + f", reasoning_effort={reasoning_effort}"
         if self.tools:
             content = content + f", tool_choice={tool_choice}."
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
@@ -577,15 +596,45 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 f"{self.formatted_class_name}: response_message is not of the expected type ChatCompletionMessage. Received response of type {type(response_message)}. Response: {response.model_dump_json()}"
             )
         content = str(response_message.content)
+        details = content
         json_objects = extract_json_objects(content)
         if json_objects:
             # create a more nicely formatted message.
-            content = f"{self.base_url} raised the following {e.__class__.__name__} exception: {json.dumps(json_objects, indent=4)}"
+            details = f"{self.base_url} raised the following {e.__class__.__name__} exception: {json.dumps(json_objects, indent=4)}"
+            provider_message = self.provider_error_text(json_objects)
+            if provider_message:
+                content = f"The LLM provider rejected the request: {provider_message}"
+            else:
+                content = details
 
-        stack_trace = traceback.format_exc()
-        content = content + f"\n\nPython Stack trace:\n--------------------\n{stack_trace}"
-
+        # The chat displays smarter_error messages in production mode too, so this one is only
+        # the error. The stack trace is in the server's log, and in a debug_mode platform's
+        # smarter message, which the chat displays in sandbox mode only.
         self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
+        if smarter_settings.debug_mode:
+            stack_trace = traceback.format_exc()
+            details = details + f"\n\nPython Stack trace:\n--------------------\n{stack_trace}"
+            self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=details)
+
+    @staticmethod
+    def provider_error_text(error_object: SmarterDictType) -> Optional[str]:
+        """
+        The message of an LLM provider's error object, e.g. ``{'error': {'message': '...'}}``.
+
+        :param error_object: The error object that the provider returned.
+        :type error_object: SmarterDictType
+        :returns: The error's message, or None if it has none.
+        :rtype: Optional[str]
+        """
+        error = error_object.get("error")
+        if not isinstance(error, dict):
+            return None
+        message = error.get("message")
+        if not isinstance(message, str):
+            return None
+        if not message:
+            return None
+        return message
 
     def handle_response(self) -> None:
         """
@@ -1320,49 +1369,114 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         return {
             _InternalKeys.MODEL_KEY: self.model,
             _InternalKeys.TEMPERATURE_KEY: self.temperature,
+            _InternalKeys.REASONING_EFFORT_KEY: self.reasoning_effort,
             _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             "input_text": self.input_text,
         }
 
-    def create_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
+    def create_completion(self, completions_kwargs: SmarterDictType, none_is_for_tools: bool = False) -> ChatCompletion:
         """
-        Send one request to v1/chat/completions.
+        Send one request to v1/chat/completions, changed to what its model accepts.
 
-        Every request of a prompt goes through here.
+        Every request of a prompt goes through here. The rules that are known before the request
+        is sent are applied by :func:`~smarter.lib.openai.model_quirks.apply_model_quirks`. When
+        the model rejects the request anyway, what the rejection teaches is remembered, and the
+        request is sent again, at most :data:`MAX_REQUEST_ATTEMPTS` times in all:
 
-        Reasoning models accept only their default temperature when their reasoning runs at its
-        default effort, i.e. when the request omits reasoning_effort. Such requests omit temperature
-        for the models in :data:`DEFAULT_TEMPERATURE_ONLY_MODELS`. If another model rejects the
-        request's temperature, the request is retried once without it, and, when the request
-        omitted reasoning_effort, the model is added to the set.
+        - a rejected temperature is left out, and, when the request omitted reasoning_effort, the
+          model is added to :data:`DEFAULT_TEMPERATURE_ONLY_MODELS`.
+        - a rejected reasoning_effort value records the values that the model supports, from the
+          vendor's message, in :data:`SUPPORTED_REASONING_EFFORTS`, so that it is left out. The
+          request's own temperature is put back, since it may be accepted without the effort.
+
+        When the request is accepted, the smarter messages of sandbox mode warn about the
+        LLMClient's settings that it left out. See :meth:`warn_about_llmclient_settings`.
 
         :param completions_kwargs: The keyword arguments of ``openai.chat.completions.create()``.
-            temperature is removed from it when the model does not accept it.
+            It is changed in place to what was sent.
+        :param none_is_for_tools: Whether the request's reasoning_effort 'none' is there so that the
+            model accepts its tools, as :meth:`retry_with_no_reasoning` sets it. If the model rejects
+            it, the request is not sent again: the model can't use tools, and the caller sends it
+            without them.
         :returns: The LLM's response.
         :rtype: ChatCompletion
-        :raises openai.BadRequestError: When the provider rejects the request for another reason.
+        :raises openai.APIStatusError: When the provider rejects the request for another reason,
+            e.g. its tools, which :meth:`create_first_completion` handles.
         """
-        apply_model_quirks(completions_kwargs, self.model)
-        sends_reasoning_effort = _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
-        try:
-            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
-        except openai.BadRequestError as e:
-            sends_temperature = _InternalKeys.TEMPERATURE_KEY in completions_kwargs
-            if not sends_temperature:
-                raise
-            if e.param != _InternalKeys.TEMPERATURE_KEY:
-                raise
+        requested_temperature = completions_kwargs.get(_InternalKeys.TEMPERATURE_KEY)
+        attempts = 0
+        while True:
+            attempts += 1
+            apply_model_quirks(completions_kwargs, self.model)
+            try:
+                response = openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            except openai.BadRequestError as e:
+                if attempts >= MAX_REQUEST_ATTEMPTS:
+                    raise
+                learned = self.learn_from_rejection(e, completions_kwargs, requested_temperature, none_is_for_tools)
+                if not learned:
+                    raise
+                continue
+            self.warn_about_llmclient_settings(completions_kwargs)
+            return response
+
+    def learn_from_rejection(
+        self,
+        error: openai.BadRequestError,
+        completions_kwargs: SmarterDictType,
+        requested_temperature: Optional[float],
+        none_is_for_tools: bool = False,
+    ) -> bool:
+        """
+        Remember what a rejected request teaches about its model, and change the request to be sent again.
+
+        :param error: The vendor's rejection.
+        :param completions_kwargs: The rejected request, changed in place.
+        :param requested_temperature: The request's temperature before any was left out.
+        :param none_is_for_tools: Whether the request's reasoning_effort 'none' is there for its tools.
+        :returns: Whether the request may be sent again. False when the rejection is about something
+            else, or about the tools, which :meth:`create_first_completion` handles.
+        :rtype: bool
+        """
+        model = str(self.model)
+        parameter = rejected_parameter(error)
+        sends_temperature = _InternalKeys.TEMPERATURE_KEY in completions_kwargs
+        if parameter == _InternalKeys.TEMPERATURE_KEY and sends_temperature:
             base_logger.warning(
                 "%s %s - model %s rejected temperature=%s. Retrying with its default temperature.",
                 self.formatted_class_name,
-                SmarterFormattedText.text("create_completion()"),
-                self.model,
+                SmarterFormattedText.text("learn_from_rejection()"),
+                model,
                 completions_kwargs[_InternalKeys.TEMPERATURE_KEY],
             )
-            if not sends_reasoning_effort:
-                DEFAULT_TEMPERATURE_ONLY_MODELS.add(str(self.model))
+            if _InternalKeys.REASONING_EFFORT_KEY not in completions_kwargs:
+                DEFAULT_TEMPERATURE_ONLY_MODELS.add(model)
             completions_kwargs.pop(_InternalKeys.TEMPERATURE_KEY)
-            return openai.chat.completions.create(**completions_kwargs)  # type: ignore[call-arg]
+            return True
+
+        if parameter != _InternalKeys.REASONING_EFFORT_KEY:
+            return False
+        reasoning_effort = completions_kwargs.get(_InternalKeys.REASONING_EFFORT_KEY)
+        if reasoning_effort is None:
+            return False
+        supported = supported_reasoning_efforts(error)
+        if supported is None:
+            return False
+        base_logger.warning(
+            "%s %s - model %s rejected reasoning_effort=%s. It supports: %s.",
+            self.formatted_class_name,
+            SmarterFormattedText.text("learn_from_rejection()"),
+            model,
+            reasoning_effort,
+            supported,
+        )
+        SUPPORTED_REASONING_EFFORTS[model] = supported
+        if reasoning_effort == REASONING_EFFORT_NONE and none_is_for_tools:
+            # the model can't use tools here: create_first_completion() sends it without them.
+            return False
+        if requested_temperature is not None:
+            completions_kwargs[_InternalKeys.TEMPERATURE_KEY] = requested_temperature
+        return True
 
     def create_first_completion(self, completions_kwargs: SmarterDictType) -> ChatCompletion:
         """
@@ -1370,31 +1484,297 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         Some reasoning models reject function tools on v1/chat/completions unless reasoning_effort
         is 'none'. Requests with tools set reasoning_effort to 'none' for the models in
-        :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`. If another model rejects the request for that
-        reason, it is retried once with reasoning_effort set to 'none' and the model is added to the set.
+        :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`, and, when the LLMClient sets another effort, for
+        the models in :data:`TOOLS_REJECT_REASONING_EFFORT_MODELS`. If another model rejects the
+        request's tools at its effort, it is retried with reasoning_effort 'none', and the model is
+        added to one of these sets when the retry succeeds.
+
+        Other models can't use function tools on v1/chat/completions at all: reasoning models that
+        don't support 'none', e.g. gpt-6.1-sol, and the search models. Requests to the models in
+        :data:`TOOLS_UNSUPPORTED_MODELS` are sent without their tools, so that the LLM still
+        answers, and a smarter message names the tools that were left out. A model that rejects
+        'none' with tools, or rejects tools altogether, is added to that set and the request is
+        sent once more without its tools, at the LLMClient's own reasoning effort.
+
         Each request is sent with :meth:`create_completion`.
+
+        :param completions_kwargs: The keyword arguments of ``openai.chat.completions.create()``.
+        :returns: The LLM's response.
+        :rtype: ChatCompletion
+        :raises openai.APIStatusError: When the provider rejects the request for another reason.
         """
-        has_tools = bool(completions_kwargs.get(_InternalKeys.TOOLS_KEY))
-        apply_model_quirks(completions_kwargs, self.model)
+        offered_tools = completions_kwargs.get(_InternalKeys.TOOLS_KEY) or []
+        # a preview: create_completion() applies the quirks itself, once it has kept the request's temperature.
+        preview = apply_model_quirks(dict(completions_kwargs), self.model)
+        sends_tools = bool(preview.get(_InternalKeys.TOOLS_KEY))
+        if offered_tools and not sends_tools:
+            self.append_message_tools_unsupported(offered_tools)
+            return self.create_completion(completions_kwargs)
+
         try:
             return self.create_completion(completions_kwargs)
-        except openai.BadRequestError as e:
-            if (
-                not has_tools
-                or _InternalKeys.REASONING_EFFORT_KEY in completions_kwargs
-                or e.param != _InternalKeys.REASONING_EFFORT_KEY
-            ):
+        except (openai.BadRequestError, openai.NotFoundError) as e:
+            if not sends_tools:
                 raise
-            base_logger.warning(
-                "%s %s - model %s rejected function tools at its default reasoning_effort. Retrying with reasoning_effort='%s'.",
-                self.formatted_class_name,
-                SmarterFormattedText.text("create_first_completion()"),
-                self.model,
-                REASONING_EFFORT_NONE,
+            parameter = rejected_parameter(e)
+            if parameter == _InternalKeys.TOOLS_KEY:
+                return self.retry_without_tools(completions_kwargs, offered_tools)
+            if parameter != _InternalKeys.REASONING_EFFORT_KEY:
+                raise
+            reasoning_effort = completions_kwargs.get(_InternalKeys.REASONING_EFFORT_KEY)
+            if reasoning_effort == REASONING_EFFORT_NONE:
+                return self.retry_without_tools(completions_kwargs, offered_tools)
+            if not rejects_tools_at_reasoning_effort(e):
+                raise
+            return self.retry_with_no_reasoning(completions_kwargs, offered_tools, reasoning_effort)
+
+    def retry_with_no_reasoning(
+        self,
+        completions_kwargs: SmarterDictType,
+        offered_tools: list[SmarterDictType],
+        rejected_effort: Optional[str],
+    ) -> ChatCompletion:
+        """
+        Send a request with tools again, with reasoning_effort 'none', after the model rejected its tools at another effort.
+
+        When the retry succeeds, the model is added to :data:`TOOLS_REQUIRE_NO_REASONING_MODELS`
+        if it rejected its tools at its default effort, or to
+        :data:`TOOLS_REJECT_REASONING_EFFORT_MODELS` if at the LLMClient's. When the model doesn't
+        support 'none', the request is sent without its tools, by :meth:`retry_without_tools`.
+
+        :param completions_kwargs: The rejected request. reasoning_effort is set in it.
+        :param offered_tools: The request's tools.
+        :param rejected_effort: The reasoning_effort that the model rejected tools at, or None for its default.
+        :returns: The LLM's response.
+        :rtype: ChatCompletion
+        :raises openai.BadRequestError: When the provider rejects the retry for another reason.
+        """
+        model = str(self.model)
+        supported = SUPPORTED_REASONING_EFFORTS.get(model)
+        if supported is not None and REASONING_EFFORT_NONE not in supported:
+            return self.retry_without_tools(completions_kwargs, offered_tools)
+        base_logger.warning(
+            "%s %s - model %s rejected function tools at reasoning_effort=%s. Retrying with reasoning_effort='%s'.",
+            self.formatted_class_name,
+            SmarterFormattedText.text("retry_with_no_reasoning()"),
+            model,
+            rejected_effort,
+            REASONING_EFFORT_NONE,
+        )
+        completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
+        try:
+            response = self.create_completion(completions_kwargs, none_is_for_tools=True)
+        except openai.BadRequestError as e:
+            if rejected_parameter(e) != _InternalKeys.REASONING_EFFORT_KEY:
+                raise
+            return self.retry_without_tools(completions_kwargs, offered_tools)
+        if rejected_effort is None:
+            TOOLS_REQUIRE_NO_REASONING_MODELS.add(model)
+        else:
+            TOOLS_REJECT_REASONING_EFFORT_MODELS.add(model)
+        return response
+
+    def retry_without_tools(
+        self, completions_kwargs: SmarterDictType, offered_tools: list[SmarterDictType]
+    ) -> ChatCompletion:
+        """
+        Send a request again without its tools, after the model rejected them with reasoning_effort 'none', or altogether.
+
+        Such a model can't use function tools on v1/chat/completions at any reasoning effort. It is
+        added to :data:`TOOLS_UNSUPPORTED_MODELS`, so that later requests leave out their tools
+        before they are sent, and a smarter message names the tools that were left out. The request
+        is sent at the LLMClient's own reasoning effort, if it sets one.
+
+        :param completions_kwargs: The rejected request. Its tools are removed from it.
+        :param offered_tools: The request's tools.
+        :returns: The LLM's response.
+        :rtype: ChatCompletion
+        :raises openai.BadRequestError: When the provider rejects the request without tools too.
+        """
+        base_logger.warning(
+            "%s %s - model %s can't use function tools in /v1/chat/completions. Sending the request without its tools.",
+            self.formatted_class_name,
+            SmarterFormattedText.text("retry_without_tools()"),
+            self.model,
+        )
+        model = str(self.model)
+        TOOLS_REQUIRE_NO_REASONING_MODELS.discard(model)
+        TOOLS_REJECT_REASONING_EFFORT_MODELS.discard(model)
+        TOOLS_UNSUPPORTED_MODELS.add(model)
+        completions_kwargs.pop(_InternalKeys.REASONING_EFFORT_KEY, None)
+        reasoning_effort = getattr(self, "reasoning_effort", None)
+        if reasoning_effort:
+            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = reasoning_effort
+        apply_model_quirks(completions_kwargs, model)
+        self.append_message_tools_unsupported(offered_tools)
+        return self.create_completion(completions_kwargs)
+
+    def llmclient_settings(self) -> tuple[Optional[float], Optional[str]]:
+        """
+        The temperature and reasoning effort that the prompt's LLMClient sets in its manifest, if any.
+
+        :returns: ``(defaultTemperature, defaultReasoningEffort)``, each None when the LLMClient
+            leaves it to the defaults, or when there is no LLMClient.
+        :rtype: tuple[Optional[float], Optional[str]]
+        """
+        prompt = getattr(self, "prompt", None)
+        llmclient = getattr(prompt, "llmclient", None)
+        temperature = getattr(llmclient, "default_temperature", None)
+        if not isinstance(temperature, (int, float)):
+            temperature = None
+        reasoning_effort = getattr(llmclient, "default_reasoning_effort", None)
+        if not isinstance(reasoning_effort, str):
+            reasoning_effort = None
+        if not reasoning_effort:
+            reasoning_effort = None
+        return temperature, reasoning_effort
+
+    def warn_about_llmclient_settings(self, sent_kwargs: SmarterDictType) -> None:
+        """
+        Warn, in sandbox mode, about the LLMClient's settings that an accepted request left out or changed.
+
+        :param sent_kwargs: The request that the model accepted.
+        :returns: None
+        :rtype: None
+        """
+        temperature, reasoning_effort = self.llmclient_settings()
+        sent_effort = sent_kwargs.get(_InternalKeys.REASONING_EFFORT_KEY)
+        sent_temperature = _InternalKeys.TEMPERATURE_KEY in sent_kwargs
+        if temperature is not None and not sent_temperature:
+            self.append_message_temperature_unsupported(temperature, sent_effort)
+        if reasoning_effort is None:
+            return
+        if sent_effort == reasoning_effort:
+            return
+        has_tools = bool(sent_kwargs.get(_InternalKeys.TOOLS_KEY))
+        if sent_effort == REASONING_EFFORT_NONE and has_tools:
+            self.append_message_reasoning_effort_for_tools(reasoning_effort)
+            return
+        self.append_message_reasoning_effort_unsupported(reasoning_effort)
+
+    def append_message_tools_unsupported(self, offered_tools: list[SmarterDictType]) -> None:
+        """
+        Append a smarter message that says the model answered without the tools that it can't use.
+
+        :param offered_tools: The tools that the request left out.
+        :returns: None
+        :rtype: None
+        """
+        tool_names = []
+        for tool in offered_tools:
+            function = tool.get("function") or {}
+            name = function.get("name")
+            if name:
+                tool_names.append(str(name))
+        names = ", ".join(tool_names)
+        content = (
+            f"Warning: model {self.model} can't use function tools in /v1/chat/completions, so it answered "
+            f"without these tools: {names}. To use them, set spec.config.prompt.defaultModel to a model "
+            f"that can, e.g. defaultModel: {TOOLS_MODEL_SUGGESTION}. Otherwise remove the tools from "
+            "spec.plugins, spec.mcpClients and spec.extensions, so that the LLMClient doesn't offer them."
+        )
+        self.append_model_warning(content)
+
+    def append_message_temperature_unsupported(self, temperature: float, sent_effort: Optional[str]) -> None:
+        """
+        Append a smarter message that says the model ignored the LLMClient's defaultTemperature, which it doesn't accept.
+
+        :param temperature: The LLMClient's temperature.
+        :param sent_effort: The reasoning_effort of the accepted request, if any.
+        :returns: None
+        :rtype: None
+        """
+        if sent_effort is not None and sent_effort != REASONING_EFFORT_NONE:
+            content = (
+                f"Warning: model {self.model} accepts only its default temperature while it reasons, so it "
+                f"ignored spec.config.prompt.defaultTemperature: {temperature} at reasoning effort {sent_effort}. "
+                f"To use this temperature, set defaultReasoningEffort: {REASONING_EFFORT_NONE}, if the model "
+                "supports it. Otherwise remove defaultTemperature."
             )
-            TOOLS_REQUIRE_NO_REASONING_MODELS.add(str(self.model))
-            completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = REASONING_EFFORT_NONE
-            return self.create_completion(completions_kwargs)
+            self.append_model_warning(content)
+            return
+        supported = SUPPORTED_REASONING_EFFORTS.get(str(self.model)) or ()
+        content = (
+            f"Warning: model {self.model} doesn't accept spec.config.prompt.defaultTemperature: {temperature}, "
+            f"so it used its default temperature. Remove defaultTemperature, or set it to the default of "
+            f"reasoning models, defaultTemperature: {REASONING_MODEL_DEFAULT_TEMPERATURE}."
+        )
+        if REASONING_EFFORT_NONE in supported:
+            content = (
+                content + f" This model accepts other temperatures without reasoning: to use {temperature}, set "
+                f"defaultReasoningEffort: {REASONING_EFFORT_NONE}."
+            )
+        self.append_model_warning(content)
+
+    def append_message_reasoning_effort_unsupported(self, reasoning_effort: str) -> None:
+        """
+        Append a smarter message that says the model doesn't support the LLMClient's defaultReasoningEffort.
+
+        :param reasoning_effort: The LLMClient's reasoning effort.
+        :returns: None
+        :rtype: None
+        """
+        supported = SUPPORTED_REASONING_EFFORTS.get(str(self.model))
+        if not supported:
+            content = (
+                f"Warning: model {self.model} doesn't reason, so it ignored "
+                f"spec.config.prompt.defaultReasoningEffort: {reasoning_effort}. Remove defaultReasoningEffort, "
+                f"or choose a reasoning model, e.g. defaultModel: {TOOLS_WITH_REASONING_MODEL_SUGGESTION}."
+            )
+            self.append_model_warning(content)
+            return
+        suggestion = closest_reasoning_effort(reasoning_effort, supported)
+        listed = ", ".join(supported)
+        content = (
+            f"Warning: model {self.model} doesn't support spec.config.prompt.defaultReasoningEffort: "
+            f"{reasoning_effort}, so it reasoned at its default effort. It supports {listed}: e.g. set "
+            f"defaultReasoningEffort: {suggestion}."
+        )
+        self.append_model_warning(content)
+
+    def append_message_reasoning_effort_for_tools(self, reasoning_effort: str) -> None:
+        """
+        Append a smarter message that says the requests that offer tools reasoned at 'none', not at the LLMClient's effort.
+
+        :param reasoning_effort: The LLMClient's reasoning effort.
+        :returns: None
+        :rtype: None
+        """
+        content = (
+            f"Warning: model {self.model} uses function tools only at reasoning effort {REASONING_EFFORT_NONE}, "
+            f"so the requests that offer the LLMClient's tools reasoned at {REASONING_EFFORT_NONE}, not at "
+            f"spec.config.prompt.defaultReasoningEffort: {reasoning_effort}. Answers without tools reason at "
+            f"{reasoning_effort}. To reason at {reasoning_effort} with tools, choose a model that allows it, "
+            f"e.g. defaultModel: {TOOLS_WITH_REASONING_MODEL_SUGGESTION}."
+        )
+        self.append_model_warning(content)
+
+    def append_model_warning(self, content: str) -> None:
+        """
+        Append a smarter message that warns that the LLMClient's settings don't suit its model, once per prompt.
+
+        Smarter Chat displays smarter messages in sandbox mode only, so the prompt engineer sees the
+        warning and the LLMClient's users don't. A prompt's later requests, e.g. after tool calls,
+        don't repeat it.
+
+        :param content: The warning.
+        :returns: None
+        :rtype: None
+        """
+        warnings = getattr(self, "model_warnings", None)
+        if warnings is None:
+            warnings = set()
+            self.model_warnings = warnings
+        if content in warnings:
+            return
+        warnings.add(content)
+        base_logger.warning(
+            "%s %s - %s",
+            self.formatted_class_name,
+            SmarterFormattedText.text("append_model_warning()"),
+            content,
+        )
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
     def handler(
         self,
@@ -1514,8 +1894,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         try:
             self.validate()
             self.authorize_budgets()
+            self.model_warnings = set()
             self.model = self.prompt.llmclient.default_model or self.default_model
             self.temperature = self.prompt.llmclient.default_temperature or self.default_temperature
+            self.reasoning_effort = self.prompt.llmclient.default_reasoning_effort or None
             self.max_completion_tokens = self.prompt.llmclient.default_max_tokens or self.default_max_tokens
             if not self.data:
                 raise SmarterValueError(f"{self.formatted_class_name}: data is required")
@@ -1568,6 +1950,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 _InternalKeys.TEMPERATURE_KEY: self.temperature,
                 _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
             }
+            if self.reasoning_effort:
+                completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = self.reasoning_effort
             if self.tools:
                 # new rule: tool_choice should only be provided if there are
                 # actual tools included in the request, otherwise OpenAI's
@@ -1644,6 +2028,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         _InternalKeys.TEMPERATURE_KEY: self.temperature,
                         _InternalKeys.MAX_COMPLETION_TOKENS_KEY: self.max_completion_tokens,
                     }
+                    reasoning_effort = getattr(self, "reasoning_effort", None)
+                    if reasoning_effort:
+                        completions_kwargs[_InternalKeys.REASONING_EFFORT_KEY] = reasoning_effort
                     if offer_tools:
                         completions_kwargs[_InternalKeys.TOOLS_KEY] = self.tools
                         completions_kwargs[_InternalKeys.TOOL_CHOICE] = OPENAI_TOOL_CHOICE
