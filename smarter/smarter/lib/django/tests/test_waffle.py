@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from asgiref.sync import async_to_sync
 from django.apps import apps
 from django.db.models.signals import post_delete, post_save
-from django.db.utils import OperationalError
+from django.db.utils import OperationalError, ProgrammingError
 from django_redis.exceptions import ConnectionInterrupted
 from redis.exceptions import TimeoutError as RedisTimeoutError
 from waffle import get_waffle_switch_model
@@ -204,6 +204,33 @@ class TestSwitchCache(SmarterTestBase):
             self.assertFalse(switch_is_active(name))
         with patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=self.model(True)):
             self.assertTrue(switch_is_active(name))
+
+    def test_a_database_outage_logs_one_warning_line(self):
+        """Test that a database that can't be reached gives one warning line, without a traceback (issue #951)."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        failing = MagicMock()
+        failing.get.side_effect = OperationalError(2003, "Can't connect to MySQL server")
+        with (
+            patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=failing),
+            self.assertLogs(IS_ACTIVE, level="WARNING") as logs,
+        ):
+            self.assertFalse(switch_is_active(name))
+        self.assertEqual(len(logs.records), 1)
+        self.assertEqual(logs.records[0].levelname, "WARNING")
+        self.assertIn("the database is unavailable", logs.output[0])
+        self.assertNotIn("Traceback", "\n".join(logs.output))
+
+    def test_a_missing_table_still_logs_an_error(self):
+        """Test that a database error other than an outage, e.g. a missing table, is still logged as an error."""
+        name = SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF
+        failing = MagicMock()
+        failing.get.side_effect = ProgrammingError(1146, "Table 'waffle_switch' doesn't exist")
+        with (
+            patch(f"{IS_ACTIVE}.get_waffle_switch_model", return_value=failing),
+            self.assertLogs(IS_ACTIVE, level="ERROR") as logs,
+        ):
+            self.assertFalse(switch_is_active(name))
+        self.assertIn("Database not ready", logs.output[0])
 
     def test_a_remembered_switch_skips_the_readiness_checks(self):
         """Test that a remembered state is returned before the apps and database are checked."""
