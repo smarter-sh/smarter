@@ -5,7 +5,7 @@ The document covers the apis that the ``smarter`` cli and the SDKs call, family 
 
 - the cli api (``/api/v1/cli/``), to apply, get, describe, validate and delete the resources that
   SAM manifests declare,
-- the chat api (``/api/v1/llm-clients/{id}/config/`` and ``.../prompt/``), to chat with an
+- the chat api (``/api/v1/llm-clients/{id}/config/``, ``.../prompt/`` and ``.../provider-request/``), to chat with an
   LLMClient, as JSON or as a stream of Server-Sent Events,
 - the REST reads of the resource families: the LLMClients', Guardrails', Secrets', MCPClients',
   vectorstores', LLMHosts', plugins', Providers' and Proxies', whose responses are built from each
@@ -101,6 +101,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiProgressResult,
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
+    PromptChatApiProviderRequestResponse,
 )
 from smarter.apps.provider.contract.models import (
     PROVIDER_API_MODELS,
@@ -229,6 +230,7 @@ CHAT_MODELS: tuple[type[BaseModel], ...] = (
     PromptChatApiErrorResponse,
     PromptChatApiProgressEvent,
     PromptChatApiProgressResult,
+    PromptChatApiProviderRequestResponse,
 )
 """The Smarter Chat api contract's models that the chat api's operations use."""
 
@@ -847,9 +849,32 @@ def chat_paths() -> dict[str, OpenApiPathItem]:
             "default": json_response("An error.", "LLMClientPromptErrorResponse"),
         },
     )
+    provider_request = OpenApiOperation(
+        operationId="llmclient_provider_request",
+        summary="A chat session's request to the LLM provider",
+        description="The chat session's conversation, as the request body that Smarter sends to the LLM "
+        "provider's v1/chat/completions api: the model, temperature, token limit and tools of its latest prompt "
+        "(or the LLMClient's, before its first prompt), and its system, user, assistant and tool messages, "
+        "without Smarter's own messages, fields, api url or key. It can be sent with curl, or to the Prompt "
+        "Passthrough api. Only a user who may read the LLMClient receives it, never a deployed LLMClient's own host.",
+        tags=[TAG_CHAT],
+        parameters=[LLMCLIENT_ID_PARAMETER, SESSION_KEY_PARAMETER],
+        requestBody=OpenApiRequestBody(
+            required=False,
+            content={"application/json": OpenApiMediaType(schema_=ref(PromptChatApiConfigRequest.__name__))},
+        ),
+        responses={
+            "200": json_response("The request body.", PromptChatApiProviderRequestResponse.__name__),
+            "default": json_response(
+                "An error, e.g. 404 for an LLMClient that does not exist, or that the user may not read.",
+                PromptChatApiErrorResponse.__name__,
+            ),
+        },
+    )
     return {
         "/llm-clients/{id}/config/": OpenApiPathItem(post=config),
         "/llm-clients/{id}/prompt/": OpenApiPathItem(post=prompt),
+        "/llm-clients/{id}/provider-request/": OpenApiPathItem(post=provider_request),
     }
 
 

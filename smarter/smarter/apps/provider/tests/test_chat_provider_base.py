@@ -197,6 +197,28 @@ class TestGetMessageThread(SmarterTestBase):
             module.example_prompts_message(["a", "b"]), "Some example prompts to get you started:\n\n- a\n- b\n"
         )
 
+    def test_introduction_messages(self):
+        """A new session starts with the LLMClient's system role, welcome message and example prompts."""
+        messages = module.introduction_messages(self.llmclient)
+        self.assertEqual(
+            [(message["role"], message["content"]) for message in messages],
+            [
+                ("system", self.llmclient.default_system_role_enhanced),
+                ("assistant", WELCOME_MESSAGE),
+                ("assistant", module.example_prompts_message(EXAMPLE_PROMPTS)),
+            ],
+        )
+        self.assertEqual(module.introduction_messages(None)[0]["content"], module.get_date_time_string())
+
+    def test_introduction_ignores_values_that_are_not_text(self):
+        """A welcome message or example prompts of the wrong type are left out."""
+        self.llmclient.app_welcome_message = 42
+        self.llmclient.app_example_prompts = ["a", 7]
+        self.assertEqual(module.llmclient_welcome_message(self.llmclient), "")
+        self.assertEqual(module.llmclient_example_prompts(self.llmclient), ["a"])
+        self.llmclient.app_example_prompts = "a"
+        self.assertEqual(module.llmclient_example_prompts(self.llmclient), [])
+
 
 class TestHandlerFirstRequest(TestAccountMixin):
     """Test that a new session's first request sends the LLM the LLMClient's system role, and no client history."""

@@ -566,6 +566,12 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
                 self.assertValid(schemas[event]["$ref"].rsplit("/", 1)[-1], data)
         self.assertValid("PromptChatApiPromptResponse", events[-1][1]["response"])
 
+        status, response = self.chat_post(
+            f"llm-clients/{llmclient.hashed_id}/provider-request/", {"session_key": session_key}
+        )
+        self.assertEqual(status, HTTPStatus.OK, response.content)
+        self.assertValid("PromptChatApiProviderRequestResponse", response.json())
+
         status, response = self.chat_post("llm-clients/999999999/config/", {})
         self.assertEqual(status, HTTPStatus.NOT_FOUND, response.content)
         self.assertValid("PromptChatApiErrorResponse", response.json())

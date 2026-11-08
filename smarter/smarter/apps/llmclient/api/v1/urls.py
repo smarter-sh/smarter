@@ -3,6 +3,9 @@
 from django.urls import path
 
 from smarter.apps.prompt.views.detailviews import PromptConfigView
+from smarter.apps.prompt.views.detailviews.prompt_provider_request_view import (
+    PromptProviderRequestView,
+)
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
@@ -62,11 +65,13 @@ class LLMClientApiV1ReverseViews:
     # --------------------------------------------------------------------------
     llmclient_view_by_hashed_id = to_snake_case(LLMClientView.__name__) + BY_HASHED_ID
     chat_config_view_by_hashed_id = to_snake_case(PromptConfigView.__name__) + BY_HASHED_ID
+    provider_request_view_by_hashed_id = to_snake_case(PromptProviderRequestView.__name__) + BY_HASHED_ID
     default_llmclient_api_view_by_hashed_id = to_snake_case(DefaultLLMClientApiView.__name__) + BY_HASHED_ID
 
     # legacy reverse() references by llmclient_id
     # --------------------------------------------------------------------------
     chat_config_view_by_id = to_snake_case(PromptConfigView.__name__)
+    provider_request_view_by_id = to_snake_case(PromptProviderRequestView.__name__) + BY_ID
     default_llmclient_api_view_by_id = to_snake_case(DefaultLLMClientApiView.__name__)
 
     # currently no reverse() references to these named views.
@@ -95,6 +100,11 @@ urlpatterns = [
         "<int:llmclient_id>/config/",
         PromptConfigView.as_view(),
         name=LLMClientApiV1ReverseViews.chat_config_view_by_id,
+    ),
+    path(
+        "<int:llmclient_id>/provider-request/",
+        PromptProviderRequestView.as_view(),
+        name=LLMClientApiV1ReverseViews.provider_request_view_by_id,
     ),
     path(
         "<int:llmclient_id>/prompt/",
@@ -154,6 +164,11 @@ urlpatterns = [
         "<str:hashed_id>/config/",
         PromptConfigView.as_view(),
         name=LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id,
+    ),
+    path(
+        "<str:hashed_id>/provider-request/",
+        PromptProviderRequestView.as_view(),
+        name=LLMClientApiV1ReverseViews.provider_request_view_by_hashed_id,
     ),
     path(
         "<str:hashed_id>/prompt/",
