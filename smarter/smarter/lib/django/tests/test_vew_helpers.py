@@ -101,8 +101,18 @@ class TestSmarterWebHtmlView(TestViewHelpersBase):
     def test_get(self, mock_clean_http_response):
         mock_clean_http_response.return_value = HttpResponse("ok")
         view = views.SmarterWebHtmlView()
+        view.template_path = "foo.html"
         response = view.get(Mock())
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    @patch.object(views.SmarterWebHtmlView, "clean_http_response")
+    def test_get_without_a_template(self, mock_clean_http_response):
+        """A view without a template renders nothing, and answers GET with 405 (issue #963)."""
+        view = views.SmarterWebHtmlView()
+        request = self.factory.get("/")
+        response = view.get(request)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        mock_clean_http_response.assert_not_called()
 
 
 class TestSmarterAuthenticatedNeverCachedWebView(TestViewHelpersBase):
