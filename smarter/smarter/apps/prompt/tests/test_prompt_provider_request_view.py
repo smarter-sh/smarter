@@ -7,8 +7,10 @@ See :mod:`smarter.apps.prompt.views.detailviews.prompt_provider_request_view`.
 import json
 import secrets
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import yaml
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, RequestFactory, override_settings
 from pydantic import ValidationError
@@ -23,6 +25,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiProviderRequestResponse,
 )
 from smarter.apps.prompt.models import Prompt, PromptHistory
+from smarter.apps.prompt.tasks import create_prompt_history
 from smarter.apps.prompt.views.detailviews import prompt_provider_request_view as module
 from smarter.apps.prompt.views.detailviews.prompt_provider_request_view import (
     PromptProviderRequestView,
@@ -235,6 +238,147 @@ class TestPromptProviderRequestView(TestAccountMixin):
             response = view.config_response(request)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertIn("PromptProviderRequestView", view.formatted_class_name)
+
+
+class TestProviderRequestOfARealPrompt(TestAccountMixin):
+    """
+    The download of a real prompt that called a tool, checked against that prompt's own request and response.
+
+    The prompt (tests/data/stackademy_sql_tool_call.yaml) is saved as the platform saves every prompt, by the
+    create_prompt_history task, in the session that the config api gave the chat. The download must be the prompt's
+    request, with the response's new messages appended: the tools that were presented, each tool call, each tool's
+    result and the final answer, in a request that an OpenAI-compatible api accepts.
+    """
+
+    def setUp(self):
+        super().setUp()
+        with open(Path(__file__).parent / "data" / "stackademy_sql_tool_call.yaml", encoding="utf-8") as file:
+            self.saved = yaml.safe_load(file)
+        self.request = self.saved["request"]
+        self.response = self.saved["response"]
+        self.llmclient = self.create_llmclient("stackademy_sql")
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+
+    def create_llmclient(self, name: str) -> LLMClient:
+        """An LLMClient of the test's account, deleted with its sessions after the test."""
+        llmclient = LLMClient.objects.create(
+            name=f"test_{name}_{self.hash_suffix}", user_profile=self.user_profile, default_model=MODEL
+        )
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        self.addCleanup(Prompt.objects.filter(llmclient=llmclient).delete)
+        return llmclient
+
+    def post(self, view_name: str, session_key: str) -> dict:
+        """POST the chat's session key to one of the LLMClient's chat apis, as Smarter Chat does, and return its data."""
+        path = reverse(
+            f"{LLMClientApiV1ReverseViews.namespace}:{view_name}", kwargs={"hashed_id": self.llmclient.hashed_id}
+        )
+        response = self.client.post(
+            f"{path}?session_key={session_key}",
+            data=json.dumps({"session_key": session_key}),
+            content_type="application/json",
+        )
+        payload = json.loads(response.content)
+        self.assertEqual(response.status_code, HTTPStatus.OK, payload)
+        return payload["data"]
+
+    def download_after_the_prompt(self) -> dict:
+        """
+        The chat's session from the config api, the prompt saved in it, and the session's download.
+
+        The chat starts with another LLMClient's session key, as a browser's session cookie can hold, so the config
+        api gives it a new session.
+        """
+        other_session_key = secrets.token_hex(32)
+        Prompt.objects.create(
+            session_key=other_session_key,
+            user_profile=self.user_profile,
+            llmclient=self.create_llmclient("another_llmclient"),
+            ip_address="192.1.1.1",
+            user_agent="unit test",
+            url="https://www.example.com",
+        )
+        session_key = self.post(LLMClientApiV1ReverseViews.chat_config_view_by_hashed_id, other_session_key)[
+            "session_key"
+        ]
+        self.assertNotEqual(session_key, other_session_key)
+        prompt = Prompt.objects.get(session_key=session_key)
+        self.assertEqual(prompt.llmclient, self.llmclient)
+        # as the prompt_finished receiver queues it, run as a Celery worker runs it.
+        create_prompt_history(prompt.id, self.request, self.response, self.saved["messages"])
+        body = self.post(LLMClientApiV1ReverseViews.provider_request_view_by_hashed_id, session_key)
+        PromptChatApiProviderRequest.model_validate(body)
+        return body
+
+    @staticmethod
+    def provider_messages_of(messages: list[dict]) -> list[dict]:
+        """
+        The messages that an LLM provider receives: without Smarter's own messages and fields, and without the null.
+
+        fields that the api leaves out, e.g. a tool-calling message's content.
+        """
+        provider_roles = ("system", "user", "assistant", "tool")
+        return [
+            {key: value for key, value in message.items() if not key.startswith("smarter") and value is not None}
+            for message in messages
+            if message["role"] in provider_roles
+        ]
+
+    def test_the_test_data(self):
+        """The prompt presented a tool, called it, and answered from its result, so each must be in the download."""
+        new_messages = self.response["smarter"]["messages"]
+        self.assertTrue(self.request["tools"])
+        self.assertTrue([m for m in new_messages if m["role"] == "assistant" and m.get("tool_calls")])
+        self.assertTrue([m for m in new_messages if m["role"] == "tool"])
+        self.assertTrue(self.response["choices"][0]["message"]["content"])
+
+    def test_the_request_and_the_response_are_in_the_download(self):
+        """The download is the prompt's request, with the response's new messages appended."""
+        body = self.download_after_the_prompt()
+        expected = self.provider_messages_of(self.request["messages"] + self.response["smarter"]["messages"])
+        downloaded = body["messages"]
+        self.assertEqual([m["role"] for m in downloaded], [m["role"] for m in expected])
+        self.assertEqual(downloaded, expected)
+        # the system prompt, as the LLM received it, with the chat's Markdown instructions, once.
+        self.assertEqual(downloaded[0]["content"].count(MARKDOWN_SYSTEM_PROMPT), 1)
+
+    def test_the_tools_that_were_presented(self):
+        body = self.download_after_the_prompt()
+        self.assertEqual(body["tools"], self.request["tools"])
+        self.assertEqual(body["tool_choice"], self.request["tool_choice"])
+        self.assertEqual(body["model"], self.request["model"])
+
+    def test_each_tool_call_and_its_result(self):
+        """Each tool call, with its arguments, is followed by its tool's result, as OpenAI requires."""
+        body = self.download_after_the_prompt()
+        new_messages = self.response["smarter"]["messages"]
+        tool_calls = [call for m in new_messages if m["role"] == "assistant" for call in m.get("tool_calls") or []]
+        results = {m["tool_call_id"]: m["content"] for m in new_messages if m["role"] == "tool"}
+        downloaded = body["messages"]
+        for call in tool_calls:
+            calling = [i for i, m in enumerate(downloaded) if call in (m.get("tool_calls") or [])]
+            self.assertEqual(len(calling), 1, f"tool call {call['id']} is not in the download")
+            index = calling[0]
+            replies = {m["tool_call_id"]: m for m in downloaded[index + 1 :] if m["role"] == "tool"}
+            self.assertIn(call["id"], replies, f"the result of tool call {call['id']} is not in the download")
+            self.assertEqual(replies[call["id"]]["content"], results[call["id"]])
+
+    def test_the_users_prompt_and_the_final_answer(self):
+        body = self.download_after_the_prompt()
+        downloaded = body["messages"]
+        user_prompts = [m["content"] for m in self.request["messages"] if m["role"] == "user"]
+        self.assertEqual([m["content"] for m in downloaded if m["role"] == "user"], user_prompts)
+        self.assertEqual(downloaded[-1]["role"], "assistant")
+        self.assertEqual(downloaded[-1]["content"], self.response["choices"][0]["message"]["content"])
+
+    def test_nothing_of_smarters_own(self):
+        """An OpenAI-compatible api rejects Smarter's own roles and fields, and the api key never leaves the platform."""
+        body = self.download_after_the_prompt()
+        self.assertEqual({m["role"] for m in body["messages"]} - {"system", "user", "assistant", "tool"}, set())
+        content = json.dumps(body)
+        for smarter_content in ("smarter_is_new", '"role": "smarter"', "api_url", "api_key", self.request["api_key"]):
+            self.assertNotIn(smarter_content, content)
 
 
 class TestProviderRequest(TestAccountMixin):
