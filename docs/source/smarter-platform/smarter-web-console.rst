@@ -142,18 +142,19 @@ programmed. Each hint shows until the user has acted on it once, on any device, 
         alt="Smarter Dashboard LLM Prompt Workbench"/>
 
 
-Manifest Drop Zone
-~~~~~~~~~~~~~~~~~~~~~
+Apply Manifest
+~~~~~~~~~~~~~~
 
-A drop zone on the console dashboard gives authors a streamlined workflow for uploading Smarter manifests,
-and providing immediate feedback on manifest validation results, including detailed error messages to
-facilitate rapid development iteration.
+The console's Apply Manifest page is a manifest editor for any kind of resource. Paste or type a manifest, open
+a file, drag one onto the page, or start from a kind's example. The editor checks the manifest as you type, marks
+each problem with a detailed error message, and shows what each field is as you hover over it or move the cursor
+to it, so that you can iterate quickly. Apply creates the manifest's resource, or updates it if it exists.
 
 .. raw:: html
 
    <img src="https://cdn.smarter.sh/docs/smarter-framework/smarter-web-dashboard/console-drop-zone.png"
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
-        alt="Smarter Dashboard Manifest Drop Zone"/>
+        alt="Smarter Dashboard Apply Manifest"/>
 
 LLM Provider API Passthrough Tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
