@@ -3,7 +3,7 @@
 
 import traceback
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, List, Optional, Type
+from typing import TYPE_CHECKING, List, Optional, Type
 
 from django.forms.models import model_to_dict
 from rest_framework import serializers
@@ -399,7 +399,10 @@ class SAMSecretBroker(AbstractBroker):
         if self.secret_transformer and self.secret:
             self._name = str(self.secret.name)
         if not self._name:
-            logger.warning("%s.name() could not determine name, returning None", self.formatted_class_name)
+            # debug, not warning: commands such as json-schema and example-manifest need no name, and
+            # the commands that do (get, describe, delete, ...) fail with their own error (issue #965).
+            logger.debug("%s.name() could not determine name, returning None", self.formatted_class_name)
+        return self._name
 
     @property
     def manifest(self) -> Optional[SAMSecret]:
@@ -448,12 +451,15 @@ class SAMSecretBroker(AbstractBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSecret(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMSecretMetadata(**self.loader.manifest_metadata),
-                spec=SAMSecretSpec(**self.loader.manifest_spec),
-            )
+            # model_validate() takes the loader's Optional values as they are, and Pydantic rejects
+            # a missing apiVersion or spec, as the keyword arguments did.
+            loader_manifest = {
+                "apiVersion": self.loader.manifest_api_version,
+                "kind": self.loader.manifest_kind,
+                "metadata": self.loader.manifest_metadata,
+                "spec": self.loader.manifest_spec,
+            }
+            self._manifest = SAMSecret.model_validate(loader_manifest)
             logger.debug(
                 "%s.manifest() initialized %s from SAMLoader", self.formatted_class_name, type(self._manifest).__name__
             )
