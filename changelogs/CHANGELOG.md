@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.6](https://github.com/smarter-sh/smarter/compare/v0.44.5...v0.44.6) (2026-11-09)
+
+### Bug Fixes
+
+* **celery:** shorten RedBeat's lock so Beat recovers soon after a crash ([aa86a25](https://github.com/smarter-sh/smarter/commit/aa86a25204f2670b45cdb92b1fa1c6a3d76b9b2d)), closes [#964](https://github.com/smarter-sh/smarter/issues/964) [#945](https://github.com/smarter-sh/smarter/issues/945)
+* **django:** answer 405, not 500, to a GET of a view without a template ([5b2c907](https://github.com/smarter-sh/smarter/commit/5b2c90787fbd37a968acafb3d4926b2ada7236d2)), closes [#963](https://github.com/smarter-sh/smarter/issues/963)
+* **secret:** return the broker's name, and log a missing one at debug ([0a4d4ab](https://github.com/smarter-sh/smarter/commit/0a4d4ab4b43475a7d97668f699eaceec54c9e2a5)), closes [#965](https://github.com/smarter-sh/smarter/issues/965)
+
 ## [0.44.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.5...v0.44.6-alpha.1) (2026-11-09)
 
 ### Bug Fixes
