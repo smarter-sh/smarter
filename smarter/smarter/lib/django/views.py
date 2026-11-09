@@ -322,14 +322,40 @@ class SmarterWebHtmlView(SmarterView):
         """
         Handle GET requests and return a cleaned HttpResponse.
 
+        A view without a template, e.g. a JSON api that only answers POST, has nothing to render, so
+        a GET receives 405 Method Not Allowed instead of a 500 (issue #963).
+
         :param request: The HTTP request object.
         :param args: Passed to :meth:`clean_http_response`.
         :param kwargs: Passed to :meth:`clean_http_response`.
-        :returns: An HttpResponse with the cleaned HTML content.
+        :returns: An HttpResponse with the cleaned HTML content, or a 405 response when the view
+            has no template.
         """
+        if not self.template_path:
+            return self.get_not_allowed(request, *args, **kwargs)
         return self.clean_http_response(
             request, template_path=self.template_path, context=self.context, *args, **kwargs
         )
+
+    def get_not_allowed(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+        Answer a GET to a view that has no template with 405 Method Not Allowed.
+
+        Django's own :meth:`http_method_not_allowed` never runs for these views, because this class
+        defines :meth:`get`. Its ``Allow`` header would list GET and HEAD, so they are removed.
+
+        :param request: The HTTP request object.
+        :param args: Passed to :meth:`http_method_not_allowed`.
+        :param kwargs: Passed to :meth:`http_method_not_allowed`.
+        :returns: A 405 response whose ``Allow`` header lists the methods that the view handles.
+        """
+        response = self.http_method_not_allowed(request, *args, **kwargs)
+        allowed_methods = []
+        for method in self._allowed_methods():
+            if method not in ("GET", "HEAD"):
+                allowed_methods.append(method)
+        response["Allow"] = ", ".join(allowed_methods)
+        return response
 
 
 @method_decorator(never_cache, name="dispatch")
