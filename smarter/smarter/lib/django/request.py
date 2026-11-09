@@ -64,9 +64,10 @@ netloc_pattern_named_url = re.compile(
 )
 
 
-NAMED_URL_PATHS = ("", "/config", "/prompt")
+NAMED_URL_PATHS = ("", "/config", "/prompt", "/jsi18n")
 """The paths, without a trailing slash, that a deployed LLMClient's own host serves.
 
+``/jsi18n`` is the message catalog of the endpoints page that a browser sees there (issue #962).
 See ``smarter.urls.llmclients``.
 """
 
@@ -1394,6 +1395,7 @@ class SmarterRequestMixin(AccountMixin):
             http://example-username.3141-5926-5359.api.localhost:9357/
             http://example-username.3141-5926-5359.api.localhost:9357/config/
             http://example-username.3141-5926-5359.api.localhost:9357/prompt/
+            http://example-username.3141-5926-5359.api.localhost:9357/jsi18n/
 
         As a side effect, when the url has an account number and :attr:`account` is not set,
         the account is loaded from the account number.

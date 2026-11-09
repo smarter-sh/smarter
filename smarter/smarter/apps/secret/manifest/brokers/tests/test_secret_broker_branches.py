@@ -11,7 +11,11 @@ from smarter.apps.secret.manifest.brokers.secret import (
 )
 from smarter.apps.secret.manifest.transformers.secret import SecretTransformer
 from smarter.apps.secret.models import Secret
-from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 
@@ -34,6 +38,13 @@ class TestSmarterSecretBrokerBranches(TestSAMBrokerBaseClass):
 
     def patch_property(self, name: str, value) -> PropertyMock:
         patcher = patch.object(SAMSecretBroker, name, new_callable=PropertyMock, return_value=value)
+        mock = patcher.start()
+        self.addCleanup(patcher.stop)
+        return mock
+
+    def patch_base_name(self, value) -> PropertyMock:
+        """Patch AbstractBroker.name, which SAMSecretBroker.name calls first."""
+        patcher = patch.object(AbstractBroker, "name", new_callable=PropertyMock, return_value=value)
         mock = patcher.start()
         self.addCleanup(patcher.stop)
         return mock
@@ -185,6 +196,32 @@ class TestSmarterSecretBrokerBranches(TestSAMBrokerBaseClass):
         self.patch_property("manifest", None)
         with self.assertRaises(SAMSecretBrokerError):
             broker.manifest_to_django_orm()
+
+    def test_no_name_is_not_a_warning(self):
+        """
+        A broker without a name, e.g. for example-manifest or json-schema, logs no warning (issue #965).
+
+        The commands that need a name fail with their own error.
+        """
+        broker = self.broker
+        self.patch_base_name(None)
+        self.patch_property("secret_transformer", None)
+        broker._name = None  # pylint: disable=protected-access
+        with patch("smarter.apps.secret.manifest.brokers.secret.logger") as mock_logger:
+            self.assertIsNone(broker.name)
+            self.assertIsNone(broker.name)
+        mock_logger.warning.assert_not_called()
+        self.assertEqual(mock_logger.debug.call_count, 2)
+
+    def test_name_from_the_secret(self):
+        """Without a name in the manifest, the name is the Secret's, and is returned."""
+        broker = self.broker
+        self.patch_base_name(None)
+        secret = MagicMock(spec=Secret)
+        secret.name = "the-secret"
+        self.patch_property("secret_transformer", self.fake_transformer())
+        self.patch_property("secret", secret)
+        self.assertEqual(broker.name, "the-secret")
 
     def test_secret_without_a_transformer(self):
         """There's no Secret without a SecretTransformer."""

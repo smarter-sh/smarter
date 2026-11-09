@@ -832,6 +832,29 @@ check reconnects it first.
 See: https://redbeat.readthedocs.io/en/latest/config.html
 """
 
+CELERY_BEAT_MAX_LOOP_INTERVAL = 30
+"""
+The longest time, in seconds, that Celery Beat sleeps between two ticks.
+
+Beat extends RedBeat's lock once per tick, and a Beat that waits for the lock tries again after
+this interval. Celery's default is 300 seconds.
+
+See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#beat-max-loop-interval
+"""
+
+CELERY_REDBEAT_LOCK_TIMEOUT = 5 * CELERY_BEAT_MAX_LOOP_INTERVAL
+"""
+The time, in seconds, that RedBeat's lock lives unless Beat extends it.
+
+When Beat crashes while Redis is unreachable, it can't release its lock, and the restarted Beat
+waits until the lock expires. With RedBeat's default of five times Celery's 300-second loop
+interval, no periodic task ran for 25 minutes after a Redis restart (issue #964). The lock must
+outlast :data:`CELERY_BEAT_MAX_LOOP_INTERVAL`, because Beat extends it once per tick. With one
+Beat replica, it only keeps two Beats from overlapping during a rollout.
+
+See: https://redbeat.readthedocs.io/en/latest/config.html
+"""
+
 CELERY_TASK_TIME_LIMIT = 30 * 60
 """
 The maximum time limit (in seconds) for Celery tasks in Smarter.
