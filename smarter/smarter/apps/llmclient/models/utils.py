@@ -8,6 +8,7 @@ from django.http import HttpRequest
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
+from smarter.lib.django.request import NAMED_URL_PATHS
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
 from .llmclient import LLMClient
@@ -18,10 +19,10 @@ from .llmclient_plugin import LLMClientPlugin
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
-LLMCLIENT_HOST_PATHS = ("/", "/config/", "/prompt/")
-"""The paths that a deployed LLMClient's own host serves.
+LLMCLIENT_HOST_PATHS = tuple(f"{path}/" for path in NAMED_URL_PATHS)
+"""The paths that a deployed LLMClient's own host serves, with their trailing slash.
 
-See ``smarter.urls.llmclients``.
+They are :data:`smarter.lib.django.request.NAMED_URL_PATHS`. See ``smarter.urls.llmclients``.
 """
 
 
