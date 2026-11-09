@@ -58,3 +58,23 @@ class TestRedisSettings(SmarterTestBase):
         self.assertEqual(fallback_warnings, [])
         self.assertEqual(config.redis_url, settings.CELERY_REDBEAT_REDIS_URL)
         self.assertEqual(config.redbeat_redis_options, settings.CELERY_REDBEAT_REDIS_OPTIONS)
+        self.assertEqual(config.lock_timeout, settings.CELERY_REDBEAT_LOCK_TIMEOUT)
+
+    def test_a_crashed_beats_lock_expires_soon(self):
+        """
+        A Beat that crashes during a Redis outage leaves its lock behind (issue #964).
+
+        The restarted Beat waits for it to expire: within a few minutes, not RedBeat's default of
+        25. The lock outlasts Beat's loop interval, because Beat extends it once per tick.
+        """
+        # pylint: disable=import-outside-toplevel
+        from redbeat.schedulers import RedBeatScheduler
+
+        from smarter.lib.celery_conf import APP
+
+        self.assertEqual(APP.conf.beat_max_loop_interval, settings.CELERY_BEAT_MAX_LOOP_INTERVAL)
+        scheduler = RedBeatScheduler(app=APP, lazy=True)
+        self.assertEqual(scheduler.max_interval, settings.CELERY_BEAT_MAX_LOOP_INTERVAL)
+        self.assertEqual(scheduler.lock_timeout, settings.CELERY_REDBEAT_LOCK_TIMEOUT)
+        self.assertGreater(scheduler.lock_timeout, scheduler.max_interval)
+        self.assertLessEqual(scheduler.lock_timeout, 5 * 60)
