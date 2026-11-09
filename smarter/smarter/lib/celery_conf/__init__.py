@@ -23,7 +23,8 @@ def set_redbeat_conf(app: Celery) -> None:
     those exact keys in ``app.conf.keys()``. Under the ``CELERY`` namespace the keys are still
     ``CELERY_REDBEAT_REDIS_URL`` and ``CELERY_REDBEAT_REDIS_OPTIONS``, so it found neither, warned that
     it falls back to the broker's url and transport options, and RedBeat 2.5.0 removes that fallback
-    (issue #945). Setting them unprefixed is what RedBeat finds.
+    (issue #945). Setting them unprefixed is what RedBeat finds. ``redbeat_lock_timeout`` is set the
+    same way (issue #964).
 
     :param app: The Celery app that Celery Beat runs.
     :returns: None
@@ -33,6 +34,7 @@ def set_redbeat_conf(app: Celery) -> None:
 
     app.conf.redbeat_redis_url = settings.CELERY_REDBEAT_REDIS_URL
     app.conf.redbeat_redis_options = settings.CELERY_REDBEAT_REDIS_OPTIONS
+    app.conf.redbeat_lock_timeout = settings.CELERY_REDBEAT_LOCK_TIMEOUT
 
 
 set_redbeat_conf(APP)
