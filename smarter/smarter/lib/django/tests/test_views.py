@@ -40,6 +40,11 @@ class OkOptionallyAuthenticatedApiView(SmarterOptionallyAuthenticatedApiView):
         return HttpResponse("api ok")
 
 
+class PostOnlyHtmlView(SmarterWebHtmlView):
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("post ok")
+
+
 class TestSmarterViews(TestAccountMixin):
     """Test the txt, xml, admin and cached views, and the html helpers."""
 
@@ -74,6 +79,39 @@ class TestSmarterViews(TestAccountMixin):
         self.assertEqual(html.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
         txt = SmarterWebTxtView.as_view(template_path="not/a/template.txt")(self.request())
         self.assertEqual(txt.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def test_get_without_a_template_is_not_allowed(self):
+        """
+        A GET to a view without a template, e.g. a POST-only JSON api, answers 405, not 500 (issue #963).
+
+        The Allow header lists the methods that the view handles, without GET and HEAD.
+        """
+        with self.assertNoLogs(level="ERROR"):
+            response = PostOnlyHtmlView.as_view()(self.request("/api/web/post-only/"))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(response["Allow"], "POST, OPTIONS")
+        head_request = self.factory.head("/api/web/post-only/", HTTP_HOST="localhost:9357")
+        head_request.user = AnonymousUser()
+        head_response = PostOnlyHtmlView.as_view()(head_request)
+        self.assertEqual(head_response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        post_request = self.factory.post("/api/web/post-only/", HTTP_HOST="localhost:9357")
+        post_request.user = AnonymousUser()
+        post_response = PostOnlyHtmlView.as_view()(post_request)
+        self.assertEqual(post_response.status_code, HTTPStatus.OK)
+
+    def test_get_to_a_post_only_web_api_is_not_allowed(self):
+        """A signed-in GET to the passthrough's providers api, which only answers POST, receives 405 (issue #963)."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.dashboard.views.passthrough.api.providers import (
+            ProviderApiView,
+        )
+
+        request = self.request("/api/web/dashboard/passthrough/providers/", user=self.admin_user)
+        with self.assertNoLogs(level="ERROR"):
+            response = ProviderApiView.as_view()(request)
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertNotIn("GET", response["Allow"])
+        self.assertIn("POST", response["Allow"])
 
     def test_reverse_is_not_cached(self):
         """Test that reverse() follows the URLconf, rather than a path cached by an earlier release."""

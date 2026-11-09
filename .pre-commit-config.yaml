@@ -80,6 +80,9 @@ repos:
     hooks:
       - id: commitlint
         stages: [commit-msg]
+        # The latest Node.js release can be a prerelease (v27.0.0-alpha), whose version nodeenv
+        # cannot parse, so the hook's environment failed to install. The latest LTS is a release.
+        language_version: lts
         additional_dependencies: ["@commitlint/config-conventional", "@commitlint/config-angular"]
 ci:
   # for more information, see https://pre-commit.ci

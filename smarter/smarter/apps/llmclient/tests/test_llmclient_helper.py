@@ -138,9 +138,13 @@ class TestLLMClientHelperNamedUrl(TestAccountMixin):
         self.assertIsNone(helper.llmclient_id)
         self.assertIsNone(helper.llmclient_from_host_label())
 
-    def test_the_config_and_prompt_paths(self):
-        """A deployed host's /config/ and /prompt/ resolve its LLMClient, with or without a trailing slash."""
-        for path in ("/config/", "/config", "/prompt/", "/prompt"):
+    def test_the_config_prompt_and_catalog_paths(self):
+        """
+        A deployed host's /config/, /prompt/ and /jsi18n/ resolve its LLMClient, with or without a trailing slash.
+
+        /jsi18n/ is the message catalog of the endpoints page (issue #962).
+        """
+        for path in ("/config/", "/config", "/prompt/", "/prompt", "/jsi18n/", "/jsi18n"):
             with self.subTest(path=path):
                 helper = self.helper(self.admin_llmclient.rfc1034_compliant_name, path=path)
                 self.assertEqual(helper.llmclient, self.admin_llmclient)
@@ -172,7 +176,7 @@ class TestLLMClientHelperNamedUrl(TestAccountMixin):
 
     def test_other_paths_are_not_named_urls(self):
         """Paths that a deployed host doesn't serve, e.g. the console's /dashboard/, resolve nothing."""
-        for path in ("/dashboard/", "/jsi18n/", "/config/extra/"):
+        for path in ("/dashboard/", "/jsi18n/extra/", "/config/extra/"):
             with self.subTest(path=path):
                 helper = self.helper(self.admin_llmclient.rfc1034_compliant_name, path=path)
                 self.assertFalse(helper.is_llmclient_named_url)
