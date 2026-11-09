@@ -1,0 +1,594 @@
+# A prompt that called a tool, as the platform saved it (a PromptHistory row): the request of its first
+# iteration, the response, and the conversation's messages. The stackademy_sql LLMClient was asked "do you
+# teach AI?", and called its stackademy_sql plugin. The api key's last characters are replaced.
+request:
+  api_url: https://api.openai.com/v1/
+  api_key: '****ABCD'
+  model: gpt-6-luna
+  messages:
+  - role: system
+    content: "The current date/time is Saturday, 2026-11-07T23:34:29+0000\nYou are a helpful assistant. When given the opportunity\
+      \ to utilize function calling, you should always do so. This will allow you to provide the best possible responses to\
+      \ the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd also:\nYou are a helpful\
+      \ student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever\
+      \ possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy\
+      \ University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but\
+      \ I can only provide information about the courses offered by Stackademy University.\"\n\n\nYour responses are displayed\
+      \ in a chat window that renders GitHub flavored Markdown: headings, bold, italics, strikethrough, lists, tables, block\
+      \ quotes, inline code, fenced code blocks, links and images. Use Markdown when it makes a response clearer, and name\
+      \ the language of each fenced code block. It also typesets math written in LaTeX: \\( ... \\) for inline math, and \\\
+      [ ... \\] or $$ ... $$ for a displayed equation. A single dollar sign is not math, so never use $ ... $ for math. It\
+      \ draws a fenced code block whose language is mermaid as a Mermaid diagram, such as a flowchart, sequence diagram, class\
+      \ diagram, state diagram or entity relationship diagram. Draw one when a process, architecture or set of relationships\
+      \ is easier to understand as a picture, and keep its syntax simple: quote labels that contain punctuation. The chat\
+      \ window does not render HTML, so do not use it. To show an image, use Markdown image syntax, ![description](https://...),\
+      \ but only with an image url that the user gave you or that a tool returned. NEVER invent an image url, because a broken\
+      \ image looks worse than no image."
+  - role: assistant
+    content: Welcome to Stackademy! How can I help you today?
+  - role: assistant
+    content: 'Some example prompts to get you started:
+
+
+      - Do you offer any courses on AI?
+
+      - My budget is $1,000. What courses can I take?
+
+      - I want to study programming. What do you suggest?
+
+      '
+  - role: user
+    content: do you teach AI?
+  temperature: 1.0
+  max_completion_tokens: 1024
+  tools:
+  - type: function
+    function:
+      name: smarter_plugin_0000000023
+      description: Online course catalogue inquiries for fictional Stackademy University that only offers computer science
+        degrees programs.
+      parameters:
+        type: object
+        properties:
+          max_cost:
+            type: number
+            description: the maximum cost that a student is willing to pay for a course.
+          description:
+            type: string
+            description: areas of specialization for courses in the catalogue.
+            enum:
+            - AI
+            - mobile
+            - web
+            - database
+            - network
+            - neural networks
+        required: []
+        additionalProperties: false
+  tool_choice: auto
+response:
+  id: chatcmpl-EhkDYnHvJ18o2bOzH3hGwWGjVPzwB
+  choices:
+  - finish_reason: stop
+    index: 0
+    logprobs: null
+    message:
+      content: 'Yes! Stackademy offers several AI courses:
+
+
+        - **CS210 — Artificial Intelligence**: Introduction to AI concepts and techniques. **$700**; prerequisite: **CS107
+        Algorithms**.
+
+        - **CS316 — AI for Robotics**: Applying AI techniques to robotics. **$850**; prerequisite: **CS301 Machine Learning**.
+
+        - **CS319 — AI in Healthcare**: Applications of AI in healthcare. **$800**; prerequisite: **CS301 Machine Learning**.
+
+        - **CS405 — AI Capstone Project**: Team-based AI project. **$1,000**; prerequisite: **CS301 Machine Learning**.'
+      refusal: null
+      role: assistant
+      annotations: []
+      audio: null
+      function_call: null
+      tool_calls: null
+  created: 1794094472
+  model: gpt-6-luna
+  object: chat.completion
+  moderation: null
+  service_tier: default
+  system_fingerprint: null
+  usage:
+    completion_tokens: 134
+    prompt_tokens: 988
+    total_tokens: 1122
+    completion_tokens_details:
+      accepted_prediction_tokens: 0
+      audio_tokens: 0
+      reasoning_tokens: 0
+      rejected_prediction_tokens: 0
+    prompt_tokens_details:
+      audio_tokens: 0
+      cache_write_tokens: 0
+      cached_tokens: 0
+  metadata:
+    tool_calls:
+    - function_name: smarter_plugin_0000000023
+      function_args:
+        description: AI
+      smarter_plugin:
+        id: 23
+        createdAt: '2026-10-19T16:03:58.147484Z'
+        updatedAt: '2026-10-30T21:49:01.513982Z'
+        name: stackademy_sql
+        userProfile:
+          user:
+            username: admin
+            email: admin@smarter.sh
+          account:
+            accountNumber: 3141-5926-5359
+        description: Online course catalogue inquiries for fictional Stackademy University that only offers computer science
+          degrees programs.
+        pluginClass: sql
+        version: 0.1.0
+        annotations:
+          smarter.sh/stackademy-sql/display-name: Stackademy SQL
+          smarter.sh/stackademy-sql/icon: https://example.com/stackademy-sql-icon.png
+          smarter.sh/stackademy-sql/documentation-url: https://docs.stackademy.com/sql
+          smarter.sh/stackademy-sql/contact-email: no-reply@example.com
+          smarter.sh/source-commit: b955a5a0fd106028ac789bc4015b438bb666b1bd
+          smarter.sh/source-path: plugins/sql/stackademy-sql.yaml
+          smarter.sh/source-repository: https://github.com/smarter-sh/stackademy
+        tags:
+        - db
+        - database
+        - sql
+        manifestUrl: /llm-tools/plugins/rMTAwMDAyMwx/
+        ready: true
+        kind: SqlPlugin
+        canDelete: false
+        detailUrl: /api/web/dashboard/resource/SqlPlugin/pluginmeta-rMTAwMDAyMwx/
+    model: gpt-6-luna
+    temperature: 1.0
+    max_completion_tokens: 1024
+    input_text: do you teach AI?
+  smarter:
+    first_iteration:
+      request:
+        api_url: https://api.openai.com/v1/
+        api_key: '****ABCD'
+        model: gpt-6-luna
+        messages:
+        - role: system
+          content: "The current date/time is Saturday, 2026-11-07T23:34:29+0000\nYou are a helpful assistant. When given the\
+            \ opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible\
+            \ responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd\
+            \ also:\nYou are a helpful student advisor at the fictional Stackademy University that only offers computer science\
+            \ degrees programs. Whenever possible you should defer to the tool calls provided for additional information about\
+            \ the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should\
+            \ be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\
+            \n\n\nYour responses are displayed in a chat window that renders GitHub flavored Markdown: headings, bold, italics,\
+            \ strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. Use Markdown\
+            \ when it makes a response clearer, and name the language of each fenced code block. It also typesets math written\
+            \ in LaTeX: \\( ... \\) for inline math, and \\[ ... \\] or $$ ... $$ for a displayed equation. A single dollar\
+            \ sign is not math, so never use $ ... $ for math. It draws a fenced code block whose language is mermaid as a\
+            \ Mermaid diagram, such as a flowchart, sequence diagram, class diagram, state diagram or entity relationship\
+            \ diagram. Draw one when a process, architecture or set of relationships is easier to understand as a picture,\
+            \ and keep its syntax simple: quote labels that contain punctuation. The chat window does not render HTML, so\
+            \ do not use it. To show an image, use Markdown image syntax, ![description](https://...), but only with an image\
+            \ url that the user gave you or that a tool returned. NEVER invent an image url, because a broken image looks\
+            \ worse than no image."
+        - role: assistant
+          content: Welcome to Stackademy! How can I help you today?
+        - role: assistant
+          content: 'Some example prompts to get you started:
+
+
+            - Do you offer any courses on AI?
+
+            - My budget is $1,000. What courses can I take?
+
+            - I want to study programming. What do you suggest?
+
+            '
+        - role: user
+          content: do you teach AI?
+        temperature: 1.0
+        max_completion_tokens: 1024
+        tools:
+        - type: function
+          function:
+            name: smarter_plugin_0000000023
+            description: Online course catalogue inquiries for fictional Stackademy University that only offers computer science
+              degrees programs.
+            parameters:
+              type: object
+              properties:
+                max_cost:
+                  type: number
+                  description: the maximum cost that a student is willing to pay for a course.
+                description:
+                  type: string
+                  description: areas of specialization for courses in the catalogue.
+                  enum:
+                  - AI
+                  - mobile
+                  - web
+                  - database
+                  - network
+                  - neural networks
+              required: []
+              additionalProperties: false
+        tool_choice: auto
+      response:
+        id: chatcmpl-EhkDX5uV4Rf5T98EqUwGbL45pSQi7
+        choices:
+        - finish_reason: tool_calls
+          index: 0
+          logprobs: null
+          message:
+            content: null
+            refusal: null
+            role: assistant
+            annotations: []
+            audio: null
+            function_call: null
+            tool_calls:
+            - id: call_lP3EhUC8x2LBhjptU8VjGkQn
+              function:
+                arguments: '{"description":"AI"}'
+                name: smarter_plugin_0000000023
+              type: function
+        created: 1794094471
+        model: gpt-6-luna
+        object: chat.completion
+        moderation: null
+        service_tier: default
+        system_fingerprint: null
+        usage:
+          completion_tokens: 23
+          prompt_tokens: 678
+          total_tokens: 701
+          completion_tokens_details:
+            accepted_prediction_tokens: 0
+            audio_tokens: 0
+            reasoning_tokens: 0
+            rejected_prediction_tokens: 0
+          prompt_tokens_details:
+            audio_tokens: 0
+            cache_write_tokens: 0
+            cached_tokens: 0
+    second_iteration:
+      request:
+        api_url: https://api.openai.com/v1/
+        api_key: '****ABCD'
+        model: gpt-6-luna
+        messages:
+        - role: system
+          content: "The current date/time is Saturday, 2026-11-07T23:34:29+0000\nYou are a helpful assistant. When given the\
+            \ opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible\
+            \ responses to the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd\
+            \ also:\nYou are a helpful student advisor at the fictional Stackademy University that only offers computer science\
+            \ degrees programs. Whenever possible you should defer to the tool calls provided for additional information about\
+            \ the courses offered by Stackademy University. Questions unrelated to the courses or Stackademy University should\
+            \ be answered with \"I am sorry, but I can only provide information about the courses offered by Stackademy University.\"\
+            \n\n\nYour responses are displayed in a chat window that renders GitHub flavored Markdown: headings, bold, italics,\
+            \ strikethrough, lists, tables, block quotes, inline code, fenced code blocks, links and images. Use Markdown\
+            \ when it makes a response clearer, and name the language of each fenced code block. It also typesets math written\
+            \ in LaTeX: \\( ... \\) for inline math, and \\[ ... \\] or $$ ... $$ for a displayed equation. A single dollar\
+            \ sign is not math, so never use $ ... $ for math. It draws a fenced code block whose language is mermaid as a\
+            \ Mermaid diagram, such as a flowchart, sequence diagram, class diagram, state diagram or entity relationship\
+            \ diagram. Draw one when a process, architecture or set of relationships is easier to understand as a picture,\
+            \ and keep its syntax simple: quote labels that contain punctuation. The chat window does not render HTML, so\
+            \ do not use it. To show an image, use Markdown image syntax, ![description](https://...), but only with an image\
+            \ url that the user gave you or that a tool returned. NEVER invent an image url, because a broken image looks\
+            \ worse than no image."
+        - role: assistant
+          content: Welcome to Stackademy! How can I help you today?
+        - role: assistant
+          content: 'Some example prompts to get you started:
+
+
+            - Do you offer any courses on AI?
+
+            - My budget is $1,000. What courses can I take?
+
+            - I want to study programming. What do you suggest?
+
+            '
+        - role: user
+          content: do you teach AI?
+        - content: null
+          refusal: null
+          role: assistant
+          annotations: []
+          audio: null
+          function_call: null
+          tool_calls:
+          - id: call_lP3EhUC8x2LBhjptU8VjGkQn
+            function:
+              arguments: '{"description":"AI"}'
+              name: smarter_plugin_0000000023
+            type: function
+        - tool_call_id: call_lP3EhUC8x2LBhjptU8VjGkQn
+          name: smarter_plugin_0000000023
+          role: tool
+          content: "[\n  {\n    \"course_code\": \"CS210\",\n    \"course_name\": \"Artificial Intelligence\",\n    \"description\"\
+            : \"Introduction to AI concepts and techniques.\",\n    \"cost\": \"700.00\",\n    \"prerequisite_course_code\"\
+            : \"CS107\",\n    \"prerequisite_course_name\": \"Algorithms\"\n  },\n  {\n    \"course_code\": \"CS316\",\n \
+            \   \"course_name\": \"AI for Robotics\",\n    \"description\": \"Applying AI techniques to robotics.\",\n   \
+            \ \"cost\": \"850.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine\
+            \ Learning\"\n  },\n  {\n    \"course_code\": \"CS319\",\n    \"course_name\": \"AI in Healthcare\",\n    \"description\"\
+            : \"Applications of AI in healthcare.\",\n    \"cost\": \"800.00\",\n    \"prerequisite_course_code\": \"CS301\"\
+            ,\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS405\",\n    \"\
+            course_name\": \"AI Capstone Project\",\n    \"description\": \"Team-based AI project.\",\n    \"cost\": \"1000.00\"\
+            ,\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  }\n\
+            ]"
+      response:
+        id: chatcmpl-EhkDYnHvJ18o2bOzH3hGwWGjVPzwB
+        choices:
+        - finish_reason: stop
+          index: 0
+          logprobs: null
+          message:
+            content: 'Yes! Stackademy offers several AI courses:
+
+
+              - **CS210 — Artificial Intelligence**: Introduction to AI concepts and techniques. **$700**; prerequisite: **CS107
+              Algorithms**.
+
+              - **CS316 — AI for Robotics**: Applying AI techniques to robotics. **$850**; prerequisite: **CS301 Machine Learning**.
+
+              - **CS319 — AI in Healthcare**: Applications of AI in healthcare. **$800**; prerequisite: **CS301 Machine Learning**.
+
+              - **CS405 — AI Capstone Project**: Team-based AI project. **$1,000**; prerequisite: **CS301 Machine Learning**.'
+            refusal: null
+            role: assistant
+            annotations: []
+            audio: null
+            function_call: null
+            tool_calls: null
+        created: 1794094472
+        model: gpt-6-luna
+        object: chat.completion
+        moderation: null
+        service_tier: default
+        system_fingerprint: null
+        usage:
+          completion_tokens: 134
+          prompt_tokens: 988
+          total_tokens: 1122
+          completion_tokens_details:
+            accepted_prediction_tokens: 0
+            audio_tokens: 0
+            reasoning_tokens: 0
+            rejected_prediction_tokens: 0
+          prompt_tokens_details:
+            audio_tokens: 0
+            cache_write_tokens: 0
+            cached_tokens: 0
+        metadata:
+          tool_calls:
+          - function_name: smarter_plugin_0000000023
+            function_args:
+              description: AI
+            smarter_plugin:
+              id: 23
+              createdAt: '2026-10-19T16:03:58.147484Z'
+              updatedAt: '2026-10-30T21:49:01.513982Z'
+              name: stackademy_sql
+              userProfile:
+                user:
+                  username: admin
+                  email: admin@smarter.sh
+                account:
+                  accountNumber: 3141-5926-5359
+              description: Online course catalogue inquiries for fictional Stackademy University that only offers computer
+                science degrees programs.
+              pluginClass: sql
+              version: 0.1.0
+              annotations:
+                smarter.sh/stackademy-sql/display-name: Stackademy SQL
+                smarter.sh/stackademy-sql/icon: https://example.com/stackademy-sql-icon.png
+                smarter.sh/stackademy-sql/documentation-url: https://docs.stackademy.com/sql
+                smarter.sh/stackademy-sql/contact-email: no-reply@example.com
+                smarter.sh/source-commit: b955a5a0fd106028ac789bc4015b438bb666b1bd
+                smarter.sh/source-path: plugins/sql/stackademy-sql.yaml
+                smarter.sh/source-repository: https://github.com/smarter-sh/stackademy
+              tags:
+              - db
+              - database
+              - sql
+              manifestUrl: /llm-tools/plugins/rMTAwMDAyMwx/
+              ready: true
+              kind: SqlPlugin
+              canDelete: false
+              detailUrl: /api/web/dashboard/resource/SqlPlugin/pluginmeta-rMTAwMDAyMwx/
+          model: gpt-6-luna
+          temperature: 1.0
+          max_completion_tokens: 1024
+          input_text: do you teach AI?
+      messages: []
+    plugins:
+    - stackademy_sql
+    messages:
+    - role: smarter
+      content: 'Prompt configuration: llm=openai, url=https://api.openai.com/v1/prompt/completions api_key=****ABCD model=gpt-6-luna,
+        temperature=1.0, max_completion_tokens=1024, tool_choice=auto.'
+      smarter_is_new: true
+    - role: smarter
+      content: "Tool presented: stackademy_sql(max_cost: the maximum cost that a student is willing to pay for a course.,\
+        \ description: areas of specialization for courses in the catalogue.) - Online course catalogue inquiries for fictional\
+        \ Stackademy University that only offers computer science degrees programs. \n\nTool definition:\n--------------------\n\
+        {\n    \"type\": \"function\",\n    \"function\": {\n        \"name\": \"smarter_plugin_0000000023\",\n        \"\
+        description\": \"Online course catalogue inquiries for fictional Stackademy University that only offers computer science\
+        \ degrees programs.\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\":\
+        \ {\n                \"max_cost\": {\n                    \"type\": \"number\",\n                    \"description\"\
+        : \"the maximum cost that a student is willing to pay for a course.\"\n                },\n                \"description\"\
+        : {\n                    \"type\": \"string\",\n                    \"description\": \"areas of specialization for\
+        \ courses in the catalogue.\",\n                    \"enum\": [\n                        \"AI\",\n               \
+        \         \"mobile\",\n                        \"web\",\n                        \"database\",\n                 \
+        \       \"network\",\n                        \"neural networks\"\n                    ]\n                }\n    \
+        \        },\n            \"required\": [],\n            \"additionalProperties\": false\n        }\n    }\n}"
+      smarter_is_new: true
+    - role: smarter
+      content: 'openai prompt charges: 678 prompt tokens, 23 completion tokens = 701 total tokens charged.'
+      smarter_is_new: true
+    - content: null
+      refusal: null
+      role: assistant
+      annotations: []
+      audio: null
+      function_call: null
+      tool_calls:
+      - id: call_lP3EhUC8x2LBhjptU8VjGkQn
+        function:
+          arguments: '{"description":"AI"}'
+          name: smarter_plugin_0000000023
+        type: function
+      smarter_is_new: true
+    - role: smarter
+      content: "openai called this tool: stackademy_sql({\"description\":\"AI\"})\n\nTool call:\n--------------------\n{\n\
+        \    \"id\": \"call_lP3EhUC8x2LBhjptU8VjGkQn\",\n    \"function\": {\n        \"arguments\": \"{\\\"description\\\"\
+        :\\\"AI\\\"}\",\n        \"name\": \"smarter_plugin_0000000023\"\n    },\n    \"type\": \"function\"\n}"
+      smarter_is_new: true
+    - tool_call_id: call_lP3EhUC8x2LBhjptU8VjGkQn
+      name: smarter_plugin_0000000023
+      role: tool
+      content: "[\n  {\n    \"course_code\": \"CS210\",\n    \"course_name\": \"Artificial Intelligence\",\n    \"description\"\
+        : \"Introduction to AI concepts and techniques.\",\n    \"cost\": \"700.00\",\n    \"prerequisite_course_code\": \"\
+        CS107\",\n    \"prerequisite_course_name\": \"Algorithms\"\n  },\n  {\n    \"course_code\": \"CS316\",\n    \"course_name\"\
+        : \"AI for Robotics\",\n    \"description\": \"Applying AI techniques to robotics.\",\n    \"cost\": \"850.00\",\n\
+        \    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n\
+        \    \"course_code\": \"CS319\",\n    \"course_name\": \"AI in Healthcare\",\n    \"description\": \"Applications\
+        \ of AI in healthcare.\",\n    \"cost\": \"800.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\"\
+        : \"Machine Learning\"\n  },\n  {\n    \"course_code\": \"CS405\",\n    \"course_name\": \"AI Capstone Project\",\n\
+        \    \"description\": \"Team-based AI project.\",\n    \"cost\": \"1000.00\",\n    \"prerequisite_course_code\": \"\
+        CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  }\n]"
+      smarter_is_new: true
+    - content: 'Yes! Stackademy offers several AI courses:
+
+
+        - **CS210 — Artificial Intelligence**: Introduction to AI concepts and techniques. **$700**; prerequisite: **CS107
+        Algorithms**.
+
+        - **CS316 — AI for Robotics**: Applying AI techniques to robotics. **$850**; prerequisite: **CS301 Machine Learning**.
+
+        - **CS319 — AI in Healthcare**: Applications of AI in healthcare. **$800**; prerequisite: **CS301 Machine Learning**.
+
+        - **CS405 — AI Capstone Project**: Team-based AI project. **$1,000**; prerequisite: **CS301 Machine Learning**.'
+      refusal: null
+      role: assistant
+      annotations: []
+      audio: null
+      function_call: null
+      tool_calls: null
+      smarter_is_new: true
+    - role: smarter
+      content: 'openai prompt charges: 988 prompt tokens, 134 completion tokens = 1122 total tokens charged.'
+      smarter_is_new: true
+    tools:
+    - smarter_plugin_0000000023
+messages:
+- role: system
+  content: "The current date/time is Saturday, 2026-11-07T23:34:29+0000\nYou are a helpful assistant. When given the opportunity\
+    \ to utilize function calling, you should always do so. This will allow you to provide the best possible responses to\
+    \ the user. DO NOT GUESS. IF\n  YOU DON'T KNOW THE ANSWER, RESPOND THAT YOU DON'T KNOW.\n\n\nAnd also:\nYou are a helpful\
+    \ student advisor at the fictional Stackademy University that only offers computer science degrees programs. Whenever\
+    \ possible you should defer to the tool calls provided for additional information about the courses offered by Stackademy\
+    \ University. Questions unrelated to the courses or Stackademy University should be answered with \"I am sorry, but I\
+    \ can only provide information about the courses offered by Stackademy University.\"\n"
+  smarter_is_new: false
+- role: assistant
+  content: Welcome to Stackademy! How can I help you today?
+  smarter_is_new: false
+- role: assistant
+  content: 'Some example prompts to get you started:
+
+
+    - Do you offer any courses on AI?
+
+    - My budget is $1,000. What courses can I take?
+
+    - I want to study programming. What do you suggest?
+
+    '
+  smarter_is_new: false
+- role: user
+  content: do you teach AI?
+  smarter_is_new: false
+- role: smarter
+  content: 'Smarter selected this plugin: stackademy_sql'
+  smarter_is_new: false
+- role: smarter
+  content: 'Prompt configuration: llm=openai, url=https://api.openai.com/v1/prompt/completions api_key=****ABCD model=gpt-6-luna,
+    temperature=1.0, max_completion_tokens=1024, tool_choice=auto.'
+  smarter_is_new: true
+- role: smarter
+  content: "Tool presented: stackademy_sql(max_cost: the maximum cost that a student is willing to pay for a course., description:\
+    \ areas of specialization for courses in the catalogue.) - Online course catalogue inquiries for fictional Stackademy\
+    \ University that only offers computer science degrees programs. \n\nTool definition:\n--------------------\n{\n    \"\
+    type\": \"function\",\n    \"function\": {\n        \"name\": \"smarter_plugin_0000000023\",\n        \"description\"\
+    : \"Online course catalogue inquiries for fictional Stackademy University that only offers computer science degrees programs.\"\
+    ,\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"max_cost\"\
+    : {\n                    \"type\": \"number\",\n                    \"description\": \"the maximum cost that a student\
+    \ is willing to pay for a course.\"\n                },\n                \"description\": {\n                    \"type\"\
+    : \"string\",\n                    \"description\": \"areas of specialization for courses in the catalogue.\",\n     \
+    \               \"enum\": [\n                        \"AI\",\n                        \"mobile\",\n                  \
+    \      \"web\",\n                        \"database\",\n                        \"network\",\n                       \
+    \ \"neural networks\"\n                    ]\n                }\n            },\n            \"required\": [],\n     \
+    \       \"additionalProperties\": false\n        }\n    }\n}"
+  smarter_is_new: true
+- role: smarter
+  content: 'openai prompt charges: 678 prompt tokens, 23 completion tokens = 701 total tokens charged.'
+  smarter_is_new: true
+- content: null
+  refusal: null
+  role: assistant
+  annotations: []
+  audio: null
+  function_call: null
+  tool_calls:
+  - id: call_lP3EhUC8x2LBhjptU8VjGkQn
+    function:
+      arguments: '{"description":"AI"}'
+      name: smarter_plugin_0000000023
+    type: function
+  smarter_is_new: true
+- role: smarter
+  content: "openai called this tool: stackademy_sql({\"description\":\"AI\"})\n\nTool call:\n--------------------\n{\n   \
+    \ \"id\": \"call_lP3EhUC8x2LBhjptU8VjGkQn\",\n    \"function\": {\n        \"arguments\": \"{\\\"description\\\":\\\"\
+    AI\\\"}\",\n        \"name\": \"smarter_plugin_0000000023\"\n    },\n    \"type\": \"function\"\n}"
+  smarter_is_new: true
+- tool_call_id: call_lP3EhUC8x2LBhjptU8VjGkQn
+  name: smarter_plugin_0000000023
+  role: tool
+  content: "[\n  {\n    \"course_code\": \"CS210\",\n    \"course_name\": \"Artificial Intelligence\",\n    \"description\"\
+    : \"Introduction to AI concepts and techniques.\",\n    \"cost\": \"700.00\",\n    \"prerequisite_course_code\": \"CS107\"\
+    ,\n    \"prerequisite_course_name\": \"Algorithms\"\n  },\n  {\n    \"course_code\": \"CS316\",\n    \"course_name\":\
+    \ \"AI for Robotics\",\n    \"description\": \"Applying AI techniques to robotics.\",\n    \"cost\": \"850.00\",\n   \
+    \ \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine Learning\"\n  },\n  {\n    \"\
+    course_code\": \"CS319\",\n    \"course_name\": \"AI in Healthcare\",\n    \"description\": \"Applications of AI in healthcare.\"\
+    ,\n    \"cost\": \"800.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\": \"Machine\
+    \ Learning\"\n  },\n  {\n    \"course_code\": \"CS405\",\n    \"course_name\": \"AI Capstone Project\",\n    \"description\"\
+    : \"Team-based AI project.\",\n    \"cost\": \"1000.00\",\n    \"prerequisite_course_code\": \"CS301\",\n    \"prerequisite_course_name\"\
+    : \"Machine Learning\"\n  }\n]"
+  smarter_is_new: true
+- content: 'Yes! Stackademy offers several AI courses:
+
+
+    - **CS210 — Artificial Intelligence**: Introduction to AI concepts and techniques. **$700**; prerequisite: **CS107 Algorithms**.
+
+    - **CS316 — AI for Robotics**: Applying AI techniques to robotics. **$850**; prerequisite: **CS301 Machine Learning**.
+
+    - **CS319 — AI in Healthcare**: Applications of AI in healthcare. **$800**; prerequisite: **CS301 Machine Learning**.
+
+    - **CS405 — AI Capstone Project**: Team-based AI project. **$1,000**; prerequisite: **CS301 Machine Learning**.'
+  refusal: null
+  role: assistant
+  annotations: []
+  audio: null
+  function_call: null
+  tool_calls: null
+  smarter_is_new: true
+- role: smarter
+  content: 'openai prompt charges: 988 prompt tokens, 134 completion tokens = 1122 total tokens charged.'
+  smarter_is_new: true
