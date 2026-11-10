@@ -60,6 +60,11 @@ holds only what applies to nearly every task.
     called from `initialize_platform`. When you find initialization logic
     outside it, propose moving it in, never copying it. See
     `smarter-management-commands`.
+11. **No secrets, credentials or PII in log entries**, from Python or
+    JavaScript. In DEBUG mode the web console shows Smarter's log to ordinary
+    users, so a leak there is as bad as pushing the value to this public
+    repository. Log ids and masked values, never the value. See
+    `smarter-logging`.
 
 ## Repository map
 
