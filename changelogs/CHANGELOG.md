@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.6...v0.44.7-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* resolve every mypy error and add mypy to the pre-commit hooks ([4afc95a](https://github.com/smarter-sh/smarter/commit/4afc95a244f642a22532278eb2a0965670500fce))
+
 ## [0.44.6](https://github.com/smarter-sh/smarter/compare/v0.44.5...v0.44.6) (2026-11-09)
 
 ### Bug Fixes

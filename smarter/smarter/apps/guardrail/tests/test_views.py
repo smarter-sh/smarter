@@ -44,6 +44,8 @@ def web_url(name: str, **kwargs) -> str:
 class TestGuardrailViews(GuardrailTestBase):
     """Test the Guardrail dashboard views."""
 
+    guardrail: Guardrail
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

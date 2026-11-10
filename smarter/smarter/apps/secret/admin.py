@@ -5,7 +5,6 @@ from django import forms
 from django.contrib import admin
 from django.http.request import HttpRequest
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.dashboard.admin import (

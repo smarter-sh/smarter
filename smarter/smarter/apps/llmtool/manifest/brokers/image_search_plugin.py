@@ -13,9 +13,6 @@ from typing import Optional, Type
 from django.http import HttpRequest
 
 from smarter.apps.llmtool.manifest.enum import SAMPluginCommonMetadataClassValues
-from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
-    SAMPluginCommonMetadata,
-)
 from smarter.apps.llmtool.manifest.models.image_search_plugin.const import MANIFEST_KIND
 from smarter.apps.llmtool.manifest.models.image_search_plugin.model import (
     SAMImageSearchPlugin,
@@ -168,12 +165,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
                 )
 
             if self.loader:
-                self._manifest = SAMImageSearchPlugin(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                    spec=SAMImageSearchPluginSpec(**self.loader.manifest_spec),
-                )
+                self._manifest = SAMImageSearchPlugin.model_validate(self.loader.manifest_sections)
             if self._manifest:
                 logger.debug(
                     "%s.__init__() initialized manifest from loader for %s %s",
@@ -345,12 +337,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMImageSearchPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMImageSearchPluginSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMImageSearchPlugin.model_validate(self.loader.manifest_sections)
             logger.debug(
                 "%s.manifest initialized from loader for %s %s", self.formatted_class_name, self.kind, self.name
             )
@@ -648,8 +635,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
             self.name,
             self.user_profile,
         )
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         example_manifest = SAMImageSearchPlugin(**ImageSearchPlugin.example_manifest())  # type: ignore[arg-type]
         return self.json_response_ok(command=command, data=example_manifest.model_dump())
@@ -707,8 +693,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.describe() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
 
         if not self.manifest:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
@@ -753,8 +738,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.apply() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not self.user:
             raise SAMBrokerError(
@@ -843,8 +827,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
             "%s.prompt() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
         super().prompt(request, kwargs)
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -872,8 +855,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.delete() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         self.set_and_verify_name_param(command=command)
 
         if not self.user:
@@ -933,8 +915,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.deploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -954,8 +935,7 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.undeploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -975,6 +955,5 @@ class SAMImageSearchPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.logs() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

@@ -17,6 +17,8 @@ from asgiref.typing import (
     ASGI3Application,
     ASGIReceiveCallable,
     ASGISendCallable,
+    HTTPResponseBodyEvent,
+    HTTPResponseStartEvent,
     Scope,
 )
 
@@ -57,13 +59,15 @@ class HealthzASGIMiddleware:
                 body = b"OK"
             else:
                 body = b""
-            await send(
-                {
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": [(b"content-type", b"text/plain"), (b"content-length", b"2")],
-                }
-            )
-            await send({"type": "http.response.body", "body": body})
+            # trailers and more_body are False, the ASGI spec's defaults, which the TypedDicts require.
+            start: HTTPResponseStartEvent = {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [(b"content-type", b"text/plain"), (b"content-length", b"2")],
+                "trailers": False,
+            }
+            await send(start)
+            response_body: HTTPResponseBodyEvent = {"type": "http.response.body", "body": body, "more_body": False}
+            await send(response_body)
             return
         await self.app(scope, receive, send)

@@ -641,6 +641,24 @@ class SAMLoader(SmarterHelperMixin):
         return self.get_key(SAMKeys.SPEC.value)
 
     @property
+    def manifest_sections(self) -> SmarterDictType:
+        """
+        Returns the manifest's apiVersion, kind, metadata and spec, to validate a broker's SAM model with.
+
+        A broker builds its manifest with ``SAMGuardrail.model_validate(self.loader.manifest_sections)``.
+        A section that the manifest doesn't have is None, which the model's validation rejects.
+
+        :return: A dictionary with the keys ``apiVersion``, ``kind``, ``metadata`` and ``spec``.
+        """
+        sections: SmarterDictType = {
+            SAMKeys.APIVERSION.value: self.manifest_api_version,
+            SAMKeys.KIND.value: self.manifest_kind,
+            SAMKeys.METADATA.value: self.manifest_metadata,
+            SAMKeys.SPEC.value: self.manifest_spec,
+        }
+        return sections
+
+    @property
     def manifest_status(self) -> Optional[SmarterDictType]:
         """
         Returns the status section of the manifest.

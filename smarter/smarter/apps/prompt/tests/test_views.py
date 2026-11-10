@@ -5,7 +5,6 @@ See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
 import json
-import re
 import secrets
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, call, patch

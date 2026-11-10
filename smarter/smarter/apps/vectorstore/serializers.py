@@ -10,6 +10,9 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerializer
+from smarter.apps.connection.models import ApiConnection
+from smarter.apps.provider.models import Provider
+from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
     MANIFEST_KIND as VECTORSTORE_KIND,
 )
@@ -24,9 +27,15 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
     Read only.
     """
 
-    connection = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    embeddings_provider = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    api_key_secret = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    connection: "serializers.SlugRelatedField[ApiConnection]" = serializers.SlugRelatedField(
+        slug_field="name", read_only=True
+    )
+    embeddings_provider: "serializers.SlugRelatedField[Provider]" = serializers.SlugRelatedField(
+        slug_field="name", read_only=True
+    )
+    api_key_secret: "serializers.SlugRelatedField[Secret]" = serializers.SlugRelatedField(
+        slug_field="name", read_only=True
+    )
     document_count = serializers.SerializerMethodField()
     snapshot_count = serializers.SerializerMethodField()
     manifest_url = serializers.SerializerMethodField()

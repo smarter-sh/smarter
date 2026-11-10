@@ -48,7 +48,10 @@ class TestAbstractBrokerClass(TestAccountMixin):
         super().setUpClass()
         path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         cls.good_manifest_path = os.path.join(path, "good-plugin-manifest.yaml")
-        cls.good_manifest_dict = cls.get_readonly_yaml_file(cls.good_manifest_path)
+        good_manifest = cls.get_readonly_yaml_file(cls.good_manifest_path)
+        if not isinstance(good_manifest, dict):
+            raise TypeError(f"{cls.good_manifest_path} is not a manifest: {type(good_manifest)}")
+        cls.good_manifest_dict = good_manifest
 
     def setUp(self):
         """Set up test fixtures."""

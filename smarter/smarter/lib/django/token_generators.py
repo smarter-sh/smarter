@@ -74,7 +74,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         :returns: The user.
         :raises User.DoesNotExist: If there is no such user.
         """
-        uid = urlsafe_base64_decode(uidb64)
+        uid = urlsafe_base64_decode(uidb64).decode()
         return User.objects.get(pk=uid)
 
     def encode_link(self, request: SmarterRequest, user: User, reverse_link: str) -> str:
@@ -137,7 +137,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         parsed_url = urlparse(url)
         path_parts = parsed_url.path.strip("/").split("/")
         uidb64 = path_parts[-2]
-        uid = urlsafe_base64_decode(uidb64)
+        uid = urlsafe_base64_decode(uidb64).decode()
         user = User.objects.get(pk=uid)
         token = path_parts[-1]
         return user, token

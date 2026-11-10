@@ -333,9 +333,7 @@ class SmarterWebHtmlView(SmarterView):
         """
         if not self.template_path:
             return self.get_not_allowed(request, *args, **kwargs)
-        return self.clean_http_response(
-            request, template_path=self.template_path, context=self.context, *args, **kwargs
-        )
+        return self.clean_http_response(request, self.template_path, *args, context=self.context, **kwargs)
 
     def get_not_allowed(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
@@ -351,8 +349,10 @@ class SmarterWebHtmlView(SmarterView):
         """
         response = self.http_method_not_allowed(request, *args, **kwargs)
         allowed_methods = []
-        for method in self._allowed_methods():
-            if method not in ("GET", "HEAD"):
+        # Django's View._allowed_methods(), which django-stubs doesn't declare
+        for method_name in self.http_method_names:
+            method = method_name.upper()
+            if hasattr(self, method_name) and method not in ("GET", "HEAD"):
                 allowed_methods.append(method)
         response["Allow"] = ", ".join(allowed_methods)
         return response
@@ -450,7 +450,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         super().setup(request, *args, **kwargs)
         if isinstance(user, AnonymousUser):
             user = None
-        SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
+        SmarterRequestMixin.smarter_request_setup(self, *args, request=request, user=user, **kwargs)
         if super().ready:
             self._ready = True
         self.log_ready_status()
@@ -670,7 +670,7 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         super().setup(request, *args, **kwargs)
         if isinstance(user, AnonymousUser):
             user = None
-        SmarterRequestMixin.setup(self, *args, request=request, user=user, **kwargs)
+        SmarterRequestMixin.smarter_request_setup(self, *args, request=request, user=user, **kwargs)
         if not self.smarter_request:
             self.smarter_request = request
 
@@ -683,7 +683,7 @@ class SmarterOptionallyAuthenticatedApiView(SmarterView, SmarterRequestMixin):
         :param kwargs: Passed to the view.
         :returns: The view's response, or :meth:`throttled_response` if the request was throttled.
         """
-        response = self.throttle(request)
+        response: Optional[HttpResponseBase] = self.throttle(request)
         if response is None:
             response = super().dispatch(request, *args, **kwargs)
         patch_vary_headers(response, ["Cookie"])

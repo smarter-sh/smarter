@@ -16,7 +16,6 @@ import sys
 import threading
 import time
 from importlib.metadata import distributions  # library for accessing package metadata
-from typing import Any
 
 import psutil
 

@@ -5,6 +5,7 @@ from langchain_openai import OpenAIEmbeddings
 from pydantic import SecretStr
 
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.typing import SmarterDictType
 
 from .models import VectorstoreMeta
 
@@ -28,7 +29,7 @@ def get_embeddings(vectorstore: VectorstoreMeta) -> Embeddings:
     if not api_key:
         raise SmarterConfigurationError(f"Provider {provider.name} has no API key.")
     embeddings_spec = (vectorstore.spec or {}).get("embeddings") or {}
-    kwargs = {
+    kwargs: SmarterDictType = {
         "model": vectorstore.embeddings_model,
         "api_key": SecretStr(api_key),
         "chunk_size": embeddings_spec.get("batchSize") or 64,

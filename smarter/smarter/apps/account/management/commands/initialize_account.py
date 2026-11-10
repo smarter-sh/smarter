@@ -42,6 +42,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.typing import required
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -203,10 +204,11 @@ class Command(SmarterCommand):
         smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
         for account in accounts:
             try:
+                account_number = required(account.account_number, f"account {account.pk} account_number")
                 self.initialize_account(
-                    account_number=account.account_number,
+                    account_number=account_number,
                     username=smarter_admin_user_profile.user.username,
-                    email=f"{account.account_number}_admin@{smarter_settings.root_domain}",
+                    email=f"{account_number}_admin@{smarter_settings.root_domain}",
                     password=None,
                     company_name=account.company_name,
                 )

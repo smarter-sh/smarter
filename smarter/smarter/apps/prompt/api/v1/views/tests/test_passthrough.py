@@ -2,10 +2,9 @@
 """Test prompt API prompt passthrough view."""
 
 import os
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 import openai
-from django.conf import settings
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin

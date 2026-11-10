@@ -18,7 +18,7 @@ Anyone may describe and get the Vectorstores that are shared with them.
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -73,7 +73,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -101,7 +101,7 @@ class SAMVectorstoreBrokerError(SAMBrokerError):
         return "Smarter API Vectorstore Manifest Broker Error"
 
 
-class SAMVectorstoreBroker(AbstractBroker):
+class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
     """Broker for Vectorstore manifests.
 
     See the module's documentation.
@@ -263,11 +263,13 @@ class SAMVectorstoreBroker(AbstractBroker):
             annotations=vectorstore.annotations,
         )
         status = SAMVectorstoreStatus(
-            accountNumber=vectorstore.user_profile.account.account_number,
+            accountNumber=required(
+                vectorstore.user_profile.account.account_number, "vectorstore.user_profile.account.account_number"
+            ),
             username=vectorstore.user_profile.user.username,
             recordLocator=vectorstore.record_locator,
-            created=vectorstore.created_at,
-            modified=vectorstore.updated_at,
+            created=required(vectorstore.created_at, "vectorstore.created_at"),
+            modified=required(vectorstore.updated_at, "vectorstore.updated_at"),
             vectorstoreStatus=vectorstore.status,
             message=vectorstore.status_message or None,
             indexName=vectorstore.index_name or None,
@@ -307,12 +309,7 @@ class SAMVectorstoreBroker(AbstractBroker):
                 raise SAMVectorstoreBrokerError("Cached manifest is not a SAMVectorstore instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMVectorstore(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMVectorstoreMetadata(**self.loader.manifest_metadata),
-                spec=SAMVectorstoreSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMVectorstore.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     @property
@@ -368,7 +365,9 @@ class SAMVectorstoreBroker(AbstractBroker):
                 maintenance=SAMVectorstoreMaintenance(snapshotIntervalHours=24, snapshotRetention=7),
             ),
             status=SAMVectorstoreStatus(
-                accountNumber=smarter_cached_objects.smarter_account.account_number,
+                accountNumber=required(
+                    smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+                ),
                 username=smarter_cached_objects.smarter_admin.username,
                 recordLocator="vectorstoremeta-abc123",
                 created=datetime.datetime.now(),
@@ -562,10 +561,26 @@ class SAMVectorstoreBroker(AbstractBroker):
         from smarter.apps.provider.models import Provider
         from smarter.apps.secret.models import Secret
 
+        connection_id = instance.connection_id
+        embeddings_provider_id = instance.embeddings_provider_id
+        api_key_secret_id = instance.api_key_secret_id
         return [
-            (SAMKinds.API_CONNECTION.value, ApiConnection.objects.filter(pk=instance.connection_id)),  # type: ignore[attr-defined]
-            (SAMKinds.PROVIDER.value, Provider.objects.filter(pk=instance.embeddings_provider_id)),  # type: ignore[attr-defined]
-            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+            (
+                SAMKinds.API_CONNECTION.value,
+                ApiConnection.objects.filter(pk=connection_id) if connection_id else ApiConnection.objects.none(),
+            ),
+            (
+                SAMKinds.PROVIDER.value,
+                (
+                    Provider.objects.filter(pk=embeddings_provider_id)
+                    if embeddings_provider_id
+                    else Provider.objects.none()
+                ),
+            ),
+            (
+                SAMKinds.SECRET.value,
+                Secret.objects.filter(pk=api_key_secret_id) if api_key_secret_id else Secret.objects.none(),
+            ),
         ]
 
     @memoized_dependencies

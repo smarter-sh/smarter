@@ -9,7 +9,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
    Every kind that the SDK has a type of.
 
-   :type: unknown
+   :type: readonly SAMKind[]
 
 .. js:data:: SAM_SCHEMAS
 
@@ -663,7 +663,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
 .. js:class:: SAMSmarterAuthToken
 
-   Smarter API Manifest - SmarterAuthToken
+   Smarter API Manifest - SmarterAuthToken.
 
    .. js:attribute:: apiVersion
 
@@ -875,4 +875,4 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
    A manifest kind that the SDK has a type of.
 
-   :type: unknown
+   :type: keyof SAMKinds

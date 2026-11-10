@@ -4,7 +4,7 @@ import re
 import traceback
 from functools import cached_property
 from http import HTTPStatus
-from typing import Any, Optional, Type
+from typing import Optional, Type
 
 import yaml
 from django.conf import settings
@@ -13,8 +13,9 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest
 from pydantic import ValidationError as PydanticValidationError
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import BaseAuthentication, SessionAuthentication
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
+from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
@@ -272,8 +273,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :attr:`SmarterJournalCliCommands.APPLY`.
     """
 
-    permission_classes = (SmarterAuthenticatedPermissionClass,)
-    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
+    permission_classes: tuple[type[BasePermission], ...] = (SmarterAuthenticatedPermissionClass,)
+    authentication_classes: tuple[type[BaseAuthentication], ...] = (SmarterTokenAuthentication, SessionAuthentication)
 
     def get_permissions(self):
         """
@@ -301,7 +302,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _manifest_kind_url_parsed: bool = False
     _manifest_name: Optional[str] = None
     _manifest_load_failed: bool = False
-    _params: Optional[SmarterDictType] = None
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
@@ -513,7 +513,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         if not self._manifest_name and self.manifest_data:
             self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
         if not self._manifest_kind and self.loader:
-            self._manifest_kind = self.loader.manifest_metadata.get("name") if self.loader else None
+            loader_metadata = self.loader.manifest_metadata or {}
+            self._manifest_kind = loader_metadata.get("name")
         return self._manifest_name
 
     @property
@@ -618,7 +619,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return False
         return self.cba_ready
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Setup the view.
 
@@ -626,10 +627,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         set up the view for the request. the request is not yet authenticated.
 
         :param request: The HTTP request object
-        :type request: Request
+        :type request: HttpRequest
         """
         super().setup(request, *args, **kwargs)
-        SmarterRequestMixin.setup(self, request=request, *args, **kwargs)
+        SmarterRequestMixin.smarter_request_setup(self, request=request, *args, **kwargs)
 
         # note: setup() is the earliest point in the request lifecycle where we can
         # send signals.
@@ -826,7 +827,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 raise SAMBadRequestError(f"Unsupported manifest kind: {kind}. should be one of {SAMKinds.all()}")
 
     # pylint: disable=too-many-return-statements,too-many-branches
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request to the appropriate handler method.
 
@@ -847,8 +848,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
         Parameters
         ----------
-        request : Request
-            The HTTP request object provided by DRF, containing all request data, headers, and user context.
+        request : HttpRequest
+            The Django request, which DRF wraps in a ``Request`` inside ``dispatch()``.
 
         *args
             Additional positional arguments passed to the view.

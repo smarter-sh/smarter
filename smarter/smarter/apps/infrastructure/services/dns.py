@@ -17,7 +17,7 @@ representation. Names never have a trailing dot.
 import time
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.conf import smarter_settings

@@ -3,7 +3,7 @@
 from functools import cached_property
 from typing import Union
 
-from django.http import HttpResponseBase, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
@@ -77,7 +77,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         class_name = f"{__name__}.{SmarterAuthenticatedAPIView.__name__}"
         return self.formatted_text(class_name)
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set up the view for the request, and send the ``api_request_initiated`` signal.
 
@@ -100,7 +100,9 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
                 self.formatted_class_name,
                 request,
             )
-        self.request = self.smarter_request
+        # DRF's stubs declare APIView.request a Request, which dispatch() makes it. Until then, as
+        # Django's View.setup() does, it is the HttpRequest.
+        self.request = self.smarter_request  # type: ignore[assignment]
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
 
     def initial(self, request: Request, *args, **kwargs):
@@ -284,7 +286,7 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    def setup(self, request: Request, *args, **kwargs) -> None:
+    def setup(self, request: HttpRequest, *args, **kwargs) -> None:
         """
         Set up the view and its SmarterRequestMixin, and send the ``api_request_initiated`` signal.
 
@@ -322,7 +324,9 @@ class SmarterAdminAPIView(APIView, SmarterAdminAPIMixin):
         super().initial(request, *args, **kwargs)
         self.check_superuser()
 
-    def dispatch(self, request: Request, *args, **kwargs) -> Union[HttpResponseBase, HttpResponseForbidden, Response]:
+    def dispatch(
+        self, request: HttpRequest, *args, **kwargs
+    ) -> Union[HttpResponseBase, HttpResponseForbidden, Response]:
         """
         Dispatch the request as DRF does, turning the AttributeError of a missing user into a 403.
 
@@ -396,7 +400,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         class_name = f"{__name__}.{SmarterAdminListAPIView.__name__}"
         return self.formatted_text(class_name)
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set up the view and its SmarterRequestMixin, and send the ``api_request_initiated`` signal.
 
@@ -432,7 +436,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
         super().initial(request, *args, **kwargs)
         self.check_superuser()
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request as DRF does, turning the AttributeError of a missing user into a 403.
 

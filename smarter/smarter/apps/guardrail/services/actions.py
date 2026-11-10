@@ -10,7 +10,7 @@ records ``monitored``, i.e. what it would have done.
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Callable
 
 from smarter.apps.guardrail.models import (
     Guardrail,
@@ -155,7 +155,7 @@ def _handle_transform(*, payload, finding, guardrail) -> ActionOutcome:
     )
 
 
-_ACTION_HANDLERS = {
+_ACTION_HANDLERS: dict[str, Callable[..., ActionOutcome]] = {
     GuardrailAction.LOG: _handle_log,
     GuardrailAction.FLAG: _handle_flag,
     GuardrailAction.REDACT: _handle_redact,

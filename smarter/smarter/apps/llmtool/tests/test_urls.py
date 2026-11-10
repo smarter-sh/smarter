@@ -2,6 +2,7 @@
 """Test :mod:`smarter.apps.llmtool.urls` and :mod:`smarter.apps.llmtool.api.web.urls`."""
 
 from http import HTTPStatus
+from typing import Union
 
 from django.test import Client
 from django.urls import resolve, reverse
@@ -31,7 +32,15 @@ logger = logging.getLogger(__name__)
 class TestPluginUrls(SmarterTestBase):
     """Test that each of the plugin app's reverse names resolves to its view."""
 
-    def assertResolves(self, name: str, view_class, reverse_names: type = PluginReverseNames, kwargs=None):
+    def assertResolves(
+        self,
+        name: str,
+        view_class,
+        reverse_names: Union[
+            type[PluginReverseNames], type[PluginApiWebReverseNames], type[ExtensionApiWebReverseNames]
+        ] = PluginReverseNames,
+        kwargs=None,
+    ):
         """Assert that reversing, and then resolving, ``name`` returns ``view_class`` and ``kwargs``."""
         url = reverse(f"{reverse_names.namespace}:{name}", kwargs=kwargs)
         match = resolve(url)

@@ -5,7 +5,6 @@ The profile image is never fetched: requests.head is mocked.
 """
 
 import asyncio
-import unittest
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 

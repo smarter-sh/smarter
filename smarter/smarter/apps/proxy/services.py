@@ -31,7 +31,7 @@ import ipaddress
 import socket
 import time
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Callable, Iterator, Mapping, Optional
+from typing import Any, AsyncGenerator, Callable, Iterator, Mapping, Optional
 
 import httpx
 from asgiref.sync import sync_to_async
@@ -517,7 +517,9 @@ class ProxyForwarder:
             )
         except httpx.TimeoutException as e:
             client.close()
-            error = ProxyUpstreamTimeout(f"Proxy {self.proxy.name}: the provider did not respond in time: {e}")
+            error: ProxyError = ProxyUpstreamTimeout(
+                f"Proxy {self.proxy.name}: the provider did not respond in time: {e}"
+            )
             self._failed(method, path, error, started)
             raise error from e
         except httpx.HTTPError as e:
@@ -613,11 +615,17 @@ class ProxyForwarder:
         )
 
 
-_END_OF_STREAM = object()
-"""The value that :func:`stream_asynchronously` reads when a stream has no more chunks."""
+def _next_chunk(chunks: Iterator[bytes]) -> Optional[bytes]:
+    """
+    Read the next chunk of a stream, for :func:`stream_asynchronously`.
+
+    :param chunks: The synchronous stream.
+    :returns: The next chunk, or None when the stream has no more chunks.
+    """
+    return next(chunks, None)
 
 
-async def stream_asynchronously(chunks: Iterator[bytes]) -> AsyncIterator[bytes]:
+async def stream_asynchronously(chunks: Iterator[bytes]) -> AsyncGenerator[bytes, None]:
     """
     Serve a synchronous stream, e.g. a provider's event stream read with httpx, as the ASGI server reads it.
 
@@ -630,15 +638,15 @@ async def stream_asynchronously(chunks: Iterator[bytes]) -> AsyncIterator[bytes]
 
     :param chunks: The synchronous stream.
     :returns: The same chunks, as an asynchronous iterator.
-    :rtype: AsyncIterator[bytes]
+    :rtype: AsyncGenerator[bytes, None]
     """
-    read = sync_to_async(next, thread_sensitive=True)
+    read = sync_to_async(_next_chunk, thread_sensitive=True)
     try:
         while True:
-            chunk = await read(chunks, _END_OF_STREAM)
-            if chunk is _END_OF_STREAM:
+            chunk = await read(chunks)
+            if chunk is None:
                 break
-            yield chunk  # type: ignore[misc]
+            yield chunk
     finally:
         close = getattr(chunks, "close", None)
         if close is not None:

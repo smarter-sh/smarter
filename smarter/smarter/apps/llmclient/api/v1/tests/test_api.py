@@ -25,6 +25,7 @@ from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 class TestLLMClientApi(ResourceApiTestMixin, ApiV1TestBase):
     """Test the LLMClient api."""
 
+    resource: LLMClient
     model = LLMClient
     reverse_names = Names
     list_view = Names.llmclient_list_view

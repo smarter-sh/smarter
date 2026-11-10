@@ -24,7 +24,7 @@ class Prompt(MetaDataWithOwnershipModel):
         verbose_name_plural = "Prompts"
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
-    objects: MetaDataWithOwnershipModelManager["Prompt"] = MetaDataWithOwnershipModelManager()
+    objects = MetaDataWithOwnershipModelManager["Prompt"]()
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE, blank=False, null=False)

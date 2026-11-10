@@ -70,12 +70,13 @@ Add the processors to your Django settings::
 import sys
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 from urllib.parse import urljoin
 
 from cache_results import cache_results
 from django.conf import settings
 from django.templatetags.static import static
+from pydantic import HttpUrl
 
 from smarter.apps.account.models import (
     Account,
@@ -248,12 +249,11 @@ def base(request: "HttpRequest") -> SmarterDictType:
     :rtype: dict
     """
     user = None
-    user_profile = None
+    user_profile: Optional[UserProfile] = None
     resolved_user = None
     if hasattr(request, "user"):
         user = request.user
         resolved_user = get_resolved_user(user)
-        user_profile: Optional[UserProfile] = None
         if resolved_user and getattr(resolved_user, "is_authenticated", False):
             user_profile = UserProfile.get_cached_object(user=resolved_user)  # type: ignore
         else:
@@ -311,9 +311,7 @@ def base(request: "HttpRequest") -> SmarterDictType:
     context = get_cached_context(username=resolved_user.username if resolved_user else "missing")  # type: ignore[assignment]
     # not cached with the rest, so that a newly uploaded profile image shows at once. get_cached_avatar_url() has its own cache.
     profile_image_url = (
-        get_cached_avatar_url(user_id=resolved_user.id)  # type: ignore[union-attr]
-        if user_profile
-        else static(DEFAULT_PROFILE_IMAGE)
+        get_cached_avatar_url(user_id=user_profile.user_id) if user_profile else static(DEFAULT_PROFILE_IMAGE)
     )
     context = {
         **context,
@@ -413,7 +411,7 @@ def branding(request: "HttpRequest") -> SmarterDictType:
 
 
 @snake_case()
-def footer(request: "HttpRequest") -> dict[str, dict[str, str]]:
+def footer(request: "HttpRequest") -> dict[str, dict[str, Optional[Union[str, HttpUrl]]]]:
     """
     Provides organization-specific legal context for dashboard templates.
 

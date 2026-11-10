@@ -21,7 +21,7 @@ are for superusers only.
      - Any kind, through the manifest API. See :doc:`Manifests <manifests>`.
    * - ``client.llmClients``
      - :doc:`LLMClients <../../smarter-resources/smarter-llmclient>`: ``prompt()``, ``chat()``,
-       ``stream()``, ``config()``, their ``plugins()``, ``functions()``, ``apiKeys()`` and
+       ``stream()``, ``config()``, ``providerRequest()``, their ``plugins()``, ``functions()``, ``apiKeys()`` and
        ``customDomains()``, and ``deploy()``. An LLMClient's ``tools`` list everything that it adds
        to a prompt: its functions, plugins, MCPClients (``mcpclients``) and guardrails
        (``guardrails``). See :doc:`Prompts and Chat <chat>`.

@@ -1,6 +1,5 @@
-"""Smarter API Connection Manifest"""
+"""Smarter API Connection Manifest."""
 
-from abc import abstractmethod
 from typing import ClassVar, Optional
 
 from pydantic import Field
@@ -20,7 +19,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMConnectionCommon(AbstractSAMBase):
-    """Smarter API Manifest - Common Connection Base Model"""
+    """Smarter API Manifest - Common Connection Base Model."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
@@ -28,11 +27,6 @@ class SAMConnectionCommon(AbstractSAMBase):
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
-
-    @property
-    @abstractmethod
-    def spec(self):
-        """Abstract property for spec."""
 
     status: Optional[SAMConnectionCommonStatus] = Field(
         default=None,

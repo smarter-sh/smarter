@@ -100,10 +100,12 @@ class TestComputeProvisioner(LLMHostTestBase):
 
     def own_compute(self, name: str, **node) -> LLMHostCompute:
         """An LLMHostCompute of the test user, deleted when the test ends."""
-        spec = SAMLLMHostComputeSpec(
-            node={"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32, **node},
-            nodeGroup={"maxNodes": 2},
-            cost={"perHour": "1.0"},
+        spec = SAMLLMHostComputeSpec.model_validate(
+            {
+                "node": {"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32, **node},
+                "nodeGroup": {"maxNodes": 2},
+                "cost": {"perHour": "1.0"},
+            }
         )
         compute = LLMHostCompute.objects.create(
             name=name, user_profile=self.user_profile, **compute_spec_to_django_orm(spec)

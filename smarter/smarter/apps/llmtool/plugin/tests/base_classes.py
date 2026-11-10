@@ -640,6 +640,8 @@ class PluginTestBase(TestAccountMixin):
 
     def delete_plugin_by_id(self, plugin_id: Optional[int]) -> None:
         """Remove a throwaway plugin by id, and everything that cascades from it."""
+        if plugin_id is None:
+            return
         PluginMeta.objects.filter(id=plugin_id).delete()
 
     def new_sql_plugin(self, name: str, **kwargs) -> SqlPlugin:

@@ -51,7 +51,7 @@ Configuration, errors, the http transport, logging, Server-Sent Events, and type
 
    The api's response does not match the SDK's schema of it.
 
-   This usually means that the SDK and the Smarter platform are of incompatible versions.
+   This usually means that the SDK and the Smarter installation are of incompatible versions.
 
    Extends ``APIError``, and has its methods.
 
@@ -521,7 +521,7 @@ Configuration, errors, the http transport, logging, Server-Sent Events, and type
 
    Every ``SmarterEnvironment``.
 
-   :type: unknown
+   :type: readonly SmarterEnvironment[]
 
 .. js:data:: JsonObject
 
@@ -537,7 +537,7 @@ Configuration, errors, the http transport, logging, Server-Sent Events, and type
 
 .. js:data:: LOCAL_URL
 
-   The url of the Smarter platform's local development server.
+   The url of the Smarter Project's local development server.
 
    :type: "http://localhost:9357"
 
@@ -685,9 +685,9 @@ Configuration, errors, the http transport, logging, Server-Sent Events, and type
 
 .. js:data:: QueryParamValue
 
-   A query parameter's value. ``null`` and ``undefined`` leave the parameter out.
+   A query parameter's value. An array repeats the parameter once per item; ``null`` and ``undefined`` leave it out.
 
-   :type: string | number | boolean | null | undefined
+   :type: string | number | boolean | readonly (string | number | boolean)[] | null | undefined
 
 .. js:data:: SmarterEnvironment
 

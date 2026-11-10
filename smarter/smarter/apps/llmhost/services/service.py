@@ -27,7 +27,7 @@ Example::
 """
 
 import secrets
-from typing import Any, Iterable, Optional
+from typing import Iterable, Optional
 
 from django.utils import timezone
 from pydantic import ValidationError
@@ -62,7 +62,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .cluster import ClusterBackend, get_cluster
 from .compute import ComputeProvisioner, ComputeState, computes_for, resolve_compute
@@ -250,7 +250,7 @@ class LLMHostService:
             namespace=self.cluster.namespace,
             spec=spec,
             served_name=llmhost.name,
-            account_number=llmhost.user_profile.account.account_number,
+            account_number=required(llmhost.user_profile.account.account_number, "account.account_number"),
             hostname=ingress_hostname,
             cluster_issuer=api_domain,
             hf_token=bool(spec.model.tokenSecret),
@@ -303,8 +303,10 @@ class LLMHostService:
             secret = self.find_secret(llmhost, spec.network.apiKeySecret)
         else:
             name = API_KEY_SECRET_NAME.format(name=llmhost.name)
-            secret = Secret.objects.filter(user_profile=llmhost.user_profile, name=name).first()
-            if secret is None:
+            existing = Secret.objects.filter(user_profile=llmhost.user_profile, name=name).first()
+            if existing is not None:
+                secret = existing
+            else:
                 secret = Secret(
                     name=name,
                     user_profile=llmhost.user_profile,

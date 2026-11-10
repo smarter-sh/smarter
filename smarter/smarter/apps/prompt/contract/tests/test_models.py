@@ -121,43 +121,47 @@ PLUGIN_META = {"id": 16, "name": "stackademy_sql", "plugin_class": "sql", "tags"
 
 def complete_config() -> PromptChatApiConfig:
     """A complete configuration, as PromptConfigView.chat_config() builds it."""
-    return PromptChatApiConfig(
-        contract=2,
-        session_key=SESSION_KEY,
-        sandbox_mode=False,
-        debug_mode=False,
-        llmclient={
-            **LLMCLIENT,
-            "url_llmclient": "https://stackademy.3141-5926-5359.api.example.com/prompt/",
-            "user_profile": {"user": {"username": "owner", "email": "owner@example.com"}, "account_number": "1"},
-            "default_temperature": 0.5,
-            "total_tools": 3,
-        },
-        history={
-            "chat_history": [{"role": "user", "content": "hi"}],
-            "llmclient_request_history": [
-                {
-                    "id": 1,
-                    "llmclient": 1,
-                    "request": {"session_key": SESSION_KEY, "messages": [{"role": "system", "content": "secret"}]},
-                }
-            ],
-            "prompt_tool_call_history": [{"id": 1, "prompt": 1, "function_name": "calculator", "response": {"x": [1]}}],
-        },
-        meta_data={"ready": True, "is_deployed": True, "account": {"account_number": "1"}, "url": "x"},
-        plugins={
-            "meta_data": {"total_plugins": 2, "plugins_returned": 2},
-            "plugins": [
-                {"id": 1, "llmclient": 1, "plugin_meta": PLUGIN_META},
-                {"id": 2, "llmclient": 1, "plugin_meta": PLUGIN_META},
-            ],
-        },
-        extensions={
-            "meta_data": {"total_extensions": 1, "extensions_returned": 1},
-            "extensions": [
-                {"id": 1, "llmclient": 1, "extension": 3, "name": "weather", "version": "1.0.0", "enabled": True}
-            ],
-        },
+    return PromptChatApiConfig.model_validate(
+        {
+            "contract": 2,
+            "session_key": SESSION_KEY,
+            "sandbox_mode": False,
+            "debug_mode": False,
+            "llmclient": {
+                **LLMCLIENT,
+                "url_llmclient": "https://stackademy.3141-5926-5359.api.example.com/prompt/",
+                "user_profile": {"user": {"username": "owner", "email": "owner@example.com"}, "account_number": "1"},
+                "default_temperature": 0.5,
+                "total_tools": 3,
+            },
+            "history": {
+                "chat_history": [{"role": "user", "content": "hi"}],
+                "llmclient_request_history": [
+                    {
+                        "id": 1,
+                        "llmclient": 1,
+                        "request": {"session_key": SESSION_KEY, "messages": [{"role": "system", "content": "secret"}]},
+                    }
+                ],
+                "prompt_tool_call_history": [
+                    {"id": 1, "prompt": 1, "function_name": "calculator", "response": {"x": [1]}}
+                ],
+            },
+            "meta_data": {"ready": True, "is_deployed": True, "account": {"account_number": "1"}, "url": "x"},
+            "plugins": {
+                "meta_data": {"total_plugins": 2, "plugins_returned": 2},
+                "plugins": [
+                    {"id": 1, "llmclient": 1, "plugin_meta": PLUGIN_META},
+                    {"id": 2, "llmclient": 1, "plugin_meta": PLUGIN_META},
+                ],
+            },
+            "extensions": {
+                "meta_data": {"total_extensions": 1, "extensions_returned": 1},
+                "extensions": [
+                    {"id": 1, "llmclient": 1, "extension": 3, "name": "weather", "version": "1.0.0", "enabled": True}
+                ],
+            },
+        }
     )
 
 

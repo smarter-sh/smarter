@@ -1,6 +1,8 @@
 # pylint: disable=missing-class-docstring,W0212
 """Guardrail serializers."""
 
+from typing import TYPE_CHECKING
+
 from django.urls import reverse
 from rest_framework import serializers
 
@@ -10,6 +12,9 @@ from smarter.apps.guardrail.manifest.models.guardrail.const import (
 )
 
 from .models import Guardrail, GuardrailEvent
+
+if TYPE_CHECKING:
+    from smarter.apps.llmclient.models import LLMClient
 
 
 class GuardrailSerializer(MetaDataWithOwnershipModelSerializer):
@@ -54,7 +59,9 @@ class GuardrailEventSerializer(serializers.ModelSerializer):
     Only ``reviewed`` is writable.
     """
 
-    llmclient = serializers.SlugRelatedField(read_only=True, slug_field="name")
+    llmclient: "serializers.SlugRelatedField[LLMClient]" = serializers.SlugRelatedField(
+        read_only=True, slug_field="name"
+    )
 
     class Meta:
         model = GuardrailEvent

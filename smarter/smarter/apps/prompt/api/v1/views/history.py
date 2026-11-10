@@ -68,7 +68,8 @@ def plugin_usage_for_user(user) -> QuerySet[PromptPluginUsage]:
     return (
         PromptPluginUsage.objects.filter(prompt__in=sessions_for_user(user))
         .select_related("prompt", "plugin__user_profile__user", "plugin__user_profile__account")
-        .prefetch_related("plugin__tags")
+        # django-stubs doesn't know taggit's TaggableManager, which is untyped, as a relation.
+        .prefetch_related("plugin__tags")  # type: ignore[misc]
         .order_by("-pk")
     )
 

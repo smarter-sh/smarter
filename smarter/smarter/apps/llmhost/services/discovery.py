@@ -17,7 +17,7 @@ import math
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Protocol, Union
 from urllib.parse import quote
 
 import requests
@@ -211,6 +211,22 @@ class BuiltinCatalog(ModelCatalog):
         raise LLMHostDiscoveryError(f"{repository} is not a built-in LLMHost.")
 
 
+class HubResponse(Protocol):
+    """What :class:`HuggingFaceCatalog` reads of a response: a :class:`requests.Response`, or a fake in tests."""
+
+    status_code: int
+
+    def json(self) -> Any:
+        """The response's parsed JSON body."""
+
+
+class HubSession(Protocol):
+    """What :class:`HuggingFaceCatalog` uses of a session: a :class:`requests.Session`, or a fake in tests."""
+
+    def get(self, url: str, *, params: Any = None, headers: Any = None, timeout: Any = None) -> HubResponse:
+        """Send a GET request."""
+
+
 class HuggingFaceCatalog(ModelCatalog):
     """
     The Hugging Face Hub.
@@ -226,12 +242,12 @@ class HuggingFaceCatalog(ModelCatalog):
         self,
         token: Optional[str] = None,
         base_url: str = "https://huggingface.co",
-        session: Optional[requests.Session] = None,
+        session: Optional[HubSession] = None,
         timeout: float = 15,
     ):
         self.token = token
         self.base_url = base_url.rstrip("/")
-        self.session = session or requests.Session()
+        self.session: HubSession = session or requests.Session()
         self.timeout = timeout
 
     def _get(
@@ -485,8 +501,10 @@ def recommend_resources(
     size_gb = weights_gb(parameter_count, quantization)
     options: list[tuple[SmarterDictType, PodRequests]] = []
     if cpu_ok and vram_gb <= 4:
-        resources = {"gpuCount": 0, "cpu": pod_cpu(0), "memory": pod_memory(size_gb, 0)}
-        options.append((resources, PodRequests(cpu_millicores(resources["cpu"]), memory_mib(resources["memory"]))))
+        cpu = pod_cpu(0)
+        memory = pod_memory(size_gb, 0)
+        resources: SmarterDictType = {"gpuCount": 0, "cpu": cpu, "memory": memory}
+        options.append((resources, PodRequests(cpu_millicores(cpu), memory_mib(memory))))
     # then the fewest GPUs that fit, of any compute.
     gpu_counts = set()
     for compute in computes:
@@ -494,13 +512,15 @@ def recommend_resources(
         if gpu_count:
             gpu_counts.add(gpu_count)
     for count in sorted(gpu_counts):
+        cpu = pod_cpu(count)
+        memory = pod_memory(size_gb, count)
         resources = {
             "gpuCount": count,
             "vramRequiredGb": vram_gb,
-            "cpu": pod_cpu(count),
-            "memory": pod_memory(size_gb, count),
+            "cpu": cpu,
+            "memory": memory,
         }
-        pod = PodRequests(cpu_millicores(resources["cpu"]), memory_mib(resources["memory"]), count, vram_gb)
+        pod = PodRequests(cpu_millicores(cpu), memory_mib(memory), count, vram_gb)
         options.append((resources, pod))
     for resources, pod in options:
         try:

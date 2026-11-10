@@ -16,7 +16,6 @@ those of their account, its members, and their resources. Superusers see every b
 
 from decimal import Decimal
 from http import HTTPStatus
-from typing import Any
 
 from django.http import HttpRequest, JsonResponse
 

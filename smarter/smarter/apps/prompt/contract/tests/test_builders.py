@@ -26,10 +26,15 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class TestContractBuilders(SmarterTestBase):
     """Test the builders of the Smarter Chat api contract's responses."""
 
+    responses: SmarterDictType
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.responses = cls.get_readonly_yaml_file(os.path.join(HERE, "data", "prompt_responses.yaml"))
+        responses = cls.get_readonly_yaml_file(os.path.join(HERE, "data", "prompt_responses.yaml"))
+        if not isinstance(responses, dict):
+            raise cls.failureException("prompt_responses.yaml must hold a mapping of responses by name")
+        cls.responses = responses
 
     def lambda_response(self, name: str) -> SmarterDictType:
         """A prompt's Lambda style result from the fixtures, with its body as a JSON string."""

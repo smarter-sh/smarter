@@ -7,7 +7,7 @@ PluginDataImageSearch model for storing the configuration of an ImageSearchPlugi
     Claude Opus 5.5), with Lawrence McDaniel as co-author. It is experimental.
 """
 
-from typing import Any, Optional, Union
+from typing import Any, Optional, Self, Union
 
 from cache_results import cache_results
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -322,7 +322,7 @@ class PluginDataImageSearch(PluginDataBase):
         """
 
         @cache_results()
-        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataImageSearch", None]:
+        def data_by_plugin_id(plugin_id: int) -> Optional[Self]:
             try:
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist as e:
@@ -342,7 +342,7 @@ class PluginDataImageSearch(PluginDataBase):
         pk: Optional[int] = None,
         plugin: Optional[PluginMeta] = None,
         **kwargs,
-    ) -> Optional["PluginDataBase"]:
+    ) -> Optional[Self]:
         """
         Retrieve a model instance by primary key or by plugin, with caching.
 
@@ -354,7 +354,7 @@ class PluginDataImageSearch(PluginDataBase):
         """
 
         @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional[Self]:
             try:
                 return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist as e:
@@ -363,9 +363,10 @@ class PluginDataImageSearch(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        retval: Optional[PluginDataBase] = None
+        retval: Optional[Self] = None
         if pk:
-            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[assignment]
+            cached = super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)
+            retval = cached if isinstance(cached, cls) else None
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[reportAttributeAccessIssue]
         return retval

@@ -4,6 +4,7 @@ import sys
 
 from rest_framework import serializers
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.serializers import (
     MetaDataWithOwnershipModelSerializer,
 )
@@ -18,6 +19,7 @@ from smarter.apps.connection.models import (
     ConnectionBase,
     SqlConnection,
 )
+from smarter.apps.secret.models import Secret
 
 
 def is_sphinx_build():
@@ -172,9 +174,13 @@ class ApiConnectionSerializer(MetaDataWithOwnershipModelSerializer):
         # }
     """
 
-    user_profile = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    proxy_password = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    user_profile: "serializers.SlugRelatedField[UserProfile]" = serializers.SlugRelatedField(  # type: ignore[assignment]  # DRF lets a subclass replace a declared field with another kind; the base annotates it as UserProfileSerializer
+        slug_field="name", read_only=True
+    )
+    api_key: "serializers.SlugRelatedField[Secret]" = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    proxy_password: "serializers.SlugRelatedField[Secret]" = serializers.SlugRelatedField(
+        slug_field="name", read_only=True
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:

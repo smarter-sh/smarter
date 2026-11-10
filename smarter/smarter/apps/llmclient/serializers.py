@@ -316,8 +316,8 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     custom domains and api keys) are serialized as nested lists.
     """
 
-    hashed_id = serializers.SerializerMethodField()
-    url_llmclient = serializers.ReadOnlyField()
+    # DRF lets a subclass replace a declared field with another kind; the base declares a CharField.
+    hashed_id = serializers.SerializerMethodField()  # type: ignore[assignment]
     user_profile = UserProfileSerializer()
     extensions = serializers.SerializerMethodField()
     plugins = serializers.SerializerMethodField()

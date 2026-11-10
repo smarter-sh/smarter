@@ -312,7 +312,7 @@ class MetaDataModel(TimestampedModel):
             # Retrieve by name
             instance = MyModel.get_cached_object(name="exampleName")
 
-        :param args: Passed on to :meth:`TimestampedModel.get_cached_object` for a lookup by pk.
+        :param args: Accepted for the subclasses' signature, and ignored.
         :param invalidate: Whether to drop the cached row, and read it again from the database.
         :param pk: The primary key of the model instance to retrieve.
         :param name: The name of the model instance to retrieve, which takes precedence over ``pk``.
@@ -344,7 +344,8 @@ class MetaDataModel(TimestampedModel):
                     name,
                     invalidate,
                 )
-                retval = cls.objects.prefetch_related("tags").get(name=name)
+                # taggit has no type information, so django-stubs doesn't know that tags is a relation.
+                retval = cls._default_manager.prefetch_related("tags").get(name=name)  # type: ignore[misc]
                 verbose_logger.debug(
                     "%s._get_object_by_name() fetched and cached %s name: %s",
                     class_prefix,
@@ -376,7 +377,8 @@ class MetaDataModel(TimestampedModel):
             # same args as invalidate() above, so that both produce the same cache key
             return _get_object_by_name(name, cls.__name__)
 
-        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+        # TimestampedModel.get_cached_object() takes no positional arguments after cls.
+        return super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_objects(cls, invalidate: Optional[bool] = False, **kwargs) -> QuerySet["MetaDataModel"]:

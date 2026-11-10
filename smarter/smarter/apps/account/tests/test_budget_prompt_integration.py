@@ -60,6 +60,8 @@ def completion(content: str) -> ChatCompletion:
 class TestBudgetPromptIntegration(TestAccountMixin):
     """Test the enforcement of budgets on prompts."""
 
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

@@ -1,8 +1,8 @@
 """Plugin urls."""
 
+from django.http import HttpRequest
 from django.urls import path
 from django.views import View
-from rest_framework.request import Request
 
 from .const import namespace
 from .views import (
@@ -18,7 +18,7 @@ app_name = namespace
 class RequestRouter(View):
     """Http method-based request router."""
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Send a POST to :class:`PluginView`, which creates a plugin, and any other method to :class:`PluginListView`.
 
