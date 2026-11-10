@@ -25,6 +25,11 @@ a key from the command line:
 
 This will output the generated API key to the console. Be sure to store this key securely as it will not be shown again.
 
+A user's API keys each have a different name, because the cli and the console find a key by its
+owner and name. The key is named ``<account_number>.<username>`` (in snake_case), with a ``_2``,
+``_3``, ... suffix when the user already has a key of that name. Pass ``--name`` to choose the name
+yourself; the command refuses a name that the user's other keys already have.
+
 Managing API Keys
 -----------------
 

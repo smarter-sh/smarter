@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-position,protected-access
 """Test SAMSmarterAuthTokenBroker."""
 
 import os
@@ -482,6 +482,35 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
             with self.subTest(error=error), patch.object(SmarterAuthToken.objects, "get", side_effect=error):
                 broker.orm_meta_instance_setter()
                 self.assertIsNone(broker._orm_meta_instance)
+
+    def test_duplicate_names(self):
+        """Two API keys of a user with the broker's name: a clear warning and error, not a generic failure (#971)."""
+        broker = self.broker
+        broker._orm_instance = None
+        broker._orm_meta_instance = None
+        broker._smarter_auth_token = None
+        self.patch_property("token_username", self.admin_user.username)
+        duplicates = SmarterAuthToken.MultipleObjectsReturned("get() returned more than one SmarterAuthToken")
+        with patch.object(SmarterAuthToken.objects, "get", side_effect=duplicates):
+            with patch("smarter.lib.drf.manifest.brokers.auth_token.logger") as mock_logger:
+                broker.orm_meta_instance_setter()
+            self.assertIsNone(broker._orm_meta_instance)
+            mock_logger.error.assert_not_called()
+            self.assertIn("Rename all but one", str(mock_logger.warning.call_args))
+            with self.assertRaisesRegex(SAMSmarterAuthTokenBrokerError, "Rename all but one"):
+                _ = broker.smarter_auth_token
+
+    def test_orm_meta_instance_setter_logs_the_account_number(self):
+        """The log names the account by its number, never its string form, which has the company name (#971)."""
+        broker = self.broker
+        broker._orm_instance = None
+        self.patch_property("token_username", self.admin_user.username)
+        with patch.object(SmarterAuthToken.objects, "get", side_effect=RuntimeError("database down")):
+            with patch("smarter.lib.drf.manifest.brokers.auth_token.logger") as mock_logger:
+                broker.orm_meta_instance_setter()
+        logged = str(mock_logger.error.call_args)
+        self.assertIn(self.account.account_number, logged)
+        self.assertNotIn(str(self.account.company_name), logged)
 
     def test_conversions_need_a_manifest_and_token(self):
         broker = self.broker
