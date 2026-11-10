@@ -32,6 +32,7 @@ class TestSettingsEnvironments(SmarterTestBase):
         self.assertFalse(settings.environment_is_local)
         self.assertEqual(settings.environment_platform_domain, settings.root_platform_domain)
         self.assertEqual(settings.environment_api_domain, settings.root_api_domain)
+        self.assertEqual(settings.environment_api_dns_domain, settings.environment_api_domain)
         self.assertEqual(settings.protocol, "https")
         self.assertEqual(settings.api_schema, settings_defaults.API_SCHEMA)
         self.assertEqual(settings.environment_cdn_domain, f"cdn.{settings.environment_platform_domain}")
@@ -50,6 +51,7 @@ class TestSettingsEnvironments(SmarterTestBase):
             settings.environment_platform_domain, f"{SmarterEnvironments.ALPHA}.{settings.root_platform_domain}"
         )
         self.assertEqual(settings.environment_api_domain, f"{SmarterEnvironments.ALPHA}.{settings.root_api_domain}")
+        self.assertEqual(settings.environment_api_dns_domain, settings.environment_api_domain)
         self.assertIn(SmarterEnvironments.ALPHA, settings.environment_namespace)
 
     def test_local_domains(self):
@@ -60,6 +62,10 @@ class TestSettingsEnvironments(SmarterTestBase):
         self.assertEqual(settings.protocol, "http")
         self.assertIn("localhost", settings.environment_platform_domain)
         self.assertIn("localhost", settings.environment_api_domain)
+        # DNS can't serve localhost: LLMClients' records, and their ClusterIssuer, use the proxy domain,
+        # api.local.<root domain>, which smarter-infrastructure's local environment creates.
+        self.assertEqual(settings.environment_api_dns_domain, f"api.{SmarterEnvironments.LOCAL}.{settings.root_domain}")
+        self.assertEqual(settings.environment_api_dns_domain, settings.proxy_api_domain)
         self.assertEqual(settings.environment_cdn_domain, f"cdn.{SmarterEnvironments.LOCAL}.{settings.root_domain}")
         self.assertEqual(settings.aws_s3_bucket_name, settings.root_proxy_domain)
         self.assertTrue(settings.environment_namespace.endswith(SmarterEnvironments.LOCAL))

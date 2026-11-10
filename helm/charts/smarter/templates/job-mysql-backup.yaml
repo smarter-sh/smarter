@@ -63,6 +63,7 @@ spec:
             {{- toYaml .Values.global.affinity | nindent 12 }}
           tolerations:
             {{- toYaml .Values.global.tolerations | nindent 12 }}
+          serviceAccountName: "{{ $.Values.global.appName }}-backup"
           automountServiceAccountToken: true
 
           volumes:

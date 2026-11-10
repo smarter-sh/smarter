@@ -21,7 +21,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
+from smarter.common.const import SmarterEnvironments
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -153,12 +153,14 @@ class DNSService(InfrastructureService):
     @property
     def environment_api_domain(self) -> str:
         """
-        The environment's API domain, as it exists in DNS, e.g. ``local.api.example.com``.
+        The environment's API domain, as it exists in DNS, e.g. ``api.local.example.com``.
 
         In the local environment, ``smarter_settings.environment_api_domain`` is a localhost
-        domain, which DNS cannot serve, so this is its proxy domain.
+        domain, which DNS cannot serve, so this is its proxy domain. It is
+        ``smarter_settings.environment_api_dns_domain``, the zone in which LLMClients' default
+        hosts are created, so that a record is deleted from the zone that it was created in.
         """
-        return f"{smarter_settings.environment}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}"
+        return smarter_settings.environment_api_dns_domain
 
     def _proxy_domain(self, domain: str) -> str:
         """In the local environment, replace the environment's API domain with its proxy domain."""

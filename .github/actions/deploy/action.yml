@@ -30,6 +30,12 @@ inputs:
   aws-region:
     description: "The AWS region to deploy to"
     required: true
+  aws-iam-role-arn:
+    description: "The IAM role (IRSA) of the platform's pods. When set, the pods get no AWS access keys: the keys only deploy."
+    required: false
+  aws-backup-iam-role-arn:
+    description: "The IAM role (IRSA) of the MariaDB backup CronJob"
+    required: false
   brave-search-api-key:
     description: "The Brave Search API key"
     required: false
@@ -443,9 +449,9 @@ runs:
           "deployTimestamp": "$(date +%s)",
           "env": {
             "AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
-            "AWS_ACCESS_KEY_ID": ${{ inputs.aws-access-key-id && format('"{0}"', inputs.aws-access-key-id) || 'null' }},
+            "AWS_ACCESS_KEY_ID": ${{ !inputs.aws-iam-role-arn && inputs.aws-access-key-id && format('"{0}"', inputs.aws-access-key-id) || 'null' }},
             "AWS_REGION": ${{ inputs.aws-region && format('"{0}"', inputs.aws-region) || 'null' }},
-            "AWS_SECRET_ACCESS_KEY": ${{ inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
+            "AWS_SECRET_ACCESS_KEY": ${{ !inputs.aws-iam-role-arn && inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
             "CACHES_LOCATION": ${{ env.CACHES_LOCATION && format('"{0}"', env.CACHES_LOCATION) || 'null' }},
             "CELERY_BROKER_URL": ${{ env.CELERY_BROKER_URL && format('"{0}"', env.CELERY_BROKER_URL) || 'null' }},
             "CELERY_RESULT_BACKEND": ${{ env.CELERY_RESULT_BACKEND && format('"{0}"', env.CELERY_RESULT_BACKEND) || 'null' }},
@@ -585,6 +591,9 @@ runs:
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --set global.image.pullPolicy="IfNotPresent" \
           --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_MYSQL_BACKUP_S3_URI }}" \
+          --set serviceAccount.awsRoleArn="${{ inputs.aws-iam-role-arn }}" \
+          --set databaseScheduledBackup.awsRoleArn="${{ inputs.aws-backup-iam-role-arn }}" \
+          --set serviceAccount.createClusterRole=false \
           --set slackBot.enabled=${{ inputs.slack-bot-token != '' && inputs.slack-app-token != '' && inputs.slack-bot-agent-url != '' }} \
           --set slackBot.agentUrl="${{ inputs.slack-bot-agent-url }}" \
           --set databaseInit.notifySlackChannel="${{ inputs.slack-notify-channel }}" \

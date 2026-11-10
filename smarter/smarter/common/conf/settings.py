@@ -4645,6 +4645,30 @@ class Settings(BaseSettings):
         return f"{self.environment}.{self.root_api_domain}"
 
     @cached_property
+    def environment_api_dns_domain(self) -> str:
+        """
+        Return the environment's API domain as it exists in DNS.
+
+        In an AWS environment, it is :attr:`environment_api_domain`. Elsewhere, e.g. in local
+        Docker, :attr:`environment_api_domain` is a localhost domain, which DNS cannot serve, so it
+        is :attr:`proxy_api_domain`. Its DNS zone holds the A records of the LLMClients' default
+        hosts, and its cert-manager ClusterIssuer, of the same name, issues their certificates.
+
+        Example:
+            >>> print(smarter_settings.environment_api_dns_domain)
+            'alpha.api.platform.example.com'
+            >>> print(smarter_settings.environment_api_dns_domain)
+            'api.local.example.com'
+
+        See Also:
+            - smarter_settings.environment_api_domain
+            - smarter_settings.proxy_api_domain
+        """
+        if self.environment in SmarterEnvironments.aws_environments:
+            return self.environment_api_domain
+        return self.proxy_api_domain
+
+    @cached_property
     def environment_api_url(self) -> str:
         """
         Creates a valid url from smarter_settings.environment_api_domain.
