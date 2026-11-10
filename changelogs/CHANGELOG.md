@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.11...v0.44.12-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **helm:** accept null AWS keys when the pods have an IAM role ([b33eb84](https://github.com/smarter-sh/smarter/commit/b33eb84f1e915ef3ecdd4d6349a2155460d2f6ae))
+
 ## [0.44.11](https://github.com/smarter-sh/smarter/compare/v0.44.10...v0.44.11) (2026-11-10)
 
 ### Bug Fixes
