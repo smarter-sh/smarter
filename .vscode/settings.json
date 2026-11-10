@@ -27,5 +27,12 @@
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
   "python.envFile": "${workspaceFolder}/.env",
-  "python.terminal.useEnvFile": true
+  "python.terminal.useEnvFile": true,
+  "python-envs.pythonProjects": [
+    {
+      "path": ".",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ]
 }

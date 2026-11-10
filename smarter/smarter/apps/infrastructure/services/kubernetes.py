@@ -75,6 +75,28 @@ def billable_resources(manifest: str) -> list[tuple[str, str]]:
     return retval
 
 
+def redacted_manifest(manifest: str) -> str:
+    """
+    Return a manifest that can be logged: the values of its Secrets replaced with ``<redacted>``.
+
+    A Secret's ``data`` and ``stringData`` hold credentials, e.g. an LLMHost's provider API key,
+    in plain text or base64.
+
+    :param manifest: A Kubernetes manifest, which may have several YAML documents.
+    :returns: The manifest, with each Secret value redacted, or a placeholder if it isn't valid YAML.
+    """
+    try:
+        documents = list(yaml.safe_load_all(manifest))
+    except yaml.YAMLError:
+        return "<a manifest that is not valid YAML, not logged>"
+    for doc in documents:
+        if isinstance(doc, dict) and str(doc.get("kind", "")).lower() == "secret":
+            for field in ("data", "stringData"):
+                if isinstance(doc.get(field), dict):
+                    doc[field] = {key: "<redacted>" for key in doc[field]}
+    return yaml.safe_dump_all(documents, sort_keys=False)
+
+
 def manifest_kinds(manifest: str) -> list[str]:
     """Return the kinds of a manifest's resources, e.g. ``["Ingress"]``."""
     try:
@@ -459,7 +481,11 @@ class KubectlKubernetesService(KubernetesService):
         :param manifest: The manifest, which may have several YAML documents.
         :raises KubernetesServiceError: If the cluster rejects it.
         """
-        logger.info("%s applying a manifest to the cluster:\n%s", self.formatted_class_name, manifest)
+        logger.info(
+            "%s.apply_manifest() applying a manifest to the cluster:\n%s",
+            self.formatted_class_name,
+            redacted_manifest(manifest),
+        )
         if not self.ready:
             logger.error("%s the cluster is not ready. The manifest was not applied.", self.formatted_class_name)
             return None
@@ -863,4 +889,5 @@ __all__ = [
     "get_kubernetes",
     "manifest_kinds",
     "matches_selector",
+    "redacted_manifest",
 ]
