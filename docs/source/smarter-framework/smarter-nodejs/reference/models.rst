@@ -126,6 +126,29 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
    :returns: The names.
    :rtype: string[]
 
+.. js:function:: normalizeAnnotations(value)
+
+   Annotations in the shape that the platform uses since Smarter 0.38: a map of keys to strings.
+
+   Accepts the map, and the list of one-key maps that older manifests and platforms use, e.g.
+   ``[{"acme.com/crm-account-id": "A-10042"}]``, as the platform's apply does. A key that appears more
+   than once keeps its last value. Scalar values become the string that YAML would have written:
+   ``true`` is ``"true"``, ``42`` is ``"42"``, a date is ISO 8601 and ``null`` is ``""``. Lists and objects are
+   left as they are, so that the ``Annotations`` schema rejects them: the platform rejects them
+   too, and structured data belongs in a JSON string. Keys are not checked here; the platform checks
+   them when it applies a manifest.
+
+   **Example**
+
+   .. code-block:: typescript
+
+      normalizeAnnotations([{ "acme.com/active": true }]); // { "acme.com/active": "true" }
+
+   :param value: The annotations, as a map, a list of one-key maps, ``null`` or ``undefined``.
+   :type value: unknown
+   :returns: A map, or the value itself if it is neither a map nor a list of maps, for the schema to accept (``null``) or reject.
+   :rtype: unknown
+
 .. js:function:: toManifest(manifest)
 
    A manifest from any of the forms that the SDK accepts.
@@ -167,7 +190,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -194,6 +219,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -311,6 +342,24 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: boolean | null | undefined
 
+.. js:data:: Annotations
+
+   A resource's annotations, as in Kubernetes: a map of keys to string values, or ``null``.
+
+   A key is an optional DNS-subdomain prefix that names its owner, then a slash and a name of one or
+   more slash-separated segments, e.g. ``acme.com/crm-account-id``. The prefix ``smarter.sh`` and its
+   subdomains are reserved for the platform. The legacy list of one-key maps is converted to the map
+   (see ``normalizeAnnotations``), so that manifests written for older platforms still parse.
+
+   **Example**
+
+   .. code-block:: typescript
+
+      const guardrail = await client.guardrails.retrieve(17);
+      guardrail.annotations?.["acme.com/crm-account-id"];
+
+   :type: Record<string, string> | null
+
 .. js:class:: ApiVersion
 
    The platform's version, and the versions of its main Python packages.
@@ -325,7 +374,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: version
 
-      The Smarter platform's semantic version.
+      The Smarter installation's semantic version.
 
       :type: string
 
@@ -423,7 +472,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -442,6 +493,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -707,7 +764,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: apiKeys
 
@@ -756,6 +815,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: boolean | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -1061,7 +1126,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: apiFormat
 
@@ -1090,6 +1157,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -1400,9 +1473,11 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      Key-value pairs, as a list of single-key objects.
+      Annotations, as in Kubernetes: a map of keys to string values, e.g.
+      ``{"acme.com/crm-account-id": "A-10042"}``. The list of one-key maps of older manifests is
+      converted to the map. See ``Annotations``.
 
-      :type: JsonObject[] | null | undefined
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: description
 
@@ -1454,7 +1529,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: authType
 
@@ -1477,6 +1554,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -1728,7 +1811,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -1739,6 +1824,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -1839,7 +1930,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -1850,6 +1943,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -1925,7 +2024,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: prompt
 
-      :type: unknown | null | undefined
+      :type: object | number | null | undefined
 
    .. js:attribute:: updated_at
 
@@ -2011,7 +2110,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: prompt
 
-      :type: unknown | null | undefined
+      :type: object | number | null | undefined
 
    .. js:attribute:: request
 
@@ -2036,6 +2135,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the provider's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -2112,7 +2217,7 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: url
 
-      The proxy's base url on the Smarter platform.
+      The proxy's base url on the Smarter installation.
 
       :type: string | null | undefined
 
@@ -2134,7 +2239,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -2145,6 +2252,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -2233,7 +2346,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -2244,6 +2359,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -2343,7 +2464,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: canDelete
 
@@ -2354,6 +2477,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -2421,7 +2550,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: authSecret
 
@@ -2438,6 +2569,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
@@ -2527,7 +2664,9 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
    .. js:attribute:: annotations
 
-      :type: JsonObject[]
+      The resource's annotations: a map of keys to string values, e.g. ``{"acme.com/crm-account-id": "A-10042"}``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: backend
 
@@ -2548,6 +2687,12 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string | null | undefined
 
    .. js:attribute:: description
+
+      :type: string | null | undefined
+
+   .. js:attribute:: detailUrl
+
+      The url of the resource's detail in the web console: its manifest, the resources that it uses, and those that use it.
 
       :type: string | null | undefined
 
