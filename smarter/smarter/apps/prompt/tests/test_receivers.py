@@ -9,6 +9,25 @@ from smarter.apps.prompt import receivers
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.receivers import ReceiversTestMixin
 
+#: A stand-in for chat content, e.g. a user's date of birth, which no log may show.
+CHAT_CONTENT_MARKER = "I was born on the marker date 31-dec-1999"
+
+
+def passthrough_request() -> dict:
+    """Return a request, as the passthrough api sends it as a failed iteration's data."""
+    system_message = {"role": "system", "content": "You are a date calculator."}
+    user_message = {"role": "user", "content": CHAT_CONTENT_MARKER}
+    request = {"model": "gpt-test-model", "messages": [system_message, user_message]}
+    return request
+
+
+def provider_iteration() -> dict:
+    """Return an iteration's data, as the chat providers send it: its request and the LLM's response."""
+    response_message = {"role": "assistant", "content": CHAT_CONTENT_MARKER}
+    response = {"choices": [{"message": response_message}]}
+    iteration = {"request": passthrough_request(), "response": response}
+    return iteration
+
 
 class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
     """Call each receiver of the prompt app with mock arguments."""
@@ -35,3 +54,26 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
                 receivers.handle_chat_response_success(sender=SmarterTestBase, prompt=None, request=None, response=None)
         mock_logger.warning.assert_not_called()
         mock_task.delay.assert_not_called()
+
+    def test_chat_response_failure_logs_no_chat_content(self):
+        """A failed prompt logs the model and the number of messages, never the messages or the response (issue #970)."""
+        exception = ValueError("The model does not exist.")
+        with patch.object(receivers, "logger") as mock_logger:
+            receivers.handle_chat_response_failure(
+                sender=SmarterTestBase, iteration=1, exception=exception, first_iteration=passthrough_request()
+            )
+            receivers.handle_chat_response_failure(
+                sender=SmarterTestBase, iteration=2, exception=exception, second_iteration=provider_iteration()
+            )
+        logged = str(mock_logger.mock_calls)
+        self.assertNotIn(CHAT_CONTENT_MARKER, logged)
+        self.assertIn("gpt-test-model", logged)
+        self.assertEqual(mock_logger.error.call_count, 4)
+
+    def test_iteration_summary(self):
+        """The summary of either shape of an iteration's data is its model and number of messages."""
+        expected = {"model": "gpt-test-model", "messages": 2}
+        self.assertEqual(receivers.iteration_summary(passthrough_request()), expected)
+        self.assertEqual(receivers.iteration_summary(provider_iteration()), expected)
+        self.assertEqual(receivers.iteration_summary({}), {"model": None, "messages": 0})
+        self.assertIsNone(receivers.iteration_summary(None))

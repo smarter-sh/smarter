@@ -314,7 +314,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         """
         retval = super().ready
         if not retval:
-            logger.warning("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            logger.debug("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
             return False
         retval = bool(self.manifest) or bool(self.plugin) or bool(self.orm_meta_instance)
         logger.debug(

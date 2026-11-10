@@ -26,7 +26,7 @@ SECRETS = {
     "aws access key": re.compile(r"\b(AKIA|ASIA)[A-Z0-9]{16}\b"),
     "aws account id": re.compile(r"(?:account[ :]+|arn:aws:[\w-]+:[\w-]*:)(\d{12})\b"),
     "openai-style key": re.compile(r"\bsk-[A-Za-z0-9_-]{20,}"),
-    "bearer/token value": re.compile(r"(?i)(bearer|token)[\"' :=]+[A-Za-z0-9._-]{12,}"),
+    "bearer/token value": re.compile(r"(?i)(?:^|[^a-z])(bearer|token)[\"' :=]+[A-Za-z0-9._-]{12,}"),
     "jwt": re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"),
     "private key": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     "password in url": re.compile(r"://[^:/\s]+:(?!\*+@)[^@\s]+@"),

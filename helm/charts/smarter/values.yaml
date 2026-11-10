@@ -819,8 +819,9 @@ alloy:
           }
           // A token, but not code that calls something, e.g. the traceback source line
           // stored_token = self.redis.get(self.name): the value must not run into a "(".
+          // The word must not end a longer word, e.g. "SmarterAuthToken <name>" (#971).
           stage.replace {
-            expression = "(?i)(?:bearer|token)[\"' :=]+([A-Za-z0-9._~+/-]{12,})(?:[^A-Za-z0-9._~+/(-]|$)"
+            expression = "(?i)(?:^|[^a-z])(?:bearer|token)[\"' :=]+([A-Za-z0-9._~+/-]{12,})(?:[^A-Za-z0-9._~+/(-]|$)"
             replace    = "<redacted>"
           }
           stage.replace {

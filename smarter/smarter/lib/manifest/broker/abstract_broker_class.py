@@ -544,7 +544,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         - A ready SAMLoader is present.
         - An ORM meta instance was found.
 
-        Every reason why a broker is not ready is logged as a warning.
+        Every reason why a broker is not ready is logged at DEBUG. A broker that is not ready is
+        normal for a command that needs no single resource, e.g. ``get`` (a list). A command that
+        does need one fails with :class:`SAMBrokerErrorNotReady`, which the cli view logs.
 
         :return: True if the AbstractBroker is ready for operations.
         """
@@ -579,22 +581,22 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         # log every reason why we are not ready.
         # ---------------------------------------------------------------------
         if not self._name:
-            logger.warning(
+            logger.debug(
                 "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
         if not self.srm_ready:
-            logger.warning(
+            logger.debug(
                 "%s.is_ready_abstract_broker() - SmarterRequestMixin is not ready. Cannot process broker.",
                 self.abstract_broker_logger_prefix,
             )
         if not bool(self._manifest):
-            logger.warning(
+            logger.debug(
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
                 self.abstract_broker_logger_prefix,
             )
         if self.loader is None or not self.loader.ready:
-            logger.warning(
+            logger.debug(
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
                 self.abstract_broker_logger_prefix,
             )
@@ -2465,10 +2467,11 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         A ready broker's state is logged at DEBUG, which is usually switched off, so it is built
         only when it will be logged: it reads the broker's ready state and ORM instance, which
         would otherwise cost every broker queries that its caller may never need. A broker that
-        is not ready always logs a warning.
+        is not ready is logged at DEBUG too: a command that needs no single resource, e.g. ``get``,
+        never makes it ready, and one that does fails with :class:`SAMBrokerErrorNotReady`, which
+        the cli view logs.
         """
-        is_ready = self.is_ready_abstract_broker
-        if is_ready and not logger.should_log(logging.DEBUG):
+        if not logger.should_log(logging.DEBUG):
             return
         state = {
             "ready": self.ready,
@@ -2479,11 +2482,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             "request": self.url,
             "user_profile": self.user_profile,
         }
-        if is_ready:
-            log = logger.debug
-        else:
-            log = logger.warning
-        log(
+        logger.debug(
             "%s.log_abstract_broker_state() %s broker is %s: %s",
             self.abstract_broker_logger_prefix,
             self.kind,
