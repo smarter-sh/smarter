@@ -766,22 +766,26 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     raise SmarterAPIV1CLIViewErrorNotAuthenticated(
                         f"Smarter api v1 command-line interface error: {csrf_failure} Reload the page and try again."
                     ) from e
+                # a rejected request is the client's error, answered with 403: a WARNING,
+                # and the guidance for the client goes in the response, not the log.
                 if auth_header:
-                    logger.error(
+                    logger.warning(
                         "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",
                         self.logger_prefix,
                         mask_string(auth_header),
                         e,
                     )
-                else:
-                    logger.error(
-                        "%s.initial() - Authorization header is missing from the http request. Add an http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact %s: %s",
-                        self.formatted_class_name,
-                        SMARTER_CUSTOMER_SUPPORT_EMAIL,
-                        e,
-                    )
+                    raise SmarterAPIV1CLIViewErrorNotAuthenticated(
+                        "Smarter api v1 command-line interface error: authentication failed"
+                    ) from e
+                logger.warning(
+                    "%s.initial() - the request has no Authorization header: %s",
+                    self.formatted_class_name,
+                    e,
+                )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
-                    "Smarter api v1 command-line interface error: authentication failed"
+                    "Smarter api v1 command-line interface error: authentication failed. The request has no "
+                    "Authorization header. Add one of the form 'Authorization: Token <your Smarter API key>'."
                 ) from e
         except Exception as e:
             logger.error(

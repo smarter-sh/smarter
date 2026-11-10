@@ -162,6 +162,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.name,
             )
             self._smarter_auth_token = SmarterAuthToken.objects.get(user__username=username, name=self.name)
+        except SmarterAuthToken.MultipleObjectsReturned as e:
+            message = self.duplicate_names_message(username)
+            raise SAMSmarterAuthTokenBrokerError(
+                message=message, thing=self.kind, command=SmarterJournalCliCommands.DESCRIBE
+            ) from e
         except SmarterAuthToken.DoesNotExist:
             logger.debug(
                 "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
@@ -484,21 +489,41 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.formatted_class_name,
                 loggable_fields(self.orm_meta_instance),  # type: ignore
             )
+        except SmarterAuthToken.MultipleObjectsReturned:
+            logger.warning(
+                "%s.orm_meta_instance_setter() - %s",
+                self.formatted_class_name,
+                self.duplicate_names_message(username),
+            )
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
                 "%s.orm_meta_instance_setter() - ORM meta does not exist for account=%s, name=%s",
                 self.formatted_class_name,
-                self.account,
+                self.account_number,
                 self.name,
             )
         except Exception as e:
             logger.error(
                 "%s.orm_meta_instance_setter() - Error initializing ORM meta for account=%s, name=%s: %s",
                 self.formatted_class_name,
-                self.account,
+                self.account_number,
                 self.name,
                 str(e),
             )
+
+    def duplicate_names_message(self, username: str) -> str:
+        """
+        Return the error message for a user who has more than one API key with the broker's name.
+
+        :param username: The API keys' owner.
+        :returns: How many of the user's API keys have the name, and what to do about it.
+        """
+        count = SmarterAuthToken.objects.filter(user__username=username, name=self.name).count()
+        message = (
+            f"{count} API keys of the same user are named {self.name}. "
+            "Rename all but one of them, so that the name finds a single key."
+        )
+        return message
 
     def cache_invalidations(self) -> None:
         """
