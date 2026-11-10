@@ -53,6 +53,7 @@ spec:
         meta.helm.sh/application-version: "{{ .Chart.Version }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
+      serviceAccountName: "{{ $.Values.global.appName }}"
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:

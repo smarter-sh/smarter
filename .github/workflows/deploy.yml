@@ -160,6 +160,8 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          aws-iam-role-arn: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          aws-backup-iam-role-arn: ${{ secrets.AWS_BACKUP_IAM_ROLE_ARN }}
           brave-search-api-key: ${{ secrets.BRAVE_SEARCH_API_KEY }}
           cohere-api-key: ${{ secrets.COHERE_API_KEY }}
           debug-mode: ${{ env.DEBUG_MODE }}

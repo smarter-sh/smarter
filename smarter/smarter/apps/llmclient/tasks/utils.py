@@ -67,7 +67,8 @@ def apply_ingress_manifest(domain: str) -> None:
     """
     ingress_values = {
         "app_name": smarter_settings.platform_name,
-        "cluster_issuer": smarter_settings.environment_api_domain,
+        # the ClusterIssuer is named after the DNS zone that it answers challenges in
+        "cluster_issuer": smarter_settings.environment_api_dns_domain,
         "environment_namespace": smarter_settings.environment_namespace,
         "domain": domain,
         "service_name": API_SERVICE_NAME,

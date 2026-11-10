@@ -21,7 +21,6 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
-from smarter.common.const import SmarterEnvironments
 
 
 class TestLLMClientModel(TestAccountMixin):
@@ -38,10 +37,14 @@ class TestLLMClientModel(TestAccountMixin):
         self.assertTrue(self.llmclient.is_billable_resource)
 
     def test_base_api_domain_in_aws(self):
-        """In an AWS environment the base api domain is the environment's api domain."""
-        settings = MagicMock(
-            environment=list(SmarterEnvironments.aws_environments)[0], environment_api_domain="alpha.api.example.com"
-        )
+        """
+        The base api domain is the environment's api domain as it exists in DNS.
+
+        smarter_settings.environment_api_dns_domain decides it per environment (see
+        smarter.common.tests.test_settings_environments), so that the deploy and the delete of an
+        LLMClient's A record use the same zone.
+        """
+        settings = MagicMock(environment_api_dns_domain="alpha.api.example.com")
         with patch("smarter.apps.llmclient.models.llmclient.smarter_settings", settings):
             self.assertEqual(self.llmclient.base_api_domain, "alpha.api.example.com")
 
