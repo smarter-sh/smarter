@@ -36,7 +36,6 @@ from smarter.apps.llmclient.views.deployment_contract import (
 from smarter.apps.llmclient.views.endpoints import deployment_page
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView

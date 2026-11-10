@@ -32,7 +32,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    AbstractBroker,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
@@ -60,7 +59,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-class SAMApiConnectionBroker(SAMConnectionBaseBroker):
+class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
     """
     Smarter API ApiConnection Manifest Broker.
 
@@ -258,17 +257,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMApiConnectionSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMConnectionCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
+            sections = self.loader.manifest_sections
+            sections[SAMKeys.STATUS.value] = self.loader.manifest_status or None
+            self._manifest = SAMApiConnection.model_validate(sections)
             logger.debug("%s.manifest() initialized manifest from loader", self.formatted_class_name)
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing ApiConnection model if available
@@ -277,6 +268,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             if not metadata:
                 raise SAMBrokerErrorNotReady(
                     f"Metadata could not be built for account {self.account}. Cannot build manifest.",
+                    thing=self.kind,
+                )
+            if self.connection.auth_method is None or self.connection.timeout is None:
+                raise SAMBrokerErrorNotReady(
+                    f"{self.kind} {self.connection.name} has no auth method or timeout. Cannot build manifest.",
                     thing=self.kind,
                 )
             connection = PydanticApiConnection(
@@ -624,8 +620,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
 
         metadata = SAMConnectionCommonMetadata(
             name="example_connection",
@@ -719,10 +714,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
-        data = []
+        items: list[SmarterDictType] = []
 
         # generate a QuerySet of ApiConnection objects that match our search criteria
         if name:
@@ -741,19 +735,19 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
 
                 model_dump = self.SerializerClass(api_connection).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
 
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: model_titles,
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -828,8 +822,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
         )
         updated = False
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
         if not self.user or not self.user.is_staff:
@@ -925,8 +918,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -968,8 +960,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
 
         if self.manifest is None:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
@@ -1068,8 +1059,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
 
         if not self.user or not self.user.is_staff:
             raise SAMConnectionBrokerError(
@@ -1108,8 +1098,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1133,8 +1122,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1158,6 +1146,5 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)

@@ -6,6 +6,7 @@ Secret's metadata without its value, which the Smarter api's OpenAPI document pu
 """
 
 from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from rest_framework.request import Request
@@ -88,7 +89,7 @@ class SecretListView(ContractListMixin, SmarterAdminListAPIView):
         """The Secrets that belong to any of the requesting user's accounts."""
         return secrets_for_user(self.request.user)
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request, and log it.
 
@@ -112,7 +113,7 @@ class SecretListView(ContractListMixin, SmarterAdminListAPIView):
         )
         return response
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """Setup the view.
 
         This is called by Django before dispatch() and is used to set up the view for the request.

@@ -16,7 +16,7 @@ The broker implements the ``smarter`` CLI commands for LLMHostComputes:
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.db.models import ProtectedError
@@ -67,7 +67,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -123,7 +123,7 @@ class SAMLLMHostComputeBrokerError(SAMBrokerError):
         return "Smarter API LLMHostCompute Manifest Broker Error"
 
 
-class SAMLLMHostComputeBroker(AbstractBroker):
+class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` LLMHostCompute manifests.
 
@@ -219,11 +219,11 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             annotations=compute.annotations,
         )
         status = SAMLLMHostComputeStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=compute.record_locator,
-            created=compute.created_at,
-            modified=compute.updated_at,
+            created=required(compute.created_at, "compute.created_at"),
+            modified=required(compute.updated_at, "compute.updated_at"),
             **self.status_for(compute),
         )
         model = SAMLLMHostCompute(
@@ -258,12 +258,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
                 )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMLLMHostCompute(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMLLMHostComputeMetadata(**self.loader.manifest_metadata),
-                spec=SAMLLMHostComputeSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMLLMHostCompute.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -309,7 +304,9 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             cost=SAMLLMHostComputeCost(perHour="0.9776"),  # type: ignore[arg-type]
         )
         status = SAMLLMHostComputeStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -334,7 +331,7 @@ class SAMLLMHostComputeBroker(AbstractBroker):
         if name:
             computes = computes.filter(name=name)
         computes = self.filter_by_annotation_selector(computes, kwargs)
-        data = [
+        items = [
             self.to_camel_case(LLMHostComputeSerializer(compute).data)
             for compute in computes.order_by("name")[:MAX_RESULTS]
         ]
@@ -342,11 +339,11 @@ class SAMLLMHostComputeBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=LLMHostComputeSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)

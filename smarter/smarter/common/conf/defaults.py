@@ -287,7 +287,7 @@ class SettingsDefaults:
 
     secret = get_env("SECRET_KEY", default=None, is_secret=True)
     SECRET_KEY_IS_GENERATED: bool = secret is None
-    if SECRET_KEY_IS_GENERATED:
+    if secret is None:
         warnings.warn(
             "SECRET_KEY is not set. A new secret key will be generated. "
             "This may cause existing sessions and other cryptographic operations to become invalid. "

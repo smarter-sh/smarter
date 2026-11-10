@@ -198,6 +198,18 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
    A Zod schema, and the type of the same name that it validates.
 
+   .. js:attribute:: annotationError
+
+      Why the annotation selector is invalid, in which case it is not applied, or an empty string.
+
+      :type: string
+
+   .. js:attribute:: annotations
+
+      The annotation selector's requirements that every resource matches, e.g. ``acme.com/crm-id=A-1``.
+
+      :type: string[]
+
    .. js:attribute:: count
 
       :type: number
@@ -238,11 +250,17 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       :type: string[]
 
+   .. js:attribute:: tags
+
+      The tags that every resource of the list has, e.g. ``production``.
+
+      :type: string[]
+
 .. js:data:: LLM_MESSAGE_ROLES
 
    The message roles that the LLM providers accept. Smarter's own roles, ``smarter`` and ``smarter_error``, are informational.
 
-   :type: unknown
+   :type: readonly string[]
 
 .. js:class:: PromptChatApiAudioPart
 
@@ -844,7 +862,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       The message's text, or a list of content parts.
 
-      :type: unknown | null | undefined
+      :type: string | (object | object | object | object | object)[] | null | undefined
 
    .. js:attribute:: name
 
@@ -942,7 +960,9 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
    .. js:attribute:: annotations
 
-      :type: unknown | null | undefined
+      The plugin's annotations: a map of keys to string values. See ``Annotations``.
+
+      :type: Record<string, string> | null | undefined
 
    .. js:attribute:: created_at
 
@@ -1042,7 +1062,7 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
 
       Exactly the JSON of a non-streaming response.
 
-      :type: unknown
+      :type: object | object
 
    .. js:attribute:: status
 
@@ -1202,6 +1222,77 @@ The mirrors of the platform's api contracts: the Smarter Chat api (version 2), t
    .. js:attribute:: updated_at
 
       :type: string | null | undefined
+
+.. js:class:: PromptChatApiProviderRequest
+
+   The chat session's conversation, as the request body that Smarter sends to the LLM provider.
+
+   It is a request to an OpenAI-compatible ``v1/chat/completions`` api, without any of Smarter's own
+   content: no ``smarter`` or ``smarter_error`` messages, no ``smarter_*`` fields, no api url or key. It can
+   be sent with curl, or to the Prompt Passthrough api. Its messages are the whole conversation,
+   including the latest answer, so that the next user message can be added. Its model, temperature,
+   token limit and tools are those of the session's latest prompt, or the LLMClient's, before its
+   first prompt. Fields without a value are left out.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: max_completion_tokens
+
+      :type: number | null | undefined
+
+   .. js:attribute:: messages
+
+      The conversation's system, user, assistant and tool messages.
+
+      :type: object[]
+
+   .. js:attribute:: model
+
+      The LLM's model, e.g. gpt-4o-mini.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: reasoning_effort
+
+      ``none``, for a model that requires it with tools.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: temperature
+
+      :type: number | null | undefined
+
+   .. js:attribute:: tool_choice
+
+      ``auto``, when the request has tools.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: tools
+
+      The function definitions that the LLM may call, in the OpenAI format.
+
+      :type: JsonObject[] | null | undefined
+
+.. js:class:: PromptChatApiProviderRequestResponse
+
+   The provider request api's response.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: api
+
+      The api version, e.g. ``smarter.sh/v1``.
+
+      :type: string
+
+   .. js:attribute:: data
+
+      :type: object
+
+   .. js:attribute:: metadata
+
+      :type: object
 
 .. js:class:: PromptChatApiRefusalPart
 

@@ -13,6 +13,7 @@ from django.db import models
 from smarter.apps.account.models import (
     Account,
     MetaDataWithOwnershipModel,
+    SmarterQuerySetWithPermissions,
     User,
     UserProfile,
 )
@@ -307,7 +308,9 @@ class LLMClient(MetaDataWithOwnershipModel):
         return f"{self.name} ({self.pk})" if self.name else "undefined"
 
     @classmethod
-    def restrict_readable(cls, queryset: models.QuerySet["LLMClient"], user: User) -> models.QuerySet["LLMClient"]:
+    def restrict_readable(
+        cls, queryset: "SmarterQuerySetWithPermissions[LLMClient]", user: User
+    ) -> "SmarterQuerySetWithPermissions[LLMClient]":
         """
         Hide the staff-only LLMClients from a user who is not one of the platform's staff.
 
@@ -805,14 +808,15 @@ class LLMClient(MetaDataWithOwnershipModel):
             pass
 
         # custom domain mode. Least likely case.
-        try:
-            custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if custom_url:
+        custom_host = self.custom_host
+        if custom_host:
+            try:
+                custom_url = SmarterValidator.urlify(custom_host, environment=smarter_settings.environment)
                 custom_hostname = urlparse(custom_url).netloc
                 if custom_hostname and input_hostname == custom_hostname:
                     return self.Modes.CUSTOM
-        except SmarterValueError:
-            pass
+            except SmarterValueError:
+                pass
 
         logger.error(
             "Invalid LLMClient url %s received for default_url: %s, sandbox_url: %s, custom_url: %a",
@@ -878,7 +882,7 @@ class LLMClient(MetaDataWithOwnershipModel):
 
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None, taggit=True, **kwargs
     ) -> models.QuerySet["LLMClient"]:
         """
         Retrieve a list of LLMClient instances associated with a user profile using caching.
@@ -892,6 +896,8 @@ class LLMClient(MetaDataWithOwnershipModel):
 
         :param invalidate: Whether to invalidate the cache for this retrieval.
         :param user_profile: The user profile for which to retrieve LLMClient instances.
+        :param taggit: Unused. Accepted for the signature of the base class.
+        :param kwargs: Unused. Accepted for the signature of the base class.
 
         :returns: A queryset of LLMClient instances associated with the user profile.
         :rtype: models.QuerySet["LLMClient"]
@@ -1065,18 +1071,21 @@ class LLMClient(MetaDataWithOwnershipModel):
                     continue
                 link_model.objects.get_or_create(llmclient=clone, **{field: resource})
                 logger.debug("%s.clone_links() linked %s %s to LLMClient %s", logger_prefix, field, resource, clone.pk)
-        for link in LLMClientExtensions.objects.filter(llmclient=self).select_related("extension"):
-            if not link.extension.is_available_to(clone.user_profile.account):
+        for extension_link in LLMClientExtensions.objects.filter(llmclient=self).select_related("extension"):
+            if not extension_link.extension.is_available_to(clone.user_profile.account):
                 logger.warning(
                     "%s.clone_links() did not link extension %s to LLMClient %s: it is not available to its account.",
                     logger_prefix,
-                    link.extension.slug,
+                    extension_link.extension.slug,
                     clone.pk,
                 )
                 continue
-            LLMClientExtensions.objects.get_or_create(llmclient=clone, extension=link.extension)
+            LLMClientExtensions.objects.get_or_create(llmclient=clone, extension=extension_link.extension)
             logger.debug(
-                "%s.clone_links() linked extension %s to LLMClient %s", logger_prefix, link.extension, clone.pk
+                "%s.clone_links() linked extension %s to LLMClient %s",
+                logger_prefix,
+                extension_link.extension,
+                clone.pk,
             )
 
 

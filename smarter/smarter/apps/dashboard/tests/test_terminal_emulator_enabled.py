@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404, HttpResponse
+from django.http.response import HttpResponseBase
 from django.test import RequestFactory
 
 from smarter.apps.dashboard.views.terminal_emulator.enabled import (
@@ -78,7 +79,7 @@ class TestRequireTerminal(SmarterTestBase):
         self.view = MagicMock(return_value=HttpResponse("terminal"))
         self.request = RequestFactory().get("/dashboard/terminal/")
 
-    def call(self, enabled: bool, user) -> HttpResponse:
+    def call(self, enabled: bool, user) -> HttpResponseBase:
         self.request.user = user
         with patch(f"{MODULE}.terminal_enabled", return_value=enabled):
             return require_terminal(self.view)(self.request)

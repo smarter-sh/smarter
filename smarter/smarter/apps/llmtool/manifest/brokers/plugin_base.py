@@ -1,12 +1,13 @@
 # pylint: disable=W0718,C0302
 """Smarter API SqlPlugin Manifest handler."""
 
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type, Union
 
 from django.core import serializers
 from django.db.models import QuerySet
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
+from pydantic import BaseModel
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import (
@@ -51,7 +52,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from . import PluginSerializer, SAMPluginBrokerError
 
@@ -59,7 +60,7 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 logger_prefix = SmarterFormattedText.text(__name__) + ".SAMPluginBaseBroker"
 
 
-class SAMPluginBaseBroker(AbstractBroker):
+class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
     """
     Smarter API Plugin Manifest Broker.
 
@@ -295,6 +296,8 @@ class SAMPluginBaseBroker(AbstractBroker):
                 exc_info=True,
             )
             return None
+        # found with the account admin's, or the Smarter admin's, user profile.
+        return self._orm_instance
 
     @property
     def ready(self) -> bool:
@@ -655,11 +658,13 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=SmarterJournalCliCommands("describe"),
             )
         self._plugin_status = SAMPluginCommonStatus(
-            accountNumber=self.plugin_meta.user_profile.cached_account.account_number,
+            accountNumber=required(
+                self.plugin_meta.user_profile.cached_account.account_number, "plugin_meta.account.account_number"
+            ),
             username=admin.username,
             recordLocator=self.plugin_meta.record_locator,
-            created=self.plugin_meta.created_at,
-            modified=self.plugin_meta.updated_at,
+            created=required(self.plugin_meta.created_at, "plugin_meta.created_at"),
+            modified=required(self.plugin_meta.updated_at, "plugin_meta.updated_at"),
         )
         return self._plugin_status
 
@@ -712,10 +717,10 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            metadata = model_to_dict(self.plugin_meta)  # type: ignore[no-any-return]
-            metadata = json.loads(json.dumps(metadata))
-            metadata = self.to_camel_case(metadata)
-            if not isinstance(metadata, dict):
+            plugin_meta_dict = model_to_dict(self._plugin_meta)
+            plugin_meta_json = json.loads(json.dumps(plugin_meta_dict))
+            metadata_dict = self.to_camel_case(plugin_meta_json)
+            if not isinstance(metadata_dict, dict):
                 raise SAMPluginBrokerError(
                     f"Model dump failed for {self.kind} {self.plugin.name}",
                     thing=self.kind,
@@ -725,9 +730,9 @@ class SAMPluginBaseBroker(AbstractBroker):
                 "%s.describe() PluginMeta %s %s",
                 logger_prefix,
                 self.kind,
-                metadata,
+                metadata_dict,
             )
-            metadata = SAMPluginCommonMetadata(**metadata)
+            metadata = SAMPluginCommonMetadata(**metadata_dict)
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
@@ -738,14 +743,15 @@ class SAMPluginBaseBroker(AbstractBroker):
         except Exception as e:
             raise SAMPluginBrokerError(message=str(e), thing=self.kind, command=command) from e
 
-    def plugin_data_orm2pydantic(self) -> SmarterDictType:
+    def plugin_data_orm2pydantic(self) -> Union[SmarterDictType, BaseModel, None]:
         """
         Convert plugin data from the Django ORM model format to the Pydantic manifest format.
 
         This method transforms plugin data, typically retrieved as a dictionary from the Django ORM (`plugin_data`), into a format suitable for Pydantic manifest models. It handles conversion of nested structures, such as parameters, and ensures all fields are properly camel-cased and validated.
 
-        :return: The plugin data as a dictionary formatted for Pydantic manifest models.
-        :rtype: SmarterDictType
+        :return: The plugin data as a dictionary formatted for Pydantic manifest models. Subclasses
+            may return their Pydantic data model instead, e.g. ``ApiData``, or None if there is no plugin.
+        :rtype: Union[SmarterDictType, BaseModel, None]
 
         :raises SAMPluginBrokerError:
             If the plugin or plugin data is not found, or if conversion fails.
@@ -962,9 +968,17 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.kind,
                 command=command,
             )
+        provider = self.plugin_prompt_orm.provider
+        system_role = self.plugin_prompt_orm.system_role
+        if provider is None or system_role is None:
+            raise SAMPluginBrokerError(
+                f"PluginPrompt of {self.kind} {self.plugin_meta.name} has no provider or system role",
+                thing=self.kind,
+                command=command,
+            )
         plugin_prompt = SAMPluginCommonSpecPrompt(
-            provider=self.plugin_prompt_orm.provider,
-            systemRole=self.plugin_prompt_orm.system_role,
+            provider=provider,
+            systemRole=system_role,
             model=self.plugin_prompt_orm.model,
             temperature=self.plugin_prompt_orm.temperature,
             maxTokens=self.plugin_prompt_orm.max_completion_tokens,
@@ -1019,10 +1033,12 @@ class SAMPluginBaseBroker(AbstractBroker):
                 command=command,
             )
         try:
-            plugin_selector = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
-            plugin_selector = model_to_dict(plugin_selector)  # type: ignore[no-any-return]
-            plugin_selector = self.to_camel_case(plugin_selector)
-            if not isinstance(plugin_selector, dict):
+            plugin_selector_orm = PluginSelector.get_cached_selector_by_plugin(plugin=self.plugin_meta)
+            if plugin_selector_orm is None:
+                raise PluginSelector.DoesNotExist()
+            plugin_selector_fields = model_to_dict(plugin_selector_orm)
+            plugin_selector_dict = self.to_camel_case(plugin_selector_fields)
+            if not isinstance(plugin_selector_dict, dict):
                 raise SAMPluginBrokerError(
                     f"Model dump failed for {self.kind} {self.plugin.name}",
                     thing=self.kind,
@@ -1032,9 +1048,9 @@ class SAMPluginBaseBroker(AbstractBroker):
                 "%s.describe() PluginSelector %s %s",
                 logger_prefix,
                 self.kind,
-                plugin_selector,
+                plugin_selector_dict,
             )
-            plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector)
+            plugin_selector = SAMPluginCommonSpecSelector(**plugin_selector_dict)
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
@@ -1091,6 +1107,7 @@ class SAMPluginBaseBroker(AbstractBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
+        return None
 
     def get(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
@@ -1129,10 +1146,9 @@ class SAMPluginBaseBroker(AbstractBroker):
             :class:`SCLIResponseGet`
             :class:`SCLIResponseGetData`
         """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
 
-        data = []
+        items: list[SmarterDictType] = []
         name = kwargs.get(SAMMetadataKeys.NAME.value)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
@@ -1153,7 +1169,7 @@ class SAMPluginBaseBroker(AbstractBroker):
             try:
                 model_dump = PluginSerializer(plugin).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
 
             except Exception as e:
                 logger.error(
@@ -1170,11 +1186,11 @@ class SAMPluginBaseBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: model_titles,
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)

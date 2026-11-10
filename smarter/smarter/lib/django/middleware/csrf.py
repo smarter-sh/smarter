@@ -135,8 +135,7 @@ from collections import defaultdict
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseForbidden
+from django.http import HttpRequest, HttpResponseForbidden
 from django.http.response import HttpResponseBase
 from django.middleware.csrf import CsrfViewMiddleware, get_token
 from django.utils.functional import cached_property
@@ -218,7 +217,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
     def get_dynamic_trusted_origins(
         self,
-        request: ASGIRequest,
+        request: HttpRequest,
     ) -> list[str]:
         """
         Return one request's trusted origins: ``CSRF_TRUSTED_ORIGINS``, plus its own origin for an LLMClient.
@@ -250,7 +249,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
         return origins
 
-    def llmclient_request_kind(self, request: ASGIRequest) -> tuple[bool, bool]:
+    def llmclient_request_kind(self, request: HttpRequest) -> tuple[bool, bool]:
         """
         Return whether the request is for an LLMClient, and whether it is for a configuration api.
 
@@ -320,7 +319,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
         return allowed_origin_subdomains
 
-    def renews_csrf_cookie(self, request: ASGIRequest, response: HttpResponseBase) -> bool:
+    def renews_csrf_cookie(self, request: HttpRequest, response: HttpResponseBase) -> bool:
         """
         Return whether a response should renew the CSRF cookie: a web console page for a signed-in user.
 
@@ -343,7 +342,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         user = getattr(request, "user", None)
         return bool(user is not None and user.is_authenticated)
 
-    def process_response(self, request: ASGIRequest, response: HttpResponseBase) -> HttpResponseBase:
+    def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
         """
         Renew the CSRF cookie on a signed-in user's console pages, then let Django set it.
 
@@ -361,7 +360,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
     def process_view(
         self,
-        request: ASGIRequest,
+        request: HttpRequest,
         callback,
         callback_args,
         callback_kwargs,

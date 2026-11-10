@@ -28,7 +28,6 @@ Example
 """
 
 import csv
-from typing import Any
 
 import yaml
 

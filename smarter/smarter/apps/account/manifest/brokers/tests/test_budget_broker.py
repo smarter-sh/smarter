@@ -41,6 +41,8 @@ EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")
 class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
     """Test the Smarter SAMBudgetBroker."""
 
+    llmclient: LLMClient
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

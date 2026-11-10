@@ -87,7 +87,7 @@ class Proxy(MetaDataWithOwnershipModel):
         verbose_name_plural = "Proxies"
         unique_together = ("user_profile", "name")
 
-    objects: MetaDataWithOwnershipModelManager["Proxy"] = MetaDataWithOwnershipModelManager()
+    objects = MetaDataWithOwnershipModelManager()
 
     provider = models.ForeignKey(
         Provider,
@@ -156,7 +156,7 @@ class Proxy(MetaDataWithOwnershipModel):
 
         :returns: The base URL, or an empty string if neither is set.
         """
-        url = self.base_url
+        url: Optional[str] = self.base_url
         if not url and self.provider_id:  # type: ignore[attr-defined]
             url = self.provider.base_url
         if not url:

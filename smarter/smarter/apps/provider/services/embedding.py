@@ -21,7 +21,8 @@ class SmarterEmbeddingServiceInterface(ABC, SmarterHelperMixin):
     from text inputs, with optional metadata support.
     """
 
-    _EmbeddingsClass: Type[Embeddings] = Embeddings
+    #: The concrete Embeddings class of a subclass, which sets it. Embeddings itself is abstract.
+    _EmbeddingsClass: Type[Embeddings]
     _embeddings: Optional[Embeddings] = None
     _api_key: Optional[SecretStr] = None
 

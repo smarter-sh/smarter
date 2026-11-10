@@ -10,7 +10,7 @@ Smarter API Guardrail Manifest handler.
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.db.models import Count, Max, Q
@@ -66,7 +66,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -114,7 +114,7 @@ class SAMGuardrailBrokerError(SAMBrokerError):
         return "Smarter API Guardrail Manifest Broker Error"
 
 
-class SAMGuardrailBroker(AbstractBroker):
+class SAMGuardrailBroker(AbstractBroker[Guardrail, Guardrail]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Guardrail manifests.
 
@@ -226,11 +226,11 @@ class SAMGuardrailBroker(AbstractBroker):
         )
         spec = SAMGuardrailSpec(config=SAMGuardrailSpecConfig(**config_data))
         status = SAMGuardrailStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=guardrail.record_locator,
-            created=guardrail.created_at,
-            modified=guardrail.updated_at,
+            created=required(guardrail.created_at, "guardrail.created_at"),
+            modified=required(guardrail.updated_at, "guardrail.updated_at"),
             **self.status_for(guardrail),
         )
         model = SAMGuardrail(apiVersion=self.api_version, kind=self.kind, metadata=meta, spec=spec, status=status)
@@ -257,12 +257,7 @@ class SAMGuardrailBroker(AbstractBroker):
                 raise SAMGuardrailBrokerError("Cached manifest is not a SAMGuardrail instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMGuardrail(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMGuardrailMetadata(**self.loader.manifest_metadata),
-                spec=SAMGuardrailSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMGuardrail.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -308,7 +303,9 @@ class SAMGuardrailBroker(AbstractBroker):
             priority=10,
         )
         status = SAMGuardrailStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -337,7 +334,7 @@ class SAMGuardrailBroker(AbstractBroker):
         if name:
             guardrails = guardrails.filter(name=name)
         guardrails = self.filter_by_annotation_selector(guardrails, kwargs)
-        data = [
+        items = [
             self.to_camel_case(GuardrailSerializer(guardrail).data)
             for guardrail in guardrails.order_by("priority", "name")[:MAX_RESULTS]
         ]
@@ -345,11 +342,11 @@ class SAMGuardrailBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=GuardrailSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)

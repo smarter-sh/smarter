@@ -1,8 +1,8 @@
 """The abstract base model of every Smarter Django model, with timestamps, hashed ids and caching."""
 
 import base64
+import binascii
 import datetime
-import json
 import re
 from functools import cached_property
 from typing import ClassVar, Optional
@@ -19,11 +19,11 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
-from smarter.lib.json import SmarterJSONEncoder, to_jsonable
+from smarter.lib.json import to_jsonable
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getSmarterLogger(__name__)
+logger = logging.getLogger(__name__)
 cache_prefix = f"{__name__}."
 
 
@@ -38,7 +38,7 @@ def should_log_verbose(level: int) -> bool:
     return smarter_settings.verbose_logging
 
 
-verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)  # type: ignore[assignment]
+verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
 class TimestampedModel(models.Model, SmarterHelperMixin):
@@ -261,7 +261,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 retval,
             )
             return retval
-        except (base64.binascii.Error, ValueError) as e:  # type: ignore[name-defined]
+        except (binascii.Error, ValueError) as e:
             # The hashed id comes from a url, i.e. from the client, and every caller handles None.
             logger.warning(
                 "%s Failed to decode %s.hashed_id '%s': %s",
@@ -593,7 +593,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                     pk,
                     invalidate,
                 )
-                retval = cls.objects.get(pk=pk)
+                retval = cls._default_manager.get(pk=pk)
                 verbose_logger.debug(
                     "%s._get_model_by_pk() fetched and cached %s pk: %s",
                     logger_prefix,
@@ -646,7 +646,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 "get_cached_objects() must be called on a concrete model class, not an abstract base class."
             )
 
-        queryset = cls.objects.all()
+        queryset = cls._default_manager.all()
         return queryset
 
     def __str__(self) -> str:

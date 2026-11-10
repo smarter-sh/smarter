@@ -62,6 +62,8 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
 
     def fresh_broker(self) -> SAMGuardrailBroker:
         broker = self.broker
+        if not isinstance(broker, SAMGuardrailBroker):
+            self.fail(f"Expected a SAMGuardrailBroker, got {type(broker)}")
         broker._orm_instance = None
         broker._orm_meta_instance = None
         broker._name = f"test_guardrail_{self.hash_suffix}"

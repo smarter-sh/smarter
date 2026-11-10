@@ -6,7 +6,12 @@ from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpRequest,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
@@ -72,7 +77,7 @@ class OrchestratorView(ViewBase):
         """
         return Orchestrator.objects.filter(id=self.orchestrator.id)  # type: ignore[return-value]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Remove ``hashed_id`` from the url kwargs, for :meth:`initial`, then dispatch the request.
 
@@ -190,6 +195,7 @@ class OrchestratorView(ViewBase):
         :param orchestrator_id: The Orchestrator's id, from the url.
         :returns: A redirect to the url two levels up, or ``500`` if deleting fails.
         """
+        orchestrator: Optional[Orchestrator]
         if orchestrator_id and self.is_superuser():
             orchestrator = get_object_or_404(Orchestrator, pk=orchestrator_id)
         else:
@@ -219,7 +225,7 @@ class OrchestratorListView(ContractListMixin, ListViewBase):
 
     orchestrators: Optional[QuerySet[Orchestrator]]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request, then set :attr:`orchestrators` to the Orchestrators the user may read, unless it failed.
 

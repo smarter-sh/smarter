@@ -30,6 +30,7 @@ from smarter.lib.openai.model_quirks import (
     DEFAULT_TEMPERATURE_ONLY_MODELS,
     rejected_parameter,
 )
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -201,7 +202,7 @@ class OpenAIGuardrailClient:
         :returns: The judge's verdict.
         :raises GuardrailProviderError: when the API call fails, or its reply is not a valid verdict.
         """
-        kwargs = {
+        kwargs: SmarterDictType = {
             "model": model,
             "messages": [
                 {"role": "system", "content": JUDGE_SYSTEM_MESSAGE},

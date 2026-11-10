@@ -11,7 +11,7 @@ See ``tests/data/acm_certificate_detail.json`` of the infrastructure app for an 
 certificate's description.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType

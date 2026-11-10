@@ -1,14 +1,13 @@
 """The Vectorstore model: a vector database, its embeddings, and its state."""
 
 import re
-from typing import Any, Optional
+from typing import Optional
 
 from cache_results import cache_results
 from django.db import models
 
 from smarter.apps.account.models import (
     MetaDataWithOwnershipModel,
-    MetaDataWithOwnershipModelManager,
     User,
 )
 from smarter.apps.connection.models import ApiConnection
@@ -22,7 +21,7 @@ from smarter.apps.vectorstore.enum import (
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
@@ -87,8 +86,6 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
         verbose_name = "Vectorstore"
         verbose_name_plural = "Vectorstores"
         unique_together = ("user_profile", "name")
-
-    objects: MetaDataWithOwnershipModelManager["VectorstoreMeta"] = MetaDataWithOwnershipModelManager()
 
     # --- the manifest ---------------------------------------------------------
     spec = models.JSONField(default=dict, blank=True, help_text="The manifest's spec, as it was applied.")
@@ -191,7 +188,8 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
         A managed Pinecone project, or Qdrant Cloud cluster, may be shared by many accounts,
         so the name includes the account number.
         """
-        account = re.sub(r"[^0-9]", "", self.user_profile.account.account_number)  # type: ignore[union-attr]
+        account_number = required(self.user_profile.account.account_number, f"vectorstore {self.name} account_number")
+        account = re.sub(r"[^0-9]", "", account_number)
         name = re.sub(r"[^a-z0-9-]+", "-", str(self.name).lower()).strip("-")
         if self.backend == VectorstoreBackendKind.PINECONE:
             return f"{name[: PINECONE_INDEX_NAME_MAX_LENGTH - len(account) - 1]}-{account}".strip("-")

@@ -2,7 +2,7 @@
 """Api utils."""
 
 import os
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urljoin
 
 import httpx
@@ -169,6 +169,7 @@ def apply_manifest(
         return False
 
     # wrap up the request
+    response_content: Union[str, bytes]
     try:
         response_content = httpx_response.content.decode("utf-8")
     # pylint: disable=W0718
@@ -285,7 +286,7 @@ def apply_manifest_v2(
     else:
         logger.error("%s manifest: %s", logger_prefix, data)
         logger.error("%s response: %s", logger_prefix, response_content.content)
-        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content}"
+        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content!r}"
         # pylint: disable=W0719
         raise Exception(msg)
 

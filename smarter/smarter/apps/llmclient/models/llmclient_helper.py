@@ -1,7 +1,7 @@
 """LLMClientHelper model."""
 
 from functools import cached_property
-from typing import Any, Optional
+from typing import Optional
 from urllib.parse import ParseResult
 
 from django.http import HttpRequest
@@ -103,20 +103,15 @@ class LLMClientHelper(SmarterRequestMixin):
         "_is_llmclienthelper_ready",
     )
 
-    def __init__(self, request: HttpRequest, *args, **kwargs):
+    def __init__(self, request: Optional[HttpRequest], *args, **kwargs):
         """
         Initializes the LLMClientHelper instance.
 
-        :param request: The Django HttpRequest object.
-        :type request: django.http.HttpRequest
+        :param request: The Django HttpRequest object, or None, e.g. outside a request.
+        :type request: Optional[django.http.HttpRequest]
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
         """
-        self._llmclient = None
-        self._llmclient_custom_domain = None
-        self._llmclient_requests = None
-        self._llmclient_id = None
-        self._name = None
         self._is_llmclienthelper_ready: bool = False
 
         self._llmclient: Optional[LLMClient] = kwargs.get("llmclient")
@@ -244,7 +239,7 @@ class LLMClientHelper(SmarterRequestMixin):
 
         # check for an llmclient object
         if self._llmclient:
-            self._llmclient_id = self.llmclient.id  # type: ignore[return-value]
+            self._llmclient_id = self._llmclient.id
             return self._llmclient_id
 
         # check SmarterRequestMixin for an llmclient_id derived from the  url
@@ -260,6 +255,22 @@ class LLMClientHelper(SmarterRequestMixin):
             return self._llmclient_id
 
         return self._llmclient_id
+
+    @llmclient_id.setter
+    def llmclient_id(self, llmclient_id: int):
+        """
+        Set the LLMClient id, checking that the LLMClient belongs to the helper's account.
+
+        :param llmclient_id: The id of the LLMClient.
+        :raises SmarterValueError: if the LLMClient's account is not ``self.account``.
+        """
+        self._llmclient_id = llmclient_id
+        llmclient = LLMClient.get_cached_object(pk=llmclient_id)
+        if llmclient and llmclient.user_profile.cached_account != self.account:
+            raise SmarterValueError(
+                "LLMClientHelper.llmclient_id setter: LLMClient's Account does not match self.account"
+            )
+        self.llmclient = llmclient
 
     def llmclient_from_host_label(self) -> Optional[LLMClient]:
         """
@@ -284,22 +295,6 @@ class LLMClientHelper(SmarterRequestMixin):
             if llmclient.rfc1034_compliant_name == label:
                 return llmclient
         return None
-
-    @llmclient_id.setter
-    def llmclient_id(self, llmclient_id: int):
-        """
-        Set the LLMClient id, checking that the LLMClient belongs to the helper's account.
-
-        :param llmclient_id: The id of the LLMClient.
-        :raises SmarterValueError: if the LLMClient's account is not ``self.account``.
-        """
-        self._llmclient_id = llmclient_id
-        llmclient = LLMClient.get_cached_object(pk=llmclient_id)
-        if llmclient and llmclient.user_profile.cached_account != self.account:
-            raise SmarterValueError(
-                "LLMClientHelper.llmclient_id setter: LLMClient's Account does not match self.account"
-            )
-        self.llmclient = llmclient
 
     @property
     def llmclient_name(self) -> Optional[str]:
@@ -639,15 +634,15 @@ class LLMClientHelper(SmarterRequestMixin):
         """
         if self._llmclient_custom_domain:
             return self._llmclient_custom_domain
-        if not self.llmclient:
+        llmclient = self.llmclient
+        if not llmclient:
             return None
-        if not self.llmclient.custom_domain:
+        custom_domain = llmclient.custom_domain
+        if not custom_domain:
             return None
 
         try:
-            self._llmclient_custom_domain = LLMClientCustomDomain.objects.get(
-                id=self.llmclient.custom_domain.id if self.llmclient.custom_domain else None  # type: ignore[union-attr]
-            )
+            self._llmclient_custom_domain = LLMClientCustomDomain.objects.get(id=custom_domain.id)
         except LLMClientCustomDomain.DoesNotExist:
             pass
 

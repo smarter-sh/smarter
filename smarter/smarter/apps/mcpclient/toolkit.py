@@ -27,7 +27,7 @@ so that one unavailable server does not fail the prompt.
 import hashlib
 import re
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.apps.mcpserver.services import is_staff_endpoint_url
 from smarter.lib import logging

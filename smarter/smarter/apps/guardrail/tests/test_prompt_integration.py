@@ -65,6 +65,9 @@ def completion(content: str) -> ChatCompletion:
 class TestGuardrailPromptIntegration(GuardrailTestBase):
     """Test the protection of prompts by guardrails."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

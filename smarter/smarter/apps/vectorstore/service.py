@@ -27,7 +27,7 @@ on the manifest's schedule, prunes them to its retention, and retries documents 
 import hashlib
 import secrets
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Optional
 
 from django.db import transaction
 from django.utils import timezone

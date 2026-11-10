@@ -2,7 +2,7 @@
 """PromptHelper for the prompt app."""
 
 from functools import cached_property
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from django.db import models
 from django.db.utils import IntegrityError
@@ -120,13 +120,18 @@ class PromptHelper(SmarterRequestMixin):
     _history: Optional[SmarterDictType] = None
 
     def __init__(
-        self, request: HttpRequest, session_key: Optional[str], *args, llmclient: Optional[LLMClient] = None, **kwargs
+        self,
+        request: Optional[HttpRequest],
+        session_key: Optional[str],
+        *args,
+        llmclient: Optional[LLMClient] = None,
+        **kwargs,
     ) -> None:
         """
         Initialize the PromptHelper instance.
 
-        :param request: The Django HttpRequest object for the current session.
-        :type request: django.http.HttpRequest
+        :param request: The Django HttpRequest object for the current session. It is required: None raises.
+        :type request: Optional[django.http.HttpRequest]
         :param session_key: The session key identifying the prompt session.
         :type session_key: Optional[str]
         :param llmclient: An optional LLMClient instance to associate with the prompt session.
@@ -134,7 +139,7 @@ class PromptHelper(SmarterRequestMixin):
         :param args: Additional positional arguments.
         :param kwargs: Additional keyword arguments.
 
-        :raises SmarterValueError: If neither a session key nor a LLMClient instance is provided.
+        :raises SmarterValueError: If there is no request, or neither a session key nor a LLMClient instance is provided.
         :raises SmarterConfigurationError: If there is an error creating a new Prompt object.
         """
         if not request:
@@ -372,6 +377,15 @@ class PromptHelper(SmarterRequestMixin):
             if not self.llmclient:
                 raise SmarterValueError(
                     f"{self.formatted_class_name} LLMClient instance is required for creating a Prompt object."
+                )
+            # both columns are NOT NULL, so the database would refuse the row with an IntegrityError.
+            if self.user_profile is None:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name} user_profile is required for creating a Prompt object."
+                )
+            if self.ip_address is None:
+                raise SmarterConfigurationError(
+                    f"{self.formatted_class_name} ip_address is required for creating a Prompt object."
                 )
 
             try:

@@ -1,7 +1,7 @@
 """Pydantic manifest spec for the Orchestrator SAM (Smarter API Manifest) resource."""
 
 import os
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 

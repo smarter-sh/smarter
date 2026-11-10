@@ -7,7 +7,7 @@ low-level :class:`~smarter.apps.infrastructure.providers.aws.helpers.acm.AWSCert
 helper. A certificate's id is its ARN.
 """
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from smarter.lib.typing import SmarterDictType
 

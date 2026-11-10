@@ -12,13 +12,14 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import glob
 import os
 import sys
+from typing import TYPE_CHECKING
 
 from smarter.common.conf import smarter_settings
-from smarter.lib import logging
+from smarter.lib.logging import getLogger
 
 from .base import *
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 if smarter_settings.developer_mode:
     # dev only:
@@ -101,12 +102,15 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.debug("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
     logger.debug("*" * 80)
 
-__all__ = [
-    name
-    for name, value in globals().items()
-    if name.isupper()
-    and not name.startswith("_")
-    and not hasattr(value, "__file__")
-    and not callable(value)
-    and value is not sys.modules[__name__]
-]  # type: ignore[reportUnsupportedDunderAll]
+# mypy can't evaluate a computed __all__, and would then treat a star import of this
+# module as importing nothing. It skips this block, and exports every public name.
+if not TYPE_CHECKING:
+    __all__ = [
+        name
+        for name, value in globals().items()
+        if name.isupper()
+        and not name.startswith("_")
+        and not hasattr(value, "__file__")
+        and not callable(value)
+        and value is not sys.modules[__name__]
+    ]  # type: ignore[reportUnsupportedDunderAll]

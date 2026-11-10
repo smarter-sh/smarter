@@ -74,6 +74,9 @@ for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError):
     if _driver_error is not None:
         DB_CONNECTION_EXCEPTIONS += (_driver_error,)
 
+SWITCH_NOT_READY_EXCEPTIONS: tuple[type[BaseException], ...] = (*DB_EXCEPTIONS, AppRegistryNotReady)
+"""The :data:`DB_EXCEPTIONS`, and Django's app registry not being ready yet: a switch can't be read, so it is off."""
+
 CACHE_EXCEPTIONS: tuple[type[BaseException], ...] = (ConnectionInterrupted, RedisError)
 """The errors of waffle's cache, Redis, e.g. while Redis restarts, after which a switch is read from the database."""
 
@@ -220,7 +223,7 @@ def switch_is_active(switch_name: str) -> bool:
         # one line, no traceback: the database being away is an outage to report, not a bug to debug.
         logger.warning("%s the database is unavailable, assuming switch %s is inactive: %s", prefix, switch_name, e)
         return False
-    except (*DB_EXCEPTIONS, AppRegistryNotReady) as e:
+    except SWITCH_NOT_READY_EXCEPTIONS as e:
         logger.error(
             "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
         )

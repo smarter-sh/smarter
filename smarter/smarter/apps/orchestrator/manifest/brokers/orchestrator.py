@@ -49,7 +49,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -76,7 +76,7 @@ class OrchestratorSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class SAMOrchestratorBroker(AbstractBroker):
+class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Orchestrator manifests.
 
@@ -401,11 +401,11 @@ class SAMOrchestratorBroker(AbstractBroker):
         spec_config = SAMOrchestratorSpecConfig(**orchestrator_dict)
         spec = SAMOrchestratorSpec(config=spec_config)
         status = SAMOrchestratorStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=self.orchestrator.record_locator,
-            created=self.orchestrator.created_at,
-            modified=self.orchestrator.updated_at,
+            created=required(self.orchestrator.created_at, "orchestrator.created_at"),
+            modified=required(self.orchestrator.updated_at, "orchestrator.updated_at"),
         )
         model = SAMOrchestrator(
             apiVersion=self.api_version,
@@ -465,14 +465,9 @@ class SAMOrchestratorBroker(AbstractBroker):
                 "%s.manifest() initializing %s from SAMLoader with name %s",
                 self.formatted_class_name,
                 self.kind,
-                self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
-            self._manifest = SAMOrchestrator(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMOrchestratorMetadata(**self.loader.manifest_metadata),
-                spec=SAMOrchestratorSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMOrchestrator.model_validate(self.loader.manifest_sections)
             return self._manifest
         if self._orchestrator:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
@@ -539,8 +534,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :rtype: SmarterJournaledJsonResponse
         """
 
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         meta_data = SAMOrchestratorMetadata(
             name="example_orchestrator",
@@ -576,7 +570,9 @@ class SAMOrchestratorBroker(AbstractBroker):
 
         spec = SAMOrchestratorSpec(config=config)
         status = SAMOrchestratorStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -600,9 +596,8 @@ class SAMOrchestratorBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: when the broker has no user profile.
         :raises SAMOrchestratorBrokerError: when an Orchestrator cannot be serialized.
         """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-        data = []
+        command = SmarterJournalCliCommands(self.get.__name__)
+        items: list[SmarterDictType] = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
@@ -632,7 +627,7 @@ class SAMOrchestratorBroker(AbstractBroker):
                         f"Model dump failed for {self.kind} {orchestrator.name}", thing=self.kind, command=command
                     )
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
                     "%s.get() failed to serialize %s %s",
@@ -644,15 +639,15 @@ class SAMOrchestratorBroker(AbstractBroker):
                 raise SAMOrchestratorBrokerError(
                     f"Failed to serialize {self.kind} {orchestrator.name}", thing=self.kind, command=command
                 ) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=OrchestratorSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -669,8 +664,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         call, since they're either DB-managed (id, timestamps) or handled
         through a different API (tags).
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         if not self.ready:
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
@@ -752,8 +746,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -766,8 +759,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: when there is no such Orchestrator.
         :raises SAMOrchestratorBrokerError: when the manifest cannot be built.
         """
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.orchestrator:
@@ -835,8 +827,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: when there is no such Orchestrator.
         :raises SAMOrchestratorBrokerError: when the delete fails.
         """
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
@@ -865,8 +856,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
         )
@@ -878,8 +868,7 @@ class SAMOrchestratorBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
@@ -891,7 +880,6 @@ class SAMOrchestratorBroker(AbstractBroker):
         :param request: The request.
         :returns: The response, with empty data.
         """
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

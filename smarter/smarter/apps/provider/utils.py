@@ -219,7 +219,7 @@ def get_google_service_account_bearer_token() -> str | None:
         logger.error(
             "%s.get_google_service_account_bearer_token() google service account secret not found.", logger_prefix
         )
-        return
+        return None
 
     try:
         svc_account = secret.get_secret()
@@ -227,7 +227,7 @@ def get_google_service_account_bearer_token() -> str | None:
             logger.error(
                 "%s.get_google_service_account_bearer_token() google service account secret is empty.", logger_prefix
             )
-            return
+            return None
         svc_account_dict = json.loads(svc_account)
 
         credentials = service_account.Credentials.from_service_account_info(svc_account_dict, scopes=SCOPES)
@@ -238,16 +238,16 @@ def get_google_service_account_bearer_token() -> str | None:
             logger_prefix,
             e,
         )
-        return
+        return None
     except GoogleAuthError as e:
         logger.error(
             "%s.get_google_service_account_bearer_token() error loading Google credentials: %s", logger_prefix, e
         )
-        return
+        return None
     # pylint: disable=broad-except
     except Exception as e:
         logger.error("%s.get_google_service_account_bearer_token() unexpected error: %s", logger_prefix, e)
-        return
+        return None
     credentials.refresh(auth_req)
     bearer_token = credentials.token
     return bearer_token

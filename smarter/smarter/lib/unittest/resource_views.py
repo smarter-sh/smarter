@@ -30,6 +30,7 @@ from django.urls import resolve, reverse
 from smarter.lib import json
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest import ReverseNamesClass
 
 
 def assert_console_page(testcase, url: str) -> None:
@@ -105,9 +106,9 @@ class ResourceViewsTestMixin:
     #: The model of the resource under test.
     model: type[MetaDataModel]
     #: The app's reverse names class for its console pages, e.g. ``ProviderReverseNames``.
-    reverse_names: type
+    reverse_names: ReverseNamesClass
     #: The app's reverse names class for its web console api, e.g. ``ProviderApiWebReverseNames``.
-    web_reverse_names: type
+    web_reverse_names: ReverseNamesClass
     #: The name of the url parameter that holds the resource's id.
     id_kwarg: str
     #: The function that invalidates the list api's cache for a user profile, if the app caches it.
@@ -116,6 +117,8 @@ class ResourceViewsTestMixin:
     resource_name_prefix = "test_resource_views"
     #: The attribute of ``reverse_names`` that holds the detail page's url name.
     detail_view_name = "detailview"
+    #: The resource that ``setUpClass()`` creates, which the tests share.
+    resource: MetaDataModel
 
     @classmethod
     def create_resource(cls, name: str) -> MetaDataModel:
@@ -153,7 +156,7 @@ class ResourceViewsTestMixin:
     # helpers
     # -------------------------------------------------------------------------
     @staticmethod
-    def reverse_attribute(reverse_names: type, name: str, **kwargs) -> str:
+    def reverse_attribute(reverse_names: ReverseNamesClass, name: str, **kwargs) -> str:
         """
         Reverse a url name, by the attribute of a reverse names class that holds it.
 

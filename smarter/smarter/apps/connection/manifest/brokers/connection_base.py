@@ -1,7 +1,7 @@
 # pylint: disable=W0718
 """Smarter Api ApiConnection Manifest handler."""
 
-from typing import Optional, Type
+from typing import Optional, Type, TypeVar
 
 from django.http import HttpRequest
 
@@ -23,13 +23,17 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotReady,
 )
+from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
 )
 
+ConnectionT = TypeVar("ConnectionT", bound=ConnectionBase)
+"""The Django ORM model of a connection broker's connection, e.g. ``SqlConnection``."""
 
-class SAMConnectionBaseBroker(AbstractBroker):
+
+class SAMConnectionBaseBroker(AbstractBroker[ConnectionT, ConnectionT]):
     """
     Smarter API Connection Base Manifest Broker.
 
@@ -88,7 +92,7 @@ class SAMConnectionBaseBroker(AbstractBroker):
         return self.formatted_text(f"{SAMConnectionBaseBroker.__name__}[{id(self)}]")
 
     @property
-    def ORMModelClass(self) -> Type[ConnectionBase]:
+    def ORMModelClass(self) -> Type[ConnectionT]:
         """
         Return the Django ORM model class of the connection; subclasses must implement it.
 
@@ -97,16 +101,9 @@ class SAMConnectionBaseBroker(AbstractBroker):
         raise NotImplementedError(f"{self.formatted_class_name}.ORMModelClass must be implemented in the subclass.")
 
     @property
-    def connection(self) -> Optional[ConnectionBase]:
+    def connection(self) -> Optional[ConnectionT]:
         """Return the connection model instance."""
         raise NotImplementedError(f"{self.formatted_class_name}.connection must be implemented in the subclass.")
-
-    @connection.setter
-    def connection(self, value: ConnectionBase) -> None:
-        """Set the connection model instance."""
-        self._connection = value
-        self._sam_connection_metadata = None
-        self._sam_connection_status = None
 
     def sam_connection_metadata(self) -> Optional[SAMConnectionCommonMetadata]:
         """
@@ -147,11 +144,13 @@ class SAMConnectionBaseBroker(AbstractBroker):
                     command=SmarterJournalCliCommands.GET,
                 )
             self._sam_connection_status = SAMConnectionCommonStatus(
-                account_number=self.connection.user_profile.cached_account.account_number,
+                account_number=required(
+                    self.connection.user_profile.cached_account.account_number, "connection.account.account_number"
+                ),
                 username=admin.username,
                 recordLocator=self.connection.record_locator,
-                created=self.connection.created_at,
-                modified=self.connection.updated_at,
+                created=required(self.connection.created_at, "connection.created_at"),
+                modified=required(self.connection.updated_at, "connection.updated_at"),
             )
         return self._sam_connection_status
 
@@ -267,3 +266,4 @@ class SAMConnectionBaseBroker(AbstractBroker):
 
         if tags is not None:
             self.connection.tags.set(tags)
+        return None

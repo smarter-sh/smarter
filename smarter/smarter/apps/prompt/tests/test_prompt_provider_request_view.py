@@ -39,6 +39,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.openai import model_quirks
+from smarter.lib.typing import SmarterDictType
 
 MODEL = "gpt-test"
 TOOL = {
@@ -49,7 +50,11 @@ TOOL = {
         "parameters": {"type": "object", "properties": {"q": {"type": "string"}}},
     },
 }
-TOOL_CALL = {"id": "call_1", "type": "function", "function": {"name": "smarter_plugin_0000000001", "arguments": "{}"}}
+TOOL_CALL: SmarterDictType = {
+    "id": "call_1",
+    "type": "function",
+    "function": {"name": "smarter_plugin_0000000001", "arguments": "{}"},
+}
 
 SAVED_REQUEST = {
     "api_url": "https://api.example.com/v1/",

@@ -1,7 +1,9 @@
 """PluginMeta serializers."""
 
 import sys
+from typing import TYPE_CHECKING, Union
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from smarter.apps.account.serializers import (
@@ -25,6 +27,9 @@ from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 from .manifest.enum import (
     SAMPluginCommonSpecSelectorKeyDirectiveValues,
 )
+
+if TYPE_CHECKING:
+    from smarter.apps.secret.models import Secret
 
 
 def is_sphinx_build():
@@ -311,7 +316,9 @@ class PluginWebsearchSerializer(SmarterCamelCaseSerializer):
         be documented.
     """
 
-    search_api_key = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    search_api_key: "serializers.SlugRelatedField[Secret]" = serializers.SlugRelatedField(
+        slug_field="name", read_only=True
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -481,12 +488,16 @@ class PluginSqlSerializer(SmarterCamelCaseSerializer):
         # }
     """
 
+    queryset: Union[QuerySet[SqlConnection], list[SqlConnection]]
     if is_sphinx_build():
         queryset = []
     else:
         queryset = SqlConnection.objects.all()
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
+    # in a Sphinx build, an empty list stands in for the queryset, which DRF requires of a writable field.
+    connection: "serializers.SlugRelatedField[SqlConnection]" = serializers.SlugRelatedField(
+        slug_field="name", queryset=queryset  # type: ignore[arg-type]
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -557,12 +568,16 @@ class PluginApiSerializer(SmarterCamelCaseSerializer):
         # }
     """
 
+    queryset: Union[QuerySet[ApiConnection], list[ApiConnection]]
     if is_sphinx_build():
         queryset = []
     else:
         queryset = ApiConnection.objects.all()
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=queryset)
+    # in a Sphinx build, an empty list stands in for the queryset, which DRF requires of a writable field.
+    connection: "serializers.SlugRelatedField[ApiConnection]" = serializers.SlugRelatedField(
+        slug_field="name", queryset=queryset  # type: ignore[arg-type]
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:

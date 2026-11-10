@@ -26,6 +26,9 @@ class TestVectorsearchApi(ResourceApiTestMixin, ApiV1TestBase):
     id_kwarg = "vectorsearch_id"
     resource_name_prefix = "test_vectorsearch_api"
 
+    provider: Provider
+    vectorstore: VectorstoreMeta
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

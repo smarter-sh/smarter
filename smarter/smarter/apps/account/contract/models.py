@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, Optional
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from smarter.lib.typing import required
+
 if TYPE_CHECKING:
     from smarter.apps.account.models import Account, AccountContact, UserProfile
     from smarter.apps.account.models import User as UserModel
@@ -84,8 +86,10 @@ class AccountApiAccount(AccountApiModel):
         :type account: smarter.apps.account.models.Account
         :returns: The model.
         :rtype: AccountApiAccount
+        :raises ValueError: when the account has no account number.
         """
-        return cls(account_number=account.account_number)
+        account_number = required(account.account_number, f"account {account.pk} account_number")
+        return cls(account_number=account_number)
 
 
 class AccountApiUserProfile(AccountApiModel):

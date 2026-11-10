@@ -4,7 +4,6 @@ The email is never sent: send_welcome_email() is patched.
 """
 
 import re
-import unittest
 from unittest.mock import patch
 
 from django.core.management.base import CommandError

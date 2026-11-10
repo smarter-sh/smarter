@@ -4,7 +4,7 @@
 
 import copy
 import os
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.connection.manifest.models.common.connection.model import (
@@ -108,21 +108,8 @@ class TestPluginBase(TestPluginClassBase):
     def model(self) -> SAMPluginCommon:
         raise NotImplementedError("Subclasses must implement this method")
 
-    @property
-    def connection_manifest_path(self) -> str:
-        raise NotImplementedError("Subclasses must implement this method")
-
-    @property
-    def connection_manifest(self) -> SmarterDictType:
-        raise NotImplementedError("Subclasses must implement this method")
-
-    @property
-    def connection_loader(self) -> SAMLoader:
-        raise NotImplementedError("Subclasses must implement this method")
-
-    @property
-    def connection_model(self) -> SAMConnectionCommon:
-        raise NotImplementedError("Subclasses must implement this method")
+    # connection_manifest_path, connection_manifest, connection_loader and connection_model
+    # come from the connection test mixin that each subclass also inherits, e.g. SqlConnectionTestMixin.
 
 
 def get_data_path(filename: str) -> str:

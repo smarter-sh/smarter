@@ -15,7 +15,7 @@ observed state, e.g. its status and endpoint.
 
 import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 
 from django.core.validators import MinValueValidator
 from django.db import models

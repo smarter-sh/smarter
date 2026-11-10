@@ -37,7 +37,8 @@ class TestAnnotationHandlers(SmarterTestBase):
 
     def budget(self, **annotations) -> Budget:
         """A throwaway Budget."""
-        budget = Budget.objects.create(
+        # annotations is a property, which Django's constructor sets, but django-stubs only knows fields.
+        budget = Budget.objects.create(  # type: ignore[misc]
             name=f"test_handlers_{self.hash_suffix}_{Budget.objects.count()}",
             periodic_limit=Decimal("1"),
             annotations=annotations,

@@ -16,7 +16,7 @@ from the handshake to tool calls, is real.
 import copy
 import os
 from contextlib import contextmanager
-from typing import Any, Optional
+from typing import Optional
 from unittest import mock
 
 from mcp.server import MCPServer
@@ -75,7 +75,7 @@ def build_test_server(instructions: Optional[str] = TEST_SERVER_INSTRUCTIONS) ->
     """
     server = MCPServer(name=TEST_SERVER_NAME, version=TEST_SERVER_VERSION, instructions=instructions)
 
-    @server.tool(description="Repeat the text.", annotations=ToolAnnotations(readOnlyHint=True))
+    @server.tool(description="Repeat the text.", annotations=ToolAnnotations(read_only_hint=True))
     def echo(text: str) -> str:
         return text
 

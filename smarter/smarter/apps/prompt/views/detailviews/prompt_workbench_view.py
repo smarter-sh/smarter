@@ -6,42 +6,26 @@ The Prompt Engineer's Workbench's page, :class:`PromptWorkbenchView`, and the ch
 :class:`~smarter.apps.prompt.views.detailviews.prompt_config_view.PromptConfigView`, creates or resumes.
 """
 
-import traceback
-from http import HTTPStatus
 from typing import Optional
 
-from django.conf import settings
 from django.http import (
     HttpRequest,
 )
-from django.shortcuts import render
 
 from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.apps.llmclient.models import (
     LLMClient,
-    LLMClientHelper,
-    get_cached_llmclient_by_request,
 )
 from smarter.apps.prompt.models import Prompt, PromptHelper
 from smarter.apps.prompt.signals import prompt_session_invoked
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
-)
 from smarter.common.exceptions import (
     SmarterException,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import (
-    SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
-    SmarterHttpResponseServerError,
-)
-from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -109,9 +93,7 @@ class SmarterPromptSession(SmarterHelperMixin):
         if not self.session_key and not self.llmclient:
             logger.error("%s either session_key or llmclient must be provided", self.formatted_class_name)
 
-        self._chat_helper = PromptHelper(
-            request, *args, session_key=self.session_key, llmclient=self.llmclient, **kwargs
-        )
+        self._chat_helper = PromptHelper(request, self.session_key, *args, llmclient=self.llmclient, **kwargs)
         self._chat = self._chat_helper.prompt
         # PromptHelper starts a new session when the key belongs to another llmclient's session.
         self._session_key = self._chat_helper.session_key

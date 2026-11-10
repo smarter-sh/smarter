@@ -375,6 +375,9 @@ def model_not_found(model: str) -> openai.NotFoundError:
 class TestHandlerProviderErrors(TestAccountMixin):
     """Test that the handler returns the LLM provider's error status and message."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

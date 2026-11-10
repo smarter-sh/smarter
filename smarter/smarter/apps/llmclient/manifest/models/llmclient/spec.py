@@ -88,7 +88,7 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
         description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the llmclient. This defaults to {settings_defaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the llmclient's responses. A value of 0 means that the llmclient will always choose the most likely response, while a value of 1 means that the llmclient will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
     )
     defaultReasoningEffort: Optional[OpenAIReasoningEffort] = Field(
-        None,
+        default=None,
         description=(
             f"{class_identifier}.default_reasoning_effort[str]. Optional. How much a reasoning model reasons before "
             "it answers: none, minimal, low, medium, high or xhigh. When it is not set, the model reasons at its own "
