@@ -11,12 +11,8 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_admin_user_for_account
-from smarter.apps.llmtool.manifest.models.common.plugin.model import (
-    SAMPluginCommonMetadata,
-)
 from smarter.apps.llmtool.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.llmtool.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.apps.llmtool.manifest.models.static_plugin.spec import SAMPluginStaticSpec
 from smarter.apps.llmtool.models import (
     PluginDataBase,
     PluginDataStatic,
@@ -25,7 +21,7 @@ from smarter.apps.llmtool.models import (
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
+from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError, SAMDependency
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.typing import SmarterDictType
 
@@ -42,7 +38,7 @@ class SAMUserBrokerError(SAMBrokerError):
         return "Smarter API User Manifest Broker Error"
 
 
-class SAMTestBroker(AbstractBroker):
+class SAMTestBroker(AbstractBroker[PluginDataBase, PluginMeta]):
     """Test class for unit tests of the abstract broker class."""
 
     # override the base abstract manifest model with the User model
@@ -65,7 +61,9 @@ class SAMTestBroker(AbstractBroker):
 
     def manifest_to_django_orm(self) -> SmarterDictType:
         """Transform the Smarter API User manifest into a Django ORM model."""
-        config_dump = self.manifest.spec.model_dump()  # type: ignore[return-value]
+        if self.manifest is None:
+            raise SAMUserBrokerError("No manifest set for the broker")
+        config_dump = self.manifest.spec.model_dump()
         config_dump = self.to_snake_case(config_dump)
         return config_dump  # type: ignore[return-value]
 
@@ -104,7 +102,7 @@ class SAMTestBroker(AbstractBroker):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def SerializerClass(self) -> Optional[Type[ModelSerializer]]:
+    def SerializerClass(self) -> Type[ModelSerializer]:
         return ModelSerializer
 
     @property
@@ -239,12 +237,7 @@ class SAMTestBroker(AbstractBroker):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMStaticPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMStaticPlugin.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -257,7 +250,7 @@ class SAMTestBroker(AbstractBroker):
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         return super().describe(request=request, kwargs=kwargs)
 
-    def dependencies(self) -> List[AbstractBroker]:
+    def dependencies(self) -> List[SAMDependency]:
         return []
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:

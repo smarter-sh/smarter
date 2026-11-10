@@ -17,8 +17,9 @@ from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
-STATE_FIELDS = {
+STATE_FIELDS: SmarterDictType = {
     # what a clone does not copy: it is a new, undeployed vectorstore.
     "status": VectorstoreStatus.PENDING,
     "status_message": "",
@@ -68,18 +69,17 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The clone, 400 if ``new_name`` is empty, 404 if the vectorstore is not found, or 409 if
             the user has a vectorstore named ``new_name``.
         """
+        user_profile = self.user_profile
+        if user_profile is None:
+            return JsonResponse({"error": "A user profile is required."}, status=HTTPStatus.FORBIDDEN)
         vectorstore_id = kwargs.get("vectorstore_id")
         new_name = self.to_snake_case(str(kwargs.get("new_name") or "").strip())
         if not new_name:
             return JsonResponse({"error": "new_name is required."}, status=HTTPStatus.BAD_REQUEST)
-        source = (
-            VectorstoreMeta.objects.with_read_permission_for(self.user_profile.user)  # type: ignore
-            .filter(id=vectorstore_id)
-            .first()
-        )
+        source = VectorstoreMeta.objects.with_read_permission_for(user_profile.user).filter(id=vectorstore_id).first()
         if source is None:
             return JsonResponse({"error": f"Vectorstore {vectorstore_id} not found."}, status=HTTPStatus.NOT_FOUND)
-        if VectorstoreMeta.objects.filter(user_profile=self.user_profile, name=new_name).exists():
+        if VectorstoreMeta.objects.filter(user_profile=user_profile, name=new_name).exists():
             return JsonResponse(
                 {"error": f"You already have a vectorstore named {new_name}."}, status=HTTPStatus.CONFLICT
             )
@@ -87,7 +87,7 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             clone = VectorstoreMeta.objects.get(pk=source.pk)
             clone.pk = None
             clone.name = new_name
-            clone.user_profile = self.user_profile
+            clone.user_profile = user_profile
             for field, value in STATE_FIELDS.items():
                 setattr(clone, field, value)
             spec = dict(clone.spec or {})
@@ -95,7 +95,7 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             clone.spec = spec
             clone.save()
             clone.tags.set(source.tags_list)
-        invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
+        invalidate_all_cached_vectorstores_for_user_profile(user_profile=user_profile)
         return JsonResponse(VectorstoreSerializer(clone, context={"request": request}).data, status=HTTPStatus.OK)
 
 

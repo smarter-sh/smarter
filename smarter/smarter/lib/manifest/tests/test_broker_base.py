@@ -3,7 +3,7 @@
 
 import os
 from http import HTTPStatus
-from typing import Type
+from typing import Optional, Type
 
 import yaml
 from django.http import HttpRequest
@@ -172,10 +172,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         # add a SAM manifest to the body
         yaml_data = self.loader.yaml_data
+        body: Optional[bytes] = None
         if isinstance(yaml_data, str):
-            yaml_data = yaml_data.encode("utf-8")
+            body = yaml_data.encode("utf-8")
         # pylint: disable=protected-access
-        self._request._body = yaml_data  # type: ignore
+        self._request._body = body  # type: ignore
 
         self.assertIsInstance(self._request, HttpRequest)
         logger.debug(
@@ -289,7 +290,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         try:
             json_obj = json.loads(response.content.decode("utf-8"))
         except json.JSONDecodeError as e:
-            self.fail(f"Response content is not valid JSON. Error: {e}. Response content: {response.content}")
+            self.fail(f"Response content is not valid JSON. Error: {e}. Response content: {response.content!r}")
 
         self.assertIsInstance(json_obj, dict, msg="Response to_json() is not a dict")
 
@@ -335,10 +336,12 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         """Validate that the response is a SmarterJournaledJsonResponse containing a properly structured SAM manifest dict."""
         response_json: SmarterDictType = json.loads(response.content.decode("utf-8"))
         self.assertIsInstance(response_json, dict)
-        data = response_json.get(SCLIResponseGet.DATA.value)  # type: ignore
-        self.assertIsInstance(data, dict, msg=f"Response data is not a dict. response_json: {response_json}")
-        data: SmarterDictType = data.get(SCLIResponseGet.DATA.value)  # type: ignore
-        self.assertIsInstance(data, dict, msg=f"Response data.data is not a dict. response_json: {response_json}")
+        response_data = response_json.get(SCLIResponseGet.DATA.value)
+        if not isinstance(response_data, dict):
+            self.fail(f"Response data is not a dict. response_json: {response_json}")
+        data = response_data.get(SCLIResponseGet.DATA.value)
+        if not isinstance(data, dict):
+            self.fail(f"Response data.data is not a dict. response_json: {response_json}")
 
         self.assertIn("titles", data.keys(), msg=f"'titles' missing in manifest dict. response_json: {response_json}")
         self.assertIn("items", data.keys(), msg=f"'items' missing in manifest dict. response_json: {response_json}")

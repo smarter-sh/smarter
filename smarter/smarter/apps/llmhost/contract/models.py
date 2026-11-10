@@ -179,7 +179,7 @@ class LLMHostApiLLMHost(AccountApiModel):
             "cost_per_hour": money(llmhost.cost_per_hour, llmhost._meta.get_field("cost_per_hour").decimal_places),
         }
         fields = {name: getattr(llmhost, name) for name in cls.model_fields if name not in computed}
-        return cls(**fields, **computed)
+        return cls.model_validate({**fields, **computed})
 
 
 class LLMHostApiPod(AccountApiModel):

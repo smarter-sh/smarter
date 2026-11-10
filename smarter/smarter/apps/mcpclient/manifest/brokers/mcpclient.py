@@ -10,7 +10,7 @@ Smarter API MCPClient Manifest handler.
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -59,7 +59,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -94,7 +94,7 @@ class SAMMCPClientBrokerError(SAMBrokerError):
         return "Smarter API MCPClient Manifest Broker Error"
 
 
-class SAMMCPClientBroker(AbstractBroker):
+class SAMMCPClientBroker(AbstractBroker[MCPClient, MCPClient]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` MCPClient manifests.
 
@@ -259,11 +259,11 @@ class SAMMCPClientBroker(AbstractBroker):
         )
         spec = SAMMCPClientSpec(config=SAMMCPClientSpecConfig(**config_data))
         status = SAMMCPClientStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=mcpclient.record_locator,
-            created=mcpclient.created_at,
-            modified=mcpclient.updated_at,
+            created=required(mcpclient.created_at, "mcpclient.created_at"),
+            modified=required(mcpclient.updated_at, "mcpclient.updated_at"),
             connectionStatus=mcpclient.status,
             protocolVersion=mcpclient.protocol_version,
             serverName=mcpclient.server_name,
@@ -302,12 +302,7 @@ class SAMMCPClientBroker(AbstractBroker):
                 raise SAMMCPClientBrokerError("Cached manifest is not a SAMMCPClient instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMMCPClient(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMMCPClientMetadata(**self.loader.manifest_metadata),
-                spec=SAMMCPClientSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMMCPClient.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -358,7 +353,9 @@ class SAMMCPClientBroker(AbstractBroker):
             priority=100,
         )
         status = SAMMCPClientStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -376,7 +373,7 @@ class SAMMCPClientBroker(AbstractBroker):
     def get(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Return the MCPClients that the user may read, optionally filtered by name."""
         command = SmarterJournalCliCommands(self.get.__name__)
-        data = []
+        items: list[SmarterDictType] = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
@@ -391,20 +388,20 @@ class SAMMCPClientBroker(AbstractBroker):
 
         for mcpclient in mcpclients:
             try:
-                data.append(self.to_camel_case(MCPClientSerializer(mcpclient).data))
+                items.append(self.to_camel_case(MCPClientSerializer(mcpclient).data))
             except Exception as e:
                 raise SAMMCPClientBrokerError(
                     f"Failed to serialize {self.kind} {mcpclient.name}", thing=self.kind, command=command
                 ) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=MCPClientSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -526,7 +523,9 @@ class SAMMCPClientBroker(AbstractBroker):
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.secret.models import Secret
 
-        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.credentials_id))]  # type: ignore[attr-defined]
+        if instance.credentials_id is None:
+            return [(SAMKinds.SECRET.value, Secret.objects.none())]
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.credentials_id))]
 
     @memoized_dependencies
     def dependencies(self) -> List[SAMDependency]:

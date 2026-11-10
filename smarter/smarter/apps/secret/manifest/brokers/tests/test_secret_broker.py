@@ -281,7 +281,6 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_delete(self):
         """Stub: test delete method."""
-        pass
 
     def test_deploy(self):
         """
@@ -310,8 +309,6 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_delete_secret_not_found(self):
         """Test delete method raises not found for missing secret."""
-
-        pass
 
     def test_describe_secret_not_found(self):
         """Test describe method raises not found for missing secret."""

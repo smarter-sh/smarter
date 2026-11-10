@@ -8,7 +8,7 @@ Lifecycle, status and scheduling are the job of
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Optional
 
 from langchain_core.embeddings import Embeddings
 

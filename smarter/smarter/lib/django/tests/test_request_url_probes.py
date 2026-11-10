@@ -7,7 +7,6 @@ property is read for every url, so that each classification's early returns are
 exercised, and the classifications that matter are asserted.
 """
 
-import inspect
 from functools import cached_property
 from unittest.mock import patch
 from urllib.parse import urlsplit

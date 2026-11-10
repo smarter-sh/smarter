@@ -1,6 +1,6 @@
 """Django REST Framework serializers for MetaDataModel and related models."""
 
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from django.db import models
 from rest_framework import serializers
@@ -64,8 +64,8 @@ class MetaDataModelSerializer(TaggitSerializer, SmarterCamelCaseSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = MetaDataModel
-        # List all fields you want to expose. Adjust as needed.
-        fields = [
+        # List all fields you want to expose. Adjust as needed. A subclass may use "__all__".
+        fields: Union[str, list[str]] = [
             "id",
             "hashed_id",
             "name",

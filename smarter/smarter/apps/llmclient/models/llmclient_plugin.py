@@ -1,6 +1,6 @@
 """LLMClientPlugin model."""
 
-from typing import List, Optional, Type
+from typing import List, Optional, Type, overload
 
 from cache_results import cache_results
 from django.db import models
@@ -131,15 +131,23 @@ class LLMClientPlugin(TimestampedModel):
         this_plugin = plugin_controller.plugin
         return this_plugin
 
+    @overload
     @classmethod
-    def load(cls: Type["LLMClientPlugin"], llmclient: LLMClient, data) -> "LLMClientPlugin":
+    def load(cls: Type["LLMClientPlugin"], llmclient: LLMClient, data) -> "LLMClientPlugin": ...
+
+    @overload
+    @classmethod
+    def load(cls: Type["LLMClientPlugin"], llmclient: None, data) -> None: ...
+
+    @classmethod
+    def load(cls: Type["LLMClientPlugin"], llmclient: Optional[LLMClient], data) -> Optional["LLMClientPlugin"]:
         """
         Load (aka import) a plugin from a data file in yaml or json format.
 
         :param llmclient: The LLMClient instance to associate with the plugin.
         :param data: The plugin manifest data in yaml or json format.
-        :returns: The created LLMClientPlugin instance.
-        :rtype: LLMClientPlugin
+        :returns: The created LLMClientPlugin instance, or None if there is no LLMClient.
+        :rtype: Optional[LLMClientPlugin]
 
         See Also:
 
@@ -187,7 +195,7 @@ class LLMClientPlugin(TimestampedModel):
         if admin_user is None:
             raise SmarterValueError("LLMClientPlugin.plugin() failed to find admin user for llmclient account")
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
-        retval = []
+        retval: List[PluginBase] = []
         for llmclient_plugin in llmclient_plugins:
             try:
                 plugin_controller = PluginController(
@@ -216,7 +224,7 @@ class LLMClientPlugin(TimestampedModel):
     # pylint: disable=W0221
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, llmclient: Optional[LLMClient] = None
+        cls, invalidate: Optional[bool] = False, llmclient: Optional[LLMClient] = None, **kwargs
     ) -> models.QuerySet["LLMClientPlugin"]:
         """
         Retrieve a queryset of LLMClientPlugin instances associated with a LLMClient using caching.
@@ -225,6 +233,7 @@ class LLMClientPlugin(TimestampedModel):
         :type invalidate: bool, optional
         :param llmclient: The LLMClient instance for which to retrieve plugins.
         :type llmclient: LLMClient, optional
+        :param kwargs: Unused. Accepted for the signature of the base class.
 
         :returns: A queryset of LLMClientPlugin instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientPlugin"]
@@ -273,7 +282,7 @@ class LLMClientPlugin(TimestampedModel):
         return super().get_cached_objects(invalidate=invalidate)  # type: ignore[return-value]
 
     @classmethod
-    def plugins_json(cls, llmclient: LLMClient) -> List[SmarterDictType]:
+    def plugins_json(cls, llmclient: LLMClient) -> List[Optional[SmarterDictType]]:
         """
         Return the LLMClient's plugins as JSON-serializable dicts.
 

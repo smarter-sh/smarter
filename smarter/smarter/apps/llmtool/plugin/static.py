@@ -46,6 +46,7 @@ from smarter.apps.llmtool.manifest.enum import (
 from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.llmtool.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
@@ -135,7 +136,7 @@ class StaticPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        manifest: Optional[SAMStaticPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         **kwargs,
     ):
         super().__init__(*args, manifest=manifest, **kwargs)
@@ -162,7 +163,9 @@ class StaticPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMStaticPlugin(**self.to_json())  # type: ignore[call-arg]
+            manifest_json = self.to_json()
+            if manifest_json is not None:
+                self._manifest = SAMStaticPlugin(**manifest_json)  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -221,7 +224,10 @@ class StaticPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataStatic(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            plugin_data_django_model = self.plugin_data_django_model
+            if plugin_data_django_model is None:
+                raise SmarterPluginError(f"{self.formatted_class_name}.plugin_data() the manifest has no plugin data.")
+            self._plugin_data = PluginDataStatic(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
                 "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
@@ -261,7 +267,7 @@ class StaticPlugin(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> Optional[PluginStaticSerializer]:
+    def plugin_data_serializer(self) -> PluginStaticSerializer:
         """
         Return the serializer instance for the plugin's static data.
 
@@ -275,7 +281,7 @@ class StaticPlugin(PluginBase):
         plugin's static data.
 
         :return: The serializer instance for the plugin's static data, or ``None`` if the plugin data is unavailable.
-        :rtype: Optional[PluginStaticSerializer]
+        :rtype: PluginStaticSerializer
 
         Notes
         -----
@@ -340,6 +346,7 @@ class StaticPlugin(PluginBase):
         # the description is presented to the LLM as the tool description. it is
         # metadata.description of the manifest. spec.data.description would be redundant.
         metadata = self._manifest.metadata
+        description: Optional[str]
         if metadata and metadata.description:
             description = metadata.description
         elif self.plugin_meta:
@@ -455,7 +462,7 @@ class StaticPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Use Pydantic models to generate an example manifest for a StaticPlugin.
 
@@ -463,7 +470,7 @@ class StaticPlugin(PluginBase):
         :type kwargs: Optional[SmarterDictType]
 
         :return: An example manifest as a dictionary.
-        :rtype: Optional[SmarterDictType]
+        :rtype: SmarterDictType
 
         :raises SmarterConfigurationError: If there is an error generating the example manifest.
 

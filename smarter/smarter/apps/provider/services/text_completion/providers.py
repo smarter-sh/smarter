@@ -51,7 +51,7 @@ enabling seamless integration with a variety of large language model (LLM) backe
    This is the main entry point for consumers needing OpenAI-compatible prompt completion handling and passthrough.
 """
 
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 from cache_results import cache_results
 from django.core.handlers.asgi import ASGIRequest
@@ -219,7 +219,8 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         def get_cached_openai_client_for_provider(provider_name: str, username: str) -> OpenAIPassthroughClient:
 
             provider_orm = self.get_client_orm_by_provider_name_and_user(provider_name, user)
-            api_key = SecretStr(provider_orm.api_key.get_secret()) if provider_orm.api_key else None
+            secret_value = provider_orm.api_key.get_secret() if provider_orm.api_key else None
+            api_key = SecretStr(secret_value) if secret_value is not None else None
 
             retval = OpenAIPassthroughClient(
                 provider=provider_orm.name,
@@ -293,7 +294,8 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             client_orm = self.get_client_orm_by_provider_name_and_user(
                 provider_name=provider_name or self.default_handler_name, user=user_profile.user
             )
-            api_key = SecretStr(client_orm.api_key.get_secret()) if client_orm.api_key else None
+            secret_value = client_orm.api_key.get_secret() if client_orm.api_key else None
+            api_key = SecretStr(secret_value) if secret_value is not None else None
             smarter_openai_compatible_provider = OpenAISmarterClient(
                 provider=client_orm,
                 provider_name=client_orm.name,

@@ -16,7 +16,12 @@ class TestIsFirstWorker(SmarterTestBase):
 
     def _marker(self, name: str, ppid: int) -> str:
         marker = os.path.join(tempfile.gettempdir(), f"smarter-{name}-{ppid}")
-        self.addCleanup(lambda: os.path.exists(marker) and os.remove(marker))
+
+        def remove_marker() -> None:
+            if os.path.exists(marker):
+                os.remove(marker)
+
+        self.addCleanup(remove_marker)
         return marker
 
     def test_only_the_first_worker_is_first(self):

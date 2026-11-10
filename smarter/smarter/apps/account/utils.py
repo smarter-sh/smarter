@@ -17,19 +17,17 @@ Two caching strategies are used:
   *Scope*: Shared across all processes; cache lifetime is controlled by expiration settings.
 """
 
-import glob
-import os
 import re
-from typing import Optional
+from typing import Optional, Union
 
 from cache_results import cache_results
+from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.templatetags.static import static
 from typing_extensions import deprecated
 
 from smarter.apps.account.models import (
     Account,
-    Budget,
     User,
     UserProfile,
 )
@@ -241,7 +239,9 @@ def get_cached_default_account(invalidate: bool = False) -> Account:
     return _get_default_account()
 
 
-def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Optional[User] = None) -> Account:
+def get_cached_account_for_user(
+    invalidate: Optional[bool] = False, user: Optional[Union[User, AnonymousUser]] = None
+) -> Account:
     """
     Locate the Account associated with a given user, using caching for performance.
 
@@ -250,7 +250,8 @@ def get_cached_account_for_user(invalidate: Optional[bool] = False, user: Option
     <smarter.apps.account.models.UserProfile.get_selected_object>`), else the default account, if the
     user belongs to it, else the account of the user's first profile.
 
-    :param user: User instance. The user whose account should be located.
+    :param user: User instance. The user whose account should be located. Any other user, such as an
+        AnonymousUser, has no account.
     :param invalidate: Boolean, optional. If True, invalidates the cache before fetching.
     :returns: Account instance if found, otherwise None.
 
@@ -653,7 +654,7 @@ def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
     if not account:
         raise SmarterValueError("Account is required")
 
-    user_profiles = UserProfile.objects.filter(account=account) or []
+    user_profiles = UserProfile.objects.filter(account=account)
     return list(user_profiles)
 
 

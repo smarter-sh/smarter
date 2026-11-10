@@ -30,7 +30,7 @@ Example::
 from calendar import monthrange
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from cache_results import cache_results
 from django.apps import apps

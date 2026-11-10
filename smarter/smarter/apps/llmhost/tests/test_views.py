@@ -109,10 +109,12 @@ class TestLLMHostComputeListViews(LLMHostTestBase):
 
     def own_compute(self, name: str) -> LLMHostCompute:
         """An LLMHostCompute of the test user, without a node group, deleted when the test ends."""
-        spec = SAMLLMHostComputeSpec(
-            node={"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},
-            nodeGroup={"maxNodes": 2},
-            cost={"perHour": "1.0"},
+        spec = SAMLLMHostComputeSpec.model_validate(
+            {
+                "node": {"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},
+                "nodeGroup": {"maxNodes": 2},
+                "cost": {"perHour": "1.0"},
+            }
         )
         name = f"{name}_{self.hash_suffix}"
         self.addCleanup(LLMHostCompute.objects.filter(name__startswith=name).delete)
@@ -237,10 +239,12 @@ class TestLLMHostComputeResourceViews(ResourceViewsTestMixin, LLMHostTestBase):
     @classmethod
     def create_resource(cls, name: str) -> LLMHostCompute:
         """An LLMHostCompute without a node group."""
-        spec = SAMLLMHostComputeSpec(
-            node={"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},
-            nodeGroup={"maxNodes": 2},
-            cost={"perHour": "1.0"},
+        spec = SAMLLMHostComputeSpec.model_validate(
+            {
+                "node": {"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},
+                "nodeGroup": {"maxNodes": 2},
+                "cost": {"perHour": "1.0"},
+            }
         )
         return LLMHostCompute.objects.create(
             name=name, user_profile=cls.user_profile, **compute_spec_to_django_orm(spec)

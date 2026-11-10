@@ -3,7 +3,6 @@
 
 from django.test import Client
 
-from smarter.apps.llmtool.api.web.urls import PluginApiWebReverseNames
 from smarter.apps.llmtool.urls import PluginReverseNames
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse

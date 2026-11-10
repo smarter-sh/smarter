@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest import mock
 
+from django.apps.registry import Apps
 from django.contrib.auth.models import Group
 from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
@@ -32,6 +33,8 @@ MODULE = "smarter.apps.account.user_merge"
 
 class TestUserMerge(DuplicateUsersMixin):
     """Test that the users who share an email address are merged into the one who signed in last."""
+
+    apps: Apps
 
     @classmethod
     def setUpClass(cls):

@@ -82,9 +82,9 @@ class PluginBrokerEdgeCasesMixin:
             self._patch_broker_property("plugin", plugin)
         self._patch_broker_property("plugin_meta", plugin_meta)
         for name in ("to_json", "cache_invalidations", "verify_no_dependencies"):
-            patcher = patch.object(broker, name, return_value={})
-            patcher.start()
-            self.addCleanup(patcher.stop)  # type: ignore[attr-defined]
+            method_patcher = patch.object(broker, name, return_value={})
+            method_patcher.start()
+            self.addCleanup(method_patcher.stop)  # type: ignore[attr-defined]
         return broker
 
     def _fake_plugin(self, **kwargs):

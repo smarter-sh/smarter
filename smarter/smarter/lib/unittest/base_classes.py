@@ -32,6 +32,8 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     """
 
     name: str
+    hash_suffix: str
+    uid: str
     #: The log prefix of this class's messages. A subclass can override it.
     smarter_test_base_logger_prefix = f"{logger_prefix}.SmarterTestBase()"
     #: The width of the banners that are logged at the start and end of each test.
@@ -171,7 +173,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         :returns: The request, from Django's :class:`~django.test.RequestFactory`.
         """
         factory = RequestFactory()
-        json_data = {
+        json_data: Union[SmarterDictType, bytes] = {
             "session_key": "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -185,8 +187,8 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         }
         json_data = json.dumps(json_data).encode("utf-8")
 
-        headers = {}
-        data = {}
+        headers: dict[str, str] = {}
+        data: SmarterDictType = {}
 
         request: HttpRequest = factory.post(path=url, data=data, content_type="application/json", headers=headers)
         return request

@@ -15,7 +15,7 @@ Proxies are not deployed: they work as soon as they are applied. So ``deploy``, 
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 from urllib.parse import urljoin
 
 from django.db import transaction
@@ -53,6 +53,7 @@ from smarter.lib.manifest.broker import (
     SAMDependency,
     SAMDependents,
     memoized_dependencies,
+    rows_with_pk,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -60,7 +61,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -105,7 +106,7 @@ class SAMProxyBrokerError(SAMBrokerError):
         return "Smarter API Proxy Manifest Broker Error"
 
 
-class SAMProxyBroker(AbstractBroker):
+class SAMProxyBroker(AbstractBroker[Proxy, Proxy]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Proxy manifests.
 
@@ -261,11 +262,13 @@ class SAMProxyBroker(AbstractBroker):
             annotations=proxy.annotations,
         )
         status = SAMProxyStatus(
-            accountNumber=proxy.user_profile.account.account_number,
+            accountNumber=required(
+                proxy.user_profile.account.account_number, "proxy.user_profile.account.account_number"
+            ),
             username=proxy.user_profile.user.username,
             recordLocator=proxy.record_locator,
-            created=proxy.created_at,
-            modified=proxy.updated_at,
+            created=required(proxy.created_at, "proxy.created_at"),
+            modified=required(proxy.updated_at, "proxy.updated_at"),
             url=urljoin(smarter_settings.environment_url, proxy.url) if proxy.url else None,
             upstreamUrl=proxy.upstream_base_url or None,
             apiKeySecret=proxy.secret_name,
@@ -300,12 +303,7 @@ class SAMProxyBroker(AbstractBroker):
                 raise SAMProxyBrokerError("Cached manifest is not a SAMProxy instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMProxy(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMProxyMetadata(**self.loader.manifest_metadata),
-                spec=SAMProxySpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMProxy.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -351,7 +349,9 @@ class SAMProxyBroker(AbstractBroker):
             isActive=True,
         )
         status = SAMProxyStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -379,10 +379,10 @@ class SAMProxyBroker(AbstractBroker):
         if name:
             proxies = proxies.filter(name=name)
         proxies = self.filter_by_annotation_selector(proxies, kwargs)
-        data = []
+        items: list[SmarterDictType] = []
         for proxy in proxies.order_by("name")[:MAX_RESULTS]:
             try:
-                data.append(self.to_camel_case(ProxySerializer(proxy).data))
+                items.append(self.to_camel_case(ProxySerializer(proxy).data))
             except Exception as e:
                 raise SAMProxyBrokerError(
                     f"Failed to serialize {self.kind} {proxy.name}", thing=self.kind, command=command
@@ -391,11 +391,11 @@ class SAMProxyBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ProxySerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -495,7 +495,7 @@ class SAMProxyBroker(AbstractBroker):
 
         return [
             (SAMKinds.PROVIDER.value, Provider.objects.filter(pk=instance.provider_id)),  # type: ignore[attr-defined]
-            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+            (SAMKinds.SECRET.value, rows_with_pk(Secret.objects, instance.api_key_secret_id)),
         ]
 
     @memoized_dependencies

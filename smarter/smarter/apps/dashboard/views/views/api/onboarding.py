@@ -13,9 +13,8 @@ request before it shows.
 from http import HTTPStatus
 
 from cache_results import cache_results
-from django.conf import settings
 from django.http import HttpRequest, JsonResponse
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.models import (
@@ -25,7 +24,6 @@ from smarter.apps.dashboard.models import (
 )
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
-from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)

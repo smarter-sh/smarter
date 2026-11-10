@@ -3,14 +3,16 @@
 
 import os
 import sys
+from typing import TYPE_CHECKING
 
 from smarter.common.conf import smarter_settings
 from smarter.common.utils.redis_url import redis_url_with_database
-from smarter.lib import json, logging
+from smarter.lib import json
+from smarter.lib.logging import getLogger
 
 from .base import *
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 logger.debug("Loading smarter.settings.base_aws")
 default_redis_server = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
 # The cache and the Celery broker use different Redis databases, so that cache.clear()
@@ -103,12 +105,15 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         logger.warning("Recommended cache backend is django_redis.cache.RedisCache")
 
 
-__all__ = [
-    name
-    for name, value in globals().items()
-    if name.isupper()
-    and not name.startswith("_")
-    and not hasattr(value, "__file__")
-    and not callable(value)
-    and value is not sys.modules[__name__]
-]  # type: ignore[reportUnsupportedDunderAll]
+# mypy can't evaluate a computed __all__, and would then treat a star import of this
+# module as importing nothing. It skips this block, and exports every public name.
+if not TYPE_CHECKING:
+    __all__ = [
+        name
+        for name, value in globals().items()
+        if name.isupper()
+        and not name.startswith("_")
+        and not hasattr(value, "__file__")
+        and not callable(value)
+        and value is not sys.modules[__name__]
+    ]  # type: ignore[reportUnsupportedDunderAll]

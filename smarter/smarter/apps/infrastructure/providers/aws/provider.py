@@ -17,7 +17,7 @@ In the unit tests, it refuses to reach AWS, unless ``allow_in_tests`` is True, b
 Smarter containers' AWS credentials are real.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 import boto3
 

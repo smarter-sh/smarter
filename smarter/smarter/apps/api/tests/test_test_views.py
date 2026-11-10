@@ -5,8 +5,6 @@ These views give other tests, and the cli's tests, fixed responses for authentic
 unauthenticated requests.
 """
 
-from http import HTTPStatus
-
 from django.test import Client
 from django.urls import reverse
 from rest_framework.test import APIClient

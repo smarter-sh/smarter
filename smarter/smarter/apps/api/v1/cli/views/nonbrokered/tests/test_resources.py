@@ -112,7 +112,10 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
 
         for resource in data:
             with self.subTest(kind=resource["APIKind"]):
-                self.assertEqual(resource["Deployable"], Brokers.get_broker(resource["APIKind"]).deployable)
+                broker_class = Brokers.get_broker(resource["APIKind"])
+                if broker_class is None:
+                    self.fail(f"No broker for kind {resource['APIKind']}")
+                self.assertEqual(resource["Deployable"], broker_class.deployable)
 
         deployable = sorted(resource["Singular"] for resource in data if resource["Deployable"])
         self.assertIn(SAMKinds.LLM_CLIENT.value, deployable)

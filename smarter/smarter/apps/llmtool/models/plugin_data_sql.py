@@ -1,7 +1,7 @@
 """PluginDataSql model for storing SQL-based plugin data configuration."""
 
 import re
-from typing import Optional, Union
+from typing import Optional, Self, Union
 
 from cache_results import cache_results
 from django.core.validators import MinValueValidator
@@ -242,7 +242,7 @@ class PluginDataSql(PluginDataBase):
         pk: Optional[int] = None,
         plugin: Optional[PluginMeta] = None,
         **kwargs,
-    ) -> Optional["PluginDataBase"]:
+    ) -> Optional[Self]:
         """
         Retrieve a model instance by primary key, using caching to optimize performance.
 
@@ -264,7 +264,7 @@ class PluginDataSql(PluginDataBase):
         :type plugin: PluginMeta
 
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional["PluginDataBase"]
+        :rtype: Optional[PluginDataSql]
         """
         # pylint: disable=W0621
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataSql.__name__}.get_cached_object()"
@@ -276,7 +276,7 @@ class PluginDataSql(PluginDataBase):
         )
 
         @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional[Self]:
             try:
                 logger.debug(
                     "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
@@ -301,9 +301,10 @@ class PluginDataSql(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        retval: Optional["PluginDataSql"] = None
+        retval: Optional[Self] = None
         if pk:
-            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            cached = super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)
+            retval = cached if isinstance(cached, cls) else None
 
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
@@ -324,7 +325,7 @@ class PluginDataSql(PluginDataBase):
         """
 
         @cache_results()
-        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataSql", None]:
+        def data_by_plugin_id(plugin_id: int) -> Optional[Self]:
             try:
                 retval = cls.objects.select_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(

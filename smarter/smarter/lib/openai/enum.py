@@ -50,11 +50,11 @@ class OpenAIToolCall(SmarterEnumAbstract):
     REQUIRED = "required"
 
     @classmethod
-    def all(cls) -> list["OpenAIToolCall"]:
+    def all(cls) -> list[str]:
         """
-        Return the members that a tool definition uses: every member except ``DEFAULT``.
+        Return the values of the members that a tool definition uses: every member except ``DEFAULT``.
 
-        :returns: The members, not their values.
+        :returns: The values, as :meth:`SmarterEnumAbstract.all` returns them.
         """
         members = [
             cls.TYPE,
@@ -66,7 +66,7 @@ class OpenAIToolCall(SmarterEnumAbstract):
             cls.PROPERTIES,
             cls.REQUIRED,
         ]
-        return members
+        return [member.value for member in members]
 
 
 class OpenAIToolTypes(SmarterEnumAbstract):
@@ -75,17 +75,3 @@ class OpenAIToolTypes(SmarterEnumAbstract):
     FUNCTION = "function"
     CODE_INTERPRETER = "code_interpreter"
     RETRIEVAL = "retrieval"
-
-    @classmethod
-    def all(cls) -> list["OpenAIToolTypes"]:
-        """
-        Return every member.
-
-        :returns: The members, not their values.
-        """
-        members = [
-            cls.FUNCTION,
-            cls.CODE_INTERPRETER,
-            cls.RETRIEVAL,
-        ]
-        return members

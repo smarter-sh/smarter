@@ -2,10 +2,9 @@
 """This module contains passthrough views for interacting directly with the LLM provider backend API."""
 
 from http import HTTPStatus
-from typing import Any
 
 from django.core.handlers.asgi import ASGIRequest
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from openai.types.chat.chat_completion import ChatCompletion
 
 from smarter.apps.account.models import (
@@ -90,7 +89,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
     provider_name: str
     handler: OpenAICompatiblePassthroughProtocol
 
-    def setup(self, request: ASGIRequest, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set the provider_name and handler based on the URL kwargs.
 

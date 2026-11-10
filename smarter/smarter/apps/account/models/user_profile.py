@@ -3,7 +3,7 @@
 
 import os
 import uuid
-from typing import Any, Optional, TypeVar, overload
+from typing import Any, Optional, Sequence, TypeVar, overload
 from urllib.parse import urljoin
 
 from cache_results import cache_results
@@ -193,9 +193,11 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
         """Returns a SmarterBaseQuerySetWithPermissions representing the difference of querysets."""
         return self.get_queryset().difference(*other_qs)
 
-    def select_for_update(self, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
+    def select_for_update(
+        self, nowait: bool = False, skip_locked: bool = False, of: Sequence[str] = (), no_key: bool = False
+    ) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """Returns a SmarterBaseQuerySetWithPermissions with select_for_update applied."""
-        return self.get_queryset().select_for_update(**kwargs)
+        return self.get_queryset().select_for_update(nowait=nowait, skip_locked=skip_locked, of=of, no_key=no_key)
 
     @overload
     def select_related(self, clear: None, /) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
@@ -561,8 +563,9 @@ class UserProfile(MetaDataModel):
         def _get_admin_for_account(account_id: int, class_name: str) -> Optional[User]:
 
             admins = cls.objects.filter(account_id=account_id, user__is_staff=True).order_by("user__id")
-            if admins.exists():
-                return admins.first().user  # type: ignore[return-value]
+            first_admin = admins.first()
+            if first_admin is not None:
+                return first_admin.user
 
             logger.error(
                 "%s.admin_for_account() No admin found for account %s",
@@ -571,9 +574,9 @@ class UserProfile(MetaDataModel):
             )
 
             users = cls.objects.filter(account_id=account_id).order_by("user__id")
-            if users.exists():
-                user = users.first().user  # type: ignore[return-value]
-                return user
+            first_user = users.first()
+            if first_user is not None:
+                return first_user.user
 
             logger.error(
                 "%s.admin_for_account() No user for account %s",

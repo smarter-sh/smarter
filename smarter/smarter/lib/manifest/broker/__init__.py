@@ -7,6 +7,7 @@ from .abstract_broker_class import (
     SAMDependents,
     dependents_exist,
     memoized_dependencies,
+    rows_with_pk,
 )
 from .error_classes import (
     SAMBrokerError,
@@ -25,6 +26,7 @@ __all__ = [
     "SAMDependencyReference",
     "SAMDependents",
     "dependents_exist",
+    "rows_with_pk",
     "SAMBrokerError",
     "SAMBrokerReadOnlyError",
     "SAMBrokerErrorNotImplemented",

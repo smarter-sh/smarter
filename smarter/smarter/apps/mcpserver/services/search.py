@@ -441,7 +441,7 @@ def search_files(
         hit = SearchHit(
             repository=repository.name,
             path=row["path"],
-            kind=row["kind"],
+            kind=RepositoryFileKind(row["kind"]),
             title=row["title"],
             score=round(float(item["score"]), 2),
             url=url,

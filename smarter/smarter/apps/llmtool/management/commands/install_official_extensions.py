@@ -4,7 +4,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmtool.const import OFFICIAL_EXTENSIONS
 from smarter.apps.llmtool.extension import registry
 from smarter.apps.llmtool.extension.exceptions import SmarterExtensionInstallError
-from smarter.apps.llmtool.extension.installer import ExtensionInstaller
+from smarter.apps.llmtool.extension.installer import ExtensionInstaller, SettingInput
 from smarter.apps.llmtool.extension.manifest import ExtensionSettingType
 from smarter.apps.llmtool.models import Extension
 from smarter.apps.secret.models import Secret
@@ -35,7 +35,7 @@ class Command(SmarterCommand):
         """
         manifest = extension.installed_version.parsed_manifest  # type: ignore[union-attr]
         owner = smarter_cached_objects.smarter_admin_user_profile
-        values = {}
+        values: dict[str, SettingInput] = {}
         for spec in manifest.smarter.settings:
             secret = Secret.objects.filter(user_profile=owner, name=spec.name).first()
             if spec.type == ExtensionSettingType.SECRET and secret is not None and not extension.settings.filter(name=spec.name).exists():  # type: ignore[attr-defined]

@@ -43,12 +43,28 @@ repos:
     rev: v2.4.0
     hooks:
       - id: autoflake
-        args: [--remove-all-unused-imports]
+        # --in-place: without it, autoflake only prints a diff and passes. A package's __init__.py
+        # re-exports its modules' names, and released migrations are never edited.
+        args: [--in-place, --remove-all-unused-imports, --ignore-init-module-imports]
+        exclude: /migrations/
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
     hooks:
       - id: bandit
         args: ["-ll"]
+  # mypy checks the whole package on every run, not only the changed files, so that a change
+  # can't break the types of a module it didn't touch. Its Django plugin imports the settings,
+  # which need every requirement, so it runs in the project's venv (make python-init) rather
+  # than in an environment of its own.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd smarter && ../venv/bin/python -m mypy --config-file ../mypy.ini smarter'
+        language: system
+        types: [python]
+        files: ^smarter/
+        pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

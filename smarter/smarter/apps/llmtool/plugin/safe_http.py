@@ -37,7 +37,7 @@ exhaust its resources. This module provides a single, hardened request function 
 import ipaddress
 import socket
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -152,7 +152,9 @@ def validate_public_url(url: str) -> None:
     if not addresses:
         raise SafeHttpError(f"host could not be resolved: {parsed.hostname}")
     for address in addresses:
-        ip = ipaddress.ip_address(address[4][0].split("%", 1)[0])
+        # for IPv4 and IPv6 the sockaddr starts with the address as a str; typeshed also allows an int.
+        host = str(address[4][0])
+        ip = ipaddress.ip_address(host.split("%", 1)[0])
         if not ip.is_global:
             raise SafeHttpError(f"host must have a public address: {parsed.hostname}")
 

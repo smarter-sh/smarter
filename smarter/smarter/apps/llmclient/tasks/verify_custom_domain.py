@@ -129,7 +129,9 @@ def verify_custom_domain(
     fn_name = logger_prefix + ".verify_custom_domain()"
     task_id = task_id or verify_custom_domain.request.id
     if not hosted_zone_id:
-        custom_domain = LLMClientCustomDomain.objects.filter(pk=custom_domain_id).first()
+        custom_domain = None
+        if custom_domain_id is not None:
+            custom_domain = LLMClientCustomDomain.objects.filter(pk=custom_domain_id).first()
         if custom_domain is None:
             logger.error("%s custom domain %s not found. task_id: %s", fn_name, custom_domain_id, task_id)
             return False

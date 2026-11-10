@@ -6,6 +6,7 @@ ConnectionBase list view in the Smarter Dashboard.
 """
 
 from http import HTTPStatus
+from typing import Union
 
 from django.db import transaction
 from django.http import HttpRequest, JsonResponse
@@ -106,6 +107,8 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             new_name = self.to_snake_case(new_name.strip())
             # clone the concrete ApiConnection or SqlConnection, so that the clone has its subclass row.
+            model: Union[type[SqlConnection], type[ApiConnection]]
+            serializer_class: Union[type[SqlConnectionSerializer], type[ApiConnectionSerializer]]
             if connection.kind == SAMKinds.SQL_CONNECTION.value:
                 model, serializer_class = SqlConnection, SqlConnectionSerializer
             elif connection.kind == SAMKinds.API_CONNECTION.value:

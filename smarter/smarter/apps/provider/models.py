@@ -144,7 +144,7 @@ class Provider(MetaDataWithOwnershipModel):
         verbose_name = "Provider"
         verbose_name_plural = "Providers"
 
-    objects: MetaDataWithOwnershipModelManager["Provider"] = MetaDataWithOwnershipModelManager()
+    objects = MetaDataWithOwnershipModelManager["Provider"]()
 
     status = models.CharField(
         max_length=32,
@@ -710,8 +710,10 @@ class ProviderVerification(TimestampedModel):
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property
-    def next_verification(self) -> datetime.datetime:
-        """Get the next verification time."""
+    def next_verification(self) -> Optional[datetime.datetime]:
+        """Get the next verification time, or None for a verification that has not been saved yet."""
+        if self.updated_at is None:
+            return None
         return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self) -> str:
@@ -750,8 +752,10 @@ class ProviderModelVerification(TimestampedModel):
         return self.is_successful and self.elapsed_updated < VERIFICATION_LIFETIME
 
     @property
-    def next_verification(self) -> datetime.datetime:
-        """Get the next verification time."""
+    def next_verification(self) -> Optional[datetime.datetime]:
+        """Get the next verification time, or None for a verification that has not been saved yet."""
+        if self.updated_at is None:
+            return None
         return self.updated_at + datetime.timedelta(seconds=VERIFICATION_LIFETIME - VERIFICATION_LEAD_TIME)
 
     def __str__(self) -> str:

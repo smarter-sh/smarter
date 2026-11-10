@@ -164,7 +164,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     from smarter.apps.dashboard.context_processors import cache_invalidations
 
     update_fields = kwargs.get("update_fields")
-    last_login_only = bool(update_fields) and set(update_fields) == {"last_login"}
+    last_login_only = update_fields is not None and set(update_fields) == {"last_login"}
     # a save of last_login alone happens on every login, including every api request with a token.
     log = logger.debug if last_login_only else logger.info
     log(

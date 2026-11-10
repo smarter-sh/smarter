@@ -27,7 +27,6 @@ Smarter api's OpenAPI document publishes. Errors are Django REST framework's ``{
 
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any
 
 from django.db.models import QuerySet
 from django.http import Http404
@@ -342,7 +341,10 @@ class VectorstoreDocumentView(VectorstoreViewBase):
         from smarter.apps.vectorstore.tasks import delete_vectorstore_document
 
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
-        document = vectorstore.documents.filter(pk=kwargs.get("document_id")).first()  # type: ignore[attr-defined]
+        document_id = kwargs.get("document_id")
+        if document_id is None:
+            raise Http404("Document not found")
+        document = vectorstore.documents.filter(pk=document_id).first()  # type: ignore[attr-defined]
         if document is None:
             raise Http404("Document not found")
         document.status = VectorstoreDocumentStatus.DELETING
@@ -435,7 +437,10 @@ class VectorstoreRestoreView(VectorstoreViewBase):
         :raises Http404: If the vectorstore or the snapshot does not exist, or the user does not own it.
         """
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
-        snapshot = VectorstoreSnapshot.objects.filter(vectorstore=vectorstore, pk=kwargs.get("snapshot_id")).first()
+        snapshot_id = kwargs.get("snapshot_id")
+        if snapshot_id is None:
+            raise Http404("Snapshot not found")
+        snapshot = VectorstoreSnapshot.objects.filter(vectorstore=vectorstore, pk=snapshot_id).first()
         if snapshot is None:
             raise Http404("Snapshot not found")
         try:

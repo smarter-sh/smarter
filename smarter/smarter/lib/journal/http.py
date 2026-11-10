@@ -12,6 +12,7 @@ from http import HTTPStatus
 from json import JSONEncoder
 from typing import Any, Optional, Union
 
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.helpers.console_helpers import SmarterFormattedText
@@ -174,12 +175,20 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 serializable_data = json.to_jsonable(data)
                 # SAMJournal.user is a User, or None for an anonymous request.
                 journal_user = None
-                if user and getattr(user, "is_authenticated", False):
+                if user and not isinstance(user, AnonymousUser) and getattr(user, "is_authenticated", False):
                     journal_user = user
+                # SAMJournal.thing and .command are blank, not NULL, when the response has none.
+                # Django saves a value that isn't a str as str(value): so does this.
+                journal_thing = ""
+                if thing is not None:
+                    journal_thing = str(thing)
+                journal_command = ""
+                if command is not None:
+                    journal_command = str(command)
                 journal = SAMJournal.objects.create(
                     user=journal_user,
-                    thing=thing,
-                    command=command,
+                    thing=journal_thing,
+                    command=journal_command,
                     request=request_data,
                     response=serializable_data,
                     status_code=status,

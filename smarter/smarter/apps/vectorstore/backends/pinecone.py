@@ -8,7 +8,7 @@ PineconeVectorStore stores it, so indexes that it wrote stay searchable. Dumps a
 and which require a paid Pinecone plan.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 from langchain_core.embeddings import Embeddings

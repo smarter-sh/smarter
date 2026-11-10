@@ -5,7 +5,6 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.http import (
     HttpResponseBadRequest,
     HttpResponseNotFound,

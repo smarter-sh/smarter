@@ -27,7 +27,7 @@ A tool call to a SqlPlugin, ApiPlugin, ImageSearchPlugin or SkillPlugin sends on
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import TYPE_CHECKING, Optional, Type, Union
+from typing import TYPE_CHECKING, Literal, Optional, Type, Union
 
 from django.dispatch import Signal
 
@@ -164,7 +164,7 @@ class PluginRequest:
         exc_type: Optional[Type[BaseException]],
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
-    ) -> bool:
+    ) -> Literal[False]:
         if exc_value is not None and not self.has_failed:
             self.failed(error=str(exc_value))
         self.signals.completed.send(

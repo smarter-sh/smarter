@@ -25,7 +25,7 @@ def name(value: str) -> SmarterDictType:
 class LinkedinTestBase(SmarterTestBase):
     """A backend with a fake strategy, and its settings in self.settings."""
 
-    backend_class = LinkedinOAuth2
+    backend_class: type[LinkedinOAuth2 | LinkedinOpenIdConnect] = LinkedinOAuth2
 
     def setUp(self):
         super().setUp()

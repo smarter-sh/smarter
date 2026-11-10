@@ -65,7 +65,7 @@ From `llm-clients/llmclient-example.yaml
 
 import time
 from datetime import datetime
-from typing import Any, Optional, Type, Union
+from typing import Optional, Type, Union
 
 from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -76,6 +76,7 @@ from smarter.apps.llmtool.manifest.enum import (
 from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.llmtool.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
@@ -85,6 +86,7 @@ from smarter.apps.llmtool.manifest.models.common.plugin.status import (
 )
 from smarter.apps.llmtool.manifest.models.skill_plugin.const import MANIFEST_KIND
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
+    SkillDocument,
     SkillDocumentError,
     normalize_resources,
 )
@@ -200,7 +202,7 @@ class SkillPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        manifest: Optional[SAMSkillPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         **kwargs,
     ):
         self._retrieved_skill = None
@@ -236,7 +238,9 @@ class SkillPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMSkillPlugin(**self.to_json())  # type: ignore[call-arg]
+            manifest_json = self.to_json()
+            if manifest_json is not None:
+                self._manifest = SAMSkillPlugin(**manifest_json)  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -279,7 +283,10 @@ class SkillPlugin(PluginBase):
         if self._manifest:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataSkill(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            plugin_data_django_model = self.plugin_data_django_model
+            if plugin_data_django_model is None:
+                raise SmarterPluginError(f"{self.formatted_class_name}.plugin_data() the manifest has no plugin data.")
+            self._plugin_data = PluginDataSkill(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
                 "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
@@ -299,12 +306,12 @@ class SkillPlugin(PluginBase):
         return PluginDataSkill
 
     @property
-    def plugin_data_serializer(self) -> Optional[PluginSkillSerializer]:
+    def plugin_data_serializer(self) -> PluginSkillSerializer:
         """
         Return the serializer instance for the plugin's skill data.
 
         :return: The serializer instance for the plugin's skill data.
-        :rtype: Optional[PluginSkillSerializer]
+        :rtype: PluginSkillSerializer
         """
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginSkillSerializer(self.plugin_data)
@@ -384,6 +391,7 @@ class SkillPlugin(PluginBase):
             return None
         skill_data: SkillData = self._manifest.spec.skillData
         retrieved = self.retrieved_skill
+        document: Optional[SkillDocument]
         if retrieved:
             document = retrieved.document
             resources = retrieved.resources
@@ -469,7 +477,7 @@ class SkillPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Use Pydantic models to generate an example manifest for a SkillPlugin.
 
@@ -477,7 +485,7 @@ class SkillPlugin(PluginBase):
         :type kwargs: Optional[SmarterDictType]
 
         :return: An example manifest as a dictionary.
-        :rtype: Optional[SmarterDictType]
+        :rtype: SmarterDictType
 
         See Also:
 

@@ -65,7 +65,7 @@ def verify_provider_logo(provider: Provider, **kwargs) -> bool:
         return True
 
     success = provider.logo is not None
-    if not provider.logo.name.endswith((".png", ".jpg", ".jpeg", ".svg")):
+    if not (provider.logo.name or "").endswith((".png", ".jpg", ".jpeg", ".svg")):
         success = False
 
     set_provider_verification(provider_verification=provider_verification, is_successful=success)

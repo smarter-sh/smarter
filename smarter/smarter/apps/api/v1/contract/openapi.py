@@ -1354,7 +1354,7 @@ def vectorstore_paths() -> dict[str, OpenApiPathItem]:
     vectorstore_id = id_or_hashed_id("vectorstore")
     tag = TAG_VECTORSTORES
     owner = "Only the vectorstore's owner may call it."
-    files = {
+    files: OpenApiSchema = {
         "type": "object",
         "properties": {
             "files": {
@@ -1982,7 +1982,8 @@ def journal_paths() -> dict[str, OpenApiPathItem]:
     """
     tag = TAG_JOURNAL
     # Each sortable column, ascending (``createdAt``) and descending (``-createdAt``).
-    ordering_values = []
+    # A list[str] is not a JsonValue, whose lists are invariant list[JsonValue].
+    ordering_values: list[OpenApiSchema] = []
     for column in JOURNAL_SORT_FIELDS:
         ordering_values.append(f"{column}")
         ordering_values.append(f"-{column}")

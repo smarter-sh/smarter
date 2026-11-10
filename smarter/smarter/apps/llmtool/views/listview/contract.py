@@ -33,7 +33,7 @@ from smarter.apps.llmtool.extension.contract import (
 )
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 from smarter.lib.django.pagination import ListViewPagination
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 if TYPE_CHECKING:
     from smarter.apps.llmtool.models import Extension
@@ -99,6 +99,8 @@ class ExtensionListItem(ExtensionListModel):
             except ValidationError:
                 # parsed_manifest() logs the invalid manifest. The list still shows the extension.
                 pass
+        created_at = required(extension.created_at, f"extension {extension.slug} created_at")
+        updated_at = required(extension.updated_at, f"extension {extension.slug} updated_at")
         return cls(
             id=extension.pk,
             slug=extension.slug,
@@ -112,8 +114,8 @@ class ExtensionListItem(ExtensionListModel):
             version=version.version if version else None,
             license=license_name,
             homepage=homepage,
-            created_at=extension.created_at,
-            updated_at=extension.updated_at,
+            created_at=created_at,
+            updated_at=updated_at,
         )
 
 

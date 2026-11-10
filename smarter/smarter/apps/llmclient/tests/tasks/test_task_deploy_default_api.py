@@ -35,6 +35,8 @@ MODULE = "smarter.apps.llmclient.tasks.deploy_default_api"
 class TestContinueDefaultApiDeployment(TestAccountMixin):
     """Test that a deployment checks its certificate and domain without blocking a worker."""
 
+    infrastructure: MagicMock
+
     def setUp(self):
         super().setUp()
         self.llmclient = LLMClient.objects.create(

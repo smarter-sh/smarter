@@ -61,6 +61,8 @@ class ExtensionTestMixin(TestAccountMixin):
     """
 
     installer: ExtensionInstaller
+    hash_suffix: str
+    """Set by :class:`~smarter.lib.unittest.base_classes.SmarterTestBase`, which the test classes also inherit."""
 
     def setUp(self):
         super().setUp()
