@@ -1,10 +1,10 @@
 """Secret models."""
 
-from typing import Optional
+from typing import Optional, Union
 
 # 3rd party stuff
 from cryptography.fernet import Fernet
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -59,12 +59,12 @@ class SecretQuerySet(SmarterQuerySetWithPermissions["Secret"]):
     rather than through a user's permissions.
     """
 
-    def with_read_permission_for(self, user: User) -> "SecretQuerySet":
+    def with_read_permission_for(self, user: Union[User, AnonymousUser, None]) -> "SecretQuerySet":
         """
         Returns the Secrets that ``user`` may read: the same Secrets that they may manage.
 
         :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
+            The user to check. Any other value, e.g. an ``AnonymousUser``, gets no Secrets.
         :returns: :class:`SecretQuerySet`
             The Secrets that the user owns, or, for a staff user, that their account owns, or,
             for a superuser, every Secret.
@@ -260,7 +260,8 @@ class Secret(MetaDataWithOwnershipModel):
             secret_accessed.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
             fernet = self.get_fernet()
             if self.encrypted_value:
-                return fernet.decrypt(self.encrypted_value).decode()
+                # a BinaryField may be read as a memoryview.
+                return fernet.decrypt(bytes(self.encrypted_value)).decode()
             return None
         except Exception as e:
             raise SmarterValueError(f"Failed to decrypt the secret: {str(e)}") from e
@@ -295,12 +296,12 @@ class Secret(MetaDataWithOwnershipModel):
         return "no name" + " - " + str(self.user_profile)
 
     @classmethod
-    def encrypt(cls, value: str) -> bytes:
+    def encrypt(cls, value: Optional[str]) -> bytes:
         """
         Encrypt a string value using Fernet symmetric encryption.
 
         :param value: str
-            The plaintext string to encrypt.
+            The plaintext string to encrypt. None, or an empty string, is rejected.
 
         :returns: bytes
             The encrypted value as bytes.

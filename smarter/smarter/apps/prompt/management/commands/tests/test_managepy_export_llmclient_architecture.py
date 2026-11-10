@@ -17,6 +17,8 @@ from smarter.lib.manifest.models import SAMDependencyTreeNode
 class TestExportLLMClientArchitecture(TestAccountMixin):
     """Test that an LLMClient's architecture is written as JSON, and without owners or urls with --public."""
 
+    llmclient: LLMClient
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

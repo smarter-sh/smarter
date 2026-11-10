@@ -179,11 +179,11 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             )
             return None
 
-        parsed_url = urlparse(url)
+        parsed_url = urlparse(url or "")
 
         # 3.) readiness and liveness checks
         # ---------------------------------------------------------------------
-        path_parts = list(filter(None, parsed_url.path.split("/")))  # type: ignore[assignment]
+        path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             logger.debug(

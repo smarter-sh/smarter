@@ -49,8 +49,11 @@ def example_testcases() -> list[unittest.TestCase]:
 
     loader = unittest.defaultTestLoader
     cases = [make("Five", 5), make("Three", 3), make("Two", 2), make("One", 1)]
-    tests = [list(loader.loadTestsFromTestCase(case)) for case in cases]
-    interleaved = []
+    # a TestSuite iterates as tests or suites; loadTestsFromTestCase() has only tests.
+    tests = [
+        [test for test in loader.loadTestsFromTestCase(case) if isinstance(test, unittest.TestCase)] for case in cases
+    ]
+    interleaved: list[unittest.TestCase] = []
     while any(tests):
         for group in tests:
             if group:
@@ -266,7 +269,8 @@ class TestBuildSuiteShard(SmarterTestBase):
 
     @staticmethod
     def ids(suite: unittest.TestSuite) -> list[str]:
-        return [test.id() for test in suite]
+        # the runner's suite is flat: a TestSuite iterates as tests or suites, and this one has only tests.
+        return [test.id() for test in suite if isinstance(test, unittest.TestCase)]
 
     def test_without_shard(self):
         self.assertGreater(len(self.ids(self.build(None))), 0)

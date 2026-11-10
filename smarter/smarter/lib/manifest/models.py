@@ -192,6 +192,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     )
 
     @field_validator("name")
+    @classmethod
     def validate_name(cls, v) -> str:
         """
         Validates the ``name`` field for a manifest.

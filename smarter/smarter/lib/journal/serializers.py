@@ -1,10 +1,15 @@
 """Serializers for the Smarter Journal api."""
 
+from typing import TYPE_CHECKING
+
 from rest_framework import serializers
 
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import SAMJournal
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 
 class SAMJournalSerializer(SmarterCamelCaseSerializer):
@@ -36,7 +41,7 @@ class SAMJournalSerializer(SmarterCamelCaseSerializer):
         data = SAMJournalSerializer(journal).data
     """
 
-    user = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    user: "serializers.SlugRelatedField[User]" = serializers.SlugRelatedField(read_only=True, slug_field="username")
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -66,7 +71,7 @@ class SAMJournalMiniSerializer(SmarterCamelCaseSerializer):
         data = SAMJournalMiniSerializer(journals, many=True).data
     """
 
-    user = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    user: "serializers.SlugRelatedField[User]" = serializers.SlugRelatedField(read_only=True, slug_field="username")
 
     # pylint: disable=missing-class-docstring
     class Meta:

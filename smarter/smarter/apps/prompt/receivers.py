@@ -206,6 +206,7 @@ def handle_chat_completion_response_received(
         else:
             formatted_request_data = str(request_data)
 
+        response_data: Optional[Union[SmarterDictType, list]]
         if isinstance(response, ChatCompletion):
             response_data = response.model_dump()
         else:
@@ -309,6 +310,7 @@ def handle_chat_response_success(
     """
 
     request_data = request_to_json(request) if request else None
+    response_data: Optional[Union[SmarterDictType, list]]
     if isinstance(response, ChatCompletion):
         response_data = response.model_dump()
     else:

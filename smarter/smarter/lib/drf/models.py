@@ -21,7 +21,7 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
-from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib.django.validators import SmarterValidator
@@ -43,7 +43,7 @@ this interval per key, not on every request.
 """
 
 
-class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
+class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager["SmarterAuthToken"]):
     """
     Manager of API keys, which creates them as knox's ``AuthTokenManager`` does.
 
@@ -51,7 +51,9 @@ class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
     permission-based querying, and adds a ``create()`` that generates the token as knox does.
     """
 
-    def create(
+    # knox's AuthTokenManager.create() takes the owner and returns the row with its plain token,
+    # so the override is intended.
+    def create(  # type: ignore[override]
         self,
         user: User,
         expiry=None,
@@ -75,7 +77,10 @@ class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager):
         :param kwargs: More model fields.
         :returns: A tuple of the saved key and the plain token.
         :raises SmarterBusinessRuleViolation: If the user is not staff.
+        :raises SmarterValueError: If ``name`` is None.
         """
+        if name is None:
+            raise SmarterValueError("An API key needs a name.")
         prefix = prefix or ""
         token = prefix + crypto.create_token_string()
         token_key = token[: CONSTANTS.TOKEN_KEY_LENGTH]
@@ -219,7 +224,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
     # TimestampedModel declares id as an int, the primary key of a normal row. This token's id is
     # deliberately its key_id string, so the override is intended.
     @property
-    def id(self) -> str:  # pylint: disable=invalid-name  # pyright: ignore[reportIncompatibleVariableOverride]
+    def id(self) -> str:  # type: ignore[override]  # pylint: disable=invalid-name  # pyright: ignore[reportIncompatibleVariableOverride]
         """
         Return the token's public identifier, its ``key_id``, as a string.
 
@@ -366,6 +371,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         cls,
         invalidate: Optional[bool] = False,
         user_profile: Optional[UserProfile] = None,
+        taggit: bool = True,
+        *,
         user: Optional[User] = None,
         name: Optional[str] = None,
         **kwargs,
@@ -378,6 +385,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
         :param invalidate: If True, drop the cached result for this user profile and name first.
         :param user_profile: The user profile whose user's API keys are returned.
+        :param taggit: Accepted for the base class's signature, and ignored.
         :param user: The user whose API keys are returned, used if ``user_profile`` is not given.
         :param name: If given, only the API keys with this name are returned.
         :param kwargs: Accepted for compatibility with the base class, and ignored.

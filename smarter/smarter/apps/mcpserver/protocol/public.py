@@ -137,6 +137,7 @@ class PublicEndpoint(MCPEndpointBase):
         :param repository: The repository, or None for all of them.
         :param github_token: The caller's GitHub token, or None.
         """
+        repositories: tuple[ProjectRepository, ...]
         if repository:
             repositories = (repository,)
         else:

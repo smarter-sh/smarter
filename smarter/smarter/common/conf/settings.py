@@ -31,6 +31,7 @@ prioritization sequence:
 
 # python stuff
 import base64  # library for base64 encoding and decoding
+import binascii  # library for base64's decoding errors
 import logging  # library for logging messages
 import os  # library for interacting with the operating system
 import re  # library for regular expressions
@@ -1387,10 +1388,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.CACHE_EXPIRATION
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"cache_expiration {int_value} must be a positive integer.")
             return int_value
@@ -1429,10 +1430,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.CHAT_CACHE_EXPIRATION
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"chat_cache_expiration {int_value} must be a positive integer.")
             return int_value
@@ -1471,10 +1472,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.MAX_TOOL_ROUNDS
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 1:
                 raise SmarterConfigurationError(f"max_tool_rounds {int_value} must be a positive integer.")
             return int_value
@@ -1513,10 +1514,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.PROMPT_RESPONSE_CACHE_EXPIRATION
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(
                     f"prompt_response_cache_expiration {int_value} must be a non-negative integer."
@@ -1555,10 +1556,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.LISTVIEW_CACHE_EXPIRATION
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"listview_cache_expiration {int_value} must be a positive integer.")
             return int_value
@@ -1595,10 +1596,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.LLM_CLIENT_CACHE_EXPIRATION
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"llmclient_cache_expiration {int_value} must be a positive integer.")
             return int_value
@@ -1697,10 +1698,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(
                     f"llmclient_tasks_default_ttl {int_value} must be a non-negative integer."
@@ -1734,10 +1735,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             return int_value
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate llmclient_tasks_celery_max_retries: {v}") from e
@@ -1869,10 +1870,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.PLUGIN_MAX_DATA_RESULTS
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"plugin_max_data_results {int_value} must be a positive integer.")
             return int_value
@@ -1993,10 +1994,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.MCPSERVER_RATE_LIMIT
         try:
-            int_value = int(v)  # type: ignore[reportArgumentType]
+            int_value = int(v)
             if int_value < 0:
                 raise SmarterConfigurationError(f"mcpserver_rate_limit {int_value} must be a non-negative integer.")
             return int_value
@@ -2536,7 +2537,7 @@ class Settings(BaseSettings):
             # Ensure the decoded key is exactly 32 bytes
             if len(decoded_key) != 32:
                 raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
-        except (TypeError, ValueError, base64.binascii.Error) as e:  # type: ignore[catch-base-exception]
+        except (TypeError, ValueError, binascii.Error) as e:
             # never put the key itself in the message: it is a secret, and errors are logged.
             raise SmarterValueError(f"Invalid Fernet encryption key. Error: {e}") from e
 
@@ -3401,10 +3402,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.DATABASE_READ_TIMEOUT
         try:
-            return int(v)  # type: ignore[reportArgumentType]
+            return int(v)
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate database_read_timeout: {v}") from e
 
@@ -3440,10 +3441,10 @@ class Settings(BaseSettings):
         """
         if isinstance(v, int):
             return v
-        if v in THE_EMPTY_SET:
+        if v is None or v in THE_EMPTY_SET:
             return settings_defaults.PROMPT_THREADS
         try:
-            return int(v)  # type: ignore[reportArgumentType]
+            return int(v)
         except (TypeError, ValueError) as e:
             raise SmarterConfigurationError(f"could not validate prompt_threads: {v}") from e
 

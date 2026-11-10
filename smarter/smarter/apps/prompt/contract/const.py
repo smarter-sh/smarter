@@ -16,8 +16,9 @@ older platform, which ignores it.
 """
 
 import os
+from typing import Final
 
-CHAT_CONTRACT_V1 = 1
+CHAT_CONTRACT_V1: Final = 1
 """
 Deprecated: the original contract, with legacy key names, and the prompt's completion as a JSON.
 
@@ -25,7 +26,7 @@ string. ``typing_extensions.deprecated`` can't mark a constant (PEP 702 covers c
 only), so every version 1 model, and :meth:`~.models.PromptChatApiConfig.to_v1`, is marked instead.
 """
 
-CHAT_CONTRACT_V2 = 2
+CHAT_CONTRACT_V2: Final = 2
 """The current contract: plain key names, and the prompt's messages and completion as JSON."""
 
 DEFAULT_CHAT_CONTRACT = CHAT_CONTRACT_V2

@@ -59,11 +59,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
-    try:
-        from django.contrib.auth.models import _AnyUser
-
-    except ImportError:
-        _AnyUser = Union[object]  # fallback for Sphinx/type checkers
+    from django.contrib.auth.models import _AnyUser
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 ResolvedUserType = Optional[Union[User, AbstractUser, AnonymousUser]]
@@ -168,7 +164,7 @@ def get_resolved_user(
         return None
 
     # this is the expected case
-    if isinstance(user, Union[User, AnonymousUser, AbstractUser]):
+    if isinstance(user, (User, AnonymousUser, AbstractUser)):
         verbose_logger.debug(
             "%s user[%s] %s is instance of expected type: %s",
             logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",

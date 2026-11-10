@@ -101,7 +101,7 @@ class LLMClientAPIKey(TimestampedModel):
     # pylint: disable=W0221
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, llmclient: Optional[LLMClient] = None
+        cls, invalidate: Optional[bool] = False, llmclient: Optional[LLMClient] = None, **kwargs
     ) -> models.QuerySet["LLMClientAPIKey"]:
         """
         Retrieve a list of LLMClientAPIKey instances associated with a LLMClient using caching.
@@ -117,6 +117,7 @@ class LLMClientAPIKey(TimestampedModel):
         :type invalidate: bool, optional
         :param llmclient: The LLMClient instance for which to retrieve API keys.
         :type llmclient: LLMClient, optional
+        :param kwargs: Unused. Accepted for the signature of the base class.
 
         :returns: A queryset of LLMClientAPIKey instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientAPIKey"]

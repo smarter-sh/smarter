@@ -74,6 +74,7 @@ from smarter.apps.llmtool.manifest.enum import (
 from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.llmtool.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
@@ -189,7 +190,7 @@ class WebsearchPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        manifest: Optional[SAMWebsearchPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         **kwargs,
     ):
         super().__init__(*args, manifest=manifest, **kwargs)
@@ -216,7 +217,9 @@ class WebsearchPlugin(PluginBase):
         :rtype: Optional[SAMWebsearchPlugin]
         """
         if not self._manifest and self.ready:
-            self._manifest = SAMWebsearchPlugin(**self.to_json())  # type: ignore[call-arg]
+            manifest_json = self.to_json()
+            if manifest_json is not None:
+                self._manifest = SAMWebsearchPlugin(**manifest_json)  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -242,7 +245,10 @@ class WebsearchPlugin(PluginBase):
             )
         if self._manifest:
             # the Plugin exists in the database, AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataWebsearch(**self.plugin_data_django_model)  # type: ignore[arg-type]
+            plugin_data_django_model = self.plugin_data_django_model
+            if plugin_data_django_model is None:
+                raise SmarterPluginError(f"{self.formatted_class_name}.plugin_data() the manifest has no plugin data.")
+            self._plugin_data = PluginDataWebsearch(**plugin_data_django_model)
             self._plugin_data.save()
         return self._plugin_data
 
@@ -252,7 +258,7 @@ class WebsearchPlugin(PluginBase):
         return PluginDataWebsearch
 
     @property
-    def plugin_data_serializer(self) -> Optional[PluginWebsearchSerializer]:
+    def plugin_data_serializer(self) -> PluginWebsearchSerializer:
         """Return the serializer instance for the plugin's websearch data."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginWebsearchSerializer(self.plugin_data)
@@ -414,7 +420,7 @@ class WebsearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Use Pydantic models to generate an example manifest for a WebsearchPlugin.
 
@@ -590,7 +596,7 @@ class WebsearchPlugin(PluginBase):
             plugin=self,
             url=retval["url"],
             final_url=retval["final_url"],
-            characters=len(retval["content"]),
+            characters=len(page.content),
             truncated=retval["truncated"],
             cached=page.cached,
         )

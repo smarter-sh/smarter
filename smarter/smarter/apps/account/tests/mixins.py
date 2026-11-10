@@ -29,6 +29,12 @@ logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
 class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
 
+    admin_user: User
+    account: Account
+    user_profile: UserProfile
+    non_admin_user: User
+    non_admin_user_profile: UserProfile
+
     test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
 
     @classmethod

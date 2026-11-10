@@ -329,8 +329,8 @@ class MCPEndpointBase(ABC):
             return self.dump(response)
 
         if not payload or len(payload) > MAX_BATCH_SIZE:
-            message = f"a batch must have from 1 to {MAX_BATCH_SIZE} messages."
-            error = self.error(None, mcp_types.INVALID_REQUEST, message)
+            error_message = f"a batch must have from 1 to {MAX_BATCH_SIZE} messages."
+            error = self.error(None, mcp_types.INVALID_REQUEST, error_message)
             return self.dump(error)
 
         answers = []
@@ -364,7 +364,8 @@ class MCPEndpointBase(ABC):
             # a response, or an error, from the client: this server sends no requests to answer.
             return None
         if "id" not in message:
-            return self.handle_notification(message)
+            self.handle_notification(message)
+            return None
 
         try:
             request = mcp_types.JSONRPCRequest.model_validate(message)

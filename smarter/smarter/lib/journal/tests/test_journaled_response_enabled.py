@@ -1,6 +1,5 @@
 """Test the journaled json responses of :mod:`smarter.lib.journal.http` with the journal switch on."""
 
-import unittest
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -75,6 +74,17 @@ class TestJournaledResponses(TestAccountMixin):
         journal = self.journal(response)
         self.assertEqual(journal.command, "get")
         self.assertIsNone(journal.user)
+
+    def test_response_without_thing_or_command(self):
+        """Test that a response without a thing or a command is journaled, with them blank."""
+        response = SmarterJournaledJsonResponse(
+            request=self.request(self.admin_user),
+            data={"data": {"a": 1}},
+            status=HTTPStatus.OK,
+        )
+        journal = self.journal(response)
+        self.assertEqual(journal.thing, "")
+        self.assertEqual(journal.command, "")
 
     def test_non_dict_data(self):
         """Test that data that isn't a dict or a list is wrapped in a 'response' key."""

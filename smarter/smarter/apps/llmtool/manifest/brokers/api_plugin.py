@@ -12,12 +12,6 @@ from smarter.apps.llmtool.manifest.models.api_plugin.spec import (
     SAMApiPluginSpec,
     TestValue,
 )
-from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
-    SAMPluginCommonMetadata,
-)
-from smarter.apps.llmtool.manifest.models.common.plugin.status import (
-    SAMPluginCommonStatus,
-)
 from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
 from smarter.apps.llmtool.plugin.api import ApiPlugin
 from smarter.lib import json, logging
@@ -30,7 +24,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.manifest.enum import SAMKeys
 
 from . import SAMPluginBrokerError
 from .plugin_base import SAMPluginBaseBroker
@@ -236,17 +230,9 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMApiPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMApiPluginSpec(**self.loader.manifest_spec),
-                status=(
-                    SAMPluginCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
+            sections = self.loader.manifest_sections
+            sections[SAMKeys.STATUS.value] = self.loader.manifest_status or None
+            self._manifest = SAMApiPlugin.model_validate(sections)
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing Account model if available
         elif self._plugin_meta:
@@ -482,7 +468,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return None
 
         parameters: list[Parameter] = []
-        orm_parameters: SmarterDictType = self.plugin_data.parameters if self.plugin_data else {}
+        orm_parameters = self.plugin_data.parameters if self.plugin_data else {}
         if not isinstance(orm_parameters, dict):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} plugin_data_orm2pydantic() expected parameters to be a dict for {self.kind} {self.plugin_meta.name} but got {type(orm_parameters)}: {orm_parameters}",
@@ -509,7 +495,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 )
             )
         test_values: list[TestValue] = []
-        orm_test_values: list = self.plugin_data.test_values if self.plugin_data else []
+        orm_test_values = self.plugin_data.test_values if self.plugin_data else []
         if not isinstance(orm_test_values, list):
             raise SAMPluginBrokerError(
                 f"{self.formatted_class_name} plugin_data_orm2pydantic() expected test_values to be a list for {self.kind} {self.plugin_meta.name} but got {type(orm_test_values)}: {orm_test_values}",
@@ -593,8 +579,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
         data = ApiPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
@@ -645,8 +630,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
 
         if not self.manifest:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
@@ -696,8 +680,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not isinstance(self.manifest, SAMApiPlugin):
             raise SAMPluginBrokerError(
@@ -758,8 +741,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -796,8 +778,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         if not self.user:
             raise SAMBrokerError(
                 message="User not authenticated. Cannot delete api plugin.",
@@ -861,8 +842,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -888,8 +868,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -914,6 +893,5 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             args,
             kwargs,
         )
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

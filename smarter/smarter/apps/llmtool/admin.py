@@ -4,7 +4,7 @@
 import re
 
 from django.contrib import admin
-from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
@@ -40,7 +40,7 @@ class PluginSelectorInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -58,7 +58,7 @@ class PluginPromptInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -80,7 +80,7 @@ class PluginDataInline(admin.StackedInline):
         verbose_name_plural = "Plugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -102,7 +102,7 @@ class PluginDataApiInline(admin.StackedInline):
         verbose_name_plural = "ApiPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -124,7 +124,7 @@ class PluginDataSqlInline(admin.StackedInline):
         verbose_name_plural = "SqlPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -146,7 +146,7 @@ class PluginDataSkillInline(admin.StackedInline):
         verbose_name_plural = "SkillPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -168,7 +168,7 @@ class PluginDataWebsearchInline(admin.StackedInline):
         verbose_name_plural = "WebsearchPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -190,7 +190,7 @@ class PluginDataImageSearchInline(admin.StackedInline):
         verbose_name_plural = "ImageSearchPlugin Data"
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -226,7 +226,7 @@ class PluginStaticAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -276,7 +276,7 @@ class PluginApiAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataApiInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -327,7 +327,7 @@ class PluginSqlAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSqlInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -377,7 +377,7 @@ class PluginSkillAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataSkillInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -427,7 +427,7 @@ class PluginWebsearchAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataWebsearchInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 
@@ -477,7 +477,7 @@ class PluginImageSearchAdmin(SmarterCustomerModelAdmin):
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataImageSearchInline]
 
     # pylint: disable=W0212
-    def get_readonly_fields(self, request: ASGIRequest, obj=None):
+    def get_readonly_fields(self, request: HttpRequest, obj=None):
         """
         Make every field of the model read-only.
 

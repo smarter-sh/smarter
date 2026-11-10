@@ -9,6 +9,8 @@ that existing links and generated clients keep working.
 Both are public: the document describes the api, and holds no data.
 """
 
+from typing import Optional
+
 from django.views.generic import RedirectView
 
 from smarter.apps.api.v1.urls import ApiV1ReverseNames
@@ -22,7 +24,7 @@ class DocsOpenApiJsonView(RedirectView):
     permanent = True
     query_string = True
 
-    def get_redirect_url(self, *args, **kwargs) -> str:
+    def get_redirect_url(self, *args, **kwargs) -> Optional[str]:
         """
         The api's document.
 

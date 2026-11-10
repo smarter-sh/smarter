@@ -205,6 +205,9 @@ class Command(SmarterCommand):
             """
             log_prefix = f"_initialize_provider_models({provider.name}):"
             end_point = "models"
+            if not provider.base_url:
+                self.stdout.write(self.style.ERROR(f"{log_prefix} Provider has no base url to fetch its models from."))
+                return
             url = urljoin(provider.base_url, end_point)
             headers = auth_headers(bearer_token)
 

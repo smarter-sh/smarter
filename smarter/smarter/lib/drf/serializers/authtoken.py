@@ -29,8 +29,9 @@ class SmarterAuthTokenSerializer(MetaDataWithOwnershipModelSerializer):
     """
 
     user_profile = UserProfileSerializer()
-    # a token has no integer id: it is identified by its key_id, a UUID.
-    id = serializers.CharField(read_only=True)
+    # a token has no integer id: it is identified by its key_id, a UUID. DRF lets a subclass
+    # replace a declared field with another kind.
+    id = serializers.CharField(read_only=True)  # type: ignore[assignment]
     manifest_url = serializers.CharField(read_only=True)
 
     # pylint: disable=missing-class-docstring

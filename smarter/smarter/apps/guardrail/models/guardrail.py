@@ -12,8 +12,6 @@ Guardrail models.
     be documented.
 """
 
-from typing import Any
-
 from django.db import models
 
 from smarter.apps.account.models import (

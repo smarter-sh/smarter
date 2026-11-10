@@ -8,7 +8,6 @@ from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import FieldError
 from django.db.models import QuerySet
 from django.http.request import HttpRequest
-from django.utils.translation import gettext_lazy as _
 
 from smarter.apps.account.models import User, UserProfile, get_resolved_user
 from smarter.apps.dashboard.admin import (

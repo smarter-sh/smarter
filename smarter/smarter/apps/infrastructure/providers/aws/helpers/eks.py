@@ -8,7 +8,7 @@ It describes the platform's EKS cluster, its add-ons and node groups, and writes
 import base64
 import subprocess
 import time
-from typing import Any, Optional
+from typing import Optional
 
 from botocore.exceptions import ClientError
 from botocore.signers import RequestSigner

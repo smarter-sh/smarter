@@ -136,6 +136,7 @@ def plan_doodle(day: datetime.date, region: str, due: Optional[list[DoodleTheme]
         return existing
 
     due = candidates(day, region, due=due)
+    theme: Optional[DoodleTheme]
     if due:
         theme = due[0]
         source = DoodleSource.CALENDAR

@@ -11,6 +11,7 @@ If not, it performs a test to verify the capability and updates the verification
 
 import io
 import wave
+from typing import Optional
 
 import openai
 from openai import APIConnectionError, APIStatusError
@@ -24,6 +25,7 @@ from smarter.apps.provider.utils import (
     get_model_verification_for_type,
     set_model_verification,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -90,6 +92,21 @@ def raise_if_inconclusive(error: Exception) -> None:
             raise ProviderModelVerificationInconclusive(str(error)) from error
 
 
+def provider_api_key(provider_model: ProviderModel) -> Optional[str]:
+    """
+    Return the api key of a model's Provider, for a check's call to the provider.
+
+    :param provider_model: The model that is checked.
+    :returns: The decrypted api key, or None if its Secret has no value.
+    :raises SmarterValueError: if the Provider has no api key Secret, which the check's
+        ``except`` handles as a failed check.
+    """
+    api_key = provider_model.provider.api_key
+    if api_key is None:
+        raise SmarterValueError(f"Provider {provider_model.provider.name} has no api key.")
+    return api_key.get_secret(update_last_accessed=False)
+
+
 def completion_text(response) -> str:
     """
     Return the stripped text of a chat completion's first choice.
@@ -114,7 +131,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         response = openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
@@ -147,7 +164,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "What is the weather in Boston?"}],
@@ -190,7 +207,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
 
     try:
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[{"role": "user", "content": "Hello"}],
@@ -222,7 +239,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
         # Example: using a small PNG image as base64 (replace with a real image in production)
         dummy_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgQnQn1wAAAAASUVORK5CYII="
         openai.base_url = provider_model.provider.base_url
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.chat.completions.create(
             model=provider_model.name,
             messages=[
@@ -273,7 +290,7 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
             wf.writeframes(b"\x00\x00" * 16000)
         buffer.seek(0)
 
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         # Try transcription (you can also try translation if needed)
@@ -304,7 +321,7 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
         return True
 
     try:
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         # Attempt to create a fine-tuning job with minimal dummy data
@@ -386,7 +403,7 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
         return True
 
     try:
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         # Attempt to generate an image with a simple prompt
@@ -416,7 +433,7 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
         return True
 
     try:
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         # Attempt to generate audio from text
@@ -471,7 +488,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
         return True
 
     try:
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         response = openai.chat.completions.create(
@@ -513,7 +530,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
         return True
 
     try:
-        openai.api_key = provider_model.provider.api_key.get_secret(update_last_accessed=False)
+        openai.api_key = provider_api_key(provider_model)
         openai.base_url = provider_model.provider.base_url
 
         long_text = (

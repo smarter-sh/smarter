@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from django.urls import reverse
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlConnection
+from smarter.apps.connection.models import ConnectionBase, SqlConnection
 from smarter.apps.connection.models.utils import (
     get_cached_connection_detail_view_and_kind,
 )

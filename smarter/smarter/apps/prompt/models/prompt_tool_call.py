@@ -40,7 +40,7 @@ class PromptToolCall(TimestampedModel):
 
     @classmethod
     def get_cached_object(
-        cls, *args, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
+        cls, invalidate: Optional[bool] = False, pk: Optional[int] = None, **kwargs
     ) -> Optional["PromptToolCall"]:
         """
         Get the PromptToolCall instance for the given primary key from the cache.
@@ -57,7 +57,8 @@ class PromptToolCall(TimestampedModel):
         :returns: The PromptToolCall instance associated with the given primary key, or ``None`` if not found.
         :rtype: Optional[PromptToolCall]
         """
-        return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return]
+        cached = super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)
+        return cached if isinstance(cached, cls) else None
 
     def __str__(self) -> str:
         if self.plugin:

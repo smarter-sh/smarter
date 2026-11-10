@@ -15,7 +15,7 @@ The broker implements the ``smarter`` CLI commands for LLMHosts:
 """
 
 import datetime
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
@@ -60,6 +60,7 @@ from smarter.lib.manifest.broker import (
     SAMDependency,
     SAMDependents,
     memoized_dependencies,
+    rows_with_pk,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -67,7 +68,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -125,7 +126,7 @@ class SAMLLMHostBrokerError(SAMBrokerError):
         return "Smarter API LLMHost Manifest Broker Error"
 
 
-class SAMLLMHostBroker(AbstractBroker):
+class SAMLLMHostBroker(AbstractBroker[LLMHost, LLMHost]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` LLMHost manifests.
 
@@ -234,11 +235,11 @@ class SAMLLMHostBroker(AbstractBroker):
             annotations=llmhost.annotations,
         )
         status = SAMLLMHostStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=llmhost.record_locator,
-            created=llmhost.created_at,
-            modified=llmhost.updated_at,
+            created=required(llmhost.created_at, "llmhost.created_at"),
+            modified=required(llmhost.updated_at, "llmhost.updated_at"),
             **self.status_for(llmhost),
         )
         model = SAMLLMHost(
@@ -271,12 +272,7 @@ class SAMLLMHostBroker(AbstractBroker):
                 raise SAMLLMHostBrokerError("Cached manifest is not a SAMLLMHost instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMLLMHost(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMLLMHostMetadata(**self.loader.manifest_metadata),
-                spec=SAMLLMHostSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMLLMHost.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -335,7 +331,9 @@ class SAMLLMHostBroker(AbstractBroker):
             resources=SAMLLMHostResources(gpuCount=1, vramRequiredGb=21, cpu="4", memory="24Gi"),
         )
         status = SAMLLMHostStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -358,18 +356,18 @@ class SAMLLMHostBroker(AbstractBroker):
         if name:
             llmhosts = llmhosts.filter(name=name)
         llmhosts = self.filter_by_annotation_selector(llmhosts, kwargs)
-        data = [
+        items = [
             self.to_camel_case(LLMHostSerializer(llmhost).data) for llmhost in llmhosts.order_by("name")[:MAX_RESULTS]
         ]
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=LLMHostSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -470,8 +468,8 @@ class SAMLLMHostBroker(AbstractBroker):
         from smarter.apps.secret.models import Secret
 
         return [
-            (SAMKinds.LLM_HOST_COMPUTE.value, LLMHostCompute.objects.filter(pk=instance.compute_id)),  # type: ignore[attr-defined]
-            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_secret_id)),  # type: ignore[attr-defined]
+            (SAMKinds.LLM_HOST_COMPUTE.value, rows_with_pk(LLMHostCompute.objects, instance.compute_id)),
+            (SAMKinds.SECRET.value, rows_with_pk(Secret.objects, instance.api_key_secret_id)),
         ]
 
     @memoized_dependencies

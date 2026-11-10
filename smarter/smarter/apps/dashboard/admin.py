@@ -52,7 +52,7 @@ Registered models
 
 from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser, User
-from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import (
@@ -69,11 +69,11 @@ from .models import EmailContactList
 logger = logging.getLogger(__name__)
 
 
-def smarter_is_staff(request: ASGIRequest) -> bool:
+def smarter_is_staff(request: HttpRequest) -> bool:
     """
     Helper method to determine if the user is a staff member.
 
-    param request: ASGIRequest object containing user information
+    param request: HttpRequest object containing user information
     rtype: bool
     return: True if the user is a staff member, False otherwise
     """
@@ -87,11 +87,11 @@ def smarter_is_staff(request: ASGIRequest) -> bool:
     return False
 
 
-def smarter_has_ud_permission(request: ASGIRequest, obj=None) -> bool:
+def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
     """
     Helper method to determine if the user has permission to Update or Delete (UD) an object based on ownership and account association.
 
-    param request: ASGIRequest object containing user information
+    param request: HttpRequest object containing user information
     param obj: The object for which update/delete permission is being checked (optional)
     rtype: bool
     return: True if the user has update/delete permission for the object, False otherwise
@@ -123,7 +123,7 @@ def smarter_has_ud_permission(request: ASGIRequest, obj=None) -> bool:
 class SmarterCustomerModelAdmin(admin.ModelAdmin):
     """Customized Django Admin console model class that provides access to customers."""
 
-    def has_module_permission(self, request: ASGIRequest) -> bool:
+    def has_module_permission(self, request: HttpRequest) -> bool:
         """
         Show the app's module to any authenticated user.
 
@@ -139,7 +139,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
             return False
         return True
 
-    def has_view_permission(self, request: ASGIRequest, obj=None):
+    def has_view_permission(self, request: HttpRequest, obj=None):
         """
         Override the default view permission logic to implement role-based access control for the admin console.
 
@@ -167,7 +167,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
             logger.error("%s Error checking read permission: %s", logger_prefix, e)
             return False
 
-    def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default add permission logic to implement role-based access control for the admin console.
 
@@ -180,7 +180,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
             return False
         return user.is_superuser
 
-    def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default change permission logic to implement role-based access control for the admin console.
 
@@ -188,7 +188,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         """
         return smarter_has_ud_permission(request, obj)
 
-    def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default delete permission logic to implement role-based access control for the admin console.
 
@@ -200,11 +200,11 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
 class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
     """Customized Django Admin console model class that restricts access to the model and prevents adding new instances of the model."""
 
-    def has_module_permission(self, request: ASGIRequest) -> bool:
+    def has_module_permission(self, request: HttpRequest) -> bool:
         """Override the default module permission logic to restrict access to staff users and superusers only."""
         return smarter_is_staff(request)
 
-    def has_view_permission(self, request: ASGIRequest, obj=None):
+    def has_view_permission(self, request: HttpRequest, obj=None):
         """
         Override the default view permission logic to restrict access to staff users and superusers only.
 
@@ -216,7 +216,7 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
             return False
         return smarter_has_ud_permission(request, obj)
 
-    def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default add permission logic to restrict access to superusers only.
 
@@ -231,7 +231,7 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
             return False
         return user.is_superuser
 
-    def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default change permission logic to restrict access to staff users and superusers only.
 
@@ -243,7 +243,7 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
             return False
         return smarter_has_ud_permission(request, obj)
 
-    def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default delete permission logic to restrict access to staff users and superusers only.
 
@@ -259,13 +259,13 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
 class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
     """Customized Django Admin console model class that restricts module access to superusers only."""
 
-    def has_module_permission(self, request: ASGIRequest) -> bool:
+    def has_module_permission(self, request: HttpRequest) -> bool:
         """Override the default module permission logic to restrict access to superusers only."""
         if not request.user.is_authenticated:
             return False
         return request.user.is_superuser  # type: ignore
 
-    def has_view_permission(self, request: ASGIRequest, obj=None):
+    def has_view_permission(self, request: HttpRequest, obj=None):
         """
         Override the default view permission logic to restrict access to superusers only.
 
@@ -280,7 +280,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
             return False
         return user.is_superuser
 
-    def has_add_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default add permission logic to restrict access to superusers only.
 
@@ -295,7 +295,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
             return False
         return user.is_superuser
 
-    def has_change_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_change_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default change permission logic to restrict access to superusers only.
 
@@ -310,7 +310,7 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
             return False
         return user.is_superuser
 
-    def has_delete_permission(self, request: ASGIRequest, obj=None) -> bool:
+    def has_delete_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Override the default delete permission logic to restrict access to superusers only.
 
@@ -341,7 +341,7 @@ class RestrictedAdminSite(admin.AdminSite):
     role: str = "customer"
     site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
 
-    def each_context(self, request: ASGIRequest):
+    def each_context(self, request: HttpRequest):
         """
         Set the site's role and header from the user, then return the admin's template context.
 

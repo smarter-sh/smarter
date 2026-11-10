@@ -4,10 +4,8 @@ import re
 from http import HTTPStatus
 from unittest import mock
 
-from django.contrib.auth.models import AnonymousUser
 from django.test import Client
 from django.urls import reverse
-from waffle.testutils import override_switch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.models import (

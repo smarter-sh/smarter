@@ -151,6 +151,8 @@ class DataExportStatusResponse(DataExportModel):
         if export.expires_at is not None:
             expires_at = export.expires_at.isoformat()
         email = str(export.user.email or "")
+        if export.created_at is None:
+            raise ValueError(f"DataExport {export.pk} has not been saved, so it has no created_at.")
         return cls(
             id=export.pk,
             status=export.status,  # type: ignore[arg-type]

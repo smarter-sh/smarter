@@ -419,7 +419,7 @@ class ExtensionRegistryApiView(ExtensionApiView):
     request_model = RegistryRequest
     read_only = True
 
-    def handle(self, request, body: RegistryRequest, **kwargs) -> RegistryResponse:
+    def handle(self, request, body: Optional[BaseModel], **kwargs) -> RegistryResponse:
         """
         Return the registry's extensions, from the cached index, or from the registry if a superuser asks to refresh it.
 
@@ -427,6 +427,8 @@ class ExtensionRegistryApiView(ExtensionApiView):
         :param body: Whether to refresh the index.
         :returns: The registry's extensions, or an error if the registry is disabled or cannot be read.
         """
+        if not isinstance(body, RegistryRequest):
+            raise ValueError("The request is not a RegistryRequest.")
         if not registry.is_enabled():
             return RegistryResponse(
                 enabled=False,
@@ -465,7 +467,7 @@ class ExtensionInstallApiView(ExtensionApiView):
 
     request_model = InstallRequest
 
-    def handle(self, request, body: InstallRequest, **kwargs) -> ActionResponse:
+    def handle(self, request, body: Optional[BaseModel], **kwargs) -> ActionResponse:
         """
         Install, or update, an extension from the registry.
 
@@ -473,6 +475,8 @@ class ExtensionInstallApiView(ExtensionApiView):
         :param body: The extension's slug, and optionally its version.
         :returns: A message, and the installed extension.
         """
+        if not isinstance(body, InstallRequest):
+            raise ValueError("The request is not an InstallRequest.")
         extension = registry.install_from_registry(body.slug, body.version, user=request.user)  # type: ignore[arg-type]
         return ActionResponse(
             message=f"Installed {extension.display_name} {extension.installed_version.version}.",  # type: ignore[union-attr]

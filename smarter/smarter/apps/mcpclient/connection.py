@@ -32,7 +32,7 @@ import asyncio
 import fnmatch
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
-from typing import Any, Awaitable, Callable, Optional, TypeVar
+from typing import Awaitable, Callable, Optional, TypeVar
 from urllib.parse import urlparse
 
 import anyio

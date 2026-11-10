@@ -19,7 +19,7 @@ import httpx
 from asgiref.sync import async_to_sync
 from django.http import StreamingHttpResponse
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
@@ -134,6 +134,8 @@ class ProxyTestBase(TestAccountMixin):
     :attr:`non_admin_user` is neither.
     """
 
+    staff_user: User
+    staff_user_profile: UserProfile
     provider: Provider
     secret: Secret
     fake: FakeProvider

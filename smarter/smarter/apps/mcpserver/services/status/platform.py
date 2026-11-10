@@ -97,7 +97,9 @@ def queue_depths() -> dict[str, Optional[int]]:
         with APP.connection_for_read() as broker:
             channel = broker.default_channel
             for queue in queues:
-                depths[queue] = queue_depth(channel, queue)
+                # kombu types default_channel as StdChannel, which doesn't declare the queue_declare()
+                # that the broker's channel has.
+                depths[queue] = queue_depth(channel, queue)  # type: ignore[arg-type]
     # pylint: disable=broad-except
     except Exception as e:
         logger.warning("%s.queue_depths() could not reach the broker: %s", logger_prefix, e)

@@ -3,7 +3,6 @@
 import base64
 import os
 
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,

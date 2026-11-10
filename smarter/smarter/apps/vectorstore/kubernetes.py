@@ -15,7 +15,7 @@ The Qdrant image is the unprivileged variant, which runs as a non-root user.
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 import yaml
 

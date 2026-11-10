@@ -50,14 +50,17 @@ def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
     :returns: The URL path corresponding to the given view name and namespaces.
     :raises django.urls.NoReverseMatch: if no url pattern has the view name.
     """
+    # Django's reverse() takes urlconf as its second parameter, so a positional argument after
+    # the view name would also bind to it. It goes in with the keyword arguments instead.
+    passthrough_kwargs = {**kwargs, "urlconf": urlconf}
     if kwargs:
         # not our pattern, so just pass through to Django's reverse function
-        return django_reverse(*args, urlconf=urlconf, **kwargs)
+        return django_reverse(*args, **passthrough_kwargs)
 
     for arg in args:
         if not isinstance(arg, str):
             # not our pattern, so just pass through to Django's reverse function
-            return django_reverse(*args, urlconf=urlconf, **kwargs)
+            return django_reverse(*args, **passthrough_kwargs)
 
     # each argument is a view name or namespaces, e.g. "namespace1:namespace2:view_name".
     reverse_path = ":".join(args)

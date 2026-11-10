@@ -19,7 +19,6 @@ from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
-    SAMBrokerErrorNotReady,
     SAMBrokerReadOnlyError,
 )
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
