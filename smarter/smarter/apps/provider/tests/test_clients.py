@@ -1,9 +1,11 @@
+# pylint: disable=unused-argument
 """Test OpenAIPassthroughClient request normalization."""
 
 from unittest.mock import MagicMock, patch
 
 import httpx
 import openai
+from openai.types.chat.chat_completion import ChatCompletion
 
 from smarter.apps.provider.clients import OpenAIPassthroughClient
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -103,3 +105,91 @@ class TestOpenAIPassthroughClientHandlerLogging(SmarterTestBase):
         logged = str(logger.mock_calls)
         self.assertIn("api_key", logged)
         self.assertNotIn("sk-test-0123456789abcdef", logged)
+
+
+class TestOpenAIPassthroughClientHandlerChatContent(SmarterTestBase):
+    """Test that OpenAIPassthroughClient.handler() never logs chat content."""
+
+    marker = "private-chat-content"
+
+    def build_client(self, mock_provider) -> OpenAIPassthroughClient:
+        """A client whose Provider lookup finds a provider without an api key."""
+        provider = MagicMock()
+        provider.api_key = None
+        provider.base_url = "https://example.com/v1/"
+        mock_provider.objects.filter.return_value.with_read_permission_for.return_value.first.return_value = provider
+        client = OpenAIPassthroughClient(provider="openai", base_url="", api_key="")
+        return client
+
+    def build_request(self, body: str) -> MagicMock:
+        """An authenticated request with the given body."""
+        request = MagicMock()
+        request.user.is_authenticated = True
+        request.body = body.encode("utf-8")
+        return request
+
+    def assert_marker_not_logged(self, mock_logger: MagicMock):
+        """The marker is in no call to the logger."""
+        for logged_call in mock_logger.mock_calls:
+            self.assertNotIn(self.marker, str(logged_call))
+
+    @patch("smarter.apps.provider.clients.SmarterHttpResponseBadRequest")
+    @patch("smarter.apps.provider.clients.charge_authorization")
+    @patch("smarter.apps.provider.clients.Provider")
+    def test_invalid_json_body_is_logged_without_the_body(self, mock_provider, *mocks):
+        client = self.build_client(mock_provider)
+        body = '{"messages": [{"role": "user", "content": "' + self.marker + '"}]'
+        request = self.build_request(body)
+        with patch("smarter.apps.provider.clients.logger") as mock_logger:
+            client.handler(request=request, user_profile=MagicMock(), data={})
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+        self.assert_marker_not_logged(mock_logger)
+
+    @patch("smarter.apps.provider.clients.SmarterJournaledJsonErrorResponse")
+    @patch("smarter.apps.provider.clients.chat_response_failure")
+    @patch("smarter.apps.provider.clients.chat_request")
+    @patch("smarter.apps.provider.clients.prompt_started")
+    @patch("smarter.apps.provider.clients.charge_authorization")
+    @patch("smarter.apps.provider.clients.Provider")
+    def test_failed_call_does_not_log_the_request(self, mock_provider, *mocks):
+        client = self.build_client(mock_provider)
+        body = '{"model": "gpt-40-mini", "messages": [{"role": "user", "content": "' + self.marker + '"}]}'
+        request = self.build_request(body)
+        with patch.object(client, "create_chat_completion", side_effect=RuntimeError("model_not_found")):
+            with patch("smarter.apps.provider.clients.logger") as mock_logger:
+                client.handler(request=request, user_profile=MagicMock(), data={})
+        mock_logger.error.assert_called_once()
+        self.assert_marker_not_logged(mock_logger)
+
+    @patch("smarter.apps.provider.clients.SmarterJournaledJsonResponse")
+    @patch("smarter.apps.provider.clients.prompt_finished")
+    @patch("smarter.apps.provider.clients.chat_response")
+    @patch("smarter.apps.provider.clients.chat_request")
+    @patch("smarter.apps.provider.clients.prompt_started")
+    @patch("smarter.apps.provider.clients.charge_authorization")
+    @patch("smarter.apps.provider.clients.Provider")
+    def test_successful_call_does_not_log_the_request_or_reply(self, mock_provider, *mocks):
+        client = self.build_client(mock_provider)
+        body = '{"model": "gpt-5", "messages": [{"role": "user", "content": "' + self.marker + '"}]}'
+        request = self.build_request(body)
+        completion = ChatCompletion.model_validate(
+            {
+                "id": "chatcmpl-test",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "gpt-5",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": self.marker},
+                    }
+                ],
+            }
+        )
+        with patch.object(client, "create_chat_completion", return_value=completion):
+            with patch("smarter.apps.provider.clients.logger") as mock_logger:
+                client.handler(request=request, user_profile=MagicMock(), data={})
+        self.assertIn("chatcmpl-test", str(mock_logger.mock_calls))
+        self.assert_marker_not_logged(mock_logger)

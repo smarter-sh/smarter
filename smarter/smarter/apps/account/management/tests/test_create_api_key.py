@@ -49,3 +49,19 @@ class TestCreateApiKey(CommandTestBase):
             with self.subTest(options=options):
                 with self.assertRaisesRegex(CommandError, re.escape(message)):
                     self.run_command("create_api_key", **options)
+
+    def test_second_key_gets_a_new_name(self):
+        """A second key for the same user gets a suffix, never the name of the first (#971)."""
+        self.run_command("create_api_key", username=self.admin_user.username)
+        self.run_command("create_api_key", username=self.admin_user.username)
+        self.run_command("create_api_key", username=self.admin_user.username)
+        base_name = to_snake_case(f"{self.account.account_number}.{self.admin_user.username}")
+        names = SmarterAuthToken.objects.filter(user=self.admin_user).values_list("name", flat=True)
+        self.assertEqual(sorted(names), sorted([base_name, f"{base_name}_2", f"{base_name}_3"]))
+
+    def test_name(self):
+        """--name names the key, and is refused when the user already has a key with that name."""
+        self.run_command("create_api_key", username=self.admin_user.username, name="ci_key")
+        self.assertTrue(SmarterAuthToken.objects.filter(user=self.admin_user, name="ci_key").exists())
+        with self.assertRaisesRegex(CommandError, "already has an API key named ci_key"):
+            self.run_command("create_api_key", username=self.admin_user.username, name="ci_key")

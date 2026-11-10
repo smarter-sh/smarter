@@ -1,3 +1,4 @@
+# pylint: disable=protected-access,unused-argument
 """
 Test the error and fallback branches of :class:`smarter.lib.manifest.broker.AbstractBroker`.
 
@@ -184,6 +185,23 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         ):
             self.assertIsNone(AbstractBroker.name.fget(broker))
             self.assertIsNone(AbstractBroker.name.fget(broker))
+
+    def test_a_broker_that_is_not_ready_is_not_a_warning(self):
+        """A broker with no name, manifest, loader or ORM instance, e.g. for a list, logs no warning (issue #974)."""
+        broker = self.broker
+        broker._name = None
+        broker._manifest = None
+        broker._loader = None
+        broker._orm_instance = None
+        broker._orm_meta_instance = None
+        broker._is_ready_abstract_broker = False
+        with (
+            patch.object(SAMGuardrailBroker, "orm_meta_instance", new_callable=PropertyMock, return_value=None),
+            self.assertNoLogs("smarter.lib.manifest.broker.abstract_broker_class", level="WARNING"),
+        ):
+            self.assertFalse(broker.is_ready_abstract_broker)
+            self.assertFalse(broker.is_ready_abstract_broker)
+            broker.log_abstract_broker_state()
 
     def test_setter_validation(self):
         broker = self.broker

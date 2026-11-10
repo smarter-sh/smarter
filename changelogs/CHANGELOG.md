@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.10-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.10-alpha.1...v0.44.10-alpha.2) (2026-11-10)
+
+### Bug Fixes
+
+* **account:** give each of a user's API keys a different name ([a2ee061](https://github.com/smarter-sh/smarter/commit/a2ee0614f572db16022ff3f1ac47b2bb9aded36e)), closes [#971](https://github.com/smarter-sh/smarter/issues/971)
+* **api:** log a rejected cli request at WARNING, without instructions ([302ebe3](https://github.com/smarter-sh/smarter/commit/302ebe3f7065dbfc8d92cc3cda8942ba60ddaddf)), closes [#972](https://github.com/smarter-sh/smarter/issues/972)
+* **infrastructure:** don't log the sender of a failed email ([35cb310](https://github.com/smarter-sh/smarter/commit/35cb3109834d03e777248895eb8c48760ad43fc4)), closes [#961](https://github.com/smarter-sh/smarter/issues/961) [#973](https://github.com/smarter-sh/smarter/issues/973)
+* **manifest:** log a broker that is not ready at DEBUG, not WARNING ([e9cc54b](https://github.com/smarter-sh/smarter/commit/e9cc54b648aae84ed92d54cd92bd1fa41ceaabb4)), closes [#952](https://github.com/smarter-sh/smarter/issues/952) [#974](https://github.com/smarter-sh/smarter/issues/974)
+* **passthrough:** never log a passthrough request's chat content ([f66507a](https://github.com/smarter-sh/smarter/commit/f66507a28e3a214c4c6c59ad93610924c0aabe2e)), closes [#933](https://github.com/smarter-sh/smarter/issues/933) [#937](https://github.com/smarter-sh/smarter/issues/937) [#970](https://github.com/smarter-sh/smarter/issues/970)
+
+## [0.44.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.9...v0.44.10-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **prompt:** log a summary of a failed prompt's iteration, not its chat content ([7c00560](https://github.com/smarter-sh/smarter/commit/7c0056008064804bfc4a2b52b7e5d2121e211963)), closes [#970](https://github.com/smarter-sh/smarter/issues/970)
+
 ## [0.44.9](https://github.com/smarter-sh/smarter/compare/v0.44.8...v0.44.9) (2026-11-10)
 
 ### Bug Fixes

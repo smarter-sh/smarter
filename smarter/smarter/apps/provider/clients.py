@@ -10,6 +10,7 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models.budget import charge_authorization
 from smarter.apps.account.models.user_profile import UserProfile
+from smarter.apps.prompt.receivers import iteration_summary
 from smarter.apps.prompt.signals import (
     chat_request,
     chat_response,
@@ -175,14 +176,13 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             )
 
         logger.debug(
-            "%s called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s, data: %s",
+            "%s called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s",
             logger_prefix,
             request,
             user_profile,
             self.mask_string(self.api_key) if self.api_key else None,
             self.base_url,
             self.provider,
-            SmarterFormattedText.json(data),
         )
         try:
             provider = Provider.objects.filter(name=self.provider).with_read_permission_for(request.user).first()  # type: ignore
@@ -203,12 +203,16 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         try:
             data = json.loads(request.body.decode("utf-8"))
         except json.JSONDecodeError as e:
-            logger.error("%s JSON decode error: %s. Raw request body: %s", logger_prefix, e, request.body)
+            # a client error, answered with 400. Never log the body: it holds the
+            # system prompt and the user's messages.
+            body_size = len(request.body)
+            logger.warning("%s JSON decode error: %s. Request body: %s bytes", logger_prefix, e, body_size)
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error(
-                "%s Unexpected error decoding JSON body: %s. Raw request body: %s", logger_prefix, e, request.body
+            body_size = len(request.body)
+            logger.warning(
+                "%s Unexpected error decoding JSON body: %s. Request body: %s bytes", logger_prefix, e, body_size
             )
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
@@ -218,11 +222,13 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         chat_request.send(sender=self.handler, data=data)
 
         try:
+            # never the data itself: it holds the system prompt and the user's messages.
+            request_summary = iteration_summary(data)
             logger.debug(
-                "%s sending request to %s with data: %s",
+                "%s sending request to %s: %s",
                 logger_prefix,
                 openai.base_url,
-                SmarterFormattedText.json(data),
+                request_summary,
             )
             response = self.create_chat_completion(data, logger_prefix)
         # pylint: disable=broad-except
@@ -256,7 +262,9 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         if isinstance(response, ChatCompletion):
             response_dict = response.model_dump()
 
-        logger.debug("%s returning response: %s", logger_prefix, SmarterFormattedText.json(response_dict))
+        # never the response itself: its choices hold the LLM's reply.
+        response_id = response_dict.get("id")
+        logger.debug("%s returning response: %s", logger_prefix, response_id)
         return SmarterJournaledJsonResponse(
             request=request,
             data=response_dict,

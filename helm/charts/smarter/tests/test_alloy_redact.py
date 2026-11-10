@@ -152,6 +152,16 @@ class TestAlloyKeepsWhatIsNotACredential(unittest.TestCase):
         line = "    stored_token = self.redis.get(self.name)"
         self.assertEqual(redact(line), line)
 
+    def test_kind_name(self):
+        """A log names an API key as "SmarterAuthToken <name>": its name, not its value (#971)."""
+        line = "could not describe SmarterAuthToken 1234_5678_9012.someone: get() returned more than one"
+        self.assertEqual(redact(line), line)
+
+    def test_token_after_underscore(self):
+        """A key such as access_token is still redacted."""
+        self.assertEqual(redact("access_token=abcdefghijklmnop"), "access_token=<redacted>")
+        self.assertEqual(redact("Token abcdefghijklmnop12"), "Token <redacted>")
+
 
 if __name__ == "__main__":
     unittest.main()
