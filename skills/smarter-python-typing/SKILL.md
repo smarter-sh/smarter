@@ -133,6 +133,28 @@ def config(self) -> Optional[SmarterDictType]:
   module, including `smarter.common.conf.settings`, can import it without an
   import cycle. Keep it that way.
 
+## Values that are never None in practice
+
+Some values are `Optional` in their type but can't be None where you read them, e.g. a saved
+row's `created_at` (a nullable column that Django sets on the first save) or an account's
+`account_number`. Narrow them with `required()` from `smarter.lib.typing`, which returns the
+value or raises `ValueError`, rather than an inline `if ... is None: raise`:
+
+```python
+from smarter.lib.typing import required
+
+status = SAMGuardrailStatus(
+    created=required(guardrail.created_at, "guardrail.created_at"),
+)
+```
+
+Don't use it where None is a case the code handles.
+
+A broker builds its SAM model from the manifest loader with
+`SAMGuardrail.model_validate(self.loader.manifest_sections)`, which lets Pydantic reject a
+missing `apiVersion`, `metadata` or `spec`. A broker's model types are its `AbstractBroker`
+type arguments, e.g. `AbstractBroker[Guardrail, Guardrail]`.
+
 ## Checking your work
 
 ```bash

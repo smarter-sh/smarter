@@ -31,7 +31,7 @@ def compute(gpu: bool = True, **nodegroup) -> LLMHostCompute:
     node = {"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32}
     if gpu:
         node["gpu"] = {"type": "L4", "count": 1, "memoryGb": 24}
-    spec = SAMLLMHostComputeSpec(node=node, nodeGroup={"maxNodes": 3, **nodegroup})
+    spec = SAMLLMHostComputeSpec.model_validate({"node": node, "nodeGroup": {"maxNodes": 3, **nodegroup}})
     return LLMHostCompute(pk=42, name="test_l4", **compute_spec_to_django_orm(spec))
 
 

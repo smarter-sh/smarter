@@ -223,6 +223,8 @@ class TestGetMessageThread(SmarterTestBase):
 class TestHandlerFirstRequest(TestAccountMixin):
     """Test that a new session's first request sends the LLM the LLMClient's system role, and no client history."""
 
+    llmclient: LLMClient
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

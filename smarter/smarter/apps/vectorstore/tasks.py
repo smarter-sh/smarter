@@ -12,7 +12,7 @@ Celery tasks of the vectorstore app.
   prune them to its retention, and queue documents whose task was lost again.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging

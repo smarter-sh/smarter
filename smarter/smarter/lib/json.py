@@ -40,7 +40,7 @@ from json import (  # unmodified re-export
 from typing import Any, Optional
 
 from django.utils.functional import Promise
-from pydantic import HttpUrl, TypeAdapter
+from pydantic import HttpUrl
 
 # The standard library's logging, not smarter.lib.logging: smarter.lib.logging imports
 # this module (through console_helpers), so importing it here would be circular.
@@ -233,7 +233,8 @@ def with_str_fallback(encoder_class: type[json.JSONEncoder]) -> type[json.JSONEn
     :returns: The extended encoder class.
     """
 
-    class StrFallbackEncoder(encoder_class):
+    # mypy can't check a base class that is a variable; encoder_class is a JSONEncoder subclass.
+    class StrFallbackEncoder(encoder_class):  # type: ignore[valid-type,misc]
         """Encode with ``encoder_class``, else with :func:`str`."""
 
         def default(self, o: Any) -> Any:
@@ -283,7 +284,8 @@ def dumps(
     if encoder_class is None:
         encoder_class = SmarterJSONEncoder
     if default is None:
-        encoder_class = with_str_fallback(encoder_class)
+        # mypy checks a class against Hashable with its instances' __hash__, so it rejects any class.
+        encoder_class = with_str_fallback(encoder_class)  # type: ignore[arg-type]
 
     if indent is None:
         indent = 2
@@ -319,7 +321,8 @@ def to_jsonable(obj: Any, cls: Optional[type[json.JSONEncoder]] = None) -> Any:
     encoder_class = cls
     if encoder_class is None:
         encoder_class = SmarterJSONEncoder
-    encoder_class = with_str_fallback(encoder_class)
+    # mypy checks a class against Hashable with its instances' __hash__, so it rejects any class.
+    encoder_class = with_str_fallback(encoder_class)  # type: ignore[arg-type]
     text = json.dumps(obj, cls=encoder_class, separators=(",", ":"))
     data = json.loads(text)
     return data

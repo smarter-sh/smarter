@@ -66,6 +66,7 @@ from smarter.apps.llmtool.manifest.enum import (
 from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.llmtool.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
@@ -366,7 +367,7 @@ class ImageSearchPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        manifest: Optional[SAMImageSearchPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         **kwargs,
     ):
         super().__init__(*args, manifest=manifest, **kwargs)
@@ -393,7 +394,9 @@ class ImageSearchPlugin(PluginBase):
         :rtype: Optional[SAMImageSearchPlugin]
         """
         if not self._manifest and self.ready:
-            self._manifest = SAMImageSearchPlugin(**self.to_json())  # type: ignore[call-arg]
+            manifest_json = self.to_json()
+            if manifest_json is not None:
+                self._manifest = SAMImageSearchPlugin(**manifest_json)  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -419,7 +422,10 @@ class ImageSearchPlugin(PluginBase):
             )
         if self._manifest:
             # the Plugin exists in the database, AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataImageSearch(**self.plugin_data_django_model)  # type: ignore[arg-type]
+            plugin_data_django_model = self.plugin_data_django_model
+            if plugin_data_django_model is None:
+                raise SmarterPluginError(f"{self.formatted_class_name}.plugin_data() the manifest has no plugin data.")
+            self._plugin_data = PluginDataImageSearch(**plugin_data_django_model)
             self._plugin_data.save()
         return self._plugin_data
 
@@ -429,7 +435,7 @@ class ImageSearchPlugin(PluginBase):
         return PluginDataImageSearch
 
     @property
-    def plugin_data_serializer(self) -> Optional[PluginImageSearchSerializer]:
+    def plugin_data_serializer(self) -> PluginImageSearchSerializer:
         """Return the serializer instance for the plugin's image search data."""
         if not self._plugin_data_serializer:
             self._plugin_data_serializer = PluginImageSearchSerializer(self.plugin_data)
@@ -573,7 +579,7 @@ class ImageSearchPlugin(PluginBase):
         }
 
     @classmethod
-    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
+    def example_manifest(cls, kwargs: Optional[SmarterDictType] = None) -> SmarterDictType:
         """
         Use Pydantic models to generate an example manifest for an ImageSearchPlugin.
 

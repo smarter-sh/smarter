@@ -18,7 +18,7 @@ tests exercise the service layer, and its signals, without reaching real infrast
 
 import copy
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 from urllib.parse import quote
 
 from smarter.apps.infrastructure.cluster_health import ClusterHealth

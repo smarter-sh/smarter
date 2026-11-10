@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager, _TaggableManager
 
+from smarter.apps.account.models import User
 from smarter.apps.account.utils import (
     is_platform_staff,
     smarter_cached_objects,
@@ -59,6 +60,7 @@ from smarter.lib.manifest.broker import (
     SAMDependency,
     SAMDependents,
     memoized_dependencies,
+    rows_with_pk,
 )
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -68,7 +70,7 @@ from smarter.lib.manifest.enum import (
 )
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import client_manifest_validation
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -95,7 +97,7 @@ class LLMClientSerializer(ModelSerializer):
         fields = ["name", "url", "dns_verification_status", "deployed", "created_at", "updated_at"]
 
 
-class SAMLLMClientBroker(AbstractBroker):
+class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` LLMClient manifests.
 
@@ -534,16 +536,16 @@ class SAMLLMClientBroker(AbstractBroker):
             apiKey=api_key,
         )
         status = SAMLLMClientStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=self.llmclient.record_locator,
-            created=self.llmclient.created_at,
-            modified=self.llmclient.updated_at,
-            deployed=self.llmclient.deployed,
+            created=required(self.llmclient.created_at, "llmclient.created_at"),
+            modified=required(self.llmclient.updated_at, "llmclient.updated_at"),
+            deployed=bool(self.llmclient.deployed),
             defaultHost=self.llmclient.default_host,
             sandboxHost=self.llmclient.sandbox_host,
             hostname=self.llmclient.hostname,
-            dnsVerificationStatus=self.llmclient.dns_verification_status,
+            dnsVerificationStatus=required(self.llmclient.dns_verification_status, "llmclient.dns_verification_status"),
             customUrl=self.llmclient.custom_url,
             defaultUrl=self.llmclient.default_url,
             sandboxUrl=self.llmclient.sandbox_url,
@@ -649,17 +651,12 @@ class SAMLLMClientBroker(AbstractBroker):
                 "%s.manifest() initializing %s from SAMLoader with name %s",
                 self.formatted_class_name,
                 self.kind,
-                self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
             # validated as a client's manifest, so that, e.g., the styles' image urls are checked to
             # be available. See smarter.lib.manifest.models.client_manifest_validation.
             with client_manifest_validation():
-                self._manifest = SAMLLMClient(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMLLMClientMetadata(**self.loader.manifest_metadata),
-                    spec=SAMLLMClientSpec(**self.loader.manifest_spec),
-                )
+                self._manifest = SAMLLMClient.model_validate(self.loader.manifest_sections)
             return self._manifest
         if self._llmclient:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
@@ -754,8 +751,7 @@ class SAMLLMClientBroker(AbstractBroker):
         - :py:class:`from smarter.common.conf.settings_defaults`
         """
 
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         meta_data = SAMLLMClientMetadata(
             name="example_llmclient",
@@ -839,7 +835,9 @@ class SAMLLMClientBroker(AbstractBroker):
             apiKey="snake_case_api_key_name",
         )
         status = SAMLLMClientStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -874,9 +872,8 @@ class SAMLLMClientBroker(AbstractBroker):
         :returns: A response with the column titles and the serialized LLMClients.
         :raises SAMLLMClientBrokerError: if an LLMClient fails to serialize.
         """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-        data = []
+        command = SmarterJournalCliCommands(self.get.__name__)
+        items: list[SmarterDictType] = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
@@ -901,7 +898,7 @@ class SAMLLMClientBroker(AbstractBroker):
                         f"Model dump failed for {self.kind} {llmclient.name}", thing=self.kind, command=command
                     )
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
                     "%s.get() failed to serialize %s %s",
@@ -917,11 +914,11 @@ class SAMLLMClientBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=LLMClientSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -946,8 +943,7 @@ class SAMLLMClientBroker(AbstractBroker):
             tags are handled separately because they are of type TaggableManager and
             require a different method to set them.
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         if not self.ready:
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
@@ -1056,6 +1052,12 @@ class SAMLLMClientBroker(AbstractBroker):
             # LLMClientAPIKey: create or update the API Key
             # -------------
             if self.manifest.spec.apiKey:
+                if not isinstance(self.user, User):
+                    raise SAMLLMClientBrokerError(
+                        f"User not set for broker. Cannot attach API Key {self.manifest.spec.apiKey}",
+                        thing=self.kind,
+                        command=command,
+                    )
                 try:
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist as e:
@@ -1071,7 +1073,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 for key in LLMClientAPIKey.objects.filter(llmclient=self.llmclient):
                     if key.api_key != api_key:
                         key.delete()
-                        logger.debug("%s.apply() Detached SmarterAuthToken %s from LLMClient %s", self.formatted_class_name, key.name, self.llmclient.name)  # type: ignore[union-attr]
+                        logger.debug("%s.apply() Detached SmarterAuthToken %s from LLMClient %s", self.formatted_class_name, key.api_key.name, self.llmclient.name)  # type: ignore[union-attr]
                 _, created = LLMClientAPIKey.objects.get_or_create(llmclient=self.llmclient, api_key=api_key)
                 if created:
                     logger.debug(
@@ -1098,7 +1100,7 @@ class SAMLLMClientBroker(AbstractBroker):
                 for plugin_name in self.manifest.spec.plugins:
                     plugin_name = str(self.to_snake_case(plugin_name))
                     try:
-                        plugin = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
+                        plugin_meta = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
                             "%s.apply() did not find a Plugin named %s",
@@ -1111,25 +1113,29 @@ class SAMLLMClientBroker(AbstractBroker):
                             thing=self.kind,
                             command=command,
                         ) from e
-                    _, created = LLMClientPlugin.objects.get_or_create(llmclient=self.llmclient, plugin_meta=plugin)
+                    _, created = LLMClientPlugin.objects.get_or_create(
+                        llmclient=self.llmclient, plugin_meta=plugin_meta
+                    )
                     if created:
                         logger.debug(
                             "%s.apply() attached Plugin %s to LLMClient %s",
                             self.formatted_class_name,
-                            plugin.name,
+                            plugin_meta.name,
                             self.llmclient.name,
                         )
 
             # LLMClientExtensions: add what's missing, remove what's in the model but not in the manifest
             # -------------
             extension_slugs = self.manifest.spec.extensions or []
-            for link in LLMClientExtensions.objects.filter(llmclient=self.llmclient).select_related("extension"):
-                if link.extension.slug not in extension_slugs:
-                    link.delete()
+            for extension_link in LLMClientExtensions.objects.filter(llmclient=self.llmclient).select_related(
+                "extension"
+            ):
+                if extension_link.extension.slug not in extension_slugs:
+                    extension_link.delete()
                     logger.debug(
                         "%s.apply() detached Extension %s from LLMClient %s",
                         self.formatted_class_name,
-                        link.extension.slug,
+                        extension_link.extension.slug,
                         self.llmclient.name,
                     )
             for extension_slug in extension_slugs:
@@ -1152,13 +1158,15 @@ class SAMLLMClientBroker(AbstractBroker):
             # LLMClientGuardrails: add what's missing, remove what's in the model but not in the manifest
             # -------------
             guardrail_names = self.manifest.spec.guardrails or []
-            for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related("guardrail"):
-                if link.guardrail.name not in guardrail_names:
-                    link.delete()
+            for guardrail_link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related(
+                "guardrail"
+            ):
+                if guardrail_link.guardrail.name not in guardrail_names:
+                    guardrail_link.delete()
                     logger.debug(
                         "%s.apply() detached Guardrail %s from LLMClient %s",
                         self.formatted_class_name,
-                        link.guardrail.name,
+                        guardrail_link.guardrail.name,
                         self.llmclient.name,
                     )
             for guardrail_name in guardrail_names:
@@ -1181,13 +1189,15 @@ class SAMLLMClientBroker(AbstractBroker):
             # LLMClientMCPClients: add what's missing, remove what's in the model but not in the manifest
             # -------------
             mcpclient_names = self.manifest.spec.mcpClients or []
-            for link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related("mcpclient"):
-                if link.mcpclient.name not in mcpclient_names:
-                    link.delete()
+            for mcpclient_link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related(
+                "mcpclient"
+            ):
+                if mcpclient_link.mcpclient.name not in mcpclient_names:
+                    mcpclient_link.delete()
                     logger.debug(
                         "%s.apply() detached MCPClient %s from LLMClient %s",
                         self.formatted_class_name,
-                        link.mcpclient.name,
+                        mcpclient_link.mcpclient.name,
                         self.llmclient.name,
                     )
             for mcpclient_name in mcpclient_names:
@@ -1282,8 +1292,7 @@ class SAMLLMClientBroker(AbstractBroker):
         :param kwargs: Keyword arguments (unused).
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1298,8 +1307,7 @@ class SAMLLMClientBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
         :raises SAMLLMClientBrokerError: if the manifest cannot be built.
         """
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.llmclient:
@@ -1376,7 +1384,7 @@ class SAMLLMClientBroker(AbstractBroker):
             (SAMKinds.MCP_CLIENT.value, MCPClient.objects.filter(id__in=linked(LLMClientMCPClients, "mcpclient_id"))),
             (SAMKinds.GUARDRAIL.value, Guardrail.objects.filter(id__in=linked(LLMClientGuardrails, "guardrail_id"))),
             (Extension.__name__, Extension.objects.filter(id__in=linked(LLMClientExtensions, "extension_id"))),
-            (SAMKinds.CUSTOM_DOMAIN.value, LLMClientCustomDomain.objects.filter(pk=instance.custom_domain_id)),  # type: ignore[attr-defined]
+            (SAMKinds.CUSTOM_DOMAIN.value, rows_with_pk(LLMClientCustomDomain.objects, instance.custom_domain_id)),
             (SAMKinds.AUTH_TOKEN.value, SmarterAuthToken.objects.filter(pk__in=linked(LLMClientAPIKey, "api_key_id"))),
         ]
 
@@ -1405,8 +1413,7 @@ class SAMLLMClientBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
         :raises SAMLLMClientBrokerError: if the delete fails.
         """
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
@@ -1444,8 +1451,7 @@ class SAMLLMClientBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
         :raises SAMLLMClientBrokerError: if the save fails.
         """
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.llmclient:
@@ -1482,8 +1488,7 @@ class SAMLLMClientBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: if the LLMClient does not exist.
         :raises SAMLLMClientBrokerError: if the save fails.
         """
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.llmclient:
@@ -1514,7 +1519,6 @@ class SAMLLMClientBroker(AbstractBroker):
         :param kwargs: Keyword arguments (unused).
         :returns: A successful response whose data is an empty dict.
         """
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

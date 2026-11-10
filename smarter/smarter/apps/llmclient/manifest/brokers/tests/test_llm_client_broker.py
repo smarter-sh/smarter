@@ -22,7 +22,6 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
-    SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -227,7 +226,10 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def broker_with_prompt(self, **prompt) -> SAMLLMClientBroker:
         """A broker of the test manifest, with spec.config.prompt changed."""
-        manifest = copy.deepcopy(self.loader.json_data)
+        json_data = self.loader.json_data
+        if json_data is None:
+            self.fail("The test manifest did not parse.")
+        manifest = copy.deepcopy(json_data)
         manifest["spec"]["config"]["prompt"].update(prompt)
         loader = SAMLoader(manifest=manifest)
         broker = SAMLLMClientBroker(self.request, loader)
@@ -457,7 +459,6 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def test_delete(self):
         """Stub: test delete method."""
-        pass
 
     def test_deploy(self):
         """

@@ -51,7 +51,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -78,7 +78,7 @@ class VectorsearchSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class SAMVectorsearchBroker(AbstractBroker):
+class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Vectorsearch manifests.
 
@@ -394,11 +394,11 @@ class SAMVectorsearchBroker(AbstractBroker):
         spec_config = SAMVectorsearchSpecConfig(**vectorsearch_dict)
         spec = SAMVectorsearchSpec(config=spec_config)
         status = SAMVectorsearchStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=self.vectorsearch.record_locator,
-            created=self.vectorsearch.created_at,
-            modified=self.vectorsearch.updated_at,
+            created=required(self.vectorsearch.created_at, "vectorsearch.created_at"),
+            modified=required(self.vectorsearch.updated_at, "vectorsearch.updated_at"),
         )
         model = SAMVectorsearch(
             apiVersion=self.api_version,
@@ -463,14 +463,9 @@ class SAMVectorsearchBroker(AbstractBroker):
                 "%s.manifest() initializing %s from SAMLoader with name %s",
                 self.formatted_class_name,
                 self.kind,
-                self.loader.manifest_metadata.get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
-            self._manifest = SAMVectorsearch(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMVectorsearchMetadata(**self.loader.manifest_metadata),
-                spec=SAMVectorsearchSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMVectorsearch.model_validate(self.loader.manifest_sections)
             return self._manifest
         if self._vectorsearch:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
@@ -552,8 +547,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         - :py:class:`smarter.apps.vectorsearch.manifest.enum.SCLIResponseGetData`
         - :py:class:`from smarter.common.conf.settings_defaults`
         """
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         meta_data = SAMVectorsearchMetadata(
             name="example_vectorsearch",
@@ -584,7 +578,9 @@ class SAMVectorsearchBroker(AbstractBroker):
             config=config,
         )
         status = SAMVectorsearchStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -608,9 +604,8 @@ class SAMVectorsearchBroker(AbstractBroker):
         :raises SAMBrokerErrorNotReady: when the broker has no user profile.
         :raises SAMVectorsearchBrokerError: when a Vectorsearch cannot be serialized.
         """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
-        data = []
+        command = SmarterJournalCliCommands(self.get.__name__)
+        items: list[SmarterDictType] = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
@@ -642,7 +637,7 @@ class SAMVectorsearchBroker(AbstractBroker):
                         f"Model dump failed for {self.kind} {vectorsearch.name}", thing=self.kind, command=command
                     )
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
                     "%s.get() failed to serialize %s %s",
@@ -654,15 +649,15 @@ class SAMVectorsearchBroker(AbstractBroker):
                 raise SAMVectorsearchBrokerError(
                     f"Failed to serialize {self.kind} {vectorsearch.name}", thing=self.kind, command=command
                 ) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=VectorsearchSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -687,8 +682,7 @@ class SAMVectorsearchBroker(AbstractBroker):
             tags are handled separately because they are of type TaggableManager and
             require a different method to set them.
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         if not self.ready:
             raise SAMBrokerErrorNotReady(
                 f"{self.kind} {self.name} broker is not ready", thing=self.kind, command=command
@@ -777,8 +771,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -791,8 +784,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: when there is no such Vectorsearch.
         :raises SAMVectorsearchBrokerError: when the manifest cannot be built.
         """
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         if self.vectorsearch:
@@ -841,7 +833,10 @@ class SAMVectorsearchBroker(AbstractBroker):
 
         return [
             (SAMKinds.VECTORSTORE.value, VectorstoreMeta.objects.filter(pk=instance.vectorstore_id)),  # type: ignore[attr-defined]
-            (SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.auth_secret_id)),  # type: ignore[attr-defined]
+            (
+                SAMKinds.SECRET.value,
+                Secret.objects.filter(pk=instance.auth_secret_id) if instance.auth_secret_id else Secret.objects.none(),
+            ),
         ]
 
     @memoized_dependencies
@@ -865,8 +860,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         :raises SAMBrokerErrorNotFound: when there is no such Vectorsearch.
         :raises SAMVectorsearchBrokerError: when the delete fails.
         """
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         if self.name is None:
             raise SAMBrokerErrorNotReady(f"{self.kind} name property is not set.", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
@@ -895,8 +889,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} deploy() is not implemented.", thing=self.kind, command=command
         )
@@ -908,8 +901,7 @@ class SAMVectorsearchBroker(AbstractBroker):
         :param request: The request.
         :raises SAMBrokerErrorNotImplemented: always.
         """
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(
             message=f"{self.kind} {self.name} undeploy() is not implemented.", thing=self.kind, command=command
         )
@@ -921,7 +913,6 @@ class SAMVectorsearchBroker(AbstractBroker):
         :param request: The request.
         :returns: The response, with empty data.
         """
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

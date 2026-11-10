@@ -16,6 +16,12 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 class TestAnnotationSelectors(SmarterTestBase):
     """Test the syntax of Kubernetes label selectors, applied to annotations."""
 
+    key: str
+    flag: str
+    a: Budget
+    b: Budget
+    c: Budget
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

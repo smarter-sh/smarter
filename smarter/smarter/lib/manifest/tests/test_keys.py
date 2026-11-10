@@ -1,6 +1,6 @@
 """Test :func:`smarter.lib.manifest.keys.unknown_keys`."""
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 

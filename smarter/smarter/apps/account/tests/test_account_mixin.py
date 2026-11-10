@@ -27,6 +27,15 @@ logger = logging.getLogger(__name__)
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
+    admin_user: User
+    account: Account
+    admin_user_profile: UserProfile
+    mortal_user: User
+    user_profile: UserProfile
+    other_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+
     test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccountMixin()"
 
     @classmethod

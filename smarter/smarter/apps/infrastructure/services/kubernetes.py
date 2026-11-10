@@ -22,7 +22,7 @@ import os
 import subprocess
 import time
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 import yaml
 

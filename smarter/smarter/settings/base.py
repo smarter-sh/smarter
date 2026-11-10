@@ -23,6 +23,7 @@ import time
 import urllib.parse
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import django
 from corsheaders.defaults import default_headers
@@ -36,6 +37,7 @@ from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils import mask_string
 from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
 logger_prefix = SmarterFormattedText.text(__name__)
@@ -174,7 +176,7 @@ Smarter uses this setting to restrict allowed origins for CORS requests from sma
 See `React Integration <https://docs.smarter.sh/smarter-framework/developer-reference/react-integration.html>`__
 """
 
-CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS: list[str] = []
 """
 A list of origins that are allowed to make cross-site HTTP requests.
 
@@ -457,7 +459,7 @@ BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
 # -------------------------------
 # See https://django-storages.readthedocs.io/en/latest/backends/amazon
 if smarter_settings.aws_is_configured:
-    STORAGES = {
+    STORAGES: dict[str, SmarterDictType] = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
@@ -1090,7 +1092,7 @@ This is set to the Smarter platform subdomain.
 See: https://django-hosts.readthedocs.io/en/latest/
 """
 
-TEMPLATES = [
+TEMPLATES: list[SmarterDictType] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
@@ -1136,7 +1138,7 @@ if smarter_settings.database_read_timeout:
     DATABASE_OPTIONS["read_timeout"] = smarter_settings.database_read_timeout
     DATABASE_OPTIONS["write_timeout"] = smarter_settings.database_read_timeout
 
-DATABASES = {
+DATABASES: dict[str, SmarterDictType] = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": smarter_settings.mysql_database,
@@ -1173,10 +1175,10 @@ See:
 # https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
-AUTHENTICATION_BACKENDS = os.environ.get("AUTHENTICATION_BACKENDS")
+authentication_backends_env = os.environ.get("AUTHENTICATION_BACKENDS")
 AUTHENTICATION_BACKENDS = (
-    AUTHENTICATION_BACKENDS.split(",")
-    if AUTHENTICATION_BACKENDS
+    authentication_backends_env.split(",")
+    if authentication_backends_env
     else [
         "social_core.backends.google.GoogleOAuth2",
         "social_core.backends.github.GithubOAuth2",
@@ -2278,12 +2280,15 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
         logger.warning("AWS credentials not found.")
     logger.debug("=" * 80)
 
-__all__ = [
-    name
-    for name, value in globals().items()
-    if name.isupper()
-    and not name.startswith("_")
-    and not hasattr(value, "__file__")
-    and not callable(value)
-    and value is not sys.modules[__name__]
-]  # type: ignore[reportUnsupportedDunderAll]
+# mypy can't evaluate a computed __all__, and would then treat a star import of this
+# module as importing nothing. It skips this block, and exports every public name.
+if not TYPE_CHECKING:
+    __all__ = [
+        name
+        for name, value in globals().items()
+        if name.isupper()
+        and not name.startswith("_")
+        and not hasattr(value, "__file__")
+        and not callable(value)
+        and value is not sys.modules[__name__]
+    ]  # type: ignore[reportUnsupportedDunderAll]

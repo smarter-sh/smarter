@@ -117,7 +117,7 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
             "name",
         )
 
-    objects: MetaDataWithOwnershipModelManager["LLMClientCustomDomain"] = MetaDataWithOwnershipModelManager()
+    objects = MetaDataWithOwnershipModelManager()
 
     #: The AWS Hosted Zone ID associated with this custom domain. This ID is used for DNS management via AWS Route 53.
     #: Example: "Z1234567890ABCDEF"

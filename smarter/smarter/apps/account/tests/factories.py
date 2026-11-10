@@ -27,7 +27,8 @@ def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account
     first_name = f"TestAdminFirstName_{hashed_slug}"
     last_name = f"TestAdminLastName_{hashed_slug}"
 
-    account = account or Account.objects.create(
+    # annotations is a MetaDataModel property, not a field, which Model.__init__() accepts but mypy does not.
+    account = account or Account.objects.create(  # type: ignore[misc]
         name=f"test_account_admin_user_{hashed_slug}",
         description="Account for admin user testing purposes",
         version=COMMON_VERSION,
@@ -111,7 +112,8 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
 
-    account = account or Account.objects.create(
+    # annotations is a MetaDataModel property, not a field, which Model.__init__() accepts but mypy does not.
+    account = account or Account.objects.create(  # type: ignore[misc]
         name=f"test_account_mortal_user_{hashed_slug}",
         description="Account for mortal user testing purposes",
         version=COMMON_VERSION,
@@ -161,7 +163,7 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
     return user, account, user_profile
 
 
-def factory_account_teardown(user: User, account: Optional[Account], user_profile: UserProfile):
+def factory_account_teardown(user: User, account: Optional[Account], user_profile: Optional[UserProfile]):
     if user and account and not user_profile:
         user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:

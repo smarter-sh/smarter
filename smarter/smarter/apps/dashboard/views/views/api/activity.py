@@ -12,9 +12,10 @@ whether it is.
 from http import HTTPStatus
 from typing import Any, Optional
 
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.models import get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 from smarter.lib.journal.enum import (
@@ -77,6 +78,9 @@ class ActivityView(SmarterAuthenticatedWebView):
         :returns: The activity, as JSON, in the shape the class docstring shows.
         """
         user = get_resolved_user(request.user)
+        if not isinstance(user, User):
+            # unreachable: SmarterAuthenticatedWebView only lets a signed in user through.
+            raise PermissionDenied("The activity of an anonymous user is not available.")
         entries = SAMJournal.objects.filter(user=user, command__in=ACTIVITY_COMMANDS).order_by("-created_at")[
             :MAX_ITEMS
         ]

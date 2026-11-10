@@ -2,7 +2,7 @@
 
 import abc
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Optional
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models.user_profile import UserProfile
@@ -68,8 +68,8 @@ class AbstractController(abc.ABC, AccountMixin):
     ###########################################################################
     @property
     @abc.abstractmethod
-    def manifest(self) -> AbstractSAMBase:
-        """The Pydantic manifest of the controlled resource; subclasses implement it."""
+    def manifest(self) -> Optional[AbstractSAMBase]:
+        """The Pydantic manifest of the controlled resource, or None if there is none yet; subclasses implement it."""
         raise NotImplementedError
 
     @property

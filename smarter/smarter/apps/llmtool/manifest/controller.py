@@ -79,7 +79,7 @@ PLUGIN_MAP: dict[str, PluginType] = {
     SAMKinds.WEBSEARCH_PLUGIN.value: WebsearchPlugin,
     SAMKinds.IMAGE_SEARCH_PLUGIN.value: ImageSearchPlugin,
 }
-PLUGIN_META_CLASS_MAP = {
+PLUGIN_META_CLASS_MAP: dict[str, PluginType] = {
     SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
     SAMPluginCommonMetadataClassValues.SQL.value: SqlPlugin,
     SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
@@ -197,12 +197,12 @@ class PluginController(AbstractController):
                 raise SAMPluginControllerError(
                     f"Manifest kind {manifest['kind']} should be one of: {VALID_MANIFEST_KINDS}."
                 )
-            SAMPluginCls = self.sam_map.get(manifest["kind"])
+            SAMPluginCls = self.sam_map[manifest["kind"]]
             logger.debug(
                 "%s received %s manifest as dict, converting to %s.",
                 self.formatted_class_name,
                 manifest["kind"],
-                SAMPluginCls.__name__,  # type: ignore[union-attr]
+                SAMPluginCls.__name__,
             )
             manifest = SAMPluginCls(**manifest)  # type: ignore[call-arg]
 

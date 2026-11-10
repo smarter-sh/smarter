@@ -29,6 +29,9 @@ from smarter.apps.prompt.models import Prompt, PromptPluginUsage, PromptToolCall
 class TestPromptHistoryContract(OpenApiResponseMixin, TestAccountMixin):
     """Test the prompt history's models against the serializers, and the views' responses against the document."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Literal, Optional, Union
 from uuid import UUID
 
-from pydantic import Field, JsonValue
+from pydantic import Field, JsonValue, TypeAdapter
 
 from smarter.apps.account.contract.models import (
     AccountApiModel,
@@ -41,6 +41,10 @@ if TYPE_CHECKING:
         LLMClientMCPClients,
         LLMClientPlugin,
     )
+
+
+REASONING_EFFORT: TypeAdapter[Optional[OpenAIReasoningEffort]] = TypeAdapter(Optional[OpenAIReasoningEffort])
+"""Validates ``LLMClient.default_reasoning_effort``, a CharField, as an :data:`OpenAIReasoningEffort`."""
 
 
 LLMClientApiDnsVerificationStatus = Literal["Verifying", "Not Verified", "Verified", "Failed"]
@@ -464,7 +468,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             provider=llmclient.provider,
             default_model=llmclient.default_model,
             default_temperature=llmclient.default_temperature,
-            default_reasoning_effort=llmclient.default_reasoning_effort,
+            default_reasoning_effort=REASONING_EFFORT.validate_python(llmclient.default_reasoning_effort),
             default_max_tokens=llmclient.default_max_tokens,
             app_name=llmclient.app_name,
             app_assistant=llmclient.app_assistant,

@@ -71,7 +71,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         api_key=API_KEY
     """
 
-    def __init__(self, *args, provider: str, base_url: str, api_key: str, **kwargs):
+    def __init__(self, *args, provider: str, base_url: Optional[str], api_key: str, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.provider = provider.lower()

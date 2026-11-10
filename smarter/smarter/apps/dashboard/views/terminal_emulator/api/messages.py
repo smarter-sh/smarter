@@ -40,7 +40,9 @@ class TerminalResizeMessage(BaseModel):
 TerminalClientMessage = Annotated[Union[TerminalInputMessage, TerminalResizeMessage], Field(discriminator="type")]
 """A message from the browser."""
 
-terminal_client_message = TypeAdapter(TerminalClientMessage)
+terminal_client_message: TypeAdapter[Union[TerminalInputMessage, TerminalResizeMessage]] = TypeAdapter(
+    TerminalClientMessage
+)
 """Validates a message from the browser: ``terminal_client_message.validate_json(text)``."""
 
 

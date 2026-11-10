@@ -8,9 +8,6 @@ import requests
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from smarter.apps.account.models import (
-    MetaDataWithOwnershipModelManager,
-)
 from smarter.apps.connection.signals import (
     api_connection_attempted,
     api_connection_failed,
@@ -69,8 +66,6 @@ class ApiConnection(ConnectionBase):
     class Meta:
         verbose_name = "API Connection"
         verbose_name_plural = "API Connections"
-
-    objects: MetaDataWithOwnershipModelManager["ApiConnection"] = MetaDataWithOwnershipModelManager()
 
     last_status_code: Optional[int] = None
     """
@@ -147,9 +142,11 @@ class ApiConnection(ConnectionBase):
 
         :returns: True if the response status is 200 or 308, otherwise False.
         """
-        proxy_dict = {
-            self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
-        }
+        proxy_dict: dict[str, str] = {}
+        if self.proxy_protocol:
+            proxy_dict[self.proxy_protocol] = (
+                f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}"
+            )
         try:
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]

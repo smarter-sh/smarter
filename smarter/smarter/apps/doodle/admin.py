@@ -165,8 +165,8 @@ class DoodleAdmin(SmarterSuperUserOnlyModelAdmin):
         # the cells link to each artwork by its hash: the SVG text isn't needed.
         doodles = doodles.defer("theme__props_svg", "artwork__svg").order_by("date")
         by_day: dict[datetime.date, dict[str, Doodle]] = {}
-        for doodle in doodles:
-            by_day.setdefault(doodle.date, {})[doodle.region] = doodle
+        for row in doodles:
+            by_day.setdefault(row.date, {})[row.region] = row
 
         days = []
         for date, doodles_of_day in by_day.items():
@@ -209,11 +209,12 @@ class DoodleAdmin(SmarterSuperUserOnlyModelAdmin):
             action = request.POST.get("action")
             statuses = {"approve": DoodleStatus.APPROVED, "reject": DoodleStatus.REJECTED}
             status = statuses.get(str(action))
-            doodles = Doodle.objects.filter(pk=request.POST.get("doodle_id"))
-            if status is None or not doodles.exists():
+            doodle_id = request.POST.get("doodle_id")
+            doodles = Doodle.objects.filter(pk=doodle_id) if doodle_id else Doodle.objects.none()
+            doodle = doodles.first()
+            if status is None or doodle is None:
                 messages.error(request, "Choose a doodle, and approve or reject it.")
             else:
-                doodle = doodles.first()
                 set_status(doodles, status)
                 messages.success(request, f"The doodle of {doodle.date} in {doodle.region} is {status}.")
             return HttpResponseRedirect(self.preview_url())

@@ -325,12 +325,15 @@ class SmarterRequestMixin(AccountMixin):
             return NotImplemented
         return self.url == other.url and self.user_profile == other.user_profile
 
-    def setup(self, *args, request: Optional[HttpRequest] = None, user: Optional[UserType] = None, **kwargs):
+    def smarter_request_setup(
+        self, *args, request: Optional[HttpRequest] = None, user: Optional[UserType] = None, **kwargs
+    ) -> None:
         """
-        Setup method to initialize the SmarterRequestMixin with the request and user.
+        Initialize the SmarterRequestMixin with the request and user.
 
-        This method is called during the setup phase of a Django view. It initializes
-        the request and user attributes of the mixin. The request is set using the
+        A view calls it from its own ``setup()``, after Django's ``View.setup()``. It isn't named
+        ``setup()``, because Django's takes the request positionally, and a view inherits both.
+        It initializes the request and user attributes of the mixin. The request is set using the
         smarter_request property setter, which also handles URL parsing and user authentication.
 
         :param args: Positional arguments passed to the setup method.
@@ -339,7 +342,7 @@ class SmarterRequestMixin(AccountMixin):
         :param kwargs: Keyword arguments passed to the setup method.
         """
         logger.debug(
-            "%s.setup() called with args: %s, kwargs: %s, request: %s, user: %s",
+            "%s.smarter_request_setup() called with args: %s, kwargs: %s, request: %s, user: %s",
             self.srm_formatted_class_name,
             args,
             kwargs,
@@ -1794,8 +1797,7 @@ class SmarterRequestMixin(AccountMixin):
             if self.account and not self.user:
                 self.user = get_cached_admin_user_for_account(account=self.account)  # type: ignore
 
-    # pylint: disable=W0221
-    def authenticate(self) -> bool:
+    def authenticate(self, api_token: Optional[bytes] = None, request: Optional[HttpRequest] = None) -> bool:
         """
         Authenticate the request using the API token in its ``Authorization`` header.
 
@@ -1803,12 +1805,18 @@ class SmarterRequestMixin(AccountMixin):
         by the token middleware or by :class:`~smarter.apps.account.mixins.AccountMixin`'s own
         initialization, is not authenticated again.
 
-        :returns: True if the request carries an API token and the parent's ``authenticate()``
-            accepts it, otherwise False.
+        :param api_token: The API token to authenticate with. Defaults to the request's.
+        :param request: The request that carries the token. Defaults to this mixin's request.
+        :returns: True if there is an API token and the parent's ``authenticate()`` accepts it,
+            otherwise False.
         """
-        if not self.api_token:
+        if api_token is None:
+            api_token = self.api_token
+        if request is None:
+            request = self._smarter_request
+        if not api_token:
             return False
-        is_authenticated = super().authenticate(api_token=self.api_token, request=self._smarter_request)
+        is_authenticated = super().authenticate(api_token=api_token, request=request)
         return is_authenticated
 
     def clear_cached_properties(self) -> None:

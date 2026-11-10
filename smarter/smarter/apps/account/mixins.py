@@ -286,7 +286,7 @@ class AccountMixin(SmarterHelperMixin):
                 return self._account
             if self._user:
                 try:
-                    self._account = get_cached_account_for_user(invalidate=False, user=self._user)  # type: ignore[assignment]
+                    self._account = get_cached_account_for_user(invalidate=False, user=self._user)
                 except Account.DoesNotExist as e:
                     logger.error(
                         "%s.account() could not find an account for user %s during lazy loading. This should not happen.",
@@ -306,9 +306,10 @@ class AccountMixin(SmarterHelperMixin):
                         self._account
                     )  # if there are multiple accounts then we're unable to lazily set from UserProfile
 
-                if self._account:
+                # get_cached_account_for_user() finds an account only for a User.
+                if self._account and isinstance(self._user, User):
                     try:
-                        self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)  # type: ignore[assignment]
+                        self._user_profile = UserProfile.get_cached_object(user=self._user, account=self._account)
                         self._am_ready = True
                         self._am_log_ready_status()
                     except UserProfile.DoesNotExist as e:
@@ -455,8 +456,11 @@ class AccountMixin(SmarterHelperMixin):
             self._account = None
             self._user_profile = None
             return
+        if not isinstance(user, User):
+            # an AnonymousUser has no UserProfile.
+            raise SmarterBusinessRuleViolation(f"User {self._user} does not belong to any account.")
         try:
-            self._user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[assignment]
+            self._user_profile = UserProfile.get_cached_object(user=user)
             self._am_ready = True
             self._am_log_ready_status()
         except UserProfile.DoesNotExist as e:
@@ -620,7 +624,10 @@ class AccountMixin(SmarterHelperMixin):
     def is_authenticated(self) -> bool:
         """Returns True if the user is authenticated and is associated with an Account."""
         # use the properties, which lazily resolve the account and user_profile from the user
-        return bool(self.user) and self.user.is_authenticated and bool(self.account) and bool(self.user_profile)
+        user = self.user
+        if not user:
+            return False
+        return user.is_authenticated and bool(self.account) and bool(self.user_profile)
 
     def to_json(self):
         """Returns a JSON representation of the account, user, and user_profile."""

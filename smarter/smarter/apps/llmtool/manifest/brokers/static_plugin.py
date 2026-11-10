@@ -168,12 +168,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 )
 
             if self.loader:
-                self._manifest = SAMStaticPlugin(
-                    apiVersion=self.loader.manifest_api_version,
-                    kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                    spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
-                )
+                self._manifest = SAMStaticPlugin.model_validate(self.loader.manifest_sections)
             if self._manifest:
                 logger.debug(
                     "%s.__init__() initialized manifest from loader for %s %s",
@@ -345,12 +340,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMStaticPlugin(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMPluginStaticSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMStaticPlugin.model_validate(self.loader.manifest_sections)
             logger.debug(
                 "%s.manifest initialized from loader for %s %s", self.formatted_class_name, self.kind, self.name
             )
@@ -652,8 +642,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             self.name,
             self.user_profile,
         )
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         manifest_meta = SAMPluginCommonMetadata(
             name="everlasting_gobstopper",
@@ -785,8 +774,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.describe() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
 
         if not self.manifest:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
@@ -831,8 +819,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.apply() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not self.user:
             raise SAMBrokerError(
@@ -921,8 +908,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
             "%s.prompt() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
         super().prompt(request, kwargs)
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -950,8 +936,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.delete() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         self.set_and_verify_name_param(command=command)
 
         if not self.user:
@@ -1011,8 +996,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.deploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1032,8 +1016,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.undeployº() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1053,6 +1036,5 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
         logger.debug(
             "%s.logs() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
         )
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

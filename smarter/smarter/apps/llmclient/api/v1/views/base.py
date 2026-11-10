@@ -5,11 +5,10 @@ import traceback
 from functools import cached_property
 from http import HTTPStatus
 from typing import List, Optional
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import urlparse
 
 from django.contrib.auth.models import User
-from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.account.models.user_profile import UserProfile
@@ -274,20 +273,6 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         return self.formatted_text(class_name)
 
     @property
-    def url(self) -> Optional[ParseResult]:
-        """
-        Returns the URL of the llmclient.
-
-        :return: The URL of the llmclient.
-        :rtype: Optional[ParseResult]
-        """
-        try:
-            return self._url
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.warning("%s: Error getting url: %s", self.formatted_class_name, e)
-
-    @property
     def is_web_platform(self):
         """
         Determine if the request is from the web platform domain.
@@ -309,7 +294,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         """
         logger.debug("%s: %s", self.formatted_class_name, message)
 
-    def setup(self, request: ASGIRequest, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set up the LLMClient API base viewset for request processing.
 
@@ -326,7 +311,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
         Parameters
         ----------
-        request : ASGIRequest
+        request : HttpRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -351,7 +336,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         """
         super().setup(request, *args, **kwargs)
 
-    def dispatch(self, request: ASGIRequest, *args, name: Optional[str] = None, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, name: Optional[str] = None, **kwargs):
         """
         Dispatch method for the LLMClient API base viewset.
 
@@ -373,7 +358,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
         Parameters
         ----------
-        request : ASGIRequest
+        request : HttpRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -575,19 +560,21 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
                 self.session_key,
             )
             return self.error_response(request, PromptChatApiErrorNotFound("The chat session was not found."))
-        if not self.chat_helper.prompt:
+        prompt = self.chat_helper.prompt
+        if not prompt:
             raise SmarterLLMClientException(
                 f"Prompt not found. This is a bug. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}"
             )
         # RequestMixin.data is more relaxed than the provider expects, so we validate here. A missing or
         # malformed body is the client's mistake: a 400, not an exception.
-        if not self.data or not isinstance(self.data, (dict, list)):
+        prompt_data = self.data
+        if not prompt_data or not isinstance(prompt_data, (dict, list)):
             logger.warning(
                 "%s.post() rejected a prompt whose body is empty or not JSON. name=%s, llmclient_id=%s, data_type=%s",
                 self.formatted_class_name,
                 self.name,
                 self.llmclient_id,
-                type(self.data).__name__,
+                type(prompt_data).__name__,
             )
             return self.error_response(
                 request, PromptChatApiErrorBadRequest("The prompt's body is empty, or isn't a JSON object.")
@@ -597,9 +584,10 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
             raise SmarterLLMClientException(
                 f"User is not a valid User instance. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_type={type(self.user)}"
             )
-        if not isinstance(self.user_profile, UserProfile):
+        user_profile = self.user_profile
+        if not isinstance(user_profile, UserProfile):
             raise SmarterLLMClientException(
-                f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={self.user_profile}, user_profile_type={type(self.user_profile)}"
+                f"UserProfile is not a valid UserProfile instance. request={self.smarter_request} name={self.name}, llmclient_id={self.llmclient_id}, session_key={self.session_key}, user_profile={user_profile}, user_profile_type={type(user_profile)}"
             )
 
         contract = self.forced_contract or requested_contract(request)
@@ -611,7 +599,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
         def complete() -> HttpResponse:
             with acting_user(prompting_user):
-                response = handler(self.user_profile, self.chat_helper.prompt, self.data, plugins=self.plugins)  # type: ignore[union-attr]
+                response = handler(user_profile, prompt, prompt_data, plugins=self.plugins)
             if not self.include_diagnostics:
                 response = without_diagnostics(response)
             if contract == CHAT_CONTRACT_V2:

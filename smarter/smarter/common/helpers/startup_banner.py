@@ -118,7 +118,10 @@ def _database_url() -> str:
     from django.conf import settings  # pylint: disable=import-outside-toplevel
 
     db = settings.DATABASES["default"]
-    vendor = db["ENGINE"].rsplit(".", 1)[-1]
+    # ENGINE is a dotted path. str() because mypy, inside the settings' import cycle, types the
+    # values of DATABASES["default"] from their dict literal, as Collection[str].
+    engine = str(db["ENGINE"])
+    vendor = engine.rsplit(".", 1)[-1]
     port = f":{db['PORT']}" if db.get("PORT") else ""
     return f"{vendor}://{db.get('USER', '')}@{db.get('HOST', '')}{port}/{db.get('NAME', '')}"
 

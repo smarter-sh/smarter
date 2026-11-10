@@ -1,7 +1,7 @@
 """PluginMeta app models."""
 
 from abc import abstractmethod
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from django.db import models
 
@@ -87,13 +87,20 @@ class PluginDataBase(TimestampedModel):
     """
 
     @abstractmethod
-    def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
-        """Returns a dict of custom data return results."""
+    def sanitized_return_data(
+        self, params: Optional[SmarterDictType] = None
+    ) -> Union[SmarterDictType, list, str, bool, None]:
+        """
+        Returns the plugin's data for the LLM.
+
+        Each plugin type returns its own shape: a dict, a list, a string, ``False`` on failure,
+        or ``None`` if there is no data.
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def data(self, params: Optional[SmarterDictType] = None) -> SmarterDictType:
-        """Returns a dict of custom data return results."""
+    def data(self, params: Optional[SmarterDictType] = None) -> Optional[SmarterDictType]:
+        """Returns a dict of custom data return results, or ``None`` if there is no data."""
         raise NotImplementedError
 
     def validate_all_parameters_in_test_values(self) -> None:

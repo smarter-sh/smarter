@@ -34,7 +34,7 @@ infrastructure. :func:`historical_apps` returns the registry for code outside a 
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Protocol, cast
 
 from django.apps.registry import Apps
 from django.contrib.auth.hashers import is_password_usable
@@ -42,6 +42,7 @@ from django.core.management import call_command
 from django.db import connection, models, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.migrations.loader import MigrationLoader
+from django.db.models.fields.reverse_related import ForeignObjectRel
 
 from smarter.common.utils import mask_email
 from smarter.lib import logging
@@ -87,6 +88,29 @@ class UserMergeReport:
             f"{len(self.moved)} moved, {len(self.renamed)} renamed, {len(self.deleted)} deleted"
         )
         return retval
+
+
+class HistoricalUser(Protocol):
+    """
+    The fields of a historical ``auth.User`` that a merge reads and writes.
+
+    A historical model is built from the migrations' state, so it has the fields of
+    ``auth.User`` but isn't a subclass of it, and a type checker can't see them.
+    """
+
+    pk: int
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+    last_login: Optional[datetime]
+    date_joined: datetime
+    is_active: bool
+    is_staff: bool
+    is_superuser: bool
+
+    def save(self) -> None:
+        """Save the user."""
 
 
 class DryRunRollback(Exception):
@@ -166,7 +190,7 @@ def email_key(email: str) -> str:
     return retval
 
 
-def survivor_sort_key(user: models.Model) -> tuple:
+def survivor_sort_key(user: HistoricalUser) -> tuple:
     """
     Order users so that the one who should survive a merge comes first.
 
@@ -176,18 +200,18 @@ def survivor_sort_key(user: models.Model) -> tuple:
     :param user: A user.
     :returns: The sort key.
     """
-    last_login: Optional[datetime] = user.last_login  # type: ignore[attr-defined]
+    last_login = user.last_login
     if last_login is None:
         never_signed_in = 1
         recency = 0.0
     else:
         never_signed_in = 0
         recency = -last_login.timestamp()
-    retval = (never_signed_in, recency, user.date_joined, user.pk)  # type: ignore[attr-defined]
+    retval = (never_signed_in, recency, user.date_joined, user.pk)
     return retval
 
 
-def find_duplicate_users(apps: Apps) -> list[list[models.Model]]:
+def find_duplicate_users(apps: Apps) -> list[list[HistoricalUser]]:
     """
     Find the groups of users that share an email address.
 
@@ -196,8 +220,10 @@ def find_duplicate_users(apps: Apps) -> list[list[models.Model]]:
     """
     user_model = apps.get_model("auth", "User")
     users = user_model._base_manager.exclude(email="").exclude(email__isnull=True).order_by("id")
-    groups: dict[str, list[models.Model]] = {}
-    for user in users.iterator():
+    groups: dict[str, list[HistoricalUser]] = {}
+    for row in users.iterator():
+        # a historical model has the fields of auth.User, but isn't a subclass of it.
+        user = cast(HistoricalUser, row)
         key = email_key(user.email)
         if not key:
             continue
@@ -253,6 +279,8 @@ def find_conflict(
         lookup = {}
         for name in fields:
             unique_field = model._meta.get_field(name)
+            if not isinstance(unique_field, models.Field):
+                raise TypeError(f"{model._meta.label}.{name} is a reverse relation, not a field")
             lookup[unique_field.attname] = getattr(row, unique_field.attname)
         lookup[fk_field.attname] = new_target_id
         others = model._base_manager.filter(**lookup).exclude(pk=row.pk)
@@ -285,6 +313,8 @@ def move_related_rows(
     for relation in target_model._meta.get_fields(include_hidden=True):
         if not relation.auto_created or relation.concrete:
             continue
+        if not isinstance(relation, ForeignObjectRel):
+            continue
         if relation.many_to_many:
             # moved through the automatic table, which is a relation of its own.
             continue
@@ -316,14 +346,17 @@ def move_related_rows(
                 report.deleted.append(f"{label} {row.pk}")
                 continue
             name_field = related_model._meta.get_field("name")
+            if not isinstance(name_field, models.Field):
+                raise TypeError(f"{label}.name is a reverse relation, not a field")
             suffix = f"{MERGED_NAME_SUFFIX}{row.pk}"
             max_length = name_field.max_length or 255
-            new_name = row.name[: max_length - len(suffix)] + suffix
+            old_name: str = getattr(row, name_field.attname)
+            new_name = old_name[: max_length - len(suffix)] + suffix
             same_row.update(**{fk_field.attname: new_id, "name": new_name})
-            report.renamed.append(f"{label} {row.pk}: {row.name} -> {new_name}")
+            report.renamed.append(f"{label} {row.pk}: {old_name} -> {new_name}")
 
 
-def merge_user_fields(survivor: models.Model, duplicate: models.Model) -> None:
+def merge_user_fields(survivor: HistoricalUser, duplicate: HistoricalUser) -> None:
     """
     Give the survivor the duplicate's sign-in history and privileges, where the survivor's are weaker.
 
@@ -351,7 +384,7 @@ def merge_user_fields(survivor: models.Model, duplicate: models.Model) -> None:
         survivor.password = duplicate.password
 
 
-def merge_user(apps: Apps, survivor: models.Model, duplicate: models.Model, report: UserMergeReport) -> None:
+def merge_user(apps: Apps, survivor: HistoricalUser, duplicate: HistoricalUser, report: UserMergeReport) -> None:
     """
     Move everything that one user owns to another, then delete it.
 

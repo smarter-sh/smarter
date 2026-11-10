@@ -264,12 +264,14 @@ class TestSqlConnectionLegacy(TestConnectionBase):
     _model: Optional[SAMSqlConnection] = None
 
     @property
-    def model(self) -> Optional[SAMSqlConnection]:
+    def model(self) -> SAMSqlConnection:
         # create a SAMSqlConnection pydantic model from the loader
         if not self._model and self.loader:
             logger.debug("Creating SAMSqlConnection pydantic model from loader data")
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())
             self.assertIsNotNone(self._model)
+        if not isinstance(self._model, SAMSqlConnection):
+            raise TypeError(f"Expected SAMSqlConnection, got {type(self._model)}")
         return self._model
 
     def properties_factory(self) -> SmarterDictType:

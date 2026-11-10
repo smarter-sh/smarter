@@ -139,6 +139,7 @@ class SearchIssuesTool(PublicTool):
         """
         arguments = cast(SearchIssuesArguments, arguments)
         repository = self.scope.resolve(arguments.repository, required=False)
+        repositories: tuple[ProjectRepository, ...]
         if repository:
             repositories = (repository,)
             where = repository.full_name

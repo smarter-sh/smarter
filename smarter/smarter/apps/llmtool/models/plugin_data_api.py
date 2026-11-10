@@ -1,7 +1,7 @@
 """PluginDataApi model for storing API-based plugin data configuration."""
 
 import re
-from typing import Optional, Union
+from typing import Optional, Self, Union
 from urllib.parse import urljoin
 
 import requests
@@ -299,7 +299,7 @@ class PluginDataApi(PluginDataBase):
         """
 
         @cache_results()
-        def data_by_plugin_id(plugin_id: int) -> Union["PluginDataApi", None]:
+        def data_by_plugin_id(plugin_id: int) -> Optional[Self]:
             try:
                 retval = cls.objects.select_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
@@ -330,7 +330,7 @@ class PluginDataApi(PluginDataBase):
         pk: Optional[int] = None,
         plugin: Optional[PluginMeta] = None,
         **kwargs,
-    ) -> Optional["PluginDataBase"]:
+    ) -> Optional[Self]:
         """
         Retrieve a model instance by primary key, using caching to optimize performance.
 
@@ -352,7 +352,7 @@ class PluginDataApi(PluginDataBase):
         :type plugin: PluginMeta
 
         :returns: The model instance if found, otherwise None.
-        :rtype: Optional["PluginDataBase"]
+        :rtype: Optional[PluginDataApi]
         """
         # pylint: disable=W0621
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataApi.__name__}.get_cached_object()"
@@ -364,7 +364,7 @@ class PluginDataApi(PluginDataBase):
         )
 
         @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataBase"]:
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional[Self]:
             try:
                 logger.debug(
                     "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
@@ -389,9 +389,10 @@ class PluginDataApi(PluginDataBase):
         if invalidate and plugin:
             _get_model_by_plugin_meta.invalidate(plugin.id)  # type: ignore[union-attr]
 
-        retval: Optional[PluginDataBase] = None
+        retval: Optional[Self] = None
         if pk:
-            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            cached = super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)
+            retval = cached if isinstance(cached, cls) else None
 
         if plugin:
             retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]

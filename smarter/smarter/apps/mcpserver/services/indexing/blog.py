@@ -34,7 +34,7 @@ import html
 import re
 import textwrap
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -443,7 +443,7 @@ def fetch_posts(blog: ProjectBlog) -> list[WordPressPost]:
     headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
     page = 1
     while True:
-        params = {
+        params: dict[str, Union[str, int]] = {
             "per_page": POSTS_PER_PAGE,
             "page": page,
             "_fields": POST_FIELDS,

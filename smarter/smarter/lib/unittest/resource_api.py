@@ -24,13 +24,14 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from smarter.lib import json
+from smarter.lib.unittest import ReverseNamesClass
 
 
 class ResourceApiTestMixin:
     """Test the list, detail and default api views of a resource's /api/v1/ endpoints."""
 
     model: type[models.Model]
-    reverse_names: type
+    reverse_names: ReverseNamesClass
     list_view: str
     view_by_hashed_id: str
     view_by_id: str

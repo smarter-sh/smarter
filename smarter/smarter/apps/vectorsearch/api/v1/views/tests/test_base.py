@@ -30,7 +30,7 @@ class TestVectorsearchApiBaseViewSet(TestAccountMixin):
 
     # pylint: disable=W0212
     @classmethod
-    def create_generic_request(cls, url: str) -> HttpRequest:
+    def create_chat_request(cls, url: str) -> HttpRequest:
         factory = RequestFactory()
         json_data = {
             "session_key": "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b",
@@ -44,8 +44,8 @@ class TestVectorsearchApiBaseViewSet(TestAccountMixin):
                 {"role": "user", "content": "Hello, World!"},
             ],
         }
-        json_data = json.dumps(json_data).encode("utf-8")
-        request: HttpRequest = factory.post(path=url, data=json_data, content_type="application/json")
+        body = json.dumps(json_data).encode("utf-8")
+        request: HttpRequest = factory.post(path=url, data=body, content_type="application/json")
         return request
 
     @classmethod
@@ -56,7 +56,7 @@ class TestVectorsearchApiBaseViewSet(TestAccountMixin):
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.loader = SAMLoader(manifest=cls.manifest)
 
-        cls.request = cls.create_generic_request("/anywhere/")
+        cls.request = cls.create_chat_request("/anywhere/")
 
         cls.request.user = cls.admin_user
         cls.client = APIClient()

@@ -6,7 +6,7 @@ store the personal data or secret that the guardrail detected: personal data kee
 four characters, and secrets only their length.
 """
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from smarter.apps.guardrail.models import (
     Guardrail,

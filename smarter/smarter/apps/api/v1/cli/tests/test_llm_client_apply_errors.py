@@ -8,7 +8,7 @@ data/llmclient-apply-errors-base.yaml in one way, e.g. a temperature that is out
 import copy
 import os
 from http import HTTPStatus
-from typing import Any, Union
+from typing import Union
 
 import yaml
 

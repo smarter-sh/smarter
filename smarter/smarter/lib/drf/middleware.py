@@ -48,12 +48,11 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from asgiref.sync import sync_to_async
-from django.http import HttpResponseBase
+from django.http import HttpRequest, HttpResponseBase
 from django.utils import timezone
 from knox.settings import knox_settings
 from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -109,7 +108,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         class_name = f"{__name__}.{self.__class__.__name__}"
         return self.formatted_text(class_name)
 
-    def __call__(self, request: Request) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         """
         Handle a request: authenticate it in sync mode, or hand it to ``__acall__()`` in async mode.
 
@@ -129,7 +128,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
         return self.process_request(request)
 
-    async def __acall__(self, request: Request) -> HttpResponseBase:
+    async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
         """
         Handle a request in async mode, running ``process_request()`` in a thread.
 
@@ -143,7 +142,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             response = await response
         return response
 
-    def process_request(self, request: Request) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    def process_request(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
         """
         Authenticate an api request that carries a token in its ``Authorization`` header.
 
@@ -231,14 +230,15 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         return SmarterValidator.is_api_endpoint(url)
 
     @staticmethod
-    def get_authorization_header(request: Request) -> str:
+    def get_authorization_header(request: HttpRequest) -> str:
         """
         Return the request's ``Authorization`` header as a string.
 
         :param request: The request.
         :returns: The header, or an empty string.
         """
-        auth_header = get_authorization_header(request)
+        # DRF's stubs type the request as its Request, but the function only reads request.META.
+        auth_header = get_authorization_header(request)  # type: ignore[arg-type]
 
         if isinstance(auth_header, bytes):
             return auth_header.decode()
@@ -297,7 +297,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         return token
 
     @staticmethod
-    def ensure_request_user(request: Request) -> Request:
+    def ensure_request_user(request: HttpRequest) -> HttpRequest:
         """
         Set the request's user to an anonymous user when it has none.
 
@@ -333,7 +333,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         request.auser = auser
 
     @staticmethod
-    def authenticate_request(request: Request) -> tuple[User, SmarterAuthToken]:
+    def authenticate_request(request: HttpRequest) -> tuple[User, SmarterAuthToken]:
         """
         Authenticate the request's token with :class:`SmarterTokenAuthentication`, and set ``request.auth``.
 
@@ -346,9 +346,12 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             logger_prefix,
         )
 
-        request.auth = SmarterTokenAuthentication()
+        # A middleware sees Django's HttpRequest, which declares no auth, and which DRF's
+        # authentication reads as it reads its own Request: by request.META.
+        authenticator = SmarterTokenAuthentication()
+        request.auth = authenticator  # type: ignore[attr-defined]
 
-        user_auth_tuple = request.auth.authenticate(request)
+        user_auth_tuple = authenticator.authenticate(request)  # type: ignore[arg-type]
 
         if not user_auth_tuple:
             raise AuthenticationFailed("Authentication backend did not return a user.")
@@ -408,7 +411,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
     # pylint: disable=W0613
     def handle_authentication_failure(
         self,
-        request: Request,
+        request: HttpRequest,
         token: str | None,
         exc: Exception,
     ) -> SmarterJournaledJsonErrorResponse:

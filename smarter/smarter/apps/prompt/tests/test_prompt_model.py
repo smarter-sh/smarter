@@ -11,6 +11,8 @@ from smarter.apps.prompt.models.prompt import get_cached_prompt_by_session_key
 class TestGetCachedPromptBySessionKey(TestAccountMixin):
     """Test get_cached_prompt_by_session_key()."""
 
+    llmclient: LLMClient
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

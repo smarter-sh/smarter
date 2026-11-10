@@ -6,7 +6,12 @@ from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpRequest,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
@@ -72,7 +77,7 @@ class VectorsearchView(ViewBase):
         """
         return Vectorsearch.objects.filter(id=self.vectorsearch.id)  # type: ignore[return-value]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Remove ``hashed_id`` from the url kwargs, for :meth:`initial`, then dispatch the request.
 
@@ -190,6 +195,7 @@ class VectorsearchView(ViewBase):
         :param vectorsearch_id: The Vectorsearch's id, from the url.
         :returns: A redirect to the url two levels up, or ``500`` if deleting fails.
         """
+        vectorsearch: Optional[Vectorsearch]
         if vectorsearch_id and self.is_superuser():
             vectorsearch = get_object_or_404(Vectorsearch, pk=vectorsearch_id)
         else:
@@ -219,7 +225,7 @@ class VectorsearchListView(ContractListMixin, ListViewBase):
 
     vectorsearchs: Optional[QuerySet[Vectorsearch]]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request, then set :attr:`vectorsearchs` to the Vectorsearchs the user may read, unless it failed.
 

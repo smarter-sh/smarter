@@ -217,6 +217,7 @@ class Brokers:
                 if kind:
                     return kind
         logger.warning("Brokers.from_url() could not extract manifest kind from URL: %s", url)
+        return None
 
 
 # an internal self-check to ensure that all SAMKinds have a Broker implementation
@@ -225,8 +226,5 @@ if not all(item in SAMKinds.all() for item in Brokers.all_brokers()):
     samkinds_values = set(SAMKinds.all())
     difference = brokers_keys.difference(samkinds_values)
     difference_list = list(difference)
-    if len(difference_list) == 1:
-        difference_list = difference_list[0]
-    raise SmarterConfigurationError(
-        f"The following broker(s) is missing from the master BROKERS dictionary: {difference_list}"
-    )
+    missing = difference_list[0] if len(difference_list) == 1 else str(difference_list)
+    raise SmarterConfigurationError(f"The following broker(s) is missing from the master BROKERS dictionary: {missing}")

@@ -3,7 +3,7 @@
 import re
 import string
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 import Levenshtein
 
@@ -103,12 +103,12 @@ def clean_prompt(prompt: str) -> str:
         # Output: "Who Is Lawrence McDaniel"
     """
     pattern = r"(?<!Mc)([A-Z][a-z]+)|(?<!Mc)([A-Z]+)"
-    retval = []
+    split_words: list[str] = []
     for word in prompt.split():
         word = word.translate(str.maketrans("", "", string.punctuation))
         words = re.sub(pattern, r" \1\2", word).split()
-        retval.extend(words)
-    retval = " ".join(retval)
+        split_words.extend(words)
+    retval = " ".join(split_words)
     return retval
 
 
@@ -478,9 +478,9 @@ def thesaurus_match(prompt: str, search_term: str) -> Optional[str]:
     if not term_words or not prompt_words or wordnet() is None:
         return None
     if len(term_words) > 1:
-        for synonym in sorted(synonyms(" ".join(term_words))):
-            if contains_phrase(prompt_words, synonym):
-                return synonym
+        for phrase_synonym in sorted(synonyms(" ".join(term_words))):
+            if contains_phrase(prompt_words, phrase_synonym):
+                return phrase_synonym
     matched: list[str] = []
     for term_word in term_words:
         if any(word_matches(prompt_word, term_word) for prompt_word in prompt_words):
@@ -489,7 +489,7 @@ def thesaurus_match(prompt: str, search_term: str) -> Optional[str]:
         if len(term_word) < THESAURUS_MIN_WORD_LENGTH:
             return None
         # a synonym of the search term's word that is in the prompt
-        synonym = None
+        synonym: Optional[str] = None
         for candidate in sorted(synonyms(term_word)):
             if contains_phrase(prompt_words, candidate):
                 synonym = candidate

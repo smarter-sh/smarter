@@ -2,11 +2,12 @@
 """User views for smarter api."""
 
 from http import HTTPStatus
-from typing import Optional
+from typing import Optional, Union
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpRequest, HttpResponseRedirect, JsonResponse
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -299,6 +300,7 @@ def delete_user(request: Request, user_id: Optional[int] = None):
     :returns: A redirect to the parent url, or a 404, 401 or 500 :class:`JsonResponse`.
     """
     logger.debug("%s.delete_user() - user_id: %s, request: %s", __name__, user_id, request)
+    user: Union[User, AnonymousUser]
     try:
         if user_id:
             user = User.objects.get(id=user_id)
@@ -406,7 +408,7 @@ class UserListView(AccountListViewBase):
 
     serializer_class = UserSerializer
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Setup the view.
 

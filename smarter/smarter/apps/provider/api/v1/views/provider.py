@@ -45,7 +45,7 @@ def readable_providers(request: Request) -> QuerySet[Provider]:
     :returns: The Providers, ordered by name.
     """
     return (
-        Provider.objects.with_read_permission_for(user=request.user)  # type: ignore[attr-defined]
+        Provider.objects.with_read_permission_for(user=request.user)
         .filter(is_active=True)
         .select_related("user_profile__user", "user_profile__account", "api_key")
         .order_by("name")

@@ -19,6 +19,8 @@ PATH = "/api/v1/providers/"
 class TestProviderApiViews(TestAccountMixin):
     """Test the Provider api views, as an api key's client calls them."""
 
+    token_key: str
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

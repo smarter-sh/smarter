@@ -29,6 +29,7 @@ from smarter.apps.mcpserver.services.github.issues import (
     GitHubIssueDetail,
     GitHubIssueHit,
     GitHubIssueThread,
+    GitHubUser,
 )
 from smarter.apps.mcpserver.services.github.pulls import (
     GitHubCommitAuthor,
@@ -197,7 +198,9 @@ class TestGitHubTools(MCPServerTestBase):
         return GitHubIssueThread(
             issue=detail,
             comments=[
-                GitHubIssueComment(user={"login": f"user{n}"}, created_at="2026-10-02T12:00:00Z", body=f"comment {n}")
+                GitHubIssueComment(
+                    user=GitHubUser(login=f"user{n}"), created_at="2026-10-02T12:00:00Z", body=f"comment {n}"
+                )
                 for n in range(1, comments + 1)
             ],
         )

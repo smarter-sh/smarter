@@ -24,7 +24,7 @@ from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .manifest import ExtensionSettingType, SettingValue
 
@@ -200,8 +200,13 @@ class AccountRef(ExtensionConsoleModel):
 
     @classmethod
     def from_model(cls, account: "Account") -> "AccountRef":
-        """The reference to an account."""
-        return cls(id=account.pk, account_number=account.account_number, company_name=account.company_name or "")
+        """
+        The reference to an account.
+
+        :raises ValueError: If the account has no account number, which a saved account always has.
+        """
+        account_number = required(account.account_number, f"account {account.pk} account_number")
+        return cls(id=account.pk, account_number=account_number, company_name=account.company_name or "")
 
 
 class SecretRef(ExtensionConsoleModel):

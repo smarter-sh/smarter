@@ -35,7 +35,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
-    AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
@@ -64,7 +63,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
+class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
     """
     Broker for Smarter API SQL Connection manifests.
 
@@ -295,12 +294,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         # 1.) prioritize manifest loader data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMConnectionCommonMetadata(**self.loader.manifest_metadata),
-                spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMSqlConnection.model_validate(self.loader.manifest_sections)
         # 2.) next, (and only if a loader is not available) try to initialize
         #     from existing SqlConnection model if available
         elif self.connection:
@@ -321,6 +315,17 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             if self.connection is None:
                 raise SAMBrokerErrorNotReady(
                     f"{self.formatted_class_name} manifest cannot be constructed without connection.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+            if (
+                self.connection.db_engine is None
+                or self.connection.use_ssl is None
+                or self.connection.pool_size is None
+                or self.connection.max_overflow is None
+            ):
+                raise SAMBrokerErrorNotReady(
+                    f"{self.kind} {self.connection.name} has no db engine, use ssl, pool size or max overflow. Cannot build manifest.",
                     thing=self.kind,
                     command=SmarterJournalCliCommands.APPLY,
                 )
@@ -493,7 +498,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
         try:
             if self.manifest:
                 name = self.manifest.spec.connection.password
-            elif self.connection:
+            elif self.connection and self.connection.password:
                 name = self.connection.password.name
             self._password_secret = Secret.objects.filter(name=name).with_read_permission_for(self.user).first()  # type: ignore
             if not self._password_secret:
@@ -785,8 +790,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
 
         metadata = SAMConnectionCommonMetadata(
             name="example_connection",
@@ -876,10 +880,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value)
-        data = []
+        items: list[SmarterDictType] = []
 
         # generate a QuerySet of SqlConnection objects that match our search criteria
         if name:
@@ -898,19 +901,19 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
 
                 model_dump = self.SerializerClass(sql_connection).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
-                data.append(camel_cased_model_dump)
+                items.append(camel_cased_model_dump)
 
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: model_titles,
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -965,11 +968,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             self.user_profile,
             args,
             kwargs,
-            self._loader.manifest_metadata.get("name") if self._loader else None,
+            self._loader.manifest_metadata.get("name") if self._loader and self._loader.manifest_metadata else None,
             self.manifest.metadata.name if self.manifest else None,
         )
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
         if self.connection is None:
@@ -1026,8 +1028,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1074,8 +1075,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
         self.set_and_verify_name_param(command, *args, **kwargs)
         if self.user is None or not self.user.is_authenticated:
             raise SAMBrokerErrorNotReady(
@@ -1177,8 +1177,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
         self.verify_no_dependencies(command)
         if self.connection:
             try:
@@ -1213,8 +1212,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1242,8 +1240,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1271,6 +1268,5 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker):
             args,
             kwargs,
         )
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented(message="Logs not implemented", thing=self.kind, command=command)

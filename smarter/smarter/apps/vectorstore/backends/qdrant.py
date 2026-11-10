@@ -6,7 +6,7 @@ chunk. Its text is in the payload's ``page_content``, and its metadata in ``meta
 as LangChain's QdrantVectorStore stores them.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings

@@ -101,6 +101,8 @@ def llmclient_request_settings(llmclient: LLMClient) -> SmarterDictType:
         model = None
         try:
             owner = llmclient.user_profile.user
+            if llmclient.provider is None:
+                raise SmarterValueError(f"LLMClient {llmclient.name} has no provider.")
             provider = openai_compatible_client.get_client_orm_by_provider_name_and_user(llmclient.provider, owner)
             model = provider.default_model
         except SmarterValueError as e:

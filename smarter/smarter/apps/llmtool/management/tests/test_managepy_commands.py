@@ -1,7 +1,6 @@
 """Tests for manage.py create_plugin."""
 
 from logging import getLogger
-from typing import Optional
 
 from django.core.management import call_command
 
@@ -13,9 +12,6 @@ logger = getLogger(__name__)
 
 class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     """Tests for manage.py create_plugin."""
-
-    # part of the abstract base class but not used for these tests
-    model: Optional[str] = None
 
     @classmethod
     def setUpClass(cls):

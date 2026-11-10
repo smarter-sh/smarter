@@ -10,7 +10,6 @@ guardrails before it.
 """
 
 import time
-from typing import Any
 
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.provider.services.text_completion.contracts import (

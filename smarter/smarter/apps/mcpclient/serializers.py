@@ -8,6 +8,7 @@ from smarter.apps.account.serializers import MetaDataWithOwnershipModelSerialize
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCPCLIENT_KIND,
 )
+from smarter.apps.secret.models import Secret
 
 from .models import MCPClient
 
@@ -19,7 +20,9 @@ class MCPClientSerializer(MetaDataWithOwnershipModelSerializer):
     All fields are read only. ``credentials`` is rendered as the Secret's name, never its value.
     """
 
-    credentials = serializers.SlugRelatedField(read_only=True, slug_field="name")
+    credentials: "serializers.SlugRelatedField[Secret]" = serializers.SlugRelatedField(
+        read_only=True, slug_field="name"
+    )
 
     manifest_url = serializers.SerializerMethodField()
     ready = serializers.ReadOnlyField()

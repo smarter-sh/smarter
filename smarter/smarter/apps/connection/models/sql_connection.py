@@ -1,6 +1,5 @@
 """SqlConnection model."""
 
-import io
 import tempfile
 from http import HTTPStatus
 from socket import socket
@@ -14,9 +13,6 @@ from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
 
-from smarter.apps.account.models import (
-    MetaDataWithOwnershipModelManager,
-)
 from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
@@ -81,8 +77,6 @@ class SqlConnection(ConnectionBase):
     class Meta:
         verbose_name = "SQL Connection"
         verbose_name_plural = "SQL Connections"
-
-    objects: MetaDataWithOwnershipModelManager["SqlConnection"] = MetaDataWithOwnershipModelManager()
 
     _connection: Optional[BaseDatabaseWrapper] = None
 
@@ -547,7 +541,6 @@ class SqlConnection(ConnectionBase):
             sql_connection_attempted.send(sender=self.__class__, connection=self)
             ssh_client = paramiko.SSHClient()
             if self.ssh_known_hosts:
-                known_hosts_file = io.StringIO(self.ssh_known_hosts)
                 with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                     temp_file.write(self.ssh_known_hosts.encode())
                     known_hosts_file = temp_file.name
@@ -806,6 +799,7 @@ class SqlConnection(ConnectionBase):
             Unlike most of the Smarter codebase, this method does not use Pydantic SecretStr for masking
             to avoid adding Pydantic as a dependency for the entire ``smarter`` package.
         """
+        password: Optional[str]
         if masked:
             password = "******"
         else:

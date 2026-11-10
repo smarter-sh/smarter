@@ -25,7 +25,7 @@ single :class:`~smarter.apps.provider.services.text_completion.contracts.Pipelin
 """
 
 import time
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional
 
 from smarter.apps.guardrail.models import (
     Guardrail,
