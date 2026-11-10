@@ -274,6 +274,7 @@ class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
     """
 
     cluster: InMemoryClusterBackend
+    nodegroups: InMemoryNodeGroupBackend
 
     @classmethod
     def setUpClass(cls):

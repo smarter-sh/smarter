@@ -1,7 +1,6 @@
 """Test Api v1 CLI base class for brokered commands."""
 
 from http import HTTPStatus
-from typing import Any
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -77,7 +76,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
         )
         client = APIClient()
         headers_wrong_key = {"HTTP_AUTHORIZATION": "Token WRONG_KEY"}
-        headers_missing_key = {}
+        headers_missing_key: dict[str, str] = {}
 
         response = None
         if wrong_key:

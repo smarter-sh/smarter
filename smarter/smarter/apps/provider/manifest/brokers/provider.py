@@ -47,7 +47,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 
 # pylint: disable=W0613
@@ -78,7 +78,7 @@ class SAMProviderBrokerError(SAMBrokerError):
         return "Smarter API Provider Manifest Broker Error"
 
 
-class SAMProviderBroker(AbstractBroker):
+class SAMProviderBroker(AbstractBroker[Provider, Provider]):
     """
     Smarter API Provider Manifest Broker.
 
@@ -203,12 +203,11 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.apps.account.models.Provider`
         """
         metadata = super().manifest_to_django_orm()
-        dump = self.manifest.spec.provider.model_dump()  # type: ignore[return-value]
-        dump = self.to_snake_case(dump)
         if not isinstance(self.manifest, SAMProvider):
             raise SAMProviderBrokerError(
                 f"Invalid manifest type for {self.kind} broker: {type(self.manifest)}", thing=self.kind
             )
+        dump = self.to_snake_case(self.manifest.spec.provider.model_dump())
         if not isinstance(dump, dict):
             raise SAMProviderBrokerError(
                 f"Failed to convert {self.kind} {self.manifest.metadata.name} provider spec to dict", thing=self.kind
@@ -276,8 +275,8 @@ class SAMProviderBroker(AbstractBroker):
         spec = SAMProviderSpec(provider=spec_provider)
         status = SAMProviderStatus(
             recordLocator=self.provider.record_locator,
-            created=self.provider.created_at,
-            modified=self.provider.updated_at,
+            created=required(self.provider.created_at, "provider.created_at"),
+            modified=required(self.provider.updated_at, "provider.updated_at"),
             is_active=self.provider.is_active,
             is_flagged=self.provider.is_flagged,
             is_deprecated=self.provider.is_deprecated,
@@ -376,12 +375,7 @@ class SAMProviderBroker(AbstractBroker):
                 )
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMProvider(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMProviderMetadata(**self.loader.manifest_metadata),
-                spec=SAMProviderSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMProvider.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -439,8 +433,7 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`SAMMetadataKeys`
            - :class:`SAMProviderSpecKeys`
         """
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         metadata = SAMProviderMetadata(
             name="acme_llm_company",
@@ -528,15 +521,14 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.lib.manifest.enum.SCLIResponseGet`
            - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
         """
-        command = self.get.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.get.__name__)
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
-        data = []
+        items: list[SmarterDictType] = []
         if name:
-            providers = Provider.objects.filter(user_profile__account=self.account, name=name)
+            queryset = Provider.objects.filter(user_profile__account=self.account, name=name)
         else:
-            providers = Provider.objects.filter(user_profile__account=self.account)
-        providers = [*self.filter_by_annotation_selector(providers, kwargs)]
+            queryset = Provider.objects.filter(user_profile__account=self.account)
+        providers = [*self.filter_by_annotation_selector(queryset, kwargs)]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for provider in providers:
@@ -548,19 +540,19 @@ class SAMProviderBroker(AbstractBroker):
                         raise SAMProviderBrokerError(
                             f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
                         )
-                    data.append(model_dump)
+                    items.append(model_dump)
                 except Exception as e:
                     raise SAMProviderBrokerError(
                         f"Model dump failed for {self.kind} {provider.name}", thing=self.kind, command=command
                     ) from e
-        data = {
+        data: SmarterDictType = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ProviderSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -604,8 +596,7 @@ class SAMProviderBroker(AbstractBroker):
            - :class:`smarter.apps.provider.models.Provider`
            - :class:`SAMProviderBrokerError`
         """
-        command = self.apply.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.apply.__name__)
         if not self.user:
             raise SAMProviderBrokerError(
                 message="User must be set to apply provider manifest.",
@@ -685,8 +676,7 @@ class SAMProviderBroker(AbstractBroker):
 
         :returns: Never returns; always raises an exception.
         """
-        command = self.prompt.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -708,8 +698,7 @@ class SAMProviderBroker(AbstractBroker):
         :raises: :class:`SAMProviderBrokerError`
            If serialization fails for the provider.
         """
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.describe.__name__)
 
         name = self.name or kwargs.get("name")
         owned = Provider.objects.filter(user_profile__account=self.account, name=name).first() if name else None
@@ -787,7 +776,9 @@ class SAMProviderBroker(AbstractBroker):
         from smarter.apps.api.v1.manifests.enum import SAMKinds
         from smarter.apps.secret.models import Secret
 
-        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_id))]  # type: ignore[attr-defined]
+        if instance.api_key_id is None:
+            return [(SAMKinds.SECRET.value, Secret.objects.none())]
+        return [(SAMKinds.SECRET.value, Secret.objects.filter(pk=instance.api_key_id))]
 
     @classmethod
     def providers_named(cls, name: Optional[str], user_profile: Optional[UserProfile]) -> QuerySet:
@@ -842,8 +833,7 @@ class SAMProviderBroker(AbstractBroker):
         :raises: :class:`SAMProviderBrokerError`
            If deletion fails for the provider.
         """
-        command = self.delete.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.delete.__name__)
 
         if not self.user:
             raise SAMProviderBrokerError(
@@ -893,8 +883,7 @@ class SAMProviderBroker(AbstractBroker):
 
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
         """
-        command = self.deploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -908,8 +897,7 @@ class SAMProviderBroker(AbstractBroker):
         :raises: :class:`SAMProviderBrokerError`
            If undeployment fails for the user.
         """
-        command = self.undeploy.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -922,7 +910,6 @@ class SAMProviderBroker(AbstractBroker):
 
         :returns: A `SmarterJournaledJsonResponse` containing log data.
         """
-        command = self.logs.__name__
-        command = SmarterJournalCliCommands(command)
-        data = {}
+        command = SmarterJournalCliCommands(self.logs.__name__)
+        data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

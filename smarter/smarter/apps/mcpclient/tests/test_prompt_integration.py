@@ -42,6 +42,9 @@ SYSTEM_ROLE = "You are a helpful assistant."
 class TestMCPClientPromptIntegration(MCPClientTestBase):
     """Test the injection of MCP tools into prompts."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

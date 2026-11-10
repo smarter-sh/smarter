@@ -4,8 +4,7 @@
 from http import HTTPStatus
 from typing import Optional
 
-from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import HttpRequest, HttpResponseNotAllowed, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -133,7 +132,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         class_name = f"{__name__}.{OrchestratorApiBaseViewSet.__name__}[{id(self)}]"
         return self.formatted_text(class_name)
 
-    def setup(self, request: ASGIRequest, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set up the Orchestrator API base viewset for request processing.
 
@@ -150,7 +149,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : ASGIRequest
+        request : HttpRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -182,7 +181,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         )
         super().setup(request, *args, **kwargs)
 
-    def dispatch(self, request: ASGIRequest, *args, name: Optional[str] = None, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, name: Optional[str] = None, **kwargs):
         """
         Dispatch method for the Orchestrator API base viewset.
 
@@ -204,7 +203,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
 
         Parameters
         ----------
-        request : ASGIRequest
+        request : HttpRequest
             The HTTP request object provided by Django, containing all request data, headers, and user context.
 
         *args
@@ -300,7 +299,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         instead.
 
         :param request: The HTTP request object.
-        :type request: ASGIRequest
+        :type request: HttpRequest
         :return: A JsonResponse indicating that GET is not supported.
         :rtype: JsonResponse
         """

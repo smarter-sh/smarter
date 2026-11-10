@@ -59,6 +59,7 @@ from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NA
 from smarter.lib import logging
 from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.typing import required
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -219,11 +220,13 @@ def console_account(user_profile: Optional[UserProfile]) -> Optional[ConsoleAcco
 
     :param user_profile: The selected profile, or None.
     :returns: The profile's account, or None.
+    :raises ValueError: when the account has no account number.
     """
     if user_profile is None:
         return None
     account = user_profile.cached_account
-    return ConsoleAccount(account_number=account.account_number, name=account.company_name or "")
+    account_number = required(account.account_number, f"account {account.pk} account_number")
+    return ConsoleAccount(account_number=account_number, name=account.company_name or "")
 
 
 def welcome(request: HttpRequest, user: User) -> ConsoleWelcome:

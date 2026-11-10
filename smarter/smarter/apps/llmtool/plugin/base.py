@@ -133,11 +133,12 @@ class PluginBase(ABC, AccountMixin):
         - :class:`smarter.common.mixins.SmarterHelperMixin`
     """
 
-    SAMPluginType = SAMPluginCommon
+    SAMPluginType: Type[SAMPluginCommon] = SAMPluginCommon
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
-    _manifest: Optional[SAMPluginType] = None
-    _persisted_manifest: Optional[SAMPluginType] = None
-    _pydantic_model: Optional[Type[SAMPluginType]] = SAMPluginType
+    _metadata_class: Optional[str] = None
+    _manifest: Optional[SAMPluginCommon] = None
+    _persisted_manifest: Optional[SAMPluginCommon] = None
+    _pydantic_model: Optional[Type[SAMPluginCommon]] = SAMPluginCommon
 
     _plugin_meta: Optional[PluginMeta] = None
     _plugin_selector: Optional[PluginSelector] = None
@@ -453,7 +454,7 @@ class PluginBase(ABC, AccountMixin):
 
     @property
     @abstractmethod
-    def plugin_data(self) -> PluginDataBase:
+    def plugin_data(self) -> Optional[PluginDataBase]:
         """
         Return the plugin data as a Django ORM instance.
 
@@ -461,8 +462,8 @@ class PluginBase(ABC, AccountMixin):
         It should return an instance of the Django model that represents the plugin's data.
         This instance is used for accessing and manipulating plugin-specific data stored in the database.
 
-        :return: The Django ORM model instance for plugin data.
-        :rtype: PluginDataBase
+        :return: The Django ORM model instance for plugin data, or ``None`` if unavailable.
+        :rtype: Optional[PluginDataBase]
 
         :raises NotImplementedError: If not implemented in a subclass.
         """
@@ -496,12 +497,12 @@ class PluginBase(ABC, AccountMixin):
 
     @property
     @abstractmethod
-    def plugin_data_django_model(self) -> SmarterDictType:
+    def plugin_data_django_model(self) -> Optional[SmarterDictType]:
         """
         Return the plugin data definition as a json object.
 
-        :return: The plugin data definition as a dictionary.
-        :rtype: dict
+        :return: The plugin data definition as a dictionary, or ``None`` if the manifest is not available.
+        :rtype: Optional[SmarterDictType]
         :raises NotImplementedError: If not implemented in a subclass.
         """
         raise NotImplementedError()
@@ -703,12 +704,12 @@ class PluginBase(ABC, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginCommon:
+    def manifest(self) -> Optional[SAMPluginCommon]:
         """
         Return the Pydandic model of the plugin.
 
-        :return: The Pydantic model of the plugin.
-        :rtype: SAMPluginCommon
+        :return: The Pydantic model of the plugin, or ``None`` if unavailable.
+        :rtype: Optional[SAMPluginCommon]
         """
         raise NotImplementedError
 
@@ -762,7 +763,7 @@ class PluginBase(ABC, AccountMixin):
         if self.user_profile and self._manifest:
             try:
                 self._plugin_meta = PluginMeta.get_cached_object(
-                    invalidate=True, account=self.user_profile.cached_account, name=self.manifest.metadata.name
+                    invalidate=True, account=self.user_profile.cached_account, name=self._manifest.metadata.name
                 )
             except PluginMeta.DoesNotExist:
                 # a plugin that does not exist yet, e.g. one that is about to be applied from a manifest.
@@ -801,11 +802,11 @@ class PluginBase(ABC, AccountMixin):
                 self._plugin_meta_django_model = {
                     "id": self.id,
                     "user_profile": self.user_profile,
-                    "name": self.manifest.metadata.name,
-                    "description": self.manifest.metadata.description,
-                    "plugin_class": self.manifest.metadata.pluginClass,
-                    "version": self.manifest.metadata.version,
-                    "annotations": dict(self.manifest.metadata.annotations or {}),
+                    "name": self._manifest.metadata.name,
+                    "description": self._manifest.metadata.description,
+                    "plugin_class": self._manifest.metadata.pluginClass,
+                    "version": self._manifest.metadata.version,
+                    "annotations": dict(self._manifest.metadata.annotations or {}),
                 }
             else:
                 logger.warning(
@@ -829,6 +830,7 @@ class PluginBase(ABC, AccountMixin):
             return self._plugin_selector_history
         except PluginSelectorHistory.DoesNotExist:
             self._plugin_selector_history = None
+        return self._plugin_selector_history
 
     @property
     def plugin_selector(self) -> Optional[PluginSelector]:
@@ -849,8 +851,8 @@ class PluginBase(ABC, AccountMixin):
             if self._manifest and self._manifest.spec and self._manifest.spec.selector:
                 self._plugin_selector = PluginSelector.objects.create(
                     plugin=self.plugin_meta,
-                    directive=self.manifest.spec.selector.directive,
-                    search_terms=self.manifest.spec.selector.searchTerms,
+                    directive=self._manifest.spec.selector.directive,
+                    search_terms=self._manifest.spec.selector.searchTerms,
                 )
             logger.warning(
                 "%s.plugin_selector() PluginSelector did not exist for plugin %s %s %s. Created from manifest.",
@@ -916,10 +918,10 @@ class PluginBase(ABC, AccountMixin):
             if self._manifest and self._manifest.spec and self._manifest.spec.prompt:
                 self._plugin_prompt = PluginPrompt.objects.create(
                     plugin=self.plugin_meta,
-                    system_role=self.manifest.spec.prompt.systemRole,
-                    model=self.manifest.spec.prompt.model,
-                    temperature=self.manifest.spec.prompt.temperature,
-                    max_completion_tokens=self.manifest.spec.prompt.maxTokens,
+                    system_role=self._manifest.spec.prompt.systemRole,
+                    model=self._manifest.spec.prompt.model,
+                    temperature=self._manifest.spec.prompt.temperature,
+                    max_completion_tokens=self._manifest.spec.prompt.maxTokens,
                 )
                 logger.warning(
                     "%s.plugin_prompt() PluginPrompt did not exist for plugin %s %s %s. Created from manifest.",
@@ -1055,7 +1057,10 @@ class PluginBase(ABC, AccountMixin):
             )
             return False
 
-        self.plugin_data.validate()
+        plugin_data = self.plugin_data
+        if plugin_data is None:
+            raise SmarterPluginError(f"{self.formatted_pluginbase_class_name}.ready() PluginData is not available.")
+        plugin_data.validate()
 
         plugin_ready.send(sender=self.__class__, plugin=self)
         return True
@@ -1352,11 +1357,11 @@ class PluginBase(ABC, AccountMixin):
         meta_data = self.plugin_meta_django_model
         if not meta_data:
             # plugin_meta_django_model is empty only without a user profile: the plugin would have no owner.
-            raise SmarterPluginError(f"Plugin {self.manifest.metadata.name} has no user profile to own it.")
+            raise SmarterPluginError(f"Plugin {self._manifest.metadata.name} has no user profile to own it.")
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
-            tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
+            tags = set(self._manifest.metadata.tags) if self._manifest.metadata.tags else set()
             plugin_meta.tags.set(tags)
 
             selector = self.plugin_selector_django_model
@@ -1589,7 +1594,8 @@ class PluginBase(ABC, AccountMixin):
         with transaction.atomic():
             plugin_meta_copy = copy.deepcopy(self.plugin_meta)
             if isinstance(plugin_meta_copy, PluginMeta):
-                plugin_meta_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                # django-stubs types id as int, but a None pk is Django's way to save() a copy.
+                plugin_meta_copy.id = None  # type: ignore[assignment]
                 plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
                 if user_profile is not None:
                     plugin_meta_copy.user_profile = user_profile
@@ -1604,13 +1610,15 @@ class PluginBase(ABC, AccountMixin):
             # also, set the fk plugin_id to the new plugin_meta id.
             plugin_selector_copy = copy.deepcopy(self.plugin_selector)
             if isinstance(plugin_selector_copy, PluginSelector) and isinstance(plugin_meta_copy, PluginMeta):
-                plugin_selector_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                # django-stubs types id as int, but a None pk is Django's way to save() a copy.
+                plugin_selector_copy.id = None  # type: ignore[assignment]
                 plugin_selector_copy.plugin = plugin_meta_copy
                 plugin_selector_copy.save()
 
             plugin_prompt_copy = copy.deepcopy(self.plugin_prompt)
             if isinstance(plugin_prompt_copy, PluginPrompt) and isinstance(plugin_meta_copy, PluginMeta):
-                plugin_prompt_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                # django-stubs types id as int, but a None pk is Django's way to save() a copy.
+                plugin_prompt_copy.id = None  # type: ignore[assignment]
                 plugin_prompt_copy.plugin = plugin_meta_copy
                 plugin_prompt_copy.save()
 
@@ -1620,7 +1628,8 @@ class PluginBase(ABC, AccountMixin):
                 # parent link rather than id. both must be cleared, otherwise save()
                 # updates the original record and re-assigns it to the new plugin_meta.
                 plugin_data_copy.pk = None
-                plugin_data_copy.id = None  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+                # django-stubs types id as int, but a None pk is Django's way to save() a copy.
+                plugin_data_copy.id = None  # type: ignore[assignment]
                 plugin_data_copy._state.adding = True  # pylint: disable=protected-access
                 plugin_data_copy.plugin = plugin_meta_copy
                 plugin_data_copy.save()

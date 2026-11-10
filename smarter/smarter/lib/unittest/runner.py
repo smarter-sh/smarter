@@ -58,8 +58,8 @@ import os
 import unittest
 
 from django.test.runner import DiscoverRunner
-from django.test.utils import (
-    iter_test_cases,  # pyright: ignore[reportAttributeAccessIssue]
+from django.test.utils import (  # type: ignore[attr-defined]  # django-stubs doesn't declare iter_test_cases; pyright: ignore[reportAttributeAccessIssue]
+    iter_test_cases,
 )
 
 INFRASTRUCTURE = "infrastructure"
@@ -217,7 +217,10 @@ class SmarterTestRunner(DiscoverRunner):
         runner_tags = None
         if tags:
             runner_tags = tags
-        super().__init__(*args, tags=runner_tags, exclude_tags=exclude_tags, **kwargs)
+        # as keywords after any positional arguments, which DiscoverRunner takes in another order
+        kwargs["tags"] = runner_tags
+        kwargs["exclude_tags"] = exclude_tags
+        super().__init__(*args, **kwargs)
 
     def setup_test_environment(self, **kwargs):
         """

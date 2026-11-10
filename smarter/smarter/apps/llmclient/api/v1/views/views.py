@@ -6,7 +6,12 @@ from typing import Optional
 
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpRequest,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
@@ -33,7 +38,7 @@ from smarter.apps.llmclient.serializers import (
     LLMClientPluginSerializer,
     LLMClientSerializer,
 )
-from smarter.apps.llmclient.tasks import deploy_custom_api
+from smarter.apps.llmclient.tasks.deploy_custom_api import deploy_custom_api
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
@@ -95,7 +100,7 @@ class LLMClientView(ViewBase):
         """
         return LLMClient.objects.filter(id=self.llmclient.id)  # type: ignore[return-value]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Pop ``hashed_id`` from the url kwargs, then dispatch the request.
 
@@ -215,6 +220,7 @@ class LLMClientView(ViewBase):
         :param llmclient_id: The id of the LLMClient.
         :returns: A redirect to the list url, or a 500 response if the delete fails.
         """
+        llmclient: Optional[LLMClient]
         if llmclient_id and self.is_superuser():
             llmclient = get_object_or_404(LLMClient, pk=llmclient_id)
         else:
@@ -238,7 +244,7 @@ class LLMClientListView(ListViewBase):
     serializer_class = LLMClientSerializer
     llmclients: Optional[QuerySet[LLMClient]]
 
-    def dispatch(self, request: Request, *args, **kwargs):
+    def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Dispatch the request, then, if it succeeded, set ``llmclients`` to those the user can read.
 

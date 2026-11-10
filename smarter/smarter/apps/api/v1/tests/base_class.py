@@ -7,7 +7,7 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
-from typing import Any, Optional
+from typing import Optional
 
 from rest_framework.test import APIClient
 

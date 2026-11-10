@@ -41,7 +41,7 @@ class TestExpiringTokenGenerator(SmarterTestBase):
         mock_decode.return_value = b"123"
         mock_User.objects.get.return_value = self.user
         result = self.token_gen.uidb64_to_user("abc")
-        mock_User.objects.get.assert_called_with(pk=b"123")
+        mock_User.objects.get.assert_called_with(pk="123")
         self.assertEqual(result, self.user)
 
     @patch("smarter.lib.django.token_generators.get_current_site")

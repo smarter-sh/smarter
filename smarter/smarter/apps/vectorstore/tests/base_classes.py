@@ -11,7 +11,7 @@ Nothing reaches a real cluster or service:
 """
 
 import os
-from typing import Any, Optional
+from typing import Optional
 from unittest.mock import MagicMock
 
 import yaml
@@ -72,6 +72,11 @@ class FakeKubernetes:
 
 class VectorstoreTestBase(TestAccountMixin):
     """Fixtures of the vectorstore app's tests: a Provider, an ApiConnection, and a fake cluster."""
+
+    kubernetes: FakeKubernetes
+    provider: Provider
+    secret: Secret
+    connection: ApiConnection
 
     @classmethod
     def setUpClass(cls):

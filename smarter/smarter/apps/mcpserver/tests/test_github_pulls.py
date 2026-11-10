@@ -89,6 +89,8 @@ def fake_github(overrides: Optional[dict[tuple[str, str], mock.Mock]] = None):
 class TestPullRequests(SmarterTestBase):
     """Test create_pull_request() and its validation."""
 
+    repository: ProjectRepository
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

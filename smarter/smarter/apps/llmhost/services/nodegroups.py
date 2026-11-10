@@ -28,7 +28,7 @@ Smarter's IAM identity requires: ``eks:CreateNodegroup``, ``eks:DescribeNodegrou
 import copy
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from smarter.apps.llmhost.const import LABEL_COMPUTE
 from smarter.apps.llmhost.models.compute import (

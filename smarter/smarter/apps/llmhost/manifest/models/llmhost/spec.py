@@ -48,7 +48,7 @@ node group of those nodes, which Smarter scales as LLMHosts are launched and des
 
 import os
 import re
-from typing import Any, ClassVar, Literal, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 

@@ -15,6 +15,7 @@ import secrets
 
 from cache_results import lazy_cache
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 
@@ -98,6 +99,10 @@ class TerminalTicketApiView(SmarterAuthenticatedNeverCachedWebView):
         :returns: The ticket, and the WebSocket's path.
         :rtype: django.http.JsonResponse
         """
-        ticket = TerminalTicket(ticket=issue_ticket(request.user.pk), url=f"/{TERMINAL_WEBSOCKET_PATH}")
+        user_id = request.user.pk
+        if user_id is None:
+            # unreachable: login_required only lets a signed in user through.
+            raise PermissionDenied("A terminal ticket is only issued to a signed in user.")
+        ticket = TerminalTicket(ticket=issue_ticket(user_id), url=f"/{TERMINAL_WEBSOCKET_PATH}")
         logger.info("%s.post() issued a terminal ticket to %s.", self.formatted_class_name, request.user)
         return JsonResponse(ticket.model_dump(mode="json"))

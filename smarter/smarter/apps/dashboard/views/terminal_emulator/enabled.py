@@ -3,7 +3,8 @@
 from functools import wraps
 from typing import Callable
 
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest
+from django.http.response import HttpResponseBase
 
 from smarter.common.conf import smarter_settings
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -31,7 +32,7 @@ def server_logs_enabled() -> bool:
     )
 
 
-def require_server_logs(view: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
+def require_server_logs(view: Callable[..., HttpResponseBase]) -> Callable[..., HttpResponseBase]:
     """
     Make a Server Logs view a 404 while server logs are disabled.
 
@@ -40,11 +41,11 @@ def require_server_logs(view: Callable[..., HttpResponse]) -> Callable[..., Http
 
     :param view: The view.
     :returns: The view, which raises :class:`django.http.Http404` while server logs are disabled.
-    :rtype: Callable[..., HttpResponse]
+    :rtype: Callable[..., HttpResponseBase]
     """
 
     @wraps(view)
-    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         if not server_logs_enabled():
             raise Http404("Server logs are disabled.")
         return view(request, *args, **kwargs)
@@ -67,7 +68,7 @@ def terminal_enabled() -> bool:
     return smarter_settings.enable_web_console_terminal
 
 
-def require_terminal(view: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
+def require_terminal(view: Callable[..., HttpResponseBase]) -> Callable[..., HttpResponseBase]:
     """
     Make a Terminal view a 404 while the terminal is disabled, and for every user but a superuser.
 
@@ -78,11 +79,11 @@ def require_terminal(view: Callable[..., HttpResponse]) -> Callable[..., HttpRes
     :param view: The view.
     :returns: The view, which raises :class:`django.http.Http404` while the terminal is disabled,
         or when the user is signed in but is not a superuser.
-    :rtype: Callable[..., HttpResponse]
+    :rtype: Callable[..., HttpResponseBase]
     """
 
     @wraps(view)
-    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         if not terminal_enabled():
             raise Http404("The terminal is disabled.")
         user = getattr(request, "user", None)

@@ -2,7 +2,7 @@
 
 # python stuff
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import yaml
 
@@ -273,16 +273,22 @@ class SecretTransformer(SmarterHelperMixin):
                 value=self.secret.get_secret(update_last_accessed=False) or "",
                 expiration_date=self.secret.expires_at if self.secret.expires_at else None,
             )
+            created_at = self.secret.created_at
+            updated_at = self.secret.updated_at
+            if created_at is None or updated_at is None:
+                raise SAMValidationError(f"{self.kind} {self.secret.name} has not been saved, so it has no timestamps.")
             status = SAMSecretStatus(
                 accountNumber=(
                     self.secret.user_profile.account.account_number
-                    if self.secret.user_profile and self.secret.user_profile.account
+                    if self.secret.user_profile
+                    and self.secret.user_profile.account
+                    and self.secret.user_profile.account.account_number
                     else "missing"
                 ),
                 username=self.secret.user_profile.cached_user.username if self.secret.user_profile else "missing",
                 recordLocator=self.secret.record_locator,
-                created=self.secret.created_at,
-                modified=self.secret.updated_at,
+                created=created_at,
+                modified=updated_at,
                 last_accessed=self.secret.last_accessed,
             )
             self._manifest = SAMSecret(
@@ -307,9 +313,10 @@ class SecretTransformer(SmarterHelperMixin):
     def encrypted_value(self) -> Optional[bytes]:
         """Return the encrypted secret value."""
         if self._manifest:
-            return Secret.encrypt(value=self.value)  # type: ignore[return-value]
-        if self.secret:
-            return self.secret.encrypted_value
+            return Secret.encrypt(value=self.value)
+        if self.secret and self.secret.encrypted_value is not None:
+            # a BinaryField may be read as a memoryview.
+            return bytes(self.secret.encrypted_value)
         return None
 
     @property
@@ -334,9 +341,9 @@ class SecretTransformer(SmarterHelperMixin):
         if self._manifest and self._manifest.metadata and self._manifest.metadata.tags:
             # Convert tags (list[str]) to set for TaggableManager compatibility
             tags = self._manifest.metadata.tags
-            tags = set(tags) if tags else set()
+            retval = set(tags) if tags else set()
 
-            return tags
+            return retval
         return set()
 
     @property

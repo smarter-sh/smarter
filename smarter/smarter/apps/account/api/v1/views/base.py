@@ -1,6 +1,8 @@
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
 
+from rest_framework.serializers import ModelSerializer
+
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -15,10 +17,10 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 class AccountViewBase(SmarterAdminAPIView):
     """Base class for account views."""
 
-    serializer_class = AccountSerializer
+    serializer_class: type[ModelSerializer] = AccountSerializer
 
 
 class AccountListViewBase(SmarterAdminListAPIView):
     """Base class for account list views."""
 
-    serializer_class = AccountSerializer
+    serializer_class: type[ModelSerializer] = AccountSerializer

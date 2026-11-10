@@ -115,7 +115,7 @@ class SAMJournalApiMetadata(SAMJournalApiModel):
     command: str = Field(..., description="The journal's command, e.g. apply.")
     thing: str = Field(..., description="The journal's thing, e.g. Guardrail.")
     key: Optional[str] = Field(
-        None,
+        default=None,
         pattern=JOURNAL_KEY_PATTERN,
         description="The key of the response's journal entry. Absent while the journal is disabled, or if the entry could not be saved.",
     )
@@ -124,7 +124,7 @@ class SAMJournalApiMetadata(SAMJournalApiModel):
 class SAMJournalApiEnvelope(SAMJournalApiModel):
     """The fields that every journaled response adds beside the view's own data."""
 
-    api: str = Field(SmarterApiVersions.V1, description='The api version, e.g. "smarter.sh/v1".')
+    api: str = Field(default=SmarterApiVersions.V1, description='The api version, e.g. "smarter.sh/v1".')
     metadata: SAMJournalApiMetadata = Field(..., description="The journal's command and thing, and its entry's key.")
 
     @classmethod

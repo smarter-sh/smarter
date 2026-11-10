@@ -37,7 +37,8 @@ class FauxDictSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     message = serializers.CharField()
     status = serializers.CharField()
-    data = serializers.DictField()  # type: ignore[call-arg]
+    # a field named "data" shadows Serializer.data, which DRF's stub types as a ReturnDict.
+    data = serializers.DictField()  # type: ignore[call-arg,assignment]
 
     def create(self, validated_data):
         """Create a new instance of the serializer."""

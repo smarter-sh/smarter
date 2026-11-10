@@ -1,6 +1,7 @@
 """Smarter unit test helpers."""
 
 import sys
+from typing import Protocol
 
 
 def running_unit_tests() -> bool:
@@ -16,4 +17,18 @@ def running_unit_tests() -> bool:
     return running
 
 
-__all__ = ["running_unit_tests"]
+class ReverseNamesClass(Protocol):
+    """
+    An app's ``<App>ReverseNames`` class, e.g. ``ProviderReverseNames``, which the test mixins reverse urls by.
+
+    The class itself is used, not an instance: its ``namespace`` and its url names are class
+    attributes.
+    """
+
+    @property
+    def namespace(self) -> str:
+        """The app's url namespace."""
+        raise NotImplementedError
+
+
+__all__ = ["ReverseNamesClass", "running_unit_tests"]

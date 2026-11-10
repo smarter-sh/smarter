@@ -51,6 +51,7 @@ from smarter.apps.llmtool.manifest.models.common import (
 from smarter.apps.llmtool.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
 )
+from smarter.apps.llmtool.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.llmtool.manifest.models.common.plugin.spec import (
     SAMPluginCommonSpecPrompt,
     SAMPluginCommonSpecSelector,
@@ -140,7 +141,7 @@ class ApiPlugin(PluginBase):
     def __init__(
         self,
         *args,
-        manifest: Optional[SAMApiPlugin] = None,
+        manifest: Optional[SAMPluginCommon] = None,
         **kwargs,
     ):
         super().__init__(*args, manifest=manifest, **kwargs)
@@ -199,7 +200,9 @@ class ApiPlugin(PluginBase):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = self.SAMPluginType(**self.to_json())  # type: ignore[call-arg]
+            manifest_json = self.to_json()
+            if manifest_json is not None:
+                self._manifest = SAMApiPlugin(**manifest_json)  # type: ignore[call-arg]
         return self._manifest
 
     @property
@@ -257,7 +260,10 @@ class ApiPlugin(PluginBase):
         if self._manifest and self.plugin_meta:
             # this is an update scenario. the Plugin exists in the database,
             # AND we've received manifest data from the cli.
-            self._plugin_data = PluginDataApi(**self.plugin_data_django_model)  # type: ignore[call-arg]
+            plugin_data_django_model = self.plugin_data_django_model
+            if plugin_data_django_model is None:
+                raise SmarterPluginError(f"{self.formatted_class_name}.plugin_data() the manifest has no plugin data.")
+            self._plugin_data = PluginDataApi(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
                 "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
@@ -303,7 +309,7 @@ class ApiPlugin(PluginBase):
         return PluginDataApi
 
     @property
-    def plugin_data_serializer(self) -> Optional[PluginApiSerializer]:
+    def plugin_data_serializer(self) -> PluginApiSerializer:
         """
         Return the serializer instance for plugin data.
 
@@ -316,8 +322,8 @@ class ApiPlugin(PluginBase):
         current plugin data. This ensures that the serializer always reflects the latest
         state of the plugin's data.
 
-        :returns: An instance of ``PluginApiSerializer`` for the plugin data, or ``None`` if plugin data is unavailable.
-        :rtype: Optional[PluginApiSerializer]
+        :returns: An instance of ``PluginApiSerializer`` for the plugin data.
+        :rtype: PluginApiSerializer
 
         :example:
 
@@ -513,7 +519,12 @@ class ApiPlugin(PluginBase):
 
         # recast the Pydantic model's parameters field
         # to conform to openai's function calling schema.
-        recasted_parameters = {"type": "object", "properties": {}, "required": [], "additionalProperties": False}
+        recasted_parameters: SmarterDictType = {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        }
         parameters = self.manifest.spec.apiData.parameters if self.manifest and self.manifest.spec else None
         if parameters and not isinstance(parameters, list):
             raise SmarterConfigurationError(
@@ -528,34 +539,34 @@ class ApiPlugin(PluginBase):
                     )
                 # if the parameter is a Pydantic model, we need to convert it to a
                 # standard json dict.
-                parameter = parameter.model_dump()
+                parameter_json = parameter.model_dump()
                 logger.debug(
                     "%s.plugin_data_django_model() processing parameter: %s",
                     self.formatted_class_name,
-                    parameter,
+                    parameter_json,
                 )
-                if not isinstance(parameter, dict):
+                if not isinstance(parameter_json, dict):
                     raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter} {type(parameter)}"
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must be a valid json dict. Received: {parameter_json} {type(parameter_json)}"
                     )
-                if "name" not in parameter or "type" not in parameter:
+                if "name" not in parameter_json or "type" not in parameter_json:
                     raise SmarterConfigurationError(
-                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter}"
+                        f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} each parameter must have a 'name' and 'type' field. Received: {parameter_json}"
                     )
-                recasted_parameters["properties"][parameter["name"]] = {
-                    "type": parameter["type"],
-                    "description": parameter.get("description", ""),
+                recasted_parameters["properties"][parameter_json["name"]] = {
+                    "type": parameter_json["type"],
+                    "description": parameter_json.get("description", ""),
                 }
-                if "enum" in parameter and parameter["enum"]:
-                    if not isinstance(parameter["enum"], list):
+                if "enum" in parameter_json and parameter_json["enum"]:
+                    if not isinstance(parameter_json["enum"], list):
                         raise SmarterConfigurationError(
-                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter['enum']} {type(parameter['enum'])}"
+                            f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameter 'enum' must be a list. Received: {parameter_json['enum']} {type(parameter_json['enum'])}"
                         )
-                    recasted_parameters["properties"][parameter["name"]]["enum"] = parameter["enum"]
-                if parameter.get("required", False):
-                    recasted_parameters["required"].append(parameter["name"])
-                if "default" in parameter and parameter["default"] is not None:
-                    recasted_parameters["properties"][parameter["name"]]["default"] = parameter["default"]
+                    recasted_parameters["properties"][parameter_json["name"]]["enum"] = parameter_json["enum"]
+                if parameter_json.get("required", False):
+                    recasted_parameters["required"].append(parameter_json["name"])
+                if "default" in parameter_json and parameter_json["default"] is not None:
+                    recasted_parameters["properties"][parameter_json["name"]]["default"] = parameter_json["default"]
 
             api_data["parameters"] = recasted_parameters
 

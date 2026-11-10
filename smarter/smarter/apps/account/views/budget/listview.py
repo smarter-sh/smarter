@@ -8,6 +8,7 @@ resource shows its budget versus its actual spending, with the URL of its chart'
 """
 
 from http import HTTPStatus
+from typing import Optional
 
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, JsonResponse
@@ -131,7 +132,9 @@ class BudgetListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         budget_id = kwargs.get("budget_id")
         if not self.user_profile or not self.user_profile.user.is_superuser:
             return JsonResponse({"error": "Only superusers may delete a budget."}, status=HTTPStatus.FORBIDDEN)
-        budget = Budget.objects.filter(id=budget_id).first()
+        budget: Optional[Budget] = None
+        if budget_id is not None:
+            budget = Budget.objects.filter(id=budget_id).first()
         if budget is None:
             return JsonResponse({"error": f"Budget with id {budget_id} not found."}, status=HTTPStatus.NOT_FOUND)
         budget.delete()

@@ -62,7 +62,6 @@ from cache_results import cache_results
 from django.db.models import Q
 from django.http import HttpRequest, JsonResponse
 
-from smarter.__version__ import __version__
 from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,

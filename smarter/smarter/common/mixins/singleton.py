@@ -1,6 +1,4 @@
-"""
-Singleton: A metaclass for creating singleton classes.
-"""
+"""Singleton: A metaclass for creating singleton classes."""
 
 
 class Singleton(type):
@@ -11,7 +9,7 @@ class Singleton(type):
     class MyClass(metaclass=Singleton):
     """
 
-    _instances = {}
+    _instances: dict[type, object] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

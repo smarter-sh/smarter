@@ -394,13 +394,15 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         # the manifest serializer masks the secret value
         self.assertEqual(config["value"], mask_string(self.secret_value))
 
-        actual_exp: Optional[Union[datetime, str]] = config.get("expiration_date")
-        if not actual_exp:
+        raw_exp: Optional[Union[datetime, str]] = config.get("expiration_date")
+        if not raw_exp:
             self.fail("expiration_date is None")
-        if isinstance(actual_exp, str):
-            if actual_exp.endswith("Z"):
-                actual_exp = actual_exp[:-1] + "+00:00"
-            actual_exp = datetime.fromisoformat(actual_exp)
+        if isinstance(raw_exp, str):
+            if raw_exp.endswith("Z"):
+                raw_exp = raw_exp[:-1] + "+00:00"
+            actual_exp = datetime.fromisoformat(raw_exp)
+        else:
+            actual_exp = raw_exp
         expected_exp = self.secret_expiration
         actual_exp = actual_exp.replace(microsecond=(actual_exp.microsecond // 1000) * 1000)
         expected_exp = expected_exp.replace(microsecond=(expected_exp.microsecond // 1000) * 1000)

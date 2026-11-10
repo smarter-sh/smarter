@@ -9,7 +9,7 @@ translates between Route53's hosted zones and record sets and the provider-indep
 :class:`~smarter.apps.infrastructure.services.dns.DNSRecord`.
 """
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Optional
 
 from smarter.lib.typing import SmarterDictType
 

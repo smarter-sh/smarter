@@ -11,12 +11,14 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Generic,
     Iterable,
     Iterator,
     List,
     Optional,
     Tuple,
     Type,
+    TypeVar,
     Union,
     cast,
 )
@@ -51,6 +53,7 @@ from smarter.lib import json, logging
 from smarter.lib.annotation.const import ANNOTATION_SELECTOR_PARAM
 from smarter.lib.annotation.selectors import QuerySetType, filter_by_annotations
 from smarter.lib.django import waffle
+from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.models.utils import assign_changed_fields, tags_changed
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -92,6 +95,18 @@ inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 SmarterRequest = Union[HttpRequest, Request, ASGIRequest]
+OwnedModelT = TypeVar("OwnedModelT", bound=MetaDataModel)
+"""A Django ORM model that has a name and an owner, as :meth:`AbstractBroker.get_owned_object` looks up.
+
+E.g. a ``MetaDataWithOwnershipModel``, or a ``Budget``.
+"""
+ModelT = TypeVar("ModelT", bound=models.Model)
+"""The Django ORM model of a broker's resource, its :attr:`AbstractBroker.ORMModelClass`."""
+MetaModelT = TypeVar("MetaModelT", bound=models.Model)
+"""The Django ORM model that holds a broker's resource's name and owner, its :attr:`AbstractBroker.ORMMetaModelClass`.
+
+For most kinds it is the same model as :data:`ModelT`. A plugin's is its ``PluginMeta``.
+"""
 
 KNOWN_KINDS: frozenset[str] = frozenset(SmarterJournalThings.all())
 """Every valid broker kind.
@@ -208,6 +223,27 @@ def dependents_exist(rows: Iterable[models.Model]) -> bool:
     return next(iter(rows), None) is not None
 
 
+RowT = TypeVar("RowT", bound=models.Model)
+"""A Django ORM model, as :func:`rows_with_pk` returns rows of."""
+
+
+def rows_with_pk(manager: "models.Manager[RowT]", pk: Optional[int]) -> "models.QuerySet[RowT]":
+    """Return the row with a primary key, as a QuerySet, or an empty QuerySet if the key is None.
+
+    A broker's :meth:`AbstractBroker.references` uses it for a nullable foreign key, e.g.
+    ``rows_with_pk(Secret.objects, llmhost.api_key_secret_id)``. Unlike a filter on the reverse
+    relation, it also works for an unsaved instance.
+
+    :param manager: The model's manager, e.g. ``Secret.objects``.
+    :param pk: The primary key, e.g. a foreign key's id, or None.
+    :return: A QuerySet of the row, or an empty QuerySet.
+    """
+    if pk is None:
+        return manager.none()
+    rows = manager.filter(pk=pk)
+    return rows
+
+
 def first_arg_of_type(args: Iterable[object], types: Union[type, Tuple[type, ...]]) -> Any:
     """
     Return the first positional argument that is an instance of a type, or None.
@@ -225,7 +261,7 @@ def first_arg_of_type(args: Iterable[object], types: Union[type, Tuple[type, ...
     return None
 
 
-class AbstractBroker(ABC, SmarterRequestMixin):
+class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
     """
     Abstract base class for the Smarter Broker Model.
 
@@ -248,6 +284,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     Subclasses must implement the abstract methods to provide resource-specific
     logic for CLI and API commands such as ``apply``, ``describe``, ``delete``,
     ``deploy``, ``example_manifest``, ``get``, ``logs``, and ``undeploy``.
+
+    A broker names its Django ORM models as type arguments, the model of its resource and the
+    model that holds the resource's name and owner, e.g. ``AbstractBroker[Secret, Secret]``, or
+    ``AbstractBroker[PluginDataBase, PluginMeta]`` for a plugin.
     """
 
     _api_version: str = SmarterApiVersions.V1
@@ -271,8 +311,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
     LLMHostCompute's do.
     """
     _created: bool = False
-    _orm_meta_instance: Optional[MetaDataWithOwnershipModel] = None
-    _orm_instance: Optional[MetaDataWithOwnershipModel] = None
+    _orm_meta_instance: Optional[MetaModelT] = None
+    _orm_instance: Optional[ModelT] = None
     _ready: bool = False
     _is_ready_abstract_broker: bool = False
     _dependencies: Optional[List[SAMDependency]] = None
@@ -378,8 +418,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 self.loader = SAMLoader(file_path=file_path)
                 if self._loader and self._loader.ready:
                     self.kind_setter(self._loader.manifest_kind)
-                    name = self._loader.manifest_metadata.get("name")
-                    self.name_cached_property_setter(name)  # type: ignore
+                    loader_metadata = self._loader.manifest_metadata or {}
+                    self.name_cached_property_setter(loader_metadata.get("name"))
 
         # ----------------------------------------------------------------------
         # Fallback logic to initialize from the ORM, if we have a name and
@@ -525,7 +565,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if bool(self._manifest):
             # 3.) if we have a manifest.
             self._is_ready_abstract_broker = True
-        if bool(self.loader) and self.loader.ready:
+        if self.loader is not None and self.loader.ready:
             # 4.) we have a loader and it's in a ready state.
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
@@ -553,7 +593,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
                 self.abstract_broker_logger_prefix,
             )
-        if not bool(self.loader) or not self.loader.ready:
+        if self.loader is None or not self.loader.ready:
             logger.warning(
                 "%s.is_ready_abstract_broker() returning false because loader is not ready.",
                 self.abstract_broker_logger_prefix,
@@ -747,7 +787,8 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             self._name = self._manifest.metadata.name
             return self._name
         if self._loader:
-            self._name = self._loader.manifest_metadata.get("name")
+            loader_metadata = self._loader.manifest_metadata or {}
+            self._name = loader_metadata.get("name")
             if self._name:
                 return self._name
             logger.warning("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
@@ -866,6 +907,25 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return None
 
+    @loader.setter
+    def loader(self, value: Optional[SAMLoader]) -> None:
+        """
+        Set the SAMLoader instance for this broker.
+
+        :param value: The SAMLoader instance to set.
+        """
+        if not value:
+            self._loader = None
+            return
+        if not isinstance(value, SAMLoader):
+            raise SmarterValueError("loader must be a SAMLoader instance")
+        if value.manifest_kind != self.kind:
+            raise SAMBrokerError(
+                f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
+            )
+        self.raise_for_unknown_keys(value.json_data)
+        self._loader = value
+
     def raise_for_unknown_keys(self, manifest: object) -> None:
         """
         Raise a validation error if the manifest has keys that its Pydantic model does not define.
@@ -891,25 +951,6 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 "Check their spelling, or remove them."
             )
 
-    @loader.setter
-    def loader(self, value: Optional[SAMLoader]) -> None:
-        """
-        Set the SAMLoader instance for this broker.
-
-        :param value: The SAMLoader instance to set.
-        """
-        if not value:
-            self._loader = None
-            return
-        if not isinstance(value, SAMLoader):
-            raise SmarterValueError("loader must be a SAMLoader instance")
-        if value.manifest_kind != self.kind:
-            raise SAMBrokerError(
-                f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
-            )
-        self.raise_for_unknown_keys(value.json_data)
-        self._loader = value
-
     ###########################################################################
     # Abstract Properties
     ###########################################################################
@@ -925,7 +966,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     @abstractmethod
-    def ORMMetaModelClass(self) -> Type[MetaDataWithOwnershipModel]:
+    def ORMMetaModelClass(self) -> Type[MetaModelT]:
         """
         Return the Django ORM meta model class for the broker.
 
@@ -937,7 +978,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
     @property
     @abstractmethod
-    def ORMModelClass(self) -> Type[MetaDataWithOwnershipModel]:
+    def ORMModelClass(self) -> Type[ModelT]:
         """
         Return the Django ORM model class for the broker.
 
@@ -948,7 +989,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         )
 
     @property
-    def orm_meta_instance(self) -> Optional[MetaDataWithOwnershipModel]:
+    def orm_meta_instance(self) -> Optional[MetaModelT]:
         """
         Return the Django ORM meta model instance for the broker.
 
@@ -976,11 +1017,20 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         if not self._name or not self._user_profile:
             return
-        if self.ORMMetaModelClass == self.ORMModelClass and self._orm_instance:
-            self._orm_meta_instance = self._orm_instance
+        orm_instance = self._orm_instance
+        same_model_class = self.ORMMetaModelClass == self.ORMModelClass
+        if same_model_class and isinstance(orm_instance, self.ORMMetaModelClass):
+            self._orm_meta_instance = orm_instance
             return
 
-        self._orm_meta_instance = self.get_owned_object(self.ORMMetaModelClass, "orm_meta_instance_setter")
+        meta_model_class = self.ORMMetaModelClass
+        if not issubclass(meta_model_class, MetaDataModel):
+            raise SAMBrokerErrorNotImplemented(
+                message=f"{meta_model_class.__name__} is not a MetaDataModel, so {self.__class__.__name__} must override orm_meta_instance_setter()",
+                thing=self.thing,
+                command=None,
+            )
+        self._orm_meta_instance = self.get_owned_object(meta_model_class, "orm_meta_instance_setter")
 
     def owner_user_profiles(self) -> Iterator[Optional[UserProfile]]:
         """
@@ -997,7 +1047,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         yield account_admin_user_profile
         yield smarter_cached_objects.smarter_admin_user_profile
 
-    def get_owned_object(self, model_class: Type[models.Model], caller: str) -> Optional[models.Model]:
+    def get_owned_object(self, model_class: Type[OwnedModelT], caller: str) -> Optional[OwnedModelT]:
         """
         Return the row of ``model_class`` that has the broker's name, owned by the first owner that has one.
 
@@ -1011,9 +1061,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         """
         for user_profile in self.owner_user_profiles():
             try:
-                owned_object = model_class.get_cached_object(name=self.name, user_profile=user_profile)  # type: ignore
-                return owned_object
-            except model_class.MultipleObjectsReturned:  # type: ignore[attr-defined]
+                owned_object = model_class.get_cached_object(name=self.name, user_profile=user_profile)
+                # get_cached_object() is annotated as returning models.Model, but returns a row of
+                # the class it is called on.
+                return cast(OwnedModelT, owned_object)
+            except model_class.MultipleObjectsReturned:
                 logger.error(
                     "%s.%s() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
                     self.abstract_broker_logger_prefix,
@@ -1023,7 +1075,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                     user_profile,
                 )
                 return None
-            except model_class.DoesNotExist:  # type: ignore[attr-defined]
+            except model_class.DoesNotExist:
                 continue
             # pylint: disable=broad-except
             except Exception as e:
@@ -1041,7 +1093,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return None
 
     @property
-    def orm_instance(self) -> Optional[MetaDataWithOwnershipModel]:
+    def orm_instance(self) -> Optional[ModelT]:
         """
         Return the Django ORM model instance for the broker.
 
@@ -1061,9 +1113,11 @@ class AbstractBroker(ABC, SmarterRequestMixin):
             return self._orm_instance
 
         # this should work in any cases where orm_instance() is not overridden
-        # by a subclass.
-        if self.orm_meta_instance:
-            self._orm_instance = self.orm_meta_instance
+        # by a subclass. The meta instance is the ORM instance only when both
+        # are of the same model, e.g. not a plugin's PluginMeta.
+        orm_meta_instance = self.orm_meta_instance
+        if isinstance(orm_meta_instance, self.ORMModelClass):
+            self._orm_instance = orm_meta_instance
             return self._orm_instance
 
         if not self.name:
@@ -1071,11 +1125,19 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         if not self.user_profile:
             return None
 
-        self._orm_instance = self.get_owned_object(self.ORMModelClass, "orm_instance")
-        if self._orm_instance is None:
+        model_class = self.ORMModelClass
+        if not issubclass(model_class, MetaDataModel):
+            raise SAMBrokerErrorNotImplemented(
+                message=f"{model_class.__name__} is not a MetaDataModel, so {self.__class__.__name__} must override orm_instance",
+                thing=self.thing,
+                command=None,
+            )
+        orm_instance = self.get_owned_object(model_class, "orm_instance")
+        self._orm_instance = orm_instance
+        if orm_instance is None:
             return None
-        if self.ORMModelClass == self.ORMMetaModelClass:
-            self._orm_meta_instance = self._orm_instance
+        if isinstance(orm_instance, self.ORMMetaModelClass):
+            self._orm_meta_instance = orm_instance
         else:
             self.orm_meta_instance_setter()
 
@@ -1317,7 +1379,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         raise SAMBrokerErrorNotImplemented(message="dependencies() not implemented", thing=self.thing)
 
     @classmethod
-    def dependents(cls, instance: models.Model) -> SAMDependents:
+    def dependents(cls, instance: MetaModelT) -> SAMDependents:
         """Return the resources that depend on a resource, as Django ORM rows, without building brokers.
 
         This is the one place where a broker says which resources refer to its kind of resource.
@@ -1346,7 +1408,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         raise SAMBrokerErrorNotImplemented(message=f"{cls.__name__}.dependents() not implemented")
 
     @classmethod
-    def has_dependents(cls, instance: models.Model) -> bool:
+    def has_dependents(cls, instance: MetaModelT) -> bool:
         """Return True if any resource depends on a resource.
 
         It asks :meth:`dependents` whether there is at least one row, one kind at a time, and
@@ -1369,7 +1431,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         return False
 
     @classmethod
-    def references(cls, instance: models.Model) -> SAMDependents:
+    def references(cls, instance: MetaModelT) -> SAMDependents:
         """Return the resources that a resource uses, as Django ORM rows: the opposite of :meth:`dependents`.
 
         A resource uses another when it refers to it, by name in its manifest or by a foreign key,
@@ -1616,7 +1678,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         readable = rows.with_read_permission_for(self.user).exists()  # type: ignore[attr-defined]
         return readable
 
-    def dependency_brokers_for(self, instance: Optional[models.Model]) -> List[SAMDependency]:
+    def dependency_brokers_for(self, instance: Optional[MetaModelT]) -> List[SAMDependency]:
         """Return a broker for each resource that depends on a resource, as :meth:`dependents` lists them.
 
         :param instance: The resource's Django ORM instance, or None if it does not exist.
@@ -1686,9 +1748,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         unique = {instance.pk: instance for instance in instances}
         brokers: List[SAMDependency] = []
         for instance in unique.values():
-            instance_kind = kind
-            if not instance_kind:
-                instance_kind = getattr(instance.kind, "value", instance.kind)  # type: ignore[attr-defined]
+            if kind:
+                instance_kind = kind
+            else:
+                # a row that has its own kind, e.g. a PluginMeta, which models.Model doesn't declare
+                row_kind = getattr(instance, "kind")
+                instance_kind = getattr(row_kind, "value", row_kind)
+            broker: SAMDependency
             if self._dependency_references_only:
                 name = getattr(instance, "name")
                 user_profile = getattr(instance, "user_profile")
@@ -1868,8 +1934,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :param kwargs: Additional keyword arguments.
         :return: A SmarterJournaledJsonResponse containing the JSON schema.
         """
-        command = self.example_manifest.__name__
-        command = SmarterJournalCliCommands(command)
+        command = SmarterJournalCliCommands(self.example_manifest.__name__)
 
         model = self.SAMModelClass
         data = model.model_json_schema()
@@ -2020,7 +2085,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         error: Optional[SmarterDictType] = None,
         message: Optional[str] = None,
     ) -> SmarterDictType:
-        retval = {}
+        retval: SmarterDictType = {}
         if data:
             retval[SmarterJournalApiResponseKeys.DATA] = data
         if error:
@@ -2030,11 +2095,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
 
         return retval
 
-    def _raise_for_missing_request(self, command: SmarterJournalCliCommands) -> None:
+    def _request_or_raise(self, command: SmarterJournalCliCommands) -> HttpRequest:
         """
-        Raise an error if the broker has no request, which every journaled json response needs.
+        Return the broker's request, which every journaled json response needs, or raise an error if it has none.
 
         :param command: The command that was executed.
+        :returns: The request.
         :raises SAMBrokerError: If the broker has no request.
         """
         if self.request is None:
@@ -2043,6 +2109,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 thing=self.thing,
                 command=command,
             )
+        return self.request
 
     def _error_without_exception(self, error_class: type, message: str) -> SmarterDictType:
         """
@@ -2077,11 +2144,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the success response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         data = data or {}
 
         operated = SmarterJournalCliCommands.past_tense().get(str(command), command)
 
+        kind: Optional[str]
         if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)  # type: ignore
             message = message or f"{kind} {operated} successfully"
@@ -2107,7 +2175,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
                 )
         retval = self._retval(data=data, message=message)
         return SmarterJournaledJsonResponse(
-            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
+            request=request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
         )
 
     def json_response_err_readonly(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
@@ -2117,13 +2185,13 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the read-only response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         message = f"{self.kind} {self.name} is read-only"
 
         error = self._error_without_exception(SAMBrokerReadOnlyError, message)
         retval = self._retval(error=error, message=message)
         return SmarterJournaledJsonResponse(
-            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED
+            request=request, thing=self.thing, command=command, data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED
         )
 
     def json_response_err_notimplemented(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
@@ -2133,12 +2201,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the not implemented response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         message = f"command not implemented for {self.kind} resources"
         error = self._error_without_exception(SAMBrokerErrorNotImplemented, message)
         retval = self._retval(error=error, message=message)
         return SmarterJournaledJsonResponse(
-            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_IMPLEMENTED
+            request=request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_IMPLEMENTED
         )
 
     def json_response_err_notready(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
@@ -2148,12 +2216,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the not ready response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         message = f"{self.kind} {self.name} not ready"
         error = self._error_without_exception(SAMBrokerErrorNotReady, message)
         retval = self._retval(error=error, message=message)
         return SmarterJournaledJsonResponse(
-            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.BAD_REQUEST
+            request=request, thing=self.thing, command=command, data=retval, status=HTTPStatus.BAD_REQUEST
         )
 
     def json_response_err_notfound(
@@ -2166,12 +2234,12 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the not found response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         message = message or f"{self.kind} {self.name} not found"
         error = self._error_without_exception(SAMBrokerErrorNotFound, message)
         retval = self._retval(error=error, message=message)
         return SmarterJournaledJsonResponse(
-            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_FOUND
+            request=request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_FOUND
         )
 
     def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
@@ -2183,10 +2251,10 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: A SmarterJournaledJsonResponse containing the error response.
         :raises SAMBrokerError: If the broker has no request.
         """
-        self._raise_for_missing_request(command)
+        request = self._request_or_raise(command)
         stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         return SmarterJournaledJsonErrorResponse(
-            request=self.request,
+            request=request,
             thing=self.thing,
             command=command,
             e=e,
@@ -2265,7 +2333,7 @@ class AbstractBroker(ABC, SmarterRequestMixin):
         :return: The cleaned param.
         """
         if isinstance(param, str):
-            retval = param.strip()
+            retval: Optional[str] = param.strip()
             if not retval:
                 logger.warning(
                     "%s.clean_cli_param() param <%s> is an empty string, setting to None for url: %s",

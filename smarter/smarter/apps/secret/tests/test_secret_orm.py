@@ -145,6 +145,8 @@ class TestSecretQuerySetPermissions(TestAccountMixin):
     Secret is not readable by every account. See :class:`smarter.apps.secret.models.SecretQuerySet`.
     """
 
+    ids: list[int]
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

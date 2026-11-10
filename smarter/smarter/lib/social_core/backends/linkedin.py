@@ -106,8 +106,8 @@ class LinkedinOAuth2(BaseOAuth2):
         fields_selectors = list(unique_field_selectors)
         # user sort to ease the tests URL mocking
         fields_selectors.sort()
-        fields_selectors = ",".join(fields_selectors)
-        url = self.USER_DETAILS_URL.format(projection=fields_selectors)
+        projection = ",".join(fields_selectors)
+        url = self.USER_DETAILS_URL.format(projection=projection)
         return url
 
     def user_emails_url(self) -> str:

@@ -1,5 +1,7 @@
 """Constants for the OpenAI provider."""
 
+from typing import Final
+
 
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
@@ -47,7 +49,8 @@ class OpenAIMessageKeys:
     MESSAGE_CONTENT_KEY = "content"
     MESSAGE_NAME_KEY = "name"
     SYSTEM_MESSAGE_KEY = "system"
-    ASSISTANT_MESSAGE_KEY = "assistant"
+    # Final, so that type checkers know it as the literal role that ChatCompletionMessage requires.
+    ASSISTANT_MESSAGE_KEY: Final = "assistant"
     USER_MESSAGE_KEY = "user"
     TOOL_MESSAGE_KEY = "tool"
     TOOL_CALL_ID = "tool_call_id"

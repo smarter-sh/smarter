@@ -31,6 +31,8 @@ KOLKATA = "Asia/Kolkata"
 class TestDoodleViews(DoodleTestMixin):
     """The doodle of the day, and its artwork, are public."""
 
+    today_url: str
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

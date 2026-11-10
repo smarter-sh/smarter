@@ -79,5 +79,5 @@ def getSmarterLogger(
     logger = getLogger(name)
 
     if switches_are_provided():
-        logger = WaffleSwitchedLoggerWrapper(logger, eval_switches)
+        return WaffleSwitchedLoggerWrapper(logger, eval_switches)
     return logger

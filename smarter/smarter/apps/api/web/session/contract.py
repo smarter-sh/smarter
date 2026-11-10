@@ -22,7 +22,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
-from pydantic.json_schema import models_json_schema
+from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
 from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 from smarter.lib.typing import SmarterDictType
@@ -242,7 +242,7 @@ def contract_schema() -> SmarterDictType:
     # pylint: disable=import-outside-toplevel
     from smarter.apps.account.api.web import contract as account_contract
 
-    models = []
+    models: list[tuple[type[BaseModel], JsonSchemaMode]] = []
     for model in RESPONSE_MODELS + account_contract.RESPONSE_MODELS:
         models.append((model, "serialization"))
     for model in account_contract.REQUEST_MODELS:

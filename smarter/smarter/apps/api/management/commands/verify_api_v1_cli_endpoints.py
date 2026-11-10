@@ -159,8 +159,8 @@ class Command(SmarterCommand):
             response_json = json.loads(response_content)
 
             self.stdout.write("url: " + self.style.NOTICE(url))
-            response = json.dumps(response_json) + "\n"
-            self.stdout.write("response: " + self.style.SUCCESS(response))
+            response_text = json.dumps(response_json) + "\n"
+            self.stdout.write("response: " + self.style.SUCCESS(response_text))
 
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
         try:

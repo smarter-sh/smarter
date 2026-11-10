@@ -154,15 +154,15 @@ class StackademyCourseCatalogueView(SmarterUnauthenticatedAPIView):
 
         if course_id is not None:
             try:
-                course_id = int(course_id)
-                filtered = [c for c in filtered if c["course_id"] == course_id]
+                course_number = int(course_id)
+                filtered = [c for c in filtered if c["course_id"] == course_number]
             except ValueError:
                 pass
 
         if max_cost is not None:
             try:
-                max_cost = float(max_cost)
-                filtered = [c for c in filtered if c["cost"] <= max_cost]
+                cost_limit = float(max_cost)
+                filtered = [c for c in filtered if c["cost"] <= cost_limit]
             except ValueError:
                 pass
 

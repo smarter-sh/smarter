@@ -697,10 +697,10 @@ def read_pods(snapshot: ClusterSnapshot) -> None:
     if pods is None:
         snapshot.errors.append("pods: the cluster could not be read")
         return
-    for pod in pods:
-        if section(pod, "status").get("phase") == "Succeeded":
+    for resource in pods:
+        if section(resource, "status").get("phase") == "Succeeded":
             continue
-        snapshot.pods.append(pod_status(pod))
+        snapshot.pods.append(pod_status(resource))
     snapshot.pods.sort(key=lambda pod: (pod.component, pod.name))
 
     metrics = kubernetes.find_resources("pods.metrics.k8s.io", snapshot.namespace)
@@ -730,8 +730,8 @@ def read_nodes(snapshot: ClusterSnapshot) -> None:
     if nodes is None:
         snapshot.errors.append("nodes: the cluster could not be read")
         return
-    for node in nodes:
-        snapshot.nodes.append(node_status(node))
+    for resource in nodes:
+        snapshot.nodes.append(node_status(resource))
     snapshot.nodes.sort(key=lambda node: node.name)
 
     metrics = kubernetes.find_resources("nodes.metrics.k8s.io")
