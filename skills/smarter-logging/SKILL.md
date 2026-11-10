@@ -1,6 +1,6 @@
 ---
 name: smarter-logging
-description: Use when writing or changing any logger call in Smarter Python code. Every log message starts with a formatted, dot-notated prefix that traces where it came from (logger_prefix or formatted_class_name), uses lazy %-style arguments, picks its level deliberately, uses a waffle-switched logger where a switch exists, and never logs secrets.
+description: Use when writing or changing any logger call in Smarter Python code. Every log message starts with a formatted, dot-notated prefix that traces where it came from (logger_prefix or formatted_class_name), uses lazy %-style arguments, picks its level deliberately, uses a waffle-switched logger where a switch exists, and never logs secrets, credentials or PII (Smarter's log is shown to users in the web console in DEBUG mode).
 ---
 
 # Smarter Logging Style
@@ -112,12 +112,37 @@ A new app that logs a lot gets its own switch in
 `smarter/lib/django/waffle/switches.py`. Small library modules that log only
 warnings and errors may use plain `logging.getLogger(__name__)`.
 
-## Never log secrets
+## Never log secrets or PII
 
-The repository is public and logs are shipped to aggregators. Never log an API
-key, token, password, Fernet key, `Authorization` header, or a whole headers
-dict or settings object. When a credential must be identified, mask it:
-`smarter.common.utils.mask_string(key)` or `self.mask_string(key)`.
+In DEBUG mode the web console shows Smarter's log to ordinary users, and logs
+are also shipped to aggregators. A secret or a person's data in a log entry is
+as bad as the same value pushed to this public repository. The rule covers
+every level, `print()` and the JavaScript `console.*` calls too.
+
+Never log:
+
+- **Secrets and credentials**: API keys, tokens (including `SmarterAuthToken`
+  keys and session keys), passwords, Fernet keys, a Secret's value, cookies,
+  `Authorization` headers, connection strings with passwords, signed urls.
+- **PII**: email addresses, names, phone numbers, postal addresses, IP
+  addresses, payment details, and free text a person typed (a chat prompt, a
+  form body), which can hold any of these.
+- **Containers of the above**: a whole request, `request.META`, a headers dict,
+  `settings`, a manifest or spec dict, a model's `__dict__` or `repr()`, a
+  third-party exception whose message echoes the request. Log the fields you
+  need, by name.
+
+Identify things instead by id, name of the resource, count or length, or mask
+them:
+
+| Value                       | Helper                                                                      |
+| --------------------------- | --------------------------------------------------------------------------- |
+| Email address               | `smarter.common.utils.mask_email(email)` → `j****@example.com`              |
+| Key, token, session key     | `smarter.common.utils.mask_identifier(value)` → `****325c05`                |
+| A Secret's dict, a manifest | `redact_secret()` (account data export), `redacted_manifest()` (Kubernetes) |
+
+`mask_string()` is deprecated; don't use it in new code. When you touch a log
+call that already breaks this rule, fix it in the same change.
 
 ## Tests
 
@@ -136,4 +161,5 @@ logger.warning.assert_called_once()
 - %-style arguments, no f-strings.
 - The level matches the table above.
 - The module's logger uses its app's waffle switch, if it has one.
-- Nothing secret is in the message or its arguments.
+- No secret, credential or PII is in the message, its arguments or the
+  exception it logs.

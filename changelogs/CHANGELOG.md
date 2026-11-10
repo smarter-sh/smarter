@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.8...v0.44.9-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **helm:** let the api rollout stop an old pod when no node has room ([f732111](https://github.com/smarter-sh/smarter/commit/f732111c9c4370b0123e0fd4ffd13053823c5bb6))
+
+## [0.44.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.8...v0.44.9-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **helm:** let the api rollout stop an old pod when no node has room ([1a0edd3](https://github.com/smarter-sh/smarter/commit/1a0edd37a5d0a2c44e9bcdb7ba889e24dc163a9f))
+
 ## [0.44.8](https://github.com/smarter-sh/smarter/compare/v0.44.7...v0.44.8) (2026-11-10)
 
 ### Bug Fixes
