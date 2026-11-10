@@ -32,7 +32,6 @@ from smarter.apps.llmclient.signals import (
     llmclient_undeploy,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.common.utils import rfc1034_compliant_str
@@ -423,9 +422,7 @@ class LLMClient(MetaDataWithOwnershipModel):
 
             the resulting base API domain would be: 'api.local.example.com'
         """
-        if smarter_settings.environment in SmarterEnvironments.aws_environments:
-            return smarter_settings.environment_api_domain
-        return smarter_settings.proxy_api_domain
+        return smarter_settings.environment_api_dns_domain
 
     @property
     def base_default_host(self) -> str:

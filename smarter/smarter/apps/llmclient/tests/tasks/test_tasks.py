@@ -52,7 +52,7 @@ class TestLLMClientTasks(TestAccountMixin):
         cls.smarter_admin_user = None
 
         # we want to test with the Smarter account so that we retain the
-        # same account number for DNS verifications in local.api.smarter.sh in
+        # same account number for DNS verifications in api.local.smarter.sh in
         # AWS Route53
         cls.smarter_account = smarter_cached_objects.smarter_account
         cls.smarter_user_profile = smarter_cached_objects.smarter_admin_user_profile

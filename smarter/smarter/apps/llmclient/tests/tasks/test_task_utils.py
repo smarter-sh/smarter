@@ -42,3 +42,23 @@ class TestTaskUtils(SmarterTestBase):
         manifest = infrastructure.kubernetes.apply_manifest.call_args.args[0]
         self.assertIn("test-llmclient.api.example.com", manifest)
         self.assertNotIn("$domain", manifest)
+
+    def test_cluster_issuer_is_the_dns_domain(self):
+        """
+        The ingress names the ClusterIssuer of the environment's API domain as it exists in DNS.
+
+        Locally, environment_api_domain is api.localhost:9357, which has no ClusterIssuer, so
+        certificates were never issued.
+        """
+        with (
+            patch(f"{MODULE}.infrastructure") as infrastructure,
+            patch(f"{MODULE}.smarter_settings") as settings,
+        ):
+            settings.platform_name = "smarter"
+            settings.environment_namespace = "smarter-local"
+            settings.environment_api_domain = "api.localhost:9357"
+            settings.environment_api_dns_domain = "api.local.example.com"
+            apply_ingress_manifest("test-llmclient.api.local.example.com")
+        manifest = infrastructure.kubernetes.apply_manifest.call_args.args[0]
+        self.assertIn("cert-manager.io/cluster-issuer: api.local.example.com", manifest)
+        self.assertNotIn("localhost", manifest)

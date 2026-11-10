@@ -245,16 +245,36 @@ class TestResolveDomain(InfrastructureTestBase):
         return MagicMock(
             environment=environment,
             environment_api_domain="api.localhost:9357",
+            environment_api_dns_domain="api.local.example.com",
             root_domain="example.com",
             local_hosts=["localhost", "127.0.0.1", "localhost:9357"],
         )
 
     def test_local_environment_proxy_domain(self):
+        """Local domains resolve into the zone that LLMClients' default hosts are created in."""
         with patch(f"{DNS_MODULE}.smarter_settings", self.settings(SmarterEnvironments.LOCAL)):
             dns = self.provider.dns
-            self.assertEqual(dns.environment_api_domain, "local.api.example.com")
-            self.assertEqual(dns.resolve_domain("app.api.localhost:9357"), "app.local.api.example.com")
-            self.assertEqual(dns.resolve_record_name("_x.app.api.localhost:9357."), "_x.app.local.api.example.com")
+            self.assertEqual(dns.environment_api_domain, "api.local.example.com")
+            self.assertEqual(dns.resolve_domain("api.localhost:9357"), "api.local.example.com")
+            self.assertEqual(dns.resolve_domain("app.api.localhost:9357"), "app.api.local.example.com")
+            self.assertEqual(dns.resolve_record_name("_x.app.api.localhost:9357."), "_x.app.api.local.example.com")
+
+    def test_local_records_are_deleted_from_the_zone_they_were_created_in(self):
+        """
+        Locally, an LLMClient's A record is deleted from the zone that its deploy created it in.
+
+        The deploy creates it in api.local.<root domain>, and the delete looks for the zone of
+        api.localhost:9357. If they differ, every local LLMClient's record leaks.
+        """
+        with patch(f"{DNS_MODULE}.smarter_settings", self.settings(SmarterEnvironments.LOCAL)):
+            dns = self.provider.dns
+            zone, _ = dns.get_or_create_zone("api.local.example.com")
+            dns.record_wait_seconds = 0
+            dns.get_or_create_record(zone.id, "app.1234-5678-9012.api.local.example.com", "A", values=["192.0.2.1"])
+            found = dns.get_zone("api.localhost:9357")
+            self.assertIsNotNone(found)
+            self.assertEqual(found.id, zone.id)
+            self.assertTrue(dns.delete_record(found.id, "app.1234-5678-9012.api.local.example.com", "A"))
 
     def test_ordinary_domain(self):
         with patch(f"{DNS_MODULE}.smarter_settings", self.settings(SmarterEnvironments.ALPHA)):
