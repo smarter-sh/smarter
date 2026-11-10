@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.11](https://github.com/smarter-sh/smarter/compare/v0.44.10...v0.44.11) (2026-11-10)
+
+### Bug Fixes
+
+* **infrastructure:** run pods as a ServiceAccount with an IAM role ([56bec59](https://github.com/smarter-sh/smarter/commit/56bec596d7bdfff17052b4cfc04a1f00cd820b37))
+* **llmclient:** use one DNS zone for local deploys and deletes ([37d718c](https://github.com/smarter-sh/smarter/commit/37d718c423a846f845cdeab0b9ea11cc7ddb5382))
+
 ## [0.44.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.10...v0.44.11-alpha.1) (2026-11-10)
 
 ### Bug Fixes
