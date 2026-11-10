@@ -1,0 +1,111 @@
+###############################################################################
+# The platform's Kubernetes permissions
+#
+# Smarter runs kubectl as the {{ .Values.global.appName }} ServiceAccount
+# (templates/serviceaccount.yaml). This is everything that it needs:
+#
+# Role, in this namespace only:
+#   - LLMClient ingresses, and their cert-manager Certificates and TLS Secrets
+#     (smarter.apps.llmclient).
+#   - LLMHosts: Deployments, Services, Ingresses, Secrets and
+#     PersistentVolumeClaims (smarter.apps.llmhost).
+#   - vectorstores: StatefulSets, Services, Secrets and PersistentVolumeClaims
+#     (smarter.apps.vectorstore).
+#   - pods, their logs, events and metrics, for status pages and the inventory.
+#
+# ClusterRole, read only, with serviceAccount.createClusterRole: the cluster
+#   is shared by every environment, so the only cluster-wide reads are the
+#   namespace check, nodes (LLMHost capacity, cluster status), PersistentVolumes
+#   (the inventory) and node metrics. It is named after the namespace: every
+#   environment's release is named smarter, and they would otherwise claim the
+#   same ClusterRole. smarter-sh's deploy workflow turns it off, so that the
+#   chart creates nothing outside its namespace and deploys with
+#   namespace-scoped permissions; then smarter-infrastructure creates the same
+#   ClusterRole (kubernetes-rbac.tf). Without either, those reads fail, and the
+#   pages that show them say so.
+###############################################################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "{{ .Values.global.appName }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "services", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ .Values.global.appName }}"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "{{ .Values.global.appName }}"
+subjects:
+  - kind: ServiceAccount
+    name: "{{ .Values.global.appName }}"
+    namespace: "{{ .Release.Namespace }}"
+{{- if .Values.serviceAccount.createClusterRole }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    resourceNames: ["{{ .Release.Namespace }}"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["nodes", "persistentvolumes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+subjects:
+  - kind: ServiceAccount
+    name: "{{ .Values.global.appName }}"
+    namespace: "{{ .Release.Namespace }}"
+{{- end }}

@@ -58,6 +58,11 @@ HELPERS = f"{AWS}.helpers"
 IDENTITY = {"UserId": "AIDATEST", "Account": "123456789012", "Arn": "arn:aws:iam::123456789012:user/test"}
 HERE = os.path.abspath(os.path.dirname(__file__))
 CERTIFICATE_DETAIL = os.path.join(HERE, "data", "acm_certificate_detail.json")
+WEB_IDENTITY = {
+    "AWS_ROLE_ARN": "arn:aws:iam::123456789012:role/smarter-test",
+    "AWS_WEB_IDENTITY_TOKEN_FILE": "/var/run/secrets/eks.amazonaws.com/serviceaccount/token",
+}
+"""The environment that the EKS pod identity webhook gives a pod whose ServiceAccount has a role."""
 BOTO3_SESSION = boto3.Session
 """The real boto3.Session class, which the tests patch, for the helpers' isinstance() check."""
 
@@ -594,13 +599,21 @@ class TestAWSBase(AWSTestBase):
             setattr(settings, key, value)
         return settings
 
-    def base(self, aws_deployed: bool = False, **settings) -> AWSBase:
+    def base(self, aws_deployed: bool = False, web_identity: bool = False, **settings) -> AWSBase:
+        environment = {}
+        if aws_deployed:
+            environment["AWS_DEPLOYED"] = "1"
+        if web_identity:
+            environment.update(WEB_IDENTITY)
         with (
             patch(f"{HELPERS}.base.smarter_settings", self.settings(**settings)),
-            patch.dict(os.environ, {"AWS_DEPLOYED": "1"} if aws_deployed else {}),
+            patch.dict(os.environ, environment),
         ):
             if not aws_deployed:
                 os.environ.pop("AWS_DEPLOYED", None)
+            if not web_identity:
+                for name in WEB_IDENTITY:
+                    os.environ.pop(name, None)
             return AWSBase()
 
     def test_not_initialized(self):
@@ -641,6 +654,28 @@ class TestAWSBase(AWSTestBase):
         self.assertEqual(base.aws_access_key_id_source, "overridden by IAM role-based security")
         with patch.dict(os.environ, {"AWS_DEPLOYED": "1"}):
             self.assertTrue(base.is_aws_deployed)
+
+    def test_web_identity(self):
+        """With IRSA, the session comes from boto3's default credential chain, which assumes the pod's role."""
+        base = self.base(web_identity=True)
+        self.assertTrue(base.authentication_credentials_are_initialized)
+        self.assertEqual(base.aws_access_key_id_source, "IAM role for service accounts")
+        with patch.dict(os.environ, WEB_IDENTITY), patch(f"{HELPERS}.base.logger") as logger:
+            self.assertTrue(base.is_aws_web_identity_configured)
+            self.assertIs(base.aws_session, self.session.return_value)
+        self.session.assert_called_with(region_name="us-east-1")
+        logger.warning.assert_not_called()
+
+    def test_key_pair_wins_over_web_identity(self):
+        """Static credentials win, as in boto3's default chain, and the source says so."""
+        base = self.base(web_identity=True, aws_access_key_id=MagicMock(), aws_secret_access_key=MagicMock())
+        self.assertEqual(base.aws_access_key_id_source, "passed parameter")
+
+    def test_web_identity_needs_both_variables(self):
+        environment = {"AWS_ROLE_ARN": WEB_IDENTITY["AWS_ROLE_ARN"]}
+        with patch.dict(os.environ, environment):
+            os.environ.pop("AWS_WEB_IDENTITY_TOKEN_FILE", None)
+            self.assertFalse(self.base().is_aws_web_identity_configured)
 
     def test_identity(self):
         base = self.base(aws_profile="smarter")
