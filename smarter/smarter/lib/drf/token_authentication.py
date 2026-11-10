@@ -310,16 +310,14 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         digest = crypto.hash_token(token)
         for auth_token in SmarterAuthToken.objects.filter(token_key=token[: CONSTANTS.TOKEN_KEY_LENGTH]):
             if compare_digest(digest, auth_token.digest) and auth_token.is_active:
+                # never log token_key: it is the first characters of the token itself.
                 logger.debug(
-                    "%s retrieved user %s for token_key: %s",
-                    logger_prefix,
-                    auth_token.user,
-                    auth_token.token_key,
+                    "%s retrieved user %s for token: %s", logger_prefix, auth_token.user, auth_token.identifier
                 )
                 return auth_token.user
         logger.warning(
-            "%s failed to retrieve an active token for token_key: %s. Returning SmarterAnonymousUser.",
+            "%s failed to retrieve an active token for token: %s. Returning SmarterAnonymousUser.",
             logger_prefix,
-            token[: CONSTANTS.TOKEN_KEY_LENGTH],
+            mask_string(token),
         )
         return SmarterAnonymousUser()

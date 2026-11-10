@@ -179,7 +179,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             logger_prefix,
             request,
             user_profile,
-            self.api_key,
+            self.mask_string(self.api_key) if self.api_key else None,
             self.base_url,
             self.provider,
             SmarterFormattedText.json(data),

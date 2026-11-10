@@ -8,6 +8,7 @@ from django.core.management import CommandError
 from django.test import RequestFactory
 
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.api.utils import loggable_manifest
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
@@ -129,7 +130,7 @@ class Command(SmarterCommand):
             "%s handle called with filespec=%s, manifest=%s, username=%s",
             logger_prefix,
             self.filespec,
-            self.manifest,
+            loggable_manifest(self.manifest),
             username,
         )
 
@@ -206,9 +207,9 @@ class Command(SmarterCommand):
             status_code = response.status_code if response is not None else None
             content = response.content if response is not None else None
             self.handle_completed_failure(msg=f"Manifest apply failed with status code: {status_code}")
-            logger.error("%s manifest: %s", logger_prefix, self.data)
+            logger.error("%s manifest: %s", logger_prefix, loggable_manifest(self.data))
             logger.error("%s response: %s", logger_prefix, content)
-            msg = f"Manifest apply failed with status code: {status_code}\nmanifest: {self.data}\nresponse: {content}"
+            msg = f"Manifest apply failed with status code: {status_code}\nmanifest: {loggable_manifest(self.data)}\nresponse: {content}"
             raise CommandError(msg)
 
         # ----------------------------------------------------------------------
@@ -244,7 +245,7 @@ class Command(SmarterCommand):
         #     )
         #     logger.error("%s - manifest: %s", logger_prefix, self.data)
         #     logger.error("%s - response: %s", logger_prefix, response)
-        #     msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {self.data}\nresponse: {response}"
+        #     msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {loggable_manifest(self.data)}\nresponse: {response}"
         #     raise CommandError(msg)
 
         # self.handle_completed_success()
