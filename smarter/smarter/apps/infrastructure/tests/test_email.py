@@ -102,10 +102,12 @@ class TestInMemoryEmailService(InfrastructureTestBase):
     def test_failed_email_is_logged_masked(self):
         self.email.fail = "mailbox full"
         with patch(f"{MODULE}.logger") as logger:
-            self.assertFalse(self.email.send_email("Hello", "Hi", "jane@example.com"))
-        logged = str(logger.error.call_args_list)
+            self.assertFalse(self.email.send_email("Hello", "Hi", "jane@example.com", from_email="sender@example.com"))
+        logged = str(logger.mock_calls)
         self.assertIn("j****@example.com", logged)
         self.assertNotIn("jane@example.com", logged)
+        # the sender's address isn't logged either (#973)
+        self.assertNotIn("sender@example.com", logged)
 
     def test_quiet_and_not_ready_are_logged_masked(self):
         with patch(f"{MODULE}.logger") as logger:

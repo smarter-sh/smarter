@@ -276,11 +276,11 @@ class EmailService(InfrastructureService):
             self._deliver(message, recipients, bcc)
         # pylint: disable=broad-except
         except Exception as e:
+            # never the sender's address: send_email() accepts any from_email.
             logger.error(
-                "%s could not send '%s' from %s to %s: %s",
+                "%s could not send '%s' to %s: %s",
                 self.formatted_class_name,
                 subject,
-                message["From"],
                 logged_recipients,
                 e,
             )
