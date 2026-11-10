@@ -1056,16 +1056,19 @@ class SmarterRequestMixin(AccountMixin):
                 )
             if not isinstance(body, (str, bytearray, bytes)):
                 logger.warning(
-                    "%s.data() - request body is not a string or bytes. Cannot parse request body: %s",
+                    "%s.data() - request body is not a string or bytes. Cannot parse request body of type %s",
                     self.srm_formatted_class_name,
-                    body,
+                    type(body).__name__,
                 )
             try:
                 if isinstance(body, (bytearray, bytes)):
                     body_str = body.decode("utf-8").strip()
             except (AttributeError, UnicodeDecodeError):
+                # a body may be a Secret manifest or a password, so only its size is logged.
                 logger.warning(
-                    "%s.data() - request body could not be decoded as utf-8: %s", self.srm_formatted_class_name, body
+                    "%s.data() - request body of %d bytes could not be decoded as utf-8",
+                    self.srm_formatted_class_name,
+                    len(body) if isinstance(body, (str, bytearray, bytes)) else 0,
                 )
                 body_str = body if isinstance(body, str) else None
 
@@ -1083,11 +1086,17 @@ class SmarterRequestMixin(AccountMixin):
                         # yaml reads str or bytes, not bytearray.
                         body_str = bytes(body_str)
                     self._data = yaml.safe_load(body_str) if isinstance(body_str, (str, bytes)) else None
-                except yaml.YAMLError:
+                except yaml.YAMLError as e:
+                    # a body may be a Secret manifest or a password, so only its size and where it failed are
+                    # logged: str(e) quotes the line it failed on.
+                    mark = getattr(e, "problem_mark", None)
                     logger.error(
-                        "%s.data() - failed to parse request body: %s",
+                        "%s.data() - failed to parse a request body of %d bytes: %s at line %s, column %s",
                         self.srm_formatted_class_name,
-                        body_str,
+                        len(body_str),
+                        getattr(e, "problem", None) or type(e).__name__,
+                        mark.line + 1 if mark else None,
+                        mark.column + 1 if mark else None,
                     )
 
         self._data = self._data or {}
