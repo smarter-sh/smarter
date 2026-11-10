@@ -22,7 +22,7 @@ scheduled only on the nodes of their compute's node group, by its label and tain
 import math
 import re
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.apps.llmhost.const import (
     DEFAULT_CPU,

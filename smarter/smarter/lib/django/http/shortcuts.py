@@ -80,7 +80,7 @@ class SmarterHttpResponse(HttpResponse):
         self.context = {"message": error_message}
         rendered = render(request=request, template_name=template_file, context=self.context)
         content = rendered.content
-        super().__init__(content=content, *args, **kwargs)
+        super().__init__(content, *args, **kwargs)
 
 
 class SmarterHttpErrorResponse(SmarterHttpResponse):
@@ -141,10 +141,10 @@ class SmarterHttpResponseBadRequest(SmarterHttpErrorResponse):
             error_message = "Dohhhh, that's a bad request my friend."
         template_file = "400.html"
         super().__init__(
-            request=request,
-            error_message=error_message,
-            status_code=status_code,
-            template_file=template_file,
+            request,
+            error_message,
+            status_code,
+            template_file,
             *args,
             **kwargs,
         )
@@ -200,10 +200,10 @@ class SmarterHttpResponseForbidden(SmarterHttpErrorResponse):
             error_message = "Awe shucks, you're not allowed to do that."
         template_file = "403.html"
         super().__init__(
-            request=request,
-            error_message=error_message,
-            status_code=status_code,
-            template_file=template_file,
+            request,
+            error_message,
+            status_code,
+            template_file,
             *args,
             **kwargs,
         )
@@ -260,10 +260,10 @@ class SmarterHttpResponseNotFound(SmarterHttpErrorResponse):
             error_message = "Oh no!!! We couldn't find that page."
         template_file = "404.html"
         super().__init__(
-            request=request,
-            error_message=error_message,
-            status_code=status_code,
-            template_file=template_file,
+            request,
+            error_message,
+            status_code,
+            template_file,
             *args,
             **kwargs,
         )
@@ -322,10 +322,10 @@ class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
             error_message = "Ugh!!! Something went wrong on our end."
         template_file = "500.html"
         super().__init__(
-            request=request,
-            error_message=error_message,
-            status_code=status_code,
-            template_file=template_file,
+            request,
+            error_message,
+            status_code,
+            template_file,
             *args,
             **kwargs,
         )

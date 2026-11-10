@@ -16,6 +16,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCallUnion,
 )
 from openai.types.completion_usage import CompletionUsage
+from pydantic import JsonValue
 
 from smarter.apps.account.models import (
     ChargeTypes,
@@ -35,6 +36,7 @@ from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
+from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.toolkit import MCP_INSTRUCTIONS_PREFIX, MCPToolkit
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.receivers import (
@@ -588,6 +590,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         candidate,
                     )
                     continue
+            return None
 
         logger.debug("%s.append_openai_error_response() called.", self.formatted_class_name)
         response_message = response.choices[0].message
@@ -636,6 +639,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return None
         return message
 
+    def provider_record_locator(self) -> str:
+        """
+        Return the record locator of the Provider that a charge is billed to.
+
+        :returns: The Provider's record locator.
+        :rtype: str
+        :raises SmarterValueError: If the Provider is not set.
+        """
+        if self.provider is None:
+            raise SmarterValueError(f"{self.formatted_class_name}: provider is required to insert a charge.")
+        return self.provider.record_locator
+
     def handle_response(self) -> None:
         """
         Handle internal billing, and append messages to the response for prompt completion and the billing summary.
@@ -659,7 +674,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
 
-        resource_locators = [self.provider.record_locator, self.prompt.llmclient.record_locator]  # type: ignore[assignment]
+        if self.prompt is None:
+            raise SmarterValueError(
+                f"{self.formatted_class_name}.handle_response(): prompt is required for iteration {self.iteration}, but was not set."
+            )
+        resource_locators = [self.provider_record_locator(), self.prompt.llmclient.record_locator]
         self._insert_charge_by_type(resource_locators, ChargeTypes.PROMPT_COMPLETION.value)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
@@ -732,7 +751,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             request=request,
             response=response,
         )
-        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        resource_locators = [self.provider_record_locator()]
         if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
             resource_locators.append(self.prompt.llmclient.record_locator)
         resource_locators.extend(extra_resource_locators or [])
@@ -760,7 +779,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             plugin=plugin,
             input_text=self.input_text,
         )
-        resource_locators = [self.provider.record_locator]  # type: ignore[assignment]
+        resource_locators = [self.provider_record_locator()]
         resource_locators.append(self.prompt.llmclient.record_locator)  # type: ignore[union-attr]
         resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
         if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
@@ -791,7 +810,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         llm_tool_requested.send(sender=self.process_tool_call, tool_call=tool_call.model_dump(), tool_name=tool_name)
         if not tool_call:
             raise SmarterValueError(f"{self.formatted_class_name}: tool_call is required")
-        serialized_tool_call = {}
+        serialized_tool_call: SmarterDictType = {}
         plugin: Optional[PluginBase] = None
         function_name = tool_call.function.name
         # pylint: disable=W0612
@@ -807,7 +826,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         serialized_tool_call["function_args"] = function_args
         self.append_message_tool_called(tool_call=tool_call, tool_name=tool_name)
 
-        function_response = None
+        function_response: JsonValue = None
         extra_resource_locators: list[str] = []
         budget_refusal = self.tool_budget_refusal(function_name)
         if budget_refusal is not None:
@@ -1043,11 +1062,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if function_response in (None, "") or is_error_result(function_response):  # type: ignore[arg-type]
             return False
         if self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
-            function = self.extension_toolkit.functions[function_name]
-            return function.tool.cache_ttl > 0
+            extension_function = self.extension_toolkit.functions[function_name]
+            return extension_function.tool.cache_ttl > 0
         if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
-            function = self.mcp_toolkit.functions[function_name]
-            return function.cacheable and bool(function.mcpclient.cache_ttl)
+            mcp_function = self.mcp_toolkit.functions[function_name]
+            return mcp_function.cacheable and bool(mcp_function.mcpclient.cache_ttl)
         if plugin is not None:
             method = getattr(plugin.plugin_data, "method", None)
             return not method or str(method).upper() == "GET"
@@ -1059,7 +1078,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         :returns: The tool response that tells the LLM why the tool cannot be used, or None if it can.
         """
-        resource = None
+        resource: Union[MCPClient, PluginMeta, None] = None
         if self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
             resource = self.mcp_toolkit.mcpclient_for(function_name)
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
@@ -1103,7 +1122,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self.tools = []
         self.tools.append(plugin.custom_tool)
         self.available_functions[plugin.function_calling_identifier] = plugin.tool_call_fetch_plugin_response
-        self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)  # type: ignore[call-arg]
+        if plugin.plugin_meta is None:
+            raise SmarterValueError(f"{self.formatted_class_name}: plugin_meta is required, but was not set.")
+        self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
         llm_tool_presented.send(sender=self.handle_plugin_selected, tool=plugin.custom_tool, plugin=plugin)
         # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
@@ -1343,16 +1364,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             raise SmarterValueError(f"{self.formatted_class_name}: response must be a dictionary, got {type(response)}")
         response["metadata"] = {"tool_calls": self.serialized_tool_calls, **self.request_meta_data}
 
-        response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
+        smarter_message: SmarterDictType = {
             "first_iteration": json.loads(json.dumps(self.first_iteration)),
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            _InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins or []],  # type: ignore[call-arg]
+            _InternalKeys.PLUGINS_KEY: [plugin.name for plugin in self.plugins or []],
             _InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         if self.tools:
-            response_extended = response.get(OpenAIMessageKeys.SMARTER_MESSAGE_KEY).copy() or {}  # type: ignore[call-arg]
-            response_extended[_InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
-            response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = response_extended
+            smarter_message[_InternalKeys.TOOLS_KEY] = [tool["function"]["name"] for tool in self.tools]
+        response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = smarter_message
         return response
 
     def request_meta_data_factory(self):
@@ -2161,22 +2181,22 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         # done! for better or worse. An error is kept in the message history, so that the
         # prompt engineers workbench can display it, and is returned with its own status,
         # e.g. the status of the LLM provider's error response, and its message.
-        response = self.handle_completion()
+        completion = self.handle_completion()
 
         prompt_finished.send(
             sender=self.handler,
             prompt=self.prompt,
             request=self.first_iteration.get(_InternalKeys.REQUEST_KEY),
-            response=response,
+            response=completion,
             messages=self.messages,
         )
         if error_status is not None and error_status != HTTPStatus.OK.value:
             retval = http_response_factory(
                 status=error_status,
-                body={"error": {"status": error_status, "message": error_message}, "response": response},
+                body={"error": {"status": error_status, "message": error_message}, "response": completion},
             )
         else:
-            retval = http_response_factory(status=HTTPStatus.OK, body=response)
+            retval = http_response_factory(status=HTTPStatus.OK, body=completion)
         if not isinstance(retval, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: http_response_factory() should have returned a dictionary, but instead returned {type(retval)}"

@@ -1,6 +1,6 @@
 """URL configuration for the web platform."""
 
-from django.urls import include, path
+from django.urls import path
 
 from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.common.conf import smarter_settings

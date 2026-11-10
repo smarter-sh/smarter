@@ -86,6 +86,8 @@ def outcome(error: openai.APIStatusError | None) -> str:
 class TestVendorQuirksLive(SmarterTestBase):
     """Survey the vendor's models with real requests."""
 
+    client: openai.OpenAI
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

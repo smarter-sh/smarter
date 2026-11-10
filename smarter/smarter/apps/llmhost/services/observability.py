@@ -10,9 +10,9 @@ Observability of LLMHosts: their status, health and cost.
 
 import datetime
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional
 
 import requests
 

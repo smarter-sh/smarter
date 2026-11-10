@@ -37,6 +37,7 @@ from smarter.apps.mcpserver.models import (
     RepositoryIndex,
 )
 from smarter.apps.mcpserver.services.indexing.indexes import (
+    not_indexed_error,
     queue_indexing,
     require_blog_index,
     require_index,
@@ -352,6 +353,9 @@ def repository_overview(repository: ProjectRepository) -> RepositoryOverview:
     :raises SmarterMCPServerServiceError: If the repository is not indexed yet.
     """
     index = require_index(repository)
+    if index.indexed_at is None:
+        # a ready index was indexed, so this does not happen: it is treated as not indexed.
+        raise not_indexed_error(repository.name)
     files = RepositoryFile.objects.filter(index=index)
     documentation_files = files.filter(kind=RepositoryFileKind.DOCUMENTATION).count()
     code_files = index.file_count - documentation_files
@@ -405,9 +409,7 @@ def repositories_state(repositories: Sequence[ProjectRepository]) -> list[Reposi
     :returns: One state per repository, in the same order.
     """
     names = [repository.name for repository in repositories]
-    indexes = {}
-    for index in RepositoryIndex.objects.filter(repository__in=names):
-        indexes[index.repository] = index
+    indexes = {row.repository: row for row in RepositoryIndex.objects.filter(repository__in=names)}
 
     states = []
     for repository in repositories:

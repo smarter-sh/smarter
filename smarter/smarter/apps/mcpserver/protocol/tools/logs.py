@@ -21,7 +21,7 @@ service), and the audit trail's database write. Nothing is cached.
     be documented.
 """
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from pydantic import Field
 
@@ -302,6 +302,7 @@ class SummarizeLogErrorsTool(StaffTool):
         out = [UNTRUSTED_DATA_NOTICE + heading, ""]
         for group in shown_groups:
             seen = f"{group.first_seen:%H:%M:%S} to {group.last_seen:%H:%M:%S} UTC"
+            level: Union[LogLevel, str]
             if group.level:
                 level = group.level
             else:

@@ -18,6 +18,7 @@ from smarter.apps.llmhost.services.discovery import (
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostDiscoveryError
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (
@@ -226,7 +227,7 @@ class TestDraftManifest(BuiltinFixturesMixin):
         self.computes = builtin_compute_models()
 
     def info(self, **kwargs) -> ModelInfo:
-        data = {
+        data: SmarterDictType = {
             "catalog": "huggingface",
             "source": "huggingface",
             "repository": "Qwen/Qwen2.5-7B-Instruct",

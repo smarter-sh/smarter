@@ -210,7 +210,8 @@ def prompt_result_v2(response: Any) -> tuple[SmarterDictType, Optional[SmarterDi
     provider_error = body.get("error") if isinstance(body.get("error"), dict) else None
     completion = body.get("response") if provider_error else body
     completion = _completion_without_diagnostics(completion) if isinstance(completion, dict) else {}
-    smarter = completion.get(SMARTER_KEY) if isinstance(completion.get(SMARTER_KEY), dict) else {}
+    smarter_value = completion.get(SMARTER_KEY)
+    smarter = smarter_value if isinstance(smarter_value, dict) else {}
 
     error: Optional[SmarterDictType] = None
     if provider_error or status != HTTPStatus.OK.value:

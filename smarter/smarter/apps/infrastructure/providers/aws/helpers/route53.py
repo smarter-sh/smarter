@@ -9,7 +9,7 @@ new host, are provider-independent, in :class:`~smarter.apps.infrastructure.serv
 
 # python stuff
 import time
-from typing import Any, Optional
+from typing import Optional
 
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType

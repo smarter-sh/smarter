@@ -49,6 +49,8 @@ COMMENT: SmarterDictType = {
 class TestIssues(SmarterTestBase):
     """Test create_issue() and comment_on_issue()."""
 
+    repository: ProjectRepository
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -284,6 +286,8 @@ def comment_json(number: int) -> SmarterDictType:
 class TestReadIssue(SmarterTestBase):
     """Test read_issue()."""
 
+    repository: ProjectRepository
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -360,6 +364,8 @@ MERGED_PULL: SmarterDictType = {
 
 class TestCloseIssue(SmarterTestBase):
     """Test close_issue()."""
+
+    repository: ProjectRepository
 
     @classmethod
     def setUpClass(cls):

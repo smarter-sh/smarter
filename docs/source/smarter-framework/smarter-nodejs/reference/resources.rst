@@ -369,6 +369,33 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       :throws APIStatusError: If the prompt failed, e.g. the LLM provider returned an error. The   error's ``body`` is the error response.
       :rtype: Promise<PromptResponse>
 
+   .. js:method:: providerRequest(id, options?)
+
+      A chat session's request to the LLM provider: the body that Smarter sends to the provider's
+      OpenAI-compatible ``v1/chat/completions`` api.
+
+      The body has the model, temperature, token limit and tools of the session's latest prompt (or
+      the LLMClient's, before its first prompt), and the whole conversation, including the latest
+      answer, without Smarter's own messages, fields, api url or key. It can be sent with curl, or to
+      the Prompt Passthrough api. Only a user who may read the LLMClient receives it.
+
+      **Example**
+
+      .. code-block:: typescript
+
+         const chat = await client.llmClients.chat("calculator");
+         await chat.send("What is 17 times 23?");
+         const body = await client.llmClients.providerRequest("calculator", { sessionKey: chat.sessionKey });
+         console.log(body.model, body.messages.length);
+
+      :param id: The LLMClient's id or hashed id.
+      :type id: SmarterId
+      :param options: ``sessionKey``: the chat session's key, or none for a new session, whose body is the LLMClient's introduction.
+      :type options: PromptOptions | undefined
+      :returns: The request body.
+      :throws NotFoundError: If the LLMClient does not exist, or the user may not read it.
+      :rtype: Promise<object>
+
    .. js:method:: stream(id, prompt, options?)
 
       Prompt an LLMClient, and stream its progress: the LLM requests, tool calls and plugin calls.
@@ -589,13 +616,23 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
       The resources of one kind, as a table.
 
+      **Example**
+
+      .. code-block:: typescript
+
+         const table = await client.manifests.get("LLMClient", null, {
+           annotation: ["acme.com/crm-account-id=A-10042", "!acme.com/archived"],
+         });
+         console.log(table.names);
+
       :param kind: The manifest kind, e.g. ``LLMClient``.
       :type kind: string
       :param name: Only the resource of this name.
       :type name: string | null | undefined
-      :param options: Per-request options.
-      :type options: RequestOptions | undefined
+      :param options: ``annotation``: an annotation selector, e.g. ``acme.com/crm-account-id=A-10042``, or an array of its requirements. And the per-request options.
+      :type options: ManifestGetOptions | undefined
       :returns: The table: ``data.items`` are its rows, and ``names`` the resources' names.
+      :throws BadRequestError: If the annotation selector is invalid.
       :rtype: Promise<ManifestTable>
 
    .. js:method:: jsonSchema(kind, options?)
@@ -1284,7 +1321,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       :param id: The vectorstore's id or hashed id.
       :type id: SmarterId
       :param files: The files: paths, ``file:`` urls, or ``File`` objects.
-      :type files: unknown
+      :type files: readonly UploadInput[]
       :param options: Per-request options.
       :type options: RequestOptions | undefined
       :returns: The added documents.
@@ -1442,7 +1479,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
    platform requires the key.
 
    :param messages: A chat thread.
-   :type messages: unknown
+   :type messages: readonly object[]
    :returns: The messages, as JSON.
    :rtype: JsonValue[]
 
@@ -1475,7 +1512,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    The manifest kinds of plugins.
 
-   :type: unknown
+   :type: readonly string[]
 
 .. js:class:: ConfigOptions
 
@@ -1521,6 +1558,22 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       Only entries whose key, thing or command contains this text.
 
       :type: string | null
+
+.. js:class:: ManifestGetOptions
+
+   The options of ``Manifests.get``, beside the per-request options.
+
+   Extends ``RequestOptions``, and has its methods.
+
+   .. js:attribute:: annotation
+
+      An annotation selector: only the resources whose annotations match every requirement. A
+      requirement has the syntax of a Kubernetes label selector: ``key`` (has the annotation), ``!key``
+      (doesn't have it), ``key=value`` or ``key!=value`` (which also matches resources without the key),
+      e.g. ``acme.com/crm-account-id=A-10042``. Pass an array for several requirements. An invalid
+      requirement is a ``BadRequestError``.
+
+      :type: string | readonly string[] | null
 
 .. js:class:: PromptOptions
 
@@ -1616,7 +1669,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    A prompt: the text of one user message, or a list of messages.
 
-   :type: string | unknown
+   :type: string | readonly MessageInput[]
 
 .. js:data:: UploadInput
 

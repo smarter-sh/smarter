@@ -1,7 +1,7 @@
 """Account serializers for Smarter API."""
 
 from collections.abc import Iterable, MutableMapping
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 
 from rest_framework import serializers
 
@@ -359,7 +359,7 @@ class MetaDataWithOwnershipModelSerializer(MetaDataModelSerializer):
 
     # pylint: disable=missing-class-docstring
     class Meta(MetaDataModelSerializer.Meta):
-        fields = "__all__"
+        fields: Union[str, list[str]] = "__all__"
         read_only_fields = getattr(MetaDataModelSerializer.Meta, "read_only_fields", [])
 
         # mcdaniel apr-2026: this is an abstract base serializer. if i understand this

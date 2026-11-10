@@ -89,6 +89,25 @@ deployed LLMClient's own host leaves them out either way.
        fmt.Println(plugin.PluginMeta.Name)
    }
 
+``ProviderRequest`` returns a session's conversation as the request body that Smarter sends to the
+LLM provider's OpenAI-compatible ``v1/chat/completions`` api: the model, temperature, token limit
+and tools of the session's latest prompt (the LLMClient's, before its first prompt), and its system,
+user, assistant and tool messages, without Smarter's own messages, fields, api url or key. Marshal
+it to replay the conversation with curl, or to continue it in the Prompt Passthrough. Only a user
+who may read the LLMClient receives it; a deployed LLMClient's own host answers 404.
+
+.. code-block:: go
+
+   body, err := client.LLMClients.ProviderRequest(ctx, llmclient.Ref(), &smarter.PromptParams{SessionKey: chat.SessionKey()})
+   if err != nil {
+       return err
+   }
+   data, err := json.MarshalIndent(body, "", "  ")
+   if err != nil {
+       return err
+   }
+   fmt.Println(string(data))
+
 Streaming a prompt's progress
 -----------------------------
 

@@ -41,12 +41,12 @@ ownership and permission logic. Do not instantiate MetaDataWithOwnershipModel di
 """
 
 from functools import cached_property
-from typing import Any, Optional, TypeVar, overload
+from typing import Any, Optional, Sequence, TypeVar, Union, overload
 
 from cache_results import cache_results
 
 # django stuff
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 from django.db import models
 from django.db.models.expressions import Combinable
 from django.db.models.query import Prefetch
@@ -115,7 +115,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         """
         return self.exclude(user_profile__user=user).with_read_permission_for(user)
 
-    def with_read_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+    def with_read_permission_for(self, user: Union[User, AnonymousUser, None]) -> "SmarterQuerySetWithPermissions[_MT]":
         """
         Returns a queryset of resources that the authenticated user in the given request has read permission for.
 
@@ -139,7 +139,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
           platform's staff may use.
 
         :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
+            The user to check. Any other value, e.g. an ``AnonymousUser``, gets an empty queryset.
         :returns: :class:`django.db.models.QuerySet`
             A queryset of this resource if the user has permission to read it, or an empty queryset if not.
 
@@ -223,7 +223,9 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         )
         return restricted
 
-    def with_ownership_permission_for(self, user: User) -> "SmarterQuerySetWithPermissions[_MT]":
+    def with_ownership_permission_for(
+        self, user: Union[User, AnonymousUser, None]
+    ) -> "SmarterQuerySetWithPermissions[_MT]":
         """
         Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
 
@@ -240,7 +242,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         Regular users receive only resources they own.
 
         :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
+            The user to check. Any other value, e.g. an ``AnonymousUser``, gets an empty queryset.
         :returns: :class:`django.db.models.QuerySet`
             A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
 
@@ -368,9 +370,11 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         """Returns a SmarterQuerySetWithPermissions representing the difference of querysets."""
         return self.get_queryset().difference(*other_qs)
 
-    def select_for_update(self, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
+    def select_for_update(
+        self, nowait: bool = False, skip_locked: bool = False, of: Sequence[str] = (), no_key: bool = False
+    ) -> SmarterQuerySetWithPermissions[_MT]:
         """Returns a SmarterQuerySetWithPermissions with select_for_update applied."""
-        return self.get_queryset().select_for_update(**kwargs)
+        return self.get_queryset().select_for_update(nowait=nowait, skip_locked=skip_locked, of=of, no_key=no_key)
 
     @overload
     def select_related(self, clear: None, /) -> SmarterQuerySetWithPermissions[_MT]: ...
@@ -430,7 +434,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         """
         return self.get_queryset().shared_with(user)
 
-    def with_read_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+    def with_read_permission_for(self, user: Union[User, AnonymousUser, None]) -> SmarterQuerySetWithPermissions[_MT]:
         """
         A custom Smarter pipeline for filtering any MetaDataWithOwnership queryset based on the Smarter permissions scheme for the authenticated user in the given request.
 
@@ -447,7 +451,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
             - Owned by the Smarter admin UserProfile.
 
         :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
+            The user to check. Any other value, e.g. an ``AnonymousUser``, gets an empty queryset.
         :param queryset: Optional[:class:`django.db.models.QuerySet`]
             An optional queryset to filter. If not provided, the method will default to filtering all instances
 
@@ -457,7 +461,9 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         """
         return self.get_queryset().with_read_permission_for(user)
 
-    def with_ownership_permission_for(self, user: User) -> SmarterQuerySetWithPermissions[_MT]:
+    def with_ownership_permission_for(
+        self, user: Union[User, AnonymousUser, None]
+    ) -> SmarterQuerySetWithPermissions[_MT]:
         """
         Returns a queryset of resources that the authenticated user in the given request has full management (ownership) permission for.
 
@@ -471,7 +477,7 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
         - If the user is a regular authenticated user, they have ownership permission only for resources they own.
 
         :param user: :class:`django.contrib.auth.models.User`
-            The user to check.
+            The user to check. Any other value, e.g. an ``AnonymousUser``, gets an empty queryset.
         :returns: :class:`django.db.models.QuerySet`
             A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
         """
@@ -571,7 +577,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         session_key: Optional[str] = None,
         taggit=True,
         **kwargs,
-    ) -> models.Model:
+    ) -> "MetaDataWithOwnershipModel":
         """
         Retrieve a model instance using caching to optimize performance.
 

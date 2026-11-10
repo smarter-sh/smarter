@@ -55,7 +55,7 @@ class TestPromptCache(SmarterTestBase):
     """Test the cache of the LLM's answers to the first message of a conversation."""
 
     def key(self, message: str = "What's the weather in Paris?", **fields) -> PromptCacheKey:
-        values = {
+        values: SmarterDictType = {
             "llmclient_id": 1,
             "llmclient_updated_at": "2026-10-28T00:00:00+00:00",
             "provider": "openai",
@@ -145,6 +145,8 @@ class TestPromptCache(SmarterTestBase):
 
 class TestHandlerPromptCache(TestAccountMixin):
     """Test that the handler answers a repeated first message from the cache, without calling the LLM."""
+
+    llmclient: LLMClient
 
     @classmethod
     def setUpClass(cls):

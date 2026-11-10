@@ -1,7 +1,7 @@
 # pylint: disable=R0801
 """Customer API views."""
 
-from rest_framework.request import Request
+from django.http import HttpRequest
 
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedAPIView,
@@ -17,7 +17,7 @@ class SmarterChatApiViewSet(SmarterAuthenticatedAPIView):
 
     provider_name: str
 
-    def setup(self, request: Request, *args, **kwargs):
+    def setup(self, request: HttpRequest, *args, **kwargs):
         """
         Set up the view, and move the url's ``provider_name`` from ``self.kwargs`` to ``self.provider_name``.
 

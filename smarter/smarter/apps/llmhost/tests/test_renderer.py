@@ -1,6 +1,6 @@
 """Test the Kubernetes resources of an LLMHost: :mod:`smarter.apps.llmhost.services.renderer`."""
 
-from typing import Any
+from typing import Optional
 
 from smarter.apps.llmhost.const import MODELS_MOUNT_PATH, SHM_MOUNT_PATH
 from smarter.apps.llmhost.manifest.models.llmhost.spec import SAMLLMHostSpec
@@ -45,7 +45,7 @@ class TestRenderer(SmarterTestBase):
     """Test render_resources() and its helpers."""
 
     def render(
-        self, ctx: RenderContext = None, hf_token="hf_secret", api_key="api_secret"
+        self, ctx: Optional[RenderContext] = None, hf_token="hf_secret", api_key="api_secret"
     ) -> dict[str, SmarterDictType]:
         return by_kind(render_resources(ctx or context(), hf_token=hf_token, api_key=api_key))
 

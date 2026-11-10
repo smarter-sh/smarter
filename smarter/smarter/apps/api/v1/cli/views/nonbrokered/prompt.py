@@ -3,7 +3,7 @@
 
 import traceback
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Optional
 
 from cache_results import lazy_cache as cache
 from django.http import HttpRequest, JsonResponse
@@ -194,9 +194,9 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
                     self.session_key,
                 )
             if isinstance(self.data, dict):
-                new_body = self.data.copy()
-                new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
-                new_body = json.dumps(new_body)
+                body_dict = self.data.copy()
+                body_dict[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
+                new_body = json.dumps(body_dict)
             else:
                 new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key})
 
@@ -321,10 +321,8 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         welcome_dict: Optional[SmarterDictType] = None
         prompt_dict: Optional[SmarterDictType] = None
 
-        system_role: str = self.llmclient_config.get(
-            "default_system_role",
-            self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
-        )
+        default_system_role: str = self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role)
+        system_role: str = self.llmclient_config.get("default_system_role", default_system_role)
         system_dict = {
             OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
             OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
@@ -381,8 +379,10 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         new_request.META["HTTP_HOST"] = self.parsed_url.hostname
         new_request.META["SERVER_PORT"] = self.parsed_url.port
         new_request.META["QUERY_STRING"] = ""
-        new_request.user = self.request.user if self.request and self.request.user else None  # type: ignore[union-attr]
-        new_request.session = self.request.session if self.request and hasattr(self.request, "session") else None  # type: ignore[union-attr]
+        # The copy deliberately has a None user and session when the request has none, which
+        # Django's stubs don't allow: downstream code tests them for truthiness.
+        new_request.user = self.request.user if self.request and self.request.user else None  # type: ignore[union-attr, assignment]
+        new_request.session = self.request.session if self.request and hasattr(self.request, "session") else None  # type: ignore[union-attr, assignment]
 
         return new_request
 

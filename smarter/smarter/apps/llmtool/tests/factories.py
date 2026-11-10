@@ -3,10 +3,11 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from smarter.apps.account.models import Account, Secret, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
+from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 
 from ..manifest.enum import SAMPluginCommonMetadataClassValues

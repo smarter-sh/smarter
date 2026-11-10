@@ -145,6 +145,8 @@ def console_paths() -> Mapping[str, ConsolePath]:
 
     def extension_path(hashed_id: str) -> Optional[str]:
         extension_id = Extension.id_from_hashed_id(hashed_id)
+        if extension_id is None:
+            return None
         slug = Extension.objects.filter(pk=extension_id).values_list("slug", flat=True).first()
         return extension_detail_url(slug) if slug else None
 

@@ -73,8 +73,11 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         """Return default kwargs for broker methods."""
         if not self.ready:
             raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before ready state")
+        manifest = self.broker.manifest
+        if manifest is None:
+            raise RuntimeError(f"{self.formatted_class_name}.kwargs accessed before the broker has a manifest")
         return {
-            SAMMetadataKeys.NAME.value: self.broker.manifest.metadata.name,
+            SAMMetadataKeys.NAME.value: manifest.metadata.name,
         }
 
     def test_setup(self):
@@ -453,7 +456,6 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_delete(self):
         """Stub: test delete method."""
-        pass
 
     def test_deploy(self):
         """

@@ -12,7 +12,6 @@ from smarter.apps.infrastructure.providers.aws import AWSProvider
 from smarter.apps.infrastructure.services import (
     KubectlKubernetesService,
     configure_kubernetes,
-    infrastructure,
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
 from smarter.apps.llmclient.tasks import (

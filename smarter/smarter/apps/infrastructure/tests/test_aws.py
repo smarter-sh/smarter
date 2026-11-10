@@ -11,7 +11,7 @@ import base64
 import os
 import subprocess
 import time
-from typing import Any
+from typing import Any, TypeVar
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import parse_qs, urlparse
 
@@ -172,7 +172,10 @@ class FakeACMClient:
         del self.certificates[CertificateArn]
 
 
-def connect(helper: AWSBase, client: Any) -> AWSBase:
+AWSHelperType = TypeVar("AWSHelperType", bound=AWSBase)
+
+
+def connect(helper: AWSHelperType, client: Any) -> AWSHelperType:
     """Give a helper a fake client and identity, so that it is ready without AWS."""
     helper._client = client  # pylint: disable=protected-access
     helper._identity = dict(IDENTITY)  # pylint: disable=protected-access
@@ -181,6 +184,9 @@ def connect(helper: AWSBase, client: Any) -> AWSBase:
 
 class AWSTestBase(InfrastructureTestBase):
     """Patch boto3.Session and the STS configuration check, so that no test can reach AWS."""
+
+    session: MagicMock
+    services: MagicMock
 
     def setUp(self):
         super().setUp()

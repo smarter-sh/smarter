@@ -8,7 +8,7 @@ describe the budgets that are attached to a resource that they may see.
 
 import datetime
 from decimal import Decimal
-from typing import Any, List, Optional, Type
+from typing import List, Optional, Type
 
 from django.apps import apps
 from django.db import transaction
@@ -57,7 +57,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -132,7 +132,7 @@ def resource_to_manifest(resource_locator: str) -> SmarterDictType:
     return {"recordLocator": resource_locator}
 
 
-class SAMBudgetBroker(AbstractBroker):
+class SAMBudgetBroker(AbstractBroker[Budget, Budget]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` Budget manifests.
 
@@ -172,7 +172,7 @@ class SAMBudgetBroker(AbstractBroker):
         return self._ready
 
     @property
-    def orm_meta_instance(self) -> Optional[Budget]:  # type: ignore[override]
+    def orm_meta_instance(self) -> Optional[Budget]:
         """The Budget.
 
         Budgets are not owned, so the base class's lookup by owner does not apply.
@@ -180,7 +180,7 @@ class SAMBudgetBroker(AbstractBroker):
         return self.budget
 
     @property
-    def orm_instance(self) -> Optional[Budget]:  # type: ignore[override]
+    def orm_instance(self) -> Optional[Budget]:
         """The broker's Budget, or None if it does not exist yet."""
         return self.budget
 
@@ -330,8 +330,8 @@ class SAMBudgetBroker(AbstractBroker):
         )
         status = SAMBudgetStatus(
             recordLocator=budget.record_locator,
-            created=budget.created_at,
-            modified=budget.updated_at,
+            created=required(budget.created_at, "budget.created_at"),
+            modified=required(budget.updated_at, "budget.updated_at"),
             resources=self.status_for(budget),  # type: ignore[arg-type]
         )
         model = SAMBudget(
@@ -364,24 +364,19 @@ class SAMBudgetBroker(AbstractBroker):
                 raise SAMBudgetBrokerError("Cached manifest is not a SAMBudget instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMBudget(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMBudgetMetadata(**self.loader.manifest_metadata),
-                spec=SAMBudgetSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMBudget.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def ORMMetaModelClass(self) -> Type[Budget]:  # type: ignore[override]
+    def ORMMetaModelClass(self) -> Type[Budget]:
         """The Django model of the Budget's metadata: :class:`Budget`."""
         return Budget
 
     @property
-    def ORMModelClass(self) -> Type[Budget]:  # type: ignore[override]
+    def ORMModelClass(self) -> Type[Budget]:
         """The Django model of the Budget: :class:`Budget`."""
         return Budget
 
@@ -436,7 +431,7 @@ class SAMBudgetBroker(AbstractBroker):
         if name:
             budgets = budgets.filter(name=name)
         budgets = self.filter_by_annotation_selector(budgets, kwargs)
-        data = [
+        items = [
             self.to_camel_case(BudgetSerializer(budget).data)
             for budget in budgets.order_by("name")[:MAX_RESULTS]
             if self.is_visible_budget(budget)
@@ -445,11 +440,11 @@ class SAMBudgetBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=BudgetSerializer()),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)

@@ -2,8 +2,7 @@
 
 # pylint: disable=W0718,W0212
 
-import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 from urllib.parse import urlsplit
 
 from django.test import override_settings

@@ -5,7 +5,7 @@
 import base64
 import sys  # libraries for error management
 import traceback  # libraries for error management
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES

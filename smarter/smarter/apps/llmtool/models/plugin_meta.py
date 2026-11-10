@@ -64,7 +64,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         verbose_name_plural = "Plugins"
         unique_together = ("user_profile", "name")
 
-    objects: MetaDataWithOwnershipModelManager["PluginMeta"] = MetaDataWithOwnershipModelManager()
+    objects = MetaDataWithOwnershipModelManager["PluginMeta"]()
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
@@ -224,8 +224,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         return retval
 
     # pylint: disable=W0221
+    # Unlike its base classes' get_cached_object(), which raise DoesNotExist, this one returns None
+    # when there is no such plugin, as its callers expect.
     @classmethod
-    def get_cached_object(
+    def get_cached_object(  # type: ignore[override]
         cls,
         *args,
         invalidate: Optional[bool] = False,
@@ -341,7 +343,10 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
 
         if pk:
-            return super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)  # type: ignore[return-value]
+            retval = super().get_cached_object(*args, invalidate=invalidate, pk=pk, **kwargs)
+            if isinstance(retval, PluginMeta):
+                return retval
+            return None
 
         if not plugin_class:
             retval = super().get_cached_object(
@@ -358,16 +363,15 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return retval
             return None
 
-        if plugin_class:
-            return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)  # type: ignore[return-value]
-        retval = super().get_cached_object(*args, invalidate=invalidate, name=name, user_profile=user_profile, **kwargs)
-        if isinstance(retval, PluginMeta):
-            return retval
+        if user_profile is None:
+            # not reached: without a pk, a missing UserProfile raised SmarterValueError above.
+            raise SmarterValueError("a UserProfile is required to get a PluginMeta object by plugin_class.")
+        return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
 
     # pylint: disable=W0222
     @classmethod
     def get_cached_objects(
-        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None
+        cls, invalidate: Optional[bool] = False, user_profile: Optional[UserProfile] = None, taggit=True, **kwargs
     ) -> QuerySet["PluginMeta"]:
         """
         Return a QuerySet of all PluginMeta instances for the given user profile.
@@ -378,11 +382,13 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :type invalidate: bool
         :param user_profile: The user profile whose plugins should be retrieved.
         :type user_profile: UserProfile
+        :param taggit: Passed on to :meth:`MetaDataWithOwnershipModel.get_cached_objects`.
+        :param kwargs: Passed on to :meth:`MetaDataWithOwnershipModel.get_cached_objects`.
         :return: A QuerySet of PluginMeta instances for the user profile.
         :rtype: QuerySet[PluginMeta]
         """
 
-        return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile)  # type: ignore[return-value]
+        return super().get_cached_objects(invalidate=invalidate, user_profile=user_profile, taggit=taggit, **kwargs)  # type: ignore[return-value]
 
     @classmethod
     def get_cached_plugins_for_user_profile_id(
@@ -406,7 +412,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         """
 
         try:
-            retval = []
+            retval: list[PluginMeta] = []
             try:
                 # invalidate refers to the plugins. The user profile and the account's admin don't change
                 # when a plugin does, and their own saves invalidate their caches.

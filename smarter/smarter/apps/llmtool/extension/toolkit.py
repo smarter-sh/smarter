@@ -55,7 +55,7 @@ FUNCTION_NAME_PATTERN = re.compile(r"[^A-Za-z0-9_-]")
 MAX_FUNCTION_NAME_LENGTH = 64
 """The maximum length of an OpenAI function name."""
 FUNCTION_NAME_PREFIX = "ext_"
-JSON_VALUE = TypeAdapter(JsonValue)
+JSON_VALUE: TypeAdapter[JsonValue] = TypeAdapter(JsonValue)
 TOOL_CACHE_NAMESPACE = "extension"
 """The namespace of extension tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
 

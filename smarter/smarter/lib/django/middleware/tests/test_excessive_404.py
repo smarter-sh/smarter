@@ -1,7 +1,6 @@
 """Test :class:`smarter.lib.django.middleware.excessive_404.SmarterBlockExcessive404Middleware`."""
 
 import asyncio
-import unittest
 from http import HTTPStatus
 from unittest.mock import patch
 

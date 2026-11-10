@@ -1,4 +1,4 @@
-"""Smarter API SqlConnection Manifest"""
+"""Smarter API SqlConnection Manifest."""
 
 from typing import ClassVar, Optional
 
@@ -7,11 +7,13 @@ from pydantic import Field
 from smarter.apps.connection.manifest.models.common.connection.metadata import (
     SAMConnectionCommonMetadata,
 )
+from smarter.apps.connection.manifest.models.common.connection.model import (
+    SAMConnectionCommon,
+)
 from smarter.apps.connection.manifest.models.common.connection.status import (
     SAMConnectionCommonStatus,
 )
 from smarter.lib.manifest.enum import SAMKeys
-from smarter.lib.manifest.models import AbstractSAMBase
 
 from .const import MANIFEST_KIND
 from .spec import SAMSqlConnectionSpec
@@ -19,8 +21,8 @@ from .spec import SAMSqlConnectionSpec
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMSqlConnection(AbstractSAMBase):
-    """Smarter API Manifest - SqlConnection Model"""
+class SAMSqlConnection(SAMConnectionCommon):
+    """Smarter API Manifest - SqlConnection Model."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

@@ -56,7 +56,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
@@ -74,7 +74,7 @@ class SAMCustomDomainBrokerError(SAMBrokerError):
         return "Smarter API CustomDomain Manifest Broker Error"
 
 
-class SAMCustomDomainBroker(AbstractBroker):
+class SAMCustomDomainBroker(AbstractBroker[LLMClientCustomDomain, LLMClientCustomDomain]):
     """
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` CustomDomain manifests.
 
@@ -165,11 +165,11 @@ class SAMCustomDomainBroker(AbstractBroker):
             for record in LLMClientCustomDomainDNS.objects.filter(custom_domain=custom_domain).order_by("record_name")
         ]
         status = SAMCustomDomainStatus(
-            accountNumber=self.account.account_number,
+            accountNumber=required(self.account.account_number, "account.account_number"),
             username=self.user_profile.user.username,
             recordLocator=custom_domain.record_locator,
-            created=custom_domain.created_at,
-            modified=custom_domain.updated_at,
+            created=required(custom_domain.created_at, "custom_domain.created_at"),
+            modified=required(custom_domain.updated_at, "custom_domain.updated_at"),
             awsHostedZoneId=custom_domain.aws_hosted_zone_id or None,
             verificationStatus=custom_domain.verification_status,
             verifiedAt=custom_domain.verified_at,
@@ -200,12 +200,7 @@ class SAMCustomDomainBroker(AbstractBroker):
                 raise SAMCustomDomainBrokerError("Cached manifest is not a SAMCustomDomain instance", thing=self.kind)
             return self._manifest
         if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMCustomDomain(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
-                metadata=SAMCustomDomainMetadata(**self.loader.manifest_metadata),
-                spec=SAMCustomDomainSpec(**self.loader.manifest_spec),
-            )
+            self._manifest = SAMCustomDomain.model_validate(self.loader.manifest_sections)
         return self._manifest
 
     ###########################################################################
@@ -240,7 +235,9 @@ class SAMCustomDomainBroker(AbstractBroker):
             annotations={"smarter.sh/custom-domain/purpose": "example"},
         )
         status = SAMCustomDomainStatus(
-            accountNumber=smarter_cached_objects.smarter_account.account_number,
+            accountNumber=required(
+                smarter_cached_objects.smarter_account.account_number, "smarter_account.account_number"
+            ),
             username=smarter_cached_objects.smarter_admin.username,
             recordLocator="abc123def456",
             created=datetime.datetime.now(),
@@ -273,7 +270,7 @@ class SAMCustomDomainBroker(AbstractBroker):
         if name:
             custom_domains = custom_domains.filter(name=name)
         custom_domains = self.filter_by_annotation_selector(custom_domains, kwargs)
-        data = [
+        items = [
             self.to_camel_case(LLMClientCustomDomainListSerializer(custom_domain).data)
             for custom_domain in custom_domains.order_by("name")[:MAX_RESULTS]
         ]
@@ -281,13 +278,13 @@ class SAMCustomDomainBroker(AbstractBroker):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            SAMKeys.METADATA.value: {"count": len(data)},
+            SAMKeys.METADATA.value: {"count": len(items)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(
                     serializer=LLMClientCustomDomainListSerializer()
                 ),
-                SCLIResponseGetData.ITEMS.value: data,
+                SCLIResponseGetData.ITEMS.value: items,
             },
         }
         return self.json_response_ok(command=command, data=data)

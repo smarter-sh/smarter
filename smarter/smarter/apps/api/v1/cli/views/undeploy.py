@@ -40,5 +40,7 @@ class ApiV1CliUndeployApiView(CliBaseApiView):
         logger.debug(
             "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
         )
+        if self.broker is None:
+            raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")
         response = self.broker.undeploy(request=request, kwargs=kwargs)
         return response

@@ -75,9 +75,7 @@ def ready_indexes(repositories: Sequence[ProjectSource]) -> dict[str, Repository
     :returns: The ready indexes, by repository name.
     """
     names = [repository.name for repository in repositories]
-    indexes = {}
-    for index in RepositoryIndex.objects.filter(repository__in=names):
-        indexes[index.repository] = index
+    indexes = {row.repository: row for row in RepositoryIndex.objects.filter(repository__in=names)}
 
     ready = {}
     for repository in repositories:

@@ -68,6 +68,19 @@ deployed LLMClient's own host leaves them out either way.
    const config = await client.llmClients.config(llmclient.id, { verbose: true });
    console.log(config.plugins.plugins.map((plugin) => plugin.plugin_meta.name));
 
+``providerRequest()`` returns a chat session's conversation as the request body that Smarter sends
+to the LLM provider's OpenAI-compatible ``v1/chat/completions`` api: the model, temperature, token
+limit and tools of the session's latest prompt (or the LLMClient's, before its first prompt), and
+its system, user, assistant and tool messages, including the latest answer. Smarter's own messages,
+fields, api url and key are left out, so the body can be sent as is with curl, or to the Prompt
+Passthrough api, with the next user message added. Only a user who may read the LLMClient receives
+it, never a deployed LLMClient's own host.
+
+.. code-block:: typescript
+
+   const body = await client.llmClients.providerRequest(llmclient.id, { sessionKey: chat.sessionKey });
+   console.log(body.model, body.messages.length);
+
 Streaming a prompt's progress
 -----------------------------
 

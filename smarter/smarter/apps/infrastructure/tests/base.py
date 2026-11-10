@@ -6,8 +6,6 @@ installed with :func:`~smarter.apps.infrastructure.providers.configure_provider`
 reaches real infrastructure. The ledger rows that a test's signals create are deleted afterwards.
 """
 
-from typing import Any
-
 from django.dispatch import Signal
 
 from smarter.apps.infrastructure.models import InfrastructureResource

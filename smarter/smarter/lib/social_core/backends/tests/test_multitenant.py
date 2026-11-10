@@ -4,7 +4,6 @@ Test :mod:`smarter.lib.social_core.backends.multitenant`.
 The subscription status api is never called: requests.get is mocked.
 """
 
-import unittest
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 

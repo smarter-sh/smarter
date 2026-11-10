@@ -4,6 +4,8 @@ Test the Vectorsearch dashboard views: the React list page, its list, clone, del
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
+from typing import Optional
+
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorsearch.api.web.urls import VectorsearchApiWebReverseNames
@@ -25,6 +27,9 @@ class TestVectorsearchViews(ResourceViewsTestMixin, TestAccountMixin):
     id_kwarg = "vectorsearch_id"
     invalidate_cache = staticmethod(invalidate_all_cached_vectorsearchs_for_user_profile)
     resource_name_prefix = "test_vectorsearch_views"
+
+    provider: Optional[Provider]
+    vectorstore: Optional[VectorstoreMeta]
 
     @classmethod
     def setUpClass(cls):

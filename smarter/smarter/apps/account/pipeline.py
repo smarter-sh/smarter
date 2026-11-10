@@ -35,7 +35,9 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
         super().__init__(get_response)
         SmarterMiddlewareMixin.__init__(self, get_response)
 
-    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+    # the stubs of social_django say HttpResponse, but get_response may return any HttpResponseBase,
+    # e.g. a StreamingHttpResponse.
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:  # type: ignore[override]
 
         if self.async_mode:
             return self.__acall__(request)

@@ -84,6 +84,9 @@ def completion(content: str = "", tool_calls=None) -> ChatCompletion:
 class TestExtensionPromptIntegration(ExtensionTestMixin):
     """Test an LLMClient's extensions in a prompt."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

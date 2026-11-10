@@ -97,6 +97,9 @@ class DataExport(TimestampedModel):
         """Whether it was abandoned: unfinished for longer than :data:`DATA_EXPORT_STALE_AFTER`."""
         if self.is_finished:
             return False
+        if self.created_at is None:
+            # not saved yet.
+            return False
         age = timezone.now() - self.created_at
         return age > DATA_EXPORT_STALE_AFTER
 

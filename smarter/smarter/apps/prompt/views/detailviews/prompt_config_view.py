@@ -3,6 +3,7 @@
 
 from typing import Optional, Union
 
+from django.db.models import QuerySet
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -63,7 +64,6 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
     SmarterHttpMethods,
 )
 from smarter.common.helpers.url_helpers import clean_url
@@ -398,17 +398,16 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         # counted once, and cached until the LLMClient's tools change. See get_cached_llmclient_tool_counts().
         tool_counts = get_cached_llmclient_tool_counts(self.llmclient.id)  # type: ignore[union-attr]
         llmclient_plugins_count = tool_counts.plugins
-        llmclient_plugins = (
-            LLMClientPlugin.objects.filter(llmclient=self.llmclient)
-            .select_related("plugin_meta")
-            .prefetch_related("plugin_meta__tags")
-            .order_by("-pk")[:MAX_RETURNED_PLUGINS]
+        llmclient_plugins: Union[QuerySet[LLMClientPlugin], list[LLMClientPlugin]] = (
+            LLMClientPlugin.objects.filter(llmclient=self.llmclient).select_related("plugin_meta")
+            # django-stubs doesn't know taggit's TaggableManager, which is untyped, as a relation.
+            .prefetch_related("plugin_meta__tags").order_by("-pk")[:MAX_RETURNED_PLUGINS]  # type: ignore[misc]
             if self.verbose
             else []
         )
 
         llmclient_extensions_count = tool_counts.extensions
-        llmclient_extensions = (
+        llmclient_extensions: Union[QuerySet[LLMClientExtensions], list[LLMClientExtensions]] = (
             LLMClientExtensions.objects.filter(llmclient=self.llmclient)
             .select_related("extension", "extension__installed_version")
             .defer("extension__installed_version__archive")

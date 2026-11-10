@@ -1,11 +1,7 @@
 # pylint: disable=W0613
 """Plugin utils module for core plugin functionality."""
 
-import os
-import re
-from typing import Iterator, Optional, Union
-
-import yaml
+from typing import Iterator, Optional
 
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.utils import (
@@ -13,7 +9,6 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginDataValueError, PluginMeta
-from smarter.common.const import PYTHON_ROOT
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -128,16 +123,18 @@ class Plugins:
     @property
     def data(self) -> list[SmarterDictType]:
         """Return a list of plugins in dictionary format."""
-        retval = []
+        retval: list[SmarterDictType] = []
         for plugin in self.plugins:
-            if plugin.ready:
-                retval.append(plugin.data)
+            plugin_data = plugin.data if plugin.ready else None
+            if plugin_data is not None:
+                retval.append(plugin_data)
         return retval
 
     def to_json(self) -> list[SmarterDictType]:
         """Return a list of plugins in JSON format."""
-        retval = []
+        retval: list[SmarterDictType] = []
         for plugin in self.plugins:
-            if plugin.ready:
-                retval.append(plugin.to_json())
+            plugin_json = plugin.to_json() if plugin.ready else None
+            if plugin_json is not None:
+                retval.append(plugin_json)
         return retval

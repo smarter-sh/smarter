@@ -60,6 +60,7 @@ from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterWebHtmlView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -347,6 +348,8 @@ def deployment_page(llmclient: LLMClient) -> LLMClientDeploymentPage:
     prompt = PromptChatApiPromptRequest(messages=[PromptChatApiMessage(role="user", content=example_prompt(llmclient))])
     manifest: Optional[str] = None
     try:
+        if llmclient.updated_at is None:
+            raise ValueError("it has never been saved")
         manifest = cached_manifest_yaml(llmclient.pk, llmclient.updated_at.isoformat())
     # the page, without the manifest, rather than an error. pylint: disable=W0718
     except Exception as e:
@@ -397,7 +400,7 @@ def deployment_page(llmclient: LLMClient) -> LLMClientDeploymentPage:
             react_snippet=react_snippet(base_url, authenticated=authenticated),
             react_snippet_with_api_key=react_snippet(base_url, authenticated=True),
             create_api_key_command=create_api_key_command(
-                llmclient.user_profile.account.account_number, llmclient.name
+                required(llmclient.user_profile.account.account_number, "account.account_number"), llmclient.name
             ),
             switch_command=SWITCH_COMMAND,
         ),

@@ -260,6 +260,7 @@ def search_replace(
         - This is particularly useful for handling legacy configuration formats where certain keys or values need to be updated for compatibility reasons, such as replacing 'chatbot' with 'llmclient' in prompt configuration dictionaries to maintain
           compatibility with older versions of the React app that expect 'chatbot' instead of 'llmclient'.
     """
+    retval: Union[SmarterDictType, list[Any]]
     if isinstance(data, dict):
         retval = {}
         for key, value in data.items():

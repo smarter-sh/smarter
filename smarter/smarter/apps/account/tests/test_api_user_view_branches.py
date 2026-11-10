@@ -1,7 +1,7 @@
 """Test the error branches of the user api handlers and views, :mod:`smarter.apps.account.api.v1.views.user`."""
 
 from http import HTTPStatus
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from django.http import Http404, JsonResponse
 from rest_framework.response import Response
