@@ -105,13 +105,14 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     }
     if not fields["username"]:
         logger.error(
-            "%s.create_user() No fields available to create user. Received the following: strategy=%s, details=%s, backend=%s, user=%s, kwargs=%s",
+            "%s.create_user() No fields available to create user. Received the following: strategy=%s, details=%s, backend=%s, user=%s, kwargs keys=%s",
             logger_prefix,
             strategy,
             details,
             backend,
             user,
-            kwargs,
+            # kwargs["response"] is the OAuth provider's response, with its access token.
+            sorted(kwargs),
         )
         return {"is_new": False, "user": None}
 
@@ -213,12 +214,13 @@ def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
     2. when a user.is_active is False, redirect to a custom page.
     """
     logger.debug(
-        "%s.redirect_inactive_account() called with strategy=%s, details=%s, user=%s, kwargs=%s",
+        "%s.redirect_inactive_account() called with strategy=%s, details=%s, user=%s, kwargs keys=%s",
         logger_prefix,
         strategy,
         details,
         user,
-        kwargs,
+        # kwargs["response"] is the OAuth provider's response, with its access token.
+        sorted(kwargs),
     )
     request = strategy.request if hasattr(strategy, "request") else None
     if request and request.session.get("account_status") == "inactive":

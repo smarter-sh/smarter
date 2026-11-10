@@ -35,7 +35,14 @@ class SecretAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)  # Expecting the user to be passed in via kwargs
-        logger.debug("%s Initializing SecretAdminForm with args: %s and kwargs: %s", self.logger_prefix, args, kwargs)
+        # args and kwargs hold the submitted form data, with the secret's value, so only their keys are logged.
+        logger.debug(
+            "%s Initializing SecretAdminForm for user %s with %d args and kwargs keys: %s",
+            self.logger_prefix,
+            self.user,
+            len(args),
+            sorted(kwargs),
+        )
         super().__init__(*args, **kwargs)
         if not self.user or not isinstance(self.user, User) or not self.user.is_authenticated:
             logger.error(

@@ -6,10 +6,12 @@ from typing import Optional, Union
 from urllib.parse import urljoin
 
 import httpx
+import yaml
 from django.test import RequestFactory
 
 from smarter.apps.account.models import User, UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -22,6 +24,28 @@ logger = logging.getLogger(__name__)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+def loggable_manifest(manifest: Optional[str]) -> Optional[str]:
+    """
+    Return a manifest as a log message may show it: a Secret manifest is replaced by a placeholder.
+
+    A Secret manifest's ``spec.config.value`` is the secret's unencrypted value.
+
+    :param manifest: The manifest, as YAML or JSON text.
+    :returns: The manifest, or a placeholder for a Secret manifest or one that isn't valid YAML.
+    """
+    if not manifest:
+        return manifest
+    try:
+        documents = list(yaml.safe_load_all(manifest))
+    except yaml.YAMLError:
+        return f"<a manifest of {len(manifest)} characters that is not valid YAML, not logged>"
+    for doc in documents:
+        if isinstance(doc, dict) and doc.get("kind") == SAMKinds.SECRET.value:
+            name = (doc.get("metadata") or {}).get("name")
+            return f"<{SAMKinds.SECRET.value} manifest {name}, not logged>"
+    return manifest
 
 
 def apply_manifest(
@@ -94,7 +118,7 @@ def apply_manifest(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
         logger_prefix,
         filespec,
-        manifest,
+        loggable_manifest(manifest),
         username,
         verbose,
     )
@@ -155,7 +179,7 @@ def apply_manifest(
         verbose,
     )
     if verbose:
-        logger.debug("%s manifest: %s", logger_prefix, data)
+        logger.debug("%s manifest: %s", logger_prefix, loggable_manifest(data))
 
     # the key is deleted even if the request raises, e.g. on a timeout, so that no key outlives it.
     try:
@@ -195,7 +219,7 @@ def apply_manifest(
             )
             return True
 
-        msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {data}\nresponse: {response}"
+        msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {loggable_manifest(data)}\nresponse: {response}"
         raise APIV1CLIViewError(msg)
     return True
 
@@ -223,7 +247,7 @@ def apply_manifest_v2(
         "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
         logger_prefix,
         filespec,
-        manifest,
+        loggable_manifest(manifest),
         username,
         verbose,
     )
@@ -259,7 +283,7 @@ def apply_manifest_v2(
     user = user_profile.cached_user
 
     if verbose:
-        logger.debug("%s manifest: %s", logger_prefix, data)
+        logger.debug("%s manifest: %s", logger_prefix, loggable_manifest(data))
 
     # ----------------------------------------------------------------------
     # PLAN B
@@ -284,9 +308,9 @@ def apply_manifest_v2(
     if response_content.status_code == 200:
         logger.debug("%s manifest applied successfully", logger_prefix)
     else:
-        logger.error("%s manifest: %s", logger_prefix, data)
+        logger.error("%s manifest: %s", logger_prefix, loggable_manifest(data))
         logger.error("%s response: %s", logger_prefix, response_content.content)
-        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response_content.content!r}"
+        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {loggable_manifest(data)}\nresponse: {response_content.content!r}"
         # pylint: disable=W0719
         raise Exception(msg)
 
@@ -308,6 +332,6 @@ def apply_manifest_v2(
             )
             return True
 
-        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {data}\nresponse: {response}"
+        msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {loggable_manifest(data)}\nresponse: {response}"
         raise APIV1CLIViewError(msg)
     return True

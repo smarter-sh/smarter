@@ -16,9 +16,10 @@ the number of plugins it has, the placeholder text of the message box, the assis
 welcome message, and the example prompts, which the LLMClient's manifest declares (``appName``,
 ``appAssistant``, ``appWelcomeMessage``, ``appExamplePrompts``, ``appPlaceholder``).
 
-The header shows the title, with a green check if the LLMClient is valid (a red cross if it is
-not), and a rocket if it is deployed, or "(sandbox)" if it is not. Below the title is the
-provider and model, for example ``openai gpt-4o-mini with 3 additional plugins``.
+In sandbox mode, the header shows the title and version, with a green check if the LLMClient is
+valid (a red cross if it is not), and a rocket if it is deployed, or "(sandbox)" if it is not.
+Below the title is the provider and model, for example ``openai gpt-4o-mini with 3 additional
+tools``. In production mode, the header shows only the app name, as the LLMClient's users see it.
 
 Chat sessions persist. The configuration includes the chat session's history, so reloading the
 page restores the conversation. Each chat session has a 64-character key, which the chat saves in a

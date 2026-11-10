@@ -1,6 +1,6 @@
 """Test OpenAIPassthroughClient request normalization."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import openai
@@ -84,3 +84,22 @@ class TestOpenAIPassthroughClientReasoningEffort(SmarterTestBase):
         with self.assertRaises(openai.BadRequestError):
             self.client.create_chat_completion(self.data, "prefix")
         self.assertEqual(mock_create.call_count, 1)
+
+
+class TestOpenAIPassthroughClientHandlerLogging(SmarterTestBase):
+    """Test that OpenAIPassthroughClient.handler() never logs its API key."""
+
+    @patch("smarter.apps.provider.clients.SmarterHttpResponseNotFound")
+    @patch("smarter.apps.provider.clients.charge_authorization")
+    @patch("smarter.apps.provider.clients.Provider")
+    def test_api_key_is_masked(self, mock_provider, mock_charge_authorization, mock_not_found):
+        mock_provider.DoesNotExist = type("DoesNotExist", (Exception,), {})
+        mock_provider.objects.filter.return_value.with_read_permission_for.return_value.first.return_value = None
+        client = OpenAIPassthroughClient(provider="openai", base_url="", api_key="sk-test-0123456789abcdef")
+        request = MagicMock()
+        request.user.is_authenticated = True
+        with patch("smarter.apps.provider.clients.logger") as logger:
+            client.handler(request=request, user_profile=MagicMock(), data={})
+        logged = str(logger.mock_calls)
+        self.assertIn("api_key", logged)
+        self.assertNotIn("sk-test-0123456789abcdef", logged)
