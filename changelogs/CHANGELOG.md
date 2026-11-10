@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.9...v0.44.10-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **prompt:** log a summary of a failed prompt's iteration, not its chat content ([7c00560](https://github.com/smarter-sh/smarter/commit/7c0056008064804bfc4a2b52b7e5d2121e211963)), closes [#970](https://github.com/smarter-sh/smarter/issues/970)
+
 ## [0.44.9](https://github.com/smarter-sh/smarter/compare/v0.44.8...v0.44.9) (2026-11-10)
 
 ### Bug Fixes
