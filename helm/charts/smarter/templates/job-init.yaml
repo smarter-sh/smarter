@@ -39,6 +39,7 @@ spec:
         app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
+      serviceAccountName: "{{ $.Values.global.appName }}"
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:

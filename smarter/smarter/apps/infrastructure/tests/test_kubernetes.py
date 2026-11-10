@@ -5,7 +5,9 @@ kubectl never runs: ``subprocess.run`` is replaced by :class:`FakeKubectl`, whic
 kubectl, and the kubeconfig comes from the in-memory provider.
 """
 
+import os
 import subprocess
+import tempfile
 from typing import Optional
 from unittest.mock import patch
 
@@ -22,6 +24,7 @@ from smarter.apps.infrastructure.services import (
 )
 from smarter.apps.infrastructure.services.kubernetes import (
     billable_resources,
+    in_cluster_server,
     manifest_kinds,
     matches_selector,
     redacted_manifest,
@@ -329,6 +332,66 @@ class TestBearerToken(KubernetesTestBase):
             self.kubernetes.get_resources([("ingress", "app")], NAMESPACE)
         self.assertIn("--token", self.kubectl.commands[-1])
         self.assertNotIn("secret-token", "\n".join(logs.output))
+
+
+class TestInCluster(KubernetesTestBase):
+    """Test that kubectl authenticates as the pod's ServiceAccount in a cluster, and not with the provider."""
+
+    def setUp(self):
+        super().setUp()
+        directory = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        self.addCleanup(directory.cleanup)
+        self.directory = directory.name
+        self.write_token("first-token")
+        patcher = patch(f"{MODULE}.SERVICE_ACCOUNT_DIRECTORY", self.directory)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        environment = patch.dict(os.environ, {"KUBERNETES_SERVICE_HOST": "10.0.0.1", "KUBERNETES_SERVICE_PORT": "443"})
+        environment.start()
+        self.addCleanup(environment.stop)
+
+    def write_token(self, token: str) -> None:
+        with open(os.path.join(self.directory, "token"), "w", encoding="utf-8") as token_file:
+            token_file.write(token + "\n")
+
+    def test_in_cluster_server(self):
+        self.assertEqual(in_cluster_server(), "https://10.0.0.1:443")
+        with patch.dict(os.environ, {"KUBERNETES_SERVICE_HOST": "fd00::1"}):
+            self.assertEqual(in_cluster_server(), "https://[fd00::1]:443")
+
+    def test_not_in_cluster(self):
+        """Outside a pod, or in a pod without a token, kubectl uses the provider's credentials."""
+        with patch.dict(os.environ, {}):
+            os.environ.pop("KUBERNETES_SERVICE_HOST")
+            self.assertIsNone(in_cluster_server())
+        os.remove(os.path.join(self.directory, "token"))
+        self.assertIsNone(in_cluster_server())
+
+    def test_service_account(self):
+        """The provider writes no kubeconfig and creates no token: the ServiceAccount's are used."""
+        with patch.object(self.provider, "get_kubernetes_token") as get_token:
+            self.assertTrue(self.kubernetes.ready)
+            self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+        get_token.assert_not_called()
+        self.assertEqual(self.provider.kubeconfig_updates, 0)
+        command = self.kubectl.commands[-1]
+        self.assertEqual(command[command.index("--server") + 1], "https://10.0.0.1:443")
+        certificate_authority = command[command.index("--certificate-authority") + 1]
+        self.assertEqual(certificate_authority, os.path.join(self.directory, "ca.crt"))
+        self.assertEqual(command[-2:], ["--token", "first-token"])
+
+    def test_token_is_read_on_every_call(self):
+        """The kubelet rotates the token, so a new one is used as soon as it is written."""
+        self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+        self.write_token("second-token")
+        self.kubernetes.get_resource("ingress", "app", NAMESPACE)
+        self.assertEqual(self.kubectl.commands[-1][-2:], ["--token", "second-token"])
+
+    def test_token_is_not_logged(self):
+        with self.assertLogs(level="WARNING") as logs:
+            self.kubectl.fail = "forbidden"
+            self.kubernetes.get_resources([("ingress", "app")], NAMESPACE)
+        self.assertNotIn("first-token", "\n".join(logs.output))
 
 
 class TestIngressResources(KubernetesTestBase):

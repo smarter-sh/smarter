@@ -343,6 +343,13 @@
         "mysqlName": { "type": "string" },
         "mariadbName": { "type": "string" }
       }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "awsRoleArn": { "type": "string" },
+        "createClusterRole": { "type": "boolean" }
+      }
     }
   }
 }
