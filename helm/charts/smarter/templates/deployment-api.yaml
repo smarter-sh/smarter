@@ -49,10 +49,10 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: "{{ $name }}"
+  # app.rollingUpdate in values.yaml. Its maxUnavailable must stay above 0: see the comment there.
   strategy:
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      {{- toYaml $.Values.app.rollingUpdate | nindent 6 }}
     type: RollingUpdate
   template:
     metadata:
