@@ -102,18 +102,20 @@ class SecretTransformer(SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest,
           see ./tests/data/secret-good.yaml for an example.
         """
+        # manifest and data hold the secret's unencrypted value, so only whether they were passed is logged.
+        # A Pydantic model's str() doesn't use the spec's field_serializer, which masks the value.
         logger.debug(
-            "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs=%s",
+            "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs keys=%s",
             self.formatted_class_name,
             args,
             user_profile,
             name,
             api_version,
-            manifest,
+            bool(manifest),
             secret_id,
             secret,
-            data,
-            kwargs,
+            bool(data),
+            sorted(kwargs),
         )
         super().__init__(*args, **kwargs)
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
@@ -163,7 +165,9 @@ class SecretTransformer(SmarterHelperMixin):
             self._api_version = api_version
         if manifest:
             logger.debug(
-                "%s.__init__() Initializing secret transformer with manifest: %s", self.formatted_class_name, manifest
+                "%s.__init__() Initializing secret transformer with a %s manifest",
+                self.formatted_class_name,
+                type(manifest).__name__,
             )
             if not isinstance(manifest, SAMSecret):
                 raise SAMValidationError(f"Expected SAMSecret, but got {type(manifest)}.")
@@ -172,7 +176,11 @@ class SecretTransformer(SmarterHelperMixin):
             self.api_version = manifest.apiVersion
 
         if isinstance(data, dict):
-            logger.debug("%s.__init__() Initializing secret transformer with data: %s", self.formatted_class_name, data)
+            logger.debug(
+                "%s.__init__() Initializing secret transformer with data keys: %s",
+                self.formatted_class_name,
+                sorted(data),
+            )
             # we received a yaml or json string representation of a manifest.
             self.api_version = data.get(SAMKeys.APIVERSION.value, self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:

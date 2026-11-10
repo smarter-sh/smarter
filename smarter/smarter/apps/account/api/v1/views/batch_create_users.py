@@ -163,7 +163,12 @@ class BatchCreateUsersView(AccountViewBase):
             - :class:`django.http.HttpResponseBadRequest`
             - :class:`rest_framework.request.Request`
         """
-        logger.debug("Received batch user creation request: %s", request.data)
+        # the users in the request may have passwords, so the request data isn't logged.
+        logger.debug(
+            "%s.post() received a batch user creation request with %d users",
+            self.formatted_class_name,
+            len(request.data.get("users") or []) if isinstance(request.data, dict) else 0,
+        )
         if not request.data:
             return HttpResponseBadRequest("Request body is required.")
         data = request.data
