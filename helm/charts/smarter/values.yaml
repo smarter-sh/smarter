@@ -35,9 +35,9 @@
 # -----------------------------------------------------------------------------
 env:
   AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
-  AWS_ACCESS_KEY_ID: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are optional: prefer serviceAccount.awsRoleArn
+  # (IRSA). Static keys win over the role, so set them only for a cluster without IRSA.
   AWS_REGION: "ca-central-1"
-  AWS_SECRET_ACCESS_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
   CELERY_RESULT_BACKEND: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -396,6 +396,25 @@ databaseScheduledBackup:
   # serves static assets is often public-read, so don't rely on the default there.
   s3Uri: ""
   awsCliVersion: ""      # the AWS CLI release to install. Empty: the version pinned in configmap-debian-setup.yaml
+  # the IAM role (IRSA) of the backup's ServiceAccount, smarter-backup, which only needs s3:PutObject on
+  # s3Uri. smarter-infrastructure creates one per environment. Empty: the AWS keys in env, if any.
+  awsRoleArn: ""
+
+# -----------------------------------------------------------------------------
+# The platform's ServiceAccount (templates/serviceaccount.yaml, templates/rbac.yaml)
+# -----------------------------------------------------------------------------
+# The app, the Celery workers, beat and the init job run as the smarter ServiceAccount.
+# kubectl authenticates as it, with the Role and ClusterRole in templates/rbac.yaml.
+serviceAccount:
+  # the IAM role (IRSA) that the pods use for Route53, ACM, EKS node groups and S3, e.g.
+  # arn:aws:iam::<account>:role/<namespace>-smarter. smarter-infrastructure creates one per
+  # environment. Empty: the pods use env.AWS_ACCESS_KEY_ID and env.AWS_SECRET_ACCESS_KEY.
+  awsRoleArn: ""
+  # create the ServiceAccount's read-only ClusterRole (nodes, PersistentVolumes, node metrics), which
+  # needs a deployer with cluster-wide permissions. smarter-sh's own deploy workflow turns it off,
+  # because smarter-infrastructure creates the same ClusterRole, so that each environment deploys with
+  # namespace-scoped permissions only. See templates/rbac.yaml.
+  createClusterRole: true
 
 # -----------------------------------------------------------------------------
 # Optional Slack bot (the slack-bot subchart, helm/charts/slack-bot)

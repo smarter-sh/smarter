@@ -107,7 +107,7 @@ class AWSBase(SmarterHelperMixin):
         # priority 1: AWS IAM role based security
         if not self.authentication_credentials_are_initialized and self.is_aws_deployed:
             # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
-            logger.debug("running inside AWS Lambda")
+            logger.debug("%s.__init__() running inside AWS Lambda", self.formatted_class_name)
             self._aws_access_key_id_source = "overridden by IAM role-based security"
             self._aws_secret_access_key_source = "overridden by IAM role-based security"
             self._authentication_credentials_are_initialized = True
@@ -143,6 +143,14 @@ class AWSBase(SmarterHelperMixin):
             self._authentication_credentials_are_initialized = True
             self._aws_access_key_id_source = "passed parameter"
             self._aws_secret_access_key_source = "passed parameter"
+
+        # priority 4: the pod's IAM role (IRSA). Static credentials win, as they do in boto3's
+        # default credential chain, so a pod that has both is labeled with the one it uses.
+        if not self.authentication_credentials_are_initialized and self.is_aws_web_identity_configured:
+            logger.debug("%s.__init__() using the pod's IAM role (IRSA)", self.formatted_class_name)
+            self._aws_access_key_id_source = "IAM role for service accounts"
+            self._aws_secret_access_key_source = "IAM role for service accounts"
+            self._authentication_credentials_are_initialized = True
 
         msg = f"{self.formatted_class_name}.__init__() is {self.authentication_credentials_state}"
         if self.authentication_credentials_are_initialized:
@@ -306,6 +314,21 @@ class AWSBase(SmarterHelperMixin):
         :rtype: bool
         """
         return bool(os.environ.get("AWS_DEPLOYED", False))
+
+    @property
+    def is_aws_web_identity_configured(self) -> bool:
+        """
+        Whether the pod has an IAM role, with IAM Roles for Service Accounts (IRSA).
+
+        The EKS pod identity webhook sets ``AWS_ROLE_ARN`` and ``AWS_WEB_IDENTITY_TOKEN_FILE`` in
+        the pod of a ServiceAccount that is annotated with a role, and boto3 assumes that role.
+
+        :return: True if both are set.
+        :rtype: bool
+        """
+        role_arn = os.environ.get("AWS_ROLE_ARN")
+        token_file = os.environ.get("AWS_WEB_IDENTITY_TOKEN_FILE")
+        return bool(role_arn) and bool(token_file)
 
     @property
     def aws_is_configured(self) -> bool:
@@ -476,7 +499,13 @@ class AWSBase(SmarterHelperMixin):
                 msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('Unable to establish AWS boto session using aws key-pair', SmarterFormattedText.DARK_RED)}"
                 logger.error(msg)
 
-        logger.warning("%s.aws_session() creating new aws_session without aws credentials", self.formatted_class_name)
+        if self.is_aws_deployed or self.is_aws_web_identity_configured:
+            # boto3's default credential chain finds the IAM role.
+            logger.debug("%s.aws_session() creating aws_session with the IAM role", self.formatted_class_name)
+        else:
+            logger.warning(
+                "%s.aws_session() creating new aws_session without aws credentials", self.formatted_class_name
+            )
 
         try:
             self._aws_session = boto3.Session(region_name=self.aws_region)

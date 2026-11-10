@@ -44,6 +44,33 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 RESOURCE_TYPE_PREFIX = "kubernetes"
 
+SERVICE_ACCOUNT_DIRECTORY = "/var/run/secrets/kubernetes.io/serviceaccount"
+"""Where Kubernetes mounts a pod's ServiceAccount token and the cluster's CA certificate."""
+
+
+def in_cluster_server() -> Optional[str]:
+    """
+    Return the Kubernetes api server's url, if Smarter runs in a pod that has a ServiceAccount token.
+
+    Kubernetes sets ``KUBERNETES_SERVICE_HOST`` and ``KUBERNETES_SERVICE_PORT`` in every pod, and
+    mounts the token in :data:`SERVICE_ACCOUNT_DIRECTORY`, unless ``automountServiceAccountToken``
+    is false.
+
+    :returns: The url, or None outside a cluster, or without a token.
+    """
+    host = os.environ.get("KUBERNETES_SERVICE_HOST")
+    if not host:
+        return None
+    token_path = os.path.join(SERVICE_ACCOUNT_DIRECTORY, "token")
+    if not os.path.isfile(token_path):
+        return None
+    port = os.environ.get("KUBERNETES_SERVICE_PORT", "443")
+    if ":" in host:
+        # an IPv6 address
+        host = f"[{host}]"
+    url = f"https://{host}:{port}"
+    return url
+
 
 def billable_resources(manifest: str) -> list[tuple[str, str]]:
     """
@@ -171,6 +198,7 @@ class KubernetesService(InfrastructureService):
         :returns: The resources, or an empty list.
         """
 
+    # pylint: disable=W0613
     def find_resources(self, kind: str, namespace: Optional[str] = None) -> Optional[list[SmarterDictType]]:
         """
         Return every resource of a kind, for the inventory.
@@ -349,6 +377,10 @@ class KubectlKubernetesService(KubernetesService):
     :meth:`~smarter.apps.infrastructure.providers.base.CloudProvider.update_kubeconfig`, and the
     environment's namespace, ``smarter_settings.environment_namespace``, exists.
 
+    In a pod (see :func:`in_cluster_server`), kubectl authenticates as the pod's ServiceAccount
+    instead, so Smarter has exactly the permissions of the Helm chart's Role and ClusterRole,
+    and needs neither a kubeconfig nor the provider's token.
+
     :param provider: The cloud provider that writes the kubeconfig. None for a cluster whose
         kubeconfig is already in place.
     :param allow_in_tests: Allow kubectl in the unit tests, e.g. when subprocess is mocked.
@@ -372,6 +404,9 @@ class KubectlKubernetesService(KubernetesService):
         """Whether kubectl is configured for the cluster."""
         if not self._configured:
             if self.provider is None:
+                self._configured = True
+            elif in_cluster_server():
+                logger.debug("%s.configured() using the pod's ServiceAccount", self.formatted_class_name)
                 self._configured = True
             else:
                 try:
@@ -424,7 +459,15 @@ class KubectlKubernetesService(KubernetesService):
 
         Without one, kubectl authenticates with its kubeconfig, which for EKS runs ``aws eks
         get-token`` on every call: a Python process that takes seconds to start on a busy worker.
+
+        In a pod, it is the pod's ServiceAccount token, read on every call, because the kubelet
+        replaces the file before the token expires.
         """
+        if in_cluster_server():
+            token_path = os.path.join(SERVICE_ACCOUNT_DIRECTORY, "token")
+            with open(token_path, encoding="utf-8") as token_file:
+                token = token_file.read().strip()
+            return token
         if self.provider is None:
             return None
         if self._token is None or time.time() >= self._token_expires:
@@ -440,6 +483,11 @@ class KubectlKubernetesService(KubernetesService):
         """
         refuse_in_unit_tests("the Kubernetes cluster", self.allow_in_tests)
         command = ["kubectl", *args]
+        server = in_cluster_server()
+        if server:
+            # the in-cluster api server and CA replace the kubeconfig's cluster, if there is one.
+            certificate_authority = os.path.join(SERVICE_ACCOUNT_DIRECTORY, "ca.crt")
+            command += ["--server", server, "--certificate-authority", certificate_authority]
         token = self._bearer_token()
         if token:
             # a request that has a token does not run the kubeconfig's exec command.
@@ -887,6 +935,7 @@ __all__ = [
     "billable_resources",
     "configure_kubernetes",
     "get_kubernetes",
+    "in_cluster_server",
     "manifest_kinds",
     "matches_selector",
     "redacted_manifest",

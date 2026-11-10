@@ -122,6 +122,38 @@ To add a cloud, for example Azure:
 The AWS provider, :mod:`smarter.apps.infrastructure.providers.aws`, and the in-memory provider,
 :mod:`smarter.apps.infrastructure.providers.memory`, are examples.
 
+Credentials
+-----------
+
+Smarter needs two kinds of credentials: the cloud's, for DNS, certificates, node groups and
+storage, and the Kubernetes cluster's, for kubectl. Where it runs decides where they come from,
+and in each case they carry only the permissions that the platform uses, for one environment.
+
+**In a Kubernetes pod**, as the Helm chart deploys it, Smarter stores no credentials at all:
+
+- The app, the Celery workers, beat and the init job run as the chart's ``smarter``
+  ServiceAccount. kubectl authenticates as it, with the cluster address and token that
+  Kubernetes mounts in every pod
+  (:func:`~smarter.apps.infrastructure.services.kubernetes.in_cluster_server`), so Smarter has
+  exactly the permissions of the chart's Role in its own namespace, plus a read-only
+  ClusterRole for nodes and persistent volumes.
+- On AWS, the ServiceAccount is annotated with an IAM role (the chart's
+  ``serviceAccount.awsRoleArn``), and the EKS pod identity webhook gives the pods short-lived
+  credentials for it (IAM Roles for Service Accounts). The MariaDB backup CronJob has a role of
+  its own, which can only upload backups. Static keys in the pod's environment would win over
+  the role, so the deploy leaves them out when a role is set.
+
+**In the Docker containers of a developer's laptop**, there is neither a pod nor a role, so
+Smarter uses the access key in ``.env`` (``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``,
+or ``AWS_PROFILE``), and authenticates to the cluster with a token that it creates from that
+key. smarter-infrastructure creates an IAM user for this, in its local environment, with the
+same permissions as a deployed environment's pods, scoped to the local environment and its
+namespace. Don't use a deploy key, or an administrator's key, in ``.env``.
+
+The workflows that build and deploy an environment use a third identity: a deploy user per
+environment, whose key is in the GitHub environment's secrets. It can push the environment's
+image, and is an administrator of the environment's namespace only. The platform never uses it.
+
 Signals
 -------
 
