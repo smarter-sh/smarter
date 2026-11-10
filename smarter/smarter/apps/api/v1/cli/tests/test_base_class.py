@@ -1,6 +1,8 @@
+# pylint: disable=protected-access
 """Test Api v1 CLI base class for brokered commands."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -23,6 +25,7 @@ from smarter.apps.api.v1.cli.views.base import (
     http_status_for_exception,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -117,6 +120,25 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
         response, status = self.authentication_scenarios(path=self.private_path, missing_key=True)
         self.assertEqual(status, HTTPStatus.FORBIDDEN)
         self.assertIn(SmarterJournalApiResponseKeys.ERROR, response.keys())
+
+    def test_authentication_without_a_key_logs_a_warning(self):
+        """A request without a key is the client's error: a WARNING with no instructions, and the 403 says how (#972)."""
+        with patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger:
+            response, status = self.authentication_scenarios(path=self.private_path, missing_key=True)
+        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        self.assertIn("Authorization: Token", json.dumps(response))
+        mock_logger.error.assert_not_called()
+        logged = str(mock_logger.warning.call_args_list)
+        self.assertIn("no Authorization header", logged)
+        self.assertNotIn(SMARTER_CUSTOMER_SUPPORT_EMAIL, logged)
+        self.assertNotIn("Token ", logged)
+
+    def test_authentication_with_a_wrong_key_logs_a_warning(self):
+        """A request with a wrong key is the client's error: a WARNING, not an ERROR (#972)."""
+        with patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger:
+            _, status = self.authentication_scenarios(path=self.private_path, wrong_key=True)
+        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        mock_logger.error.assert_not_called()
 
     def test_authentication_with_session(self):
         """Verify that session authentication also works api requests."""
