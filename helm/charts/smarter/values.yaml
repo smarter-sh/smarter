@@ -254,6 +254,17 @@ app:
     limits:
       cpu: "2"
       memory: "2Gi"
+  # The RollingUpdate strategy of the app's Deployment. A deploy first adds maxSurge new pods
+  # on top of the current ones, then replaces up to maxUnavailable old pods at a time. With
+  # maxUnavailable: 0, it never stops an old pod until a new one is ready, so when no node has
+  # a free resources.requests.cpu for the extra pod, and the cluster autoscaler can't add a
+  # node (spot capacity, a node group at its max size), the new pod stays Pending and the
+  # deploy never finishes. maxUnavailable: 1 lets it stop one old pod to make room, so the
+  # deploy always completes, with one pod fewer than replicas for a minute or so at worst.
+  # Keep it at or below app.podDisruptionBudget.maxUnavailable, and hpa.minReplicas above it.
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
   extraVolumeMounts: []
   # A PodDisruptionBudget that keeps voluntary disruptions (node drains, cluster
   # upgrades, Karpenter or cluster-autoscaler consolidation) from evicting more than

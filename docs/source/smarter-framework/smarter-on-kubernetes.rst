@@ -54,7 +54,10 @@ differs.
        at once, in a thread pool of their own (``app.promptThreads``,
        ``SMARTER_PROMPT_THREADS``), and queues the next ones. A HorizontalPodAutoscaler scales
        it on CPU and memory (3 to 25 pods by default, ``hpa.*``), and a PodDisruptionBudget lets
-       node drains evict only one app pod at a time (``app.podDisruptionBudget``).
+       node drains evict only one app pod at a time (``app.podDisruptionBudget``). A deploy
+       replaces one app pod at a time, and may stop an old pod before its replacement is ready
+       (``app.rollingUpdate``), so that it finishes even when no node has room for an extra
+       pod and the cluster can't add one.
    * - Operational Celery worker
      - ``smarter-worker``, queue ``default_celery_task_queue``.
      - Deployment ``smarter-worker``, same queue, with its own HorizontalPodAutoscaler.
