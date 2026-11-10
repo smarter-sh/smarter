@@ -104,9 +104,9 @@
     "env": {
       "type": "object",
       "properties": {
-        "AWS_ACCESS_KEY_ID": { "type": "string" },
+        "AWS_ACCESS_KEY_ID": { "type": ["string", "null"] },
         "AWS_REGION": { "type": "string" },
-        "AWS_SECRET_ACCESS_KEY": { "type": "string" },
+        "AWS_SECRET_ACCESS_KEY": { "type": ["string", "null"] },
         "CACHES_LOCATION": { "type": "string" },
         "CELERY_BROKER_URL": { "type": "string" },
         "CELERY_RESULT_BACKEND": { "type": "string" },
