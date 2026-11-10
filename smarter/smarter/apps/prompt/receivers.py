@@ -60,6 +60,34 @@ def get_sender_name(sender: Any) -> str:
     return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
 
 
+def iteration_summary(iteration_data: Optional[SmarterDictType]) -> Optional[SmarterDictType]:
+    """
+    Return what a log may show of a prompt iteration's data: its model and its number of messages.
+
+    An iteration's data holds the system prompt, the conversation's messages and the LLM's
+    response. They are chat content, i.e. personal data, so they are never logged. The data is
+    either the request itself, as the passthrough api sends it, or a dict whose ``request`` is the
+    request, as the chat providers send it.
+
+    :param iteration_data: The iteration's data.
+    :returns: The request's model and number of messages, or None if there is no data.
+    """
+    if not isinstance(iteration_data, dict):
+        return None
+    request_data = iteration_data.get("request")
+    if not isinstance(request_data, dict):
+        request_data = iteration_data
+    messages = request_data.get("messages")
+    message_count = 0
+    if isinstance(messages, list):
+        message_count = len(messages)
+    summary: SmarterDictType = {
+        "model": request_data.get("model"),
+        "messages": message_count,
+    }
+    return summary
+
+
 @receiver(plugin_deleting, dispatch_uid=prefix + ".plugin_deleting")
 def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     """
@@ -364,15 +392,18 @@ def handle_chat_response_failure(
     **kwargs,
 ):
     """
-    Log a failed prompt as an error, with the request's metadata and the iteration's data.
+    Log a failed prompt as an error, with the request's metadata and a summary of the iteration.
+
+    The iteration's data holds the system prompt and the user's conversation, so only
+    :func:`iteration_summary` of it is logged: its model and number of messages.
 
     :param sender: The object that sent the signal.
     :param iteration: The iteration that failed.
     :param prompt: The prompt.
     :param request_meta_data: The request's metadata.
     :param exception: The exception raised.
-    :param first_iteration: The first iteration's data, logged when ``iteration`` is 1.
-    :param second_iteration: The second iteration's data, logged when ``iteration`` is 2 or more.
+    :param first_iteration: The first iteration's data, summarized when ``iteration`` is 1.
+    :param second_iteration: The second iteration's data, summarized when ``iteration`` is 2 or more.
     :param messages: The conversation's messages, unused.
     :param stack_trace: The exception's stack trace.
     :param kwargs: Other signal arguments, unused.
@@ -392,19 +423,17 @@ def handle_chat_response_failure(
     )
     if iteration == 1 and first_iteration:
         logger.error(
-            "%s %s for prompt: %s, first_iteration: %s",
+            "%s for prompt: %s, first_iteration: %s",
             f"{logger_prefix}.handle_chat_response_failure()",
-            SmarterFormattedText.text("dump"),
             prompt if prompt else None,
-            SmarterFormattedText.json(first_iteration) if first_iteration else None,
+            iteration_summary(first_iteration),
         )
     if isinstance(iteration, int) and iteration >= 2 and second_iteration:
         logger.error(
-            "%s %s for prompt: %s, second_iteration: %s",
+            "%s for prompt: %s, second_iteration: %s",
             f"{logger_prefix}.handle_chat_response_failure()",
-            SmarterFormattedText.text("dump"),
             prompt if prompt else None,
-            SmarterFormattedText.json(second_iteration) if second_iteration else None,
+            iteration_summary(second_iteration),
         )
 
 
