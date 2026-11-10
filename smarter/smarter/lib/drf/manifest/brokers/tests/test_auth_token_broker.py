@@ -9,8 +9,10 @@ from pydantic_core import ValidationError
 
 from smarter.lib import json, logging
 from smarter.lib.drf.manifest.brokers.auth_token import (
+    LOGGED_FIELDS,
     SAMSmarterAuthTokenBroker,
     SAMSmarterAuthTokenBrokerError,
+    loggable_fields,
 )
 from smarter.lib.drf.manifest.models.auth_token.metadata import (
     SAMSmarterAuthTokenMetadata,
@@ -441,6 +443,19 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
     def test_error_message(self):
         error = SAMSmarterAuthTokenBrokerError(message="x", thing="SmarterAuthToken")
         self.assertEqual(error.get_formatted_err_message, "Smarter API SmarterAuthToken Manifest Broker Error")
+
+    def test_loggable_fields(self):
+        """A token is logged without its digest or token_key, which identify the token itself."""
+        token = MagicMock(spec=SmarterAuthToken)
+        token.digest = "digest-value"
+        token.token_key = "key-value"
+        token.name = "a-token"
+        fields = loggable_fields(token)
+        self.assertEqual(set(fields or {}), set(LOGGED_FIELDS))
+        self.assertEqual((fields or {})["name"], "a-token")
+        self.assertNotIn("digest-value", str(fields))
+        self.assertNotIn("key-value", str(fields))
+        self.assertIsNone(loggable_fields(None))
 
     def test_without_a_username(self):
         """Without a manifest or a user there's no token, nor an ORM meta instance."""

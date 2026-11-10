@@ -24,6 +24,7 @@ from smarter.apps.infrastructure.services.kubernetes import (
     billable_resources,
     manifest_kinds,
     matches_selector,
+    redacted_manifest,
 )
 from smarter.apps.infrastructure.signals import (
     billable_resource_created,
@@ -207,6 +208,14 @@ class TestKubernetesResources(KubernetesTestBase):
         self.assertEqual(self.kubectl.applied, [INGRESS_MANIFEST])
         self.assertEqual(self.sent(events, resource_applied)[0]["kinds"], ["Ingress"])
         self.assertEqual(self.sent(events, billable_resource_creating), [])
+
+    def test_apply_manifest_logs_redacted_manifest(self):
+        """The manifest is logged without its Secrets' values, and applied with them."""
+        manifest = "apiVersion: v1\nkind: Secret\nmetadata:\n  name: llmhost\nstringData:\n  api-key: sk-test-value\n"
+        with patch(f"{MODULE}.logger") as logger:
+            self.kubernetes.apply_manifest(manifest)
+        self.assertEqual(self.kubectl.applied, [manifest])
+        self.assertNotIn("sk-test-value", str(logger.mock_calls))
 
     def test_apply_billable_manifest(self):
         """A manifest's volumes and load balancers are announced as billable resources."""
@@ -447,6 +456,20 @@ class TestBillableResources(InfrastructureTestBase):
             manifest_kinds(QDRANT_MANIFEST), ["Service", "StatefulSet", "Service", "PersistentVolumeClaim"]
         )
         self.assertEqual(manifest_kinds("{not: [valid"), [])
+
+    def test_redacted_manifest(self):
+        """A Secret's values are redacted before the manifest is logged, and other resources are unchanged."""
+        manifest = (
+            "apiVersion: v1\nkind: Secret\nmetadata:\n  name: llmhost\n"
+            "stringData:\n  api-key: sk-test-value\ndata:\n  token: c2stdGVzdA==\n"
+            "---\napiVersion: v1\nkind: Service\nmetadata:\n  name: qdrant\n"
+        )
+        redacted = redacted_manifest(manifest)
+        self.assertNotIn("sk-test-value", redacted)
+        self.assertNotIn("c2stdGVzdA==", redacted)
+        self.assertIn("api-key: <redacted>", redacted)
+        self.assertIn("name: qdrant", redacted)
+        self.assertNotIn("sk-test-value", redacted_manifest("{value: [sk-test-value"))
 
 
 class TestConfigureKubernetes(InfrastructureTestBase):

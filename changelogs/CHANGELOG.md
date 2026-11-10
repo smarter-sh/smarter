@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.8](https://github.com/smarter-sh/smarter/compare/v0.44.7...v0.44.8) (2026-11-10)
+
+### Bug Fixes
+
+* **security:** stop logging api keys, passwords and secret values ([d1427e1](https://github.com/smarter-sh/smarter/commit/d1427e10f3ea60d064cd1c35b349166435129d70))
+
+## [0.44.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.7...v0.44.8-alpha.1) (2026-11-10)
+
+### Bug Fixes
+
+* **security:** stop logging api keys, passwords and secret values ([d1427e1](https://github.com/smarter-sh/smarter/commit/d1427e10f3ea60d064cd1c35b349166435129d70))
+
 ## [0.44.7](https://github.com/smarter-sh/smarter/compare/v0.44.6...v0.44.7) (2026-11-10)
 
 ### Bug Fixes

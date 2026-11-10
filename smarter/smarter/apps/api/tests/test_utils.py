@@ -108,3 +108,20 @@ class TestApplyManifest(TestAccountMixin):
         with patch("smarter.apps.guardrail.manifest.brokers.guardrail.SAMGuardrailBroker.apply", return_value=None):
             self.assertFalse(utils.apply_manifest_v2(manifest=manifest(self.name), username=self.admin_user.username))
         self.assertTrue(issubclass(APIV1CLIViewError, Exception))
+
+    def test_loggable_manifest(self):
+        """A Secret manifest is never logged, and other manifests are logged as they are."""
+        secret = "apiVersion: smarter.sh/v1\nkind: Secret\nmetadata:\n  name: openai\nspec:\n  config:\n    value: sk-test-value\n"
+        self.assertNotIn("sk-test-value", utils.loggable_manifest(secret) or "")
+        self.assertIn("openai", utils.loggable_manifest(secret) or "")
+        guardrail = manifest(self.name)
+        self.assertEqual(utils.loggable_manifest(guardrail), guardrail)
+        self.assertIsNone(utils.loggable_manifest(None))
+        self.assertNotIn("sk-test-value", utils.loggable_manifest("{value: [sk-test-value") or "")
+        with (
+            patch.object(utils, "logger") as logger,
+            patch.object(utils.httpx, "post", side_effect=httpx.TimeoutException("x")),
+        ):
+            with self.assertRaises(httpx.TimeoutException):
+                utils.apply_manifest(manifest=secret, username=self.admin_user.username, verbose=True)
+        self.assertNotIn("sk-test-value", str(logger.mock_calls))

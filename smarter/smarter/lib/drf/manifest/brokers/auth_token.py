@@ -4,7 +4,6 @@
 import traceback
 from typing import List, Optional, Type
 
-from django.core import serializers
 from django.http import HttpRequest
 from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
@@ -46,6 +45,22 @@ from smarter.lib.typing import SmarterDictType, required
 
 MAX_RESULTS = 1000
 logger = logging.getLogger(__name__)
+
+#: The SmarterAuthToken fields that log messages may show. Not ``digest``, the primary key, nor
+#: ``token_key``, the first characters of the token itself.
+LOGGED_FIELDS = ("key_id", "name", "description", "user", "is_active", "created", "expiry", "last_used_at", "tags")
+
+
+def loggable_fields(smarter_auth_token: Optional[SmarterAuthToken]) -> Optional[SmarterDictType]:
+    """
+    Return the fields of a SmarterAuthToken that a log message may show.
+
+    :param smarter_auth_token: The SmarterAuthToken.
+    :returns: Its :data:`LOGGED_FIELDS`, as strings, or None if there is no token.
+    """
+    if smarter_auth_token is None:
+        return None
+    return {field: str(getattr(smarter_auth_token, field, None)) for field in LOGGED_FIELDS}
 
 
 class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
@@ -342,7 +357,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.formatted_class_name,
                 type(self._manifest).__name__,
                 self.smarter_auth_token,
-                serializers.serialize("json", [self._smarter_auth_token]),
+                loggable_fields(self._smarter_auth_token),
             )
             return self._manifest
         else:
@@ -467,7 +482,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
             logger.debug(
                 "%s.orm_meta_instance_setter() - initialized ORM meta: %s",
                 self.formatted_class_name,
-                serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
+                loggable_fields(self.orm_meta_instance),  # type: ignore
             )
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
@@ -689,7 +704,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 "%s.apply() Saving %s: %s",
                 self.formatted_class_name,
                 self.smarter_auth_token,
-                serializers.serialize("json", [self.smarter_auth_token]),
+                loggable_fields(self.smarter_auth_token),
             )
             self.smarter_auth_token.save()
             self.smarter_auth_token.refresh_from_db()
@@ -845,7 +860,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.formatted_class_name,
                 self.kind,
                 self.name,
-                serializers.serialize("json", [self.smarter_auth_token]),
+                loggable_fields(self.smarter_auth_token),
             )
         else:
             logger.debug(

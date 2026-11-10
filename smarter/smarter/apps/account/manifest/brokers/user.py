@@ -48,6 +48,19 @@ logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.MANIFEST_LOGGING]
 )
 
+#: The User fields that log messages may show. Not ``password``, the password's hash.
+LOGGED_FIELDS = (
+    "username",
+    "email",
+    "first_name",
+    "last_name",
+    "is_active",
+    "is_staff",
+    "is_superuser",
+    "last_login",
+    "date_joined",
+)
+
 MAX_RESULTS = 1000
 """
 Maximum number of results to return for list operations.
@@ -636,7 +649,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 "%s.orm_instance() - retrieved %s instance: %s",
                 self.formatted_class_name,
                 User.__name__,
-                serializers.serialize("json", [self._orm_instance]),
+                serializers.serialize("json", [self._orm_instance], fields=LOGGED_FIELDS),
             )
             return self._orm_instance
         except User.DoesNotExist:
@@ -673,7 +686,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 "%s.orm_meta_instance_setter() - initialized %s meta: %s",
                 self.formatted_class_name,
                 User.__name__,
-                serializers.serialize("json", [self.orm_meta_instance]),  # type: ignore
+                serializers.serialize("json", [self.orm_meta_instance], fields=LOGGED_FIELDS),  # type: ignore
             )
         except User.DoesNotExist:
             logger.warning(

@@ -24,6 +24,7 @@ from smarter.lib.typing import SmarterDictType
 from .base import AccountListViewBase, AccountViewBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 #: The fields of a new user that the request body may set.
 USER_CREATE_FIELDS = ("username", "password", "email", "first_name", "last_name")
@@ -42,8 +43,8 @@ def validate_request_body(request: Request):
     :param request: The request.
     :returns: None if the body is valid, else a 400 :class:`JsonResponse` that explains why not.
     """
-    # do a cursory check of the request data
-    logger.debug("%s.validate_request_body() - request body: %s", __name__, request.body)
+    # do a cursory check of the request data. The body has the new user's password, so it isn't logged.
+    logger.debug("%s.validate_request_body() - request body of %d bytes", logger_prefix, len(request.body))
     try:
         data = json.loads(request.body)
         if not isinstance(data, dict):
@@ -242,14 +243,17 @@ def update_user(request: Request, user_id: int):
     :param user_id: The User's id.
     :returns: The response: the updated user, or an error :class:`JsonResponse`.
     """
-    logger.debug("%s.update_user() - user_id: %s, request: %s", request, user_id, request)
+    logger.debug("%s.update_user() - user_id: %s, request: %s", logger_prefix, user_id, request)
     data: SmarterDictType
 
     # a partial update: the body needn't have the username and password that validate_request_body() requires.
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        logger.debug("UserListView.get_queryset() - invalid JSON format in request body: %s", request.body)
+        # the body may have a password, so it isn't logged.
+        logger.debug(
+            "%s.update_user() - invalid JSON format in a request body of %d bytes", logger_prefix, len(request.body)
+        )
         return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
     if not isinstance(data, dict):
         return JsonResponse(
