@@ -78,6 +78,14 @@ initialize_platform`, and nowhere else.** That covers example resources, Stackad
     `initialize_platform` calls. If you find initialization logic outside it,
     propose moving it into `initialize_platform`. See
     `smarter-management-commands`.
+11. **Never put a secret, credential or PII in a log entry**, in Python
+    (`logger.*`, `print`) or JavaScript (`console.*`). In DEBUG mode the web
+    console shows Smarter's log to ordinary users, so a leaked value in a log
+    is as bad as one pushed to this public repository. Log ids, counts and
+    masked values (`mask_identifier`, `mask_email`), never the value itself,
+    and never a whole request, headers dict, settings object, manifest or
+    exception that may carry one. Check every log call you write or change
+    against this rule. See `smarter-logging`, "Never log secrets or PII".
 
 ## When the user reports that something didn't happen
 
@@ -353,6 +361,8 @@ reference implementations.
 - The tests cover it, and you ran them in the container. Report failures
   honestly, including pre-existing ones.
 - The pre-commit hooks pass on the changed files.
+- No new or changed log call (Python or JavaScript) writes a secret,
+  credential or PII.
 - Public Python objects have docstrings, and user-facing features have a
   Sphinx page woven into the existing evergreen docs.
 - Your summary says what changed, what you verified, and what you skipped.
