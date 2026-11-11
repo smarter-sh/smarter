@@ -9,6 +9,7 @@ not a superuser, and an anonymous user. The object is an api key that the accoun
 
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import RequestFactory
+from django.utils.functional import SimpleLazyObject
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -98,6 +99,18 @@ class TestDashboardAdmin(TestAccountMixin):
             .exists(),
         )
         self.assertFalse(model_admin.has_view_permission(user_request, None))
+
+    def test_customer_model_admin_anonymous_user_is_not_a_warning(self):
+        """An anonymous visitor of the admin, e.g. of its login page, gets no access and logs no warning (issue #979)."""
+        model_admin = SmarterCustomerModelAdmin(EmailContactList, RestrictedAdminSite())
+        # Django's request.user is a SimpleLazyObject, which wraps an AnonymousUser when no one is signed in.
+        lazy_anonymous_user = SimpleLazyObject(AnonymousUser)
+        for user in (AnonymousUser(), lazy_anonymous_user):
+            with self.subTest(user=type(user).__name__):
+                request = self.request(user)
+                with self.assertNoLogs("smarter.apps.dashboard.admin", level="WARNING"):
+                    self.assertFalse(model_admin.has_module_permission(request))
+                    self.assertFalse(model_admin.has_add_permission(request))
 
     def test_staff_only_model_admin(self):
         model_admin = SmarterStaffOnlyModelAdmin(EmailContactList, RestrictedAdminSite())
