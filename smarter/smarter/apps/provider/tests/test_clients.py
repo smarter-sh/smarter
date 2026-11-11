@@ -1,14 +1,20 @@
 # pylint: disable=unused-argument
 """Test OpenAIPassthroughClient request normalization."""
 
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import httpx
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
 
-from smarter.apps.provider.clients import OpenAIPassthroughClient
+from smarter.apps.provider.clients import (
+    OpenAIPassthroughClient,
+    SmarterPassthroughInvalidRequest,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 
 class TestOpenAIPassthroughClientNormalize(SmarterTestBase):
@@ -44,6 +50,51 @@ def bad_request(param: str) -> openai.BadRequestError:
     """An OpenAI 400 error for the given request parameter."""
     response = httpx.Response(400, request=httpx.Request("POST", "https://api.openai.com/v1/chat/completions"))
     return openai.BadRequestError("bad request", response=response, body={"param": param})
+
+
+def not_found() -> openai.NotFoundError:
+    """An OpenAI 404 error, e.g. for a mistyped model."""
+    response = httpx.Response(404, request=httpx.Request("POST", OPENAI_URL))
+    return openai.NotFoundError("model not found", response=response, body=None)
+
+
+def status_error(status_code: int) -> openai.APIStatusError:
+    """An OpenAI error with the given status, e.g. 503 for an outage."""
+    response = httpx.Response(status_code, request=httpx.Request("POST", OPENAI_URL))
+    return openai.APIStatusError("provider error", response=response, body=None)
+
+
+def connection_error() -> openai.APIConnectionError:
+    """An OpenAI connection error, which has no status."""
+    return openai.APIConnectionError(request=httpx.Request("POST", OPENAI_URL))
+
+
+class TestOpenAIPassthroughClientFailureStatus(SmarterTestBase):
+    """Test OpenAIPassthroughClient.client_error_status() and server_error_status()."""
+
+    def test_client_error_status(self):
+        self.assertEqual(OpenAIPassthroughClient.client_error_status(bad_request("x")), HTTPStatus.BAD_REQUEST)
+        self.assertEqual(OpenAIPassthroughClient.client_error_status(not_found()), HTTPStatus.NOT_FOUND)
+        self.assertEqual(OpenAIPassthroughClient.client_error_status(status_error(499)), HTTPStatus.BAD_REQUEST)
+        self.assertIsNone(OpenAIPassthroughClient.client_error_status(status_error(503)))
+        self.assertIsNone(OpenAIPassthroughClient.client_error_status(connection_error()))
+        self.assertIsNone(OpenAIPassthroughClient.client_error_status(RuntimeError("x")))
+
+    @patch("smarter.apps.provider.clients.openai.chat.completions.create")
+    def test_unknown_parameter_is_a_client_error(self, mock_create):
+        """The SDK's TypeError for an unknown parameter becomes a 400, not a 500."""
+        mock_create.side_effect = TypeError("create() got an unexpected keyword argument 'illegal_key'")
+        with self.assertRaises(SmarterPassthroughInvalidRequest) as context:
+            OpenAIPassthroughClient.send_chat_completion({"illegal_key": "illegal_value"})
+        status = OpenAIPassthroughClient.client_error_status(context.exception)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_server_error_status(self):
+        self.assertEqual(OpenAIPassthroughClient.server_error_status(status_error(503)), HTTPStatus.BAD_GATEWAY)
+        self.assertEqual(OpenAIPassthroughClient.server_error_status(connection_error()), HTTPStatus.BAD_GATEWAY)
+        self.assertEqual(
+            OpenAIPassthroughClient.server_error_status(RuntimeError("x")), HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
 
 class TestOpenAIPassthroughClientReasoningEffort(SmarterTestBase):
@@ -161,6 +212,43 @@ class TestOpenAIPassthroughClientHandlerChatContent(SmarterTestBase):
                 client.handler(request=request, user_profile=MagicMock(), data={})
         mock_logger.error.assert_called_once()
         self.assert_marker_not_logged(mock_logger)
+
+    @patch("smarter.apps.provider.clients.SmarterJournaledJsonErrorResponse")
+    @patch("smarter.apps.provider.clients.chat_response_failure")
+    @patch("smarter.apps.provider.clients.chat_request")
+    @patch("smarter.apps.provider.clients.prompt_started")
+    @patch("smarter.apps.provider.clients.charge_authorization")
+    @patch("smarter.apps.provider.clients.Provider")
+    def test_failure_status_and_logging(
+        self, mock_provider, mock_charge, mock_started, mock_request, mock_failure, mock_error_response
+    ):
+        """A provider's 4xx keeps its status and logs no error; any other failure is a 502 or 500 and an error (issue #984)."""
+        cases = [
+            (bad_request("temperature"), HTTPStatus.BAD_REQUEST, True),
+            (not_found(), HTTPStatus.NOT_FOUND, True),
+            (status_error(503), HTTPStatus.BAD_GATEWAY, False),
+            (connection_error(), HTTPStatus.BAD_GATEWAY, False),
+            (RuntimeError("a bug in Smarter"), HTTPStatus.INTERNAL_SERVER_ERROR, False),
+        ]
+        client = self.build_client(mock_provider)
+        body = '{"model": "gpt-5", "messages": [{"role": "user", "content": "' + self.marker + '"}]}'
+        for exception, expected_status, is_client_error in cases:
+            with self.subTest(exception=type(exception).__name__):
+                mock_failure.reset_mock()
+                mock_error_response.reset_mock()
+                request = self.build_request(body)
+                with patch.object(client, "create_chat_completion", side_effect=exception):
+                    with patch("smarter.apps.provider.clients.logger") as mock_logger:
+                        client.handler(request=request, user_profile=MagicMock(), data={})
+                status = mock_error_response.call_args.kwargs["status"]
+                self.assertEqual(status, expected_status)
+                client_error = mock_failure.send.call_args.kwargs["client_error"]
+                self.assertEqual(client_error, is_client_error)
+                if is_client_error:
+                    mock_logger.error.assert_not_called()
+                else:
+                    mock_logger.error.assert_called_once()
+                self.assert_marker_not_logged(mock_logger)
 
     @patch("smarter.apps.provider.clients.SmarterJournaledJsonResponse")
     @patch("smarter.apps.provider.clients.prompt_finished")

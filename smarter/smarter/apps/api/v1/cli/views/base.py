@@ -440,7 +440,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         self._broker.name,
                     )
                 else:
-                    logger.warning(
+                    logger.debug(
                         "%s.broker() - broker %s %s is instantiated but is not in a ready state.",
                         self.logger_prefix,
                         self._broker.kind,
