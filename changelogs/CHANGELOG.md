@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.13-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.13-alpha.1...v0.44.13-alpha.2) (2026-11-11)
+
+### Bug Fixes
+
+* **dashboard:** don't log a warning for an anonymous user's admin module permission ([fb035b4](https://github.com/smarter-sh/smarter/commit/fb035b47cc8c613c11c42ead3be2c4e24f440f70)), closes [#979](https://github.com/smarter-sh/smarter/issues/979)
+
 ## [0.44.13-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.12...v0.44.13-alpha.1) (2026-11-11)
 
 ### Bug Fixes
