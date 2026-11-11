@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.13](https://github.com/smarter-sh/smarter/compare/v0.44.12...v0.44.13) (2026-11-11)
+
+### Bug Fixes
+
+* **dashboard:** don't log a warning for an anonymous user's admin module permission ([fb035b4](https://github.com/smarter-sh/smarter/commit/fb035b47cc8c613c11c42ead3be2c4e24f440f70)), closes [#979](https://github.com/smarter-sh/smarter/issues/979)
+* **passthrough:** answer a provider's 4xx as the client's error ([#984](https://github.com/smarter-sh/smarter/issues/984)) ([56f3183](https://github.com/smarter-sh/smarter/commit/56f3183b4637377a46f55c2ee58a90f2befad569))
+* **plugin:** log brokers without a loader at debug, not error ([#985](https://github.com/smarter-sh/smarter/issues/985)) ([0438428](https://github.com/smarter-sh/smarter/commit/0438428858186bd6b99747ef4cba17cf5f57e169)), closes [#952](https://github.com/smarter-sh/smarter/issues/952) [#965](https://github.com/smarter-sh/smarter/issues/965) [#974](https://github.com/smarter-sh/smarter/issues/974)
+* **skills:** download the smarter-api deployment's inventory and logs in download-logs.sh ([014d3cf](https://github.com/smarter-sh/smarter/commit/014d3cf707afa559bb3b472963dbdf04caa6f8b2)), closes [#982](https://github.com/smarter-sh/smarter/issues/982)
+
 ## [0.44.13-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.44.13-alpha.2...v0.44.13-alpha.3) (2026-11-11)
 
 ### Bug Fixes
