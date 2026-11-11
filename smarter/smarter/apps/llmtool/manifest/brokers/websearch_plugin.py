@@ -151,29 +151,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             - `SAMPluginBaseBroker.__init__`
         """
         super().__init__(*args, **kwargs)
-        if not self.ready:
-            if not self.loader and not self.manifest and not self.plugin:
-                logger.error(
-                    "%s.__init__() No loader nor existing Plugin provided for %s broker. Cannot initialize.",
-                    self.formatted_class_name,
-                    self.kind,
-                )
-                return
-            if self.loader and self.loader.manifest_kind != self.kind:
-                raise SAMBrokerErrorNotReady(
-                    f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                    thing=self.kind,
-                )
-
-            if self.loader:
-                self._manifest = SAMWebsearchPlugin.model_validate(self.loader.manifest_sections)
-            if self._manifest:
-                logger.debug(
-                    "%s.__init__() initialized manifest from loader for %s %s",
-                    self.formatted_class_name,
-                    self.kind,
-                    self._manifest.metadata.name,
-                )
+        self.init_manifest_from_loader(SAMWebsearchPlugin)
         logger.debug(
             "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
         )

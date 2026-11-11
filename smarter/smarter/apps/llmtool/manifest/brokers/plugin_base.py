@@ -42,6 +42,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotReady,
     SAMDependency,
     SAMDependents,
     memoized_dependencies,
@@ -52,6 +53,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
+from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.typing import SmarterDictType, required
 
 from . import PluginSerializer, SAMPluginBrokerError
@@ -82,6 +84,44 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
     lookup is filtered by it. Otherwise ``get`` of one plugin kind returns the plugins of every
     kind, and ``describe`` of a plugin with another kind's broker fails.
     """
+
+    def init_manifest_from_loader(self, manifest_class: Type[AbstractSAMBase]) -> None:
+        """
+        Build the broker's manifest from its loader, when the broker isn't ready yet.
+
+        A broker with no loader, manifest or plugin is normal for a command that needs no
+        resource, e.g. ``example-manifest``, ``json-schema`` or ``get`` of a list, so that case is
+        logged at DEBUG. A command that does need a ready broker still fails later with
+        ``SAMBrokerErrorNotReady``.
+
+        :param manifest_class: The Pydantic manifest model of this broker's kind, e.g. ``SAMStaticPlugin``.
+        :raises SAMBrokerErrorNotReady: If the loader's manifest is of another kind.
+        """
+        if self.ready:
+            return
+        has_source = bool(self.loader) or bool(self.manifest) or bool(self.plugin)
+        if not has_source:
+            logger.debug(
+                "%s.init_manifest_from_loader() No loader nor existing Plugin provided for %s broker.",
+                self.formatted_class_name,
+                self.kind,
+            )
+            return
+        if self.loader and self.loader.manifest_kind != self.kind:
+            raise SAMBrokerErrorNotReady(
+                f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
+                thing=self.kind,
+            )
+        if not self.loader:
+            return
+        manifest = manifest_class.model_validate(self.loader.manifest_sections)
+        self._manifest = manifest
+        logger.debug(
+            "%s.init_manifest_from_loader() initialized manifest from loader for %s %s",
+            self.formatted_class_name,
+            self.kind,
+            manifest.metadata.name,
+        )
 
     def plugin_init(self) -> None:
         """Initialize the plugin model instance."""

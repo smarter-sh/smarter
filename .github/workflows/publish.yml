@@ -128,7 +128,7 @@ jobs:
       url: https://docs.smarter.sh/
     permissions:
       contents: read
-      id-token: write
+      id-token: write # signs in to AWS with OIDC, to upload the docs
     steps:
       # conf.py finds the release with `git describe --tags`, which needs the
       # history and tags.

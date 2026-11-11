@@ -167,7 +167,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         if self._secret_transformer:
             return self._secret_transformer
         if not self.user_profile:
-            logger.warning("%s.secret_transformer() called with no user_profile", self.formatted_class_name)
+            logger.debug("%s.secret_transformer() called with no user_profile", self.formatted_class_name)
             return None
         if self._name or self.manifest:
             self._secret_transformer = SecretTransformer(

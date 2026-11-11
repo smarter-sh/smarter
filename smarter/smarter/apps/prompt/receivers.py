@@ -389,6 +389,7 @@ def handle_chat_response_failure(
     second_iteration: Optional[SmarterDictType] = None,
     messages: Optional[list] = None,
     stack_trace: Optional[str] = None,
+    client_error: bool = False,
     **kwargs,
 ):
     """
@@ -396,6 +397,9 @@ def handle_chat_response_failure(
 
     The iteration's data holds the system prompt and the user's conversation, so only
     :func:`iteration_summary` of it is logged: its model and number of messages.
+
+    When ``client_error`` is True, e.g. the provider rejected the request with a 4xx, the failure
+    is the client's, so it is logged as one warning, without the stack trace.
 
     :param sender: The object that sent the signal.
     :param iteration: The iteration that failed.
@@ -406,10 +410,25 @@ def handle_chat_response_failure(
     :param second_iteration: The second iteration's data, summarized when ``iteration`` is 2 or more.
     :param messages: The conversation's messages, unused.
     :param stack_trace: The exception's stack trace.
+    :param client_error: Whether the failure is the client's error, e.g. a provider's 4xx.
     :param kwargs: Other signal arguments, unused.
     """
 
     sender_name = get_sender_name(sender)
+
+    if client_error:
+        summary = None
+        if first_iteration:
+            summary = iteration_summary(first_iteration)
+        logger.warning(
+            "%s from %s during iteration %s: the provider rejected the request: %s, iteration: %s",
+            f"{logger_prefix}.handle_chat_response_failure()",
+            sender_name,
+            iteration,
+            exception,
+            summary,
+        )
+        return
 
     logger.error(
         "%s from %s during iteration %s for prompt: %s, request_meta_data: %s, exception: %s %s",
