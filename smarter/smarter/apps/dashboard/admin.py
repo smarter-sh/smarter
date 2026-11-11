@@ -127,15 +127,18 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         """
         Show the app's module to any authenticated user.
 
+        An anonymous visitor, e.g. of the admin's login page, gets False without a warning. Its
+        ``request.user`` is a lazy ``AnonymousUser``, which is expected.
+
         :param request: The admin request.
         :returns: True if the request's resolved user is an authenticated User.
         """
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return False
         user = get_resolved_user(request.user)  # type: ignore
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_module_permission()"
         if not isinstance(user, User):
             logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
-            return False
-        if not user.is_authenticated:
             return False
         return True
 
@@ -171,8 +174,11 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         """
         Override the default add permission logic to implement role-based access control for the admin console.
 
-        Add permission is granted to superusers only.
+        Add permission is granted to superusers only. An anonymous user gets False without a
+        warning.
         """
+        if not hasattr(request, "user") or not request.user.is_authenticated:
+            return False
         user = get_resolved_user(request.user)  # type: ignore
         logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_add_permission()"
         if not isinstance(user, User):

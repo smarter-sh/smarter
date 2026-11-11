@@ -56,6 +56,32 @@ class TestSchemaAndExampleManifestViews(ApiV1CliTestBase):
                             self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
                             self.assertIn("data", json.loads(response.content))
 
+    def test_example_manifest_writes_no_warning(self):
+        """
+        An anonymous example-manifest request needs no ready broker, so it writes no WARNING or ERROR.
+
+        The plugin kinds and Secret used to log that their broker had no loader, plugin or user
+        profile. See https://github.com/smarter-sh/smarter/issues/985.
+        """
+        kinds = (
+            "ApiPlugin",
+            "Plugin",
+            "ImageSearchPlugin",
+            "WebsearchPlugin",
+            "SkillPlugin",
+            "SqlPlugin",
+            "Secret",
+            "Budget",
+        )
+        client = Client()
+        # one anonymous request per kind would otherwise reach the anonymous rate limit.
+        with patch("smarter.lib.drf.throttling.SmarterAnonRateThrottle.allow_request", return_value=True):
+            for kind in kinds:
+                with self.subTest(kind=kind):
+                    with self.assertNoLogs("smarter.apps", level="WARNING"):
+                        response = client.post(self.url(ApiV1CliReverseViews.example_manifest, kind))
+                    self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+
     def test_unsupported_kind(self):
         """Test that an unsupported kind in the url is a 400 that names it, and parses the url only once (#954)."""
         client = Client()

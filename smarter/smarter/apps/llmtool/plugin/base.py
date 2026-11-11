@@ -306,7 +306,7 @@ class PluginBase(ABC, AccountMixin):
         if self.ready:
             return None  # plugin is ready, no further action needed.
         else:
-            logger.warning("%s.__init__() Plugin is not ready. %r", self.formatted_pluginbase_class_name, self)
+            logger.debug("%s.__init__() Plugin is not ready. %r", self.formatted_pluginbase_class_name, self)
 
     def __str__(self) -> str:
         """
@@ -1001,7 +1001,7 @@ class PluginBase(ABC, AccountMixin):
         """
 
         if not self.user_profile:
-            logger.warning(
+            logger.debug(
                 "%s.ready() UserProfile is not set.",
                 self.formatted_pluginbase_class_name,
             )
