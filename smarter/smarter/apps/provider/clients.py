@@ -50,6 +50,10 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 _RequestDataT = TypeVar("_RequestDataT")
 
 
+class SmarterPassthroughInvalidRequest(ValueError):
+    """The openai SDK rejected a passthrough request's body before sending it, e.g. for an unknown parameter."""
+
+
 class OpenAIPassthroughClient(SmarterHelperMixin):
     """
     A passthrough prompt provider that is fully compatible with OpenAI's API.
@@ -114,6 +118,48 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             and "reasoning_effort" not in data
         )
 
+    @staticmethod
+    def client_error_status(e: Exception) -> Optional[HTTPStatus]:
+        """
+        Return the provider's 4xx status when it rejected the request as invalid.
+
+        A provider's 4xx, e.g. ``openai.BadRequestError`` for a temperature above 2 or
+        ``openai.NotFoundError`` for a mistyped model, is the client's error, which the passthrough
+        answers with the same status.
+
+        :param e: The exception raised by the provider call.
+        :returns: The provider's 4xx status, 400 for :class:`SmarterPassthroughInvalidRequest`, or
+            None if ``e`` is neither.
+        """
+        if isinstance(e, SmarterPassthroughInvalidRequest):
+            return HTTPStatus.BAD_REQUEST
+        if not isinstance(e, openai.APIStatusError):
+            return None
+        status_code = e.status_code
+        if status_code < HTTPStatus.BAD_REQUEST:
+            return None
+        if status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
+            return None
+        try:
+            status = HTTPStatus(status_code)
+        except ValueError:
+            # a non-standard 4xx, e.g. 499
+            status = HTTPStatus.BAD_REQUEST
+        return status
+
+    @staticmethod
+    def server_error_status(e: Exception) -> HTTPStatus:
+        """
+        Return the status that answers a failed provider call that is not the client's error.
+
+        :param e: The exception raised by the provider call.
+        :returns: 502 for a failure of the provider (its 5xx, a timeout or a connection error), or
+            500 for any other exception, which is Smarter's own.
+        """
+        if isinstance(e, openai.APIError):
+            return HTTPStatus.BAD_GATEWAY
+        return HTTPStatus.INTERNAL_SERVER_ERROR
+
     def create_chat_completion(self, data: SmarterDictType, logger_prefix: str):
         """
         Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools.
@@ -125,7 +171,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             the one that the retry handles.
         """
         try:
-            return openai.chat.completions.create(**data)
+            return self.send_chat_completion(data)
         except openai.BadRequestError as e:
             if not self.requires_reasoning_effort_none(self.provider, data, e):
                 raise
@@ -140,7 +186,23 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
                 e,
             )
             data["reasoning_effort"] = "none"
+            return self.send_chat_completion(data)
+
+    @staticmethod
+    def send_chat_completion(data: SmarterDictType):
+        """
+        Send the prompt to the provider.
+
+        :param data: The chat completion request body.
+        :returns: The provider's chat completion.
+        :raises SmarterPassthroughInvalidRequest: If the openai SDK rejects the body before sending
+            it, e.g. for an unknown parameter.
+        """
+        try:
             return openai.chat.completions.create(**data)
+        except TypeError as e:
+            # the SDK rejects an unknown or missing parameter before sending the request: the client's error.
+            raise SmarterPassthroughInvalidRequest(str(e)) from e
 
     def handler(
         self,
@@ -161,8 +223,9 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         :param data: Not used: the request body is decoded from ``request`` instead.
         :param kwargs: Not used.
         :returns: A journaled JSON response with the chat completion, or a 403 when the user is
-            not authenticated, 404 when the Provider is not found, or 400 when the body is not JSON
-            or the provider call fails.
+            not authenticated, 404 when the Provider is not found, 400 when the body is not JSON,
+            the provider's own 4xx when it rejects the request as invalid, 502 when the provider
+            fails (its 5xx, a timeout or a connection error), or 500 for any other error.
         :raises SmarterBudgetExceeded: If a budget's resource lock forbids charges to the user
             profile.
         """
@@ -234,6 +297,8 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             stack_trace = traceback.format_exc()
+            client_error_status = self.client_error_status(e)
+            is_client_error = client_error_status is not None
             chat_response_failure.send(
                 sender=self.handler,
                 iteration=1,
@@ -241,15 +306,22 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
                 first_iteration=data,
                 messages=data.get("messages") if isinstance(data, dict) else None,
                 stack_trace=stack_trace,
+                client_error=is_client_error,
             )
 
-            logger.error("%s error calling %s: %s", logger_prefix, openai.base_url, str(e), exc_info=True)
+            if client_error_status is not None:
+                # the provider rejected the request, e.g. temperature > 2: the client's error,
+                # which handle_chat_response_failure() has logged as a warning.
+                status = client_error_status
+            else:
+                status = self.server_error_status(e)
+                logger.error("%s error calling %s: %s", logger_prefix, openai.base_url, str(e), exc_info=True)
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
                 thing=SmarterJournalThings.PROMPT,
                 command=SmarterJournalCliCommands.PROMPT,
-                status=HTTPStatus.BAD_REQUEST,
+                status=status,
                 error_message=str(e),
                 description=str(e),
                 stack_trace=stack_trace,
