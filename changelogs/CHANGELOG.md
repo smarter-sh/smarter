@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.13-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.44.13-alpha.2...v0.44.13-alpha.3) (2026-11-11)
+
+### Bug Fixes
+
+* **passthrough:** answer a provider's 4xx as the client's error ([#984](https://github.com/smarter-sh/smarter/issues/984)) ([56f3183](https://github.com/smarter-sh/smarter/commit/56f3183b4637377a46f55c2ee58a90f2befad569))
+* **plugin:** log brokers without a loader at debug, not error ([#985](https://github.com/smarter-sh/smarter/issues/985)) ([0438428](https://github.com/smarter-sh/smarter/commit/0438428858186bd6b99747ef4cba17cf5f57e169)), closes [#952](https://github.com/smarter-sh/smarter/issues/952) [#965](https://github.com/smarter-sh/smarter/issues/965) [#974](https://github.com/smarter-sh/smarter/issues/974)
+
 ## [0.44.13-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.13-alpha.1...v0.44.13-alpha.2) (2026-11-11)
 
 ### Bug Fixes
