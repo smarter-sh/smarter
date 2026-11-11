@@ -70,6 +70,26 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
         self.assertIn("gpt-test-model", logged)
         self.assertEqual(mock_logger.error.call_count, 4)
 
+    def test_chat_response_failure_client_error_logs_one_warning(self):
+        """A provider's 4xx is the client's error: one warning without the stack trace, and no error (issue #984)."""
+        exception = ValueError("Invalid 'temperature': decimal above maximum value.")
+        with patch.object(receivers, "logger") as mock_logger:
+            receivers.handle_chat_response_failure(
+                sender=SmarterTestBase,
+                iteration=1,
+                exception=exception,
+                first_iteration=passthrough_request(),
+                stack_trace="Traceback (most recent call last): marker-stack-trace",
+                client_error=True,
+            )
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+        logged = str(mock_logger.mock_calls)
+        self.assertIn("temperature", logged)
+        self.assertIn("gpt-test-model", logged)
+        self.assertNotIn("marker-stack-trace", logged)
+        self.assertNotIn(CHAT_CONTENT_MARKER, logged)
+
     def test_iteration_summary(self):
         """The summary of either shape of an iteration's data is its model and number of messages."""
         expected = {"model": "gpt-test-model", "messages": 2}
