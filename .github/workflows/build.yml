@@ -323,22 +323,6 @@ jobs:
           echo "-------------"
           aws sts get-caller-identity
 
-      - name: Upgrade ECR Basic Scanning
-        id: upgrade-ecr-scanning
-        shell: bash
-        run: |
-          echo "Checking current ECR scanning version:"
-          echo "-------------------------------------"
-          current_setting=$(aws ecr get-account-setting --name BASIC_SCAN_TYPE_VERSION --query 'value' --output text 2>/dev/null || echo "CLAIR")
-          echo "Current setting: $current_setting"
-          if [ "$current_setting" != "AWS_NATIVE" ]; then
-            echo "Upgrading to AWS_NATIVE scanning..."
-            aws ecr put-account-setting --name BASIC_SCAN_TYPE_VERSION --value AWS_NATIVE
-            echo "ECR scanning upgraded to AWS_NATIVE"
-          else
-            echo "ECR scanning already using AWS_NATIVE version"
-          fi
-
       - name: Add to .env
         shell: bash
         run: |
@@ -353,12 +337,6 @@ jobs:
         shell: bash
         run: |
           echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
-
-      - name: Create the repository
-        id: create-repo
-        shell: bash
-        run: |
-          aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
 
       - name: Get the date
         shell: bash
@@ -381,6 +359,10 @@ jobs:
 
       # -----------------------------------------------------------------------
       # Build and push to AWS ECR
+      # The repository and its scan on push are smarter-infrastructure's
+      # (aws/terraform/smarter/ecr.tf). The
+      # environment's deploy user can push to its repository and nothing more:
+      # it can't create a repository, start a scan or change account settings.
       # Creates the tags of the following formats:
       # - latest
       # - 26594738590
@@ -411,14 +393,6 @@ jobs:
           DOCKER_BUILDKIT: 1
           BUILDKIT_PROGRESS: plain
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
-
-      - name: Trigger ECR image scan
-        id: trigger-scan
-        shell: bash
-        run: |
-          echo "Triggering new image scan for latest tag..."
-          aws ecr start-image-scan --repository-name ${{ env.AWS_ECR_REPO }} --image-id imageTag=latest || echo "Scan already in progress or failed"
-          echo "ECR image scan triggered"
 
       # -----------------------------------------------------------------------
       # Copy the image to Docker Hub
