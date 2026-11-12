@@ -70,6 +70,7 @@ from pygments.token import Keyword, Operator, Punctuation, Text, Whitespace
 from sphinx.addnodes import pending_xref
 from sphinx.domains.python import PythonDomain
 from sphinx.util import logging as sphinx_logging
+from sphinxcontrib_django import docstrings as django_docstrings
 from sphinxcontrib_django.docstrings import classes, field_utils
 
 # Import the guardrail services' Pydantic contracts before sphinx_autodoc_typehints resolves
@@ -97,6 +98,26 @@ def safe_get_field_type(field, include_role=True):
 # patch BOTH
 field_utils.get_field_type = safe_get_field_type
 classes.get_field_type = safe_get_field_type
+
+# Sphinx 9.2 documents a module-level TypeVar or NewType that has a docstring (e.g. ModelT in
+# smarter.lib.manifest.broker.abstract_broker_class) as a class, and sphinxcontrib_django then
+# calls issubclass() on it, which raises TypeError and stops the build. Let it improve only the
+# docstrings of real classes. Its handler looks the function up in its own package's namespace.
+_original_improve_class_docstring = classes.improve_class_docstring
+
+
+def safe_improve_class_docstring(app, cls, lines):
+    """Improve a class's docstring as sphinxcontrib_django does, skipping objects that aren't classes.
+
+    :param app: The Sphinx application.
+    :param cls: The object that autodoc documents as a class, perhaps a TypeVar or NewType.
+    :param lines: The docstring's lines, which sphinxcontrib_django changes in place.
+    """
+    if isinstance(cls, type):
+        _original_improve_class_docstring(app, cls, lines)
+
+
+django_docstrings.improve_class_docstring = safe_improve_class_docstring
 
 project = "Smarter Documentation"
 
@@ -202,7 +223,10 @@ extensions = [
 templates_path = ["_templates"]
 # sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
 # asgiref and pydantic, import only for type checking. These are harmless.
-suppress_warnings = ["sphinx_autodoc_typehints.guarded_import"]
+# forward_reference: an annotation that names a type imported only for type checking, such as
+# django-stubs' _AnyUser, or AbstractBroker in the wrapper that memoized_dependencies returns,
+# which is resolved in the decorated method's module. The signature shows the name as written.
+suppress_warnings = ["sphinx_autodoc_typehints.guarded_import", "sphinx_autodoc_typehints.forward_reference"]
 # _example-manifests is the clone of smarter-sh/example-manifests (see above), read only by literalinclude.
 exclude_patterns = ["_example-manifests"]
 django_settings = "smarter.settings.prod"

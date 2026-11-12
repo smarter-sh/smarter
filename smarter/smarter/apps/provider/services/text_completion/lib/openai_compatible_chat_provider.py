@@ -80,6 +80,7 @@ from smarter.lib.openai.model_quirks import (
     REASONING_EFFORT_NONE,
     REASONING_MODEL_DEFAULT_TEMPERATURE,
     SUPPORTED_REASONING_EFFORTS,
+    TEMPERATURE_REJECTED_MODELS,
     TOOLS_MODEL_SUGGESTION,
     TOOLS_REJECT_REASONING_EFFORT_MODELS,
     TOOLS_REQUIRE_NO_REASONING_MODELS,
@@ -1661,7 +1662,15 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         sent_effort = sent_kwargs.get(_InternalKeys.REASONING_EFFORT_KEY)
         sent_temperature = _InternalKeys.TEMPERATURE_KEY in sent_kwargs
         if temperature is not None and not sent_temperature:
-            self.append_message_temperature_unsupported(temperature, sent_effort)
+            if self.temperature_was_used(temperature):
+                logger.debug(
+                    "%s.warn_about_llmclient_settings() model %s ran at its default temperature %s, the LLMClient's",
+                    self.formatted_class_name,
+                    self.model,
+                    temperature,
+                )
+            else:
+                self.append_message_temperature_unsupported(temperature, sent_effort)
         if reasoning_effort is None:
             return
         if sent_effort == reasoning_effort:
@@ -1671,6 +1680,23 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self.append_message_reasoning_effort_for_tools(reasoning_effort)
             return
         self.append_message_reasoning_effort_unsupported(reasoning_effort)
+
+    def temperature_was_used(self, temperature: float) -> bool:
+        """
+        Whether a request without temperature still ran at the LLMClient's defaultTemperature.
+
+        A model that accepts only its default temperature runs at that default when the request omits
+        temperature. If the LLMClient asked for the default, nothing was ignored. A model that rejects
+        every temperature, e.g. a search model, didn't use it.
+
+        :param temperature: The LLMClient's temperature.
+        :returns: True if the model's default temperature is the LLMClient's.
+        :rtype: bool
+        """
+        if str(self.model) in TEMPERATURE_REJECTED_MODELS:
+            return False
+        is_default = temperature == REASONING_MODEL_DEFAULT_TEMPERATURE
+        return is_default
 
     def append_message_tools_unsupported(self, offered_tools: list[SmarterDictType]) -> None:
         """

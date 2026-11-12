@@ -562,6 +562,25 @@ class TestModelWarnings(SmarterTestBase):
             self.client.create_completion(self.kwargs("gpt-6-luna"))
         self.client.append_message.assert_not_called()
 
+    def test_default_temperature_on_a_default_only_model_does_not_warn(self):
+        """The model ran at its default, 1.0, which is what the LLMClient asked for (#993)."""
+        self.prompt.llmclient.default_temperature = 1.0
+        with patch(CREATE_PATCH) as create:
+            self.client.create_completion(self.kwargs("gpt-6-luna"))
+        self.assertNotIn("temperature", create.call_args.kwargs)
+        self.client.append_message.assert_not_called()
+
+    def test_default_temperature_on_a_model_that_rejects_temperature_warns(self):
+        """A search model rejects every temperature, so it didn't use the LLMClient's 1.0 either."""
+        patch_model_set(self, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-5-search-api"})
+        patch_model_set(self, "TEMPERATURE_REJECTED_MODELS", {"gpt-5-search-api"})
+        self.prompt.llmclient.default_temperature = 1.0
+        with patch(CREATE_PATCH):
+            self.client.create_completion(self.kwargs("gpt-5-search-api"))
+        warnings = self.warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("defaultTemperature: 1.0", warnings[0])
+
     def test_a_warning_is_shown_once_per_prompt(self):
         """A prompt's later requests, e.g. after tool calls, don't repeat a warning."""
         with patch(CREATE_PATCH):
