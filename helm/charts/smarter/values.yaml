@@ -862,8 +862,11 @@ alloy:
           // A password or api key, and the password of a url, but not a value that Smarter
           // already masked: mask_string() and SqlConnection.get_connection_string() write
           // masks that start with "*", e.g. "api_key": "****abcd" and mysql://user:******@host.
+          // The word must not end a longer word, e.g. "tokenSecret": "<name>", which names a
+          // Smarter Secret (#990). A JSON null, true or false is matched outside the capture
+          // group, which stage.replace then leaves as it is, e.g. "apiKeySecret": null.
           stage.replace {
-            expression = "(?i)(?:password|passwd|secret|api_key|apikey)[\"']?\\s*[:=]\\s*[\"']?([^\\s\"',}*][^\\s\"',}]{3,})"
+            expression = "(?i)(?:^|[^a-z])(?:password|passwd|secret|api_key|apikey)[\"']?\\s*[:=]\\s*(?:(?:null|true|false)(?:[\\s,}\\]]|$)|[\"']?([^\\s\"',}*][^\\s\"',}]{3,}))"
             replace    = "<redacted>"
           }
           stage.replace {

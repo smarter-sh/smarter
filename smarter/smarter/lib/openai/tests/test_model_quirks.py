@@ -51,6 +51,12 @@ class TestApplyModelQuirks(SmarterTestBase):
         self.assertEqual(body, {})
         self.assertEqual(no_reasoning, {"temperature": 0.5, "reasoning_effort": "none"})
 
+    def test_temperature_rejected_models(self):
+        """The search models reject every temperature, and are default-only models too; the others are not."""
+        self.assertIn("gpt-5-search-api", model_quirks.TEMPERATURE_REJECTED_MODELS)
+        self.assertNotIn("gpt-6-luna", model_quirks.TEMPERATURE_REJECTED_MODELS)
+        self.assertLessEqual(model_quirks.TEMPERATURE_REJECTED_MODELS, model_quirks.DEFAULT_TEMPERATURE_ONLY_MODELS)
+
     def test_reasoning_omits_temperature(self):
         """A request that reasons at an effort other than 'none' omits temperature, for every model."""
         body = apply_model_quirks({"temperature": 0.5, "reasoning_effort": "low"}, "gpt-unknown")

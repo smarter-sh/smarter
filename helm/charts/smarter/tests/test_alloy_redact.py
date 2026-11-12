@@ -157,6 +157,33 @@ class TestAlloyKeepsWhatIsNotACredential(unittest.TestCase):
         line = "could not describe SmarterAuthToken 1234_5678_9012.someone: get() returned more than one"
         self.assertEqual(redact(line), line)
 
+    def test_secret_reference_keys(self):
+        """A key that ends in Secret holds a Secret's name, or its id, or null: not a credential (#990)."""
+        line = '      "tokenSecret": "huggingface_token",'
+        self.assertEqual(redact(line), line)
+        line = '  "apiKeySecret": null,'
+        self.assertEqual(redact(line), line)
+        line = '  "apiKeySecret": 12345,'
+        self.assertEqual(redact(line), line)
+
+    def test_json_literals(self):
+        """A JSON null, true or false after a password or secret key is not a credential (#990)."""
+        self.assertEqual(redact('{"password": null}'), '{"password": null}')
+        self.assertEqual(redact('{"secret": true, "x": 1}'), '{"secret": true, "x": 1}')
+        self.assertEqual(redact("api_key=false"), "api_key=false")
+
+    def test_values_that_begin_like_literals(self):
+        """A value that only begins with null, true or false is still redacted."""
+        self.assertEqual(redact("password=nullified123"), "password=<redacted>")
+        self.assertEqual(redact('{"secret": "null"}'), '{"secret": "<redacted>"}')
+
+    def test_keys_after_a_non_letter(self):
+        """A key whose word follows an underscore, a quote or the start of the line is still redacted."""
+        self.assertEqual(redact('"client_secret": "abcd1234"'), '"client_secret": "<redacted>"')
+        self.assertEqual(redact("DB_PASSWORD=abcd1234"), "DB_PASSWORD=<redacted>")
+        self.assertEqual(redact("password: abcd1234"), "password: <redacted>")
+        self.assertEqual(redact('"apiKey": "abcd1234"'), '"apiKey": "<redacted>"')
+
     def test_token_after_underscore(self):
         """A key such as access_token is still redacted."""
         self.assertEqual(redact("access_token=abcdefghijklmnop"), "access_token=<redacted>")
