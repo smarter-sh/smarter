@@ -21,7 +21,6 @@ from smarter.lib.typing import SmarterDictType
 
 from .caching import invalidate_cached_catalog
 from .models import MCPClient
-from .serializers import MCPClientSerializer
 from .signals import (
     mcpclient_connected,
     mcpclient_connection_failed,
@@ -40,14 +39,15 @@ module_prefix = __name__
 @receiver(post_save, sender=MCPClient)
 def mcpclient_saved(sender, instance: MCPClient, created: bool, **kwargs):
     """
-    Log the MCPClient, and refresh its catalog once the transaction commits.
+    Log the MCPClient's name and id, and refresh its catalog once the transaction commits.
 
-    Status updates are made with queryset updates, which do not send ``post_save``, so
-    this runs only when the MCPClient's configuration is saved.
+    Its serialized fields are not logged: they include the owner's user profile, whose
+    email address is personal data. Status updates are made with queryset updates, which
+    do not send ``post_save``, so this runs only when the MCPClient's configuration is saved.
     """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_saved()"
-    data = logging.SmarterFormattedText.json(MCPClientSerializer(instance).data)
-    logger.info("%s %s %s, %s", prefix, "created" if created else "updated", instance, data)
+    action = "created" if created else "updated"
+    logger.info("%s %s %s (id %s)", prefix, action, instance, instance.pk)
     if instance.is_active and instance.endpoint_url:
         mcpclient_id = instance.pk
         transaction.on_commit(lambda: refresh_mcpclient.delay(mcpclient_id))
