@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.13...v0.44.14-alpha.1) (2026-11-12)
+
+### Bug Fixes
+
+* **docs:** stop the docs build crashing on documented TypeVars ([2998b91](https://github.com/smarter-sh/smarter/commit/2998b91fa02dc8d925a9b4eb8715e11abd8deb01))
+
 ## [0.44.13](https://github.com/smarter-sh/smarter/compare/v0.44.12...v0.44.13) (2026-11-11)
 
 ### Bug Fixes
