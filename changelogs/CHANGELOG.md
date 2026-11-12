@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.14](https://github.com/smarter-sh/smarter/compare/v0.44.13...v0.44.14) (2026-11-12)
+
+### Bug Fixes
+
+* **docs:** stop the docs build crashing on documented TypeVars ([2998b91](https://github.com/smarter-sh/smarter/commit/2998b91fa02dc8d925a9b4eb8715e11abd8deb01))
+* **logging:** stop logging the owner's email in the *_saved() receivers of five apps ([a7ef281](https://github.com/smarter-sh/smarter/commit/a7ef281a7b2969dc58acc925505f05558fafa322)), closes [#988](https://github.com/smarter-sh/smarter/issues/988)
+* **provider, helm:** skip default-temperature warning, keep Secret refs ([65a104f](https://github.com/smarter-sh/smarter/commit/65a104f5cfcaf72a31c4ef35aaf8ddaae6f0894d)), closes [#993](https://github.com/smarter-sh/smarter/issues/993) [#990](https://github.com/smarter-sh/smarter/issues/990) [#971](https://github.com/smarter-sh/smarter/issues/971) [#993](https://github.com/smarter-sh/smarter/issues/993) [#990](https://github.com/smarter-sh/smarter/issues/990)
+* **provider:** read the text of a completion whose content is a list of parts in model verification ([709a5e6](https://github.com/smarter-sh/smarter/commit/709a5e68570f4671c98b802a8811a2b1e06c68ab)), closes [#991](https://github.com/smarter-sh/smarter/issues/991)
+
 ## [0.44.14-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.44.14-alpha.2...v0.44.14-alpha.3) (2026-11-12)
 
 ### Bug Fixes
