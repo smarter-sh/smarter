@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.44.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.44.14-alpha.1...v0.44.14-alpha.2) (2026-11-12)
+
+### Bug Fixes
+
+* **logging:** stop logging the owner's email in the *_saved() receivers of five apps ([a7ef281](https://github.com/smarter-sh/smarter/commit/a7ef281a7b2969dc58acc925505f05558fafa322)), closes [#988](https://github.com/smarter-sh/smarter/issues/988)
+* **provider:** read the text of a completion whose content is a list of parts in model verification ([709a5e6](https://github.com/smarter-sh/smarter/commit/709a5e68570f4671c98b802a8811a2b1e06c68ab)), closes [#991](https://github.com/smarter-sh/smarter/issues/991)
+
 ## [0.44.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.13...v0.44.14-alpha.1) (2026-11-12)
 
 ### Bug Fixes
