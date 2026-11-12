@@ -6,6 +6,7 @@ The openai client, the provider's connectivity test and the web page test are mo
 
 import os
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -51,8 +52,8 @@ def api_error(cls: type[APIStatusError], status_code: int, message: str) -> APIS
     return cls(message, response=httpx.Response(status_code, request=request), body=None)
 
 
-def completion(content: str | None) -> MagicMock:
-    """Return a chat completion whose first choice's message is ``content``."""
+def completion(content) -> MagicMock:
+    """Return a chat completion whose first choice's message is ``content``: a string, None, or a list of content parts."""
     response = MagicMock()
     response.choices[0].message.content = content
     return response
@@ -268,6 +269,19 @@ class TestProviderModelVerification(ProviderTestBase):
             self.openai.chat.completions.create.call_args.kwargs["max_completion_tokens"],
             model_checks.VERIFICATION_MAX_COMPLETION_TOKENS,
         )
+
+    def test_answers_with_content_parts(self):
+        """Test that a model whose content is a list of typed parts, as Mistral returns, passes translation and summarization: only the text parts are read."""
+        thinking = {"type": "thinking", "thinking": [{"type": "text", "text": "The user wants Spanish."}]}
+        translation = [thinking, {"type": "text", "text": "Hola"}]
+        self.openai.chat.completions.create.return_value = completion(translation)
+        self.assertTrue(model_checks.verify_model_translation(provider_model=self.model))
+
+        summary = [thinking, SimpleNamespace(type="text", text="OpenAI builds safe AGI for humanity.")]
+        self.openai.chat.completions.create.return_value = completion(summary)
+        self.assertTrue(model_checks.verify_model_summarization(provider_model=self.model))
+
+        self.assertEqual(model_checks.completion_text(completion([thinking])), "")
 
     def test_text_to_text_reuses_text_input(self):
         """Test that text_to_text, which runs the text_input check, does not call the provider again when text_input has just succeeded."""

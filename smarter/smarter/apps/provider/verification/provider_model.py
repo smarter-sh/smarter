@@ -107,14 +107,50 @@ def provider_api_key(provider_model: ProviderModel) -> Optional[str]:
     return api_key.get_secret(update_last_accessed=False)
 
 
+def content_part_text(part) -> str:
+    """
+    Return the text of one part of a message's content, or an empty string if it is not a text part.
+
+    Some providers, e.g. Mistral, return a message's content as a list of typed parts, such as
+    ``{"type": "thinking", ...}`` and ``{"type": "text", "text": "..."}``. The openai client
+    passes them on as dicts, or as objects with attributes.
+
+    :param part: One part of the content, a dict or an object.
+    :returns: The part's text, if its type is ``text``, and otherwise an empty string.
+    """
+    if isinstance(part, dict):
+        part_type = part.get("type")
+        text = part.get("text")
+    else:
+        part_type = getattr(part, "type", None)
+        text = getattr(part, "text", None)
+    if part_type != "text":
+        return ""
+    if not isinstance(text, str):
+        return ""
+    return text
+
+
 def completion_text(response) -> str:
     """
     Return the stripped text of a chat completion's first choice.
 
+    The content is usually a string. Some providers return a list of typed parts instead, whose
+    text parts are joined (see :func:`content_part_text`).
+
     :param response: A chat completion.
     :returns: The text, or an empty string when the message has none, as when a reasoning model runs out of tokens.
     """
-    return (response.choices[0].message.content or "").strip()
+    content = response.choices[0].message.content
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content.strip()
+    texts = []
+    for part in content:
+        texts.append(content_part_text(part))
+    text = "".join(texts)
+    return text.strip()
 
 
 def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
