@@ -110,6 +110,15 @@ request at most once per model. The search models reject any temperature, the de
 are here as well.
 """
 
+TEMPERATURE_REJECTED_MODELS: set[str] = models_where(lambda capabilities: capabilities.temperature == "rejected")
+"""
+Models that reject every temperature, their default too, e.g. the search models.
+
+They are also in :data:`DEFAULT_TEMPERATURE_ONLY_MODELS`, so requests to them omit temperature. For
+the others in that set, a defaultTemperature equal to the model's default is what the model used,
+so a warning about it would be a false positive (#993). For these, it is not.
+"""
+
 REASONING_MODEL_DEFAULT_TEMPERATURE = DEFAULT_TEMPERATURE
 """The only temperature that OpenAI's reasoning models accept while they reason, which warnings suggest."""
 

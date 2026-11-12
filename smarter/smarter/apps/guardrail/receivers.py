@@ -18,7 +18,6 @@ from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Guardrail
-from .serializers import GuardrailSerializer
 from .signals import (
     guardrail_blocked,
     guardrail_escalated,
@@ -34,7 +33,10 @@ module_prefix = __name__
 @receiver(post_save, sender=Guardrail)
 def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
     """
-    Log a created or updated Guardrail.
+    Log a created or updated Guardrail, with its name and id.
+
+    Its serialized fields are not logged: they include the owner's user profile, whose
+    email address is personal data.
 
     :param sender: The model class, :class:`~smarter.apps.guardrail.models.Guardrail`.
     :param instance: The saved Guardrail.
@@ -42,8 +44,8 @@ def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
     :param kwargs: The other ``post_save`` arguments.
     """
     prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_saved()"
-    data = logging.SmarterFormattedText.json(GuardrailSerializer(instance).data)
-    logger.info("%s %s %s, %s", prefix, "created" if created else "updated", instance, data)
+    action = "created" if created else "updated"
+    logger.info("%s %s %s (id %s)", prefix, action, instance, instance.pk)
 
 
 @receiver(pre_delete, sender=Guardrail)
