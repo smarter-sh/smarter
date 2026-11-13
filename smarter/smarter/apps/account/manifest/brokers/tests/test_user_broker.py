@@ -66,7 +66,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     @property
     def broker(self) -> SAMUserBroker:
-        return super().broker  # type: ignore
+        return super().broker  # type: ignore[return-value]
 
     @property
     def kwargs(self) -> SmarterDictType:
@@ -164,7 +164,9 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         """Test that the manifest property can initialize a SAMUser model."""
         # verify that the manifest property
         # can correctly initialize a SAMUser Pydantic model.
-        sam_user = SAMUser(**self.broker.manifest.model_dump())
+        manifest = self.broker.manifest
+        assert manifest is not None
+        sam_user = SAMUser(**manifest.model_dump())
         self.assertIsInstance(sam_user, SAMUser)
 
     def test_username_property(self):
@@ -323,8 +325,10 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
             }
             }
         """
+        manifest = self.broker.manifest
+        assert manifest is not None
         kwargs = {
-            "name": self.broker.manifest.metadata.name,
+            "name": manifest.metadata.name,
         }
         response = self.broker.apply(self.request, kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
@@ -332,67 +336,69 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
+        user = self.broker.brokered_user
+        assert user is not None
+        user_profile = self.broker.brokered_user_profile
+        assert user_profile is not None
 
         # User fields
         self.assertEqual(
-            self.broker.manifest.spec.config.firstName,
-            self.broker.brokered_user.first_name,
-            f"firstName does not match manifest: {self.broker.manifest.spec.config.firstName}, user: {self.broker.brokered_user.first_name}",
+            manifest.spec.config.firstName,
+            user.first_name,
+            f"firstName does not match manifest: {manifest.spec.config.firstName}, user: {user.first_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.lastName,
-            self.broker.brokered_user.last_name,
-            f"lastName does not match manifest: {self.broker.manifest.spec.config.lastName}, user: {self.broker.brokered_user.last_name}",
+            manifest.spec.config.lastName,
+            user.last_name,
+            f"lastName does not match manifest: {manifest.spec.config.lastName}, user: {user.last_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.email,
-            self.broker.brokered_user.email,
-            f"email does not match manifest: {self.broker.manifest.spec.config.email}, user: {self.broker.brokered_user.email}",
+            manifest.spec.config.email,
+            user.email,
+            f"email does not match manifest: {manifest.spec.config.email}, user: {user.email}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.isStaff,
-            self.broker.brokered_user.is_staff,
-            f"isStaff does not match manifest: {self.broker.manifest.spec.config.isStaff}, user: {self.broker.brokered_user.is_staff}",
+            manifest.spec.config.isStaff,
+            user.is_staff,
+            f"isStaff does not match manifest: {manifest.spec.config.isStaff}, user: {user.is_staff}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.isActive,
-            self.broker.brokered_user.is_active,
-            f"isActive does not match manifest: {self.broker.manifest.spec.config.isActive}, user: {self.broker.brokered_user.is_active}",
+            manifest.spec.config.isActive,
+            user.is_active,
+            f"isActive does not match manifest: {manifest.spec.config.isActive}, user: {user.is_active}",
         )
 
         # UserProfile fields
         self.assertEqual(
-            self.broker.manifest.metadata.name,
-            self.broker.brokered_user_profile.name,
-            f"name does not match manifest: {self.broker.manifest.metadata.name}, user_profile: {self.broker.brokered_user_profile.name}",
+            manifest.metadata.name,
+            user_profile.name,
+            f"name does not match manifest: {manifest.metadata.name}, user_profile: {user_profile.name}",
         )
         self.assertEqual(
-            self.broker.manifest.metadata.description,
-            self.broker.brokered_user_profile.description,
-            f"description does not match manifest: {self.broker.manifest.metadata.description}, user_profile: {self.broker.brokered_user_profile.description}",
+            manifest.metadata.description,
+            user_profile.description,
+            f"description does not match manifest: {manifest.metadata.description}, user_profile: {user_profile.description}",
         )
         self.assertEqual(
-            self.broker.manifest.metadata.version,
-            self.broker.brokered_user_profile.version,
-            f"version does not match manifest: {self.broker.manifest.metadata.version}, user_profile: {self.broker.brokered_user_profile.version}",
+            manifest.metadata.version,
+            user_profile.version,
+            f"version does not match manifest: {manifest.metadata.version}, user_profile: {user_profile.version}",
         )
 
-        # self.broker.manifest.metadata.tags is a list of strings.
+        # manifest.metadata.tags is a list of strings.
         # verify that user_profile.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        manifest_tags = set(manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.brokered_user_profile.tags, TaggableManager):
-            django_orm_tags = (
-                set(self.broker.brokered_user_profile.tags_list) if self.broker.brokered_user_profile.tags else set()
-            )
-        elif isinstance(self.broker.brokered_user_profile.tags, set):
-            django_orm_tags = self.broker.brokered_user_profile.tags
+        if isinstance(user_profile.tags, TaggableManager):
+            django_orm_tags = set(user_profile.tags_list) if user_profile.tags else set()
+        elif isinstance(user_profile.tags, set):
+            django_orm_tags = user_profile.tags
         else:
-            self.fail(f"user_profile.tags is of unexpected type: {type(self.broker.brokered_user_profile.tags)}")
+            self.fail(f"user_profile.tags is of unexpected type: {type(user_profile.tags)}")
 
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # manifest.metadata.annotations is a map of keys to string values.
         # verify that user_profile.annotations holds the same annotations.
         def normalize_annotation_value(val):
             if isinstance(val, datetime.datetime):
@@ -407,8 +413,8 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         def normalize_annotations(annotations):
             return {k: normalize_annotation_value(v) for k, v in sorted((annotations or {}).items())}
 
-        manifest_annotations = normalize_annotations(self.broker.manifest.metadata.annotations)
-        orm_annotations = normalize_annotations(self.broker.brokered_user_profile.annotations)
+        manifest_annotations = normalize_annotations(manifest.metadata.annotations)
+        orm_annotations = normalize_annotations(user_profile.annotations)
         self.assertEqual(
             manifest_annotations,
             orm_annotations,
@@ -501,14 +507,16 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_delete_user_not_found(self):
         """Test delete method raises not found for missing user."""
-        self.request._body = None
+        # a request without a body, so that the broker has no manifest; HttpRequest types _body as bytes.
+        self.request._body = None  # type: ignore[assignment]  # pylint: disable=protected-access
         self._broker = self.SAMBrokerClass(self.request)
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.delete(self.request, {"name": "nonexistent-user"})
 
     def test_describe_user_not_found(self):
         """Test describe method raises not found for missing user."""
-        self.request._body = None
+        # a request without a body, so that the broker has no manifest; HttpRequest types _body as bytes.
+        self.request._body = None  # type: ignore[assignment]  # pylint: disable=protected-access
         self._broker = self.SAMBrokerClass(self.request)
         # with self.assertRaises(SAMBrokerErrorNotFound):
         #     self.broker.describe(self.request, {"name": "nonexistent-user"})

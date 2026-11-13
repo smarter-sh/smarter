@@ -76,9 +76,11 @@ class TestGuardrailEvents(GuardrailTestBase):
             session_key="abc",
         )
         self.assertIsInstance(event, GuardrailEvent)
+        assert event is not None
         self.assertEqual(event.guardrail_name, guardrail.name)
         self.assertEqual(event.stage, "input")
         self.assertEqual(event.session_key, "abc")
+        assert event.excerpt is not None
         self.assertNotIn("4111 1111", event.excerpt)
         self.assertFalse(event.reviewed)
         self.assertEqual(str(event), f"{guardrail.name} input redacted")
@@ -98,6 +100,7 @@ class TestGuardrailEvents(GuardrailTestBase):
         """Test that deleting a guardrail keeps its events, with its name."""
         guardrail = self.create_guardrail("test_events_deleted")
         event = record_event(guardrail=guardrail, stage=GuardrailStage.PRE, disposition="blocked")
+        assert event is not None
         self.addCleanup(GuardrailEvent.objects.filter(pk=event.pk).delete)
         guardrail.delete()
         event.refresh_from_db()

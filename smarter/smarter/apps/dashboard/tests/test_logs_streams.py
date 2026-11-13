@@ -98,7 +98,8 @@ class TestLogStreams(TestAccountMixin):
     def test_helpers(self):
         """Test the payload decoding, SSE framing and internal log filtering helpers."""
         self.assertEqual(streams._decode_redis_payload(b"abc"), "abc")
-        self.assertEqual(streams._decode_redis_payload(123), "123")
+        # an int, deliberately: the helper stringifies any payload it doesn't recognize
+        self.assertEqual(streams._decode_redis_payload(123), "123")  # type: ignore[arg-type]
         self.assertEqual(list(streams._iter_sse_data_frames("a\nb")), ["data: a\n", "data: b\n", "\n"])
         self.assertEqual(list(streams._iter_sse_data_frames("")), ["data: \n", "\n"])
 

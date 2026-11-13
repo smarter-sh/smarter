@@ -3,6 +3,8 @@
 import json
 from typing import get_args
 
+from django.db import models
+
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.mcpclient.connection import (
     MCPServerCatalog,
@@ -21,6 +23,7 @@ from smarter.apps.mcpclient.contract.models import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
+from smarter.lib.typing import required
 
 
 class TestMCPClientContractModels(MCPClientTestBase):
@@ -34,9 +37,10 @@ class TestMCPClientContractModels(MCPClientTestBase):
         ]
         for literal, field in cases:
             with self.subTest(field=field):
-                self.assertEqual(
-                    list(get_args(literal)), [value for value, _ in MCPClient._meta.get_field(field).choices]
-                )
+                model_field = MCPClient._meta.get_field(field)
+                assert isinstance(model_field, models.Field)
+                choices = required(model_field.choices, f"MCPClient.{field}.choices")
+                self.assertEqual(list(get_args(literal)), [value for value, _ in choices])
 
     def test_mcpclient_is_the_serializers_output(self):
         model = MCPClientApiMCPClient.from_model(self.mcpclient)

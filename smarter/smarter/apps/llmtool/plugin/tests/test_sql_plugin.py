@@ -85,7 +85,10 @@ class TestSqlPlugin(PluginTestBase):
 
     def test_sql_plugin_data_test_values(self):
         """Test that the SqlPlugin test values are persisted."""
-        test_values = self.load_sql_plugin().plugin_data.test_values  # type: ignore[union-attr]
+        plugin_data = self.load_sql_plugin().plugin_data
+        assert plugin_data is not None
+        test_values = plugin_data.test_values
+        assert test_values is not None
         self.assertEqual({tv["name"] for tv in test_values}, {"username", "unit"})
 
     def test_sql_plugin_data_is_memoized(self):
@@ -169,9 +172,10 @@ class TestSqlPlugin(PluginTestBase):
     def test_sql_plugin_data_django_model_snake_case_keys(self):
         """Test that the Django model dict uses snake_case keys."""
         model = self.sql_plugin.plugin_data_django_model
-        self.assertIn("test_values", model)  # type: ignore[operator]
-        self.assertNotIn("testValues", model)  # type: ignore[operator]
-        self.assertNotIn("sqlQuery", model)  # type: ignore[operator]
+        assert model is not None
+        self.assertIn("test_values", model)
+        self.assertNotIn("testValues", model)
+        self.assertNotIn("sqlQuery", model)
 
     def test_sql_plugin_data_django_model_without_manifest(self):
         """Test that the Django model dict is None without a manifest."""
@@ -289,6 +293,7 @@ class TestSqlPlugin(PluginTestBase):
 
     def test_sql_tool_call_empty_args(self):
         """Test tool calls with empty arguments."""
+        function_args: object
         for function_args in (None, {}, [], ""):
             rows = self.sql_rows(self.load_sql_plugin(), function_args)
             self.assertEqual(rows, [{"username": None, "unit": None}], f"function_args={function_args!r}")
@@ -520,6 +525,7 @@ class TestSqlPlugin(PluginTestBase):
 
     def test_sql_tool_call_empty_result_returns_empty_string(self):
         """Test that an empty result returns an empty string."""
+        empty: object
         for empty in ("", None, [], {}):
             cache.clear()
             with mock.patch.object(SqlConnection, "execute_query", return_value=empty):

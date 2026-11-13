@@ -62,7 +62,7 @@ class TestSmarterValidator(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             SmarterValidator.validate_json("{key: value}")
         with self.assertRaises(SmarterValueError):
-            SmarterValidator.validate_json(123)
+            SmarterValidator.validate_json(123)  # type: ignore[arg-type]  # not a string, to test that it is refused
 
     def test_is_valid_json(self):
         self.assertTrue(SmarterValidator.is_valid_json('{"key": "value"}'))

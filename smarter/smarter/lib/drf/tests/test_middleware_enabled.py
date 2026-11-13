@@ -6,6 +6,7 @@ so these tests turn the switch on, and authenticate requests with real tokens.
 """
 
 import asyncio
+import inspect
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
@@ -24,6 +25,7 @@ from smarter.lib.drf.token_authentication import (
     SmarterAnonymousUser,
     SmarterTokenAuthentication,
 )
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.lib.drf.middleware"
 API_PATH = "/api/v1/cli/whoami/"
@@ -46,10 +48,9 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
         self.factory = RequestFactory()
 
     def request(self, path: str = API_PATH, authorization: str | None = None):
-        headers = {"HTTP_HOST": "localhost:9357"}
+        request = self.factory.post(path, HTTP_HOST="localhost:9357")
         if authorization is not None:
-            headers["HTTP_AUTHORIZATION"] = authorization
-        request = self.factory.post(path, **headers)
+            request.META["HTTP_AUTHORIZATION"] = authorization
         SessionMiddleware(lambda r: None).process_request(request)  # type: ignore[arg-type]
         return request
 
@@ -57,7 +58,7 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
         """Test that a valid token logs in its user."""
         request = self.request(authorization=f"Token {self.token_key}")
         with patch(f"{MODULE}.smarter_token_authentication_success") as success:
-            response = self.middleware(request)
+            response = http_response(self.middleware(request))
         self.assertEqual(response.content, b"ok")
         self.assertEqual(request.user, self.admin_user)
         success.send.assert_called_once()
@@ -80,14 +81,16 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
         request = self.request(authorization=f"Token {self.token_key}")
         self.middleware(request)
         with patch.object(SmarterTokenAuthentication, "authenticate_credentials") as authenticate_credentials:
-            user, _ = SmarterTokenAuthentication().authenticate(Request(request))
+            result = SmarterTokenAuthentication().authenticate(Request(request))
         authenticate_credentials.assert_not_called()
+        assert result is not None
+        user, _ = result
         self.assertEqual(user, self.admin_user)
 
     def test_invalid_token(self):
         """Test that an invalid token returns a 401, without calling the view."""
         with patch(f"{MODULE}.smarter_token_authentication_failure") as failure:
-            response = self.middleware(self.request(authorization="Token not-a-valid-token"))
+            response = http_response(self.middleware(self.request(authorization="Token not-a-valid-token")))
         self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
         failure.send.assert_called_once()
 
@@ -102,19 +105,21 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
         ]
         for request in cases:
             with self.subTest(authorization=request.META.get("HTTP_AUTHORIZATION")):
-                self.assertEqual(self.middleware(request).content, b"ok")
+                self.assertEqual(http_response(self.middleware(request)).content, b"ok")
 
     def test_already_authenticated(self):
         request = self.request(authorization="Token not-a-valid-token")
         request.auth = "already"
-        self.assertEqual(self.middleware(request).content, b"ok")
+        self.assertEqual(http_response(self.middleware(request)).content, b"ok")
 
     def test_switch_off(self):
         with patch("smarter.lib.django.waffle.switch_is_active", return_value=False):
-            self.assertEqual(self.middleware(self.request(authorization="Token not-a-valid-token")).content, b"ok")
+            response = http_response(self.middleware(self.request(authorization="Token not-a-valid-token")))
+            self.assertEqual(response.content, b"ok")
 
     def test_amnesty(self):
-        self.assertEqual(self.middleware(self.request("/healthz/", authorization="Token x")).content, b"ok")
+        response = http_response(self.middleware(self.request("/healthz/", authorization="Token x")))
+        self.assertEqual(response.content, b"ok")
 
     def test_async(self):
         """Test that the async middleware authenticates, and returns the view's response, not its coroutine."""
@@ -124,7 +129,9 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
 
         middleware = SmarterTokenAuthenticationMiddleware(get_response)
         request = self.request(authorization=f"Token {self.token_key}")
-        response = asyncio.run(middleware(request))
+        pending = middleware(request)
+        assert inspect.isawaitable(pending)
+        response = http_response(asyncio.run(pending))
         self.assertEqual(response.content, b"async ok")
         self.assertEqual(request.user, self.admin_user)
 
@@ -145,7 +152,8 @@ class TestSmarterTokenAuthenticationMiddlewareEnabled(ApiV1TestBase):
     def test_validate_token_lifetime(self):
         """Test that an expired token, or a token that isn't found, is logged, and a missing digest is ignored."""
         with patch(f"{MODULE}.logger") as logger:
-            self.middleware.validate_token_lifetime(user=self.admin_user, auth_obj=object())
+            # deliberately not an api key, which is ignored
+            self.middleware.validate_token_lifetime(user=self.admin_user, auth_obj=object())  # type: ignore[arg-type]
             logger.warning.assert_not_called()
             self.middleware.validate_token_lifetime(user=self.admin_user, auth_obj=MagicMock(digest="not-a-digest"))
             self.assertEqual(logger.warning.call_count, 1)

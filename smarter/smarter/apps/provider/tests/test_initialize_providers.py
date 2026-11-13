@@ -83,7 +83,9 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(get.call_args.kwargs["headers"], {"Authorization": "Bearer sk-test-initialize"})
         provider = Provider.objects.get(name=self.name)
         self.assertTrue(provider.is_active)
+        assert provider.api_key is not None
         self.assertEqual(provider.api_key.get_secret(), "sk-test-initialize")
+        assert provider.logo.name is not None
         self.assertTrue(provider.logo.name.endswith(".svg"))
         models = ProviderModel.objects.filter(provider=provider)
         self.assertEqual(sorted(models.values_list("name", flat=True)), ["model-a", "model-b"])
@@ -268,6 +270,7 @@ class TestInitializeProviders(TestAccountMixin):
             self.initialize()
         provider = Provider.objects.get(name=self.name)
         self.addCleanup(provider.logo.delete, save=False)
+        assert provider.api_key is not None
         self.assertEqual(provider.api_key.get_secret(), "sk-test-initialize")
 
     def test_models_api_errors(self):
@@ -293,7 +296,8 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertIn("error text", self.command.stdout.getvalue())
 
     def test_no_user_profile(self):
-        self.command.user_profile = None
+        # the command handles a missing user profile, though user_profile is annotated as a UserProfile.
+        self.command.user_profile = None  # type: ignore[assignment]
         self.initialize()
         self.assertFalse(Provider.objects.filter(name=self.name).exists())
 
@@ -432,7 +436,9 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertIsInstance(stored, str)
         self.assertEqual(json.loads(stored), account)
         secret = Secret.objects.get(user_profile=self.user_profile, name=name)
-        self.assertEqual(json.loads(secret.get_secret()), account)
+        secret_string = secret.get_secret()
+        assert secret_string is not None
+        self.assertEqual(json.loads(secret_string), account)
 
     def test_handle(self):
         """Test that handle() initializes each provider for the smarter admin, and reports an error."""

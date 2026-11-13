@@ -7,6 +7,7 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.proxy.api.v1.urls import ProxyApiV1ReverseViews as Names
+from smarter.apps.proxy.models import Proxy
 from smarter.apps.proxy.services import PROXY_RESPONSE_HEADER, Usage
 from smarter.lib import json
 
@@ -31,6 +32,8 @@ def url(name: str, path: str = "") -> str:
 
 class TestProxyPassthroughApi(ProxyTestBase):
     """Test the passthrough, as a provider's SDK calls it."""
+
+    test_proxy: Proxy
 
     @classmethod
     def setUpClass(cls):

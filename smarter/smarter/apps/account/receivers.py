@@ -290,7 +290,7 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
 
 
 @receiver(post_delete, sender=Account)
-def account_post_delete(sender: Account, instance: Account, **kwargs):
+def account_post_delete(sender: type[Account], instance: Account, **kwargs):
     """
     Log the deletion of an Account.
 

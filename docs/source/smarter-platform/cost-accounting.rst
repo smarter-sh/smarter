@@ -44,6 +44,11 @@ tracks the following cost metrics:
    * - Reference
      - External provider billing reference. eg fp_b547601dbd
 
+Every user can read their own token usage, the series that the web console's dashboard charts, with
+an api key: ``GET /api/v1/accounts/usage/?periodicity=24_hours`` returns the tokens and cost of their
+LLM requests, one point per hour, day or month (``12_hours``, ``24_hours``, ``7_days``, ``1_month``
+or ``1_year``), oldest first, as the Smarter SDKs do.
+
 An example of a custom SQL query to aggregate token usage by session for a given month is shown below. Other
 Django models associated with cost accounting include: `LLMClientRequests`, `PluginSelectorHistory`, and `Chat`.
 

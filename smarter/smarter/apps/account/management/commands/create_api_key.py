@@ -116,9 +116,10 @@ class Command(SmarterCommand):
             if account:
                 user_profile = get_user_profile(f"username {username}", account=account, user=user)
             else:
-                user_profile = UserProfile.objects.filter(user=user).first()
-                if not user_profile:
+                first_profile = UserProfile.objects.filter(user=user).first()
+                if not first_profile:
                     raise CommandError(f"The user {username} doesn't belong to an account.")
+                user_profile = first_profile
             account = user_profile.account
         else:
             # without a username, the account number was given, and get_account() found it.

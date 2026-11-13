@@ -198,10 +198,11 @@ class TestConsoleSessionView(TestAccountMixin):
         """The welcome dialog opens by itself until it is closed in this session."""
         request = RequestFactory().get(self.url)
         request.user = self.non_admin_user
-        request.session = {}
+        # a dict stands in for the session, which welcome() only reads and writes by key.
+        request.session = {}  # type: ignore[assignment]
         with mock.patch.object(views, "user_was_welcomed", return_value=False):
             first = views.welcome(request, self.non_admin_user)
-            request.session = {WELCOME_SHOWN_SESSION_KEY: True}
+            request.session = {WELCOME_SHOWN_SESSION_KEY: True}  # type: ignore[assignment]
             later = views.welcome(request, self.non_admin_user)
         self.assertTrue(first.show)
         self.assertTrue(first.show_at_startup)

@@ -12,7 +12,7 @@ from smarter.apps.proxy.manifest.models.proxy.model import SAMProxy
 from smarter.apps.proxy.manifest.models.proxy.spec import SAMProxySpec, SAMProxySpecAuth
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .base_classes import get_data_path, get_test_data
 
@@ -135,8 +135,8 @@ class TestSAMProxy(unittest.TestCase):
         model = SAMProxy(
             apiVersion=loader.manifest_api_version,
             kind=loader.manifest_kind,
-            metadata=SAMProxyMetadata(**loader.manifest_metadata),
-            spec=SAMProxySpec(**loader.manifest_spec),
+            metadata=SAMProxyMetadata(**required(loader.manifest_metadata, "metadata")),
+            spec=SAMProxySpec(**required(loader.manifest_spec, "spec")),
         )
         self.assertEqual(model.kind, MANIFEST_KIND)
         self.assertEqual(MANIFEST_KIND, "Proxy")
@@ -156,12 +156,12 @@ class TestSAMProxy(unittest.TestCase):
             with self.subTest(manifest=os.path.basename(filename)):
                 loader = SAMLoader(file_path=filename)
                 self.assertEqual(loader.manifest_kind, MANIFEST_KIND)
-                metadata = SAMProxyMetadata(**loader.manifest_metadata)
-                model = SAMProxySpec(**loader.manifest_spec)
+                metadata = SAMProxyMetadata(**required(loader.manifest_metadata, "metadata"))
+                model = SAMProxySpec(**required(loader.manifest_spec, "spec"))
                 self.assertTrue(model.allowedPaths, "an example Proxy must restrict its paths.")
                 self.assertTrue(model.apiKey)
                 self.assertTrue(model.baseUrl and model.baseUrl.startswith("https://"))
-                self.assertEqual(metadata.annotations["smarter.sh/proxy/builtin"], "true")
+                self.assertEqual(required(metadata.annotations, "annotations")["smarter.sh/proxy/builtin"], "true")
                 names.add(metadata.name)
         self.assertEqual(len(names), len(files), "example Proxy names must be unique.")
         self.assertTrue({"openai", "anthropic", "googleai", "mistral"} <= names)

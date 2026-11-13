@@ -21,6 +21,7 @@ from smarter.lib.django.views import (
     redirect_and_expire_cache,
     smarter_cache_page_by_user,
 )
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.lib.django.views"
 
@@ -70,7 +71,7 @@ class TestSmarterViews(TestAccountMixin):
         self.assertFalse(view.ready)
         self.assertIn("SmarterView", view.formatted_class_name)
         self.assertEqual(view.remove_comments("<p><!-- x -->a</p>"), "<p>a</p>")
-        response = view.render_clean_html(self.request(), template_path="not/a/template.html")
+        response = http_response(view.render_clean_html(self.request(), template_path="not/a/template.html"))
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def test_missing_template_is_a_server_error(self):
@@ -126,7 +127,7 @@ class TestSmarterViews(TestAccountMixin):
         response = view(self.request("/admin-page/", user=self.non_admin_user))
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertIn("/admin/login/", response["Location"])
-        self.assertEqual(view(self.request(user=self.admin_user)).content, b"admin ok")
+        self.assertEqual(http_response(view(self.request(user=self.admin_user))).content, b"admin ok")
 
     def test_cached_view_error_response(self):
         """Test that an error response of a cached view is returned as is."""
@@ -190,6 +191,8 @@ class TestSmarterCachePageByUser(TestAccountMixin):
             return HttpResponse(f"call {self.calls}")
 
         self.view = view
+        # smarter_cache_page_by_user() adds invalidate() to the view, which its Callable return type doesn't declare.
+        self.invalidate = view.invalidate  # type: ignore[attr-defined]
 
     def request(self, user=None):
         request = self.factory.get("/cached/page/", HTTP_HOST="localhost:9357")
@@ -200,15 +203,15 @@ class TestSmarterCachePageByUser(TestAccountMixin):
         with patch(f"{MODULE}.waffle.switch_is_active", return_value=False):
             self.view(self.request())
             self.view(self.request())
-            self.view.invalidate(self.request())
+            self.invalidate(self.request())
         self.assertEqual(self.calls, 2)
 
     def test_cached_by_user(self):
         with patch(f"{MODULE}.waffle.switch_is_active", return_value=True):
             for user in (None, self.admin_user):
-                self.view.invalidate(self.request(user))
-                self.addCleanup(self.view.invalidate, self.request(user))
+                self.invalidate(self.request(user))
+                self.addCleanup(self.invalidate, self.request(user))
                 first = self.view(self.request(user)).content
                 self.assertEqual(self.view(self.request(user)).content, first)
-            self.view.invalidate(None)
+            self.invalidate(None)
         self.assertEqual(self.calls, 2)

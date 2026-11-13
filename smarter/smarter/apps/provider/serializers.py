@@ -179,7 +179,8 @@ class ProviderVerificationSerializer(SmarterCamelCaseSerializer):
                 queryset = queryset.filter(verification_type__iexact=verification_type)
             return queryset
 
-        queryset = ProviderVerification.objects.filter(is_active=True)
+        # ProviderVerification has no is_active: an active verification is one of an active Provider.
+        queryset = ProviderVerification.objects.filter(provider__is_active=True)
         return queryset
 
 

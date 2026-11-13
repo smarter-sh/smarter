@@ -41,6 +41,7 @@ from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getLogger(__name__)
 MANIFEST_PATH_SQL_PLUGIN = os.path.abspath(
@@ -68,6 +69,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
     """
 
     test_sam_sql_plugin_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMSqlPlugin()"
+    loader: SAMLoader
 
     @classmethod
     def setUpClass(cls):
@@ -84,13 +86,23 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         super().setUp()
         self._manifest_filespec = MANIFEST_PATH_SQL_PLUGIN
 
+    @property
+    def manifest_metadata(self) -> SmarterDictType:
+        """The test manifest's metadata, which it always has."""
+        return required(self.loader.manifest_metadata, "loader.manifest_metadata")
+
+    @property
+    def manifest_spec(self) -> SmarterDictType:
+        """The test manifest's spec, which it always has."""
+        return required(self.loader.manifest_spec, "loader.manifest_spec")
+
     def test_model_initialization(self):
         """Test that the SAMSqlPlugin model can be initialized with valid data."""
         SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMSqlPluginSpec(**self.manifest_spec),
             status=(
                 SAMPluginCommonStatus(**self.loader.manifest_status)
                 if self.loader and self.loader.manifest_status
@@ -106,11 +118,12 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
     def test_invalid_field_types(self):
         """Test that wrong types for fields raises ValidationError."""
         with self.assertRaises(Exception):
+            # the wrong types are the test; pyright types the constructor, mypy's pydantic plugin doesn't.
             SAMSqlPlugin(
-                apiVersion=123,  # type: ignore
-                kind=456,  # type: ignore
-                metadata=self.loader.manifest_metadata,  # type: ignore
-                spec=self.loader.manifest_spec,  # type: ignore
+                apiVersion=123,  # pyright: ignore[reportArgumentType]
+                kind=456,  # pyright: ignore[reportArgumentType]
+                metadata=self.manifest_metadata,  # pyright: ignore[reportArgumentType]
+                spec=self.manifest_spec,  # pyright: ignore[reportArgumentType]
             )
 
     def test_alternative_initialization(self):
@@ -118,8 +131,8 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
-            "metadata": self.loader.manifest_metadata,
-            "spec": self.loader.manifest_spec,
+            "metadata": self.manifest_metadata,
+            "spec": self.manifest_spec,
         }
         SAMSqlPlugin(**data)
 
@@ -128,19 +141,20 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         model = SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMSqlPluginSpec(**self.manifest_spec),
         )
         with self.assertRaises(PydanticValidationError):
-            model.kind = "NewKind"
+            # a frozen model's field, which mypy refuses to assign; the test checks that it fails at runtime too.
+            model.kind = "NewKind"  # type: ignore[misc]
 
     def test_optional_status_field(self):
         """Test that status is optional and can be omitted."""
         model = SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMSqlPluginSpec(**self.manifest_spec),
         )
         self.assertIsNone(model.status)
 
@@ -150,7 +164,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec={"not": "a valid spec"},  # type: ignore
             )
 
@@ -161,26 +175,26 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata={"not": "a valid metadata"},  # type: ignore
-                spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+                spec=SAMSqlPluginSpec(**self.manifest_spec),
             )
 
     def test_empty_parameters(self):
         """Test that empty parameters list is valid if allowed by spec."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             manifest_spec["sqlData"]["parameters"] = []
         model = SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMSqlPluginSpec(**manifest_spec),
         )
         self.assertEqual(model.spec.sqlData.parameters, [])
 
     def test_parameter_missing_required_field(self):
         """Test that parameter missing required field raises ValidationError."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             param = dict(manifest_spec["sqlData"]["parameters"][0])
@@ -191,13 +205,13 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
 
     def test_parameter_wrong_type(self):
         """Test that parameter with wrong type value raises ValidationError."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             param = dict(manifest_spec["sqlData"]["parameters"][0])
@@ -207,13 +221,13 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
 
     def test_sql_query_required(self):
         """Test that sqlQuery is required in sqlData."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             if "sqlQuery" in manifest_spec["sqlData"]:
@@ -222,7 +236,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
 
@@ -231,22 +245,22 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
         model = SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSqlPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMSqlPluginSpec(**self.manifest_spec),
         )
         self.assertIn("SAMSqlPlugin", repr(model))
         self.assertIn("SAMSqlPlugin", str(model))
 
     def test_sqldata_sqlquery_required_and_type(self):
         """Test that sqlQuery is required and must be a string."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             manifest_spec["sqlData"]["sqlQuery"] = "SELECT 42;"
         model = SAMSqlPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMSqlPluginSpec(**manifest_spec),
         )
         self.assertEqual(model.spec.sqlData.sqlQuery, "SELECT 42;")
@@ -257,7 +271,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
 
@@ -267,13 +281,13 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
 
     def test_sqldata_parameters_various_cases(self):
         """Test parameters: present, None, empty, wrong type, invalid Parameter."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             # Valid list
@@ -287,7 +301,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.sqlData.parameters, list)
@@ -297,7 +311,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.sqlData.parameters)
@@ -307,7 +321,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.sqlData.parameters, [])
@@ -318,7 +332,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 
@@ -328,13 +342,13 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 
     def test_sqldata_testvalues_various_cases(self):
         """Test testValues: present, None, wrong type, valid/invalid TestValue."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             # Valid list
@@ -342,7 +356,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.sqlData.testValues, list)
@@ -352,7 +366,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.sqlData.testValues)
@@ -363,7 +377,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 
@@ -373,13 +387,13 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 
     def test_sqldata_limit_default_and_validation(self):
         """Test limit: default, custom, below minimum, wrong type."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "sqlData" in manifest_spec:
             manifest_spec["sqlData"] = dict(manifest_spec["sqlData"])
             # Remove limit for default
@@ -387,7 +401,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.sqlData.limit, 100)
@@ -397,7 +411,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
             model = SAMSqlPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMSqlPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.sqlData.limit, 10)
@@ -408,7 +422,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 
@@ -418,7 +432,7 @@ class TestSAMSqlPlugin(TestSAMBrokerBaseClass):
                 SAMSqlPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMSqlPluginSpec(**manifest_spec),
                 )
 

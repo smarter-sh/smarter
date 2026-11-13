@@ -176,7 +176,7 @@ class TestProviderProperties(ProviderTestBase):
         self.assertFalse(self.provider.is_official_provider)
         self.assertEqual(self.provider.rfc1034_compliant_name, self.provider.name.replace("_", "-"))
         self.assertIn(self.provider.name, str(self.provider))
-        self.assertIsNone(self.provider.validate())
+        self.provider.validate()
 
     def test_get_cached_provider_by_name(self):
         found = Provider.get_cached_provider_by_account_id_and_name(
@@ -237,7 +237,10 @@ class TestVerificationModels(ProviderTestBase):
         verification = ProviderVerification.objects.create(
             provider=self.provider, verification_type=ProviderVerificationTypes.LOGO, is_successful=True
         )
-        self.assertGreater(verification.next_verification, verification.updated_at)
+        next_verification = verification.next_verification
+        assert next_verification is not None
+        assert verification.updated_at is not None
+        self.assertGreater(next_verification, verification.updated_at)
 
     def test_provider_model_verification(self):
         model = ProviderModel.objects.create(provider=self.provider, name="test-model")

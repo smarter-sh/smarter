@@ -48,7 +48,8 @@ class TestAnnotationModel(TestAccountMixin):
 
     def test_constructor_and_create(self):
         """Test that annotations passed to the constructor, as manifests' brokers do, are saved."""
-        budget = Budget.objects.create(
+        # annotations is a constructor argument of annotatable models, not a field, so django-stubs refuses it
+        budget = Budget.objects.create(  # type: ignore[misc]
             name=f"test_annotations_create_{self.hash_suffix}",
             periodic_limit=Decimal("1"),
             annotations={"acme.com/id": "7"},

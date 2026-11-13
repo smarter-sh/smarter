@@ -3,7 +3,7 @@
 GitHub is never contacted: requests.request is replaced.
 """
 
-from typing import Optional
+from typing import Optional, Union
 from unittest import mock
 
 import requests
@@ -29,7 +29,9 @@ REQUEST = "smarter.apps.mcpserver.services.github.client.requests.request"
 
 
 def response(
-    status: int, body: Optional[SmarterDictType] = None, headers: Optional[dict[str, str]] = None
+    status: int,
+    body: Optional[Union[SmarterDictType, list[SmarterDictType]]] = None,
+    headers: Optional[dict[str, str]] = None,
 ) -> mock.Mock:
     """Return a fake GitHub response."""
     fake = mock.Mock(spec=requests.Response)
@@ -44,6 +46,8 @@ def response(
 
 class TestGitHub(SmarterTestBase):
     """Test the token checks, the request, and the explanations of GitHub's errors."""
+
+    repository: ProjectRepository
 
     @classmethod
     def setUpClass(cls):

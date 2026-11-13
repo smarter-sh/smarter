@@ -143,7 +143,11 @@ In this order:
    Contract: One Extensibility Model for Python, Go, React and VS Code". A
    title that names only Smarter's own concepts ("Smarter's Clients Don't Know
    What a Broker Is") was rejected by the user as unclear. A claim or story is
-   fine after the technology's name, never instead of it. Then a date line. Both stay in
+   fine after the technology's name, never instead of it. Prefer a plain,
+   broad title that says what a reader gets, in title case, over a clever or
+   narrow one: the user replaced "Three Years of pre-commit Hooks in a Large
+   Django Codebase" with "Maintaining Code Quality On A Large Python Django
+   Project". Then a date line. Both stay in
    the Markdown only: the H1 becomes the WordPress title, and the publishing
    script leaves both out of the post's content, because the theme prints the
    title and date (see `blog.smarter.sh-publish`).
@@ -206,6 +210,14 @@ The posts are written in the voice of Lawrence McDaniel, Smarter's creator.
 - Avoid marketing words ("game-changing", "seamless", "revolutionary"),
   sentences that announce what's coming ("In this section we'll look at"),
   and stacked adjectives.
+- **No signposting or talk about the post itself.** Cut forward references
+  ("which I'll come back to", "more on that below"), roadmaps ("This post
+  walks through ...", "It ends with ..."), throat-clearing lead-ins ("First,
+  the obvious caveat.", "Three things stand out.", "This is where the effort
+  went.", "The lesson is simple."), and remarks about writing the post ("It
+  came to light while I was researching this post"). The user called these
+  uninteresting and counterproductive, however accurate, and had every one
+  removed. State the fact itself.
 - Use headings, not bold lines, as section labels, and blank lines around
   lists. The user's editor flags bold-as-heading (MD036) and lists without
   blank lines (MD032).

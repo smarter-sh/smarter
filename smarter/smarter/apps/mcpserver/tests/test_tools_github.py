@@ -36,6 +36,7 @@ from smarter.apps.mcpserver.services.github.pulls import (
     GitHubPullRequest,
     PullRequestFile,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import TOKEN, MCPServerTestBase
 
@@ -150,7 +151,7 @@ class TestGitHubTools(MCPServerTestBase):
     def test_create_issue_limits(self):
         """Titles and bodies that are empty or too long are refused before GitHub is contacted."""
         tool = CreateIssueTool(self.single(), github_token=SecretStr(TOKEN))
-        cases = [
+        cases: list[SmarterDictType] = [
             {"title": "", "body": "b"},
             {"title": "t", "body": ""},
             {"title": "t" * 257, "body": "b"},
@@ -422,7 +423,7 @@ class TestGitHubTools(MCPServerTestBase):
     def test_create_pull_request_limits(self):
         """Missing files, too many files, unknown fields and a bad author are refused before GitHub is contacted."""
         tool = CreatePullRequestTool(self.all(), github_token=SecretStr(TOKEN))
-        cases = [
+        cases: list[SmarterDictType] = [
             {"files": []},
             {"files": [{"path": f"f{n}", "content": "x"} for n in range(21)]},
             {"files": [{"path": "a", "content": "x", "mode": "100755"}]},

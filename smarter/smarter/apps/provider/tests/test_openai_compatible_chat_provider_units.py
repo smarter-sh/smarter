@@ -52,14 +52,20 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.client._messages = [{"role": "system", "content": "You are a test."}]
         self.client.mcp_toolkit = None
         self.client.tools = None
-        self.client.available_functions = None
+        # the handler sets available_functions to None until it has functions, though it is annotated as a dict.
+        self.client.available_functions = None  # type: ignore[assignment]
         self.client._chat = None
         patcher = patch.object(OpenAISmarterClient, "append_message")
         self.append_message = patcher.start()
         self.addCleanup(patcher.stop)
 
     def appended(self) -> list[str]:
-        return [call.kwargs.get("content") for call in self.append_message.call_args_list]
+        contents = []
+        for call in self.append_message.call_args_list:
+            content = call.kwargs.get("content")
+            assert isinstance(content, str), content
+            contents.append(content)
+        return contents
 
     # -------------------------------------------------------------------------
     # append_openai_error_response
@@ -122,7 +128,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             with patch.object(module, "charge_authorization"):
                 self.assertIsNone(self.client.tool_budget_refusal(f"{PLUGIN_PREFIX}_1"))
             with patch.object(module, "charge_authorization", side_effect=SmarterBudgetExceeded("over budget")):
-                refusal = json.loads(self.client.tool_budget_refusal(f"{PLUGIN_PREFIX}_1"))
+                refusal_text = self.client.tool_budget_refusal(f"{PLUGIN_PREFIX}_1")
+        assert refusal_text is not None
+        refusal = json.loads(refusal_text)
         self.assertEqual(refusal["error"], "budget_exceeded")
 
     def test_budget_refusal_for_an_mcp_tool(self):
@@ -193,7 +201,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         self.handle_mcp_clients(self.mcp_toolkit())
         self.assertEqual(self.client.tools, [{"type": "function", "function": {"name": "mcp_weather"}}])
         self.assertIn("mcp_weather", self.client.available_functions)
-        self.assertEqual(self.client.messages[0]["content"], "You are a test.\n\nUse the weather server.")
+        messages = self.client.messages
+        assert messages is not None
+        self.assertEqual(messages[0]["content"], "You are a test.\n\nUse the weather server.")
         appended = self.appended()
         self.assertTrue(any("weather_server" in content for content in appended))
         self.assertTrue(any("down_server" in content for content in appended))
@@ -204,7 +214,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         toolkit.system_prompt.return_value = f'{module.MCP_INSTRUCTIONS_PREFIX}weather" MCP server: Use it.'
         for _ in range(3):
             self.handle_mcp_clients(toolkit)
-        self.assertEqual(self.client.messages[0]["content"], f"You are a test.\n\n{toolkit.system_prompt.return_value}")
+        messages = self.client.messages
+        assert messages is not None
+        self.assertEqual(messages[0]["content"], f"You are a test.\n\n{toolkit.system_prompt.return_value}")
 
     def test_mcp_instructions_replace_a_system_prompt_of_only_instructions(self):
         """A system message that holds only earlier instructions is replaced by the current ones."""
@@ -215,7 +227,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             {"role": "user", "content": "hi"},
         ]
         self.handle_mcp_clients(toolkit)
-        self.assertEqual(self.client.messages[0]["content"], toolkit.system_prompt.return_value)
+        messages = self.client.messages
+        assert messages is not None
+        self.assertEqual(messages[0]["content"], toolkit.system_prompt.return_value)
 
     def test_long_history_is_capped_in_the_request(self):
         """The request leaves out the oldest turns of a long thread; the history keeps them."""
@@ -235,7 +249,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         """Without a system message, the instructions become one."""
         self.client._messages = [{"role": "user", "content": "hi"}]
         self.handle_mcp_clients(self.mcp_toolkit())
-        self.assertEqual(self.client.messages[0], {"role": "system", "content": "Use the weather server."})
+        messages = self.client.messages
+        assert messages is not None
+        self.assertEqual(messages[0], {"role": "system", "content": "Use the weather server."})
 
     def test_no_mcp_clients(self):
         """Without MCP clients, or without a prompt, there's no toolkit."""
@@ -299,8 +315,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         """The request's system prompt says that responses may use Markdown, without changing the history."""
         self.client.iteration = 1
         self.client._messages = [
-            {"role": "system", "content": "You are a test.", "smarter_is_new": False},
-            {"role": "user", "content": "hello", "smarter_is_new": True},
+            # the messages hold flags as well as text, though _messages is annotated as list[dict[str, str]].
+            {"role": "system", "content": "You are a test.", "smarter_is_new": False},  # type: ignore[dict-item]
+            {"role": "user", "content": "hello", "smarter_is_new": True},  # type: ignore[dict-item]
         ]
         messages = self.client.openai_messages
         self.assertEqual(messages[0]["content"], f"You are a test.\n\n{module.MARKDOWN_SYSTEM_PROMPT}")
@@ -516,7 +533,9 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         """An extension tool's result is returned to the LLM as JSON, and its extension is recorded."""
         self.extension_toolkit({"result": 2})
         self.process("ext_calculator_calculator")
-        serialized = self.client.serialized_tool_calls[0]
+        serialized_tool_calls = self.client.serialized_tool_calls
+        assert serialized_tool_calls is not None
+        serialized = serialized_tool_calls[0]
         self.assertEqual(serialized["function_name"], "ext_calculator_calculator")
         self.assertEqual(
             serialized["smarter_extension"], {"id": 3, "slug": "calculator", "version": "1.0.0", "tool": "calculator"}

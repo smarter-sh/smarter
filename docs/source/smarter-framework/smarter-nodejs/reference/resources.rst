@@ -29,6 +29,12 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
       :type: AccountContacts
 
+   .. js:attribute:: dataExports
+
+      The api key's user's data exports.
+
+      :type: DataExports
+
    .. js:attribute:: kind
 
       The manifest kind, e.g. ``Guardrail``.
@@ -58,6 +64,20 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       The account's users.
 
       :type: Users
+
+   .. js:method:: usage(options?)
+
+      The tokens and cost of the api key's user's LLM requests over a window of time, one point per hour,
+      day or month, oldest first, counting the current hour's charges. Every user may read their own.
+
+      The platform caches the series for five minutes. The points' fields are snake_case, as the platform
+      sends them, e.g. ``total_tokens``.
+
+      :param options: ``periodicity``: the window, ``24_hours`` (the current hour and the 23 before it) by default.
+      :type options: unknown | undefined
+      :returns: The series.
+      :throws BadRequestError: If the periodicity is unknown.
+      :rtype: Promise<object>
 
 .. js:class:: ChatSession(llmclients, llmclientId, config)
 
@@ -129,6 +149,242 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
    :type events: object
    :param onMessages: Called with a successful prompt's messages.
    :type onMessages: object
+
+.. js:class:: DataExports(client)
+
+   The api key's user's data exports: ``/api/v1/accounts/data-exports/``.
+
+   An export is a zip file of the manifest of every resource that the user owns, in every account they
+   belong to, with Secrets' values redacted. The platform builds it in the background, stores it, and
+   emails the user a link to it when it is ready: the api never returns the link or the file. A user
+   may start a few exports a day, and only one at a time.
+
+   Extends ``SmarterAPIResource``, and has its methods.
+
+   :param client: The client whose requests the operations send.
+   :type client: ResourceClient
+
+   .. js:attribute:: path
+
+      The data exports' endpoint.
+
+      :type: "accounts/data-exports/"
+
+   .. js:method:: overview(options?)
+
+      What the user may export: the address that the link is emailed to, how long the link works, how
+      many exports are left today, and the latest export.
+
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The overview.
+      :rtype: Promise<object>
+
+   .. js:method:: retrieve(exportId, options?)
+
+      A data export's progress.
+
+      :param exportId: The export's id.
+      :type exportId: number
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The export.
+      :throws NotFoundError: If the user has no export of that id.
+      :rtype: Promise<object>
+
+   .. js:method:: start(options?)
+
+      Start a data export. A link to the zip file is emailed to the user when it is ready.
+
+      If an export is already in progress, the platform returns that one instead of starting another.
+      A refusal (429) is not retried: it means that the user has no email address, or has started too
+      many exports today, which a retry won't change.
+
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The new export, queued, or the one in progress.
+      :throws RateLimitError: If the user has no email address, or has started too many exports today.
+      :rtype: Promise<object>
+
+.. js:class:: Extensions(client)
+
+   The platform's extensions: ``/api/v1/extensions/``.
+
+   Extends ``SmarterAPIResource``, and has its methods.
+
+   :param client: The client whose requests the operations send.
+   :type client: ResourceClient
+
+   .. js:attribute:: path
+
+      The extensions' endpoint.
+
+      :type: "extensions/"
+
+   .. js:method:: checkUpdates(options?)
+
+      Download the registry's index, and record each installed extension's newest compatible version. Superusers only.
+
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message that names the available updates.
+      :throws PermissionDeniedError: If the user is not a superuser.
+      :rtype: Promise<object>
+
+   .. js:method:: configure(slug, settings, options?)
+
+      Change some of an extension's settings. Superusers only.
+
+      A secret setting is given a value, which the platform saves encrypted in a Secret of the platform
+      admin, or one of the platform admin's Secrets, or neither, which clears it.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param settings: ``values``: the new values of settings that are not secrets. ``secrets``: of secret settings.
+      :type settings: ExtensionSettings
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the extension.
+      :throws BadRequestError: If a setting is unknown, or a value is invalid.
+      :rtype: Promise<object>
+
+   .. js:method:: disable(slug, options?)
+
+      Disable an extension. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the extension.
+      :rtype: Promise<object>
+
+   .. js:method:: enable(slug, options?)
+
+      Enable an extension, after checking that it is compatible, that it loads, and that its required
+      settings are set. Its tools are then offered to the LLMClients that use it. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the extension.
+      :throws BadRequestError: If it can't be enabled, e.g. a required setting is missing.
+      :rtype: Promise<object>
+
+   .. js:method:: install(slug, options?)
+
+      Install, or update, an extension from the registry. Superusers only.
+
+      It is installed disabled: configure its settings with ``Extensions.configure``, then
+      ``Extensions.enable`` it.
+
+      :param slug: The extension's slug in the registry.
+      :type slug: string
+      :param options: ``version``: the version to install, the newest compatible one by default.
+      :type options: unknown | undefined
+      :returns: A message, and the installed extension.
+      :throws BadRequestError: If the registry has no such extension or version, or it is incompatible.
+      :throws PermissionDeniedError: If the user is not a superuser.
+      :rtype: Promise<object>
+
+   .. js:method:: list(options?)
+
+      The installed extensions that the user may see, by display name, and the state of the registry.
+
+      A user who is not a superuser sees only the extensions that their account may use.
+
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The extensions, whether the registry is enabled, and how many updates it has.
+      :rtype: Promise<object>
+
+   .. js:method:: registry(options?)
+
+      The registry's extensions, with what each offers on this platform: install, update, or nothing, and why.
+
+      :param options: ``refresh``: download the registry's index again rather than read the platform's cache. Superusers only.
+      :type options: unknown | undefined
+      :returns: The registry's extensions, and why it cannot be read, if it cannot.
+      :rtype: Promise<object>
+
+   .. js:method:: retrieve(slug, options?)
+
+      An installed extension: its documentation, tools, settings, versions, resources, switches and availability.
+
+      A user who is not a superuser gets its ``settings``, ``accounts`` and ``availableSecrets`` as empty lists.
+
+      :param slug: The extension's slug, e.g. ``weather``.
+      :type slug: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The extension.
+      :throws NotFoundError: If it is not installed, or the user's account may not use it.
+      :rtype: Promise<object>
+
+   .. js:method:: rollback(slug, versionId, options?)
+
+      Make one of an extension's earlier installed versions the one that runs. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param versionId: The version's id, from the extension's ``versions``.
+      :type versionId: number
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the extension.
+      :rtype: Promise<object>
+
+   .. js:method:: setAvailability(slug, allAccounts, options?)
+
+      Make an extension available to every account, or to the given accounts only. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param allAccounts: True for every account.
+      :type allAccounts: boolean
+      :param options: ``accountIds``: the ids of the accounts that may use it, when not every account may.
+      :type options: unknown | undefined
+      :returns: A message, and the extension.
+      :throws BadRequestError: If some of the accounts do not exist.
+      :rtype: Promise<object>
+
+   .. js:method:: uninstall(slug, options?)
+
+      Uninstall an extension, and delete its versions and settings. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message. Its ``extension`` is null.
+      :rtype: Promise<object>
+
+   .. js:method:: update(slug, options?)
+
+      Install the registry's newest compatible version of an extension. Superusers only.
+
+      :param slug: The extension's slug.
+      :type slug: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the extension.
+      :rtype: Promise<object>
+
+   .. js:method:: upload(archive, options?)
+
+      Install, or update, an extension from its .zip archive, of at most 10 MiB. Superusers only.
+
+      It is installed disabled. Its trust badge is ``unverified``.
+
+      :param archive: The archive: its path, its ``file:`` url, or a ``File``.
+      :type archive: UploadInput
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: A message, and the installed extension.
+      :throws BadRequestError: If the archive is not a valid extension.
+      :throws PermissionDeniedError: If the user is not a superuser.
+      :rtype: Promise<object>
 
 .. js:class:: Guardrails(client)
 
@@ -1262,6 +1518,13 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    Vectorsearches: ``/api/v1/vectorsearches/``, and the manifest api's ``Vectorsearch`` kind.
 
+   **Example**
+
+   .. code-block:: typescript
+
+      const found = await client.vectorsearches.run(12, "How long is the refund window?");
+      for (const result of found.results) console.log(result.score, result.text);
+
    Extends ``SmarterKindResource``, and has its methods.
 
    :param client: The client whose requests the operations send.
@@ -1284,6 +1547,24 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       The REST list endpoint, relative to the api's base url, e.g. ``guardrails/``.
 
       :type: "vectorsearches/"
+
+   .. js:method:: run(id, query, options?)
+
+      Run a Vectorsearch: search its vectorstore with a query, and the Vectorsearch's own configuration,
+      its search type, ``k``, score threshold, mmr settings and metadata filter.
+
+      The query is embedded by the vectorstore's embeddings provider, which may be billable.
+
+      :param id: The Vectorsearch's id or hashed id.
+      :type id: SmarterId
+      :param query: The text to find similar chunks of.
+      :type query: string
+      :param options: ``filter``: more metadata that every result must match, besides the Vectorsearch's own   ``metadataFilter``, which wins where both name the same key.
+      :type options: unknown | undefined
+      :returns: The matching chunks, best first, and the names of the Vectorsearch and its vectorstore.
+      :throws BadRequestError: If the Vectorsearch is disabled, the query is invalid, or the search failed.
+      :throws PaymentRequiredError: If a budget forbids the search.
+      :rtype: Promise<object>
 
 .. js:class:: Vectorstores(client)
 
@@ -1529,6 +1810,38 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
       :type: boolean
 
+.. js:class:: ExtensionSecretInput
+
+   A secret setting's new value: one of the platform admin's Secrets, a value to save in a new Secret, or neither, which clears it.
+
+   .. js:attribute:: secretId
+
+      The id of one of the platform admin's Secrets.
+
+      :type: number | null
+
+   .. js:attribute:: value
+
+      A value, which the platform saves encrypted in the Secret ``extension_<slug>_<setting>``.
+
+      :type: string | null
+
+.. js:class:: ExtensionSettings
+
+   New values of some of an extension's settings, by name. Settings that are left out don't change.
+
+   .. js:attribute:: secrets
+
+      Secret settings.
+
+      :type: Record<string, ExtensionSecretInput>
+
+   .. js:attribute:: values
+
+      Settings that are not secrets. ``null`` resets one to its default.
+
+      :type: Record<string, string | number | boolean | null>
+
 .. js:class:: JournalListOptions
 
    The options of a page of the journal, beside the per-request options.
@@ -1670,6 +1983,12 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
    A prompt: the text of one user message, or a list of messages.
 
    :type: string | readonly MessageInput[]
+
+.. js:data:: TokenUsagePeriodicity
+
+   The window of a token usage series, e.g. ``24_hours``: the current hour and the 23 before it.
+
+   :type: "12_hours" | "24_hours" | "7_days" | "1_month" | "1_year"
 
 .. js:data:: UploadInput
 

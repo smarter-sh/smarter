@@ -33,6 +33,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
     OpenAISmarterClient,
 )
 from smarter.lib import json
+from smarter.lib.typing import required
 
 from .base_classes import TEST_SERVER_INSTRUCTIONS, MCPClientTestBase, mock_mcp_server
 
@@ -114,17 +115,18 @@ class TestMCPClientPromptIntegration(MCPClientTestBase):
         provider = self.provider()
         with mock_mcp_server():
             provider.handle_mcp_clients()
-        function_names = [tool["function"]["name"] for tool in provider.tools]
+        function_names = [tool["function"]["name"] for tool in required(provider.tools, "provider.tools")]
         self.assertIn(f"mcp{self.mcpclient.id}_echo", function_names)
         self.assertIn(f"mcp{self.mcpclient.id}_add_numbers", function_names)
         self.assertNotIn(f"mcp{self.mcpclient.id}_secret_admin_tool", function_names)
         self.assertIn(f"mcp{self.mcpclient.id}_echo", provider.available_functions)
-        system = provider.messages[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY]
+        messages = required(provider.messages, "provider.messages")
+        system = messages[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY]
         self.assertTrue(system.startswith(SYSTEM_ROLE))
         self.assertIn(TEST_SERVER_INSTRUCTIONS, system)
         smarter_messages = [
             message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY]
-            for message in provider.messages
+            for message in messages
             if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] == OpenAIMessageKeys.SMARTER_MESSAGE_KEY
         ]
         self.assertTrue(any(self.mcpclient.name in message for message in smarter_messages))
@@ -136,7 +138,9 @@ class TestMCPClientPromptIntegration(MCPClientTestBase):
         provider.handle_mcp_clients()
         self.assertIsNone(provider.mcp_toolkit)
         self.assertIsNone(provider.tools)
-        self.assertEqual(provider.messages[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY], SYSTEM_ROLE)
+        self.assertEqual(
+            required(provider.messages, "provider.messages")[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY], SYSTEM_ROLE
+        )
 
     def test_unreachable_server(self):
         """Test that an unreachable MCP server is skipped, and reported in a Smarter error message."""
@@ -148,7 +152,7 @@ class TestMCPClientPromptIntegration(MCPClientTestBase):
         self.assertFalse(provider.tools)
         errors = [
             message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY]
-            for message in provider.messages
+            for message in required(provider.messages, "provider.messages")
             if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] == OpenAIMessageKeys.SMARTER_ERROR_KEY
         ]
         self.assertTrue(any("server is down" in error for error in errors))
@@ -166,7 +170,7 @@ class TestMCPClientPromptIntegration(MCPClientTestBase):
             )
             with mock.patch.object(OpenAISmarterClient, "handle_tool_called") as handle_tool_called:
                 provider.process_tool_call(tool_call)
-        tool_message = provider.messages[-1]
+        tool_message = required(provider.messages, "provider.messages")[-1]
         self.assertEqual(tool_message[OpenAIMessageKeys.MESSAGE_ROLE_KEY], OpenAIMessageKeys.TOOL_MESSAGE_KEY)
         self.assertEqual(tool_message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY], "5")
         self.assertEqual(tool_message[OpenAIMessageKeys.TOOL_CALL_ID], "call_1")

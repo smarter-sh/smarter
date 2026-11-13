@@ -1,6 +1,7 @@
 """Test :class:`smarter.common.mixins.middleware_mixin.SmarterMiddlewareMixin`."""
 
 import asyncio
+import inspect
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import AnonymousUser
@@ -8,12 +9,19 @@ from django.http import HttpRequest, HttpResponse
 
 from smarter.common.mixins.middleware_mixin import SmarterMiddlewareMixin
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.common.mixins.middleware_mixin"
 
 
-def make_request(path: str = "/api/v1/", **meta) -> HttpRequest:
-    request = HttpRequest()
+class ProcessRequest(HttpRequest):
+    """An HttpRequest, typed with the process id that the middleware sets on it."""
+
+    smarter_process_id: int
+
+
+def make_request(path: str = "/api/v1/", **meta) -> ProcessRequest:
+    request = ProcessRequest()
     request.path = path
     request.META.update(meta)
     request.user = AnonymousUser()
@@ -30,7 +38,7 @@ class TestSmarterMiddlewareMixin(SmarterTestBase):
     def test_sync_call(self):
         """Test that a sync middleware returns the response, and sets the request's process id."""
         request = make_request()
-        response = self.middleware(request)
+        response = http_response(self.middleware(request))
         self.assertEqual(response.content, b"ok")
         self.assertFalse(self.middleware.async_mode)
         self.assertEqual(request.smarter_process_id, self.middleware.smarter_process_id)
@@ -49,7 +57,9 @@ class TestSmarterMiddlewareMixin(SmarterTestBase):
         middleware = SmarterMiddlewareMixin(get_response)
         self.assertTrue(middleware.async_mode)
         request = make_request()
-        response = asyncio.run(middleware(request))
+        pending = middleware(request)
+        assert inspect.isawaitable(pending)
+        response = http_response(asyncio.run(pending))
         self.assertEqual(response.content, b"async ok")
         self.assertEqual(request.smarter_process_id, middleware.smarter_process_id)
 

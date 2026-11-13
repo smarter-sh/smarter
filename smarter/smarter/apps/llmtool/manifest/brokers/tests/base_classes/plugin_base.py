@@ -10,6 +10,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import required
 
 from .connection_base import TestSmarterConnectionBrokerBase
 
@@ -30,6 +31,8 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     """Adds a class-level setup to create SqlConnection instances for use in plugin broker tests."""
 
     test_smarter_plugin_broker_base_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSmarterPluginBrokerBase()"
+    test_sql_connection_name: str
+    sql_connection: SqlConnection
 
     @classmethod
     def setUpClass(cls):
@@ -51,9 +54,13 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
 
         # this should match spec.connection in ../data/sql-plugin.yaml
         # assumed to be: test_sql_connection
-        cls.test_sql_connection_name = test_sql_connection_loader.manifest_metadata.get("name")
-        if not cls.test_sql_connection_name:
+        test_sql_connection_metadata = required(
+            test_sql_connection_loader.manifest_metadata, "test_sql_connection_loader.manifest_metadata"
+        )
+        test_sql_connection_name = test_sql_connection_metadata.get("name")
+        if not test_sql_connection_name:
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")
+        cls.test_sql_connection_name = test_sql_connection_name
         try:
             cls.sql_connection = SqlConnection.objects.get(
                 user_profile=cls.user_profile,

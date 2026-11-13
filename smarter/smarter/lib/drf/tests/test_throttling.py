@@ -70,6 +70,7 @@ class TestThrottling(TestAccountMixin):
             self.assertIsNone(throttle_wait(self.request(), self.view))
             wait = throttle_wait(self.request(), self.view)
         self.assertIsInstance(wait, int)
+        assert wait is not None
         self.assertGreaterEqual(wait, 1)
         self.assertLessEqual(wait, 60)
 

@@ -57,14 +57,14 @@ class TestValidators(TestCase):
         ):
             with self.subTest(message=message):
                 validators.validate_messages({"messages": [*MESSAGES, message]})
-        for message in (
+        for invalid in (
             {"role": "assistant"},
             {"role": "assistant", "tool_calls": []},
             {"role": "user", "tool_calls": tool_calls},
             {"role": "tool", "tool_call_id": "call_1"},
         ):
-            with self.subTest(message=message), self.assertRaises(SmarterValueError):
-                validators.validate_messages({"messages": [message]})
+            with self.subTest(message=invalid), self.assertRaises(SmarterValueError):
+                validators.validate_messages({"messages": [invalid]})
 
     def test_validate_completion_request(self):
         validators.validate_completion_request(

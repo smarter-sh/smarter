@@ -115,6 +115,14 @@ semantic-release (`release.config.js`) to version the release.
   characters.
 
 - `chore(release): ...` belongs to semantic-release. Never write it yourself.
+- **Never a `!` or a `BREAKING CHANGE:` footer before 1.0.0.** Smarter is on
+  0.x, and semantic-release turns either one into 1.0.0 (`1.0.0-alpha.N` on
+  alpha), whatever the change. Cutting 1.0.0 is the maintainers' decision
+  (ADR-020, rule 5), not a side effect of a commit. Before 1.0.0, a change that
+  breaks a manifest, the api or an upgrade keeps its usual type, and its body
+  says what breaks and what to do, e.g. "To upgrade, add staticData to any
+  static plugin manifest that lacks it." Don't write the words BREAKING CHANGE
+  anywhere in the message. From 1.0.0 on, mark it with both.
 
 ## Body
 

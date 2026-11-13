@@ -28,6 +28,7 @@ from smarter.apps.llmtool.signals import (
     websearch_searched,
 )
 from smarter.lib import json, logging
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import PluginAppTestBase, get_test_data
 
@@ -49,6 +50,8 @@ RECEIVER_MODULES = (
 # pylint: disable=too-many-public-methods
 class TestPluginReceivers(PluginAppTestBase):
     """Test the plugin app's signal and model receivers."""
+
+    selector_history: SmarterDictType
 
     @classmethod
     def setUpClass(cls):
@@ -290,8 +293,10 @@ class TestPluginReceivers(PluginAppTestBase):
 
     def test_selector_history(self):
         """Test that the post_save and pre_delete receivers log PluginSelectorHistory."""
+        plugin_selector = self.static_plugin.plugin_selector
+        assert plugin_selector is not None
         history = PluginSelectorHistory.objects.create(
-            plugin_selector=self.static_plugin.plugin_selector, search_term="Gobstopper", messages=[]
+            plugin_selector=plugin_selector, search_term="Gobstopper", messages=[]
         )
         self.assertIn("PluginSelectorHistory() created", self.logged())
         history.delete()
@@ -304,7 +309,7 @@ class TestPluginReceivers(PluginAppTestBase):
         """Test that each request lifecycle receiver logs its signal, and logs failures as warnings."""
         plugin = self.static_plugin
         for family in ("sql", "api", "image_search", "skill"):
-            cases = {
+            cases: dict[str, SmarterDictType] = {
                 "request_started": {"function_args": {"q": "gobstoppers"}},
                 "responded": {"response": [{"name": "Willy"}], "cached": True, "sql": "SELECT 1;", "query": "q"},
                 "failed": {"error": "it broke"},

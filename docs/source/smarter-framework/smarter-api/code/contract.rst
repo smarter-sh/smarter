@@ -17,6 +17,71 @@ API Contract
     :show-inheritance:
 
 .. automodule:: smarter.apps.api.v1.contract.openapi
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.builders
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.schemas
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.cli
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.chat
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.routes
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.document
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.llmclient
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.guardrail
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.secret
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.mcpclient
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.vectorstore
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.llmhost
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.plugin
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.provider
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.proxy
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.account
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.history
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.journal
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.orchestrator
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.vectorsearch
+    :members:
+
+.. automodule:: smarter.apps.api.v1.contract.openapi.families.extension
     :members:
 
 .. automodule:: smarter.apps.api.v1.contract.views

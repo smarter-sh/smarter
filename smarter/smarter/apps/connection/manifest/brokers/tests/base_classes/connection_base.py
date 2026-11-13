@@ -2,6 +2,7 @@
 """Test TestSmarterConnectionBrokerBase."""
 
 import os
+from typing import Optional
 
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.secret.models import Secret
@@ -10,6 +11,7 @@ from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import required
 
 logger = logging.getLogger(__name__)
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
@@ -41,6 +43,12 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
     test_smarter_connection_broker_base_logger_prefix = (
         f"{SmarterFormattedText.text(HERE)}.TestSmarterConnectionBrokerBase()"
     )
+    test_secret_name: Optional[str]
+    secret: Secret
+    test_secret_value: Optional[str]
+    test_proxy_secret_name: Optional[str]
+    proxy_secret: Secret
+    test_proxy_secret_value: Optional[str]
 
     @classmethod
     def setUpClass(cls):
@@ -53,14 +61,13 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_smarter_connection_broker_base_logger_prefix)
         test_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD)
+        test_secret_metadata = required(test_secret_loader.manifest_metadata, "test_secret_loader.manifest_metadata")
         if not apply_manifest(username=cls.admin_user.username, manifest=test_secret_loader.yaml_data, verbose=True):
-            raise SmarterValueError(
-                f"Failed to apply Secret manifest {test_secret_loader.manifest_metadata.get('name')}."
-            )
+            raise SmarterValueError(f"Failed to apply Secret manifest {test_secret_metadata.get('name')}.")
 
         # this should match spec.connection.password in ../data/sql-connection.yaml
         # assumed to be: smarter_test_user
-        cls.test_secret_name = test_secret_loader.manifest_metadata.get("name")
+        cls.test_secret_name = test_secret_metadata.get("name")
         if not cls.test_secret_name:
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")
         try:
@@ -79,17 +86,18 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         )
 
         test_proxy_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_PROXY_PASSWORD)
+        test_proxy_secret_metadata = required(
+            test_proxy_secret_loader.manifest_metadata, "test_proxy_secret_loader.manifest_metadata"
+        )
         if not apply_manifest(
             username=cls.admin_user.username, manifest=test_proxy_secret_loader.yaml_data, verbose=True
         ):
-            raise SmarterValueError(
-                f"Failed to apply Secret manifest {test_proxy_secret_loader.manifest_metadata.get('name')}."
-            )
+            raise SmarterValueError(f"Failed to apply Secret manifest {test_proxy_secret_metadata.get('name')}.")
 
         # this should match spec.connection.proxyPassword
         # in ../data/sql-connection.yaml. if the parameter
         # is not set in the manifest then proxy connection will not be tested.
-        cls.test_proxy_secret_name = test_proxy_secret_loader.manifest_metadata.get("name")
+        cls.test_proxy_secret_name = test_proxy_secret_metadata.get("name")
         if not cls.test_proxy_secret_name:
             raise SmarterValueError("Failed to get test proxy secret name from manifest metadata.")
 

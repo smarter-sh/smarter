@@ -473,11 +473,11 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                     elif "enum" in details:
                         inputs.append(f"{parameter}: {', '.join(details['enum'])}")
 
-                inputs = ", ".join(inputs)
+                inputs_text = ", ".join(inputs)
                 # the tool's name as users know it, e.g. a plugin's name rather than its symbolic function
                 # name, smarter_plugin_0000000016. The definition below has the function name the LLM sees.
                 display_name = self.tool_display_name(tool_name) if tool_name else tool_name
-                content = f"Tool presented: {display_name}({inputs}) - {tool_description} "
+                content = f"Tool presented: {display_name}({inputs_text}) - {tool_description} "
                 content = content + f"\n\nTool definition:\n--------------------\n{json.dumps(tool, indent=4)}"
                 self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
@@ -814,13 +814,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         serialized_tool_call: SmarterDictType = {}
         plugin: Optional[PluginBase] = None
         function_name = tool_call.function.name
-        # pylint: disable=W0612
-        try:
-            function_to_call = self.available_functions[function_name]
-        except KeyError as e:
+        if function_name not in self.available_functions:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}: function '{function_name}' not found in available functions: {self.available_functions}"
-            ) from e
+            )
 
         function_args = json.loads(tool_call.function.arguments)
         serialized_tool_call["function_name"] = function_name

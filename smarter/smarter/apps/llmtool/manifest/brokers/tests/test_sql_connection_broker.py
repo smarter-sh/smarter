@@ -90,16 +90,20 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_immutability(self):
         """Test that any property of any Pydantic broker model are immutable."""
+        # each assignment below is to a read-only property or a frozen model's field, which mypy refuses.
+        # The test checks that it fails at runtime too.
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            self.broker.kind = "NewKind"  # type: ignore[misc]
+        manifest = self.broker.manifest
+        assert manifest is not None
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.annotations = []
+            manifest.metadata.annotations = []  # type: ignore[misc,assignment]
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.tags = []
+            manifest.metadata.tags = []  # type: ignore[misc]
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.connection.database = "NewDatabaseName"
+            manifest.spec.connection.database = "NewDatabaseName"  # type: ignore[misc]
 
     def test_ready(self):
         """Test that the test setup is correct."""
@@ -107,13 +111,17 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_sam_broker_initialization(self):
         """Test that the SAMSqlConnection model can be initialized from the manifest data."""
-        metadata = {**self.loader.manifest_metadata}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        manifest_metadata = self.loader.manifest_metadata
+        manifest_spec = self.loader.manifest_spec
+        assert manifest_metadata is not None
+        assert manifest_spec is not None
+        metadata = {**manifest_metadata}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         SAMSqlConnection(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
             metadata=SAMConnectionCommonMetadata(**metadata),
-            spec=SAMSqlConnectionSpec(**self.loader.manifest_spec),
+            spec=SAMSqlConnectionSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
@@ -148,7 +156,9 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_manifest_model_initialization(self):
         """Test that the SAMSqlConnection can be initialized from a json dump of the manifest model."""
-        static_plugin = SAMSqlConnection(**self.broker.manifest.model_dump())
+        manifest = self.broker.manifest
+        assert manifest is not None
+        static_plugin = SAMSqlConnection(**manifest.model_dump())
         self.assertIsInstance(static_plugin, SAMSqlConnection)
 
     def test_formatted_class_name(self):
@@ -171,7 +181,8 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertIsInstance(manifest, SAMSqlConnection)
 
         # we should be able to round-trip the manifest model.
-        SAMSqlConnection(**self.broker.manifest.model_dump())
+        assert manifest is not None
+        SAMSqlConnection(**manifest.model_dump())
 
     def test_manifest_to_django_orm(self):
         """Test that we can convert the Django plugin spec ORM to a Pydantic manifest spec."""
@@ -186,6 +197,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
         connection = self.broker.connection
         self.assertIsInstance(connection, SqlConnection)
+        assert connection is not None
         self.assertTrue(connection.ready)
 
     def test_is_valid(self):
@@ -204,7 +216,9 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
             return None
 
         self.assertIsInstance(password_secret, Secret)
-        self.assertEqual(password_secret.name, self.broker.manifest.spec.connection.password)
+        manifest = self.broker.manifest
+        assert manifest is not None
+        self.assertEqual(password_secret.name, manifest.spec.connection.password)
         self.assertEqual(password_secret.name, self.test_secret_name)
         self.assertEqual(password_secret.get_secret(), self.test_secret_value)
 
@@ -216,7 +230,9 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
             return None
 
         self.assertIsInstance(proxy_password_secret, Secret)
-        self.assertEqual(proxy_password_secret.name, self.broker.manifest.spec.connection.proxyPassword)
+        manifest = self.broker.manifest
+        assert manifest is not None
+        self.assertEqual(proxy_password_secret.name, manifest.spec.connection.proxyPassword)
         self.assertEqual(proxy_password_secret.name, self.test_proxy_secret_name)
         self.assertEqual(proxy_password_secret.get_secret(), self.test_proxy_secret_value)
 
@@ -246,21 +262,23 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertTrue(is_valid_response)
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
+        manifest = self.broker.manifest
+        connection = self.broker.connection
+        assert manifest is not None
+        assert connection is not None
 
         # self.broker.manifest.metadata.tags is a list of strings.
         # verify that account.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        manifest_tags = set(manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.connection.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.connection.tags_list) if self.broker.connection.tags else set()
-        elif isinstance(self.broker.connection.tags, set):
-            django_orm_tags = self.broker.connection.tags
-        elif isinstance(self.broker.connection.tags, list):
-            django_orm_tags = set(self.broker.connection.tags)
+        if isinstance(connection.tags, (TaggableManager, _TaggableManager)):
+            django_orm_tags = set(connection.tags_list) if connection.tags else set()
+        elif isinstance(connection.tags, set):
+            django_orm_tags = connection.tags
+        elif isinstance(connection.tags, list):
+            django_orm_tags = set(connection.tags)
         else:
-            self.fail(
-                f"connection.tags is of unexpected type: {type(self.broker.connection.tags)}. Value: {self.broker.connection.tags}"
-            )
+            self.fail(f"connection.tags is of unexpected type: {type(connection.tags)}. Value: {connection.tags}")
         self.assertEqual(manifest_tags, django_orm_tags)
 
         # self.broker.manifest.metadata.annotations is a map of keys to string values.
@@ -268,8 +286,8 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         def sort_annotations(annotations):
             return dict(sorted((annotations or {}).items()))
 
-        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        orm_annotations = sort_annotations(self.broker.connection.annotations or [])
+        manifest_annotations = sort_annotations(manifest.metadata.annotations or [])
+        orm_annotations = sort_annotations(connection.annotations or [])
         self.assertEqual(
             manifest_annotations,
             orm_annotations,
@@ -277,49 +295,47 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         )
 
         self.assertEqual(
-            self.broker.manifest.metadata.name,
-            getattr(self.broker.connection, "name", None),
-            f"SqlConnection name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, orm: {self.broker.connection.name}",
+            manifest.metadata.name,
+            getattr(connection, "name", None),
+            f"SqlConnection name does not match manifest name. manifest: {manifest.metadata.name}, orm: {connection.name}",
         )
         self.assertEqual(
-            self.broker.manifest.metadata.description or "",
-            getattr(self.broker.connection, "description", "") or "",
-            f"SqlConnection description does not match manifest description. manifest: {self.broker.manifest.metadata.description}, orm: {self.broker.connection.description}",
+            manifest.metadata.description or "",
+            getattr(connection, "description", "") or "",
+            f"SqlConnection description does not match manifest description. manifest: {manifest.metadata.description}, orm: {connection.description}",
         )
         self.assertEqual(
-            self.broker.manifest.metadata.version or "",
-            getattr(self.broker.connection, "version", "") or "",
-            f"SqlConnection version does not match manifest version. manifest: {self.broker.manifest.metadata.version}, orm: {self.broker.connection.version}",
+            manifest.metadata.version or "",
+            getattr(connection, "version", "") or "",
+            f"SqlConnection version does not match manifest version. manifest: {manifest.metadata.version}, orm: {connection.version}",
         )
 
         # plugin spec fields
+        self.assertEqual(manifest.spec.connection.authenticationMethod, connection.authentication_method)
+        self.assertEqual(manifest.spec.connection.dbEngine, connection.db_engine)
+        self.assertEqual(manifest.spec.connection.database, connection.database)
+        self.assertEqual(manifest.spec.connection.hostname, connection.hostname)
+        self.assertEqual(manifest.spec.connection.port, connection.port)
+        self.assertEqual(manifest.spec.connection.username, connection.username)
         self.assertEqual(
-            self.broker.manifest.spec.connection.authenticationMethod, self.broker.connection.authentication_method
+            manifest.spec.connection.password,
+            connection.password.name if connection.password else None,
         )
-        self.assertEqual(self.broker.manifest.spec.connection.dbEngine, self.broker.connection.db_engine)
-        self.assertEqual(self.broker.manifest.spec.connection.database, self.broker.connection.database)
-        self.assertEqual(self.broker.manifest.spec.connection.hostname, self.broker.connection.hostname)
-        self.assertEqual(self.broker.manifest.spec.connection.port, self.broker.connection.port)
-        self.assertEqual(self.broker.manifest.spec.connection.username, self.broker.connection.username)
+        self.assertEqual(manifest.spec.connection.timeout, connection.timeout)
+        self.assertEqual(manifest.spec.connection.useSsl, connection.use_ssl)
+        self.assertEqual(manifest.spec.connection.sslCert, connection.ssl_cert)
+        self.assertEqual(manifest.spec.connection.sslKey, connection.ssl_key)
+        self.assertEqual(manifest.spec.connection.sslCa, connection.ssl_ca)
+        self.assertEqual(manifest.spec.connection.proxyHost, connection.proxy_host)
+        self.assertEqual(manifest.spec.connection.proxyPort, connection.proxy_port)
+        self.assertEqual(manifest.spec.connection.proxyUsername, connection.proxy_username)
         self.assertEqual(
-            self.broker.manifest.spec.connection.password,
-            self.broker.connection.password.name if self.broker.connection.password else None,
+            manifest.spec.connection.proxyPassword,
+            connection.proxy_password.name if connection.proxy_password else None,
         )
-        self.assertEqual(self.broker.manifest.spec.connection.timeout, self.broker.connection.timeout)
-        self.assertEqual(self.broker.manifest.spec.connection.useSsl, self.broker.connection.use_ssl)
-        self.assertEqual(self.broker.manifest.spec.connection.sslCert, self.broker.connection.ssl_cert)
-        self.assertEqual(self.broker.manifest.spec.connection.sslKey, self.broker.connection.ssl_key)
-        self.assertEqual(self.broker.manifest.spec.connection.sslCa, self.broker.connection.ssl_ca)
-        self.assertEqual(self.broker.manifest.spec.connection.proxyHost, self.broker.connection.proxy_host)
-        self.assertEqual(self.broker.manifest.spec.connection.proxyPort, self.broker.connection.proxy_port)
-        self.assertEqual(self.broker.manifest.spec.connection.proxyUsername, self.broker.connection.proxy_username)
-        self.assertEqual(
-            self.broker.manifest.spec.connection.proxyPassword,
-            self.broker.connection.proxy_password.name if self.broker.connection.proxy_password else None,
-        )
-        self.assertEqual(self.broker.manifest.spec.connection.sshKnownHosts, self.broker.connection.ssh_known_hosts)
-        self.assertEqual(self.broker.manifest.spec.connection.poolSize, self.broker.connection.pool_size)
-        self.assertEqual(self.broker.manifest.spec.connection.maxOverflow, self.broker.connection.max_overflow)
+        self.assertEqual(manifest.spec.connection.sshKnownHosts, connection.ssh_known_hosts)
+        self.assertEqual(manifest.spec.connection.poolSize, connection.pool_size)
+        self.assertEqual(manifest.spec.connection.maxOverflow, connection.max_overflow)
 
     def test_describe(self):
         """Test the describe() method returns a valid manifest response."""

@@ -4,6 +4,7 @@ import copy
 import json
 from typing import get_args
 
+from django.db.models import Field
 from pydantic import ValidationError
 
 from smarter.apps.account.serializers import user_can_delete
@@ -70,7 +71,11 @@ class TestGuardrailContractModels(TestAccountMixin):
         ]
         for literal, model, field in cases:
             with self.subTest(field=f"{model.__name__}.{field}"):
-                self.assertEqual(list(get_args(literal)), [value for value, _ in model._meta.get_field(field).choices])
+                django_field = model._meta.get_field(field)
+                assert isinstance(django_field, Field)
+                choices = django_field.choices
+                assert choices is not None
+                self.assertEqual(list(get_args(literal)), [value for value, _ in choices])
 
     def test_guardrail_is_the_serializers_output(self):
         model = GuardrailApiGuardrail.from_model(self.guardrail)

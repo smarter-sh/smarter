@@ -50,9 +50,11 @@ class Command(SmarterCommand):
         company_name = options["company_name"]
 
         if account_number:
-            account = Account.objects.filter(account_number=account_number).first()
-            created = account is None
-            if created:
+            existing = Account.objects.filter(account_number=account_number).first()
+            created = existing is None
+            if existing is not None:
+                account = existing
+            else:
                 if not company_name:
                     raise CommandError(f"Provide a --company_name for the new account {account_number}.")
                 account = Account(

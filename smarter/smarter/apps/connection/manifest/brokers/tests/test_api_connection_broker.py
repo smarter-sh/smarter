@@ -24,6 +24,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import required
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 
@@ -74,9 +75,11 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         """Test that the manifest property returns an immutable SAMApiConnection."""
         manifest = self.broker.manifest
         self.assertIsInstance(manifest, SAMApiConnection)
+        assert manifest is not None
         self.assertEqual(manifest.metadata.name, "test_api_connection")
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            # deliberately assigns to a frozen field, to test that the manifest is immutable.
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
         self.assertIsInstance(SAMApiConnection(**manifest.model_dump()), SAMApiConnection)
 
     def test_manifest_initialization(self):
@@ -92,12 +95,15 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         """Test that the manifest converts to a serializable Django ORM dict."""
         orm_dict = self.broker.manifest_to_django_orm()
         self.assertIsInstance(orm_dict, dict)
-        self.assertEqual(orm_dict.get("base_url"), self.broker.manifest.spec.connection.baseUrl)
+        manifest = required(self.broker.manifest, "broker.manifest")
+        self.assertEqual(orm_dict.get("base_url"), manifest.spec.connection.baseUrl)
 
     def test_secrets(self):
         """Test that the api key and proxy password secrets resolve to the class's Secrets."""
-        self.assertEqual(self.broker.api_key_secret.name, self.test_secret_name)
-        self.assertEqual(self.broker.proxy_password_secret.name, self.test_proxy_secret_name)
+        api_key_secret = required(self.broker.api_key_secret, "broker.api_key_secret")
+        proxy_password_secret = required(self.broker.proxy_password_secret, "broker.proxy_password_secret")
+        self.assertEqual(api_key_secret.name, self.test_secret_name)
+        self.assertEqual(proxy_password_secret.name, self.test_proxy_secret_name)
 
     def test_example_manifest(self):
         """Test the example_manifest() generates a valid manifest response."""
@@ -110,12 +116,15 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         self.apply_manifest()
         connection = self.broker.connection
         self.assertIsInstance(connection, ApiConnection)
-        self.assertEqual(connection.name, self.broker.manifest.metadata.name)
-        self.assertEqual(connection.base_url, self.broker.manifest.spec.connection.baseUrl)
-        self.assertEqual(connection.timeout, self.broker.manifest.spec.connection.timeout)
-        self.assertEqual(connection.proxy_host, self.broker.manifest.spec.connection.proxyHost)
-        self.assertEqual(connection.proxy_password.name, self.test_proxy_secret_name)
-        self.assertEqual(set(self.broker.manifest.metadata.tags or []), set(connection.tags_list))
+        assert connection is not None
+        manifest = required(self.broker.manifest, "broker.manifest")
+        proxy_password = required(connection.proxy_password, "connection.proxy_password")
+        self.assertEqual(connection.name, manifest.metadata.name)
+        self.assertEqual(connection.base_url, manifest.spec.connection.baseUrl)
+        self.assertEqual(connection.timeout, manifest.spec.connection.timeout)
+        self.assertEqual(connection.proxy_host, manifest.spec.connection.proxyHost)
+        self.assertEqual(proxy_password.name, self.test_proxy_secret_name)
+        self.assertEqual(set(manifest.metadata.tags or []), set(connection.tags_list))
 
         # applying a second time updates the existing connection.
         self.apply_manifest()
@@ -145,12 +154,13 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
             self.apply_manifest()
         save.assert_not_called()
 
-        connection = self.broker.connection
-        connection.timeout = connection.timeout + 1  # type: ignore[union-attr]
-        connection.save()  # type: ignore[union-attr]
+        connection = required(self.broker.connection, "broker.connection")
+        connection.timeout = required(connection.timeout, "connection.timeout") + 1
+        connection.save()
         self.apply_manifest()
-        connection.refresh_from_db()  # type: ignore[union-attr]
-        self.assertEqual(connection.timeout, self.broker.manifest.spec.connection.timeout)  # type: ignore[union-attr]
+        connection.refresh_from_db()
+        manifest = required(self.broker.manifest, "broker.manifest")
+        self.assertEqual(connection.timeout, manifest.spec.connection.timeout)
 
     def test_not_implemented(self):
         """Test that deploy(), undeploy(), prompt() and logs() are not implemented."""

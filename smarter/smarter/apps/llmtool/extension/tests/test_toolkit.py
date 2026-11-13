@@ -13,6 +13,7 @@ from smarter.apps.llmtool.signals import (
     extension_tool_failed,
     extension_tool_responded,
 )
+from smarter.lib.unittest.narrowing import json_object
 
 from .mixins import ExtensionTestMixin
 
@@ -58,7 +59,8 @@ class TestExtensionToolkit(ExtensionTestMixin):
                 signal.disconnect(dispatch_uid=f"t{id(signal)}")
         self.assertEqual(result, {"echo": "hello world", "has_api_key": True, "account": self.account.account_number})
         self.assertEqual(received, [extension_tool_called, extension_tool_responded])
-        self.assertEqual(self.toolkit.call("ext_echo_echo", {"text": "dict"})["echo"], "hello dict")  # type: ignore[index]
+        result = json_object(self.toolkit.call("ext_echo_echo", {"text": "dict"}))
+        self.assertEqual(result["echo"], "hello dict")
 
     def test_tools_are_not_cached_by_default(self):
         """A tool without cache_ttl runs on every call, because its result may depend on who calls it."""
@@ -87,7 +89,7 @@ class TestExtensionToolkit(ExtensionTestMixin):
         finally:
             extension_tool_responded.disconnect(dispatch_uid="cached")
         self.assertEqual(first, second)
-        self.assertEqual(other["echo"], "hello other")  # type: ignore[index]
+        self.assertEqual(json_object(other)["echo"], "hello other")
         self.assertEqual(execute.call_count, 2)
         self.assertEqual(responded, [False, True, False])
 
@@ -97,14 +99,15 @@ class TestExtensionToolkit(ExtensionTestMixin):
             patch.object(self.toolkit.functions["ext_echo_fail"].tool, "cache_ttl", 60),
             patch.object(ExtensionToolkit, "execute", autospec=True, side_effect=ExtensionToolkit.execute) as execute,
         ):
-            self.assertIn("error", self.toolkit.call("ext_echo_fail", None))  # type: ignore[operator]
-            self.assertIn("error", self.toolkit.call("ext_echo_fail", None))  # type: ignore[operator]
+            self.assertIn("error", json_object(self.toolkit.call("ext_echo_fail", None)))
+            self.assertIn("error", json_object(self.toolkit.call("ext_echo_fail", None)))
         self.assertEqual(execute.call_count, 2)
 
     def test_call_with_switch(self):
         """A tool reads the extension's own switches."""
         Switch.objects.filter(name="ext_echo_verbose").update(active=True)
-        self.assertEqual(self.toolkit.call("ext_echo_echo", {"text": "x"})["version"], "1.0.0")  # type: ignore[index]
+        result = json_object(self.toolkit.call("ext_echo_echo", {"text": "x"}))
+        self.assertEqual(result["version"], "1.0.0")
 
     def test_errors_are_returned_to_the_llm(self):
         """Invalid arguments, exceptions, refusals, timeouts and non-JSON results are returned as errors."""
@@ -123,8 +126,8 @@ class TestExtensionToolkit(ExtensionTestMixin):
             }
             for (function_name, arguments), message in cases.items():
                 with self.subTest(function_name=function_name, arguments=arguments):
-                    result = self.toolkit.call(function_name, arguments)
-                    self.assertIn(message, result["error"])  # type: ignore[index]
+                    result = json_object(self.toolkit.call(function_name, arguments))
+                    self.assertIn(message, result["error"])
         finally:
             extension_tool_failed.disconnect(dispatch_uid="tf")
         self.assertEqual(len(failures), 7)

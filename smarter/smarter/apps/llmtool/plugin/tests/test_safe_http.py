@@ -10,6 +10,7 @@ Unit tests for :py:mod:`smarter.apps.llmtool.plugin.safe_http`, which protects t
 """
 
 import socket
+from typing import Optional
 from unittest import mock
 
 import requests
@@ -88,6 +89,7 @@ class TestSafeHttp(SmarterTestBase):
 
     def test_unresolvable_host(self):
         """Test that a host that cannot be resolved is rejected."""
+        side_effect: object
         for side_effect in (socket.gaierror("no such host"), lambda *args, **kwargs: []):
             with mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=side_effect):
                 with self.assertRaises(safe_http.SafeHttpError):
@@ -95,6 +97,7 @@ class TestSafeHttp(SmarterTestBase):
 
     def test_is_loopback_host(self):
         """Localhost, its subdomains, the local hosts of SmarterValidator and loopback addresses are loopback hosts."""
+        host: Optional[str]
         for host in (
             "localhost",
             "LOCALHOST",

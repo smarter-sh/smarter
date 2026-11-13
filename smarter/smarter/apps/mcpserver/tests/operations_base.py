@@ -23,6 +23,7 @@ import copy
 import os
 from datetime import datetime, timedelta, timezone
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import platform_staff_profile_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.infrastructure.providers import configure_provider
@@ -94,6 +95,8 @@ class OperationsTestBase(TestAccountMixin):
     The account mixin's admin user is staff of its own test account. A profile in the Smarter
     account makes them one of the platform's staff, as the server requires.
     """
+
+    platform_staff_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):

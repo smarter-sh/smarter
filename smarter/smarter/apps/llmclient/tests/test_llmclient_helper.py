@@ -74,7 +74,8 @@ class TestLLMClientHelper(TestAccountMixin):
         helper.llmclient = None
         self.assertIsNone(helper._llmclient_id)  # pylint: disable=protected-access
         with self.assertRaises(SmarterValueError):
-            helper.llmclient = "not an llmclient"
+            # the test checks that a value of the wrong type is refused.
+            helper.llmclient = "not an llmclient"  # type: ignore[assignment]
 
     def test_llmclient_id_setter(self):
         helper = self.helper()

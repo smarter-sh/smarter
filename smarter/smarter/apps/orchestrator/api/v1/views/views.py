@@ -31,7 +31,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
 
@@ -75,7 +75,8 @@ class OrchestratorView(ViewBase):
 
         :returns: A queryset holding :attr:`orchestrator`.
         """
-        return Orchestrator.objects.filter(id=self.orchestrator.id)  # type: ignore[return-value]
+        orchestrator = required(self.orchestrator, "orchestrator")
+        return Orchestrator.objects.filter(id=orchestrator.id)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """

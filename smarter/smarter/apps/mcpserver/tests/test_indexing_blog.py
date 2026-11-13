@@ -31,6 +31,7 @@ from smarter.apps.mcpserver.signals import (
     mcpserver_repository_indexed,
 )
 from smarter.lib import json
+from smarter.lib.typing import required
 
 from .base_classes import BLOG_URL, MCPServerTestBase, blog_posts
 
@@ -252,7 +253,7 @@ class TestBlog(MCPServerTestBase):
         with mock.patch(REQUESTS_PATCH, return_value=FakeResponse(500)):
             index = index_blog(blog=self.test_blog)
         self.assertEqual(index.status, RepositoryIndexStatus.FAILED)
-        self.assertIn("HTTP 500", index.error)
+        self.assertIn("HTTP 500", required(index.error, "index.error"))
 
         with mock.patch(REQUESTS_PATCH, side_effect=self.wordpress([self.posts_json])):
             index_blog(blog=self.test_blog)
@@ -260,7 +261,7 @@ class TestBlog(MCPServerTestBase):
             index = index_blog(blog=self.test_blog)
         self.assertEqual(index.status, RepositoryIndexStatus.READY)
         self.assertEqual(index.file_count, 2)
-        self.assertIn("HTTP 500", index.error)
+        self.assertIn("HTTP 500", required(index.error, "index.error"))
         self.assertEqual(failures, [self.test_blog.name, self.test_blog.name])
 
     def test_index_blog_defaults_to_the_project_blog(self):

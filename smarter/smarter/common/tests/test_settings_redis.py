@@ -10,6 +10,7 @@ import warnings
 from django.conf import settings
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 from smarter.settings.base import REDIS_HEALTH_CHECK_INTERVAL
 
 
@@ -19,7 +20,8 @@ class TestRedisSettings(SmarterTestBase):
     def test_cache_connections_are_health_checked(self):
         for alias in ("default", "sessions"):
             with self.subTest(alias=alias):
-                pool = settings.CACHES[alias]["OPTIONS"]["CONNECTION_POOL_KWARGS"]
+                options = json_object(settings.CACHES[alias]["OPTIONS"])
+                pool = json_object(options["CONNECTION_POOL_KWARGS"])
                 self.assertEqual(pool["health_check_interval"], REDIS_HEALTH_CHECK_INTERVAL)
                 self.assertTrue(pool["socket_keepalive"])
 

@@ -12,7 +12,7 @@ from smarter.apps.llmhost.services.cluster import (
     get_cluster,
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostClusterError
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -31,7 +31,7 @@ class TestInMemoryClusterBackend(SmarterTestBase):
         """Test that applied resources can be read back, by name and by label selector, with kinds normalized."""
         self.cluster.apply([resource("Deployment", "llmhost-1-a"), resource("Service", "llmhost-1-a")])
         self.cluster.apply([resource("Deployment", "llmhost-2-b", llmhost="llmhost-2-b")])
-        self.assertEqual(self.cluster.get("deployment", "llmhost-1-a")["kind"], "Deployment")
+        self.assertEqual(required(self.cluster.get("deployment", "llmhost-1-a"), "deployment")["kind"], "Deployment")
         self.assertIsNone(self.cluster.get("deployment", "missing"))
         self.assertEqual(len(self.cluster.list_resources("deployments", "smarter.sh/llmhost=llmhost-1-a")), 1)
         self.assertEqual(len(self.cluster.applied), 2)
@@ -41,7 +41,7 @@ class TestInMemoryClusterBackend(SmarterTestBase):
         self.cluster.apply([resource("Deployment", "d")])
         self.cluster.set_deployment_status("d", readyReplicas=1)
         self.cluster.apply([resource("Deployment", "d")])
-        self.assertEqual(self.cluster.get("deployment", "d")["status"], {"readyReplicas": 1})
+        self.assertEqual(required(self.cluster.get("deployment", "d"), "deployment")["status"], {"readyReplicas": 1})
 
     def test_delete(self):
         """Test that delete removes only the selected kinds and labels, and delete_named one resource."""

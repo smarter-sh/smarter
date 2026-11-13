@@ -100,7 +100,9 @@ class TestCreateFirstCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send the first request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        self.client.append_message = MagicMock()
+        patcher = patch.object(self.client, "append_message")
+        self.append_message = patcher.start()
+        self.addCleanup(patcher.stop)
         patch_model_set(self, "TOOLS_REQUIRE_NO_REASONING_MODELS", {"gpt-6-luna"})
         patch_model_set(self, "TOOLS_UNSUPPORTED_MODELS", {"gpt-6.1-sol"})
         patch_model_set(self, "TOOLS_REJECT_REASONING_EFFORT_MODELS", set())
@@ -193,19 +195,19 @@ class TestCreateFirstCompletion(SmarterTestBase):
         self.assertNotIn("reasoning_effort", sent)
         self.assertNotIn(UNKNOWN_MODEL, module.TOOLS_REQUIRE_NO_REASONING_MODELS)
         self.assertIn(UNKNOWN_MODEL, module.TOOLS_UNSUPPORTED_MODELS)
-        self.client.append_message.assert_called_once()
-        notice = self.client.append_message.call_args.kwargs["content"]
+        self.append_message.assert_called_once()
+        notice = self.append_message.call_args.kwargs["content"]
         self.assertIn(UNKNOWN_MODEL, notice)
         self.assertIn("get_current_weather", notice)
 
         # the next prompt's request leaves out its tools up front
-        self.client.append_message.reset_mock()
+        self.append_message.reset_mock()
         self.client.model_warnings = set()
         with patch(CREATE_PATCH) as create:
             self.client.create_first_completion(self.kwargs(UNKNOWN_MODEL))
         create.assert_called_once()
         self.assertNotIn("tools", create.call_args.kwargs)
-        self.client.append_message.assert_called_once()
+        self.append_message.assert_called_once()
 
     def test_known_unsupported_model_answers_without_tools(self):
         with patch(CREATE_PATCH) as create:
@@ -213,13 +215,13 @@ class TestCreateFirstCompletion(SmarterTestBase):
         create.assert_called_once()
         self.assertNotIn("tools", create.call_args.kwargs)
         self.assertNotIn("reasoning_effort", create.call_args.kwargs)
-        self.client.append_message.assert_called_once()
+        self.append_message.assert_called_once()
 
     def test_known_unsupported_model_without_tools_has_no_notice(self):
         with patch(CREATE_PATCH) as create:
             self.client.create_first_completion(self.kwargs("gpt-6.1-sol", tools=False))
         create.assert_called_once()
-        self.client.append_message.assert_not_called()
+        self.append_message.assert_not_called()
 
     def test_llmclient_effort_with_tools_is_retried_with_none(self):
         """A model that rejects tools at the LLMClient's effort uses 'none' with tools, and is remembered for it."""
@@ -269,7 +271,9 @@ class TestCreateCompletion(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send a request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        self.client.append_message = MagicMock()
+        patcher = patch.object(self.client, "append_message")
+        self.append_message = patcher.start()
+        self.addCleanup(patcher.stop)
         patch_model_set(self, "DEFAULT_TEMPERATURE_ONLY_MODELS", {"gpt-6-luna"})
         patch_model_set(self, "SUPPORTED_REASONING_EFFORTS", {})
 
@@ -474,7 +478,9 @@ class TestModelWarnings(SmarterTestBase):
         super().setUp()
         # the handler's other state is not needed to send a request
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        self.client.append_message = MagicMock()
+        patcher = patch.object(self.client, "append_message")
+        self.append_message = patcher.start()
+        self.addCleanup(patcher.stop)
         self.prompt = MagicMock()
         self.prompt.llmclient.default_temperature = 0.2
         self.prompt.llmclient.default_reasoning_effort = None
@@ -536,7 +542,7 @@ class TestModelWarnings(SmarterTestBase):
         return {"model": model, "messages": [{"role": "user", "content": "hi"}], "temperature": 0.2}
 
     def warnings(self) -> list[str]:
-        return [call.kwargs["content"] for call in self.client.append_message.call_args_list]
+        return [call.kwargs["content"] for call in self.append_message.call_args_list]
 
     def test_known_model_warns_about_the_llmclients_temperature(self):
         with patch(CREATE_PATCH):
@@ -546,7 +552,7 @@ class TestModelWarnings(SmarterTestBase):
         self.assertIn("defaultTemperature: 0.2", warnings[0])
         self.assertIn("defaultTemperature: 1.0", warnings[0])
         self.assertIn("defaultReasoningEffort: none", warnings[0])
-        role = self.client.append_message.call_args.kwargs["role"]
+        role = self.append_message.call_args.kwargs["role"]
         self.assertEqual(role, "smarter")
 
     def test_rejected_temperature_warns(self):
@@ -560,7 +566,7 @@ class TestModelWarnings(SmarterTestBase):
         self.prompt.llmclient.default_temperature = None
         with patch(CREATE_PATCH):
             self.client.create_completion(self.kwargs("gpt-6-luna"))
-        self.client.append_message.assert_not_called()
+        self.append_message.assert_not_called()
 
     def test_default_temperature_on_a_default_only_model_does_not_warn(self):
         """The model ran at its default, 1.0, which is what the LLMClient asked for (#993)."""
@@ -568,7 +574,7 @@ class TestModelWarnings(SmarterTestBase):
         with patch(CREATE_PATCH) as create:
             self.client.create_completion(self.kwargs("gpt-6-luna"))
         self.assertNotIn("temperature", create.call_args.kwargs)
-        self.client.append_message.assert_not_called()
+        self.append_message.assert_not_called()
 
     def test_default_temperature_on_a_model_that_rejects_temperature_warns(self):
         """A search model rejects every temperature, so it didn't use the LLMClient's 1.0 either."""

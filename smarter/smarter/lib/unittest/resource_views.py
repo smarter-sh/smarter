@@ -383,5 +383,6 @@ class ResourceViewsTestMixin:
         """Test that the resource api has no resource for an invalid, or unknown, id."""
         prefix = self.resource.record_locator.partition("-")[0]  # type: ignore[attr-defined]
         assert_no_resource(self, f"{prefix}-not-a-hashed-id")
-        unknown = self.model(id=999999999)  # type: ignore[attr-defined]
+        # the abstract MetaDataModel declares no id, which every concrete model has
+        unknown = self.model(id=999999999)  # type: ignore[misc]
         assert_no_resource(self, unknown.record_locator)

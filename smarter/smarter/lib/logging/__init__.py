@@ -63,6 +63,7 @@ from .streaming_file_handler import StreamingFileHandler
 from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 __all__ = [
+    "getSmarterLogger",
     "get_user_context",
     "WaffleSwitchedLoggerWrapper",
     "build_channel",

@@ -31,6 +31,13 @@ class TestPromptHistoryContract(OpenApiResponseMixin, TestAccountMixin):
 
     llmclient: LLMClient
     prompt: Prompt
+    plugin: PluginMeta
+    tool_call: PromptToolCall
+    plugin_usage: PromptPluginUsage
+    stranger: User
+    stranger_account: Account
+    stranger_profile: UserProfile
+    stranger_prompt: Prompt
 
     @classmethod
     def setUpClass(cls):

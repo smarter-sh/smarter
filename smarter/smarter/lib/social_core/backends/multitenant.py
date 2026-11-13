@@ -180,7 +180,8 @@ class PaymentVerifiedUserDetailsMixin:
         :param response: The provider's user data.
         :returns: The user details, or None.
         """
-        details = super().get_user_details(response)
+        # the backend that this mixin precedes in the MRO, e.g. GoogleOAuth2, defines get_user_details().
+        details = super().get_user_details(response)  # type: ignore[misc]
         logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
         if details is None:
             # authentication failed, so no point in checking payment status
@@ -193,7 +194,15 @@ class PaymentVerifiedUserDetailsMixin:
                 type(details),
             )
             return details
-        if verify_payment_status(details.get(USERNAME)):
+        username = details.get(USERNAME)
+        if not isinstance(username, str) or not username:
+            # without a username there is nothing to check; verify_payment_status() fails open, and so does this.
+            logger.warning(
+                "%s.get_user_details() the user details have no username, so the payment status is not checked.",
+                logger_prefix,
+            )
+            return details
+        if verify_payment_status(username):
             return details
         if self.allow_unpaid_user(details):
             return details

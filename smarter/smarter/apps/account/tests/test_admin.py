@@ -18,6 +18,9 @@ from smarter.apps.secret.models import Secret
 class TestAccountAdmin(TestAccountMixin):
     """Test the account app's model admins and smarter_filter_queryset_for_user_profile()."""
 
+    staff_user: User
+    staff_user_profile: UserProfile
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -107,6 +110,7 @@ class TestAccountAdmin(TestAccountMixin):
     def test_user_admin(self):
         """Test that staff may change only the users of their own account, and only superusers may delete users."""
         user_admin = account_admin.smarter_restricted_admin_site._registry[User]  # pylint: disable=protected-access
+        assert isinstance(user_admin, account_admin.RestrictedUserAdmin)
         staff = self.request(self.staff_user)
         self.assertTrue(user_admin.has_change_permission(staff, self.non_admin_user))
         self.assertFalse(user_admin.has_change_permission(staff, None))

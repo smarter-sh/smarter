@@ -21,7 +21,7 @@ is operational: it runs in the queue of the other operational tasks, such as cha
 """
 
 from dataclasses import asdict
-from typing import Any, Optional
+from typing import Optional
 
 from django.db.models import Q
 

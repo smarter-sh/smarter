@@ -69,9 +69,13 @@ class TestGetCachedLLMClientByRequest(TestAccountMixin):
         """Only the id is cached, so a change, e.g. a deployment by update(), is seen at once."""
         with patch(HELPER) as helper:
             helper.return_value.llmclient = self.llmclient
-            self.assertFalse(get_cached_llmclient_by_request(self.request()).deployed)
+            llmclient = get_cached_llmclient_by_request(self.request())
+            assert llmclient is not None
+            self.assertFalse(llmclient.deployed)
             LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=True)
-            self.assertTrue(get_cached_llmclient_by_request(self.request()).deployed)
+            llmclient = get_cached_llmclient_by_request(self.request())
+            assert llmclient is not None
+            self.assertTrue(llmclient.deployed)
             LLMClient.objects.filter(pk=self.llmclient.pk).delete()
             self.assertIsNone(get_cached_llmclient_by_request(self.request()))
 

@@ -14,7 +14,7 @@ Classes:
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -22,12 +22,13 @@ from .const import namespace as app_name
 logger = logging.getLogger(__name__)
 
 
-class WebPlatformConfig(AppConfig, SmarterHelperMixin):
+class WebPlatformConfig(AppConfig):
     """
     ``AppConfig`` for the ``smarter.apps.dashboard`` application.
 
-    Extends both :class:`~django.apps.AppConfig` and
-    :class:`~smarter.common.mixins.SmarterHelperMixin`.
+    Extends :class:`~django.apps.AppConfig`. It doesn't mix in
+    :class:`~smarter.common.mixins.SmarterHelperMixin`, whose ``ready`` property would conflict with
+    ``AppConfig.ready()``.
 
     Attributes:
         default_auto_field (str): ``"django.db.models.BigAutoField"``
@@ -50,7 +51,6 @@ class WebPlatformConfig(AppConfig, SmarterHelperMixin):
         handlers are registered before any requests are processed. Called
         automatically by Django during startup.
         """
-        from . import receivers  # noqa: F401
-        from . import signals  # noqa: F401
+        from . import receivers, signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)
+        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)

@@ -132,12 +132,14 @@ class TestLLMClientSpecConfigStyles(SmarterTestBase):
         )
         self.assertIsInstance(styles.conversationHeader, SAMLLMClientStylesConversationHeader)
         self.assertIsInstance(styles.incomingMessage, SAMLLMClientStylesMessage)
+        assert styles.messageInput is not None
         self.assertEqual(styles.messageInput.editorBackgroundColor, "#eee")
         self.assertEqual(styles.googleFont, "Space Grotesk")
 
     def test_misspelled_setting_is_an_error(self):
         with self.assertRaises(ValidationError):
-            SAMLLMClientSpecConfigStyles(appLogoURL="https://cdn.example.com/logo.png")
+            # the test checks that a misspelled setting is refused.
+            SAMLLMClientSpecConfigStyles(appLogoURL="https://cdn.example.com/logo.png")  # type: ignore[call-arg]
         with self.assertRaises(ValidationError):
             SAMLLMClientSpecConfigStyles(conversationHeader={"bgColor": "#fff"})
 

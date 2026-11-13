@@ -13,6 +13,9 @@ logger = getLogger(__name__)
 class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     """Tests for manage.py create_plugin."""
 
+    file_path: str
+    plugin_name: str
+
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""

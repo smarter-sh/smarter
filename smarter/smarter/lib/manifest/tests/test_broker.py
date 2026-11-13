@@ -215,7 +215,8 @@ class TestAbstractBrokerClass(TestAccountMixin):
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
         )
         with self.assertRaises(TypeError):
-            self.broker < broker2  # pylint: disable=pointless-statement
+            # deliberately unordered: brokers don't support <
+            self.broker < broker2  # type: ignore[operator]  # pylint: disable=pointless-statement
 
     def test_str_names_the_concrete_class(self):
         """Str() names the broker's own class, without ANSI color codes."""
@@ -485,9 +486,13 @@ class TestAbstractBrokerClass(TestAccountMixin):
         with_query = requests.Request("GET", "http://example.com/?a=1&b=2").prepare()
         without_query = requests.Request("GET", "http://example.com/").prepare()
         with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=with_query):
-            self.assertEqual(broker.params.dict(), {"a": "1", "b": "2"})
+            params = broker.params
+            assert params is not None
+            self.assertEqual(params.dict(), {"a": "1", "b": "2"})
         with patch.object(SAMTestBroker, "request", new_callable=PropertyMock, return_value=without_query):
-            self.assertEqual(broker.params.dict(), {})
+            params = broker.params
+            assert params is not None
+            self.assertEqual(params.dict(), {})
 
     def test_not_ready_without_a_ready_request(self):
         broker = self.make_broker()

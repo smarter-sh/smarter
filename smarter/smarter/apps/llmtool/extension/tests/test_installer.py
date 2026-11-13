@@ -9,6 +9,7 @@ from smarter.apps.llmtool.extension.exceptions import (
     SmarterExtensionInstallError,
     SmarterExtensionLoadError,
 )
+from smarter.apps.llmtool.extension.installer import SettingInput
 from smarter.apps.llmtool.extension.lifecycle import LifecycleContext
 from smarter.apps.llmtool.extension.resources import (
     apply_extension_manifest,
@@ -111,12 +112,14 @@ class TestInstall(ExtensionTestMixin):
         """A pre_install hook that raises rolls the install back."""
         archive = fixture_archive("echo")
         loaded = installer_module.load_archive(installer_module.ExtensionArchive(archive))
-        loaded.entry_point("echo.lifecycle:FAIL").add("pre_install")
+        fail = loaded.entry_point("echo.lifecycle:FAIL")
+        assert isinstance(fail, set)
+        fail.add("pre_install")
         try:
             with self.assertRaisesRegex(RuntimeError, "pre_install failed"):
                 self.installer.install(archive)
         finally:
-            loaded.entry_point("echo.lifecycle:FAIL").clear()
+            fail.clear()
         self.assertFalse(Extension.objects.filter(slug="echo").exists())
         self.assertFalse(ExtensionVersion.objects.filter(extension__slug="echo").exists())
 
@@ -124,11 +127,13 @@ class TestInstall(ExtensionTestMixin):
         """A post_install hook that raises leaves the extension installed, disabled, with the error."""
         archive = fixture_archive("echo")
         loaded = installer_module.load_archive(installer_module.ExtensionArchive(archive))
-        loaded.entry_point("echo.lifecycle:FAIL").add("post_install")
+        fail = loaded.entry_point("echo.lifecycle:FAIL")
+        assert isinstance(fail, set)
+        fail.add("post_install")
         try:
             extension = self.installer.install(archive)
         finally:
-            loaded.entry_point("echo.lifecycle:FAIL").clear()
+            fail.clear()
         extension.refresh_from_db()
         self.assertFalse(extension.enabled)
         self.assertIn("post_install failed", extension.error)
@@ -211,12 +216,13 @@ class TestConfigureEnableDisable(ExtensionTestMixin):
         self.assertEqual(ExtensionSetting.objects.get(extension=extension, name="repeat").value, "2")
         self.installer.configure(extension, {"greeting": None})
         self.assertFalse(ExtensionSetting.objects.filter(extension=extension, name="greeting").exists())
-        for values, message in (
+        cases: tuple[tuple[dict[str, SettingInput], str], ...] = (
             ({"nope": "x"}, "no setting"),
             ({"repeat": "many"}, "repeat"),
             ({"api_key": "plain text"}, "must be a Secret"),
             ({"repeat": self.secret("echo_wrong_secret")}, "not a secret setting"),
-        ):
+        )
+        for values, message in cases:
             with self.subTest(values=values):
                 with self.assertRaisesRegex(SmarterExtensionInstallError, message):
                     self.installer.configure(extension, values)

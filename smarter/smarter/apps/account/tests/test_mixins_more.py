@@ -75,8 +75,9 @@ class TestAccountMixinMore(TestAccountMixin):
         """Account mixins compare for equality by user_profile, but have no order."""
         admin = AccountMixin(user_profile=self.user_profile)
         mortal = AccountMixin(user_profile=self.non_admin_user_profile)
+        # the test proves that AccountMixin has no order, so mypy rightly refuses the comparison.
         with self.assertRaises(TypeError):
-            admin < mortal  # pylint: disable=pointless-statement
+            admin < mortal  # type: ignore[operator]  # pylint: disable=pointless-statement
         self.assertIs(admin.__eq__("not a mixin"), NotImplemented)
 
     def test_authenticate(self):

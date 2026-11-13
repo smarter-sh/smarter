@@ -194,52 +194,6 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         response, status = self.get_response(path=url_with_query_params)
         logger.info("get() raw response: %s", response)
 
-        expected_output = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "SqlConnection",
-                "name": "smarter_test_base_7e1abbdf13b16e06",
-                "metadata": {"count": 1},
-                "kwargs": {"kwargs": {}},
-                "data": {
-                    "titles": [
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "hostname", "type": "CharField"},
-                        {"name": "port", "type": "IntegerField"},
-                        {"name": "database", "type": "CharField"},
-                        {"name": "username", "type": "CharField"},
-                        {"name": "password", "type": "PrimaryKeyRelatedField"},
-                        {"name": "proxyProtocol", "type": "ChoiceField"},
-                        {"name": "proxyHost", "type": "CharField"},
-                        {"name": "proxyPort", "type": "IntegerField"},
-                        {"name": "proxyUsername", "type": "CharField"},
-                        {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
-                    ],
-                    "items": [
-                        {
-                            "name": "smarter_test_base_7e1abbdf13b16e06",
-                            "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-mariadb",
-                            "port": 3306,
-                            "database": "smarter",
-                            "username": "smarter",
-                            "password": 1156,
-                            "proxyProtocol": "http",
-                            "proxyHost": None,
-                            "proxyPort": None,
-                            "proxyUsername": None,
-                            "proxyPassword": None,
-                        }
-                    ],
-                },
-            },
-            "message": "SqlConnections got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "SqlConnection",
-            "metadata": {"key": "4ccb6c8cef5f9a98bf182b37c3240e3be29401ad1679a25135ce7e5cb0d404ca"},
-        }
-
         self.assertEqual(status, HTTPStatus.OK)
 
         # validate the response and status are both good
@@ -276,51 +230,6 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
 
         data = response["data"][SmarterJournalApiResponseKeys.DATA]
         logger.info("data: %s", data)
-        expected_output = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "SqlConnection",
-                "name": "smarter_test_base_21b4ec52db9ba67b",
-                "metadata": {"count": 1},
-                "kwargs": {"kwargs": {}},
-                "data": {
-                    "titles": [
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "hostname", "type": "CharField"},
-                        {"name": "port", "type": "IntegerField"},
-                        {"name": "database", "type": "CharField"},
-                        {"name": "username", "type": "CharField"},
-                        {"name": "password", "type": "PrimaryKeyRelatedField"},
-                        {"name": "proxyProtocol", "type": "ChoiceField"},
-                        {"name": "proxyHost", "type": "CharField"},
-                        {"name": "proxyPort", "type": "IntegerField"},
-                        {"name": "proxyUsername", "type": "CharField"},
-                        {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
-                    ],
-                    "items": [
-                        {
-                            "name": "smarter_test_base_21b4ec52db9ba67b",
-                            "description": "local mysql test sqlconnection - ",
-                            "hostname": "smarter-mariadb",
-                            "port": 3306,
-                            "database": "smarter",
-                            "username": "smarter",
-                            "password": 1155,
-                            "proxyProtocol": "http",
-                            "proxyHost": None,
-                            "proxyPort": None,
-                            "proxyUsername": None,
-                            "proxyPassword": None,
-                        }
-                    ],
-                },
-            },
-            "message": "SqlConnections got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "SqlConnection",
-            "metadata": {"key": "0515caf3d20e92bab3ef1b4f226b37a9bec26c0aada1e1e116781abd37d6cd4b"},
-        }
 
         self.assertIn("data", response)
         self.assertIn("message", response)

@@ -5,6 +5,7 @@ import inspect
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib.typing import required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -18,9 +19,8 @@ class TestApiCliV1Brokers(SmarterTestBase):
             samkinds_values = set(SAMKinds.all())
             difference = brokers_keys.difference(samkinds_values)
             difference_list = list(difference)
-            if len(difference_list) == 1:
-                difference_list = difference_list[0]
-            self.fail(msg=f"The following broker(s) is missing from the master BROKERS dictionary: {difference_list}")
+            missing = difference_list[0] if len(difference_list) == 1 else difference_list
+            self.fail(msg=f"The following broker(s) is missing from the master BROKERS dictionary: {missing}")
 
     def test_brokers_get(self):
         """Test that the correct broker is returned for the given kind."""
@@ -56,6 +56,7 @@ class TestApiCliV1Brokers(SmarterTestBase):
         """
         for kind in Brokers.all_brokers():
             broker_class = Brokers.get_broker(kind)
+            assert broker_class is not None
             with self.subTest(kind=kind):
                 source = inspect.getsource(broker_class.deploy)
                 implemented = "SAMBrokerErrorNotImplemented" not in source and "not implemented" not in source
@@ -68,7 +69,9 @@ class TestApiCliV1Brokers(SmarterTestBase):
 
     def test_deployable_kinds(self):
         """Test the kinds whose brokers deploy, so that a change to them is deliberate."""
-        deployable = sorted(kind for kind in Brokers.all_brokers() if Brokers.get_broker(kind).deployable)
+        deployable = sorted(
+            kind for kind in Brokers.all_brokers() if required(Brokers.get_broker(kind), f"broker of {kind}").deployable
+        )
         self.assertEqual(
             deployable,
             sorted(

@@ -8,6 +8,8 @@ from .const import namespace
 from .views.account import AccountListView, AccountView
 from .views.account_contact import AccountContactListView, AccountContactView
 from .views.batch_create_users import BatchCreateUsersView
+from .views.data_export import DataExportListView, DataExportView
+from .views.usage import TokenUsageView
 from .views.user import UserListView, UserView
 from .views.user_profile import UserProfileListView, UserProfileView
 
@@ -26,6 +28,9 @@ class AccountAPINamespaces:
     batch_create_users = to_snake_case(BatchCreateUsersView.__name__)
     user_profile_list_view = to_snake_case(UserProfileListView.__name__)
     user_profile_view = to_snake_case(UserProfileView.__name__)
+    token_usage_view = to_snake_case(TokenUsageView.__name__)
+    data_export_list_view = to_snake_case(DataExportListView.__name__)
+    data_export_view = to_snake_case(DataExportView.__name__)
 
 
 urlpatterns = [
@@ -69,5 +74,14 @@ urlpatterns = [
         "user-profiles/<int:user_profile_id>/",
         UserProfileView.as_view(),
         name=AccountAPINamespaces.user_profile_view,
+    ),
+    # the user's own token usage and data exports
+    # -----------------------------------------------------------------------
+    path("usage/", TokenUsageView.as_view(), name=AccountAPINamespaces.token_usage_view),
+    path("data-exports/", DataExportListView.as_view(), name=AccountAPINamespaces.data_export_list_view),
+    path(
+        "data-exports/<int:export_id>/",
+        DataExportView.as_view(),
+        name=AccountAPINamespaces.data_export_view,
     ),
 ]

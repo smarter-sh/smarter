@@ -28,10 +28,10 @@ rule (:doc:`ADR-012 <../../adr/012-error-handling>`), becomes Go's sentinel erro
      - ``*smarter.APIResponseValidationError``: the response doesn't decode into the SDK's struct.
    * - ``errors.As(err, &statusError)``
      - ``*smarter.APIStatusError``: the API returned a 4xx or 5xx status.
-   * - ``errors.Is(err, smarter.ErrBadRequest)``, ``ErrAuthentication``, ``ErrPermissionDenied``,
-       ``ErrNotFound``, ``ErrConflict``, ``ErrUnprocessableEntity``, ``ErrRateLimit``,
-       ``ErrInternalServer``
-     - The status: 400, 401, 403, 404, 409, 422, 429, and 5xx.
+   * - ``errors.Is(err, smarter.ErrBadRequest)``, ``ErrAuthentication``, ``ErrPaymentRequired``,
+       ``ErrPermissionDenied``, ``ErrNotFound``, ``ErrConflict``, ``ErrUnprocessableEntity``,
+       ``ErrRateLimit``, ``ErrInternalServer``
+     - The status: 400, 401, 402, 403, 404, 409, 422, 429, and 5xx.
    * - ``errors.As(err, &promptError)``
      - ``*smarter.PromptError``: a streamed prompt failed.
 
@@ -51,6 +51,11 @@ keep working through your own ``fmt.Errorf("...: %w", err)``.
        fmt.Println("something else went wrong:", err)
    }
 
+``ErrPaymentRequired`` is a :doc:`budget's <../../smarter-resources/smarter-budget>` refusal: a
+budget that reached its limit has locked the account, the user profile or the resource that the
+request would charge, e.g. a Vectorsearch or a Proxy. Retrying won't help until the budget allows
+charges again, in its next period or after an admin raises its limit, so the SDK never retries it.
+
 An ``*APIResponseValidationError`` usually means that the SDK and the platform are of incompatible
 versions. Compare the platform's ``client.Version(ctx)`` with the SDK's ``smarter.Version``.
 
@@ -61,7 +66,9 @@ A request that failed for a transient reason is retried, by default twice, with 
 and jitter, honoring the response's ``Retry-After``. Transient means: no response, a timeout, or a
 408, 429, 502 or 504 status. A 503 is retried only when it didn't come from the platform itself,
 e.g. from a load balancer, because the platform answers 503 for a resource that isn't ready, which a
-retry won't change.
+retry won't change. Likewise, the 429 with which the platform refuses to start a data export (the user
+has no email address, or has started too many today) is its answer, not a transient failure, and is
+not retried.
 
 .. code-block:: go
 

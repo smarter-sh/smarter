@@ -33,8 +33,8 @@ class TestLLMClientDeploymentContract(SmarterTestBase):
         self.assertIn("workbenchUrl", DeploymentLLMClient.model_json_schema(mode="serialization")["properties"])
         request = AttachApiKeyRequest.model_validate({"keyId": "6f1d2c3b-4a5e-4f60-8172-839405a6b7c8"})
         self.assertEqual(str(request.key_id), "6f1d2c3b-4a5e-4f60-8172-839405a6b7c8")
-        request = CreateApiKeyRequest.model_validate({"name": "my_site_chat"})
-        self.assertEqual((request.description, request.attach), ("", False))
+        create_request = CreateApiKeyRequest.model_validate({"name": "my_site_chat"})
+        self.assertEqual((create_request.description, create_request.attach), ("", False))
 
     def test_export_command(self):
         """The export command writes the schema."""

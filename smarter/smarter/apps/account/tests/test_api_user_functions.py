@@ -21,6 +21,9 @@ from smarter.lib import json
 class TestUserApiFunctions(TestAccountMixin):
     """Test get_user(), create_user(), update_user(), delete_user() and their helpers."""
 
+    staff_user: User
+    staff_user_profile: UserProfile
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -48,12 +51,13 @@ class TestUserApiFunctions(TestAccountMixin):
         self.assertIsNone(
             user_api.validate_request_body(self.request(self.admin_user, "post", {"username": "a", "password": "b"}))
         )
-        for body in ([], {"password": "b"}, {"username": "a"}):
+        bodies: tuple[object, ...] = ([], {"password": "b"}, {"username": "a"})
+        for body in bodies:
             with self.subTest(body=body):
                 response = user_api.validate_request_body(self.request(self.admin_user, "post", body))
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         request = self.factory.post("/", data="not json", content_type="application/json")
-        self.assertEqual(user_api.validate_request_body(request).status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(user_api.validate_request_body(request).status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[arg-type]  # @api_view takes a Django request
 
     def test_eval_permissions(self):
         self.assertIsNone(
@@ -135,7 +139,7 @@ class TestUserApiFunctions(TestAccountMixin):
         )
         request = self.factory.post("/", data="not json", content_type="application/json")
         request.user = self.admin_user
-        self.assertEqual(user_api.create_user(request).status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(user_api.create_user(request).status_code, HTTPStatus.BAD_REQUEST)  # type: ignore[arg-type]  # @api_view takes a Django request
 
     def test_update_unknown_user(self):
         """Test that updating a user that doesn't exist is a 400."""
@@ -177,7 +181,9 @@ class TestUserApiFunctions(TestAccountMixin):
     def test_update_and_delete_errors(self):
         request = self.factory.patch("/", data="not json", content_type="application/json")
         request.user = self.admin_user
-        self.assertEqual(user_api.update_user(request, self.non_admin_user.id).status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(
+            user_api.update_user(request, self.non_admin_user.id).status_code, HTTPStatus.BAD_REQUEST  # type: ignore[arg-type]  # @api_view takes a Django request
+        )
         self.assertEqual(
             user_api.delete_user(self.request(self.admin_user, "delete"), 999999999).status_code, HTTPStatus.NOT_FOUND
         )

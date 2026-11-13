@@ -263,6 +263,7 @@ class TestProviderPromptCache(SmarterTestBase):
 
     def test_later_messages_have_no_cache_key(self):
         """A message that follows another in the conversation is never cached."""
+        assert self.client._messages is not None
         self.client._messages = self.client._messages + [
             {"role": "assistant", "content": "Sunny."},
             {"role": "user", "content": "And in London?"},
@@ -289,6 +290,7 @@ class TestProviderPromptCache(SmarterTestBase):
 
     def test_lookup_of_a_later_message(self):
         """A later message is neither looked up nor cacheable."""
+        assert self.client._messages is not None
         self.client._messages = self.client._messages + [{"role": "user", "content": "And in London?"}]
         self.client.handle_prompt_cache_lookup()
         self.assertFalse(self.client.prompt_cacheable)

@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
@@ -28,6 +29,10 @@ def url(name: str, **kwargs) -> str:
 class TestVectorstoreApi(VectorstoreTestBase):
     """Test the api views, and their permissions."""
 
+    other_admin_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -43,10 +48,12 @@ class TestVectorstoreApi(VectorstoreTestBase):
 
     def setUp(self):
         super().setUp()
-        self.service = self.ready_service("test_api")
-        self.vectorstore = self.service.vectorstore
+        self.vectorstore_service = self.ready_service("test_api")
+        self.vectorstore = self.vectorstore_service.vectorstore
         # the views use the test's service: its in-memory Qdrant and fake embeddings.
-        patcher = patch.object(views.VectorstoreViewBase, "get_service", lambda view, vectorstore: self.service)
+        patcher = patch.object(
+            views.VectorstoreViewBase, "get_service", lambda view, vectorstore: self.vectorstore_service
+        )
         patcher.start()
         self.addCleanup(patcher.stop)
         self.delay = patch("smarter.apps.vectorstore.tasks.load_vectorstore_document.delay").start()
@@ -106,6 +113,7 @@ class TestVectorstoreApi(VectorstoreTestBase):
         listed = self.request("get", path)["documents"]
         self.assertEqual(len(listed), 3)
         document = VectorstoreDocument.objects.filter(vectorstore=self.vectorstore).first()
+        assert document is not None
         with patch("smarter.apps.vectorstore.tasks.delete_vectorstore_document.delay") as delete:
             self.request(
                 "delete",
@@ -129,8 +137,10 @@ class TestVectorstoreApi(VectorstoreTestBase):
         self.request("post", url(Names.search_by_hashed_id, hashed_id=hashed_id), {"query": "anything"})
 
     def test_search(self):
-        document, _ = self.service.add_document(name="a.txt", text="Smarter manifests describe AI applications. " * 20)
-        self.service.load_document(document)
+        document, _ = self.vectorstore_service.add_document(
+            name="a.txt", text="Smarter manifests describe AI applications. " * 20
+        )
+        self.vectorstore_service.load_document(document)
         path = url(Names.search_by_hashed_id, hashed_id=self.vectorstore.hashed_id)
         results = self.request("post", path, {"query": "manifests", "k": 2})["results"]
         self.assertEqual(len(results), 2)
@@ -139,7 +149,7 @@ class TestVectorstoreApi(VectorstoreTestBase):
         self.request("post", path, {"query": "x", "searchType": "nope"}, status=HTTPStatus.BAD_REQUEST)
 
     def test_status_snapshots_and_restore(self):
-        self.mock_snapshots(self.service)
+        self.mock_snapshots(self.vectorstore_service)
         hashed_id = self.vectorstore.hashed_id
         status = self.request("get", url(Names.status_by_hashed_id, hashed_id=hashed_id))
         self.assertEqual(status["status"], "ready")

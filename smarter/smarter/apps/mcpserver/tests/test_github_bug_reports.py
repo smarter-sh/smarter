@@ -36,6 +36,8 @@ BODY = "After Redis restarted, no Celery worker ran a task. The beat pod sent 13
 class TestBugReports(SmarterTestBase):
     """Test create_bug_report() and its checks."""
 
+    repository: ProjectRepository
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

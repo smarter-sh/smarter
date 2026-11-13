@@ -14,7 +14,8 @@ type of the same name, e.g. ``Guardrail``: the schema validates, and the type an
 Every schema keeps fields that it doesn't declare, so that the SDK keeps working when the platform
 adds fields to a response. A model's fields are the API's own names, exactly as the API returns
 them, camelCase for the REST resources (``hashedId``) and snake_case for the chat contract
-(``session_key``), so ``JSON.stringify()`` of a response is the platform's JSON. Timestamps are ISO
+(``session_key``) and for the few REST responses that the platform sends in snake_case, e.g. the
+prompt history and a token usage series (``total_tokens``), so ``JSON.stringify()`` of a response is the platform's JSON. Timestamps are ISO
 8601 strings.
 
 SAM types
@@ -69,5 +70,8 @@ and examples, and fail when the platform adds a field that the SDK doesn't decla
 REST models
 -----------
 
-The other schemas model the REST API's resources, e.g. ``LLMClient``, ``Guardrail`` and
-``Vectorstore``.
+The other schemas model the REST API's resources and the results of its actions, e.g.
+``LLMClient``, ``Guardrail``, ``Vectorstore``, ``VectorsearchResults``, the platform's extensions
+(``ExtensionSummary``, ``ExtensionDetail``, ``ExtensionRegistry``, ``ExtensionActionResult``), a
+user's token usage (``TokenUsageSeries``) and their data exports (``DataExportOverview``,
+``DataExport``). An LLMClient's own extensions are ``LLMClientExtension``.

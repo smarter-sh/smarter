@@ -13,6 +13,7 @@ from smarter.apps.mcpserver.services.status.cluster import (
     warning_event,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import required
 
 from .operations_base import OperationsTestBase
 
@@ -23,8 +24,8 @@ class TestQuantities(OperationsTestBase):
     def test_parse_cpu(self):
         self.assertEqual(parse_cpu("250m"), 0.25)
         self.assertEqual(parse_cpu("2"), 2.0)
-        self.assertAlmostEqual(parse_cpu("350000000n"), 0.35)
-        self.assertAlmostEqual(parse_cpu("500u"), 0.0005)
+        self.assertAlmostEqual(required(parse_cpu("350000000n"), "parse_cpu"), 0.35)
+        self.assertAlmostEqual(required(parse_cpu("500u"), "parse_cpu"), 0.0005)
         self.assertIsNone(parse_cpu("1Gi"), "a memory quantity is not CPU")
         self.assertIsNone(parse_cpu(None))
         self.assertIsNone(parse_cpu("lots"))
@@ -143,9 +144,9 @@ class TestResourceParsing(OperationsTestBase):
     def test_event_times(self):
         """An event's last time comes from its series, its lastTimestamp, its eventTime, or its creation."""
         series = warning_event({"series": {"lastObservedTime": "2026-11-02T14:00:00Z", "count": 3}})
-        self.assertEqual((series.last_seen.hour, series.count), (14, 3))
+        self.assertEqual((required(series.last_seen, "series.last_seen").hour, series.count), (14, 3))
         new = warning_event({"eventTime": "2026-11-02T13:00:00.000000Z"})
-        self.assertEqual(new.last_seen.hour, 13)
+        self.assertEqual(required(new.last_seen, "new.last_seen").hour, 13)
         created = warning_event({"metadata": {"creationTimestamp": "2026-11-02T12:00:00Z"}})
-        self.assertEqual(created.last_seen.hour, 12)
+        self.assertEqual(required(created.last_seen, "created.last_seen").hour, 12)
         self.assertIsNone(warning_event({}).last_seen)

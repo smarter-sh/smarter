@@ -7,6 +7,7 @@ from unittest.mock import patch
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.cli.brokers import Brokers
@@ -50,6 +51,12 @@ def detail_url(kind: str, record_locator: str) -> str:
 
 class TestResourceDetail(TestAccountMixin):
     """Test the detail of a Guardrail that an LLMClient uses, as its owner and as another account's user."""
+
+    guardrail: Guardrail
+    llmclient: LLMClient
+    other_user: User
+    other_account: Account
+    other_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):
@@ -138,7 +145,9 @@ class TestResourceDetail(TestAccountMixin):
                 raise NotImplementedError
 
         broker = Broker()
-        self.assertIsNone(instance_of_kind(broker, "SqlConnection", ConnectionBase(pk=999999999)))
+        # the base class, deliberately: an instance of another model than the broker's
+        base = ConnectionBase(pk=999999999)  # type: ignore[abstract]
+        self.assertIsNone(instance_of_kind(broker, "SqlConnection", base))
         self.assertIsNone(instance_of_kind(broker, "SqlConnection", self.guardrail))
         connection = SqlConnection(pk=5)
         self.assertIs(instance_of_kind(broker, "SqlConnection", connection), connection)

@@ -14,6 +14,7 @@ from smarter.apps.mcpserver.services.status.feeds import (
     provider_statuses,
     published_time,
 )
+from smarter.lib.typing import required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 FETCH = "smarter.apps.mcpserver.services.status.feeds.fetch"
@@ -135,5 +136,5 @@ class TestAwsServiceEvents(SmarterTestBase):
         self.assertEqual(unread, ["EKS", "EC2"])
 
     def test_published_time(self):
-        self.assertEqual(published_time("Mon, 02 Nov 2026 12:47:37 PST").hour, 20)
+        self.assertEqual(required(published_time("Mon, 02 Nov 2026 12:47:37 PST"), "published_time").hour, 20)
         self.assertIsNone(published_time(""))

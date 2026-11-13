@@ -62,5 +62,6 @@ class TestStaticPlugin(TestAccountMixin):
         self.assertIsInstance(itf, dict)
 
         self.assertIsInstance(itf, dict)
+        assert itf is not None
         self.assertTrue("type" in itf)
         self.assertTrue("function" in itf)

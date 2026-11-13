@@ -55,7 +55,7 @@ class TestCertificateService(InfrastructureTestBase):
         records = self.certificates.create_validation_records(certificate_id)
         self.assertEqual(len(records), 1)
         zone = self.dns.get_zone("example.com")
-        self.assertIsNotNone(zone, "the zone is created for the validation records")
+        assert zone is not None, "the zone is created for the validation records"
         self.assertIsNotNone(self.dns.get_record(zone.id, records[0].name, "CNAME"))
         self.assertTrue(self.certificates.is_issued(certificate_id))
         self.assertTrue(self.certificates.get_certificate(certificate_id).is_issued)

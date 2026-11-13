@@ -101,40 +101,6 @@ class TestApiCliV1User(ApiV1CliTestBase):
         response, status = self.get_response(path=url_with_query_params)
         logger.info("base response: %s, Status: %s", response, status)
 
-        expected = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "User",
-                "metadata": {
-                    "name": "test_admin_user_be7caebde13673c8",
-                    "description": "Mortal user profile for testing purposes",
-                    "version": "0.0.1",
-                    "tags": ["mortal", "test"],
-                    "annotations": [{"smarter.sh/role": "mortal"}, {"smarter.sh/environment": "test"}],
-                    "username": "test_admin_user_be7caebde13673c8",
-                },
-                "spec": {
-                    "config": {
-                        "firstName": "TestMortalFirstName_be7caebde13673c8",
-                        "lastName": "TestMortalLastName_be7caebde13673c8",
-                        "email": "test-mortal-be7caebde13673c8@mail.com",
-                        "isStaff": False,
-                        "isActive": True,
-                    }
-                },
-                "status": {
-                    "account_number": "7657-4839-2961",
-                    "username": "test_admin_user_be7caebde13673c8",
-                    "created": "2026-01-07T20:26:42.658Z",
-                    "modified": "2026-01-07T20:26:42.658Z",
-                },
-            },
-            "message": "User test_admin_user_be7caebde13673c8 described successfully",
-            "api": "smarter.sh/v1",
-            "thing": "User",
-            "metadata": {"key": "fbf627f25069aa1084df2683963ab65ad0c00be2a9415d0ac58ae8b87aa4d830"},
-        }
-
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)

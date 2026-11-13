@@ -6,6 +6,7 @@ defines a command with the same name, which would shadow them.
 """
 
 from io import StringIO
+from typing import Optional
 from unittest.mock import patch
 
 from django.core.management import call_command, get_commands
@@ -33,7 +34,7 @@ class TestSecretCommands(TestAccountMixin):
         call_command(module.__name__.rsplit(".", 1)[1], stdout=out, stderr=out, **options)
         return out.getvalue()
 
-    def get_value(self) -> str:
+    def get_value(self) -> Optional[str]:
         self.secret.refresh_from_db()
         return self.secret.get_secret(update_last_accessed=False)
 

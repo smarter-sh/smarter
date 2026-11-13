@@ -204,13 +204,17 @@ class TestSmarterListApiView(TestAccountMixin):
     def test_queryset_fetches_owner_and_tags(self):
         """The queryset joins the owner, and prefetches the tags of a model whose tags are a relation."""
         queryset = GuardrailListApiView.get_queryset(self.admin_user, "owned")
-        self.assertIn("user_profile", queryset.query.select_related)
-        self.assertIn("tags", queryset._prefetch_related_lookups)  # pylint: disable=W0212
+        select_related = queryset.query.select_related
+        assert isinstance(select_related, dict)
+        self.assertIn("user_profile", select_related)
+        # _prefetch_related_lookups is private, and not in django-stubs.
+        self.assertIn("tags", queryset._prefetch_related_lookups)  # type: ignore[attr-defined]  # pylint: disable=W0212
 
     def test_queryset_without_tag_relation(self):
         """SmarterAuthToken's tags are a JSON list, which isn't prefetched."""
         queryset = AuthTokenListApiView.get_queryset(self.admin_user, "all")
-        self.assertNotIn("tags", queryset._prefetch_related_lookups)  # pylint: disable=W0212
+        # _prefetch_related_lookups is private, and not in django-stubs.
+        self.assertNotIn("tags", queryset._prefetch_related_lookups)  # type: ignore[attr-defined]  # pylint: disable=W0212
 
     def test_page_costs_few_queries(self):
         """A page of many resources costs a fixed number of queries, not a few per resource."""

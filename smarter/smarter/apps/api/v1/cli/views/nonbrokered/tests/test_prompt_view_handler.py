@@ -51,7 +51,8 @@ class TestPromptViewHandler(TestAccountMixin):
                 patch.object(ApiV1CliPromptApiView, name, new_callable=PropertyMock, return_value=value)
             )
         view = ApiV1CliPromptApiView()
-        view.request = self.request
+        # a Django request stands in for DRF's Request, whose features the code under test doesn't use.
+        view.request = self.request  # type: ignore[assignment]
         view._chat_config = {}
         return view
 
@@ -109,7 +110,7 @@ class TestPromptViewHandler(TestAccountMixin):
             patch.object(ApiV1CliPromptApiView, "validate"),
             patch(f"{MODULE}.waffle.switch_is_active", return_value=True),
         ):
-            view.initial(self.request, name="test")
+            view.initial(self.request, name="test")  # type: ignore[arg-type]  # a Django request, as in view()
         return view
 
     def test_initial_needs_a_body_and_a_uid(self):

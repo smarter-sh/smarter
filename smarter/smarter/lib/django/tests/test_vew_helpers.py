@@ -18,7 +18,7 @@ class TestViewHelpersBase(TestAccountMixin):
         self.factory = RequestFactory()
 
     def tearDown(self):
-        self.factory = None
+        del self.factory
         super().tearDown()
 
 

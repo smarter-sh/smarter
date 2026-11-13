@@ -205,6 +205,26 @@ Configuration, errors, the http transport, logging, Server-Sent Events, and type
 
       :type: string
 
+.. js:class:: PaymentRequiredError(message, options)
+
+   402: a budget forbids the charge that the request would make.
+
+   The platform refuses a budgeted request, e.g. a Vectorsearch run or a Proxy's request, when a
+   budget has locked the account, the user profile or the resource that it would charge. Retrying
+   won't help until the budget allows it again, e.g. in its next period or after its limit is raised,
+   so the SDK never retries it.
+
+   Extends ``APIStatusError``, and has its methods.
+
+   :param message: The error's description, from the response when it has one.
+   :type message: string
+   :param options: The request, the response's status, headers and body, and its journal error.
+   :type options: APIStatusErrorOptions
+
+   .. js:attribute:: name
+
+      :type: string
+
 .. js:class:: PermissionDeniedError(message, options)
 
    403: the api key's user may not perform the operation.

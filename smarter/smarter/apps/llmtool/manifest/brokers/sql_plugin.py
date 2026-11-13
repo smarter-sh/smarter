@@ -503,7 +503,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                     f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to be a dict for {self.kind} {self.plugin_meta.name} but got {type(test_value)}: {test_value}",
                     thing=self.kind,
                 )
-            if not "name" in test_value or not "value" in test_value:
+            if "name" not in test_value or "value" not in test_value:
                 raise SAMPluginBrokerError(
                     f"{self.formatted_class_name} plugin_data_orm2pydantic() expected each test_value to have 'name' and 'value' keys for {self.kind} {self.plugin_meta.name} but got: {test_value}",
                     thing=self.kind,

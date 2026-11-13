@@ -119,8 +119,10 @@ class TestPluginAdmin(PluginAppTestBase):
 
     def test_selector_history_queryset(self):
         """Test that the selection history admin lists the history of the user's plugins."""
+        plugin_selector = self.static_plugin.plugin_selector
+        assert plugin_selector is not None
         history = PluginSelectorHistory.objects.create(
-            plugin_selector=self.static_plugin.plugin_selector, search_term="Gobstopper", messages=[]
+            plugin_selector=plugin_selector, search_term="Gobstopper", messages=[]
         )
         self.addCleanup(history.delete)
         model_admin = self.model_admin(PluginSelectorHistory)

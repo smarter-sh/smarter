@@ -89,16 +89,21 @@ class TestLLMClientCors(TestAccountMixin):
         """Test that django-cors-headers allows the LLMClient's origin, and only that one."""
         client = Client()
         url = f"/api/v1/llm-clients/{self.llmclient.hashed_id}/prompt/"
-        preflight = {
-            "HTTP_ACCESS_CONTROL_REQUEST_METHOD": "POST",
-            "HTTP_ACCESS_CONTROL_REQUEST_HEADERS": "content-type,x-smarter-capabilities,authorization",
-        }
-        response = client.options(url, HTTP_ORIGIN=ORIGIN, **preflight)
+
+        def preflight(origin: str):
+            return client.options(
+                url,
+                HTTP_ORIGIN=origin,
+                HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+                HTTP_ACCESS_CONTROL_REQUEST_HEADERS="content-type,x-smarter-capabilities,authorization",
+            )
+
+        response = preflight(ORIGIN)
         self.assertEqual(response.headers.get("access-control-allow-origin"), ORIGIN)
         self.assertEqual(response.headers.get("access-control-allow-credentials"), "true")
         self.assertIn("x-smarter-capabilities", response.headers.get("access-control-allow-headers", ""))
 
-        response = client.options(url, HTTP_ORIGIN="https://evil.example.com", **preflight)
+        response = preflight("https://evil.example.com")
         self.assertIsNone(response.headers.get("access-control-allow-origin"))
 
     def test_an_error_response_has_cors_headers(self):

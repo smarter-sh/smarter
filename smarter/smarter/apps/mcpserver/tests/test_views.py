@@ -30,12 +30,14 @@ from smarter.apps.mcpserver.services.acting_user import (
 from smarter.apps.mcpserver.services.github.issues import GitHubIssue
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.typing import SmarterDictType, required
 
 from .base_classes import TOKEN, MCPServerTestBase
 from .operations_base import TICKET, OperationsTestBase
 
 CONNECTION = "smarter.apps.mcpclient.connection"
-HEADERS = {"HTTP_ACCEPT": "application/json, text/event-stream"}
+HEADERS: SmarterDictType = {"HTTP_ACCEPT": "application/json, text/event-stream"}
+"""The WSGI environ of every request; RequestFactory's extra environ may hold values of any type."""
 CREATE_ISSUE = "smarter.apps.mcpserver.services.github.issues.create_issue"
 
 
@@ -51,7 +53,7 @@ def forward_to_django(test) -> None:
 
     async def handler(request: httpx2.Request) -> httpx2.Response:
         def forward():
-            extra = {}
+            extra: SmarterDictType = {}
             for name, value in request.headers.items():
                 # the test client sets its own host, and the content's type and length.
                 if name.lower() in ("host", "content-type", "content-length"):
@@ -197,7 +199,7 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
         self.assertFalse(catalog.has_resources)
         self.assertIn("search_code", [tool.name for tool in catalog.tools])
         self.assertTrue(all(tool.read_only for tool in catalog.tools))
-        self.assertIn(self.docs_repository.full_name, catalog.instructions)
+        self.assertIn(self.docs_repository.full_name, required(catalog.instructions, "catalog.instructions"))
 
     def test_call_tool(self):
         """The MCPClient calls a tool, and gets its text."""
@@ -221,7 +223,8 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
             catalog = connection.discover()
             tools = {tool.name: tool for tool in catalog.tools}
             self.assertFalse(tools["create_issue"].read_only)
-            self.assertIn("create_issue opens a public GitHub issue", catalog.instructions)
+            instructions = required(catalog.instructions, "catalog.instructions")
+            self.assertIn("create_issue opens a public GitHub issue", instructions)
             self.assertFalse(tools["comment_on_issue"].read_only)
             self.assertTrue(tools["search_issues"].read_only)
             with mock.patch(CREATE_ISSUE, return_value=issue) as create_issue:
@@ -233,6 +236,11 @@ class TestMCPClientEndToEnd(MCPServerTestBase):
 
 class TestStaffEndpointView(OperationsTestBase):
     """Test the MCPServer's staff-only endpoint, with real api keys."""
+
+    staff_token: SmarterAuthToken
+    staff_key: str
+    inactive_token: SmarterAuthToken
+    inactive_key: str
 
     @classmethod
     def setUpClass(cls):

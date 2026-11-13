@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -12,7 +12,7 @@ from .const import presentation_app_name
 logger = logging.getLogger(__name__)
 
 
-class LLMClientConfig(AppConfig, SmarterHelperMixin):
+class LLMClientConfig(AppConfig):
     """Django Config for the LLMClient app."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -22,8 +22,6 @@ class LLMClientConfig(AppConfig, SmarterHelperMixin):
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
         """Import signals."""
-        from . import cors  # noqa: F401
-        from . import receivers  # noqa: F401
-        from . import signals  # noqa: F401
+        from . import cors, receivers, signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {presentation_app_name}", self.formatted_state_ready)
+        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {presentation_app_name}", SmarterReadyState.READY)

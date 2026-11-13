@@ -5,6 +5,7 @@ from smarter.apps.mcpserver.protocol.tools.public import simplify_schema
 from smarter.apps.mcpserver.protocol.tools.reading import ReadFileTool
 from smarter.apps.mcpserver.protocol.tools.search import SearchDocumentationTool
 from smarter.apps.mcpserver.protocol.toolsets import PUBLIC_TOOL_CLASSES
+from smarter.lib.typing import required
 
 from .base_classes import MCPServerTestBase
 
@@ -50,10 +51,11 @@ class TestPublicTool(MCPServerTestBase):
             with self.subTest(tool=tool_class.name):
                 definition = tool_class(self.single()).definition()
                 self.assertEqual(definition.name, tool_class.name)
-                self.assertEqual(definition.annotations.read_only_hint, tool_class.name not in writes)
-                self.assertEqual(definition.annotations.idempotent_hint, tool_class.name not in writes)
-                self.assertEqual(definition.annotations.open_world_hint, tool_class.name in open_world)
-                self.assertFalse(definition.annotations.destructive_hint)
+                annotations = required(definition.annotations, "definition.annotations")
+                self.assertEqual(annotations.read_only_hint, tool_class.name not in writes)
+                self.assertEqual(annotations.idempotent_hint, tool_class.name not in writes)
+                self.assertEqual(annotations.open_world_hint, tool_class.name in open_world)
+                self.assertFalse(annotations.destructive_hint)
 
     def test_simplify_schema(self):
         """Optional fields lose their null variant and null default."""
