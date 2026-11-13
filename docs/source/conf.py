@@ -27,6 +27,7 @@ from smarter.common.const import (
     AUTHOR,
     SMARTER_ORGANIZATION_WEBSITE_URL,
     SMARTER_PRODUCT_NAME,
+    SMARTER_PROJECT_DOCS_URL,
     SMARTER_PROJECT_WEBSITE_URL,
 )
 from smarter.common.exceptions import SmarterConfigurationError
@@ -272,8 +273,11 @@ autodoc_type_aliases = {
 # "The type annotation for `__pydantic_extra__` must be `dict[str, ...]`".
 autodoc_use_type_comments = False
 
-# sitemap settings
-html_baseurl = f"https://docs.{smarter_settings.root_domain}/"
+# sitemap settings. The docs are always published to the project's own docs
+# site, whatever platform the build's environment configures: a ROOT_DOMAIN
+# in the builder's shell (which overrides .env) must not change the sitemap's
+# urls, or the canonical links of every page.
+html_baseurl = f"{SMARTER_PROJECT_DOCS_URL}/"
 sitemap_url_scheme = "{link}"
 sitemap_filename = "sitemap.xml"
 
