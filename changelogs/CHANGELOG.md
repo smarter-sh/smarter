@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.45.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.45.0-alpha.1...v0.45.0-alpha.2) (2026-11-13)
+
+### Bug Fixes
+
+* **plugin:** require staticData in a static plugin manifest ([b17d70a](https://github.com/smarter-sh/smarter/commit/b17d70a7bcf629573a642c50699c28612ee5ca55))
+* type-check test bodies, and fix the bugs that mypy found ([90907dd](https://github.com/smarter-sh/smarter/commit/90907dd334ce1c3f0201fc57c174cb271297324e))
+
 ## [0.45.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.14...v0.45.0-alpha.1) (2026-11-13)
 
 ### Features
