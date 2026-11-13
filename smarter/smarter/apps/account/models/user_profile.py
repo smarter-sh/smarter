@@ -747,8 +747,10 @@ class UserProfile(MetaDataModel):
                     .order_by("-pk")
                     .first()
                 )
-                logger.warning(
-                    "%s.get_cached_object() Multiple UserProfiles found for user_id %s. Defaulting to newest result: %s",
+                # A user has one UserProfile per account, so this is expected:
+                # without an account, the newest profile is the user's default.
+                logger.debug(
+                    "%s._get_object_by_user() user_id %s has more than one UserProfile. Defaulting to the newest: %s",
                     logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
                     user_id,
                     retval,

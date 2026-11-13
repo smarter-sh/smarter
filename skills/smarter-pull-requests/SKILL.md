@@ -72,7 +72,11 @@ unchecked:
 
 **Resolves.** One `- Fixes #<n>` line per issue. GitHub closes them when the pull request merges
 into `main`, the default branch. An issue that is already closed gets a note, e.g. `- Fixes #886
-(already closed by #887)`. If no commit resolves an issue, write `- None.`
+(already closed by #887)`. A fix without an issue is still resolved: never write `- None.` beside
+bug fixes. Say that no issue was filed, then list each problem that the pull request resolves,
+one bullet per problem, in a sentence a reader understands without the Changes section, with its
+commit's short hash. Write `- None.` only when the pull request resolves no problem, e.g. a
+release or a chore.
 
 **Changes.** Start with one or two sentences on what the pull request does as a whole. Then one
 `###` subsection per commit, most important first, titled with its subject and short hash, e.g.
