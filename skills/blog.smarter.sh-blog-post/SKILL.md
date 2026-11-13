@@ -245,7 +245,18 @@ The posts are written in the voice of Lawrence McDaniel, Smarter's creator.
 
 - **Only data that serves the point.** Having a number, a file count, a run
   time or a configuration detail is not a reason to print it. Each fact must
-  help the reader follow the argument; cut the rest, however true.
+  help the reader follow the argument; cut the rest, however true. Ask of
+  every date and count: why would any reader care? When a hook, tool or rule
+  was added ("mypy joined the hooks on November 9, 2026"), how many errors a
+  change fixed ("1,990 errors in 314 files"), a module's exact line counts,
+  and what was tried and removed are trivia. Say what the thing does, why it
+  is set up that way, and what it catches. If the post tells a history, keep
+  its dates in one table or chart, not in the body. The user rejected the
+  dated sentences of the pre-commit article, twice. Individual bugs, incidents
+  and findings are the same kind of trivia in a how-to ("type-checking found a
+  Provider list that raised a FieldError"): the reader came for the practice,
+  not for Smarter's war stories. The user had the pre-commit article rewritten
+  from scratch around what to do and why, with each specific cut.
 - **Qualify every term for a reader outside the repository.** Read each
   sentence as someone who has never seen the code. "The folder", "the hooks",
   "the build", "the platform" or "the packages" each need saying which one
