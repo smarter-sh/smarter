@@ -77,7 +77,9 @@ each change:
 | A changed description                  | A changed response shape, e.g. `data` from object to list      |
 
 Say which it is in the commit body, and name the files. A breaking change also
-needs a note for the SDKs' users (see "Downstream").
+needs a note for the SDKs' users (see "Downstream"). Before 1.0.0, never mark it
+with a `!` or a `BREAKING CHANGE:` footer: on 0.x that cuts 1.0.0 (see
+`smarter-git-commits`). The body says what breaks and how to upgrade.
 
 Unexpected churn means something is wrong, not that the file needs committing:
 

@@ -160,9 +160,14 @@ staticfiles.
   that hold production data. From 1.0.0 on, released migrations are
   append-only: never edit, delete or regenerate one (ADR-020). See
   `smarter-migrations`.
-- **Breaking changes** (anything an operator must do by hand on upgrade, or a
-  break under ADR-023) need a `!` and a `BREAKING CHANGE:` footer with the
-  upgrade steps. See `docs/source/adr/020-semantic-versioning.rst`.
+- **Breaking changes: never a `!` or a `BREAKING CHANGE:` footer before
+  1.0.0.** Smarter is on 0.x, where semantic-release turns either one into
+  1.0.0 (`1.0.0-alpha.N` on alpha). Cutting 1.0.0 is the maintainers'
+  decision (ADR-020, rule 5), never a side effect of a commit. Before 1.0.0,
+  describe a breaking change and its upgrade steps in the commit body, under
+  its usual `fix` or `feat`. From 1.0.0 on, anything an operator must do by
+  hand on upgrade, or a break under ADR-023, needs both. See
+  `docs/source/adr/020-semantic-versioning.rst`.
 - **Tests:** one test module per source module; fixtures built once in
   `setUpClass`; test data as YAML under `tests/data/`. `SmarterTestBase` has no
   transaction rollback, so delete everything you create. Traps are listed in
