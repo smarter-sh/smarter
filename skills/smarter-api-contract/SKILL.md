@@ -1,6 +1,6 @@
 ---
 name: smarter-api-contract
-description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api, the chat api and every family of REST routes under /api/v1, and which each platform serves at /api/v1/openapi.json and renders at /docs/openapi/ - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the design decisions in openapi.py, and the downstream SDKs.
+description: Use when maintaining the Smarter api contract in smarter.apps.api.v1.contract - the committed SAM JSON Schemas and example manifests (sam/<Kind>.schema.json, sam/<Kind>.example.json) and the OpenAPI document of the Smarter api (openapi.json), which covers the cli api, the chat api and every family of REST routes under /api/v1, and which each platform serves at /api/v1/openapi.json and renders at /docs/openapi/ - e.g. after changing a SAM model, a broker's example manifest, the journal or chat contract, or a covered route or its response, when a test says the contract is out of date or a route is undocumented, or when adding a kind, a cli command, or a new family of routes. Covers what generates each file, make api-contract, reviewing the diff for breaking changes, the rules for examples, documenting a route or a whole family, streaming responses, the openapi package's modules and its ApiFamily, the design decisions in it, and the downstream SDKs.
 ---
 
 # The Smarter API Contract
@@ -14,10 +14,10 @@ with the code and a breaking change shows up in a pull request's diff.
 | ------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `sam/<Kind>.schema.json`  | One JSON Schema per SAM kind. Exactly the `data` of `POST /api/v1/cli/json-schema/<Kind>/`                | The kind's SAM model: `Brokers.get_broker(kind)._pydantic_model.model_json_schema()`             |
 | `sam/<Kind>.example.json` | One example manifest per kind, without its read-only `status`                                             | The broker's `example_manifest()`, rendered in-process by the cli's public example-manifest view |
-| `openapi.json`            | OpenAPI 3.1 document of the cli api, the chat api, and the REST families in `DOCUMENTED_URLCONFS`         | `openapi.py`, from the SAM models, the journal and chat contracts, and `models.py`               |
+| `openapi.json`            | OpenAPI 3.1 document of the cli api, the chat api, and the REST families in `DOCUMENTED_URLCONFS`         | `openapi/`, from the SAM models, the journal and chat contracts, and `models.py`                 |
 | `sam.py`                  | Builds and writes the schemas and examples                                                                |                                                                                                  |
 | `models.py`               | `CliApi*`: the `data` of cli responses that aren't manifests. `OpenApi*`: the document itself             |                                                                                                  |
-| `openapi.py`              | Assembles the document: `cli_schemas()`, `cli_paths()`, `openapi_document()`                              |                                                                                                  |
+| `openapi/`                | The package that assembles the document. See [The openapi package](#the-openapi-package)                  |                                                                                                  |
 | `tests/`                  | Fail when a file is stale, when an example is invalid, or when a real response doesn't match the document |                                                                                                  |
 
 The docs page is `docs/source/smarter-framework/smarter-api/api-contract.rst`.
@@ -35,7 +35,7 @@ Anything that reaches these files changes the contract:
   `PromptChatApiCompletionV1`, `PromptChatApiMessage`, ...),
 - a route of a covered family (a urlconf in `DOCUMENTED_URLCONFS`, e.g.
   `smarter/apps/api/v1/cli/urls.py`), or the shape of its view's response,
-- `contract/models.py` or `contract/openapi.py` themselves.
+- `contract/models.py` or the `contract/openapi/` package themselves.
 
 A field description counts too: it's in the schema, and in the SDKs' docstrings.
 
@@ -110,13 +110,46 @@ Nothing in the contract package needs editing. Register the broker in
 run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
 `test_every_kind_has_a_model` and `test_every_kind_is_a_manifest` check the rest.
 
+## The openapi package
+
+`contract/openapi/` builds the document, one module per concern. Its
+`__init__.py` re-exports the public names (`openapi_document()`, the route
+tables, ...), so importers use `smarter.apps.api.v1.contract.openapi`.
+
+| Module        | What it holds                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `builders.py` | `ref()`, `json_response()`, `json_body()`, `rest_read()`, `rest_operation()`, parameters, `merge_paths()`, the access notes, and `ApiFamily` |
+| `schemas.py`  | `model_schemas()` (every family's `*_API_MODELS`) and `cli_schemas()` (envelopes, `SAMManifest`, ...)                                        |
+| `cli.py`      | The cli api: its parameters, `operation()`, `cli_paths()`, and its tags                                                                      |
+| `chat.py`     | The chat api: its parameters and `chat_paths()`, under the LLMClients' family                                                                |
+| `families/`   | One module per REST family: its `ApiFamily` and its `<family>_paths()`. `FAMILIES` lists them in tag order                                   |
+| `routes.py`   | `DOCUMENTED_URLCONFS`, `UNDOCUMENTED_URLCONFS`, `UNDOCUMENTED_ROUTES`, `PATH_PARAMETER_ALIASES`                                              |
+| `document.py` | `openapi_document()`, its tags, `openapi_json()` and `write_openapi()`                                                                       |
+
+Each family is an `ApiFamily`, named after its Django app (the app's
+`const.namespace`), from which everything else is derived, so that no name is
+typed twice: its tag (the name's plural, e.g. `guardrails`), its routes'
+prefix (`/<tag>/`, unless `mount` says otherwise, e.g. `llm-clients`), its
+operation ids (`family.operation_id("list")` is `guardrail_list`), its paths
+(`family.path("{id}/events/")`), its tag's description (a template, in which
+`{plural}` is the resource's plural), and the words its descriptions use for its
+resource: `family.resource` (its SAM kind, e.g. `Guardrail`, or a lowercase word,
+e.g. `vectorstore`), `family.plural`, `family.a` (`a Guardrail`, `an LLMClient`)
+and `family.a_capitalized`. Plurals and articles come from inflect; set
+`resources` when inflect is wrong (it adds only an s to a capitalized `Proxy`), and
+`tag_name` when the tag isn't the name's plural (`journal`, `history`). A
+family's `<family>_paths()` writes `family.a`, `family.plural` or
+`family.resource` in its descriptions, never the word itself.
+
 ## Route coverage
 
-`openapi.py` declares which families of routes the document covers, and
+`openapi/routes.py` declares which families of routes the document covers, and
 `test_every_route_is_documented` holds it to them:
 
 - `DOCUMENTED_URLCONFS` maps each family's path, relative to `/api/v1`, to its
-  urlconf, e.g. `"/llm-clients/": "smarter.apps.llmclient.api.v1.urls"`.
+  urlconf, e.g. `"/llm-clients/": "smarter.apps.llmclient.api.v1.urls"`. It is
+  built from `FAMILIES` (each `ApiFamily`'s `prefix` and `urlconf`), the cli's
+  and the connections'.
 - Every `path()` route of those urlconfs must be in the document, or in
   `UNDOCUMENTED_ROUTES` with a reason. The test also fails when an entry of
   `UNDOCUMENTED_ROUTES` names no route, or a route that is now documented, so
@@ -143,7 +176,7 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
    resources and validate views. Let errors raise: `CliBaseApiView.dispatch()`
    returns every exception as the journal's error response, with the status from
    `http_status_for_exception()`. Never return a bare `{"error": ...}`.
-3. **Add the operation** to `cli_paths()` in `openapi.py` with `operation(...)`:
+3. **Add the operation** to `cli_paths()` in `openapi/cli.py` with `operation(...)`:
    an `operationId` (snake case, unique), a summary, a description, a tag, the
    response schema's name, and its parameters and request body. Add an envelope
    schema in `cli_schemas()`, e.g.
@@ -159,7 +192,9 @@ run `make api-contract`, and commit the two new `sam/` files and `openapi.json`.
 Every family is covered now, so this is for a new app's routes. The chat api
 (`chat_paths()`) is the pattern to copy.
 
-1. **Add the family's urlconf** to `DOCUMENTED_URLCONFS`. Run the test: it
+1. **Add the family**: a module in `openapi/families/` with its `ApiFamily`
+   (see [The openapi package](#the-openapi-package)), added to `FAMILIES`,
+   which puts its urlconf in `DOCUMENTED_URLCONFS`. Run the test: it
    lists every route of the family. Add each one to `UNDOCUMENTED_ROUTES` with
    `NOT_YET_MODELED`, and aliases for its path parameters if needed. Now the
    backlog is explicit, and nothing new slips in.
@@ -183,9 +218,11 @@ Every family is covered now, so this is for a new app's routes. The chat api
    `HttpResponseNotFound` or `JsonResponse({"error": ...})`, so every error is
    `{"detail": ...}`.
 4. **Publish the reads only** (`GET`): add the family's models to
-   `model_schemas()` (a tuple like `LLMCLIENT_API_MODELS`), and its operations
-   in a `<family>_paths()` function built with `rest_read()`, merged by
-   `merge_paths()` in `openapi_document()`. Pass `rest_read()` the family's
+   `model_schemas()` in `openapi/schemas.py` (a tuple like
+   `LLMCLIENT_API_MODELS`), and its operations in the family module's
+   `<family>_paths()` function, built with `rest_read()` and the family's
+   `operation_id()`, `path()` and resource words, merged by `merge_paths()` in
+   `openapi_document()`, whose `tags` gets the family's `openapi_tag()`. Pass `rest_read()` the family's
    access note: `SUPERUSER_ONLY` for `SmarterAdmin*` views, `READ_PERMISSION`
    for `SmarterAuthenticated*` ones. The REST writes stay unpublished: clients
    write through manifests. An action that an SDK uses may be published as a
@@ -230,7 +267,7 @@ extension (`OpenApiMediaType.x_smarter_events`) that maps each event's name to
 the schema of its JSON data. A test reads the stream (`sse_events()`) and
 validates every event's data against the schema that the extension names.
 
-## Design decisions in openapi.py (don't undo them)
+## Design decisions in the openapi package (don't undo them)
 
 - **No `jsonSchemaDialect`.** The document's schemas use OpenAPI 3.1's default
   dialect (JSON Schema 2020-12 with OpenAPI's keywords). Swagger UI and other

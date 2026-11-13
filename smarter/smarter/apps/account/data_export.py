@@ -135,8 +135,16 @@ class DataExportStatusResponse(DataExportModel):
     failed_count: int = Field(default=0, ge=0, description="How many resources had no manifest.")
     size_bytes: int = Field(default=0, ge=0, description="The size of the zip file.")
     email: str = Field(default="", description="The address that the link is emailed to.")
-    created_at: str = Field(..., description="When the export was started, in ISO 8601.")
-    expires_at: Optional[str] = Field(default=None, description="When the emailed link expires, in ISO 8601.")
+    created_at: str = Field(
+        ...,
+        description="When the export was started, in ISO 8601.",
+        json_schema_extra={"format": "date-time"},
+    )
+    expires_at: Optional[str] = Field(
+        default=None,
+        description="When the emailed link expires, in ISO 8601.",
+        json_schema_extra={"format": "date-time"},
+    )
     error: str = Field(default="", description="Why the export failed, or an empty string.")
 
     @classmethod
@@ -199,6 +207,10 @@ class DataExportOverviewResponse(DataExportModel):
             exports_left_today=max(exports_left, 0),
             latest=latest_status,
         )
+
+
+DATA_EXPORT_API_MODELS = (DataExportOverviewResponse, DataExportStatusResponse)
+"""The models whose JSON Schemas the Smarter api's OpenAPI document includes."""
 
 
 # ------------------------------------------------------------------------------
@@ -559,6 +571,7 @@ def delete_expired_data_exports() -> int:
 
 
 __all__ = [
+    "DATA_EXPORT_API_MODELS",
     "DATA_EXPORTS_PER_DAY",
     "DATA_EXPORT_LINK_SECONDS",
     "DataExportOverviewResponse",

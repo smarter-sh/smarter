@@ -22,7 +22,7 @@ the person who tried it.
 """
 
 from http import HTTPStatus
-from typing import Optional
+from typing import Optional, Union
 
 from django.core.handlers.asgi import ASGIRequest
 from django.http import JsonResponse
@@ -39,6 +39,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import SmarterDictType
 
 from . import registry
 from .contract import (
@@ -49,6 +50,7 @@ from .contract import (
     AvailabilityRequest,
     ConfigureRequest,
     ErrorResponse,
+    ExtensionConsoleModel,
     ExtensionDetail,
     ExtensionDetailResponse,
     ExtensionListResponse,
@@ -277,14 +279,19 @@ class ExtensionDetailView(ConsoleAppView):
 
 
 # ------------------------------------------------------------------------------
-# the api
+# the api's handlers, which the web console's api and /api/v1/extensions/ share
 # ------------------------------------------------------------------------------
-class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
+class ExtensionApiHandler:
     """
-    The base class of the Extensions api: POST only, JSON in and out, and superusers only unless :attr:`read_only` is set.
+    The logic of one endpoint of the Extensions api, apart from how its request arrives and its response leaves.
 
-    Subclasses implement :meth:`handle`, which returns a contract model, and set
-    :attr:`request_model` if the request has a body.
+    Two transports mix it in: :class:`ExtensionApiView`, the web console's api (POST only, a Django session,
+    errors as ``{"error": ...}``), and :class:`smarter.apps.llmtool.extension.api.v1.views.ExtensionApiV1View`,
+    the REST api under ``/api/v1/extensions/`` (an api key, errors as ``{"detail": ...}``). A transport
+    implements :meth:`request_data`, calls :meth:`respond`, and turns its result into a response.
+
+    Subclasses implement :meth:`handle`, which returns a contract model, and set :attr:`request_model`
+    if the request has a body.
     """
 
     request_model: Optional[type[BaseModel]] = None
@@ -293,24 +300,30 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
 
     It then shows a user who is not a superuser only what they may see.
     """
-    http_method_names = ["post"]
 
-    @property
-    def formatted_class_name(self) -> str:
-        """The class name, for logging."""
-        return f"{self.formatted_text(__name__)}.{self.__class__.__name__}"
+    # provided by the transport's view, which is a SmarterRequestMixin. Declared for type checkers.
+    account: Optional[Account]
+    formatted_class_name: str
 
-    def error(self, message: str, status: HTTPStatus = HTTPStatus.BAD_REQUEST) -> JsonResponse:
+    def request_data(self, request) -> SmarterDictType:
         """
-        Return an error response.
+        Return the request's data, as a dict, for :attr:`request_model` to validate: its JSON body.
 
-        :param message: What went wrong.
-        :param status: The HTTP status.
-        :returns: ``{"error": message}``, with the status.
+        The web console's api sends JSON. The REST api's transport overrides it with DRF's parsed data.
+
+        :param request: The request.
+        :returns: The body, or an empty dict if it has none, or it is not an object.
+        :raises ValueError: If the body is not JSON.
         """
-        return JsonResponse(ErrorResponse(error=message).to_json(), status=status)
+        try:
+            body = json.loads(request.body or b"{}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"The request is not JSON: {e}") from e
+        if isinstance(body, dict):
+            return body
+        return {}
 
-    def installer(self, request: ASGIRequest) -> ExtensionInstaller:
+    def installer(self, request) -> ExtensionInstaller:
         """Return an installer that acts as the requesting superuser."""
         return ExtensionInstaller(user=request.user)  # type: ignore[arg-type]
 
@@ -318,21 +331,26 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
         """Return an installed extension, or raise Extension.DoesNotExist."""
         return Extension.objects.select_related("installed_version").get(slug=slug)
 
-    def parse(self, request: ASGIRequest) -> Optional[BaseModel]:
-        """Validate the request's JSON body with :attr:`request_model`."""
+    def parse(self, request) -> Optional[BaseModel]:
+        """
+        Validate the request's data with :attr:`request_model`.
+
+        A request without a model is not read at all: a multipart upload's body can't be read again.
+
+        :param request: The request.
+        :returns: The validated request, or None if the endpoint takes none.
+        :raises ValueError: If the request is not valid.
+        """
         if self.request_model is None:
             return None
+        data = self.request_data(request)
         try:
-            body = json.loads(request.body or b"{}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"The request is not JSON: {e}") from e
-        try:
-            return self.request_model.model_validate(body if isinstance(body, dict) else {})
+            return self.request_model.model_validate(data)
         except ValidationError as e:
             problems = describe_validation_errors(e, whole_location="request")
             raise ValueError(f"The request is not valid: {problems}") from e
 
-    def visible(self, request: ASGIRequest, extension: Extension) -> bool:
+    def visible(self, request, extension: Extension) -> bool:
         """
         Return whether the requesting user may see an extension: a superuser sees every one.
 
@@ -340,37 +358,40 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
         :param extension: The extension.
         :returns: True for a superuser, or if the extension is available to the user's account.
         """
-        return request.user.is_superuser or extension.is_available_to(self.account)  # type: ignore[union-attr]
+        if request.user.is_superuser:
+            return True
+        return extension.is_available_to(self.account)  # type: ignore[arg-type]
 
-    def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
+    def respond(self, request, **kwargs) -> tuple[HTTPStatus, Union[ExtensionConsoleModel, str]]:
         """
-        Check permission, validate the body, and call :meth:`handle`, turning its exceptions into error responses.
+        Check permission, validate the request, and call :meth:`handle`, turning its exceptions into errors.
 
         :param request: The request.
         :param kwargs: Keyword arguments from the url, e.g. ``slug``, passed to :meth:`handle`.
-        :returns: The JSON of the model that :meth:`handle` returns, or an error: 403 for a user who
-            is not a superuser, unless :attr:`read_only` is set, 400 for a request that is not valid
-            or an extension error, 404 for an extension that is not installed, and 500 for anything else.
+        :returns: The status and the model that :meth:`handle` returns, or an error's status and message:
+            403 for a user who is not a superuser, unless :attr:`read_only` is set, 400 for a request that
+            is not valid or an extension error, 404 for an extension that is not installed, and 500 for
+            anything else.
         """
-        if not (self.read_only or request.user.is_superuser):  # type: ignore[union-attr]
-            return self.error(FORBIDDEN, HTTPStatus.FORBIDDEN)
+        if not self.read_only and not request.user.is_superuser:
+            return HTTPStatus.FORBIDDEN, FORBIDDEN
         try:
             body = self.parse(request)
             result = self.handle(request, body, **kwargs)
         except ValueError as e:
-            return self.error(str(e))
+            return HTTPStatus.BAD_REQUEST, str(e)
         except Extension.DoesNotExist:
-            return self.error(f"No extension {kwargs.get('slug')} is installed.", HTTPStatus.NOT_FOUND)
+            return HTTPStatus.NOT_FOUND, f"No extension {kwargs.get('slug')} is installed."
         except SmarterExtensionException as e:
-            return self.error(e.message)
+            return HTTPStatus.BAD_REQUEST, e.message
         # a lifecycle hook is an extension's code, which can fail in any way at all.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.exception("%s.post() failed", self.formatted_class_name)
-            return self.error(f"{type(e).__name__}: {e}", HTTPStatus.INTERNAL_SERVER_ERROR)
-        return JsonResponse(result.to_json())
+            logger.exception("%s.respond() failed", self.formatted_class_name)
+            return HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(e).__name__}: {e}"
+        return HTTPStatus.OK, result
 
-    def handle(self, request: ASGIRequest, body: Optional[BaseModel], **kwargs):
+    def handle(self, request, body: Optional[BaseModel], **kwargs) -> ExtensionConsoleModel:
         """
         Carry out the request, and return its response's model.
 
@@ -385,7 +406,7 @@ class ExtensionApiView(SmarterAuthenticatedNeverCachedWebView):
         raise NotImplementedError
 
 
-class ExtensionListApiView(ExtensionApiView):
+class ExtensionListHandler(ExtensionApiHandler):
     """The installed extensions that the requesting user may see, and the state of the registry."""
 
     read_only = True
@@ -398,19 +419,22 @@ class ExtensionListApiView(ExtensionApiView):
         :param body: None: the request has no body.
         :returns: The extensions, whether the registry is enabled, and how many updates are available.
         """
-        extensions = [
-            extension
-            for extension in Extension.objects.select_related("installed_version").order_by("display_name")
-            if self.visible(request, extension)
-        ]
+        extensions = []
+        for extension in Extension.objects.select_related("installed_version").order_by("display_name"):
+            if self.visible(request, extension):
+                extensions.append(extension)
+        updates_available = 0
+        for extension in extensions:
+            if extension.update_available:
+                updates_available += 1
         return ExtensionListResponse(
             objects=[ExtensionSummary.from_model(extension, detail_url(extension.slug)) for extension in extensions],
             registry_enabled=registry.is_enabled(),
-            updates_available=sum(1 for extension in extensions if extension.update_available),
+            updates_available=updates_available,
         )
 
 
-class ExtensionRegistryApiView(ExtensionApiView):
+class ExtensionRegistryHandler(ExtensionApiHandler):
     """The registry's extensions, with what each offers on this platform.
 
     Only a superuser may refresh it.
@@ -444,7 +468,7 @@ class ExtensionRegistryApiView(ExtensionApiView):
         return RegistryResponse(enabled=True, objects=registry_extensions(index))
 
 
-class ExtensionCheckUpdatesApiView(ExtensionApiView):
+class ExtensionCheckUpdatesHandler(ExtensionApiHandler):
     """Check the registry for updates now."""
 
     def handle(self, request, body, **kwargs) -> ActionResponse:
@@ -462,7 +486,7 @@ class ExtensionCheckUpdatesApiView(ExtensionApiView):
         )
 
 
-class ExtensionInstallApiView(ExtensionApiView):
+class ExtensionInstallHandler(ExtensionApiHandler):
     """Install, or update, an extension from the registry."""
 
     request_model = InstallRequest
@@ -484,7 +508,7 @@ class ExtensionInstallApiView(ExtensionApiView):
         )
 
 
-class ExtensionUploadApiView(ExtensionApiView):
+class ExtensionUploadHandler(ExtensionApiHandler):
     """Install, or update, an extension from an uploaded archive: a multipart request with the file ``archive``."""
 
     def handle(self, request, body, **kwargs) -> ActionResponse:
@@ -508,7 +532,7 @@ class ExtensionUploadApiView(ExtensionApiView):
         )
 
 
-class ExtensionDetailApiView(ExtensionApiView):
+class ExtensionDetailHandler(ExtensionApiHandler):
     """Everything that an extension's detail page shows, and less to a user who is not a superuser."""
 
     read_only = True
@@ -531,10 +555,10 @@ class ExtensionDetailApiView(ExtensionApiView):
         return ExtensionDetailResponse(extension=read_only_detail(extension_detail(extension)))
 
 
-class ExtensionActionApiView(ExtensionApiView):
+class ExtensionActionHandler(ExtensionApiHandler):
     """The base class of an action on one extension: :meth:`act` returns the message of its success."""
 
-    def act(self, request: ASGIRequest, extension: Extension, body) -> str:
+    def act(self, request, extension: Extension, body) -> str:
         """
         Carry out the action, and return what happened.
 
@@ -564,7 +588,7 @@ class ExtensionActionApiView(ExtensionApiView):
         return ActionResponse(message=message, extension=refreshed_detail)
 
 
-class ExtensionEnableApiView(ExtensionActionApiView):
+class ExtensionEnableHandler(ExtensionActionHandler):
     """Enable an extension."""
 
     def act(self, request, extension, body) -> str:
@@ -573,7 +597,7 @@ class ExtensionEnableApiView(ExtensionActionApiView):
         return f"Enabled {extension.display_name}."
 
 
-class ExtensionDisableApiView(ExtensionActionApiView):
+class ExtensionDisableHandler(ExtensionActionHandler):
     """Disable an extension."""
 
     def act(self, request, extension, body) -> str:
@@ -582,7 +606,7 @@ class ExtensionDisableApiView(ExtensionActionApiView):
         return f"Disabled {extension.display_name}."
 
 
-class ExtensionUpdateApiView(ExtensionActionApiView):
+class ExtensionUpdateHandler(ExtensionActionHandler):
     """Update an extension to the registry's newest compatible version."""
 
     def act(self, request, extension, body) -> str:
@@ -591,7 +615,7 @@ class ExtensionUpdateApiView(ExtensionActionApiView):
         return f"Updated {extension.display_name} to {updated.installed_version.version}."  # type: ignore[union-attr]
 
 
-class ExtensionRollbackApiView(ExtensionActionApiView):
+class ExtensionRollbackHandler(ExtensionActionHandler):
     """Make an earlier version of an extension the one that runs."""
 
     request_model = RollbackRequest
@@ -609,7 +633,7 @@ class ExtensionRollbackApiView(ExtensionActionApiView):
         return f"Rolled {extension.display_name} back to {version.version}."
 
 
-class ExtensionConfigureApiView(ExtensionActionApiView):
+class ExtensionConfigureHandler(ExtensionActionHandler):
     """Change some of an extension's settings."""
 
     request_model = ConfigureRequest
@@ -657,7 +681,7 @@ class ExtensionConfigureApiView(ExtensionActionApiView):
         return f"Saved the settings of {extension.display_name}."
 
 
-class ExtensionAvailabilityApiView(ExtensionActionApiView):
+class ExtensionAvailabilityHandler(ExtensionActionHandler):
     """Change which accounts may use an extension."""
 
     request_model = AvailabilityRequest
@@ -679,7 +703,7 @@ class ExtensionAvailabilityApiView(ExtensionActionApiView):
         return f"{extension.display_name} is available to {len(accounts)} account(s)."
 
 
-class ExtensionUninstallApiView(ExtensionActionApiView):
+class ExtensionUninstallHandler(ExtensionActionHandler):
     """Uninstall an extension."""
 
     def act(self, request, extension, body) -> str:
@@ -688,7 +712,7 @@ class ExtensionUninstallApiView(ExtensionActionApiView):
         return f"Uninstalled {extension.display_name}."
 
 
-class ExtensionAccountsApiView(ExtensionApiView):
+class ExtensionAccountsHandler(ExtensionApiHandler):
     """Every account, for the availability picker."""
 
     def handle(self, request, body, **kwargs) -> AccountsResponse:
@@ -704,7 +728,125 @@ class ExtensionAccountsApiView(ExtensionApiView):
         )
 
 
+# ------------------------------------------------------------------------------
+# the web console's api
+# ------------------------------------------------------------------------------
+# abstract: its concrete views get handle() from the handler that they mix in before it.
+class ExtensionApiView(ExtensionApiHandler, SmarterAuthenticatedNeverCachedWebView):  # pylint: disable=abstract-method
+    """
+    The base class of the web console's Extensions api: POST only, JSON in and out, and a Django session.
+
+    Its concrete views mix a handler in before it, e.g. ``ExtensionEnableApiView(ExtensionEnableHandler,
+    ExtensionApiView)``. Errors are ``{"error": ...}``.
+    """
+
+    http_method_names = ["post"]
+
+    @property
+    def formatted_class_name(self) -> str:  # type: ignore[override]
+        """The class name, for logging."""
+        return f"{self.formatted_text(__name__)}.{self.__class__.__name__}"
+
+    def error(self, message: str, status: HTTPStatus = HTTPStatus.BAD_REQUEST) -> JsonResponse:
+        """
+        Return an error response.
+
+        :param message: What went wrong.
+        :param status: The HTTP status.
+        :returns: ``{"error": message}``, with the status.
+        """
+        return JsonResponse(ErrorResponse(error=message).to_json(), status=status)
+
+    def post(self, request: ASGIRequest, *args, **kwargs) -> JsonResponse:
+        """
+        Carry out the request with :meth:`respond`.
+
+        :param request: The request.
+        :param kwargs: Keyword arguments from the url, e.g. ``slug``.
+        :returns: The JSON of the model that :meth:`handle` returns, or an error.
+        """
+        status, result = self.respond(request, **kwargs)
+        if isinstance(result, str):
+            return self.error(result, status)
+        return JsonResponse(result.to_json())
+
+
+class ExtensionListApiView(ExtensionListHandler, ExtensionApiView):
+    """The installed extensions that the requesting user may see, and the state of the registry."""
+
+
+class ExtensionRegistryApiView(ExtensionRegistryHandler, ExtensionApiView):
+    """The registry's extensions, with what each offers on this platform."""
+
+
+class ExtensionCheckUpdatesApiView(ExtensionCheckUpdatesHandler, ExtensionApiView):
+    """Check the registry for updates now."""
+
+
+class ExtensionInstallApiView(ExtensionInstallHandler, ExtensionApiView):
+    """Install, or update, an extension from the registry."""
+
+
+class ExtensionUploadApiView(ExtensionUploadHandler, ExtensionApiView):
+    """Install, or update, an extension from an uploaded archive."""
+
+
+class ExtensionDetailApiView(ExtensionDetailHandler, ExtensionApiView):
+    """An extension's detail page."""
+
+
+class ExtensionEnableApiView(ExtensionEnableHandler, ExtensionApiView):
+    """Enable an extension."""
+
+
+class ExtensionDisableApiView(ExtensionDisableHandler, ExtensionApiView):
+    """Disable an extension."""
+
+
+class ExtensionUpdateApiView(ExtensionUpdateHandler, ExtensionApiView):
+    """Update an extension to the registry's newest compatible version."""
+
+
+class ExtensionRollbackApiView(ExtensionRollbackHandler, ExtensionApiView):
+    """Make an earlier version of an extension the one that runs."""
+
+
+class ExtensionConfigureApiView(ExtensionConfigureHandler, ExtensionApiView):
+    """Change some of an extension's settings."""
+
+
+class ExtensionAvailabilityApiView(ExtensionAvailabilityHandler, ExtensionApiView):
+    """Change which accounts may use an extension."""
+
+
+class ExtensionUninstallApiView(ExtensionUninstallHandler, ExtensionApiView):
+    """Uninstall an extension."""
+
+
+class ExtensionAccountsApiView(ExtensionAccountsHandler, ExtensionApiView):
+    """Every account, for the availability picker."""
+
+
 __all__ = [
+    "ExtensionAccountsHandler",
+    "ExtensionActionHandler",
+    "ExtensionApiHandler",
+    "ExtensionAvailabilityHandler",
+    "ExtensionCheckUpdatesHandler",
+    "ExtensionConfigureHandler",
+    "ExtensionDetailHandler",
+    "ExtensionDisableHandler",
+    "ExtensionEnableHandler",
+    "ExtensionInstallHandler",
+    "ExtensionListHandler",
+    "ExtensionRegistryHandler",
+    "ExtensionRollbackHandler",
+    "ExtensionUninstallHandler",
+    "ExtensionUpdateHandler",
+    "ExtensionUploadHandler",
+    "ExtensionApiView",
+    "FORBIDDEN",
+    "MAX_UPLOAD_BYTES",
     "ExtensionAccountsApiView",
     "ExtensionAvailabilityApiView",
     "ExtensionCheckUpdatesApiView",

@@ -62,19 +62,19 @@ from smarter.common.const import PROJECT_ROOT
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 
-CONTRACT = "smarter/smarter/apps/api/v1/contract/openapi.py"
-"""The module that declares the document's routes, which failure messages point to."""
+CONTRACT = "smarter/smarter/apps/api/v1/contract/openapi/"
+"""The package that builds the document, which failure messages point to: see its routes.py, families/ and schemas.py."""
 
 FIX_UNDOCUMENTED_ROUTE = (
     "To fix it, document the route: model its response in contract/models.py, build the view's response from "
     f"that model, add the operation to cli_paths() or the family's *_paths() function in {CONTRACT}, test a real "
     "response in TestOpenApiResponses, and run `make api-contract`. If the route must not be published, add it to "
-    f"UNDOCUMENTED_ROUTES in {CONTRACT} with the reason instead. See 'Adding or changing a cli route' in {SKILL}."
+    f"UNDOCUMENTED_ROUTES in {CONTRACT}routes.py with the reason instead. See 'Adding or changing a cli route' in {SKILL}."
 )
 """What to do when a route of a documented family is not in the document."""
 
 FIX_UNCOVERED_FAMILY = (
-    f"To fix it, add the family's urlconf to DOCUMENTED_URLCONFS in {CONTRACT}, and list its routes in "
+    f"To fix it, add the family to FAMILIES in {CONTRACT}families/, which adds it to DOCUMENTED_URLCONFS, and list its routes in "
     "UNDOCUMENTED_ROUTES as NOT_YET_MODELED until they are documented. If the family must not be published, add "
     f"it to UNDOCUMENTED_URLCONFS with the reason instead. See 'Covering a new family of routes' in {SKILL}."
 )
