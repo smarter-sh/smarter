@@ -36,6 +36,7 @@ from smarter.apps.mcpserver.signals import (
     mcpserver_repository_index_failed,
     mcpserver_repository_indexed,
 )
+from smarter.lib.typing import required
 
 from .base_classes import (
     COMMIT_SHA,
@@ -385,7 +386,7 @@ class TestIndexRepository(MCPServerTestBase):
         self.addCleanup(mcpserver_repository_index_failed.disconnect, receiver)
         index = self.index(commit_status=500)
         self.assertEqual(index.status, RepositoryIndexStatus.FAILED)
-        self.assertIn("HTTP 500", index.error)
+        self.assertIn("HTTP 500", required(index.error, "index.error"))
         self.assertEqual(received, [(self.unindexed_repository.name, index.error)])
         self.assertFalse(index.is_ready)
 
@@ -395,7 +396,7 @@ class TestIndexRepository(MCPServerTestBase):
         index = self.index(commit_sha=COMMIT_SHA, archive_status=502)
         self.assertEqual(index.status, RepositoryIndexStatus.READY)
         self.assertEqual(index.commit_sha, NEW_COMMIT_SHA)
-        self.assertIn("HTTP 502", index.error)
+        self.assertIn("HTTP 502", required(index.error, "index.error"))
         self.assertEqual(RepositoryFile.objects.filter(index=index).count(), len(INDEXED_PATHS))
 
     def test_unknown_repository(self):

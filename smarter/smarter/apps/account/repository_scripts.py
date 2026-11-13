@@ -74,10 +74,10 @@ SCRIPT_DEFAULT_TIMEOUT = 300
 SCRIPT_MAX_TIMEOUT = 3600
 """The most seconds that a script's configuration may give it."""
 
-SCRIPT_STAGE_PRE = "pre"
+SCRIPT_STAGE_PRE: Literal["pre"] = "pre"
 """The stage of the scripts that run before any manifest is applied."""
 
-SCRIPT_STAGE_POST = "post"
+SCRIPT_STAGE_POST: Literal["post"] = "post"
 """The stage of the scripts that run after every manifest is applied, and the LLMClients deployed."""
 
 ScriptStage = Literal["pre", "post"]

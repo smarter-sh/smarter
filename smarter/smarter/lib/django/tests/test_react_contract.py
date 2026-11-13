@@ -50,6 +50,7 @@ class TestViteManifest(SmarterTestBase):
         """Test that the _custom entry is read as build information, and that a manifest may omit it."""
         build_info = ViteManifest.model_validate(MANIFEST).build_info
         self.assertIsInstance(build_info, ReactAppBuildInfo)
+        assert build_info is not None
         self.assertEqual(build_info.version, "0.3.0")
         self.assertEqual(build_info.build_env, "production")
         self.assertEqual(build_info.build_time.year, 2026)

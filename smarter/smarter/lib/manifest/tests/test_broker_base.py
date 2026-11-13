@@ -38,6 +38,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     _broker: AbstractBroker
     _broker_class: Type[AbstractBroker]
     _manifest_filespec: str
+    token_record: SmarterAuthToken
+    token_key: str
     test_sam_broker_base_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSAMBrokerBaseClass()"
 
     @classmethod

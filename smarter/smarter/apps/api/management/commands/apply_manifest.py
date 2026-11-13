@@ -205,7 +205,7 @@ class Command(SmarterCommand):
         else:
             # the broker may return no response at all.
             status_code = response.status_code if response is not None else None
-            content = response.content if response is not None else None
+            content = response.content.decode("utf-8", errors="replace") if response is not None else None
             self.handle_completed_failure(msg=f"Manifest apply failed with status code: {status_code}")
             logger.error("%s manifest: %s", logger_prefix, loggable_manifest(self.data))
             logger.error("%s response: %s", logger_prefix, content)

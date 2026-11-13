@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 import yaml
 from django.core.exceptions import ValidationError
 from django.core.handlers.asgi import ASGIRequest
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.parsers import FileUploadParser
 
@@ -300,7 +300,7 @@ def create_plugin(request, data: Optional[SmarterDictType] = None):
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
-def update_plugin(request: ASGIRequest, plugin_id: Optional[int] = None):
+def update_plugin(request: HttpRequest, plugin_id: Optional[int] = None):
     """
     Update a plugin from a json representation in the body of the request.
 

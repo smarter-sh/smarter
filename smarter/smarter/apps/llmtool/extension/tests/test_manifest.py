@@ -8,6 +8,7 @@ from smarter.apps.llmtool.extension.manifest import (
     ExtensionSettingSpec,
     ExtensionSettingType,
     ExtensionSwitchSpec,
+    SettingValue,
     is_development_version,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -159,7 +160,7 @@ class TestExtensionSettingSpec(SmarterTestBase):
 
     def test_coerce(self):
         """Values, which may be text from a form, are converted to the setting's type."""
-        cases = [
+        cases: list[tuple[ExtensionSettingType, SettingValue, SettingValue]] = [
             (ExtensionSettingType.INTEGER, "3", 3),
             (ExtensionSettingType.FLOAT, "1.5", 1.5),
             (ExtensionSettingType.BOOLEAN, "yes", True),
@@ -174,7 +175,7 @@ class TestExtensionSettingSpec(SmarterTestBase):
 
     def test_coerce_rejects(self):
         """Values that cannot be converted are rejected."""
-        cases = [
+        cases: list[tuple[ExtensionSettingType, SettingValue]] = [
             (ExtensionSettingType.INTEGER, True),
             (ExtensionSettingType.INTEGER, "x"),
             (ExtensionSettingType.FLOAT, False),

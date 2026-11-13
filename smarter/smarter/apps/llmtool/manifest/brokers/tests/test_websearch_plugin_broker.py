@@ -29,6 +29,7 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.spec import (
 )
 from smarter.apps.llmtool.models import PluginDataWebsearch, PluginMeta
 from smarter.apps.llmtool.plugin.websearch import WebsearchPlugin
+from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -57,6 +58,7 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
     plugin_class = WebsearchPlugin
     broker_module = "smarter.apps.llmtool.manifest.brokers.websearch_plugin"
     spec_kind = "websearch"
+    api_key_secret: Secret
 
     @classmethod
     def setUpClass(cls):
@@ -105,20 +107,28 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
 
     def test_immutability(self):
         """Test that the Pydantic manifest models are immutable."""
+        # each assignment below is to a read-only property or a frozen model's field, which mypy refuses.
+        # The test checks that it fails at runtime too.
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            self.broker.kind = "NewKind"  # type: ignore[misc]
+        manifest = self.broker.manifest
+        assert manifest is not None
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.websearchData.timeout = 1
+            manifest.spec.websearchData.timeout = 1  # type: ignore[misc]
 
     def test_sam_broker_initialization(self):
         """Test that the SAMWebsearchPlugin model can be initialized from the manifest data."""
+        manifest_metadata = self.loader.manifest_metadata
+        manifest_spec = self.loader.manifest_spec
+        assert manifest_metadata is not None
+        assert manifest_spec is not None
         SAMWebsearchPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMWebsearchPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**manifest_metadata),
+            spec=SAMWebsearchPluginSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
@@ -165,8 +175,11 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertTrue(self.validate_apply(response))
-        plugin_data = self.broker.plugin.plugin_data
+        plugin = self.broker.plugin
+        assert plugin is not None
+        plugin_data = plugin.plugin_data
         self.assertIsInstance(plugin_data, PluginDataWebsearch)
+        assert plugin_data is not None
         self.assertEqual(plugin_data.search_provider, "brave")
         self.assertEqual(plugin_data.search_api_key, self.api_key_secret)
         self.assertEqual(plugin_data.blocked_domains, ["blocked.example"])
@@ -174,7 +187,9 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
     def test_apply_then_describe(self):
         """Test that describe() renders an applied plugin, with the api key's Secret name, never its value."""
         self.broker.apply(self.request, **self.kwargs)
-        broker = self.SAMBrokerClass(self.request, name=self.broker.manifest.metadata.name)
+        manifest = self.broker.manifest
+        assert manifest is not None
+        broker = self.SAMBrokerClass(self.request, name=manifest.metadata.name)
         spec = broker.plugin_websearch_spec_orm2pydantic()
         self.assertIsInstance(spec, SAMWebsearchPluginSpec)
         self.assertEqual(spec.websearchData.search.apiKey, API_KEY_SECRET)  # type: ignore[union-attr]
@@ -189,6 +204,7 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
         """Test that the plugin property returns a ready WebsearchPlugin."""
         plugin = self.broker.plugin
         self.assertIsInstance(plugin, WebsearchPlugin)
+        assert plugin is not None
         self.assertTrue(plugin.ready)
 
     def test_describe(self):
@@ -200,7 +216,9 @@ class TestSmarterWebsearchPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBroker
         """Test that delete() removes an applied plugin."""
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
-        name = self.broker.manifest.metadata.name
+        manifest = self.broker.manifest
+        assert manifest is not None
+        name = manifest.metadata.name
         broker = self.SAMBrokerClass(self.request, self.loader)
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))

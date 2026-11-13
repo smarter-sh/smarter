@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -11,7 +11,7 @@ from .const import namespace as app_name
 logger = logging.getLogger(__name__)
 
 
-class PromptConfig(AppConfig, SmarterHelperMixin):
+class PromptConfig(AppConfig):
     """Django Config for the OpenAI Function Calling app."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -21,8 +21,6 @@ class PromptConfig(AppConfig, SmarterHelperMixin):
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
         """Import signals."""
-        from . import progress  # noqa: F401
-        from . import receivers  # noqa: F401
-        from . import signals  # noqa: F401
+        from . import progress, receivers, signals  # noqa: F401
 
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", self.formatted_state_ready)
+        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)

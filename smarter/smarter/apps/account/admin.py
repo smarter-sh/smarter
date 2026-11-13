@@ -302,11 +302,12 @@ class DataExportAdmin(SmarterSuperUserOnlyModelAdmin):
         """
         return [field.name for field in self.model._meta.fields]  # pylint: disable=protected-access
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
         """
         Refuse to add exports in the admin: users start them from the user menu.
 
         :param request: The admin request.
+        :param obj: The object, unused, as in the base class.
         :returns: False.
         """
         return False

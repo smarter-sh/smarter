@@ -17,6 +17,10 @@ MODULE = "smarter.apps.provider.services.text_completion.lib.mixins"
 class TestChatDbMixin(TestAccountMixin):
     """Test the ChatDbMixin's prompt-backed querysets, provider lookup and record inserts."""
 
+    llmclient: LLMClient
+    prompt: Prompt
+    provider: Provider
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -79,6 +83,7 @@ class TestChatDbMixin(TestAccountMixin):
     def test_prompt_from_the_session_key(self):
         """A session key loads the prompt."""
         mixin = self.mixin(**{SMARTER_CHAT_SESSION_KEY_NAME: self.prompt.session_key})
+        assert mixin.prompt is not None
         self.assertEqual(mixin.prompt.pk, self.prompt.pk)
 
     def test_prompt_setter_rejects_other_types(self):
@@ -148,9 +153,16 @@ class TestChatDbMixin(TestAccountMixin):
 
     def test_insert_charge_errors(self):
         """A charge needs resource locators and a prompt."""
-        kwargs = {"charge_type": "completion", "completion_tokens": 1, "prompt_tokens": 2, "total_tokens": 3}
         with self.assertRaises(SmarterValueError):
-            self.mixin(prompt=self.prompt).db_insert_charge(resource_locators=[], **kwargs)
+            self.mixin(prompt=self.prompt).db_insert_charge(
+                resource_locators=[], charge_type="completion", completion_tokens=1, prompt_tokens=2, total_tokens=3
+            )
         with self.assertRaises(SmarterValueError):
-            self.mixin().db_insert_charge(resource_locators=["llmclient:test"], **kwargs)
+            self.mixin().db_insert_charge(
+                resource_locators=["llmclient:test"],
+                charge_type="completion",
+                completion_tokens=1,
+                prompt_tokens=2,
+                total_tokens=3,
+            )
         self.tasks["create_charge"].delay.assert_not_called()

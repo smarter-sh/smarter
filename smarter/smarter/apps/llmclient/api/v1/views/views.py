@@ -47,7 +47,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
@@ -98,7 +98,8 @@ class LLMClientView(ViewBase):
 
         :returns: The LLMClient found by :meth:`initial`, as a one-row queryset.
         """
-        return LLMClient.objects.filter(id=self.llmclient.id)  # type: ignore[return-value]
+        llmclient = required(self.llmclient, "llmclient")
+        return LLMClient.objects.filter(id=llmclient.id)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """

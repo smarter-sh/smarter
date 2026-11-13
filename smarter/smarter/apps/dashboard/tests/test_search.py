@@ -7,7 +7,7 @@ from unittest.mock import patch
 from django.test import Client
 from django.urls import reverse
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.search import (
@@ -55,6 +55,13 @@ class TestParseQuery(TestAccountMixin):
 
 class TestGlobalSearch(TestAccountMixin):
     """Test global_search() with Guardrails, which the user owns and another account's user doesn't see."""
+
+    tag: str
+    key: str
+    guardrails: list[Guardrail]
+    other_user: User
+    other_account: Account
+    other_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):

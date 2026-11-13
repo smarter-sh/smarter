@@ -14,6 +14,7 @@ from smarter.lib.django.middleware.sensitive_files import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 
 class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase):
@@ -36,7 +37,7 @@ class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase):
 
     def test_non_sensitive_file(self):
         request = self.factory.get("/non_sensitive_file.txt", REMOTE_ADDR="8.8.4.4")
-        response = self.middleware(request)
+        response = http_response(self.middleware(request))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_sensitive_file(self):
@@ -45,7 +46,7 @@ class TestSmarterBlockSensitiveFilesMiddleware(SmarterTestBase):
             ip = f"8.9.{i // 250}.{i % 250 + 1}"
             self.addCleanup(cache.delete, self.middleware.get_throttle_key(ip))
             request = self.factory.get("/" + sensitive_file, REMOTE_ADDR=ip)
-            response = self.middleware(request)
+            response = http_response(self.middleware(request))
             self.assertEqual(
                 response.status_code,
                 HTTPStatus.NOT_FOUND,

@@ -17,6 +17,8 @@ from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 class TestOrchestratorApi(ResourceApiTestMixin, ApiV1TestBase):
     """Test the Orchestrator api."""
 
+    resource: Orchestrator
+
     model = Orchestrator
     reverse_names = OrchestratorApiV1ReverseViews
     list_view = OrchestratorApiV1ReverseViews.orchestrator_list_view

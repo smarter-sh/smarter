@@ -38,7 +38,7 @@ class TestSecretAPIUrls(TestAccountMixin):
             factory_secret_teardown(self.secret)
         if self.client:
             self.client.logout()
-        self.client = None
+        self.client = None  # type: ignore[assignment]  # drops the test client; TestCase types it as a Client
         super().tearDown()
 
     def test_secret_view(self):

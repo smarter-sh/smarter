@@ -120,7 +120,7 @@ class TestI18nViews(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        self.client = None
+        del self.client
         return super().tearDown()
 
     def test_javascript_catalog(self):
@@ -196,6 +196,7 @@ class TestI18nViews(TestAccountMixin):
         """The console's page, which every console path answers with, loads the JavaScript catalog."""
         html = console_index_html()
         self.assertIsNotNone(html)
+        assert html is not None
         self.assertIn(f'src="{reverse("javascript-catalog")}"', html)
 
 

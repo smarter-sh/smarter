@@ -30,6 +30,8 @@ PERMISSIONS = ("has_view_permission", "has_change_permission", "has_delete_permi
 class TestDashboardAdmin(TestAccountMixin):
     """Test the admin console's role based access control."""
 
+    api_key: SmarterAuthToken
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

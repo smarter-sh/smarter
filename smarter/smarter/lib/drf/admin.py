@@ -43,7 +43,7 @@ class SmarterAuthTokenAdmin(SmarterStaffOnlyModelAdmin):
         :param admin_site: The admin site.
         """
         super().__init__(model, admin_site)
-        self.list_display = [field.name for field in model._meta.fields]
+        self.list_display = tuple(field.name for field in model._meta.fields)
 
 
 smarter_restricted_admin_site.register(SmarterAuthToken, SmarterAuthTokenAdmin)

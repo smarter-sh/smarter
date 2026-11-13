@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.utils import timezone
 
 from smarter.apps.llmhost.models import LLMHost, LLMHostEvent
+from smarter.lib.typing import required
 
 from .base_classes import LLMHostTestBase
 
@@ -36,11 +37,11 @@ class TestLLMHostModels(LLMHostTestBase):
         llmhost.status = "active"
         llmhost.deployed_at = timezone.now() - datetime.timedelta(hours=10)
         self.assertTrue(llmhost.is_deployed)
-        self.assertAlmostEqual(llmhost.uptime_hours, 10, places=2)
-        self.assertAlmostEqual(float(llmhost.estimated_cost), 12.12, places=2)
+        self.assertAlmostEqual(required(llmhost.uptime_hours, "llmhost.uptime_hours"), 10, places=2)
+        self.assertAlmostEqual(float(required(llmhost.estimated_cost, "llmhost.estimated_cost")), 12.12, places=2)
         # cost_per_hour is per replica.
         llmhost.replicas = 2
-        self.assertAlmostEqual(float(llmhost.estimated_cost), 24.24, places=2)
+        self.assertAlmostEqual(float(required(llmhost.estimated_cost, "llmhost.estimated_cost")), 24.24, places=2)
         llmhost.cost_per_hour = None
         self.assertIsNone(llmhost.estimated_cost)
         llmhost.status = "inactive"

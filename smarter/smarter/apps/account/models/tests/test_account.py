@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 class TestAccount(SmarterTestBase):
     """Test Account model."""
 
+    user: User
+    company_name: str
+
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccount()"
 
     @classmethod

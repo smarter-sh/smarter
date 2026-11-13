@@ -141,6 +141,7 @@ class TestProxyModel(ProxyTestBase):
         """
         proxy = self.proxy("test_model_clone", headers={"anthropic-version": "2023-06-01"}, timeout=33)
         clone = proxy.clone(new_name="test_model_clone_copy", user_profile=self.non_admin_user_profile)
+        assert isinstance(clone, Proxy)
         self.addCleanup(Proxy.objects.filter(pk=clone.pk).delete)
         self.assertNotEqual(clone.pk, proxy.pk)
         self.assertEqual(clone.user_profile, self.non_admin_user_profile)

@@ -43,6 +43,7 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
     def test_session_invoked_logs_at_debug(self):
         """The session's string form includes its session_key, so it's logged at DEBUG, not INFO."""
         with patch.object(receivers, "logger") as mock_logger:
+            # the receiver must log a session invoked without a request, which its annotation doesn't allow.
             receivers.handle_chat_session_invoked(sender=SmarterTestBase, instance=MagicMock(), request=None)
         mock_logger.debug.assert_called_once()
         mock_logger.info.assert_not_called()

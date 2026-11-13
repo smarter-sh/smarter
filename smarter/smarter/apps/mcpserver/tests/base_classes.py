@@ -133,6 +133,8 @@ class MCPServerTestBase(SmarterTestBase):
     code_index: RepositoryIndex
     blog: ProjectBlog
     blog_index: RepositoryIndex
+    repositories_patcher: "mock._patch[tuple[ProjectRepository, ...]]"
+    blog_patcher: "mock._patch[ProjectBlog]"
 
     @classmethod
     def setUpClass(cls):

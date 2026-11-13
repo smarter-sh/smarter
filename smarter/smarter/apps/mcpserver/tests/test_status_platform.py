@@ -14,6 +14,7 @@ from smarter.apps.mcpserver.services.status.platform import (
     task_queues,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib.typing import required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 CELERY_APP = "smarter.lib.celery_conf.APP"
@@ -59,7 +60,8 @@ class TestQueueDepths(SmarterTestBase):
                 def declare(queue, passive, not_found=not_found):
                     if queue == smarter_settings.llmclient_tasks_celery_task_queue:
                         raise ChannelError("NOT_FOUND - no queue", reply_code=not_found)
-                    raise ChannelError("ACCESS_REFUSED", reply_code="403")
+                    # a broker may send its reply code as a string, which queue_depths() must handle.
+                    raise ChannelError("ACCESS_REFUSED", reply_code="403")  # type: ignore[arg-type]
 
                 with mock.patch(CELERY_APP, self.broker(declare)):
                     depths = queue_depths()
@@ -82,11 +84,11 @@ class TestDatabaseLoad(SmarterTestBase):
 
     def test_load(self):
         load = database_load()
-        self.assertGreaterEqual(load.connections, 1, "this test's own connection")
-        self.assertGreater(load.max_connections, 0)
-        self.assertGreaterEqual(load.running, 1)
+        self.assertGreaterEqual(required(load.connections, "load.connections"), 1, "this test's own connection")
+        self.assertGreater(required(load.max_connections, "load.max_connections"), 0)
+        self.assertGreaterEqual(required(load.running, "load.running"), 1)
         self.assertIsNotNone(load.slow_queries)
-        self.assertGreater(load.uptime_seconds, 0)
+        self.assertGreater(required(load.uptime_seconds, "load.uptime_seconds"), 0)
 
     def test_as_number(self):
         self.assertEqual(as_number("42"), 42)

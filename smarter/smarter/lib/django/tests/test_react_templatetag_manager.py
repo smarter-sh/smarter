@@ -54,7 +54,10 @@ class TestSmarterReactTemplateTagManager(SmarterTestBase):
         manager = SmarterReactTemplateTagManager(app_name=APP, templatetag_name="test_tag")
         self.assertEqual(manager.entry_key, "index.html")
         self.assertIsInstance(manager.manifest, ViteManifest)
-        self.assertEqual(manager.manifest.build_info.version, "0.3.0")
+        manifest = manager.manifest
+        assert manifest is not None
+        assert manifest.build_info is not None
+        self.assertEqual(manifest.build_info.version, "0.3.0")
         assets = manager.reactapp_build_assets
         self.assertIsInstance(assets, ReactAppAssets)
         self.assertEqual(assets.js, ["assets/index.js", "assets/vendor.js", "assets/shared.js"])

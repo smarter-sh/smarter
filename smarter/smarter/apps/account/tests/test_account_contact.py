@@ -162,6 +162,7 @@ class TestAccountContactEmails(TestAccountMixin):
         AccountContact(account=self.account, email=self.email, first_name="jane").save()
         contact = AccountContact.objects.get(account=self.account, email=self.email)
         self.assertTrue(contact.welcomed)
+        assert contact.welcomed_at is not None
         self.assertGreaterEqual(contact.welcomed_at, before)
 
     def test_welcome_email_not_sent_records_nothing(self):

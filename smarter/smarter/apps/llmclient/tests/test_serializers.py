@@ -1,5 +1,6 @@
 """Test the tools of an LLMClient in :class:`smarter.apps.llmclient.serializers.LLMClientSerializer` and ``LLMClientConfigSerializer``."""
 
+from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.tests.base_classes import GuardrailTestBase
 from smarter.apps.llmclient.models import (
     LLMClient,
@@ -23,6 +24,15 @@ class TestLLMClientSerializer(MCPClientTestBase, GuardrailTestBase):
     The class fixture is an LLMClient with one extension, one plugin, the MCPClientTestBase
     MCPClient and one guardrail.
     """
+
+    llmclient: LLMClient
+    plugin_meta: PluginMeta
+    guardrail: Guardrail
+    extension: Extension
+    extension_link: LLMClientExtensions
+    plugin: LLMClientPlugin
+    mcpclient_link: LLMClientMCPClients
+    guardrail_link: LLMClientGuardrails
 
     @classmethod
     def setUpClass(cls):

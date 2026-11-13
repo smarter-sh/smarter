@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -11,7 +11,7 @@ from .const import namespace as app_name
 logger = logging.getSmarterLogger(__name__)
 
 
-class DrfConfig(AppConfig, SmarterHelperMixin):
+class DrfConfig(AppConfig):
     """Django rest framework lib app configuration."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -27,5 +27,5 @@ class DrfConfig(AppConfig, SmarterHelperMixin):
             "%s.DrfConfig.ready() %s app is %s",
             logging.SmarterFormattedText.text(__name__),
             f"{SMARTER_APP_NAME} {app_name.upper()}",
-            self.formatted_state_ready,
+            SmarterReadyState.READY,
         )

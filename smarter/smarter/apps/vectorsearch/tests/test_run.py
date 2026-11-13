@@ -24,11 +24,11 @@ class TestVectorsearchRun(OpenApiResponseMixin, VectorstoreTestBase):
 
     def setUp(self):
         super().setUp()
-        self.service = self.ready_service("test_vectorsearch_run")
-        self.vectorstore = self.service.vectorstore
+        self.vectorstore_service = self.ready_service("test_vectorsearch_run")
+        self.vectorstore = self.vectorstore_service.vectorstore
         for name, topic in (("a.txt", "Smarter manifests describe AI applications. "), ("b.txt", "Cats sleep. ")):
-            document, _ = self.service.add_document(name=name, text=topic * 20, metadata={"topic": name})
-            self.service.load_document(document)
+            document, _ = self.vectorstore_service.add_document(name=name, text=topic * 20, metadata={"topic": name})
+            self.vectorstore_service.load_document(document)
         self.vectorsearch = Vectorsearch.objects.create(
             name=f"test_vectorsearch_run_{self.hash_suffix}",
             user_profile=self.user_profile,
@@ -37,7 +37,7 @@ class TestVectorsearchRun(OpenApiResponseMixin, VectorstoreTestBase):
         )
         self.addCleanup(Vectorsearch.objects.filter(pk=self.vectorsearch.pk).delete)
         patcher = patch.object(
-            default.DefaultVectorsearchApiView, "get_service", lambda view, vectorstore: self.service
+            default.DefaultVectorsearchApiView, "get_service", lambda view, vectorstore: self.vectorstore_service
         )
         patcher.start()
         self.addCleanup(patcher.stop)

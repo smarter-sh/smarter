@@ -19,12 +19,14 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 from smarter.lib import json, logging
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import required
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
     including SAMLoader and HttpRequest properties.
     """
+
+    token_record: SmarterAuthToken
 
     def setUp(self):
         """
@@ -72,6 +76,16 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def broker(self) -> SAMLLMClientBroker:
         return super().broker  # type: ignore
 
+    @property
+    def manifest(self) -> SAMLLMClient:
+        """Return the broker's manifest, which the test manifest always has."""
+        return required(self.broker.manifest, "broker.manifest")
+
+    @property
+    def llmclient(self) -> LLMClient:
+        """Return the broker's LLMClient, which exists once the manifest is applied."""
+        return required(self.broker.llmclient, "broker.llmclient")
+
     def test_setup(self):
         """Verify that setup initialized the broker correctly."""
         self.assertTrue(self.ready)
@@ -96,25 +110,31 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         """Test that the broker instance is immutable after initialization."""
 
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            # the test checks that the read-only property refuses the assignment.
+            self.broker.kind = "NewKind"  # type: ignore[misc]
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            # the test checks that the frozen model refuses the assignment.
+            self.manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.annotations = []
+            # the test checks that the frozen model refuses the assignment.
+            self.manifest.metadata.annotations = {}  # type: ignore[misc]
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.tags = []
+            # the test checks that the frozen model refuses the assignment.
+            self.manifest.metadata.tags = []  # type: ignore[misc]
 
         # test any field in spec.config.prompt
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.prompt.appAssistant = "New Assistant Name"
+            # the test checks that the frozen model refuses the assignment.
+            self.manifest.spec.config.prompt.appAssistant = "New Assistant Name"  # type: ignore[misc]
 
         # test any field in status
-        if self.broker.manifest.status:
+        if self.manifest.status:
             with self.assertRaises(ValidationError):
-                self.broker.manifest.status.account_number = "NewAccountNumber"
+                # the test checks that the frozen model refuses the assignment.
+                self.manifest.status.accountNumber = "NewAccountNumber"  # type: ignore[misc]
         else:
             logger.warning("Broker manifest status is None; skipping immutability test for status.")
 
@@ -125,14 +145,14 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def test_sam_broker_initialization(self):
         """Test that the SAMLLMClientBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**self.loader.manifest_metadata}
+        metadata = {**required(self.loader.manifest_metadata, "manifest_metadata")}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
         SAMLLMClient(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
             metadata=SAMLLMClientMetadata(**metadata),
             spec=SAMLLMClientSpec(
-                config=SAMLLMClientSpecConfig(**self.loader.manifest_spec["config"]),
+                config=SAMLLMClientSpecConfig(**required(self.loader.manifest_spec, "manifest_spec")["config"]),
                 plugins=[],
                 extensions=[],
                 apiKey=None,
@@ -165,7 +185,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def test_manifest_model_initialization(self):
         """Test that the manifest property can initialize a SAMLLMClient model."""
-        sam_account = SAMLLMClient(**self.broker.manifest.model_dump())
+        sam_account = SAMLLMClient(**self.manifest.model_dump())
         self.assertIsInstance(sam_account, SAMLLMClient)
 
     def test_formatted_class_name(self):
@@ -239,9 +259,10 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         """DefaultReasoningEffort is saved, and described."""
         broker = self.broker_with_prompt(defaultModel="gpt-6-luna", defaultReasoningEffort="high")
         broker.apply(self.request, **self.kwargs)
-        broker.llmclient.refresh_from_db()
-        self.assertEqual(broker.llmclient.default_reasoning_effort, "high")
-        described = self.broker_with_prompt().django_orm_to_manifest_dict()
+        llmclient = required(broker.llmclient, "broker.llmclient")
+        llmclient.refresh_from_db()
+        self.assertEqual(llmclient.default_reasoning_effort, "high")
+        described = required(self.broker_with_prompt().django_orm_to_manifest_dict(), "described")
         self.assertEqual(described["spec"]["config"]["prompt"]["defaultReasoningEffort"], "high")
 
     def test_settings_that_the_model_cant_honor_are_rejected(self):
@@ -253,10 +274,10 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def test_an_llmclient_that_its_model_cant_honor_is_described(self):
         """An LLMClient in the database is described as it is, e.g. one that was applied before the check."""
         self.broker.apply(self.request, **self.kwargs)
-        LLMClient.objects.filter(pk=self.broker.llmclient.pk).update(
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(
             default_model="gpt-6-luna", default_reasoning_effort="minimal"
         )
-        described = self.broker_with_prompt().django_orm_to_manifest_dict()
+        described = required(self.broker_with_prompt().django_orm_to_manifest_dict(), "described")
         self.assertEqual(described["spec"]["config"]["prompt"]["defaultReasoningEffort"], "minimal")
 
     def test_apply_updates_the_tags_of_an_existing_llmclient(self):
@@ -267,10 +288,10 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         ``_TaggableManager``, its manager, so it logged a warning and never set the tags.
         """
         self.broker.apply(self.request, **self.kwargs)
-        self.broker.llmclient.tags.set(["stale_tag"])
+        self.llmclient.tags.set(["stale_tag"])
         self.broker.apply(self.request, **self.kwargs)
-        self.broker.llmclient.refresh_from_db()
-        self.assertEqual(set(self.broker.llmclient.tags.names()), set(self.broker.manifest.metadata.tags or []))
+        self.llmclient.refresh_from_db()
+        self.assertEqual(set(self.llmclient.tags.names()), set(self.manifest.metadata.tags or []))
 
     def test_apply(self):
         """
@@ -285,36 +306,36 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
 
-        # self.broker.manifest.metadata.tags is a list of strings.
+        # self.manifest.metadata.tags is a list of strings.
         # verify that account.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        manifest_tags = set(self.manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.llmclient.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = set(self.broker.llmclient.tags_list) if self.broker.llmclient.tags else set()
-        elif isinstance(self.broker.llmclient.tags, set):
-            django_orm_tags = self.broker.llmclient.tags
-        elif isinstance(self.broker.llmclient.tags, list):
-            django_orm_tags = set(self.broker.llmclient.tags)
+        if isinstance(self.llmclient.tags, (TaggableManager, _TaggableManager)):
+            django_orm_tags = set(self.llmclient.tags_list) if self.llmclient.tags else set()
+        elif isinstance(self.llmclient.tags, set):
+            django_orm_tags = self.llmclient.tags
+        elif isinstance(self.llmclient.tags, list):
+            django_orm_tags = set(self.llmclient.tags)
         else:
-            self.fail(f"llmclient.tags is of unexpected type: {type(self.broker.llmclient.tags)}")
+            self.fail(f"llmclient.tags is of unexpected type: {type(self.llmclient.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # self.manifest.metadata.annotations is a map of keys to string values.
         # verify that plugin.annotations holds the same annotations.
         def sort_annotations(annotations):
             return dict(sorted((annotations or {}).items()))
 
-        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        llmclient_annotations = sort_annotations(self.broker.llmclient.annotations or [])
+        manifest_annotations = sort_annotations(self.manifest.metadata.annotations or [])
+        llmclient_annotations = sort_annotations(self.llmclient.annotations or [])
         self.assertEqual(
             manifest_annotations,
             llmclient_annotations,
             f"LLMClient annotations do not match manifest annotations. manifest: {manifest_annotations}, llmclient: {llmclient_annotations}",
         )
 
-        # self.broker.manifest.spec.extensions is a list of slugs or None.
+        # self.manifest.spec.extensions is a list of slugs or None.
         # verify that broker.extensions List[str] contains the same slugs.
-        manifest_extensions = set(self.broker.manifest.spec.extensions or [])
+        manifest_extensions = set(self.manifest.spec.extensions or [])
         django_orm_extensions = set()
         if isinstance(self.broker.extensions, list):
             django_orm_extensions = set(self.broker.extensions)
@@ -322,9 +343,9 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
             self.fail(f"broker.extensions is of unexpected type: {type(self.broker.extensions)}")
         self.assertEqual(manifest_extensions, django_orm_extensions)
 
-        # self.broker.manifest.spec.plugins is a list of strings or None.
+        # self.manifest.spec.plugins is a list of strings or None.
         # verify that llmclient.plugins List[str] contains the same plugins.
-        manifest_plugins = set(self.broker.manifest.spec.plugins or [])
+        manifest_plugins = set(self.manifest.spec.plugins or [])
         django_orm_plugins = set()
         if isinstance(self.broker.plugins, list):
             django_orm_plugins = set(self.broker.plugins)
@@ -333,87 +354,87 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.assertEqual(manifest_plugins, django_orm_plugins)
 
         self.assertEqual(
-            self.broker.manifest.metadata.name,
-            self.broker.llmclient.name,
-            f"LLMClient name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, llmclient: {self.broker.llmclient.name}",
+            self.manifest.metadata.name,
+            self.llmclient.name,
+            f"LLMClient name does not match manifest name. manifest: {self.manifest.metadata.name}, llmclient: {self.llmclient.name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.subdomain,
-            self.broker.llmclient.subdomain,
-            f"LLMClient subdomain does not match manifest subdomain. manifest: {self.broker.manifest.spec.config.prompt.subdomain}, llmclient: {self.broker.llmclient.subdomain}",
+            self.manifest.spec.config.prompt.subdomain,
+            self.llmclient.subdomain,
+            f"LLMClient subdomain does not match manifest subdomain. manifest: {self.manifest.spec.config.prompt.subdomain}, llmclient: {self.llmclient.subdomain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.customDomain,
-            self.broker.llmclient.custom_domain,
-            f"LLMClient customDomain does not match manifest customDomain. manifest: {self.broker.manifest.spec.config.prompt.customDomain}, llmclient: {self.broker.llmclient.custom_domain}",
+            self.manifest.spec.config.prompt.customDomain,
+            self.llmclient.custom_domain,
+            f"LLMClient customDomain does not match manifest customDomain. manifest: {self.manifest.spec.config.prompt.customDomain}, llmclient: {self.llmclient.custom_domain}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.provider,
-            self.broker.llmclient.provider,
-            f"LLMClient provider does not match manifest provider. manifest: {self.broker.manifest.spec.config.prompt.provider}, llmclient: {self.broker.llmclient.provider}",
+            self.manifest.spec.config.prompt.provider,
+            self.llmclient.provider,
+            f"LLMClient provider does not match manifest provider. manifest: {self.manifest.spec.config.prompt.provider}, llmclient: {self.llmclient.provider}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.defaultModel,
-            self.broker.llmclient.default_model,
-            f"LLMClient defaultModel does not match manifest defaultModel. manifest: {self.broker.manifest.spec.config.prompt.defaultModel}, llmclient: {self.broker.llmclient.default_model}",
+            self.manifest.spec.config.prompt.defaultModel,
+            self.llmclient.default_model,
+            f"LLMClient defaultModel does not match manifest defaultModel. manifest: {self.manifest.spec.config.prompt.defaultModel}, llmclient: {self.llmclient.default_model}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.defaultSystemRole,
-            self.broker.llmclient.default_system_role,
-            f"LLMClient defaultSystemRole does not match manifest defaultSystemRole. manifest: {self.broker.manifest.spec.config.prompt.defaultSystemRole}, llmclient: {self.broker.llmclient.default_system_role}",
+            self.manifest.spec.config.prompt.defaultSystemRole,
+            self.llmclient.default_system_role,
+            f"LLMClient defaultSystemRole does not match manifest defaultSystemRole. manifest: {self.manifest.spec.config.prompt.defaultSystemRole}, llmclient: {self.llmclient.default_system_role}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.defaultTemperature,
-            self.broker.llmclient.default_temperature,
-            f"LLMClient defaultTemperature does not match manifest defaultTemperature. manifest: {self.broker.manifest.spec.config.prompt.defaultTemperature}, llmclient: {self.broker.llmclient.default_temperature}",
+            self.manifest.spec.config.prompt.defaultTemperature,
+            self.llmclient.default_temperature,
+            f"LLMClient defaultTemperature does not match manifest defaultTemperature. manifest: {self.manifest.spec.config.prompt.defaultTemperature}, llmclient: {self.llmclient.default_temperature}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.defaultMaxTokens,
-            self.broker.llmclient.default_max_tokens,
-            f"LLMClient defaultMaxTokens does not match manifest defaultMaxTokens. manifest: {self.broker.manifest.spec.config.prompt.defaultMaxTokens}, llmclient: {self.broker.llmclient.default_max_tokens}",
+            self.manifest.spec.config.prompt.defaultMaxTokens,
+            self.llmclient.default_max_tokens,
+            f"LLMClient defaultMaxTokens does not match manifest defaultMaxTokens. manifest: {self.manifest.spec.config.prompt.defaultMaxTokens}, llmclient: {self.llmclient.default_max_tokens}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appName,
-            self.broker.llmclient.app_name,
-            f"LLMClient appName does not match manifest appName. manifest: {self.broker.manifest.spec.config.prompt.appName}, llmclient: {self.broker.llmclient.app_name}",
+            self.manifest.spec.config.prompt.appName,
+            self.llmclient.app_name,
+            f"LLMClient appName does not match manifest appName. manifest: {self.manifest.spec.config.prompt.appName}, llmclient: {self.llmclient.app_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appAssistant,
-            self.broker.llmclient.app_assistant,
-            f"LLMClient appAssistant does not match manifest appAssistant. manifest: {self.broker.manifest.spec.config.prompt.appAssistant}, llmclient: {self.broker.llmclient.app_assistant}",
+            self.manifest.spec.config.prompt.appAssistant,
+            self.llmclient.app_assistant,
+            f"LLMClient appAssistant does not match manifest appAssistant. manifest: {self.manifest.spec.config.prompt.appAssistant}, llmclient: {self.llmclient.app_assistant}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appWelcomeMessage,
-            self.broker.llmclient.app_welcome_message,
-            f"LLMClient appWelcomeMessage does not match manifest appWelcomeMessage. manifest: {self.broker.manifest.spec.config.prompt.appWelcomeMessage}, llmclient: {self.broker.llmclient.app_welcome_message}",
+            self.manifest.spec.config.prompt.appWelcomeMessage,
+            self.llmclient.app_welcome_message,
+            f"LLMClient appWelcomeMessage does not match manifest appWelcomeMessage. manifest: {self.manifest.spec.config.prompt.appWelcomeMessage}, llmclient: {self.llmclient.app_welcome_message}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appExamplePrompts,
-            self.broker.llmclient.app_example_prompts,
-            f"LLMClient appExamplePrompts does not match manifest appExamplePrompts. manifest: {self.broker.manifest.spec.config.prompt.appExamplePrompts}, llmclient: {self.broker.llmclient.app_example_prompts}",
+            self.manifest.spec.config.prompt.appExamplePrompts,
+            self.llmclient.app_example_prompts,
+            f"LLMClient appExamplePrompts does not match manifest appExamplePrompts. manifest: {self.manifest.spec.config.prompt.appExamplePrompts}, llmclient: {self.llmclient.app_example_prompts}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appPlaceholder,
-            self.broker.llmclient.app_placeholder,
-            f"LLMClient appPlaceholder does not match manifest appPlaceholder. manifest: {self.broker.manifest.spec.config.prompt.appPlaceholder}, llmclient: {self.broker.llmclient.app_placeholder}",
+            self.manifest.spec.config.prompt.appPlaceholder,
+            self.llmclient.app_placeholder,
+            f"LLMClient appPlaceholder does not match manifest appPlaceholder. manifest: {self.manifest.spec.config.prompt.appPlaceholder}, llmclient: {self.llmclient.app_placeholder}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appInfoUrl,
-            self.broker.llmclient.app_info_url,
-            f"LLMClient appInfoUrl does not match manifest appInfoUrl. manifest: {self.broker.manifest.spec.config.prompt.appInfoUrl}, llmclient: {self.broker.llmclient.app_info_url}",
+            self.manifest.spec.config.prompt.appInfoUrl,
+            self.llmclient.app_info_url,
+            f"LLMClient appInfoUrl does not match manifest appInfoUrl. manifest: {self.manifest.spec.config.prompt.appInfoUrl}, llmclient: {self.llmclient.app_info_url}",
         )
-        manifest_styles = self.broker.manifest.spec.config.styles
+        manifest_styles = self.manifest.spec.config.styles
         self.assertEqual(
             manifest_styles.model_dump(mode="json", exclude_none=True) if manifest_styles else {},
-            self.broker.llmclient.styles,
-            f"LLMClient styles do not match manifest styles. manifest: {manifest_styles}, llmclient: {self.broker.llmclient.styles}",
+            self.llmclient.styles,
+            f"LLMClient styles do not match manifest styles. manifest: {manifest_styles}, llmclient: {self.llmclient.styles}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.prompt.appFileAttachment,
-            self.broker.llmclient.app_file_attachment,
-            f"LLMClient appFileAttachment does not match manifest appFileAttachment. manifest: {self.broker.manifest.spec.config.prompt.appFileAttachment}, llmclient: {self.broker.llmclient.app_file_attachment}",
+            self.manifest.spec.config.prompt.appFileAttachment,
+            self.llmclient.app_file_attachment,
+            f"LLMClient appFileAttachment does not match manifest appFileAttachment. manifest: {self.manifest.spec.config.prompt.appFileAttachment}, llmclient: {self.llmclient.app_file_attachment}",
         )
-        self.assertEqual(self.broker.llmclient.allowed_origins, ["https://www.example.com", "http://localhost:5173"])
+        self.assertEqual(self.llmclient.allowed_origins, ["https://www.example.com", "http://localhost:5173"])
 
     def test_describe_round_trips_allowed_origins(self):
         """Test that describe returns the allowedOrigins that apply saved, so that its output can be applied again."""
@@ -440,7 +461,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def test_describe_round_trips_the_api_key_name(self):
         """Test that describe returns the name of the LLMClient's API key, which apply looks it up by."""
         self.broker.apply(self.request, **self.kwargs)
-        llmclient_api_key = LLMClientAPIKey.objects.create(llmclient=self.broker.llmclient, api_key=self.token_record)
+        llmclient_api_key = LLMClientAPIKey.objects.create(llmclient=self.llmclient, api_key=self.token_record)
         self.addCleanup(llmclient_api_key.delete)
         manifest = json.loads(self.broker.describe(self.request, **self.kwargs).content)["data"]
         self.assertEqual(manifest["spec"]["apiKey"], self.token_record.name)
@@ -472,7 +493,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         response = self.broker.deploy(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-        self.assertTrue(self.broker.llmclient.deployed)
+        self.assertTrue(self.llmclient.deployed)
         self.assertEqual(json.loads(response.content)["metadata"]["command"], "deploy")
 
     def test_undeploy(self):
@@ -486,7 +507,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         response = self.broker.undeploy(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-        self.assertFalse(self.broker.llmclient.deployed)
+        self.assertFalse(self.llmclient.deployed)
         # journaled as an undeploy, not a deploy.
         self.assertEqual(json.loads(response.content)["metadata"]["command"], "undeploy")
 
@@ -520,31 +541,3 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         response = self.broker.logs(self.request, **self.kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
-
-    def test_invalid_timezone(self):
-        """Test that applying a manifest with an invalid timezone raises an error."""
-        # Modify the manifest to have an invalid timezone
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.prompt.timezone = "Invalid/Timezone"
-
-    def test_invalid_currency(self):
-        """Test that applying a manifest with an invalid currency raises an error."""
-        # Modify the manifest to have an invalid currency
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.prompt.currency = "INVALID"
-
-    def test_invalid_language(self):
-        """Test that applying a manifest with an invalid language raises an error."""
-        # Modify the manifest to have an invalid language
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.prompt.language = "xx-XX"
-
-    def test_invalid_country(self):
-        """Test that applying a manifest with an invalid country raises an error."""
-        # Modify the manifest to have an invalid country
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.prompt.country = "XX"

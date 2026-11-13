@@ -2,7 +2,10 @@
 
 import json
 from dataclasses import asdict
+from decimal import Decimal
 from typing import get_args
+
+from django.db.models import Field
 
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.llmhost.contract.models import (
@@ -21,6 +24,7 @@ from smarter.apps.llmhost.serializers import LLMHostSerializer
 from smarter.apps.llmhost.services.discovery import ModelInfo
 from smarter.apps.llmhost.services.observability import LLMHostObservation
 from smarter.apps.llmhost.tests.base_classes import LLMHostTestBase
+from smarter.lib.typing import required
 
 
 class TestLLMHostContractModels(LLMHostTestBase):
@@ -37,9 +41,10 @@ class TestLLMHostContractModels(LLMHostTestBase):
         ]
         for literal, field in cases:
             with self.subTest(field=field):
-                self.assertEqual(
-                    list(get_args(literal)), [value for value, _ in LLMHost._meta.get_field(field).choices]
-                )
+                model_field = LLMHost._meta.get_field(field)
+                assert isinstance(model_field, Field)
+                choices = required(model_field.choices, f"{field}.choices")
+                self.assertEqual(list(get_args(literal)), [value for value, _ in choices])
 
     def test_llmhost_is_the_serializers_output(self):
         llmhost = self.new_llmhost("test_llmhost_contract_models")
@@ -54,7 +59,7 @@ class TestLLMHostContractModels(LLMHostTestBase):
 
     def test_money(self):
         self.assertEqual(money(None), None)
-        self.assertEqual(money(1.5), "1.5000")
+        self.assertEqual(money(Decimal("1.5")), "1.5000")
 
     def test_observation_keys(self):
         """The observation's keys are the ones that LLMHostObservation.to_dict() returned."""

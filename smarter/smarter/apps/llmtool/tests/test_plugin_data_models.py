@@ -68,7 +68,8 @@ class TestPluginDataApi(SmarterTestBase):
             self.plugin_data(endpoint="not a valid endpoint!").validate_endpoint()
 
     def test_validate_url_params(self):
-        self.assertIsNone(self.plugin_data(url_params=None).validate_url_params())
+        # a None value is valid: validation returns without raising.
+        self.plugin_data(url_params=None).validate_url_params()
         self.plugin_data(url_params=[{"key": "units", "value": "metric"}]).validate_url_params()
         with self.assertRaises(SmarterValueError):
             self.plugin_data(url_params={"units": "metric"}).validate_url_params()
@@ -76,7 +77,8 @@ class TestPluginDataApi(SmarterTestBase):
             self.plugin_data(url_params=[{"units": "metric"}]).validate_url_params()
 
     def test_validate_headers(self):
-        self.assertIsNone(self.plugin_data(headers=None).validate_headers())
+        # a None value is valid: validation returns without raising.
+        self.plugin_data(headers=None).validate_headers()
         self.plugin_data(headers=[{"name": "Accept", "value": "application/json"}]).validate_headers()
         with self.assertRaises(SmarterValueError):
             self.plugin_data(headers={"Accept": "application/json"}).validate_headers()
@@ -84,14 +86,16 @@ class TestPluginDataApi(SmarterTestBase):
             self.plugin_data(headers=[{"Accept": "application/json"}]).validate_headers()
 
     def test_validate_body(self):
-        self.assertIsNone(self.plugin_data(body=None).validate_body())
+        # a None value is valid: validation returns without raising.
+        self.plugin_data(body=None).validate_body()
         self.plugin_data(body={"a": 1}).validate_body()
         self.plugin_data(body=[1, 2]).validate_body()
         with self.assertRaises(SmarterValueError):
             self.plugin_data(body="a string").validate_body()
 
     def test_validate_test_values(self):
-        self.assertIsNone(self.plugin_data(test_values=None).validate_test_values())
+        # a None value is valid: validation returns without raising.
+        self.plugin_data(test_values=None).validate_test_values()
         self.plugin_data(test_values=[{"name": "city", "value": "Paris"}]).validate_test_values()
         with self.assertRaises(SmarterValueError):
             self.plugin_data(test_values={"city": "Paris"}).validate_test_values()
@@ -141,7 +145,8 @@ class TestPluginDataSql(SmarterTestBase):
         self.assertFalse(self.plugin_data(test_values={"city": "Paris"}).are_test_values_pydantic())
 
     def test_validate_test_values(self):
-        self.assertIsNone(self.plugin_data(test_values=None).validate_test_values())
+        # a None value is valid: validation returns without raising.
+        self.plugin_data(test_values=None).validate_test_values()
         self.plugin_data(test_values=[{"name": "city", "value": "Paris"}]).validate_test_values()
         with self.assertRaises(SmarterValueError):
             self.plugin_data(test_values={"city": "Paris"}).validate_test_values()

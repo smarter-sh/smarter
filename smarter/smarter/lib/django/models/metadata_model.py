@@ -1,8 +1,9 @@
 """The abstract base model of Smarter models that hold SAM metadata: name, description, version, tags, annotations."""
 
+from collections.abc import Collection
 from functools import cached_property
 from logging import getLogger
-from typing import Optional
+from typing import Any, Optional, Self
 
 from cache_results import cache_results
 from django.apps import apps
@@ -453,16 +454,17 @@ class MetaDataModel(TimestampedModel):
         self._loaded_name = self.name
 
     @classmethod
-    def from_db(cls, db, field_names, values):
+    def from_db(cls, db: Optional[str], field_names: Collection[str], values: Collection[Any], **kwargs: Any) -> Self:
         """
         Load a row, and remember its name, so that :meth:`save` can tell a rename.
 
         :param db: The database alias.
         :param field_names: The loaded fields' names.
         :param values: The loaded fields' values.
+        :param kwargs: Passed on to Django's, e.g. the ``fetch_mode`` that Django's type stubs already declare.
         :returns: The instance.
         """
-        instance = super().from_db(db, field_names, values)
+        instance = super().from_db(db, field_names, values, **kwargs)
         # a deferred name is not loaded, and is not read here, which would query it.
         instance._loaded_name = instance.__dict__.get("name")
         return instance

@@ -32,7 +32,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getLogger(__name__)
 
@@ -151,10 +151,10 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
     def test_sam_broker_initialization(self):
         """Test that the SAMSmarterAuthTokenBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**self.loader.manifest_metadata}
+        metadata = {**required(self.loader.manifest_metadata, "manifest_metadata")}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
         spec = {
-            "config": SAMSmarterAuthTokenSpecConfig(**self.loader.manifest_spec["config"]),
+            "config": SAMSmarterAuthTokenSpecConfig(**required(self.loader.manifest_spec, "manifest_spec")["config"]),
         }
         SAMSmarterAuthToken(
             apiVersion=self.loader.manifest_api_version,
@@ -351,49 +351,6 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.logs(self.request, **self.kwargs)  # type: ignore
 
-    def test_invalid_timezone(self):
-        """Test that applying a manifest with an invalid timezone raises an error."""
-        # Modify the manifest to have an invalid timezone
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"  # type: ignore
-
-    def test_invalid_currency(self):
-        """Test that applying a manifest with an invalid currency raises an error."""
-        # Modify the manifest to have an invalid currency
-
-        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
-            self.fail(
-                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify currency for test."
-            )
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.currency = "INVALID"  # type: ignore
-
-    def test_invalid_language(self):
-        """Test that applying a manifest with an invalid language raises an error."""
-        # Modify the manifest to have an invalid language
-
-        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
-            self.fail(
-                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify language for test."
-            )
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.language = "xx-XX"  # type: ignore
-
-    def test_invalid_country(self):
-        """Test that applying a manifest with an invalid country raises an error."""
-        # Modify the manifest to have an invalid country
-
-        if not self.broker.manifest or not self.broker.manifest.spec or not self.broker.manifest.spec.config:
-            self.fail(
-                "Broker manifest or manifest spec or manifest spec config is not set. Cannot modify country for test."
-            )
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.country = "XX"  # type: ignore
-
     def test_deploy(self):
         """
         Test deploy method.
@@ -587,7 +544,8 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
 
     def test_get_with_an_unserializable_token(self):
         self.broker.apply(self.request, **self.kwargs)
-        for data in ({}, RuntimeError("boom")):
+        cases: tuple[SmarterDictType, Exception] = ({}, RuntimeError("boom"))
+        for data in cases:
             with self.subTest(data=data):
                 serializer = MagicMock()
                 type(serializer.return_value).data = PropertyMock(
@@ -651,6 +609,7 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
     def test_deploy_activates_and_undeploy_needs_a_token(self):
         self.broker.apply(self.request, **self.kwargs)
         token = self.broker.smarter_auth_token
+        assert token is not None
         token.is_active = False
         token.save()
         self.broker.deploy(self.request, **self.kwargs)

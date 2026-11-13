@@ -16,10 +16,14 @@ from smarter.apps.orchestrator.contract.models import (
 )
 from smarter.apps.orchestrator.models import Orchestrator
 from smarter.apps.orchestrator.serializers import OrchestratorSerializer
+from smarter.lib.typing import required
 
 
 class TestOrchestratorContract(OpenApiResponseMixin, TestAccountMixin):
     """Test the Orchestrator contract's model against the serializer, and the views' responses against the document."""
+
+    llmclient: LLMClient
+    orchestrator: Orchestrator
 
     @classmethod
     def setUpClass(cls):
@@ -42,7 +46,7 @@ class TestOrchestratorContract(OpenApiResponseMixin, TestAccountMixin):
     def test_strategy_is_the_choices(self):
         self.assertEqual(
             list(get_args(OrchestratorApiStrategy)),
-            [value for value, _ in Orchestrator._meta.get_field("strategy").choices],
+            [value for value, _ in required(Orchestrator._meta.get_field("strategy").choices, "strategy.choices")],
         )
 
     def test_model_is_the_serializers_output(self):

@@ -31,6 +31,7 @@ from smarter.apps.llmtool.nlp import (
 from smarter.apps.llmtool.signals import search_term_matched
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, smarter_waffle_switches
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import get_test_data
@@ -53,6 +54,8 @@ def switches(fuzzy: bool = False, thesaurus: bool = False):
 
 class TestPluginNlp(SmarterTestBase):
     """Test the nlp functions, with the cases in ./data/nlp.yaml."""
+
+    cases: SmarterDictType
 
     @classmethod
     def setUpClass(cls):

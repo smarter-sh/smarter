@@ -29,5 +29,7 @@ class TestSmarterJournalCliCommandsValidate(SmarterTestBase):
 
     def test_journal_model_choices(self):
         """Test that SAMJournal.command accepts 'validate', i.e. migration 0006 matches the enum."""
-        choices = [value for value, _ in SAMJournal._meta.get_field("command").choices]
+        field_choices = SAMJournal._meta.get_field("command").choices
+        assert field_choices is not None
+        choices = [value for value, _ in field_choices]
         self.assertIn("validate", choices)

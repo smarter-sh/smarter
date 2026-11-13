@@ -17,6 +17,7 @@ from smarter.apps.infrastructure.providers import (
 from smarter.apps.infrastructure.providers.aws import AWSProvider
 from smarter.apps.infrastructure.providers.memory import InMemoryProvider
 from smarter.apps.infrastructure.services import infrastructure
+from smarter.apps.infrastructure.services.kubernetes import KubectlKubernetesService
 from smarter.apps.infrastructure.signals import (
     infrastructure_authenticated,
     infrastructure_authentication_failed,
@@ -79,7 +80,9 @@ class TestFacade(InfrastructureTestBase):
         self.assertTrue(infrastructure.ready)
         self.assertIs(infrastructure.dns, self.provider.dns)
         self.assertIs(infrastructure.certificates, self.provider.certificates)
-        self.assertIs(infrastructure.kubernetes.provider, self.provider)
+        kubernetes = infrastructure.kubernetes
+        assert isinstance(kubernetes, KubectlKubernetesService)
+        self.assertIs(kubernetes.provider, self.provider)
         self.provider.ready = False
         self.assertFalse(infrastructure.ready)
 

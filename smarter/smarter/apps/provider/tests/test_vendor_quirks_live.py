@@ -20,7 +20,7 @@ prompt fails with a 400 from the vendor. They check that:
 """
 
 import os
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import openai
 from django.test import tag
@@ -131,7 +131,9 @@ class TestVendorQuirksLive(SmarterTestBase):
         self.addCleanup(setattr, openai, "base_url", original_base_url)
 
         provider = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        provider.append_message = MagicMock()
+        patcher = patch.object(provider, "append_message")
+        patcher.start()
+        self.addCleanup(patcher.stop)
         for model in VALID_CHAT_COMPLETION_MODELS:
             for tools in (False, True):
                 with self.subTest(model=model, tools=tools):

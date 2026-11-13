@@ -31,4 +31,6 @@ class TestUserProfileLanguage(TestAccountMixin):
         self.assertEqual(self.user_profile.language, settings.LANGUAGE_CODE)
 
     def test_choices_are_settings_languages(self):
-        self.assertEqual(list(UserProfile._meta.get_field("language").choices), list(settings.LANGUAGES))
+        choices = UserProfile._meta.get_field("language").choices
+        assert choices is not None
+        self.assertEqual(list(choices), list(settings.LANGUAGES))

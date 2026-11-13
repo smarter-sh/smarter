@@ -21,7 +21,7 @@ BASE_NAME = "llmhost-12-test-llmhost"
 
 
 def context(
-    hf_token: bool = True, api_key: bool = True, hostname: str = "llm.example.com", **overrides
+    hf_token: bool = True, api_key: bool = True, hostname: Optional[str] = "llm.example.com", **overrides
 ) -> RenderContext:
     """A render context for the test manifest, with spec overrides."""
     return RenderContext(

@@ -14,7 +14,6 @@ from smarter.apps.llmtool.manifest.controller import (
 )
 from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
-    SAMPluginCommonSpecSelectorKeyDirectiveValues,
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
@@ -193,35 +192,39 @@ class TestPluginBase(TestAccountMixin):
 
         snake_case_name = to_snake_case(self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(plugin.plugin_meta.name, snake_case_name)  # type: ignore
+        plugin_selector = plugin.plugin_selector
+        plugin_prompt = plugin.plugin_prompt
+        assert plugin_selector is not None
+        assert plugin_prompt is not None
 
         self.assertEqual(
-            plugin.plugin_selector.directive,
+            plugin_selector.directive,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.provider,
+            plugin_prompt.provider,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.PROVIDER.value],
         )
         self.assertEqual(
-            plugin.plugin_prompt.system_role,
+            plugin_prompt.system_role,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.model,
+            plugin_prompt.model,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MODEL.value],
         )
         self.assertEqual(
-            plugin.plugin_prompt.temperature,
+            plugin_prompt.temperature,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
             ],
         )
         self.assertEqual(
-            plugin.plugin_prompt.max_completion_tokens,
+            plugin_prompt.max_completion_tokens,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
             ],
@@ -330,6 +333,7 @@ class TestPluginBase(TestAccountMixin):
         data[SAMKeys.METADATA.value]["description"] = f"test_delete {self.hash_suffix}"
         plugin = self.plugin_class(user_profile=self.user_profile, data=data)
         plugin_id = plugin.id
+        assert plugin_id is not None
         plugin.delete()
 
         # sleep long enough to eliminate race situation
@@ -379,75 +383,81 @@ class TestPluginBase(TestAccountMixin):
             with self.subTest(removed=".".join(removal)), self.assertRaises(rejected):
                 self.plugin_class(data=bad_data)
 
+    def manifest_with(self, path: tuple[str, ...], value: object = None, remove: bool = False) -> SmarterDictType:
+        """
+        Return a deep copy of the test's manifest with one value replaced, or removed.
+
+        :param path: The keys of the value, e.g. ``("spec", "prompt", "model")``.
+        :param value: The new value, unless ``remove``.
+        :param remove: Remove the value instead.
+        :returns: The changed copy. ``self.data`` is not changed.
+        """
+        manifest = copy.deepcopy(self.data)
+        parent = manifest
+        for key in path[:-1]:
+            parent = parent[key]
+        if remove:
+            parent.pop(path[-1])
+        else:
+            parent[path[-1]] = value
+        return manifest
+
     def test_pydantic_validation_errors(self):
-        """Test that the StaticPlugin raises an error when given bad data."""
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(
-            SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+        """A manifest without a required field is refused by the kind's model, which names the field."""
+        required_fields = (
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value, SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value),
+            (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value, SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value),
         )
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
+        for path in required_fields:
+            with self.subTest(removed=".".join(path)):
+                manifest = self.manifest_with(path, remove=True)
+                with self.assertRaisesRegex(PydanticValidationError, path[-1]):
+                    self.plugin_class.SAMPluginType.model_validate(manifest)
 
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.PROVIDER.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MODEL.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(
-            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+    def test_optional_prompt_fields(self):
+        """A manifest without the prompt's provider, model, temperature or max tokens is valid: they have defaults."""
+        optional_fields = (
+            SAMPluginCommonSpecPromptKeys.PROVIDER.value,
+            SAMPluginCommonSpecPromptKeys.MODEL.value,
+            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value,
+            SAMPluginCommonSpecPromptKeys.MAXTOKENS.value,
         )
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MAXTOKENS.value)
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("staticData")
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
+        for field in optional_fields:
+            with self.subTest(removed=field):
+                manifest = self.manifest_with((SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value, field), remove=True)
+                self.plugin_class.SAMPluginType.model_validate(manifest)
 
     def test_validation_bad_data_types(self):
-        """Test that the StaticPlugin raises an error when given bad data."""
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.METADATA.value]["tags"] = "not a list"
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
+        """A value of the wrong type is refused by the kind's model, which names the field."""
+        bad_values = (
+            ((SAMKeys.METADATA.value, "tags"), "not a list"),
+            (
+                (
+                    SAMKeys.SPEC.value,
+                    SAMPluginSpecKeys.SELECTOR.value,
+                    # the manifest's key, searchTerms: SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS is
+                    # the directive's value, search_terms, an unknown key that the model would ignore.
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                ),
+                "not a list",
+            ),
+            (
+                (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value, SAMPluginCommonSpecPromptKeys.TEMPERATURE.value),
+                "not a float",
+            ),
+            (
+                (SAMKeys.SPEC.value, SAMPluginSpecKeys.PROMPT.value, SAMPluginCommonSpecPromptKeys.MAXTOKENS.value),
+                "not an int",
+            ),
+        )
+        for path, value in bad_values:
+            with self.subTest(field=".".join(path)):
+                manifest = self.manifest_with(path, value)
+                with self.assertRaisesRegex(PydanticValidationError, path[-1]):
+                    self.plugin_class.SAMPluginType.model_validate(manifest)
 
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-            SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
-        ] = "not a list"
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
-        ] = "not a float"
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
-
-        bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-            SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
-        ] = "not an int"
-        with self.assertRaises((TypeError, PydanticValidationError)):
-            self.plugin_data(data=bad_data)
+        # self.data, which every test reads, is unchanged: each case changed a deep copy.
+        self.plugin_class.SAMPluginType.model_validate(self.data)
 
     def test_clone(self):
         """Test that we can clone a plugin using the StaticPlugin."""

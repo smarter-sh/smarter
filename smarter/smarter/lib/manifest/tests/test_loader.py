@@ -9,6 +9,7 @@ from smarter.lib import logging
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ class TestManifestLoader(SmarterTestBase):
         super().setUp()
         self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
-        self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
+        self.good_manifest_text = json_object(self.get_readonly_yaml_file(self.good_manifest_path))
         self.url = "https://cdn.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
@@ -104,7 +105,7 @@ class TestManifestLoader(SmarterTestBase):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:
-            self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
+            self.good_manifest_text = json_object(self.get_readonly_yaml_file(self.good_manifest_path))
             test_missing(element)
 
     def test_yaml_is_parsed_once(self):

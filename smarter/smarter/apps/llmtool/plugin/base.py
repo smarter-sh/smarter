@@ -1398,8 +1398,10 @@ class PluginBase(ABC, AccountMixin):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
-            plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
-            self.id = plugin_id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            plugin_meta = self.plugin_meta
+            # the id setter loads the PluginMeta of an id, so there is nothing to set without one.
+            if isinstance(plugin_meta, PluginMeta):
+                self.id = plugin_meta.id
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")

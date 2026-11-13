@@ -15,6 +15,10 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
 
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModel()"
 
+    secret1: Secret
+    secret2: Secret
+    secrets: list[Secret]
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

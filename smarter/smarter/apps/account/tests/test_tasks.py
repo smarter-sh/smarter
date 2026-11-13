@@ -6,7 +6,7 @@ them synchronously, in this process.
 """
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from smarter.apps.account.models import Charge, ChargeTypes
 from smarter.apps.account.tasks import (
@@ -76,6 +76,10 @@ class TestAccountTasks(SmarterTestBase):
 
 class TestSendSlackInvitationEmailsTask(SmarterTestBase):
     """Test that send_slack_invitation_emails sends only with its switch on and email configured."""
+
+    waffle: MagicMock
+    infrastructure: MagicMock
+    AccountContact: MagicMock
 
     def setUp(self):
         super().setUp()

@@ -4,7 +4,7 @@ import re
 import traceback
 from functools import cached_property
 from http import HTTPStatus
-from typing import Optional, Type
+from typing import Optional, Type, Union
 
 import yaml
 from django.conf import settings
@@ -297,7 +297,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
     _loader: Optional[SAMLoader] = None
-    _manifest_data: Optional[SmarterDictType] = None
+    _manifest_data: Optional[Union[SmarterDictType, str]] = None
+    """The manifest's data, or the raw JSON body until :attr:`manifest_data` parses it."""
     _manifest_kind: Optional[str] = None
     _manifest_kind_url_parsed: bool = False
     _manifest_name: Optional[str] = None
@@ -488,11 +489,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :return: Raw manifest data as a json object
         :rtype: Optional[dict]
         """
-        if self._manifest_data:
-            # belt & suspenders: ensure that the manifest data is a json object.
-            if isinstance(self._manifest_data, str):
-                self._manifest_data = json.loads(self._manifest_data)
-        return self._manifest_data
+        data = self._manifest_data
+        # belt & suspenders: ensure that the manifest data is a json object.
+        if isinstance(data, str) and data:
+            parsed: SmarterDictType = json.loads(data)
+            self._manifest_data = parsed
+            return parsed
+        if isinstance(data, str):
+            return None
+        return data
 
     @property
     def manifest_name(self) -> Optional[str]:

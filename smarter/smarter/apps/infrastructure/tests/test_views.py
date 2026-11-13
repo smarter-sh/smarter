@@ -95,7 +95,7 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
         """The list API filters the whole ledger, by status, billable, provider, type and text."""
         self.client.force_login(self.admin_user)
         mine = {"provider": "test"}
-        cases = (
+        cases: tuple[tuple[SmarterDictType, list[str]], ...] = (
             ({}, ["dns.record", "dns.zone"]),
             ({"status": "active"}, ["dns.zone"]),
             ({"status": "destroyed"}, ["dns.record"]),
@@ -134,9 +134,9 @@ class TestInfrastructureResourceConsole(TestAccountMixin):
             with self.subTest(body=body):
                 pagination = self.post({**mine, **body})["pagination"]
                 self.assertEqual((pagination["page"], pagination["pageSize"]), (1, DEFAULT_PAGE_SIZE))
-        for body in ("not json", "[]"):
-            with self.subTest(body=body):
-                self.assertEqual(self.post(body)["pagination"]["page"], 1)
+        for raw_body in ("not json", "[]"):
+            with self.subTest(body=raw_body):
+                self.assertEqual(self.post(raw_body)["pagination"]["page"], 1)
 
     def test_list_api_is_for_superusers(self):
         self.client.force_login(self.non_admin_user)

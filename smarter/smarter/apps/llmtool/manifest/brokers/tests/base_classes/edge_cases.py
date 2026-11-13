@@ -284,7 +284,7 @@ class PluginBrokerEdgeCasesMixin:
         self._patch_broker_property("plugin_meta", self._plugin_meta())
         model = broker.ORMModelClass
         with patch.object(model, "get_cached_data_by_plugin", side_effect=model.DoesNotExist):
-            self.assertIsNone(broker.plugin_data)
+            self.assertIsNone(broker.plugin_data)  # type: ignore[attr-defined]
 
     def test_ready_needs_the_base_broker(self):
         """The broker isn't ready when the plugin base broker isn't."""
@@ -292,7 +292,7 @@ class PluginBrokerEdgeCasesMixin:
             return
         broker = self.broker  # type: ignore[attr-defined]
         with patch.object(SAMPluginBaseBroker, "ready", new_callable=PropertyMock, return_value=False):
-            self.assertFalse(broker.ready)
+            self.assertFalse(broker.ready)  # type: ignore[attr-defined]
 
     def test_cached_manifest_of_the_wrong_type(self):
         """A cached manifest of the wrong type is rejected."""
@@ -306,7 +306,7 @@ class PluginBrokerEdgeCasesMixin:
     def test_cache_invalidations(self):
         """Cache_invalidations() runs for a broker whose plugin may not be saved."""
         broker = self.broker  # type: ignore[attr-defined]
-        self.assertIsNone(broker.cache_invalidations())
+        self.assertIsNone(broker.cache_invalidations())  # type: ignore[attr-defined]
 
     def test_plugin_init_resets_the_broker(self):
         """Plugin_init() forgets the manifest, plugin and plugin data."""
@@ -325,7 +325,7 @@ class PluginBrokerEdgeCasesMixin:
         with patch.object(self.SAMBrokerClass, "ready", new_callable=PropertyMock, return_value=False):  # type: ignore[attr-defined]
             with patch.object(self.SAMBrokerClass, "plugin", new_callable=PropertyMock, return_value=None):  # type: ignore[attr-defined]
                 broker = self.SAMBrokerClass(self.request)  # type: ignore[attr-defined]
-        self.assertIsNone(broker._manifest)
+        self.assertIsNone(broker._manifest)  # type: ignore[attr-defined]
 
     # -------------------------------------------------------------------------
     # These apply to the brokers that set ``orm_spec_method``: api, sql.
@@ -339,9 +339,9 @@ class PluginBrokerEdgeCasesMixin:
         broker = self.broker  # type: ignore[attr-defined]
         broker._plugin_data = None
         self._patch_broker_property("plugin_meta", None)
-        self.assertIsNone(broker.plugin_data)
-        self.assertIsNone(broker.plugin_data_orm2pydantic())
-        self.assertIsNone(getattr(broker, self.orm_spec_method)())
+        self.assertIsNone(broker.plugin_data)  # type: ignore[attr-defined]
+        self.assertIsNone(broker.plugin_data_orm2pydantic())  # type: ignore[attr-defined]
+        self.assertIsNone(getattr(broker, self.orm_spec_method)())  # type: ignore[attr-defined]
 
     def test_orm_plugin_init_resets_the_broker(self):
         """Plugin_init() forgets the manifest, plugin and plugin data."""
@@ -349,9 +349,9 @@ class PluginBrokerEdgeCasesMixin:
             return
         broker = self.broker  # type: ignore[attr-defined]
         broker.plugin_init()
-        self.assertIsNone(broker._manifest)
-        self.assertIsNone(broker._plugin)
-        self.assertIsNone(broker._plugin_data)
+        self.assertIsNone(broker._manifest)  # type: ignore[attr-defined]
+        self.assertIsNone(broker._plugin)  # type: ignore[attr-defined]
+        self.assertIsNone(broker._plugin_data)  # type: ignore[attr-defined]
 
     def test_orm_cached_manifest_of_the_wrong_type(self):
         """A cached manifest of the wrong type is rejected."""
@@ -390,7 +390,7 @@ class PluginBrokerEdgeCasesMixin:
         broker._plugin_meta = None
         with self.assertNoLogs("smarter.apps.llmtool", level="WARNING"):  # type: ignore[attr-defined]
             manifest = broker.manifest
-        self.assertIsNone(manifest)
+        self.assertIsNone(manifest)  # type: ignore[attr-defined]
 
     def test_broker_by_name_writes_no_warning(self):
         """

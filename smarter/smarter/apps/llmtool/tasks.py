@@ -17,7 +17,7 @@ from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 from smarter.workers.celery import app
 
 from .models import PluginSelectorHistory
@@ -158,7 +158,7 @@ def create_plugin_selector_history(*args, **kwargs):
     session_key: Optional[str] = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
 
     PluginSelectorHistory.objects.create(
-        plugin_selector=plugin.plugin_selector,
+        plugin_selector=required(plugin.plugin_selector, "plugin_selector"),
         search_term=search_term,
         messages={"input_text": input_text} if input_text else messages,
         session_key=session_key,

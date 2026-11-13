@@ -31,6 +31,7 @@ from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
     parse_request,
 )
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_object
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 
@@ -45,7 +46,7 @@ class TestUtils(SmarterTestBase):
 
     def test_http_response_factory(self):
         """Test test_http_response_factory."""
-        retval = http_response_factory(200, self.response)
+        retval = json_object(http_response_factory(200, self.response))
         self.assertEqual(retval["statusCode"], 200)
         self.assertEqual(retval["body"], json.dumps(self.response))
         self.assertEqual(retval["isBase64Encoded"], False)
@@ -117,7 +118,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_paired_thread_is_unchanged(self):
         """Test that a thread whose tool calls are all answered is returned unchanged."""
-        messages = [
+        messages: list[SmarterDictType] = [
             self.system,
             self.user,
             {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]},
@@ -134,7 +135,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_unanswered_tool_call_is_removed(self):
         """Test that a tool call without a reply is removed, and that the assistant message stays valid."""
-        partly = {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]}
+        partly: SmarterDictType = {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]}
         answer = {"role": "tool", "tool_call_id": "a", "content": "A"}
         retval = pair_tool_messages([self.user, partly, answer])
         self.assertEqual([call["id"] for call in retval[1]["tool_calls"]], ["a"])
@@ -148,7 +149,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_reply_to_another_call_is_removed(self):
         """Test that a tool reply that answers no tool call of the preceding assistant message is removed."""
-        messages = [
+        messages: list[SmarterDictType] = [
             {"role": "assistant", "content": None, "tool_calls": [tool_call("a")]},
             {"role": "tool", "tool_call_id": "a", "content": "A"},
             {"role": "tool", "tool_call_id": "z", "content": "Z"},

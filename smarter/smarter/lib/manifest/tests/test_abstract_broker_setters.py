@@ -11,7 +11,9 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import required
 
 from .test_abstract_broker import GUARDRAIL_DATA
 
@@ -60,14 +62,16 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         self.assertIsNone(broker._manifest)
         broker.manifest_setter(get_readonly_yaml_file(self.manifest_filespec))
         self.assertIsInstance(broker._loader, SAMLoader)
-        self.assertEqual(broker.manifest.metadata.name, self.loader.manifest_metadata["name"])
+        manifest = broker.manifest
+        assert isinstance(manifest, AbstractSAMBase)
+        self.assertEqual(manifest.metadata.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
 
     def test_name_from_the_loader(self):
         """Without a cached name or manifest, the name comes from the loader."""
         broker = self.broker
         broker._name = None
         broker._manifest = None
-        self.assertEqual(broker.name, self.loader.manifest_metadata["name"])
+        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
 
     def test_name_from_the_manifest(self):
         """Without a cached name, the name comes from the manifest."""
@@ -75,6 +79,7 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         manifest = broker.manifest
         broker._name = None
         broker._manifest = manifest
+        assert isinstance(manifest, AbstractSAMBase)
         self.assertEqual(broker.name, manifest.metadata.name)
 
     def test_params_from_a_prepared_request(self):
@@ -84,15 +89,18 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         with patch.object(SAMGuardrailBroker, "request", new_callable=PropertyMock, return_value=with_query):
             params = broker.params
         self.assertIsInstance(params, QueryDict)
+        assert params is not None
         self.assertEqual(params.get("name"), "abc")
         without_query = requests.Request("GET", "https://example.com/api/").prepare()
         with patch.object(SAMGuardrailBroker, "request", new_callable=PropertyMock, return_value=without_query):
-            self.assertEqual(len(broker.params), 0)
+            params = broker.params
+            assert params is not None
+            self.assertEqual(len(params), 0)
 
     def test_file_path_initialization(self):
         """A broker can be initialized from a manifest file, which overrides a loader."""
         broker = SAMGuardrailBroker(self.request, file_path=self.manifest_filespec)
-        self.assertEqual(broker.name, self.loader.manifest_metadata["name"])
+        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
         self.assertEqual(broker.kind, "Guardrail")
 
     def test_send_broker_ready_sends_once(self):

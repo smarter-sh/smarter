@@ -109,7 +109,9 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 # prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(prompt_session_invoked, dispatch_uid="prompt_session_invoked")
-def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request: ASGIRequest, *args, **kwargs):
+def handle_chat_session_invoked(
+    sender, instance: SmarterPromptSession, request: Optional[ASGIRequest], *args, **kwargs
+):
     """
     Log, at DEBUG, that a prompt session was invoked, with the request's url.
 

@@ -4,6 +4,7 @@ import asyncio
 import json
 import threading
 import time
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
@@ -69,7 +70,7 @@ class TestEmit(TestCase):
         emit(PromptProgressEvents.LLM_REQUEST, "nobody is listening")
 
     def test_emit_sends_to_the_current_sink_only(self):
-        received = []
+        received: list[SmarterDictType] = []
         with progress_sink(received.append):
             emit(PromptProgressEvents.LLM_REQUEST, "hello", iteration=1)
         emit(PromptProgressEvents.LLM_REQUEST, "after")
@@ -250,6 +251,7 @@ class TestPromptEventStream(TestCase):
 
         async def disconnect():
             stream = prompt_event_stream(complete, self.on_error)
+            assert isinstance(stream, AsyncGenerator)
             await stream.__anext__()  # retry
             await stream.__anext__()  # keepalive, while the prompt runs
             await stream.aclose()

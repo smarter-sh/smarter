@@ -187,6 +187,9 @@ def hit(repository: str, number: int, body: str = "It fails.") -> SmarterDictTyp
 class TestIssueSearch(SmarterTestBase):
     """Test search_issues() and its query."""
 
+    cli: ProjectRepository
+    docs: ProjectRepository
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

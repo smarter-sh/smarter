@@ -5,6 +5,7 @@ The tasks are called directly, which runs them synchronously, in this process. T
 services are mocked: no DNS record, ingress or certificate is read or created.
 """
 
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -36,6 +37,9 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
     """Test that a deployment checks its certificate and domain without blocking a worker."""
 
     infrastructure: MagicMock
+    is_taskable: MagicMock
+    apply_ingress_manifest: MagicMock
+    AccountContact: MagicMock
 
     def setUp(self):
         super().setUp()
@@ -124,7 +128,7 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
 
     def test_dns_signals_carry_the_llmclient(self):
         """Test that the DNS verification signals carry the llmclient, which their receivers log."""
-        received = []
+        received: list[tuple[str, Optional[LLMClient]]] = []
 
         def receiver(signal_name):
             def handler(sender, **kwargs):
@@ -146,6 +150,7 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
 
         self.assertEqual([name for name, _ in received], ["initiated", "failed"])
         for _, llmclient in received:
+            assert llmclient is not None
             self.assertEqual(llmclient.pk, self.llmclient.pk)
         self.assertEqual(check_domain.call_args.kwargs["llmclient"].pk, self.llmclient.pk)
 
@@ -175,6 +180,10 @@ class TestContinueDefaultApiDeployment(TestAccountMixin):
 
 class TestDeployDefaultApi(TestAccountMixin):
     """Test that deploy_default_api creates the DNS record and ingress, then hands off to its continuation."""
+
+    is_taskable: MagicMock
+    apply_ingress_manifest: MagicMock
+    continue_default_api_deployment: MagicMock
 
     def setUp(self):
         super().setUp()

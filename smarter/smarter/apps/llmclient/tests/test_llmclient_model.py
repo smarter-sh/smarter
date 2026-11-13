@@ -5,12 +5,14 @@ from unittest.mock import MagicMock, patch
 
 from django.urls import get_urlconf, set_urlconf
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import (
     factory_account_teardown,
     mortal_user_factory,
     platform_staff_profile_factory,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.tests.base_classes import GuardrailTestBase
 from smarter.apps.llmclient.models import (
     LLMClient,
@@ -20,6 +22,7 @@ from smarter.apps.llmclient.models import (
     LLMClientPlugin,
 )
 from smarter.apps.llmtool.models import Extension, PluginMeta
+from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
 
 
@@ -94,6 +97,16 @@ class TestLLMClientClone(MCPClientTestBase, GuardrailTestBase):
     The original belongs to the non-admin user. Its plugins, MCPClient and guardrail are theirs,
     so a user of another account may not use them.
     """
+
+    original: LLMClient
+    plugins: list[PluginMeta]
+    mcpclient_of_owner: MCPClient
+    guardrail: Guardrail
+    public_extension: Extension
+    private_extension: Extension
+    outsider: User
+    outsider_account: Account
+    outsider_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):
