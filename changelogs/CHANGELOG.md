@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.45.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.45.0-alpha.2...v0.45.0-alpha.3) (2026-11-13)
+
+### Bug Fixes
+
+* make flake8 check pyflakes and pycodestyle, ratchet complexity ([2263448](https://github.com/smarter-sh/smarter/commit/2263448aa55bff2265e893117f06bc35a54ef879))
+
 ## [0.45.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.45.0-alpha.1...v0.45.0-alpha.2) (2026-11-13)
 
 ### Bug Fixes
