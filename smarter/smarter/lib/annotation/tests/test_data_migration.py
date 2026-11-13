@@ -43,7 +43,7 @@ class TestDataMigration(SmarterTestBase):
 
     def test_forward_and_reverse(self):
         """Test the copy of legacy shapes, its idempotence, and the reverse to the legacy list."""
-        rows = [
+        rows: list[tuple[int, object]] = [
             (1, [{"smarter.sh/tests/purpose": "x"}, {"smarter.sh/tests/active": True}]),
             (2, {"acme.com/id": "A-1"}),
             (3, None),
@@ -53,9 +53,10 @@ class TestDataMigration(SmarterTestBase):
         operation = copy_annotations_to_rows("legacy", "legacymodel")
         self.assertIsInstance(operation, migrations.RunPython)
         apps = FakeApps(rows)
-        operation.code(apps, None)
+        # FakeApps stands in for the migration's StateApps, and the operation uses no schema editor
+        operation.code(apps, None)  # type: ignore[arg-type]
         apps.legacy.objects.values_list.return_value.iterator.return_value = iter(rows)
-        operation.code(apps, None)
+        operation.code(apps, None)  # type: ignore[arg-type]
 
         stored = Annotation.objects.filter(content_type=apps.content_type).order_by("object_id", "key")
         self.assertEqual(
@@ -68,7 +69,9 @@ class TestDataMigration(SmarterTestBase):
             ],
         )
 
-        operation.reverse_code(apps, None)
+        reverse_code = operation.reverse_code
+        assert reverse_code is not None
+        reverse_code(apps, None)  # type: ignore[arg-type]
         pks = [call.kwargs["pk"] for call in apps.legacy.objects.filter.call_args_list]
         values = [call.kwargs["annotations"] for call in apps.legacy.objects.filter.return_value.update.call_args_list]
         self.assertEqual(

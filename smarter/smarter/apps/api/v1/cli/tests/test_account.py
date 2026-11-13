@@ -125,48 +125,6 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         logger.info("base response: %s, Status: %s", response, status)
-        expected = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Account",
-                "metadata": {
-                    "name": "test_account_admin_user_25aa3db5a9836253",
-                    "description": "TestAccount_AdminUser_25aa3db5a9836253",
-                    "version": "0.0.1",
-                    "tags": ["test", "account", "mortal"],
-                    "annotations": [
-                        {"smarter.sh/created_by": "admin_user_factory"},
-                        {"smarter.sh/purpose": "testing"},
-                        {"smarter.sh/hash": "25aa3db5a9836253"},
-                    ],
-                    "accountNumber": "5390-0388-2767",
-                },
-                "spec": {
-                    "config": {
-                        "companyName": "TestAccount_AdminUser_25aa3db5a9836253",
-                        "phoneNumber": "123-456-789",
-                        "address1": "Smarter Way 4U",
-                        "address2": "Suite 100",
-                        "city": "Smarter",
-                        "state": "WY",
-                        "postalCode": "12345",
-                        "country": "USA",
-                        "language": "EN",
-                        "timezone": "America/New_York",
-                        "currency": "USD",
-                    }
-                },
-                "status": {
-                    "adminAccount": "5390-0388-2767",
-                    "created": "2026-01-07T18:54:28.092Z",
-                    "modified": "2026-01-07T18:54:28.092Z",
-                },
-            },
-            "message": "Account test_account_admin_user_25aa3db5a9836253 described successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Account",
-            "metadata": {"key": "14e4a15ce216fd8d4f52eadcedc73665396fad044b44dc87cb139bc167e8dd20"},
-        }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK.value)
@@ -226,49 +184,6 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         logger.info("Re-queried response: %s, Status: %s", response, status)
-
-        expected = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Account",
-                "metadata": {
-                    "name": "test_account_admin_user_02a6745418b64990",
-                    "description": "test data",
-                    "version": "0.0.1",
-                    "tags": ["test", "account", "mortal"],
-                    "annotations": [
-                        {"smarter.sh/created_by": "admin_user_factory"},
-                        {"smarter.sh/purpose": "testing"},
-                        {"smarter.sh/hash": "02a6745418b64990"},
-                    ],
-                    "accountNumber": "7872-3063-5091",
-                },
-                "spec": {
-                    "config": {
-                        "companyName": "test data",
-                        "phoneNumber": "+1 617 834 6172",
-                        "address1": "Avenida Reforma 222",
-                        "address2": "Piso 19",
-                        "city": "CDMX",
-                        "state": "CDMX",
-                        "postalCode": "06600",
-                        "country": "MX",
-                        "language": "es-ES",
-                        "timezone": "America/Mexico_City",
-                        "currency": "MXN",
-                    }
-                },
-                "status": {
-                    "adminAccount": "7872-3063-5091",
-                    "created": "2026-01-07T19:17:14.723Z",
-                    "modified": "2026-01-07T19:17:15.582Z",
-                },
-            },
-            "message": "Account test_account_admin_user_02a6745418b64990 described successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Account",
-            "metadata": {"key": "1770a3d88ee83425030c484fc3e0e5f2a19d01a71a798225e725596efe0ae79b"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
@@ -330,36 +245,6 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-
-        expected = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Account",
-                "name": "2868-0693-2944",
-                "metadata": {"count": 1},
-                "kwargs": {"kwargs": {}},
-                "data": {
-                    "titles": [
-                        {"name": "accountNumber", "type": "CharField"},
-                        {"name": "companyName", "type": "CharField"},
-                        {"name": "createdAt", "type": "DateTimeField"},
-                        {"name": "updatedAt", "type": "DateTimeField"},
-                    ],
-                    "items": [
-                        {
-                            "accountNumber": "2868-0693-2944",
-                            "companyName": "test data",
-                            "createdAt": "2026-01-07T19:40:31.448806Z",
-                            "updatedAt": "2026-01-07T19:40:32.124334Z",
-                        }
-                    ],
-                },
-            },
-            "message": "Accounts got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Account",
-            "metadata": {"key": "04fc1fb0e4a156f2986e7e776027e090ba1f8a9c92bf570c6124f21c8768008d"},
-        }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK.value)

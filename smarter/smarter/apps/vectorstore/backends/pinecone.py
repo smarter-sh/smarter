@@ -8,7 +8,7 @@ PineconeVectorStore stores it, so indexes that it wrote stay searchable. Dumps a
 and which require a paid Pinecone plan.
 """
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from langchain_core.embeddings import Embeddings
@@ -31,6 +31,11 @@ from .base import (
 TEXT_KEY = "text"
 
 
+if TYPE_CHECKING:
+    # Pinecone.Index()'s return type, which pinecone imports only for type checkers, as here.
+    from pinecone.db_data import _Index as Index
+
+
 class PineconeBackend(SmarterVectorstoreBackend):
     """
     The Pinecone backend.
@@ -47,7 +52,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
     ):
         super().__init__(vectorstore, embeddings)
         self._client = client
-        self._index = None
+        self._index: Optional["Index"] = None
 
     @property
     def client(self) -> Pinecone:
@@ -69,7 +74,7 @@ class PineconeBackend(SmarterVectorstoreBackend):
         return self._client
 
     @property
-    def index(self):
+    def index(self) -> "Index":
         """The Pinecone index, created when it is first used."""
         if self._index is None:
             self._index = self.client.Index(name=self.index_name)

@@ -29,7 +29,7 @@ from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,8 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
     def broker_for(self, text: str, token_key: str = "") -> SAMBudgetBroker:
         """A broker for a manifest, authenticated with a token: the superuser's by default."""
         request = HttpRequest()
-        request.headers = {"Authorization": f"Token {token_key or self.token_key}"}  # type: ignore
+        # a plain dict stands in for the request's read-only HttpHeaders.
+        request.headers = {"Authorization": f"Token {token_key or self.token_key}"}  # type: ignore[assignment]
         request._body = text.encode("utf-8")  # pylint: disable=protected-access
         return SAMBudgetBroker(request=request, loader=SAMLoader(manifest=text))
 
@@ -103,6 +104,7 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
     def test_apply(self):
         """Test that apply creates the Budget, and attaches it to spec.resources."""
         response = self.broker.apply(self.request, **self.kwargs)
+        assert response is not None
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         budget = Budget.objects.get(name=self.budget_name)
         self.assertEqual(budget.periodic_limit, Decimal("10.00"))
@@ -236,6 +238,7 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
     def test_without_a_budget_manifest_or_user_profile(self):
         """Test the broker without a Budget, with a cached manifest of the wrong type, and without a user profile."""
         broker = self.broker_for(self.manifest_text())
+        request = required(broker.request, "broker.request")
         with patch.object(SAMBudgetBroker, "budget", new_callable=PropertyMock, return_value=None):
             self.assertIsNone(broker.django_orm_to_manifest_dict())
         broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]  # pylint: disable=protected-access
@@ -244,44 +247,47 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
         broker._manifest = None  # pylint: disable=protected-access
         with patch.object(SAMBudgetBroker, "user_profile", new_callable=PropertyMock, return_value=None):
             with self.assertRaises(SAMBrokerErrorNotReady):
-                broker.get(broker.request)
+                broker.get(request)
 
     def test_not_implemented_commands_and_logs(self):
         broker = self.broker_for(self.manifest_text())
+        request = required(broker.request, "broker.request")
         for command in (broker.prompt, broker.deploy, broker.undeploy):
             with self.subTest(command=command.__name__):
                 with self.assertRaises(SAMBrokerErrorNotImplemented):
-                    command(broker.request)
-        self.assertEqual(broker.logs(broker.request).status_code, 200)
+                    command(request)
+        self.assertEqual(broker.logs(request).status_code, 200)
 
     def test_command_guards(self):
         """Apply needs a manifest, describe a name, and delete a Budget that it can see."""
         broker = self.broker_for(self.manifest_text())
+        request = required(broker.request, "broker.request")
         with patch.object(SAMBudgetBroker, "manifest", new_callable=PropertyMock, return_value=None):
             with self.assertRaises(SAMBrokerErrorNotReady):
-                broker.apply(broker.request)
+                broker.apply(request)
             with self.assertRaises(SAMBrokerErrorNotReady):
                 broker.manifest_to_django_orm()
         with patch.object(SAMBudgetBroker, "name", new_callable=PropertyMock, return_value=None):
             with self.assertRaises(SAMBrokerErrorNotReady):
-                broker.describe(broker.request)
+                broker.describe(request)
         with patch.object(SAMBudgetBroker, "budget", new_callable=PropertyMock, return_value=None):
             with self.assertRaises(SAMBrokerErrorNotFound):
-                broker.delete(broker.request)
+                broker.delete(request)
 
     def test_describe_and_delete_failures(self):
         self.broker.apply(self.request, **self.kwargs)
         broker = self.broker_for(self.manifest_text())
+        request = required(broker.request, "broker.request")
         with patch.object(SAMBudgetBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("bad")):
             with self.assertRaises(SAMBudgetBrokerError):
-                broker.describe(broker.request, **self.kwargs)
+                broker.describe(request, **self.kwargs)
         with (
             patch.object(SAMBudgetBroker, "verify_no_dependencies"),
             patch.object(Budget, "delete", side_effect=RuntimeError("database down")),
         ):
             with self.assertRaises(SAMBudgetBrokerError):
-                broker.delete(broker.request, **self.kwargs)
+                broker.delete(request, **self.kwargs)
         with patch.object(SAMBudgetBroker, "is_superuser", new_callable=PropertyMock, return_value=False):
             with patch.object(SAMBudgetBroker, "is_visible_budget", return_value=True):
                 with self.assertRaises(SAMBudgetBrokerError):
-                    broker.delete(broker.request, **self.kwargs)
+                    broker.delete(request, **self.kwargs)

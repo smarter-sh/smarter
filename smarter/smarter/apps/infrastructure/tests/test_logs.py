@@ -36,6 +36,7 @@ from smarter.apps.infrastructure.services.logs import (
     parse_level,
     re2_escape,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .base import InfrastructureTestBase
 
@@ -138,7 +139,7 @@ class TestLogQuery(InfrastructureTestBase):
 
     def test_invalid(self):
         hour = timedelta(hours=1)
-        invalid = [
+        invalid: list[SmarterDictType] = [
             {"components": ('smarter"}|',)},
             {"pod": "Pod With Spaces"},
             {"contains": ("",)},

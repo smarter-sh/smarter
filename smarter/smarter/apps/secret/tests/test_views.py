@@ -9,6 +9,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
@@ -73,6 +74,12 @@ class TestSecretViewsRefusePlatformSecrets(TestAccountMixin):
     treat a platform Secret, and any other account's, as missing. A clone would otherwise put
     the platform's api key into the user's own account, where describe returns its value.
     """
+
+    platform_value: str
+    platform_secret: Secret
+    account_secret: Secret
+    staff_user: User
+    staff_user_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):

@@ -220,7 +220,7 @@ class TestMCPClientManifest(SmarterTestBase):
         """Test that the manifest is immutable."""
         manifest = SAMMCPClient(**get_test_data("mcpclient.yaml"))
         with self.assertRaises(ValidationError):
-            manifest.spec.config.timeout = 1
+            manifest.spec.config.timeout = 1  # type: ignore[misc]  # assigning to the frozen model is what is tested
 
     def test_status_is_optional(self):
         """Test that a manifest may omit its status."""

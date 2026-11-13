@@ -107,8 +107,12 @@ class TestLLMHostComputeListViews(LLMHostTestBase):
         self.assertEqual(response.status_code, status, response.content)
         return json.loads(response.content)
 
-    def own_compute(self, name: str) -> LLMHostCompute:
-        """An LLMHostCompute of the test user, without a node group, deleted when the test ends."""
+    def own_compute(self: LLMHostTestBase, name: str) -> LLMHostCompute:
+        """
+        An LLMHostCompute of the test user, without a node group, deleted when the test ends.
+
+        ``self`` is any LLMHostTestBase, because TestLLMHostDetailViews calls it too.
+        """
         spec = SAMLLMHostComputeSpec.model_validate(
             {
                 "node": {"instanceType": "g6.2xlarge", "cpu": 8, "memoryGb": 32},

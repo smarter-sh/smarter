@@ -27,10 +27,12 @@ class TestAnnotationSelectors(SmarterTestBase):
         super().setUpClass()
         cls.key = f"acme-{cls.hash_suffix}.com/crm-id"
         cls.flag = f"acme-{cls.hash_suffix}.com/archived"
-        cls.a = Budget.objects.create(
+        # annotations is a constructor argument of annotatable models, not a field, so django-stubs refuses it
+        cls.a = Budget.objects.create(  # type: ignore[misc]
             name=f"test_selectors_a_{cls.hash_suffix}", periodic_limit=Decimal("1"), annotations={cls.key: "A, 1"}
         )
-        cls.b = Budget.objects.create(
+        # annotations is a constructor argument of annotatable models, not a field, so django-stubs refuses it
+        cls.b = Budget.objects.create(  # type: ignore[misc]
             name=f"test_selectors_b_{cls.hash_suffix}",
             periodic_limit=Decimal("1"),
             annotations={cls.key: "B", cls.flag: ""},

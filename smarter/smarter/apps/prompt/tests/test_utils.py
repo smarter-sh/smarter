@@ -1,26 +1,10 @@
-# pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
 import os
-import sys
-from pathlib import Path
 
-# python stuff
-from smarter.lib import json
-from smarter.lib.unittest.base_classes import SmarterTestBase
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-from smarter.apps.provider.services.text_completion.const import (  # noqa: E402
-    OpenAIMessageKeys,
-)
-
-# our stuff
-from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
+from smarter.apps.prompt.tests.test_setup import get_test_file
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.utils import (
     exception_response_factory,
     get_content_for_role,
     get_message_history,
@@ -30,9 +14,12 @@ from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
     pair_tool_messages,
     parse_request,
 )
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
-from ..tests.test_setup import get_test_file  # noqa: E402
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestUtils(SmarterTestBase):
@@ -45,7 +32,7 @@ class TestUtils(SmarterTestBase):
 
     def test_http_response_factory(self):
         """Test test_http_response_factory."""
-        retval = http_response_factory(200, self.response)
+        retval = json_object(http_response_factory(200, self.response))
         self.assertEqual(retval["statusCode"], 200)
         self.assertEqual(retval["body"], json.dumps(self.response))
         self.assertEqual(retval["isBase64Encoded"], False)
@@ -117,7 +104,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_paired_thread_is_unchanged(self):
         """Test that a thread whose tool calls are all answered is returned unchanged."""
-        messages = [
+        messages: list[SmarterDictType] = [
             self.system,
             self.user,
             {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]},
@@ -134,7 +121,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_unanswered_tool_call_is_removed(self):
         """Test that a tool call without a reply is removed, and that the assistant message stays valid."""
-        partly = {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]}
+        partly: SmarterDictType = {"role": "assistant", "content": None, "tool_calls": [tool_call("a"), tool_call("b")]}
         answer = {"role": "tool", "tool_call_id": "a", "content": "A"}
         retval = pair_tool_messages([self.user, partly, answer])
         self.assertEqual([call["id"] for call in retval[1]["tool_calls"]], ["a"])
@@ -148,7 +135,7 @@ class TestPairToolMessages(SmarterTestBase):
 
     def test_reply_to_another_call_is_removed(self):
         """Test that a tool reply that answers no tool call of the preceding assistant message is removed."""
-        messages = [
+        messages: list[SmarterDictType] = [
             {"role": "assistant", "content": None, "tool_calls": [tool_call("a")]},
             {"role": "tool", "tool_call_id": "a", "content": "A"},
             {"role": "tool", "tool_call_id": "z", "content": "Z"},

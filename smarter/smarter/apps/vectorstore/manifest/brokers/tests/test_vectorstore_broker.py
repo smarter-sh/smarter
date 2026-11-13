@@ -80,6 +80,7 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
     def test_apply(self):
         """Test that apply creates the Vectorstore, without creating its database."""
         response = self.broker.apply(self.request, **self.kwargs)
+        assert response is not None
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         vectorstore = VectorstoreMeta.objects.get(name=self.vs_name)
         self.assertEqual(

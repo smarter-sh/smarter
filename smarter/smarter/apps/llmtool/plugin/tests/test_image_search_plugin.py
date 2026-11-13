@@ -239,6 +239,7 @@ class TestImageSearchPlugin(PluginTestBase):
     def test_000_fixtures(self):
         """Test the class fixtures themselves."""
         self.assertTrue(self.image_search_plugin.ready)
+        assert self.image_search_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.image_search_plugin.id, plugin_class="imagesearch").exists())
         self.assertTrue(PluginDataImageSearch.objects.filter(plugin_id=self.image_search_plugin.id).exists())
 
@@ -261,6 +262,7 @@ class TestImageSearchPlugin(PluginTestBase):
 
     def test_plugin_controller(self):
         """Test that the plugin controller instantiates an ImageSearchPlugin."""
+        assert self.image_search_plugin.id is not None
         plugin_meta = PluginMeta.objects.get(id=self.image_search_plugin.id)
         controller = PluginController(user_profile=self.user_profile, plugin_meta=plugin_meta)
         self.assertIsInstance(controller.plugin, ImageSearchPlugin)

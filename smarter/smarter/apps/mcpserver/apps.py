@@ -18,7 +18,7 @@ work, and its protocol layer (:mod:`smarter.apps.mcpserver.protocol`) serves the
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -27,7 +27,7 @@ from .const import presentation_app_name
 logger = logging.getLogger(__name__)
 
 
-class MCPServerConfig(AppConfig, SmarterHelperMixin):
+class MCPServerConfig(AppConfig):
     """
     Django app configuration of the MCPServer app.
 
@@ -57,4 +57,4 @@ class MCPServerConfig(AppConfig, SmarterHelperMixin):
         from . import receivers, signals  # noqa: F401
 
         app_title = f"{SMARTER_APP_NAME} {presentation_app_name}"
-        logger.debug("%s app is %s", app_title, self.formatted_state_ready)
+        logger.debug("%s app is %s", app_title, SmarterReadyState.READY)

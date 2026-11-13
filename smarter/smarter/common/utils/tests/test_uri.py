@@ -52,6 +52,17 @@ class FakeRequest:
         return self._path
 
 
+def fake_request(**kwargs) -> HttpRequest:
+    """
+    Return a :class:`FakeRequest`, typed as the ``HttpRequest`` that it stands in for.
+
+    :param kwargs: The FakeRequest's arguments.
+    :returns: The FakeRequest.
+    """
+    # deliberately a request-like object without HttpRequest's methods, which is what these tests are about
+    return FakeRequest(**kwargs)  # type: ignore[return-value]
+
+
 class TestUriUtilsBranches(SmarterTestBase):
     """Test how smarter_build_absolute_uri() finds a request's host, and its fallbacks."""
 
@@ -71,31 +82,33 @@ class TestUriUtilsBranches(SmarterTestBase):
         self.assertEqual(smarter_build_absolute_uri(req), "http://testserver/mockpath/")
 
     def test_host_from_get_host(self):
-        req = FakeRequest(host="example.com")
+        req = fake_request(host="example.com")
         self.assertEqual(smarter_build_absolute_uri(req), "https://example.com/a/path/")
 
     def test_host_from_meta(self):
         """Test that the host is HTTP_HOST, then SERVER_NAME, when get_host() is missing or fails."""
         self.assertEqual(
-            smarter_build_absolute_uri(FakeRequest(meta={"HTTP_HOST": "a.example.com"})),
+            smarter_build_absolute_uri(fake_request(meta={"HTTP_HOST": "a.example.com"})),
             "https://a.example.com/a/path/",
         )
         self.assertEqual(
-            smarter_build_absolute_uri(FakeRequest(meta={"SERVER_NAME": "b.example.com"}, host_error=KeyError("host"))),
+            smarter_build_absolute_uri(
+                fake_request(meta={"SERVER_NAME": "b.example.com"}, host_error=KeyError("host"))
+            ),
             "https://b.example.com/a/path/",
         )
 
     def test_host_fallback(self):
         """Test that a request without a host gets testserver."""
-        self.assertEqual(smarter_build_absolute_uri(FakeRequest()), "https://testserver/a/path/")
+        self.assertEqual(smarter_build_absolute_uri(fake_request()), "https://testserver/a/path/")
 
     def test_build_error_falls_back(self):
         """Test that an error while building the url returns the fallback url."""
-        req = FakeRequest(host_error=RuntimeError("no host"))
+        req = fake_request(host_error=RuntimeError("no host"))
         self.assertEqual(smarter_build_absolute_uri(req), "http://testserver/unknown/")
 
     def test_invalid_url_falls_back(self):
-        req = FakeRequest(host="example.com")
+        req = fake_request(host="example.com")
         with patch("smarter.common.utils.uri.SmarterValidator.is_valid_url", return_value=False):
             self.assertEqual(smarter_build_absolute_uri(req), "http://testserver/unknown/")
 

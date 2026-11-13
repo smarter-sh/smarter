@@ -64,7 +64,8 @@ class TestSmarterEnum(SmarterTestBase):
     def test_str(self):
         self.assertIn("Colors", str(Colors()))
         color = Colors()
-        color.value = "red"  # pylint: disable=attribute-defined-outside-init
+        # SmarterEnum declares no value, but its __str__ uses an instance's value when it has one
+        color.value = "red"  # type: ignore[attr-defined]  # pylint: disable=attribute-defined-outside-init
         self.assertEqual(str(color), "red")
 
     def test_ownership_filter(self):

@@ -29,6 +29,7 @@ from smarter.apps.mcpclient.toolkit import (
     MCPToolkit,
     input_schema,
 )
+from smarter.lib.typing import required
 
 from .base_classes import (
     README_TEXT,
@@ -87,7 +88,7 @@ class TestMCPToolkit(MCPClientTestBase):
     def test_instructions(self):
         """Test that the servers' instructions are returned for the system prompt."""
         toolkit = self.load()
-        system_prompt = toolkit.system_prompt()
+        system_prompt = required(toolkit.system_prompt(), "system_prompt")
         self.assertIn(TEST_SERVER_INSTRUCTIONS, system_prompt)
         self.assertIn(self.mcpclient.name, system_prompt)
 

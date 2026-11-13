@@ -22,7 +22,7 @@ class TestDashboard(TestAccountMixin):
         """Tear down test fixtures."""
         if self.client is not None:
             self.client.logout()
-        self.client = None
+        del self.client
         return super().tearDown()
 
     def test_dashboard(self):

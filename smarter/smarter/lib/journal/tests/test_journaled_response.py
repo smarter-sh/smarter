@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from smarter.lib import json
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..http import SmarterJournaledJsonErrorResponse, SmarterJournaledJsonResponse
@@ -31,12 +32,12 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_journal.key = JOURNAL_KEY
         mock_samjournal.objects.create.return_value = mock_journal
 
-        data = {}
+        data: SmarterDictType = {}
         resp = SmarterJournaledJsonResponse(
             request=mock_request,
             data=data,
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.CREATED,
         )
         self.assertEqual(resp.status_code, HTTPStatus.CREATED)
@@ -60,12 +61,12 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_journal.key = JOURNAL_KEY
         mock_samjournal.objects.create.return_value = mock_journal
 
-        data = {}
+        data: SmarterDictType = {}
         resp = SmarterJournaledJsonResponse(
             request=mock_request,
             data=data,
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.OK,
         )
         self.assertEqual(resp.status_code, HTTPStatus.OK)
@@ -85,12 +86,12 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request.POST = {}
         mock_request.COOKIES = {}
         mock_request.headers = {}
-        data = {}
+        data: SmarterDictType = {}
         resp = SmarterJournaledJsonResponse(
             request=mock_request,
             data=data,
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.OK,
         )
         self.assertEqual(resp.status_code, HTTPStatus.OK)
@@ -118,7 +119,7 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
             request=mock_request,
             e=exc,
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.UNAUTHORIZED,
             stack_trace="trace",
         )
@@ -149,7 +150,7 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
             request=mock_request,
             e=Exception("fail"),
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             stack_trace="trace",
         )
@@ -172,7 +173,7 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
             request=mock_request,
             e=Exception("fail"),
             thing="thing",
-            command="command",
+            command="command",  # type: ignore[arg-type]  # a plain string stands in for the command
             status=HTTPStatus.BAD_GATEWAY,
             stack_trace="trace",
             description="Upstream failed.",

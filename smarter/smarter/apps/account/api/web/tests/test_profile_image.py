@@ -81,24 +81,28 @@ class TestProfileImage(TestAccountMixin):
         response = self.call("post", {"profile_image": image_file()})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         first = self.profile().profile_image
-        self.assertTrue(first.name.startswith("account/profile_images/"))
-        self.assertTrue(first.name.endswith(".png"))
-        self.assertNotIn("me", first.name)
+        first_name = first.name
+        assert first_name is not None
+        self.assertTrue(first_name.startswith("account/profile_images/"))
+        self.assertTrue(first_name.endswith(".png"))
+        self.assertNotIn("me", first_name)
         url = json.loads(response.content)["profile_image_url"]
         self.assertTrue(url.startswith("http"), url)
-        self.assertTrue(url.endswith(first.name), url)
+        self.assertTrue(url.endswith(first_name), url)
         self.assertEqual(get_cached_avatar_url(user_id=self.non_admin_user.id), url)
 
         self.assertEqual(self.call("post", {"profile_image": image_file("me.jpg", "JPEG")}).status_code, HTTPStatus.OK)
         second = self.profile().profile_image
-        self.assertNotEqual(second.name, first.name)
-        self.assertFalse(second.storage.exists(first.name))
+        self.assertNotEqual(second.name, first_name)
+        self.assertFalse(second.storage.exists(first_name))
 
         response = self.call("delete")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(json.loads(response.content)["profile_image_url"], OAUTH_IMAGE)
         self.assertFalse(self.profile().profile_image)
-        self.assertFalse(second.storage.exists(second.name))
+        second_name = second.name
+        assert second_name is not None
+        self.assertFalse(second.storage.exists(second_name))
         self.assertEqual(self.call("delete").status_code, HTTPStatus.OK)
 
     def test_upload_for_unnamed_profile(self):

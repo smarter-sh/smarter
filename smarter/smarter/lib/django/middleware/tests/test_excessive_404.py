@@ -13,6 +13,7 @@ from smarter.lib.django.middleware.excessive_404 import (
     SmarterBlockExcessive404Middleware,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.lib.django.middleware.excessive_404"
 
@@ -39,7 +40,7 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
     def test_404_is_counted(self):
         middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
         for count in range(1, 4):
-            self.assertEqual(middleware(self.request()).status_code, HTTPStatus.NOT_FOUND)
+            self.assertEqual(http_response(middleware(self.request())).status_code, HTTPStatus.NOT_FOUND)
             self.assertEqual(cache.get(self.key), count)
 
     def test_not_counted(self):
@@ -65,7 +66,7 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
 
         cache.set(self.key, SmarterBlockExcessive404Middleware.THROTTLE_LIMIT, timeout=60)
         for path in paths:
-            self.assertEqual(middleware(self.request(path)).status_code, HTTPStatus.NOT_FOUND)
+            self.assertEqual(http_response(middleware(self.request(path))).status_code, HTTPStatus.NOT_FOUND)
 
         async def get_response(request):
             return HttpResponseNotFound()
@@ -73,7 +74,9 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
         middleware = SmarterBlockExcessive404Middleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
             for path in paths:
-                self.assertEqual(asyncio.run(middleware(self.request(path))).status_code, HTTPStatus.NOT_FOUND)
+                response = middleware(self.request(path))
+                assert asyncio.iscoroutine(response)
+                self.assertEqual(http_response(asyncio.run(response)).status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(cache.get(self.key), SmarterBlockExcessive404Middleware.THROTTLE_LIMIT)
 
     def test_throttled_client_gets_403(self):
@@ -89,16 +92,20 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
         """Test that the middleware blocks a client that has exceeded the limit, sync and async."""
         middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
         cache.set(self.key, SmarterBlockExcessive404Middleware.THROTTLE_LIMIT, timeout=60)
-        self.assertEqual(middleware(self.request()).status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(http_response(middleware(self.request())).status_code, HTTPStatus.FORBIDDEN)
 
         async def get_response(request):
             return HttpResponseNotFound()
 
         middleware = SmarterBlockExcessive404Middleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            self.assertEqual(asyncio.run(middleware(self.request())).status_code, HTTPStatus.FORBIDDEN)
+            blocked = middleware(self.request())
+            assert asyncio.iscoroutine(blocked)
+            self.assertEqual(http_response(asyncio.run(blocked)).status_code, HTTPStatus.FORBIDDEN)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=False):
-            self.assertEqual(asyncio.run(middleware(self.request())).status_code, HTTPStatus.NOT_FOUND)
+            unblocked = middleware(self.request())
+            assert asyncio.iscoroutine(unblocked)
+            self.assertEqual(http_response(asyncio.run(unblocked)).status_code, HTTPStatus.NOT_FOUND)
 
     def test_log_sampling(self):
         middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
@@ -114,5 +121,7 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
 
         middleware = SmarterBlockExcessive404Middleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            self.assertEqual(asyncio.run(middleware(self.request())).status_code, HTTPStatus.NOT_FOUND)
+            response = middleware(self.request())
+            assert asyncio.iscoroutine(response)
+            self.assertEqual(http_response(asyncio.run(response)).status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(cache.get(self.key), 1)

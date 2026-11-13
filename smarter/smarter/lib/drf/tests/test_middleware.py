@@ -6,7 +6,6 @@ from logging import getLogger
 
 from django.http import HttpRequest
 from django.utils import timezone
-from rest_framework.authentication import get_authorization_header
 from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
@@ -47,7 +46,6 @@ class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
         request = HttpRequest()
         request.method = SmarterHttpMethods.POST
         request.META = {"HTTP_AUTHORIZATION": "Bearer something"}
-        self.middleware.authorization_header = get_authorization_header(request).decode()
         response = self.middleware(request)
         self.assertEqual(response, request)
 
@@ -85,6 +83,7 @@ class TestSmarterTokenAuthenticationMiddleware(ApiV1TestBase):
         # Should skip if request.auth is already set
         request = HttpRequest()
         request.method = SmarterHttpMethods.POST
-        request.auth = "already_authenticated"
+        # DRF's attribute, which a plain HttpRequest lacks
+        request.auth = "already_authenticated"  # type: ignore[attr-defined]
         response = self.middleware(request)
         self.assertEqual(response, request)

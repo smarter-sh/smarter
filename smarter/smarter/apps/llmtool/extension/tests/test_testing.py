@@ -4,6 +4,7 @@ from pydantic import SecretStr
 
 from smarter.apps.llmtool.extension.testing import call_tool, tool_context
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 from .test_protocol import GetWeather
 
@@ -23,4 +24,5 @@ class TestTestingHelpers(SmarterTestBase):
         """A tool is called with validated arguments, from a dict or JSON, and invalid ones are an error."""
         self.assertEqual(call_tool(GetWeather, {"location": "Paris"}), {"location": "Paris"})
         self.assertEqual(call_tool(GetWeather, '{"location": "Paris"}'), {"location": "Paris"})
-        self.assertIn("Invalid arguments", call_tool(GetWeather, "")["error"])  # type: ignore[index]
+        result = json_object(call_tool(GetWeather, ""))
+        self.assertIn("Invalid arguments", result["error"])

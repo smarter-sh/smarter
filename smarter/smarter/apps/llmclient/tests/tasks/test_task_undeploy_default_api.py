@@ -98,10 +98,13 @@ class TestUndeployDeployRace(TestAccountMixin):
         self.events: list[str] = []
         self.destroying = threading.Event()
         self.release = threading.Event()
+
+        def create_domain_a_record(**kwargs):
+            self.events.append("created")
+            return ({}, True)
+
         infrastructure = MagicMock()
-        infrastructure.dns.create_domain_a_record.side_effect = lambda **kwargs: (
-            self.events.append("created") or ({}, True)
-        )
+        infrastructure.dns.create_domain_a_record.side_effect = create_domain_a_record
         settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
         for target in (
             patch(f"{MODULE}.is_taskable", return_value=True),

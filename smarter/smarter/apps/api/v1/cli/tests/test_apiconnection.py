@@ -246,52 +246,6 @@ class TestApiCliV1ApiConnection(ApiV1CliTestBase):
         self.assertEqual(status, HTTPStatus.OK)
         logger.info("get() raw response: %s", response)
 
-        expected = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "ApiConnection",
-                "name": None,
-                "metadata": {"count": 1},
-                "kwargs": {"kwargs": {}},
-                "data": {
-                    "titles": [
-                        {"name": "user_profile", "type": "SlugRelatedField"},
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "baseUrl", "type": "URLField"},
-                        {"name": "apiKey", "type": "SlugRelatedField"},
-                        {"name": "authMethod", "type": "ChoiceField"},
-                        {"name": "timeout", "type": "IntegerField"},
-                        {"name": "proxyProtocol", "type": "ChoiceField"},
-                        {"name": "proxyHost", "type": "CharField"},
-                        {"name": "proxyPort", "type": "IntegerField"},
-                        {"name": "proxyUsername", "type": "CharField"},
-                        {"name": "proxyPassword", "type": "SlugRelatedField"},
-                    ],
-                    "items": [
-                        {
-                            "user_profile": "a user profile",
-                            "name": "smarter_test_base_92a2c8606f908c29",
-                            "description": "test apiconnection",
-                            "baseUrl": "http://localhost:9357/api/v1/cli/example_manifest/plugin/",
-                            "apiKey": "smarter_test_base_92a2c8606f908c29",
-                            "authMethod": "basic",
-                            "timeout": 30,
-                            "proxyProtocol": "http",
-                            "proxyHost": None,
-                            "proxyPort": None,
-                            "proxyUsername": None,
-                            "proxyPassword": None,
-                        }
-                    ],
-                },
-            },
-            "message": "ApiConnections got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "ApiConnection",
-            "metadata": {"key": "3f1eea81a8c3bb26519506ebe7ccb85240e9d052b7e0115de974adfc86aa92a0"},
-        }
-
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)

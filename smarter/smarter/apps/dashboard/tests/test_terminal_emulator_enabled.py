@@ -15,6 +15,7 @@ from smarter.apps.dashboard.views.terminal_emulator.enabled import (
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.apps.dashboard.views.terminal_emulator.enabled"
 
@@ -53,7 +54,7 @@ class TestRequireServerLogs(SmarterTestBase):
     def test_calls_the_view_while_enabled(self):
         with patch(f"{MODULE}.server_logs_enabled", return_value=True):
             response = require_server_logs(self.view)(self.request, "an arg", key="a kwarg")
-        self.assertEqual(response.content, b"logs")
+        self.assertEqual(http_response(response).content, b"logs")
         self.view.assert_called_once_with(self.request, "an arg", key="a kwarg")
 
     def test_is_a_404_while_disabled(self):
@@ -86,11 +87,11 @@ class TestRequireTerminal(SmarterTestBase):
 
     def test_a_superuser(self):
         response = self.call(True, MagicMock(is_authenticated=True, is_superuser=True))
-        self.assertEqual(response.content, b"terminal")
+        self.assertEqual(http_response(response).content, b"terminal")
 
     def test_an_anonymous_user_reaches_the_view_which_redirects_to_login(self):
         response = self.call(True, AnonymousUser())
-        self.assertEqual(response.content, b"terminal")
+        self.assertEqual(http_response(response).content, b"terminal")
 
     def test_a_user_who_is_not_a_superuser(self):
         with self.assertRaises(Http404):

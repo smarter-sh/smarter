@@ -388,6 +388,114 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string | null | undefined
 
+.. js:class:: DataExport
+
+   A data export: a zip file of the manifest of every resource that the user owns, with Secrets'
+   values redacted, and its progress. A link to it is emailed to the user when it is ready; the api
+   never returns the link.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: createdAt
+
+      When the export was started, in ISO 8601.
+
+      :type: string
+
+   .. js:attribute:: email
+
+      The address that the link is emailed to.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: error
+
+      Why the export failed, or an empty string.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: expiresAt
+
+      When the emailed link expires, in ISO 8601.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: failedCount
+
+      How many resources had no manifest.
+
+      :type: number | null | undefined
+
+   .. js:attribute:: id
+
+      :type: number
+
+   .. js:attribute:: manifestCount
+
+      How many manifests have been written so far.
+
+      :type: number | null | undefined
+
+   .. js:attribute:: resourceCount
+
+      How many resources the user owns.
+
+      :type: number | null | undefined
+
+   .. js:attribute:: sizeBytes
+
+      The size of the zip file, in bytes.
+
+      :type: number | null | undefined
+
+   .. js:attribute:: status
+
+      queued, running, succeeded or failed.
+
+      :type: string
+
+   .. js:attribute:: step
+
+      The step that the export is on: queued, inventory, manifests, archive, upload, email or done.
+
+      :type: string
+
+.. js:class:: DataExportOverview
+
+   What the user may export: where the link is emailed, how long it works, how many exports are left today, and the latest export.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: email
+
+      The address that the link is emailed to, or an empty string if the user has none.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: exportsLeftToday
+
+      How many more the user may start now.
+
+      :type: number
+
+   .. js:attribute:: exportsPerDay
+
+      The most exports that a user may start in 24 hours.
+
+      :type: number
+
+   .. js:attribute:: latest
+
+      The user's most recent export, or null if they never started one.
+
+      :type: object | null | undefined
+
+   .. js:attribute:: linkHours
+
+      How many hours the emailed link works.
+
+      :type: number
+
 .. js:class:: DiscoveredManifest
 
    The response of ``discover/manifest/``: a drafted LLMHost manifest.
@@ -2418,6 +2526,72 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
 
       :type: string
 
+.. js:class:: TokenUsagePoint
+
+   The tokens and cost of the user's LLM requests in one period: an hour, a day or a month.
+
+   Its fields are snake_case, as the platform sends them.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: completion_tokens
+
+      The tokens of the completions.
+
+      :type: number
+
+   .. js:attribute:: period_start
+
+      The start of the period, in UTC, in ISO 8601.
+
+      :type: string
+
+   .. js:attribute:: prompt_tokens
+
+      The tokens of the prompts.
+
+      :type: number
+
+   .. js:attribute:: records
+
+      How many charges the period has.
+
+      :type: number
+
+   .. js:attribute:: total_cost
+
+      The period's cost, in US dollars.
+
+      :type: number
+
+   .. js:attribute:: total_tokens
+
+      Every token of the period.
+
+      :type: number
+
+.. js:class:: TokenUsageSeries
+
+   The tokens and cost of the user's LLM requests over a window of time, one point per period, oldest first.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: period
+
+      The period of each point: hour, day or month.
+
+      :type: string
+
+   .. js:attribute:: periodicity
+
+      The window, e.g. ``24_hours``.
+
+      :type: string
+
+   .. js:attribute:: points
+
+      :type: object[]
+
 .. js:class:: User
 
    A user of the platform.
@@ -2655,6 +2829,28 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
    .. js:attribute:: version
 
       :type: string | null | undefined
+
+.. js:class:: VectorsearchResults
+
+   The chunks that a Vectorsearch's run found in its vectorstore, best first.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: results
+
+      :type: object[]
+
+   .. js:attribute:: vectorsearch
+
+      The Vectorsearch's name.
+
+      :type: string
+
+   .. js:attribute:: vectorstore
+
+      The name of the vectorstore that it searched.
+
+      :type: string
 
 .. js:class:: Vectorstore
 

@@ -88,12 +88,12 @@ class Command(SmarterCommand):
 
         smarter_switches = SmarterWaffleSwitches().all.copy()
 
-        for switch in smarter_switches:
-            verify_switch(switch)
+        for switch_name in smarter_switches:
+            verify_switch(switch_name)
 
-        waffle_switches = Switch.objects.all()
-        for switch in waffle_switches:
-            if not switch.name in smarter_switches:
+        existing_switches = Switch.objects.all()
+        for switch in existing_switches:
+            if switch.name not in smarter_switches:
                 self.stdout.write(self.style.NOTICE(f"Deleting orphaned switch {switch.name}."))
                 switch.delete()
 

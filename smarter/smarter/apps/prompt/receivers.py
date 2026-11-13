@@ -13,6 +13,7 @@ from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import request_to_json
+from smarter.common.utils.request_to_json import RequestData
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestType
@@ -108,7 +109,9 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 # prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 @receiver(prompt_session_invoked, dispatch_uid="prompt_session_invoked")
-def handle_chat_session_invoked(sender, instance: SmarterPromptSession, request: ASGIRequest, *args, **kwargs):
+def handle_chat_session_invoked(
+    sender, instance: SmarterPromptSession, request: Optional[ASGIRequest], *args, **kwargs
+):
     """
     Log, at DEBUG, that a prompt session was invoked, with the request's url.
 
@@ -316,6 +319,40 @@ def handle_chat_completion_tool_called(
     )
 
 
+def save_prompt_history(
+    prompt_id: int,
+    request_data: Optional[Union[RequestData, ASGIRequest, SmarterDictType, list]],
+    response_data: Optional[Union[SmarterDictType, list]],
+    messages: Optional[list],
+) -> None:
+    """
+    Save a finished prompt's PromptHistory now, in the prompt's own thread, before its response is returned.
+
+    The next prompt of the conversation rebuilds the conversation from the newest PromptHistory
+    (``db_message_history``), so the history must be saved before the client can send it. It was saved by
+    a Celery task, and a follow-up that arrived before the worker ran it found no history, started a new
+    conversation with only its own message, and was answered without the earlier turns: a chat's "divide
+    that by 4" no longer knew what "that" was. If the save fails, the Celery task is queued instead, so that
+    the history is still saved, with the task's retries.
+
+    :param prompt_id: The id of the Prompt.
+    :param request_data: The request sent to the LLM, as :func:`~smarter.common.utils.request_to_json` returns it.
+    :param response_data: The LLM's response, as JSON.
+    :param messages: The conversation's messages.
+    """
+    try:
+        create_prompt_history(prompt_id, request_data, response_data, messages)
+    # pylint: disable=broad-exception-caught
+    except Exception as e:
+        logger.error(
+            "%s could not save the history of prompt %s now, and queued it: %s",
+            f"{logger_prefix}.save_prompt_history()",
+            prompt_id,
+            type(e).__name__,
+        )
+        create_prompt_history.delay(prompt_id, request_data, response_data, messages)  # type: ignore[attr-defined]
+
+
 # pylint: disable=W0612
 @receiver(prompt_finished, dispatch_uid="prompt_finished")
 def handle_chat_response_success(
@@ -327,7 +364,7 @@ def handle_chat_response_success(
     **kwargs,
 ):
     """
-    Log a successful prompt, and queue the Celery task that saves its PromptHistory.
+    Log a successful prompt, and save its PromptHistory, with :func:`save_prompt_history`.
 
     :param sender: The object that sent the signal.
     :param prompt: The prompt. Without one, no history is saved.
@@ -351,7 +388,7 @@ def handle_chat_response_success(
         get_sender_name(sender),
     )
     if prompt:
-        create_prompt_history.delay(prompt.id, request_data, response_data, messages)  # type: ignore
+        save_prompt_history(prompt.id, request_data, response_data, messages)
     else:
         # DEBUG, not WARNING: expected for the passthrough api, whose OpenAIPassthroughClient
         # never has a Prompt.

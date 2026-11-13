@@ -12,7 +12,8 @@ class TestInvalidateCachedAnnotations(TestAccountMixin):
 
     def setUp(self):
         super().setUp()
-        self.budget = Budget.objects.create(
+        # annotations is a constructor argument of annotatable models, not a field, so django-stubs refuses it
+        self.budget = Budget.objects.create(  # type: ignore[misc]
             name=f"test_annotation_receivers_{self.hash_suffix}",
             periodic_limit=Decimal("1"),
             annotations={"acme.com/a": "1"},

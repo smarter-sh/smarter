@@ -4,14 +4,15 @@
 import os
 from contextlib import ExitStack
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from typing import TYPE_CHECKING, Union
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from smarter.apps.llmhost.manifest.brokers.llmhost import (
     SAMLLMHostBroker,
     SAMLLMHostBrokerError,
 )
 from smarter.apps.llmhost.manifest.models.llmhost.model import SAMLLMHost
-from smarter.apps.llmhost.models import LLMHost, LLMHostEvent
+from smarter.apps.llmhost.models import LLMHost, LLMHostCompute, LLMHostEvent
 from smarter.apps.llmhost.services import LLMHostServiceError
 from smarter.apps.llmhost.services.cluster import (
     InMemoryClusterBackend,
@@ -37,7 +38,10 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
+
+if TYPE_CHECKING:
+    from unittest.mock import _patch
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +51,11 @@ LLMHOST_NAME = "test_broker_llmhost"
 # pylint: disable=too-many-public-methods
 class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
     """Test the Smarter SAMLLMHostBroker, on an in-memory cluster."""
+
+    cluster: InMemoryClusterBackend
+    nodegroups: InMemoryNodeGroupBackend
+    builtin_computes_created: list[LLMHostCompute]
+    _dns_patcher: "_patch[Union[MagicMock, AsyncMock]]"
 
     @classmethod
     def setUpClass(cls):
@@ -121,7 +130,8 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         llmhost = self.llmhost()
         self.assertEqual(llmhost.model_repository, "Qwen/Qwen2.5-7B-Instruct")
         self.assertEqual((llmhost.inference_engine, llmhost.gpu_count, llmhost.gpu_type), ("vllm", 1, "A10G"))
-        self.assertEqual((llmhost.compute.name, llmhost.cost_per_hour), ("gpu_a10g_1x", Decimal("1.2120")))
+        compute = required(llmhost.compute, "llmhost.compute")
+        self.assertEqual((compute.name, llmhost.cost_per_hour), ("gpu_a10g_1x", Decimal("1.2120")))
         self.assertEqual(llmhost.spec["engine"]["args"][-1], "hermes")
         self.assertEqual(sorted(llmhost.tags_list), ["qwen", "test"])
         self.assertEqual(llmhost.status, "inactive")
@@ -161,7 +171,8 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         self.assertEqual(data["status"], "provisioning")
         base_name = resource_name(self.llmhost().pk, LLMHOST_NAME)
         self.assertIsNotNone(self.cluster.get("deployment", base_name))
-        self.assertEqual(self.nodegroups.created, [self.llmhost().compute.nodegroup_name])
+        compute = required(self.llmhost().compute, "llmhost.compute")
+        self.assertEqual(self.nodegroups.created, [compute.nodegroup_name])
         status = self.data(self.fresh_broker().describe(self.request, **self.kwargs))["status"]
         self.assertEqual(status["hostStatus"], "provisioning")
         self.assertEqual(status["apiKeySecret"], f"llmhost_{LLMHOST_NAME}_api_key")

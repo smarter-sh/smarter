@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 class TestCharge(TestAccountMixin):
     """Test Charge model."""
 
+    provider: Provider
+
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestCharge()"
 
     @classmethod

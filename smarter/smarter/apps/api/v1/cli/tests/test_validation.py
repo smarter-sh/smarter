@@ -10,6 +10,7 @@ import yaml
 
 from smarter.apps.api.v1.cli.validation import validate_manifest
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 GUARDRAIL_MANIFEST = os.path.join(
@@ -29,6 +30,8 @@ GUARDRAIL_MANIFEST = os.path.join(
 
 class TestValidateManifest(SmarterTestBase):
     """Test validate_manifest() without HTTP."""
+
+    manifest: SmarterDictType
 
     @classmethod
     def setUpClass(cls):

@@ -17,9 +17,11 @@ class TestVectorstoreOpenApi(OpenApiResponseMixin, VectorstoreTestBase):
 
     def setUp(self):
         super().setUp()
-        self.service = self.ready_service("test_vectorstore_openapi")
-        self.vectorstore = self.service.vectorstore
-        patcher = patch.object(views.VectorstoreViewBase, "get_service", lambda view, vectorstore: self.service)
+        self.vectorstore_service = self.ready_service("test_vectorstore_openapi")
+        self.vectorstore = self.vectorstore_service.vectorstore
+        patcher = patch.object(
+            views.VectorstoreViewBase, "get_service", lambda view, vectorstore: self.vectorstore_service
+        )
         patcher.start()
         self.addCleanup(patcher.stop)
         patch("smarter.apps.vectorstore.tasks.load_vectorstore_document.delay").start()
@@ -57,14 +59,14 @@ class TestVectorstoreOpenApi(OpenApiResponseMixin, VectorstoreTestBase):
         self.assertEqual(len(listed["documents"]), 2)
 
         document = VectorstoreDocument.objects.get(pk=added["documents"][0]["id"])
-        self.service.load_document(document)
+        self.vectorstore_service.load_document(document)
         results = self.call("post", "/vectorstores/{id}/search/", HTTPStatus.OK, {"query": "answers", "k": 2})
         self.assertTrue(results["results"])
         self.call("post", "/vectorstores/{id}/search/", HTTPStatus.BAD_REQUEST, {"query": "x", "searchType": "nope"})
         self.call("delete", "/vectorstores/{id}/documents/{document_id}/", HTTPStatus.ACCEPTED, document_id=document.pk)
 
     def test_snapshots_and_deployment(self):
-        self.mock_snapshots(self.service)
+        self.mock_snapshots(self.vectorstore_service)
         snapshot = self.call("post", "/vectorstores/{id}/snapshots/", HTTPStatus.CREATED)
         self.call("get", "/vectorstores/{id}/snapshots/", HTTPStatus.OK)
         self.call(

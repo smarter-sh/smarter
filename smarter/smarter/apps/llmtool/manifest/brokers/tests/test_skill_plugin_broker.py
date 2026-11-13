@@ -77,20 +77,28 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
 
     def test_immutability(self):
         """Test that the Pydantic manifest models are immutable."""
+        # each assignment below is to a read-only property or a frozen model's field, which mypy refuses.
+        # The test checks that it fails at runtime too.
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            self.broker.kind = "NewKind"  # type: ignore[misc]
+        manifest = self.broker.manifest
+        assert manifest is not None
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.skillData.skill = "---\nname: x\ndescription: y\n---\n"
+            manifest.spec.skillData.skill = "---\nname: x\ndescription: y\n---\n"  # type: ignore[misc]
 
     def test_sam_broker_initialization(self):
         """Test that the SAMSkillPlugin model can be initialized from the manifest data."""
+        manifest_metadata = self.loader.manifest_metadata
+        manifest_spec = self.loader.manifest_spec
+        assert manifest_metadata is not None
+        assert manifest_spec is not None
         SAMSkillPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMSkillPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**manifest_metadata),
+            spec=SAMSkillPluginSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
@@ -112,7 +120,9 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
 
     def test_manifest_model_initialization(self):
         """Test that a SAMSkillPlugin can be initialized from a dump of the manifest model."""
-        self.assertIsInstance(SAMSkillPlugin(**self.broker.manifest.model_dump()), SAMSkillPlugin)
+        manifest = self.broker.manifest
+        assert manifest is not None
+        self.assertIsInstance(SAMSkillPlugin(**manifest.model_dump()), SAMSkillPlugin)
 
     def test_formatted_class_name(self):
         """Test the formatted class name."""
@@ -122,7 +132,10 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
         """Test that the manifest property returns a SAMSkillPlugin, whose SKILL.md is verbatim."""
         manifest = self.broker.manifest
         self.assertIsInstance(manifest, SAMSkillPlugin)
-        self.assertEqual(manifest.spec.skillData.skill, self.loader.manifest_spec["skillData"]["skill"])
+        manifest_spec = self.loader.manifest_spec
+        assert manifest is not None
+        assert manifest_spec is not None
+        self.assertEqual(manifest.spec.skillData.skill, manifest_spec["skillData"]["skill"])
 
     def test_example_manifest(self):
         """Test the example_manifest() generates a valid manifest response."""
@@ -143,12 +156,21 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertTrue(self.validate_apply(response))
-        plugin_data = self.broker.plugin.plugin_data
+        manifest = self.broker.manifest
+        plugin = self.broker.plugin
+        assert manifest is not None
+        assert plugin is not None
+        plugin_data = plugin.plugin_data
         self.assertIsInstance(plugin_data, PluginDataSkill)
-        self.assertEqual(plugin_data.skill_document, self.broker.manifest.spec.skillData.skill)
-        self.assertEqual(set(plugin_data.resources), set(self.broker.manifest.spec.skillData.resources or {}))
-        self.assertEqual(self.broker.manifest.spec.selector.directive, self.broker.plugin.plugin_selector.directive)
-        self.assertEqual(self.broker.manifest.spec.prompt.model, self.broker.plugin.plugin_prompt.model)
+        plugin_selector = plugin.plugin_selector
+        plugin_prompt = plugin.plugin_prompt
+        assert plugin_data is not None
+        assert plugin_selector is not None
+        assert plugin_prompt is not None
+        self.assertEqual(plugin_data.skill_document, manifest.spec.skillData.skill)
+        self.assertEqual(set(plugin_data.resources), set(manifest.spec.skillData.resources or {}))
+        self.assertEqual(manifest.spec.selector.directive, plugin_selector.directive)
+        self.assertEqual(manifest.spec.prompt.model, plugin_prompt.model)
 
     def test_apply_invalidates_cached_remote_skill(self):
         """Test that apply() invalidates a remote skill's cached copy, before the plugin retrieves it."""
@@ -174,20 +196,26 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
     def test_apply_then_describe(self):
         """Test that describe() renders an applied plugin as the manifest author wrote it."""
         self.broker.apply(self.request, **self.kwargs)
-        broker = self.SAMBrokerClass(self.request, name=self.broker.manifest.metadata.name)
+        manifest = self.broker.manifest
+        manifest_spec = self.loader.manifest_spec
+        assert manifest is not None
+        assert manifest_spec is not None
+        broker = self.SAMBrokerClass(self.request, name=manifest.metadata.name)
         spec = broker.plugin_skill_spec_orm2pydantic()
         self.assertIsInstance(spec, SAMSkillPluginSpec)
-        self.assertEqual(spec.skillData.skill, self.loader.manifest_spec["skillData"]["skill"])
+        assert spec is not None
+        self.assertEqual(spec.skillData.skill, manifest_spec["skillData"]["skill"])
 
         response = self.broker.describe(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         data = json.loads(response.content)["data"]
-        self.assertEqual(data["spec"]["skillData"]["skill"], self.loader.manifest_spec["skillData"]["skill"])
+        self.assertEqual(data["spec"]["skillData"]["skill"], manifest_spec["skillData"]["skill"])
 
     def test_plugin(self):
         """Test that the plugin property returns a ready SkillPlugin."""
         plugin = self.broker.plugin
         self.assertIsInstance(plugin, SkillPlugin)
+        assert plugin is not None
         self.assertTrue(plugin.ready)
 
     def test_describe(self):
@@ -199,7 +227,9 @@ class TestSmarterSkillPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBase
         """Test that delete() removes an applied plugin."""
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
-        name = self.broker.manifest.metadata.name
+        manifest = self.broker.manifest
+        assert manifest is not None
+        name = manifest.metadata.name
         broker = self.SAMBrokerClass(self.request, self.loader)
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))

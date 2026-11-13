@@ -2,13 +2,17 @@
 """Test LLMClient tasks."""
 
 import time
+from typing import Optional
 
 from django.test import tag
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.infrastructure.providers import configure_provider
 from smarter.apps.infrastructure.providers.aws import AWSProvider
+from smarter.apps.infrastructure.providers.aws.certificates import ACMCertificateService
+from smarter.apps.infrastructure.providers.aws.dns import Route53DNSService
 from smarter.apps.infrastructure.services import (
     KubectlKubernetesService,
     configure_kubernetes,
@@ -38,6 +42,12 @@ class TestLLMClientTasks(TestAccountMixin):
     The infrastructure services refuse to reach real infrastructure from the unit tests, so this
     suite, which is tagged INFRASTRUCTURE and skipped by default, allows them explicitly.
     """
+
+    dns: Route53DNSService
+    certificates: ACMCertificateService
+    smarter_account: Optional[Account]
+    smarter_admin_user: Optional[User]
+    smarter_user_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):

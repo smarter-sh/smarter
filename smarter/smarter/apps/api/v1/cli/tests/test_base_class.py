@@ -242,19 +242,22 @@ class TestCliExceptionClassification(SmarterTestBase):
 
     def test_describe_exception(self):
         """Test that a client error says what is wrong, and that only a 500 asks for a bug report."""
-        e = pydantic_validation_error(defaultTemperature=-1)
+        e: BaseException = pydantic_validation_error(defaultTemperature=-1)
         description = describe_exception(e, http_status_for_exception(e))
+        assert description is not None
         self.assertIn("defaultTemperature", description)
         self.assertNotIn(BUG_REPORT, description)
 
         e = raised_from(SAMTestBrokerError("Failed to apply"), DjangoValidationError({"app_name": ["too long"]}))
         description = describe_exception(e, http_status_for_exception(e))
+        assert description is not None
         self.assertIn("Failed to apply", description)
         self.assertIn("app_name: too long", description)
         self.assertNotIn(BUG_REPORT, description)
 
         e = RuntimeError("unexpected")
         description = describe_exception(e, http_status_for_exception(e))
+        assert description is not None
         self.assertIn(BUG_REPORT, description)
         self.assertIn("unexpected", description)
 

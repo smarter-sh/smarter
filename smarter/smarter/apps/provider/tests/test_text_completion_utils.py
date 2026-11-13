@@ -5,6 +5,8 @@ from unittest import TestCase
 
 from smarter.apps.provider.services.text_completion import utils
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_object
 
 MESSAGES = [
     {"role": "system", "content": "You are helpful."},
@@ -18,10 +20,10 @@ class TestHttpResponseFactory(TestCase):
     """Test the standardized http responses."""
 
     def test_ok_and_error(self):
-        response = utils.http_response_factory(200, {"a": 1})
+        response = json_object(utils.http_response_factory(200, {"a": 1}))
         self.assertEqual(response["statusCode"], 200)
         self.assertEqual(json.loads(response["body"]), {"a": 1})
-        response = utils.http_response_factory(400, {"error": "bad"}, debug_mode=True)
+        response = json_object(utils.http_response_factory(400, {"error": "bad"}, debug_mode=True))
         self.assertEqual(json.loads(response["body"]), {"error": "bad"})
 
     def test_invalid_status(self):
@@ -33,7 +35,7 @@ class TestHttpResponseFactory(TestCase):
         try:
             raise ValueError("test error")
         except ValueError as e:
-            response = utils.exception_response_factory(e, request_meta_data={"x": 1})
+            response = json_object(utils.exception_response_factory(e, request_meta_data={"x": 1}))
         self.assertEqual(response["error"], "test error")
         self.assertIn("ValueError", response["description"])
 
@@ -102,13 +104,14 @@ class TestMessageHelpers(TestCase):
             ([{"role": "user", "content": "hi"}], 42),
         ):
             with self.subTest(messages=messages, default=default), self.assertRaises(SmarterValueError):
-                utils.ensure_system_role_present(messages, default)
+                # deliberately invalid messages and default, to test that they are refused.
+                utils.ensure_system_role_present(messages, default)  # type: ignore[arg-type]
 
 
 class TestCapMessageHistory(TestCase):
     """Test that the oldest turns of a long thread are left out of the request."""
 
-    THREAD = [
+    THREAD: list[SmarterDictType] = [
         {"role": "system", "content": "s" * 10},
         {"role": "assistant", "content": "w" * 10},
         {"role": "user", "content": "a" * 100},

@@ -13,11 +13,13 @@ from http import HTTPStatus
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.guardrail.api.v1.urls import GuardrailApiV1ReverseViews as Names
 from smarter.apps.guardrail.models import Guardrail, GuardrailEvent
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_list
 
 from .base_classes import GuardrailTestBase, get_test_data
 
@@ -31,6 +33,12 @@ def url(name: str, **kwargs) -> str:
 
 class TestGuardrailApi(GuardrailTestBase):
     """Test the Guardrail api views, and their permissions."""
+
+    guardrail: Guardrail
+    other_admin_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+    other_guardrail: Guardrail
 
     @classmethod
     def setUpClass(cls):
@@ -67,7 +75,7 @@ class TestGuardrailApi(GuardrailTestBase):
         """Test that the list includes the account's Guardrails, and not another account's."""
         self.client.force_login(self.non_admin_user)
         data = self.request("get", url(Names.list_view))
-        items = data["results"] if isinstance(data, dict) and "results" in data else data
+        items = json_list(data["results"] if isinstance(data, dict) and "results" in data else data)
         names = [item["name"] for item in items]
         self.assertIn(self.guardrail.name, names)
         self.assertNotIn(self.other_guardrail.name, names)

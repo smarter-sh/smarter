@@ -15,6 +15,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType
 
 from ..base import OrchestratorApiBaseViewSet
 
@@ -27,6 +28,14 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 # pylint: disable=too-many-instance-attributes
 class TestOrchestratorApiBaseViewSet(TestAccountMixin):
     """Test SAM Orchestrator Broker."""
+
+    manifest: SmarterDictType
+    loader: SAMLoader
+    request: HttpRequest
+    client: APIClient
+    kwargs: SmarterDictType
+    broker: SAMOrchestratorBroker
+    harness_llmclient: LLMClient
 
     # pylint: disable=W0212
     @classmethod

@@ -1,8 +1,11 @@
 # pylint: disable=attribute-defined-outside-init
 """Test model discovery: :mod:`smarter.apps.llmhost.services.discovery`."""
 
+from typing import Optional
+
 import requests
 
+from smarter.apps.llmhost.manifest.enum import SAMLLMHostQuantization
 from smarter.apps.llmhost.manifest.models.llmhost.model import SAMLLMHost
 from smarter.apps.llmhost.models import LLMHost
 from smarter.apps.llmhost.services.discovery import (
@@ -18,7 +21,7 @@ from smarter.apps.llmhost.services.discovery import (
 )
 from smarter.apps.llmhost.services.exceptions import LLMHostDiscoveryError
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (
@@ -69,7 +72,10 @@ class TestBuiltinCatalog(BuiltinFixturesMixin):
 
     def test_to_manifest_annotations(self):
         """Test that the manifest's annotations are the LLMHost's map of strings."""
-        llmhost = LLMHost(name="x", description="", version="1.0.0", annotations=[{"example.com/a": 1}], spec={})
+        # annotations is a property, which Django's Model() accepts as a keyword argument, but django-stubs does not.
+        llmhost = LLMHost(
+            name="x", description="", version="1.0.0", annotations=[{"example.com/a": 1}], spec={}  # type: ignore[misc]
+        )
         llmhost.__dict__["tags_list"] = []  # an unsaved LLMHost has no tags to fetch.
         self.assertEqual(BuiltinCatalog.to_manifest(llmhost)["metadata"]["annotations"], {"example.com/a": "1"})
 
@@ -98,7 +104,10 @@ class TestBuiltinCatalog(BuiltinFixturesMixin):
         self.assertTrue(llamas)
         self.assertTrue(
             all(
-                "llama" in (info.repository + str(info.tags) + info.manifest["metadata"]["name"]).lower()
+                "llama"
+                in (
+                    info.repository + str(info.tags) + required(info.manifest, "info.manifest")["metadata"]["name"]
+                ).lower()
                 for info in llamas
             )
         )
@@ -185,8 +194,13 @@ class TestSizing(SmarterTestBase):
     def setUp(self):
         self.computes = builtin_compute_models()
 
-    def recommend(self, *args, **kwargs):
-        return recommend_resources(*args, computes=self.computes, **kwargs)
+    def recommend(
+        self,
+        parameter_count: Optional[int],
+        quantization: str = SAMLLMHostQuantization.NONE.value,
+        cpu_ok: bool = False,
+    ) -> SmarterDictType:
+        return recommend_resources(parameter_count, quantization, cpu_ok, computes=self.computes)
 
     def test_estimate(self):
         self.assertIsNone(estimate_vram_gb(None))

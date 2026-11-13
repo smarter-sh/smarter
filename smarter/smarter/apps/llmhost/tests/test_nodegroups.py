@@ -19,6 +19,7 @@ from smarter.apps.llmhost.services.nodegroups import (
     InMemoryNodeGroupBackend,
     instance_id,
 )
+from smarter.lib.typing import required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -64,7 +65,7 @@ class TestEKSNodeGroupBackend(SmarterTestBase):
         self.assertFalse(backend.ready)
 
     def test_describe(self):
-        nodegroup = self.backend.describe(compute())
+        nodegroup = required(self.backend.describe(compute()), "nodegroup")
         self.assertEqual((nodegroup.status, nodegroup.desired, nodegroup.max_nodes), ("ACTIVE", 2, 5))
         self.assertEqual(nodegroup.issues, ["Ec2SubnetInvalid: no IPs"])
         self.eks.describe_nodegroup.side_effect = ResourceNotFoundException("gone")
@@ -153,9 +154,9 @@ class TestInMemoryNodeGroupBackend(SmarterTestBase):
         self.assertIsNone(backend.describe(compute()))
         self.assertEqual(backend.create(compute(), 1).status, "ACTIVE")
         backend.scale(compute(), 3)
-        self.assertEqual(backend.describe(compute()).desired, 3)
+        self.assertEqual(required(backend.describe(compute()), "nodegroup").desired, 3)
         backend.remove_node(compute(), "aws:///us-east-1a/i-1")
-        self.assertEqual(backend.describe(compute()).desired, 2)
+        self.assertEqual(required(backend.describe(compute()), "nodegroup").desired, 2)
         backend.delete(compute())
         self.assertIsNone(backend.describe(compute()))
         backend.fail = "down"

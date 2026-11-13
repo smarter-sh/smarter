@@ -1349,7 +1349,6 @@ class PluginBase(ABC, AccountMixin):
             plugin_id: int = plugin.id if isinstance(plugin, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
-            plugin_meta = self._plugin_meta
 
         if self.plugin_meta:
             return self.update()
@@ -1376,9 +1375,9 @@ class PluginBase(ABC, AccountMixin):
                 plugin_data[PLUGIN_KEY] = plugin_meta
 
             if selector is not None:
-                plugin_selector = PluginSelector.objects.create(**selector)
+                PluginSelector.objects.create(**selector)
             if prompt is not None:
-                plugin_prompt = PluginPrompt.objects.create(**prompt)
+                PluginPrompt.objects.create(**prompt)
             if plugin_data is not None:
                 self.plugin_data_class.objects.create(**plugin_data)
 
@@ -1398,8 +1397,10 @@ class PluginBase(ABC, AccountMixin):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
-            plugin_id: Optional[int] = self.plugin_meta.id if isinstance(self.plugin_meta, PluginMeta) else None  # type: ignore[reportOptionalMemberAccess]
-            self.id = plugin_id  # type: ignore[reportAttributeAccessIssue,reportOptionalMemberAccess]
+            plugin_meta = self.plugin_meta
+            # the id setter loads the PluginMeta of an id, so there is nothing to set without one.
+            if isinstance(plugin_meta, PluginMeta):
+                self.id = plugin_meta.id
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
@@ -1525,7 +1526,6 @@ class PluginBase(ABC, AccountMixin):
         if not self.ready:
             return False
 
-        plugin_id = self.id
         plugin_name = self.name
         with transaction.atomic():
             plugin_deleting.send(sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta)
@@ -1583,7 +1583,7 @@ class PluginBase(ABC, AccountMixin):
                     if copy_number == "":
                         new_name = re.sub(r"\(copy\)$", "(copy2)", plugin_name)
                     else:
-                        new_name = re.sub(r"\(copy\d*\)$", f"(copy{int(copy_number)+1})", plugin_name)
+                        new_name = re.sub(r"\(copy\d*\)$", f"(copy{int(copy_number) + 1})", plugin_name)
                 else:
                     new_name = f"{plugin_name} (copy)"
             return new_name

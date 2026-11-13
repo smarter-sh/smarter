@@ -19,6 +19,11 @@ PATH = "/api/v1/providers/"
 class TestProviderApiViews(TestAccountMixin):
     """Test the Provider api views, as an api key's client calls them."""
 
+    provider: Provider
+    inactive_provider: Provider
+    model: ProviderModel
+    inactive_model: ProviderModel
+    token_record: SmarterAuthToken
     token_key: str
 
     @classmethod

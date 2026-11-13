@@ -143,6 +143,7 @@ class TestPluginListApiViews(PluginAppTestBase):
 
         clone = PluginMeta.objects.get(name=clone_name, user_profile=self.user_profile)
         plugin = PluginController(user_profile=self.user_profile, plugin_meta=clone).plugin
+        assert plugin is not None
         self.assertTrue(plugin.ready)
         self.assertEqual(plugin.plugin_data.static_data, self.static_plugin.plugin_data.static_data)  # type: ignore
         self.assertEqual(plugin.plugin_selector.search_terms, self.static_plugin.plugin_selector.search_terms)  # type: ignore
@@ -160,6 +161,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         clone = PluginMeta.objects.get(name=clone_name)
         self.assertEqual(clone.user_profile, self.non_admin_user_profile)
         plugin = PluginController(user_profile=self.non_admin_user_profile, plugin_meta=clone).plugin
+        assert plugin is not None
         self.assertTrue(plugin.ready)
 
     def test_clone_not_found(self):
@@ -182,6 +184,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         )
         data = self.post(url)
         self.assertEqual(data["name"], "test_plugin_app_api_renamed")
+        assert plugin.id is not None
         self.assertEqual(PluginMeta.objects.get(id=plugin.id).name, "test_plugin_app_api_renamed")
 
     def test_rename_not_owner(self):
@@ -192,6 +195,7 @@ class TestPluginListApiViews(PluginAppTestBase):
             kwargs={"llmclient_id": self.static_plugin.id, "new_name": "stolen"},
         )
         self.post(url, status=HTTPStatus.NOT_FOUND)
+        assert self.static_plugin.id is not None
         self.assertEqual(PluginMeta.objects.get(id=self.static_plugin.id).name, STATIC_PLUGIN_NAME)
 
     # -------------------------------------------------------------------------
@@ -202,6 +206,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         plugin = self.new_static_plugin("test_plugin_app_api_delete")
         url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.delete}", kwargs={"llmclient_id": plugin.id})
         self.post(url)
+        assert plugin.id is not None
         self.assertFalse(PluginMeta.objects.filter(id=plugin.id).exists())
         self.assertNotIn("test_plugin_app_api_delete", self.listed("owned"))
 
@@ -210,6 +215,7 @@ class TestPluginListApiViews(PluginAppTestBase):
         self.client.force_login(self.non_admin_user)
         url = reverse(f"{NAMESPACE}:{PluginApiWebReverseNames.delete}", kwargs={"llmclient_id": self.static_plugin.id})
         self.post(url, status=HTTPStatus.NOT_FOUND)
+        assert self.static_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id).exists())
 
     def api_url(self, name: str, **kwargs) -> str:
@@ -253,6 +259,7 @@ class TestPluginListApiViews(PluginAppTestBase):
             with self.subTest(api=name), patch.object(PluginMeta, method, side_effect=RuntimeError("test error")):
                 data = self.post(self.api_url(name, **kwargs), status=HTTPStatus.BAD_REQUEST)
                 self.assertIn("test error", data["error"])
+        assert self.static_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id, name=self.static_plugin.name).exists())
 
 

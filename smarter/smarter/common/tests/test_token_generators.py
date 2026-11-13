@@ -13,7 +13,7 @@ class TestExpiringTokens(TestAccountMixin):
     """Test url token generators."""
 
     def test_token(self):
-        """test that we can encode and decode an expiring link."""
+        """Test that we can encode and decode an expiring link."""
         expiring_token = ExpiringTokenGenerator()
         rf = RequestFactory()
         request = rf.get("/")
@@ -25,8 +25,11 @@ class TestExpiringTokens(TestAccountMixin):
         expiring_token.validate(user=self.admin_user, token=token)
 
         # create an encoded link for a url pattern that expects a uidb64 and token
+        # encode_link() accepts any HttpRequest, though its SmarterRequest alias names only ASGIRequest and Request
         encoded_link = expiring_token.encode_link(
-            request=request, user=self.admin_user, reverse_link=AccountReverseNames.PASSWORD_RESET_LINK
+            request=request,
+            user=self.admin_user,
+            reverse_link=AccountReverseNames.PASSWORD_RESET_LINK,
         )
         decoded_user, _ = expiring_token.parse_link(url=encoded_link)
         self.assertEqual(decoded_user, self.admin_user)

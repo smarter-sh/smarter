@@ -68,7 +68,7 @@ class Command(SmarterCommand):
         self.stdout.write(f"manage.py retrieve_plugin: Retrieving plugin {name} for account {account}")
         try:
             plugin_meta = PluginMeta.objects.get(name=name, user_profile__account=account)
-        except MultipleObjectsReturned as e:
+        except MultipleObjectsReturned:
             try:
                 plugin_meta = PluginMeta.objects.get(name=name, user_profile=user_profile)
             except PluginMeta.DoesNotExist as e2:

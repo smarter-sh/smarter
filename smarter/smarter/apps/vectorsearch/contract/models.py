@@ -18,6 +18,7 @@ from smarter.apps.account.contract.models import (
     MetaDataApiAnnotations,
 )
 from smarter.apps.account.serializers import user_can_delete
+from smarter.apps.vectorstore.contract.models import VectorstoreApiSearchResult
 
 if TYPE_CHECKING:
     from smarter.apps.vectorsearch.models import Vectorsearch
@@ -104,7 +105,36 @@ class VectorsearchApiVectorsearch(AccountApiModel):
         )
 
 
-VECTORSEARCH_API_MODELS = (VectorsearchApiVectorsearch,)
+class VectorsearchApiRun(AccountApiModel):
+    """
+    The request body of a run of a Vectorsearch: the query, and optionally more metadata to match.
+
+    How to search (the search type, ``k`` and the rest) is the Vectorsearch's own configuration.
+    """
+
+    query: str = Field(..., description="The text to find similar chunks of.")
+    filter: Optional[dict[str, JsonValue]] = Field(
+        None,
+        description="Metadata that every result must match, besides the Vectorsearch's own metadataFilter, which "
+        "wins where both name the same key.",
+    )
+
+
+class VectorsearchApiResults(AccountApiModel):
+    """The results of a run of a Vectorsearch, most similar first."""
+
+    vectorsearch: str = Field(..., description="The Vectorsearch's name.")
+    vectorstore: str = Field(..., description="The name of the vectorstore that it searched.")
+    results: list[VectorstoreApiSearchResult]
+
+
+VECTORSEARCH_API_MODELS = (VectorsearchApiVectorsearch, VectorsearchApiRun, VectorsearchApiResults)
 """The models whose JSON Schemas the Smarter api's OpenAPI document includes."""
 
-__all__ = ["VECTORSEARCH_API_MODELS", "VectorsearchApiSearchType", "VectorsearchApiVectorsearch"]
+__all__ = [
+    "VECTORSEARCH_API_MODELS",
+    "VectorsearchApiResults",
+    "VectorsearchApiRun",
+    "VectorsearchApiSearchType",
+    "VectorsearchApiVectorsearch",
+]

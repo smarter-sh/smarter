@@ -25,6 +25,7 @@ from smarter.apps.doodle.models import (
 )
 from smarter.apps.doodle.planner import plan_doodle
 from smarter.apps.doodle.regions import DoodleRegion
+from smarter.lib.typing import required
 
 from .mixins import QUIET_DAY, DoodleTestMixin
 
@@ -41,6 +42,7 @@ class TestDoodleAdmin(DoodleTestMixin):
 
     def test_choosing_another_theme(self):
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.US)
+        assert doodle is not None
         doodle.theme = self.theme("pi-day")
         form = MagicMock(changed_data=["theme"])
         self.doodle_admin.save_model(self.request, doodle, form, change=True)
@@ -52,6 +54,7 @@ class TestDoodleAdmin(DoodleTestMixin):
 
     def test_changing_only_the_caption(self):
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.CA)
+        assert doodle is not None
         doodle.caption = "Hello!"
         form = MagicMock(changed_data=["caption"])
         self.doodle_admin.save_model(self.request, doodle, form, change=True)
@@ -61,12 +64,14 @@ class TestDoodleAdmin(DoodleTestMixin):
 
     def test_preview(self):
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.MX)
+        assert doodle is not None
         html = DoodleAdmin.preview(doodle)
         self.assertIn(doodle.artwork.sha256, html)
         self.assertIn("<img", html)
 
     def test_approve_and_reject(self):
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.AFRICA)
+        assert doodle is not None
         Doodle.objects.filter(pk=doodle.pk).update(status=DoodleStatus.PROPOSED, source=DoodleSource.LLM)
         queryset = Doodle.objects.filter(pk=doodle.pk)
         with patch.object(self.doodle_admin, "message_user") as message_user:
@@ -95,6 +100,7 @@ class TestDoodleAdmin(DoodleTestMixin):
 
     def test_str(self):
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.GLOBAL)
+        assert doodle is not None
         self.assertEqual(str(doodle), f"{QUIET_DAY} global default")
         self.assertEqual(str(doodle.theme), "default")
         self.assertEqual(str(doodle.artwork), doodle.artwork.sha256[:12])
@@ -102,6 +108,9 @@ class TestDoodleAdmin(DoodleTestMixin):
 
 class TestDoodleWeekPreview(DoodleTestMixin, TestAccountMixin):
     """The week's preview shows every region's doodle of every planned day, and approves or rejects them."""
+
+    doodle_admin: DoodleAdmin
+    url: str
 
     @classmethod
     def setUpClass(cls):
@@ -117,7 +126,7 @@ class TestDoodleWeekPreview(DoodleTestMixin, TestAccountMixin):
         # the preview starts yesterday in UTC, so its days are the dev platform's too: a far day is ours.
         self.day = timezone.now().date() + datetime.timedelta(days=4000)
         self.addCleanup(self.delete_doodles, self.day)
-        self.doodle = plan_doodle(self.day, DoodleRegion.OCEANIA)
+        self.doodle = required(plan_doodle(self.day, DoodleRegion.OCEANIA), "doodle")
         Doodle.objects.filter(pk=self.doodle.pk).update(status=DoodleStatus.PROPOSED, source=DoodleSource.LLM)
 
     def test_the_url(self):

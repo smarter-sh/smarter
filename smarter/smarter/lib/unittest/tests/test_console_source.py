@@ -3,6 +3,7 @@
 import tempfile
 import unittest
 import urllib.error
+from email.message import Message
 from pathlib import Path
 from unittest.mock import patch
 
@@ -68,7 +69,7 @@ class TestConsoleSource(SmarterTestBase):
     def test_a_missing_file_fails(self):
         """The release exists, so a file it doesn't have means the test or the console changed."""
         self.version_file.write_text("1.0.3\n", encoding="utf-8")
-        missing = urllib.error.HTTPError("https://raw.githubusercontent.com/x", 404, "Not Found", {}, None)
+        missing = urllib.error.HTTPError("https://raw.githubusercontent.com/x", 404, "Not Found", Message(), None)
         with patch.object(source.urllib.request, "urlopen", side_effect=missing):
             with self.assertRaisesRegex(AssertionError, "answered 404"):
                 source.console_source(ONBOARDING_CONST)

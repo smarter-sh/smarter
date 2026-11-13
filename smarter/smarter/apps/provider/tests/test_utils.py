@@ -19,8 +19,10 @@ class TestProviderUtils(ProviderTestBase):
         name = f"test_provider_utils_secret_{self.hash_suffix}"
         self.addCleanup(Secret.objects.filter(name=name).delete)
         secret = utils.initialize_secret("first", name, "a test secret", self.user_profile)
+        assert secret is not None
         self.assertEqual(secret.get_secret(), "first")
         secret = utils.initialize_secret("second", name, "a test secret", self.user_profile)
+        assert secret is not None
         self.assertEqual(Secret.objects.get(pk=secret.pk).get_secret(), "second")
         with patch.object(Secret.objects, "update_or_create", side_effect=RuntimeError("database down")):
             self.assertIsNone(utils.initialize_secret("third", name, "a test secret", self.user_profile))

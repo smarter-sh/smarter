@@ -1,6 +1,7 @@
 """Tests for smarter.apps.mcpserver.protocol.auth: the credentials of a request, and the platform's staff."""
 
 from http import HTTPStatus
+from typing import Optional
 
 from django.test import RequestFactory
 
@@ -11,6 +12,7 @@ from smarter.apps.mcpserver.protocol.auth import (
     staff_user,
 )
 from smarter.apps.mcpserver.services.acting_user import sign_acting_user
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import TOKEN
@@ -22,7 +24,7 @@ class TestAuth(SmarterTestBase):
     def test_bearer_token(self):
         """The token of an Authorization: Bearer header is read, and nothing else."""
         factory = RequestFactory()
-        cases = [
+        cases: list[tuple[SmarterDictType, Optional[str]]] = [
             ({}, None),
             ({"HTTP_AUTHORIZATION": f"Bearer {TOKEN}"}, TOKEN),
             ({"HTTP_AUTHORIZATION": f"  bearer   {TOKEN}  "}, TOKEN),
@@ -40,7 +42,7 @@ class TestAuth(SmarterTestBase):
     def test_api_key(self):
         """The key of an Authorization: Token header is read, and nothing else."""
         factory = RequestFactory()
-        cases = [
+        cases: list[tuple[SmarterDictType, Optional[str]]] = [
             ({}, None),
             ({"HTTP_AUTHORIZATION": "Token abc123"}, "abc123"),
             ({"HTTP_AUTHORIZATION": "  token   abc123  "}, "abc123"),

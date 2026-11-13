@@ -44,7 +44,8 @@ class TestLLMClientSpecConfig(SmarterTestBase):
 
     def test_prompt_is_required(self):
         with self.assertRaises(ValidationError):
-            SAMLLMClientSpecConfig()
+            # the test checks that a missing prompt is refused.
+            SAMLLMClientSpecConfig()  # type: ignore[call-arg]
 
     def test_styles_are_optional(self):
         config = SAMLLMClientSpecConfig(prompt={"appName": "Example"})
@@ -56,13 +57,16 @@ class TestLLMClientSpecConfig(SmarterTestBase):
             prompt={"appName": "Example"},
             styles={"appLogoUrl": "https://cdn.example.com/logo.png", "messageList": {"backgroundColor": "#fff"}},
         )
+        assert config.styles is not None
         self.assertEqual(config.styles.appLogoUrl, "https://cdn.example.com/logo.png")
+        assert config.styles.messageList is not None
         self.assertEqual(config.styles.messageList.backgroundColor, "#fff")
 
     def test_settings_outside_of_prompt_are_ignored(self):
         """The model ignores keys that it doesn't define. Apply rejects them, see the broker's tests."""
         with self.assertRaises(ValidationError):
-            SAMLLMClientSpecConfig(appName="Example")
+            # the test checks that a setting outside of prompt is refused.
+            SAMLLMClientSpecConfig(appName="Example")  # type: ignore[call-arg]
 
 
 class TestLLMClientSpecConfigStaffOnly(SmarterTestBase):

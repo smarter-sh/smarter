@@ -44,6 +44,10 @@ COMPUTE_NAME = "test_broker_compute"
 class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
     """Test the Smarter SAMLLMHostComputeBroker, with in-memory node groups."""
 
+    cluster: InMemoryClusterBackend
+    nodegroups: InMemoryNodeGroupBackend
+    builtin_computes_created: list[LLMHostCompute]
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

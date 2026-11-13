@@ -8,7 +8,10 @@ string, unreadable request bodies, and properties whose inputs (parsed_url,
 url, url_path_parts) are missing or malformed.
 """
 
+import inspect
+from collections.abc import Callable
 from functools import cached_property
+from typing import Optional
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlparse, urlsplit
 
@@ -21,9 +24,17 @@ from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin, cached_property_names
+from smarter.lib.typing import required
 
 SESSION_KEY = "9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126"
 MODULE = "smarter.lib.django.request"
+
+
+def uncached(name: str) -> Callable[[SmarterRequestMixin], object]:
+    """Return the function of a cached property of SmarterRequestMixin, to evaluate it whatever the instance cached."""
+    prop = inspect.getattr_static(SmarterRequestMixin, name)
+    assert isinstance(prop, cached_property)
+    return prop.func
 
 
 class TestSmarterRequestBranches(TestAccountMixin):
@@ -65,9 +76,11 @@ class TestSmarterRequestBranches(TestAccountMixin):
             new_callable=PropertyMock,
             return_value=self.account.account_number,
         ):
-            srm = self.srm(self.named_url(self.account.account_number), user=AnonymousUser())
+            srm = self.srm(
+                self.named_url(required(self.account.account_number, "account_number")), user=AnonymousUser()
+            )
             srm.account = None
-            self.assertTrue(SmarterRequestMixin.is_llmclient_named_url.func(srm))
+            self.assertTrue(uncached("is_llmclient_named_url")(srm))
             self.assertEqual(srm.account, self.account)
             srm.account = None
             srm.eval_llmclient_url()
@@ -76,7 +89,7 @@ class TestSmarterRequestBranches(TestAccountMixin):
 
     def test_named_url_account_number_from_the_url(self):
         """Without patching, a named url's account number is read from the url, and loads its account."""
-        srm = self.srm(self.named_url(self.account.account_number), user=AnonymousUser())
+        srm = self.srm(self.named_url(required(self.account.account_number, "account_number")), user=AnonymousUser())
         self.assertEqual(srm.url_account_number, self.account.account_number)
         self.assertEqual(srm.account, self.account)
 
@@ -112,12 +125,12 @@ class TestSmarterRequestBranches(TestAccountMixin):
     def test_url_from_a_string(self):
         """A string _url is urlified, and its query string and fragment are dropped."""
         srm = self.srm("http://localhost:9357/dashboard/")
-        srm._url = "http://localhost:9357/dashboard/?a=1#top"
+        srm._url = "http://localhost:9357/dashboard/?a=1#top"  # type: ignore[assignment]  # a string, which url urlifies
         self.assertEqual(srm.url, "http://localhost:9357/dashboard/")
 
     def test_url_from_an_invalid_string(self):
         srm = self.srm("http://localhost:9357/dashboard/")
-        srm._url = "not a url"
+        srm._url = "not a url"  # type: ignore[assignment]  # a string, which url urlifies
         with patch(f"{MODULE}.SmarterValidator.urlify", side_effect=SmarterValueError("invalid")):
             self.assertIsNone(srm.url)
 
@@ -128,13 +141,13 @@ class TestSmarterRequestBranches(TestAccountMixin):
 
     def test_params_without_meta(self):
         srm = self.srm("http://localhost:9357/dashboard/")
-        srm._smarter_request = object()
+        srm._smarter_request = object()  # type: ignore[assignment]  # a request without META, deliberately
         self.assertEqual(srm.params.dict(), {})
 
     def test_set_is_internal_api_request_rejects_non_requests(self):
         srm = self.srm("http://localhost:9357/dashboard/")
         with self.assertRaises(SmarterValueError):
-            srm.set_is_internal_api_request("not a request")
+            srm.set_is_internal_api_request("not a request")  # type: ignore[arg-type]  # a wrong type, to test that it is refused
         request = srm.set_is_internal_api_request(HttpRequest())
         self.assertTrue(srm.is_internal_api_request(request))
 
@@ -193,14 +206,14 @@ class TestSmarterRequestBranches(TestAccountMixin):
         """Every classification is False, and every url part is None, without a parsed url."""
         srm = self.srm("http://localhost:9357/dashboard/")
         with patch.object(SmarterRequestMixin, "parsed_url", new_callable=PropertyMock, return_value=None):
-            self.assertFalse(SmarterRequestMixin.qualified_request.func(srm))
+            self.assertFalse(uncached("qualified_request")(srm))
             self.assertFalse(srm.is_environment_root_domain)
             self.assertIsNone(srm.domain)
             self.assertIsNone(srm.path)
         with patch.object(SmarterRequestMixin, "qualified_request", new_callable=PropertyMock, return_value=True):
             with patch.object(SmarterRequestMixin, "parsed_url", new_callable=PropertyMock, return_value=None):
-                self.assertFalse(SmarterRequestMixin.is_llmclient_smarter_api_url.func(srm))
-                self.assertFalse(SmarterRequestMixin.is_llmclient_sandbox_url.func(srm))
+                self.assertFalse(uncached("is_llmclient_smarter_api_url")(srm))
+                self.assertFalse(uncached("is_llmclient_sandbox_url")(srm))
 
     def test_missing_url(self):
         srm = self.srm("http://localhost:9357/dashboard/")
@@ -210,7 +223,7 @@ class TestSmarterRequestBranches(TestAccountMixin):
             self.assertIsNone(srm.root_domain)
             self.assertIsNone(srm.subdomain)
             with patch.object(SmarterRequestMixin, "qualified_request", new_callable=PropertyMock, return_value=True):
-                self.assertFalse(SmarterRequestMixin.is_llmclient_named_url.func(srm))
+                self.assertFalse(uncached("is_llmclient_named_url")(srm))
 
     def test_unextractable_root_domain(self):
         srm = self.srm("http://localhost:9357/dashboard/")
@@ -223,7 +236,7 @@ class TestSmarterRequestBranches(TestAccountMixin):
         with patch.object(
             SmarterRequestMixin, "amnesty_urls", new_callable=PropertyMock, return_value=["/dashboard/"], create=True
         ):
-            self.assertFalse(SmarterRequestMixin.qualified_request.func(srm))
+            self.assertFalse(uncached("qualified_request")(srm))
 
     def test_cached_property_names(self):
         """A subclass's cached properties are found along with the mixin's, and each class is inspected once."""
@@ -262,14 +275,15 @@ class TestSmarterRequestBranches(TestAccountMixin):
         """Is_config, is_dashboard and is_workbench are False for missing or empty path parts."""
         srm = self.srm("http://localhost:9357/dashboard/")
         with patch.object(SmarterRequestMixin, "is_llmclient", new_callable=PropertyMock, return_value=True):
-            for parts in (None, []):
+            missing_parts: tuple[Optional[list[str]], ...] = (None, [])
+            for parts in missing_parts:
                 with self.subTest(parts=parts):
                     with patch.object(
                         SmarterRequestMixin, "url_path_parts", new_callable=PropertyMock, return_value=parts
                     ):
-                        self.assertFalse(SmarterRequestMixin.is_config.func(srm))
-                        self.assertFalse(SmarterRequestMixin.is_dashboard.func(srm))
-                        self.assertFalse(SmarterRequestMixin.is_workbench.func(srm))
+                        self.assertFalse(uncached("is_config")(srm))
+                        self.assertFalse(uncached("is_dashboard")(srm))
+                        self.assertFalse(uncached("is_workbench")(srm))
 
     def test_dashboard_and_workbench_outside_their_paths(self):
         """A url whose last part is 'dashboard' or 'workbench' must also contain that path."""
@@ -307,7 +321,7 @@ class TestSmarterRequestBranches(TestAccountMixin):
                     patch(f"{MODULE}.TimestampedModel.find_hash", return_value="abc"),
                 ):
                     expected = parts[-1] == "config"
-                    self.assertEqual(SmarterRequestMixin.is_llmclient_sandbox_url.func(srm), expected)
+                    self.assertEqual(uncached("is_llmclient_sandbox_url")(srm), expected)
 
     def test_hyphenated_llmclient_names(self):
         """A hyphenated llmclient name in a named or cli url is truncated at the first hyphen."""

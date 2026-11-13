@@ -120,11 +120,13 @@ Code Analysis
 
 - `ESLint <https://eslint.org/>`__: an open source project that helps
   you find and fix problems with your JavaScript and JSX code.
-- `Flake8 <https://flake8.pycqa.org/en/latest/>`__: provides Python
-  syntax checking, naming style enforcement, code style enforcement, and
-  `cyclomatic
-  complexity <https://en.wikipedia.org/wiki/Cyclomatic_complexity>`__
-  analysis.
+- `Flake8 <https://flake8.pycqa.org/en/latest/>`__: runs pyflakes (unused
+  and undefined names, unused variables) and pycodestyle, set up to agree
+  with black, and measures each function's `cyclomatic
+  complexity <https://en.wikipedia.org/wiki/Cyclomatic_complexity>`__.
+  Complexity above 10 fails a commit only when the commit adds it: the
+  ``complexity-new-violations`` hook compares each function with the
+  previous commit, so the existing backlog doesn't block unrelated work.
 - `pylint <https://pypi.org/project/pylint/>`__: a static code analyser
   for Python. It analyses your code without actually running it. It
   checks for errors, enforces a coding standard, looks for code smells,

@@ -9,6 +9,7 @@ from smarter.lib.annotation.const import (
     ANNOTATIONS_TOTAL_MAX_BYTES,
 )
 from smarter.lib.annotation.validation import (
+    AnnotationsInput,
     SmarterAnnotationError,
     annotations_size,
     coerce_annotation_value,
@@ -101,19 +102,21 @@ class TestAnnotationValidation(SmarterTestBase):
     def test_normalize_shapes(self):
         """Test that a map, the legacy list of one-key maps, and their JSON are the same annotations."""
         expected = {"acme.com/id": "A-1", "acme.com/active": "true"}
-        for value in (
+        values: tuple[AnnotationsInput, ...] = (
             {"acme.com/id": "A-1", "acme.com/active": True},
             [{"acme.com/id": "A-1"}, {"acme.com/active": True}],
             [{"acme.com/id": "A-1", "acme.com/active": True}],
             '{"acme.com/id": "A-1", "acme.com/active": true}',
             '[{"acme.com/id": "A-1"}, {"acme.com/active": true}]',
-        ):
+        )
+        for value in values:
             with self.subTest(value=value):
                 self.assertEqual(normalize_annotations(value), expected)
 
     def test_normalize_empty(self):
         """Test that None, an empty string, list and map are no annotations."""
-        for value in (None, "", [], {}):
+        empty_values: tuple[AnnotationsInput, ...] = (None, "", [], {})
+        for value in empty_values:
             with self.subTest(value=value):
                 self.assertEqual(normalize_annotations(value), {})
 
@@ -133,7 +136,9 @@ class TestAnnotationValidation(SmarterTestBase):
     def test_normalize_lenient(self):
         """Test that legacy rows keep what they can: valid keys, the last duplicate, structures as JSON."""
         value = [{"acme.com/id": "1"}, {"acme.com/id": "2"}, {"Bad Key": "x"}, "junk", {"acme.com/list": [1]}]
-        self.assertEqual(normalize_annotations(value, lenient=True), {"acme.com/id": "2", "acme.com/list": "[1]"})
+        # deliberately not only maps: the lenient mode drops the junk
+        normalized = normalize_annotations(value, lenient=True)  # type: ignore[arg-type]
+        self.assertEqual(normalized, {"acme.com/id": "2", "acme.com/list": "[1]"})
 
     def test_size_limit(self):
         """Test that all annotations together are limited to 256 KiB, as in Kubernetes."""

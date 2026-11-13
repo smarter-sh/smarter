@@ -14,6 +14,7 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.unittest.narrowing import json_object
 
 MODULE = "smarter.apps.llmtool.manifest.brokers.plugin_base"
 
@@ -200,7 +201,9 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
                 with patch(f"{MODULE}.PluginController") as controller:
                     controller.return_value.obj = obj
                     self.assertIs(plugin(broker), obj)
-                self.assertEqual(controller.call_args.kwargs["manifest"], broker.loader.json_data)
+                loader = broker.loader
+                assert loader is not None
+                self.assertEqual(controller.call_args.kwargs["manifest"], loader.json_data)
                 # the loader's raw dict must not leak into _manifest, which holds a Pydantic model
                 self.assertIsNone(broker._manifest)
 
@@ -261,7 +264,7 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
             with patch.object(SAMStaticPluginBroker, "to_camel_case", return_value={"parameters": parameters}):
                 plugin_data = SAMPluginBaseBroker.plugin_data_orm2pydantic(broker)
         self.assertEqual(
-            plugin_data["parameters"],
+            json_object(plugin_data)["parameters"],
             [
                 {"name": "unit", "type": "string", "required": False},
                 {"name": "username", "type": "string", "required": True},
@@ -315,6 +318,8 @@ class TestPluginBaseBroker(TestSAMBrokerBaseClass):
         plugin_meta = self.broker.plugin_meta
         self.assertEqual(self.broker.dependency_tree_instance, plugin_meta)
         tree = self.broker.dependency_tree()
+        assert plugin_meta is not None
+        assert tree is not None
         self.assertEqual((tree.kind, tree.name), (self.broker.kind, plugin_meta.name))
         self.assertEqual(tree.recordLocator, plugin_meta.record_locator)
         self.assertEqual(tree.url, plugin_meta.manifest_url)

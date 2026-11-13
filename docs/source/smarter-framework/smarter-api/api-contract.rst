@@ -63,22 +63,31 @@ tested against the platform's real responses:
    * - The accounts' REST reads
      - ``GET /api/v1/accounts/``, an account, and the users, user profiles and account contacts, as
        lists and one by one.
+   * - The user's token usage and data exports
+     - ``GET /api/v1/accounts/usage/``, the tokens and cost of the user's LLM requests over a window
+       of time, and ``/api/v1/accounts/data-exports/``: the overview, ``POST`` to start an export,
+       and an export's progress by its id.
+   * - The extensions
+     - ``GET /api/v1/extensions/``, the registry, and an extension by its slug, and the actions of
+       the web console's Extensions pages: check for updates, install from the registry, upload an
+       archive, and enable, disable, update, roll back, configure, set the availability of, and
+       uninstall an extension.
    * - The prompt history
      - ``GET /api/v1/prompts/history/prompt/``, the chat sessions, their ``tool-calls/`` and their
        ``plugin-usage/``, as lists and one by one.
    * - The Smarter Journal
      - ``GET /api/v1/journal/``, one page of the journal's entries, and an entry by its key.
-   * - The Orchestrators' and Vectorsearches' REST reads
+   * - The Orchestrators' and Vectorsearches' REST api
      - ``GET /api/v1/orchestrators/`` and ``GET /api/v1/vectorsearches/``, and one by its id or hashed
-       id.
+       id, and ``POST /api/v1/vectorsearches/{id}/vectorsearch/``, which runs a Vectorsearch.
 
 The few routes that the document leaves out are listed in
-:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`, each with the reason: web console
+:data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_ROUTES`, each with the reason: web console
 actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
 that aren't implemented yet. The families that it leaves out, the views that the platform's unit
 tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/mcpserver>`,
 whose protocol the Model Context Protocol specification defines, are listed in
-:data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
+:data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_URLCONFS`.
 
 Every Smarter platform serves its document, at ``/api/v1/openapi.json``
 (:mod:`smarter.apps.api.v1.contract.views`; ``/docs/openapi.json``, its earlier address, redirects
@@ -118,7 +127,17 @@ The contract is code, in :mod:`smarter.apps.api.v1.contract`:
    * - :mod:`~smarter.apps.api.v1.contract.openapi`
      - Assembles the OpenAPI document from the SAM models, the
        :mod:`journal contract <smarter.lib.journal.contract.models>`, the
-       :doc:`chat contract <../smarter-chat/api-contract>` and the models above.
+       :doc:`chat contract <../smarter-chat/api-contract>` and the models above. A package:
+       :mod:`~smarter.apps.api.v1.contract.openapi.builders` builds operations and parameters,
+       :mod:`~smarter.apps.api.v1.contract.openapi.schemas` the components,
+       :mod:`~smarter.apps.api.v1.contract.openapi.cli` and
+       :mod:`~smarter.apps.api.v1.contract.openapi.chat` the cli and chat apis,
+       :mod:`~smarter.apps.api.v1.contract.openapi.families` one module per family of REST routes,
+       :mod:`~smarter.apps.api.v1.contract.openapi.routes` the routes it covers and leaves out, and
+       :mod:`~smarter.apps.api.v1.contract.openapi.document` the document. Each family is an
+       :class:`~smarter.apps.api.v1.contract.openapi.builders.ApiFamily`, named after its Django
+       app, from which its tag, its paths, its operation ids and the words that its descriptions
+       use for its resource are derived.
    * - ``openapi.json``
      - The committed OpenAPI document.
 
@@ -136,10 +155,10 @@ The tests make the contract hard to break by accident. They fail when:
   prompt/config, prompt, and an error), and of the chat api (a configuration, a prompt as JSON, every
   event of a streamed prompt, and an error). The prompt tests make real, billable LLM requests,
 - a route of a covered family, a urlconf in
-  :data:`~smarter.apps.api.v1.contract.openapi.DOCUMENTED_URLCONFS`, is neither in the document
-  nor listed, with a reason, in :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_ROUTES`,
+  :data:`~smarter.apps.api.v1.contract.openapi.routes.DOCUMENTED_URLCONFS`, is neither in the document
+  nor listed, with a reason, in :data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_ROUTES`,
 - a family of routes that ``/api/v1`` mounts is neither covered nor listed, with a reason, in
-  :data:`~smarter.apps.api.v1.contract.openapi.UNDOCUMENTED_URLCONFS`.
+  :data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_URLCONFS`.
 
 
 What the Document Describes
@@ -240,7 +259,12 @@ user may read; their actions that change something require the user to own the r
 operation's description says which.
 
 The accounts' reads (``/accounts/``) return the accounts, users, user profiles (each user's membership
-of an account) and account contacts. The prompt history (``/prompts/history/``) returns the chat
+of an account) and account contacts. Beside them, every user may read their own token usage
+(``/accounts/usage/``, the series that the dashboard charts, one point per hour, day or month), and
+export their own data (``/accounts/data-exports/``): an export builds a zip file of the manifest of
+every resource that they own, with Secrets' values redacted, and emails them a link to it. The
+extensions' reads (``/extensions/``) show a user who isn't a superuser only the extensions that their
+account may use, without their settings; only superusers may act on them. The prompt history (``/prompts/history/``) returns the chat
 sessions, newest first, and the tool calls and plugin usage of each. A session holds a user's
 conversation, so the history includes only the sessions whose user the requesting user may manage:
 their own, their account's users' for an account admin, and every one for a superuser. The journal's
@@ -254,7 +278,9 @@ snake_case keys that they had, e.g. ``guardrail_name``, ``session_key`` and ``pa
 camelCase, because clients already read them.
 
 Besides the reads, the document publishes the actions that the SDKs use: a Guardrail's dry run,
-which changes nothing, an MCPClient's reconnection and tool call, and a vectorstore's maintenance. A
+which changes nothing, an MCPClient's reconnection and tool call, a vectorstore's maintenance, a
+Vectorsearch's run, which searches its vectorstore with its own configuration, the management of
+extensions, and starting a data export. A
 tool runs on the MCP server, and may change what the server manages, so only the MCPClient's owner may
 call it. Deploying a vectorstore or an LLMHost creates billable infrastructure. Work that continues in the background
 answers ``202``, e.g. a deployment, or documents that are queued to be loaded, and a new snapshot

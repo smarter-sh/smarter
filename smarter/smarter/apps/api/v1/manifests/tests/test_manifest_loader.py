@@ -100,6 +100,7 @@ class TestSAMLoader(TestAccountMixin):
         self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         bad_json = sam.json_data
+        assert bad_json is not None
         bad_json.pop("apiVersion")
         bad_yaml = yaml.dump(bad_json)
         try:

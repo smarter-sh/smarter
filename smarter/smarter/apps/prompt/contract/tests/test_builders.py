@@ -115,6 +115,7 @@ class TestContractBuilders(SmarterTestBase):
     def test_prompt_result_v2_of_a_failed_prompt(self):
         data, error, status = prompt_result_v2(self.lambda_response("failure"))
         self.assertEqual(status, HTTPStatus.UNAUTHORIZED)
+        assert error is not None
         self.assertEqual(error["errorClass"], PromptChatApiErrorLLMProvider.__name__)
         self.assertEqual(error["description"], "Incorrect API key provided.")
         self.assertEqual(data["status"], HTTPStatus.UNAUTHORIZED)
@@ -126,6 +127,7 @@ class TestContractBuilders(SmarterTestBase):
     def test_prompt_result_v2_of_an_unexpected_result(self):
         data, error, status = prompt_result_v2({"statusCode": 502, "body": "not json"})
         self.assertEqual(status, 502)
+        assert error is not None
         self.assertEqual(error["description"], "The prompt failed with http status 502.")
         self.assertEqual(data["messages"], [])
         self.assertIsNone(data["completion"])

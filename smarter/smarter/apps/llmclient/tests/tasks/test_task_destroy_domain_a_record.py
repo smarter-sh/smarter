@@ -21,6 +21,8 @@ API_HOST_DOMAIN = "api.example.com"
 class TestDestroyDomainARecord(SmarterTestBase):
     """Test that the A record of a hostname is destroyed."""
 
+    is_taskable: MagicMock
+
     def setUp(self):
         super().setUp()
         self.infrastructure = MagicMock()
@@ -35,7 +37,9 @@ class TestDestroyDomainARecord(SmarterTestBase):
     def test_is_a_celery_task(self):
         """It is queued with delay(), e.g. by llmhost, on the infrastructure queue."""
         self.assertTrue(callable(destroy_domain_A_record.delay))
-        self.assertEqual(destroy_domain_A_record.queue, smarter_settings.infrastructure_tasks_celery_task_queue)
+        # Celery sets queue from the task decorator's options, and its stubs don't declare it.
+        queue = destroy_domain_A_record.queue  # type: ignore[attr-defined]
+        self.assertEqual(queue, smarter_settings.infrastructure_tasks_celery_task_queue)
 
     def test_not_taskable(self):
         self.is_taskable.return_value = False
