@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.45.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.45.1-alpha.1...v0.45.1-alpha.2) (2026-11-13)
+
+### Bug Fixes
+
+* **account:** log a user's multiple UserProfiles at debug, not warning ([242dc22](https://github.com/smarter-sh/smarter/commit/242dc2217212862d0bc8c04ddb155bcd035b06cf)), closes [#996](https://github.com/smarter-sh/smarter/issues/996)
+
 ## [0.45.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.45.0...v0.45.1-alpha.1) (2026-11-13)
 
 ### Bug Fixes
