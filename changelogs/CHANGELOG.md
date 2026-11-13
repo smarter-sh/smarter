@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.45.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.44.14...v0.45.0-alpha.1) (2026-11-13)
+
+### Features
+
+* **api:** add extensions, usage, data exports and vectorsearch runs ([b4bb7f9](https://github.com/smarter-sh/smarter/commit/b4bb7f98f0c7aadca82fe65d9a367adcf1a91e70))
+
+### Bug Fixes
+
+* **drf:** answer duplicate api key names with a 400, not a 500 ([9de0953](https://github.com/smarter-sh/smarter/commit/9de0953c48ffd73d3d72654933ea75a5eab22acf))
+* **prompt:** save a prompt's history before its response returns ([ff55272](https://github.com/smarter-sh/smarter/commit/ff552724ef6af0e0955be62fb9ade23ba34feeb0))
+
 ## [0.44.14](https://github.com/smarter-sh/smarter/compare/v0.44.13...v0.44.14) (2026-11-12)
 
 ### Bug Fixes
