@@ -500,6 +500,29 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
             with self.assertRaisesRegex(SAMSmarterAuthTokenBrokerError, "Rename all but one"):
                 _ = broker.smarter_auth_token
 
+    def test_duplicate_names_are_a_client_error(self):
+        """The duplicate-names error is a 400 that says what to rename, not a 500 that calls it a bug.
+
+        A broker error chained to another exception is an internal error, so the error is raised from None, by
+        describe's lookup and by orm_instance, which apply and delete use.
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.cli.views.base import http_status_for_exception
+
+        broker = self.broker
+        broker._orm_instance = None
+        broker._smarter_auth_token = None
+        self.patch_property("token_username", self.admin_user.username)
+        duplicates = SmarterAuthToken.MultipleObjectsReturned("get() returned more than one SmarterAuthToken")
+        with patch.object(SmarterAuthToken.objects, "get", side_effect=duplicates):
+            with self.assertRaises(SAMSmarterAuthTokenBrokerError) as describe_error:
+                _ = broker.smarter_auth_token
+            with self.assertRaisesRegex(SAMSmarterAuthTokenBrokerError, "Rename all but one") as orm_error:
+                _ = broker.orm_instance
+        for error in (describe_error.exception, orm_error.exception):
+            self.assertIsNone(error.__cause__)
+            self.assertEqual(http_status_for_exception(error), 400)
+
     def test_orm_meta_instance_setter_logs_the_account_number(self):
         """The log names the account by its number, never its string form, which has the company name (#971)."""
         broker = self.broker

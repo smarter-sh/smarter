@@ -162,11 +162,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.name,
             )
             self._smarter_auth_token = SmarterAuthToken.objects.get(user__username=username, name=self.name)
-        except SmarterAuthToken.MultipleObjectsReturned as e:
+        except SmarterAuthToken.MultipleObjectsReturned:
+            # the user's own data is ambiguous, which they can fix: a 400 with the message, not a 500. A broker
+            # error raised from another exception is an internal error (http_status_for_exception), so the
+            # MultipleObjectsReturned is not chained.
             message = self.duplicate_names_message(username)
-            raise SAMSmarterAuthTokenBrokerError(
+            raise SAMSmarterAuthTokenBrokerError(  # pylint: disable=raise-missing-from
                 message=message, thing=self.kind, command=SmarterJournalCliCommands.DESCRIBE
-            ) from e
+            ) from None
         except SmarterAuthToken.DoesNotExist:
             logger.debug(
                 "%s.smarter_auth_token() SmarterAuthToken for user %s with name %s does not exist.",
@@ -407,6 +410,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
         Return the Django ORM model instance for the broker.
 
         :returns: The SmarterAuthToken, or None if there is no manifest or no such token.
+        :raises SAMSmarterAuthTokenBrokerError: If more than one of the owner's API keys has the name.
         """
         if self._orm_instance:
             return self._orm_instance
@@ -421,6 +425,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 SmarterAuthToken.__name__,
             )
             return None
+        username = self.manifest.spec.config.username
         try:
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve %s for %s owned by %s",
@@ -429,9 +434,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.name,
                 self.user_profile,
             )
-            self._orm_instance = SmarterAuthToken.objects.get(
-                user__username=self.manifest.spec.config.username, name=self.name
-            )
+            self._orm_instance = SmarterAuthToken.objects.get(user__username=username, name=self.name)
             logger.debug(
                 "%s.orm_instance() - retrieved %s for %s owned by %s",
                 self.formatted_class_name,
@@ -440,6 +443,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 self.user_profile,
             )
             return self._orm_instance
+        except SmarterAuthToken.MultipleObjectsReturned:
+            # as in smarter_auth_token: a 400 that says which keys to rename, not a 500.
+            message = self.duplicate_names_message(username)
+            raise SAMSmarterAuthTokenBrokerError(  # pylint: disable=raise-missing-from
+                message=message, thing=self.kind
+            ) from None
         except SmarterAuthToken.DoesNotExist:
             logger.warning(
                 "%s.orm_instance() - %s instance does not exist for %s owned by %s",
