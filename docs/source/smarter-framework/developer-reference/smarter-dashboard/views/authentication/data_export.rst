@@ -40,6 +40,12 @@ The dialog calls the console's account api: ``GET /api/web/account/data-export/`
 the user starts, ``POST`` to start an export, and ``GET /api/web/account/data-export/<id>/`` for an
 export's progress. See :doc:`../../../web-console-api`.
 
+A program does the same with an api key, through the REST api, as the Smarter SDKs do:
+``GET /api/v1/accounts/data-exports/`` for the overview, ``POST`` to start an export (``202`` when it
+starts, ``200`` with the export that is already in progress, ``429`` when the user may not start one
+now), and ``GET /api/v1/accounts/data-exports/<id>/`` for its progress. The link is still emailed to
+the user, never returned in a response. See :doc:`/smarter-framework/smarter-api/api-contract`.
+
 .. automodule:: smarter.apps.account.data_export
     :members:
     :show-inheritance:
@@ -50,5 +56,9 @@ export's progress. See :doc:`../../../web-console-api`.
     :no-index:
 
 .. automodule:: smarter.apps.account.api.web.data_export
+    :members:
+    :show-inheritance:
+
+.. automodule:: smarter.apps.account.api.v1.views.data_export
     :members:
     :show-inheritance:

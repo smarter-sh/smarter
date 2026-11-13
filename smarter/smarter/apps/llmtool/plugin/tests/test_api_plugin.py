@@ -99,7 +99,10 @@ class TestApiPlugin(PluginTestBase):
 
     def test_api_plugin_data_headers(self):
         """Test that the ApiPlugin headers are persisted as a list of name/value dicts."""
-        headers = self.load_api_plugin().plugin_data.headers  # type: ignore[union-attr]
+        plugin_data = self.load_api_plugin().plugin_data
+        assert plugin_data is not None
+        headers = plugin_data.headers
+        assert headers is not None
         self.assertIn({"name": "Accept", "value": "application/json"}, headers)
         self.assertEqual(len(headers), 3)
 
@@ -187,9 +190,10 @@ class TestApiPlugin(PluginTestBase):
     def test_api_plugin_data_django_model_snake_case_keys(self):
         """Test that the Django model dict uses snake_case keys."""
         model = self.api_plugin.plugin_data_django_model
-        self.assertIn("url_params", model)  # type: ignore[operator]
-        self.assertIn("test_values", model)  # type: ignore[operator]
-        self.assertNotIn("urlParams", model)  # type: ignore[operator]
+        assert model is not None
+        self.assertIn("url_params", model)
+        self.assertIn("test_values", model)
+        self.assertNotIn("urlParams", model)
 
     def test_api_plugin_data_django_model_without_manifest(self):
         """Test that the Django model dict is None without a manifest."""
@@ -413,6 +417,7 @@ class TestApiPlugin(PluginTestBase):
 
     def test_api_tool_call_empty_args_without_placeholders(self):
         """Test tool calls with empty arguments against an endpoint without placeholders."""
+        function_args: object
         for function_args in (None, {}, [], ""):
             cache.clear()
             plugin = self.load_api_plugin()
@@ -480,6 +485,7 @@ class TestApiPlugin(PluginTestBase):
 
     def test_api_tool_call_empty_response_returns_empty_string(self):
         """Test that an empty response returns an empty string."""
+        empty: object
         for empty in ([], {}):
             cache.clear()
             retval, _ = self.api_call(self.load_api_plugin(), {"kind": "list"}, json_data=empty)
@@ -612,6 +618,7 @@ class TestApiPlugin(PluginTestBase):
         """Test that the Secret's name is never sent in place of its value."""
         with mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request:
             self.fresh_api_connection().execute_query("/x/")
+        assert self.api_secret is not None
         self.assertNotIn(self.api_secret.name, request.call_args.kwargs["headers"]["Authorization"])
 
     def test_api_connection_execute_query_basic_auth(self):

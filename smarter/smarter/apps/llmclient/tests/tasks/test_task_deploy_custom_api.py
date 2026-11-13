@@ -21,6 +21,11 @@ Status = LLMClientCustomDomain.VerificationStatusChoices
 class TestDeployCustomApi(TestAccountMixin):
     """Test that a deployed llmclient with a verified custom domain is deployed on its custom host."""
 
+    is_taskable: MagicMock
+    infrastructure: MagicMock
+    apply_ingress_manifest: MagicMock
+    smarter_settings: MagicMock
+
     def setUp(self):
         super().setUp()
         self.domain_name = f"test-custom-api-{self.hash_suffix}.example.com".lower()

@@ -17,10 +17,15 @@ from smarter.apps.vectorsearch.contract.models import (
 from smarter.apps.vectorsearch.models import Vectorsearch
 from smarter.apps.vectorsearch.serializers import VectorsearchSerializer
 from smarter.apps.vectorstore.models import VectorstoreMeta
+from smarter.lib.typing import required
 
 
 class TestVectorsearchContract(OpenApiResponseMixin, TestAccountMixin):
     """Test the Vectorsearch contract's model against the serializer, and the views' responses against the document."""
+
+    provider: Provider
+    vectorstore: VectorstoreMeta
+    vectorsearch: Vectorsearch
 
     @classmethod
     def setUpClass(cls):
@@ -52,7 +57,10 @@ class TestVectorsearchContract(OpenApiResponseMixin, TestAccountMixin):
     def test_search_type_is_the_choices(self):
         self.assertEqual(
             list(get_args(VectorsearchApiSearchType)),
-            [value for value, _ in Vectorsearch._meta.get_field("search_type").choices],
+            [
+                value
+                for value, _ in required(Vectorsearch._meta.get_field("search_type").choices, "search_type.choices")
+            ],
         )
 
     def test_model_is_the_serializers_output(self):

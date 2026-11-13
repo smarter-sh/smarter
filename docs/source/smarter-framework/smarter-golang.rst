@@ -80,9 +80,12 @@ What It Covers
 - **Prompts and conversations**: prompt an LLMClient, hold a multi-turn chat that keeps its session,
   and stream a prompt's progress as it runs, exactly as :doc:`Smarter Chat <smarter-chat>` does.
 - **Resource actions**: evaluate a Guardrail, call an MCP server's tools, add documents to and
-  search a Vectorstore, plan and deploy an LLMHost, discover open-weight models, read the chat
-  history and the :doc:`Smarter Journal <smarter-api/smarter-journal>`, and call an LLM provider
-  through a Proxy.
+  search a Vectorstore, run a Vectorsearch, plan and deploy an LLMHost, discover open-weight models,
+  read the chat history and the :doc:`Smarter Journal <smarter-api/smarter-journal>`, and call an
+  LLM provider through a Proxy.
+- **Extensions**: read the platform's :doc:`extensions <../smarter-platform/extensions>` and the
+  extension registry, and, as a superuser, install, configure, enable, update and uninstall them.
+- **Your own account**: read the tokens and cost of your LLM requests, and export your data.
 - **The platform's own models**: a Go struct of every manifest kind, in the ``sam`` package,
   generated from the platform's JSON Schemas, and the
   :doc:`Smarter Chat API contract <smarter-chat/api-contract>`, the Smarter Journal contract and the
@@ -104,7 +107,7 @@ Where to Start
      - :doc:`Manifests <smarter-golang/manifests>`
    * - Prompt an LLMClient, chat with it, or stream its progress
      - :doc:`Prompts and Chat <smarter-golang/chat>`
-   * - Use Guardrails, MCP clients, Vectorstores, LLMHosts and the other resources
+   * - Use Guardrails, MCP clients, Vectorstores, LLMHosts, Extensions and the other resources
      - :doc:`Resources <smarter-golang/resources>`
    * - Build manifests in code, or read the API's contracts as structs
      - :doc:`Models <smarter-golang/models>`

@@ -111,6 +111,7 @@ class TestSettingsValidators(SmarterTestBase):
     def test_secret_key(self):
         """A plain string secret key is wrapped in a SecretStr."""
         settings = make_settings(secret_key="a-test-secret-key")
+        assert settings.secret_key is not None
         self.assertEqual(settings.secret_key.get_secret_value(), "a-test-secret-key")
 
     def test_secret_key_is_set(self):

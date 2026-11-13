@@ -21,6 +21,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
 )
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_list, json_object
 
 from .base_class import ApiV1CliTestBase
 
@@ -53,7 +54,7 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
     def setUp(self):
         super().setUp()
         self.path = reverse(self.namespace + ApiV1CliReverseViews.apply)
-        self.base_manifest = load_yaml(BASE_MANIFEST)
+        self.base_manifest = json_object(load_yaml(BASE_MANIFEST), "base manifest")
         self.base_manifest["metadata"]["name"] = self.name
         self.addCleanup(LLMClient.objects.filter(user_profile=self.user_profile, name=self.name).delete)
 
@@ -69,7 +70,7 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
         """Test that each invalid manifest is a client error, whose description says what is wrong."""
         response, status = self.apply(yaml.safe_dump(self.base_manifest))
         self.assertEqual(status, HTTPStatus.OK, response)
-        for case in load_yaml(CASES):
+        for case in json_list(load_yaml(CASES), "cases"):
             with self.subTest(case=case["name"]):
                 if "body" in case:
                     body = case["body"]
@@ -79,6 +80,7 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
                 self.assertEqual(status, case["status"], response)
                 error = response.get(SmarterJournalApiResponseKeys.ERROR)
                 self.assertIsInstance(error, dict, response)
+                assert error is not None
                 description = error.get(SmarterJournalApiResponseErrorKeys.DESCRIPTION)
                 self.assertIsInstance(description, str, response)
                 self.assertNotIn(BUG_REPORT, description)

@@ -295,8 +295,9 @@ class TestAccountMixin(SmarterTestBase):
         for method in ("__lt__", "__le__", "__gt__", "__ge__"):
             with self.subTest(method=method):
                 self.assertIs(getattr(instance1, method)(instance2), NotImplemented)
+        # the test proves that AccountMixin has no order, so mypy rightly refuses the comparison.
         with self.assertRaises(TypeError):
-            instance1 < instance2  # pylint: disable=pointless-statement
+            instance1 < instance2  # type: ignore[operator]  # pylint: disable=pointless-statement
 
 
 class _BrokenUserProfile:

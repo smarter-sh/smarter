@@ -12,6 +12,7 @@ from smarter.apps.account.profile_selection import (
     selected_user_profile_id,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 
 class TestSmarterUserProfileSelectionMiddleware(SmarterTestBase):
@@ -39,7 +40,7 @@ class TestSmarterUserProfileSelectionMiddleware(SmarterTestBase):
 
     def call(self, request):
         middleware = SmarterUserProfileSelectionMiddleware(self.get_response)
-        response = middleware(request)
+        response = http_response(middleware(request))
         self.assertEqual(response.status_code, 200)
         return self.seen[-1]
 
@@ -78,7 +79,9 @@ class TestSmarterUserProfileSelectionMiddleware(SmarterTestBase):
             (self.factory.get("/dashboard/"), None),
         ):
             with self.subTest(expected=expected):
-                response = asyncio.run(middleware(request))
+                pending = middleware(request)
+                assert asyncio.iscoroutine(pending)
+                response = asyncio.run(pending)
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(self.seen[-1], expected)
         self.assertIsNone(selected_user_profile_id.get())

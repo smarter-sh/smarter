@@ -60,6 +60,7 @@ def completion(content: str) -> ChatCompletion:
 class TestBudgetPromptIntegration(TestAccountMixin):
     """Test the enforcement of budgets on prompts."""
 
+    llmclient: LLMClient
     prompt: Prompt
 
     @classmethod

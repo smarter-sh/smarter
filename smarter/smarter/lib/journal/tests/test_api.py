@@ -18,6 +18,8 @@ DETAIL_URL = f"{SAMJournalApiV1ReverseViews.namespace}:{SAMJournalApiV1ReverseVi
 class TestSAMJournalApi(TestAccountMixin):
     """Test the journal's list and detail views, which only superusers may call."""
 
+    journal: SAMJournal
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

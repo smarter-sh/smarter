@@ -46,7 +46,9 @@ class TestSmarterTokenAuthentication(TestAccountMixin):
         self.assertTrue(authenticated_user.is_authenticated)
         self.assertTrue(self.smarter_auth_token.is_active)
         self.assertEqual((authenticated_user, self.smarter_auth_token), (self.admin_user, self.smarter_auth_token))
-        self.assertLess(start_time, self.smarter_auth_token.last_used_at)
+        last_used_at = self.smarter_auth_token.last_used_at
+        assert last_used_at is not None
+        self.assertLess(start_time, last_used_at)
 
     def test_last_used_at_is_written_at_most_once_per_resolution(self):
         """A key used twice within LAST_USED_RESOLUTION is written once, not on every request."""
@@ -94,11 +96,15 @@ class TestSmarterTokenAuthentication(TestAccountMixin):
     def test_authenticate_remembers_the_header_token(self):
         """DRF's authenticate() keeps its result for the request's later checks."""
         request = RequestFactory().get("/api/v1/cli/whoami/", HTTP_AUTHORIZATION=f"Token {self.token_key}")
-        user, _ = self.auth.authenticate(Request(request))
+        result = self.auth.authenticate(Request(request))
+        assert result is not None
+        user, _ = result
         self.assertEqual(user, self.admin_user)
         with patch.object(SmarterTokenAuthentication, "authenticate_credentials") as authenticate_credentials:
-            again = self.auth.authenticate(request)
+            # the Django request itself, on which the DRF Request's authentication is remembered
+            again = self.auth.authenticate(request)  # type: ignore[arg-type]
         authenticate_credentials.assert_not_called()
+        assert again is not None
         self.assertEqual(again[0], self.admin_user)
 
     def test_authenticate_without_a_token_header(self):
@@ -106,10 +112,18 @@ class TestSmarterTokenAuthentication(TestAccountMixin):
         self.assertIsNone(self.auth.authenticate(Request(request)))
 
     def test_authenticate_credentials_inactive_token(self):
+        """A valid key of a deactivated token is refused by the check that the key is active."""
         self.smarter_auth_token.is_active = False
         self.smarter_auth_token.save()
-        with self.assertRaises(AuthenticationFailed):
-            self.auth.authenticate_credentials(self.token_key[:1])
+        token_key_bytes = self.token_key.encode()
+        with self.assertRaisesRegex(AuthenticationFailed, "Api key is not activated"):
+            self.auth.authenticate_credentials(token_key_bytes)
+
+    def test_authenticate_credentials_requires_bytes(self):
+        """A key that is not bytes, as the Authorization header's is, is refused before it is looked up."""
+        with self.assertRaisesRegex(AuthenticationFailed, "Expected bytes"):
+            # a str, deliberately: the type check is what's tested
+            self.auth.authenticate_credentials(self.token_key)  # type: ignore[arg-type]
 
     def test_smarter_token_authentication_error_message(self):
         err = SmarterTokenAuthenticationError()

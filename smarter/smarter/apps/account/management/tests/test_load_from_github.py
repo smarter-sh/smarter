@@ -34,6 +34,7 @@ from smarter.lib.annotation.const import (
 from smarter.lib.annotation.selectors import filter_by_annotations
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import manifest_template_values
+from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.account.management.commands.load_from_github"
 URL = "https://github.com/smarter-sh/no-such-repo"
@@ -377,7 +378,7 @@ class TestLoadFromGithub(TestAccountMixin):
         self.assertIn("Did not deploy LLMClient c: it is staff-only.", output)
 
     def test_is_staff_only(self):
-        cases = [
+        cases: list[tuple[SmarterDictType, bool]] = [
             ({}, False),
             ({"spec": None}, False),
             ({"spec": {"config": {"prompt": {"staffOnly": False}}}}, False),
@@ -583,7 +584,9 @@ class TestLoadFromGithubApply(TestAccountMixin):
         filespec = self.write("m.yaml", manifest("MCPClient", self.secret_name))
         missing = SAMBrokerErrorNotFound(message="Secret nope not found.", thing="MCPClient")
         with patch(f"{MODULE}.call_command", side_effect=missing):
-            self.assertRegex(self.command.apply(filespec, self.user_profile), "^m.yaml: SAMBrokerErrorNotFound: ")
+            failure = self.command.apply(filespec, self.user_profile)
+            assert failure is not None
+            self.assertRegex(failure, "^m.yaml: SAMBrokerErrorNotFound: ")
             self.assertEqual(self.command.skipped, set())
             self.command.skip_missing_references = True
             self.assertIsNone(self.command.apply(filespec, self.user_profile))
@@ -629,6 +632,10 @@ class TestLoadFromGithubLLMClients(TestAccountMixin):
     """
 
     RECEIVERS = "smarter.apps.llmclient.receivers"
+
+    deploy_default_api: MagicMock
+    undeploy_default_api: MagicMock
+    delete_default_api: MagicMock
 
     def setUp(self):
         super().setUp()

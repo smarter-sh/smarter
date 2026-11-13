@@ -693,7 +693,7 @@ A TypeScript type of every SAM manifest kind, generated from the platform's JSON
 
 .. js:class:: SAMSqlConnection
 
-   Smarter API Manifest - SqlConnection Model
+   Smarter API Manifest - SqlConnection Model.
 
    .. js:attribute:: apiVersion
 

@@ -12,7 +12,7 @@ from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
     STACKADEMY_REPOSITORY_URL,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .base import CommandTestBase
 
@@ -115,12 +115,20 @@ class TestInitializeAccount(CommandTestBase):
         command = Command()
         self.assertFalse(
             command.initialize_account(
-                self.account.account_number, self.unique("nouser"), "a@example.com", None, "Company"
+                required(self.account.account_number, "account_number"),
+                self.unique("nouser"),
+                "a@example.com",
+                None,
+                "Company",
             )
         )
         self.assertTrue(
             command.initialize_account(
-                self.account.account_number, self.admin_user.username, "a@example.com", None, "Company"
+                required(self.account.account_number, "account_number"),
+                self.admin_user.username,
+                "a@example.com",
+                None,
+                "Company",
             )
         )
 

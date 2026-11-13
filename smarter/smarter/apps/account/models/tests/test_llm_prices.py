@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class TestLLMPrices(TestAccountMixin):
     """Test LLMPrices model."""
 
+    provider: Provider
+
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestLLMPrices()"
 
     @classmethod

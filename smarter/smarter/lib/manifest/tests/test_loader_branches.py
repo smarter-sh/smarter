@@ -65,7 +65,9 @@ class TestSAMLoaderSources(SmarterTestBase):
         self.assertEqual(loader.manifest_kind, "Guardrail")
         self.assertEqual(loader.manifest_status, {"dependencies": []})
         self.assertEqual(loader.source, "manifest dict")
-        self.assertEqual(yaml.safe_load(loader.yaml_data), MANIFEST)
+        yaml_data = loader.yaml_data
+        assert yaml_data is not None
+        self.assertEqual(yaml.safe_load(yaml_data), MANIFEST)
         self.assertIn("a_guardrail", str(loader))
         self.assertIn("a_guardrail", repr(loader))
         self.assertIsInstance(loader.to_json(), dict)
@@ -76,7 +78,9 @@ class TestSAMLoaderSources(SmarterTestBase):
         loader = SAMLoader(manifest=yaml.dump(MANIFEST))
         self.assertEqual(loader.data_format, SAMDataFormats.YAML)
         self.assertEqual(loader.json_data, MANIFEST)
-        self.assertEqual(yaml.safe_load(loader.yaml_data), MANIFEST)
+        yaml_data = loader.yaml_data
+        assert yaml_data is not None
+        self.assertEqual(yaml.safe_load(yaml_data), MANIFEST)
         self.assertEqual(loader.source, "manifest str")
 
     def test_json_string_manifest(self):
@@ -130,13 +134,13 @@ class TestSAMLoaderSources(SmarterTestBase):
     def test_invalid_manifest_type(self):
         """A manifest that's been replaced by something other than a str or dict reads as None."""
         loader = SAMLoader(manifest=MANIFEST)
-        loader._manifest = 42
+        loader._manifest = 42  # type: ignore[assignment]  # deliberately neither a str nor a dict
         self.assertIsNone(loader.manifest)
 
     def test_data_format_of_a_dict(self):
         loader = SAMLoader(manifest=MANIFEST)
         loader._data_format = None
-        loader._raw_data = dict(MANIFEST)
+        loader._raw_data = dict(MANIFEST)  # type: ignore[assignment]  # deliberately a dict, not the raw str
         self.assertEqual(loader.data_format, SAMDataFormats.JSON)
 
     def test_unsupported_data_format(self):

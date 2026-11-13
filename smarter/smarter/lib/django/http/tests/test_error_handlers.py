@@ -41,7 +41,8 @@ class TestErrorHandlers(SmarterTestBase):
         status, and whether the thread's connection is still open after the page rendered.
         """
         view, exception = HANDLERS[status]
-        result = {}
+        # The status, and whether the connection is open (a bool, which is an int).
+        result: dict[str, int] = {}
 
         def run():
             with connection.cursor() as cursor:
@@ -53,7 +54,7 @@ class TestErrorHandlers(SmarterTestBase):
         thread = threading.Thread(target=run)
         thread.start()
         thread.join()
-        return result["status"], result["open"]
+        return result["status"], bool(result["open"])
 
     def test_each_page_closes_its_threads_connection(self):
         """The 400, 403, 404 and 500 pages render, and leave no connection open in their thread."""
@@ -90,8 +91,10 @@ class TestErrorHandlers(SmarterTestBase):
         """Their docstrings aren't Django's, whose ``:template:`` role crashes the Sphinx build."""
         for status, (view, _) in HANDLERS.items():
             with self.subTest(status=status):
-                self.assertNotIn(":template:", view.__doc__)
-                self.assertIn(f"django.views.defaults.{view.__name__}", view.__doc__)
+                doc = view.__doc__
+                assert doc is not None
+                self.assertNotIn(":template:", doc)
+                self.assertIn(f"django.views.defaults.{view.__name__}", doc)
 
     def test_django_accepts_their_signatures(self):
         """Django's system check of custom error handlers finds nothing wrong."""

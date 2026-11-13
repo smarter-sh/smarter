@@ -62,7 +62,7 @@ def validate_provider(value):
     )
 
     provider_names = [name.lower() for name in smarter_compatible_client.all]
-    if not value in provider_names:
+    if value not in provider_names:
         raise ValidationError(
             "%(value)s is not a valid provider. Valid providers are: %(providers)s",
             params={"value": value, "providers": str(provider_names)},

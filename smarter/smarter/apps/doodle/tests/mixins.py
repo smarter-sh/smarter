@@ -25,6 +25,8 @@ class DoodleTestMixin(SmarterTestBase):
 
     themes: list[DoodleTheme]
     existing_doodles: set[int]
+    existing_themes: set[int]
+    existing_artworks: set[int]
 
     @classmethod
     def setUpClass(cls):

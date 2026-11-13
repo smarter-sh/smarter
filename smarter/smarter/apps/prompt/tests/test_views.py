@@ -83,6 +83,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     """Test the Prompt dashboard views, whose resource is an LLMClient."""
 
     model = LLMClient
+    resource: LLMClient
     reverse_names = PromptReverseNames
     web_reverse_names = PromptApiWebReverseNames
     id_kwarg = "llmclient_id"
@@ -207,6 +208,7 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_manifest_of_a_staff_only_llmclient(self):
         """Only the platform's staff may read the manifest of a staff-only LLMClient, as the resource api decides."""
         staff_only = self.throwaway("staff")
+        assert isinstance(staff_only, LLMClient)
         LLMClient.objects.filter(pk=staff_only.pk).update(staff_only=True)
         self.client.force_login(self.non_admin_user)
         self.assertEqual(self.manifest_statuses(staff_only), (HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND))
@@ -245,12 +247,17 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual((tree.kind, tree.name), ("LLMClient", self.resource.name))
         self.assertEqual(tree.recordLocator, self.resource.record_locator)
         self.assertEqual(tree.url, self.url("manifest_by_hashed_id", hashed_id=self.resource.hashed_id))
+        assert tree.owner is not None
         self.assertIn(self.admin_user.username, tree.owner)
 
         guardrails = [child for child in tree.children if child.kind == "Guardrail"]
         self.assertEqual([child.name for child in guardrails], [guardrail.name])
-        self.assertIn(self.admin_user.username, guardrails[0].owner)
-        self.assertTrue(guardrails[0].url.startswith("/guardrail/"), guardrails[0].url)
+        guardrail_owner = guardrails[0].owner
+        assert guardrail_owner is not None
+        self.assertIn(self.admin_user.username, guardrail_owner)
+        guardrail_url = guardrails[0].url
+        assert guardrail_url is not None
+        self.assertTrue(guardrail_url.startswith("/guardrail/"), guardrail_url)
 
         links = response.json()["links"]
         self.assertEqual(set(links), {"guardrailsUrl", "pluginsUrl", "extensionsUrl", "mcpClientsUrl", "apiKeysUrl"})
@@ -421,6 +428,8 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         data = ApiKeyActionResponse.model_validate(response.json())
         self.assertIsNone(data.new_api_key)
+        assert data.page.api_keys is not None
+        assert data.page.api_keys.attached is not None
         self.assertEqual(data.page.api_keys.attached.name, first.name)
         self.assertTrue(data.page.authenticated)
         self.assertIn("Authorization: Token <YOUR-API-KEY>", data.page.snippets.prompt_command)
@@ -449,8 +458,11 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         api_key = SmarterAuthToken.objects.get(name=name, user=self.admin_user)
         self.assertEqual(api_key.description, "the chat")
         data = ApiKeyActionResponse.model_validate(response.json())
+        assert data.new_api_key is not None
         self.assertEqual(data.new_api_key.name, name)
         secret = data.new_api_key.secret
+        assert data.page.api_keys is not None
+        assert data.page.api_keys.attached is not None
         self.assertEqual(data.page.api_keys.attached.name, name)
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
         # the secret is the key: it authenticates.

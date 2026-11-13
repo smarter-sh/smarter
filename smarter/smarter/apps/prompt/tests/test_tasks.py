@@ -21,12 +21,16 @@ from smarter.apps.prompt.tasks import (
     create_prompt_tool_call_history,
 )
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.typing import SmarterDictType
 
 MISSING_ID = 999999999
 
 
 class TestPromptTasks(TestAccountMixin):
     """Test the prompt history tasks."""
+
+    llmclient: LLMClient
+    prompt: Prompt
 
     @classmethod
     def setUpClass(cls):
@@ -55,6 +59,7 @@ class TestPromptTasks(TestAccountMixin):
         self.addCleanup(history.delete)
         self.assertEqual(history.request, {"q": 1})
         self.assertEqual(history.response, {"a": 2})
+        assert history.messages is not None
         self.assertEqual(history.messages[0]["content"], "hi")
 
     def test_create_prompt_history_unknown_prompt(self):
@@ -94,7 +99,8 @@ class TestPromptTasks(TestAccountMixin):
         ]
         for task in tasks:
             with self.subTest(task=task.name):
-                self.assertIn(DataError, task.dont_autoretry_for)
+                # Celery sets dont_autoretry_for from the task decorator's options; its stubs don't declare it.
+                self.assertIn(DataError, task.dont_autoretry_for)  # type: ignore[attr-defined]
 
     def test_create_prompt_tool_call_history_errors(self):
         with self.assertRaises(SmarterValueError):
@@ -104,7 +110,7 @@ class TestPromptTasks(TestAccountMixin):
         self.assertFalse(PromptToolCall.objects.filter(prompt=self.prompt, function_name="f").exists())
 
     def test_create_prompt_plugin_usage_errors(self):
-        cases = [
+        cases: list[SmarterDictType] = [
             {},
             {"prompt_id": self.prompt.id},
             {"prompt_id": self.prompt.id, "plugin_id": MISSING_ID},

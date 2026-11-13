@@ -15,6 +15,7 @@ from smarter.apps.mcpserver.protocol.tools.bug_reports import (
 )
 from smarter.apps.mcpserver.protocol.tools.github import MAX_LABEL_LENGTH
 from smarter.apps.mcpserver.services.github.issues import GitHubIssue
+from smarter.lib.typing import required
 
 from .operations_base import TICKET, OperationsTestBase
 
@@ -38,8 +39,9 @@ class TestCreateBugReportTool(OperationsTestBase):
     def test_annotations(self):
         """It is the staff-only tool that writes, and says so."""
         definition = CreateBugReportTool(self.admin_user).definition()
-        self.assertFalse(definition.annotations.read_only_hint)
-        self.assertTrue(definition.annotations.open_world_hint)
+        annotations = required(definition.annotations, "definition.annotations")
+        self.assertFalse(annotations.read_only_hint)
+        self.assertTrue(annotations.open_world_hint)
 
     def test_create_bug_report(self):
         with mock.patch(CREATE_BUG_REPORT, return_value=ISSUE) as create_bug_report:

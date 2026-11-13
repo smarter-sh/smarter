@@ -378,7 +378,6 @@ class Command(SmarterCommand):
         if not infrastructure.dns.ready:
             raise SmarterConfigurationError(f"{self.log_prefix} the DNS service is not ready. Cannot proceed.")
 
-        log_prefix = self.log_prefix + ".verify_base_dns_config()"
         verified_domains = []
         self.unchanged_a_record_domains = []
         self.stdout.write(

@@ -18,6 +18,8 @@ class TestVectorsearchBroker(CliBrokerTestMixin, ApiV1TestBase):
     kind = SAMKinds.VECTORSEARCH.value
     model = Vectorsearch
     name_prefix = "test_vectorsearch_broker"
+    provider: Provider
+    vectorstore: VectorstoreMeta
 
     @classmethod
     def setUpClass(cls):

@@ -8,6 +8,7 @@ import os
 import re
 import tempfile
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 from unittest import mock
 from urllib.parse import urlencode
 
@@ -17,6 +18,7 @@ from django.urls import URLPattern, URLResolver
 from django.urls.resolvers import RoutePattern
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
+from pydantic import JsonValue
 from rest_framework.test import APIClient
 
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
@@ -61,20 +63,24 @@ from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_list, json_object
 
-CONTRACT = "smarter/smarter/apps/api/v1/contract/openapi.py"
-"""The module that declares the document's routes, which failure messages point to."""
+if TYPE_CHECKING:
+    from rest_framework.response import _MonkeyPatchedResponse
+
+CONTRACT = "smarter/smarter/apps/api/v1/contract/openapi/"
+"""The package that builds the document, which failure messages point to: see its routes.py, families/ and schemas.py."""
 
 FIX_UNDOCUMENTED_ROUTE = (
     "To fix it, document the route: model its response in contract/models.py, build the view's response from "
     f"that model, add the operation to cli_paths() or the family's *_paths() function in {CONTRACT}, test a real "
     "response in TestOpenApiResponses, and run `make api-contract`. If the route must not be published, add it to "
-    f"UNDOCUMENTED_ROUTES in {CONTRACT} with the reason instead. See 'Adding or changing a cli route' in {SKILL}."
+    f"UNDOCUMENTED_ROUTES in {CONTRACT}routes.py with the reason instead. See 'Adding or changing a cli route' in {SKILL}."
 )
 """What to do when a route of a documented family is not in the document."""
 
 FIX_UNCOVERED_FAMILY = (
-    f"To fix it, add the family's urlconf to DOCUMENTED_URLCONFS in {CONTRACT}, and list its routes in "
+    f"To fix it, add the family to FAMILIES in {CONTRACT}families/, which adds it to DOCUMENTED_URLCONFS, and list its routes in "
     "UNDOCUMENTED_ROUTES as NOT_YET_MODELED until they are documented. If the family must not be published, add "
     f"it to UNDOCUMENTED_URLCONFS with the reason instead. See 'Covering a new family of routes' in {SKILL}."
 )
@@ -260,8 +266,8 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
         self.manifest["metadata"]["name"] = self.name
         self.addCleanup(Guardrail.objects.filter(name=self.name).delete)
 
-    def rest_get(self, path: str) -> tuple[int, object]:
-        """GET a REST api path, with the api key of the test's superuser."""
+    def rest_get(self, path: str) -> tuple[int, JsonValue]:
+        """GET a REST api path, with the api key of the test's superuser, and return the status and the parsed json."""
         response = APIClient().get(f"/api/v1{path}", headers={"Authorization": f"Token {self.token_key}"})
         return response.status_code, response.json()
 
@@ -300,13 +306,13 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
                 # a custom domain can't be created here: saving one reaches DNS.
                 if isinstance(body, list) and template != "/llm-clients/{id}/customdomains":
                     self.assertTrue(body, f"{template} returned no rows to validate.")
-        status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/")
-        self.assertEqual(body["extensions"][0]["name"], "test-openapi")
+        detail = json_object(self.rest_get(f"/llm-clients/{llmclient.pk}/")[1], "llmclient")
+        self.assertEqual(detail["extensions"][0]["name"], "test-openapi")
         # an api key is its token's public key_id, never the token's digest, its primary key.
-        self.assertEqual(body["apiKeys"][0]["apiKey"], str(token.key_id))
-        status, body = self.rest_get(f"/llm-clients/{llmclient.pk}/apikeys/")
-        self.assertEqual([item["apiKey"] for item in body], [str(token.key_id)])
-        self.assertNotIn(token.digest, json.dumps(body))
+        self.assertEqual(detail["apiKeys"][0]["apiKey"], str(token.key_id))
+        api_keys = json_list(self.rest_get(f"/llm-clients/{llmclient.pk}/apikeys/")[1], "api keys")
+        self.assertEqual([item["apiKey"] for item in api_keys], [str(token.key_id)])
+        self.assertNotIn(token.digest, json.dumps(api_keys))
 
         for path in ("/llm-clients/999999999/", "/llm-clients/rNotAHashedId/"):
             with self.subTest(not_found=path):
@@ -348,7 +354,8 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
                 status, body = self.rest_get(path)
                 self.assertEqual(status, HTTPStatus.OK, body)
                 self.assertValidResponse(template, "get", body)
-        self.assertEqual(self.rest_get(f"/guardrails/{guardrail.pk}/events/")[1]["events"][0]["id"], event.pk)
+        events = json_object(self.rest_get(f"/guardrails/{guardrail.pk}/events/")[1], "events")["events"]
+        self.assertEqual(events[0]["id"], event.pk)
 
         client = APIClient()
         headers = {"Authorization": f"Token {self.token_key}"}
@@ -431,7 +438,8 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
             status, body = self.rest_get(f"/mcpclients/{mcpclient.pk}/tools/?refresh=true")
         self.assertEqual(status, HTTPStatus.BAD_GATEWAY, body)
         self.assertValidResponse("/mcpclients/{id}/tools/", "get", body, status)
-        self.assertEqual((body["detail"], body["status"]), ("down", "error"))
+        error = json_object(body, "error")
+        self.assertEqual((error["detail"], error["status"]), ("down", "error"))
 
         status, body = self.rest_get("/mcpclients/999999999/")
         self.assertEqual(status, HTTPStatus.NOT_FOUND, body)
@@ -485,7 +493,7 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
         self.assertValid("CliApiResourcesResponse", body)
         self.assertEqual(body["metadata"]["command"], "resources")
 
-    def chat_post(self, path: str, body: SmarterDictType, **headers) -> tuple[int, object]:
+    def chat_post(self, path: str, body: SmarterDictType, **headers) -> tuple[int, "_MonkeyPatchedResponse"]:
         """POST JSON to the chat api, as a client of version 2 of the chat contract."""
         client = APIClient()
         response = client.post(
@@ -559,11 +567,16 @@ class TestOpenApiResponses(OpenApiResponseMixin, ApiV1CliTestBase):
         self.assertEqual(events[-1][0], "result")
         self.assertGreater(len(events), 1)
         stream = OpenApiDocument.model_validate(committed_document()).paths["/llm-clients/{id}/prompt/"]
-        schemas = stream.post.responses["200"].content["text/event-stream"].x_smarter_events
+        assert stream.post is not None
+        content = stream.post.responses["200"].content
+        assert content is not None
+        schemas = content["text/event-stream"].x_smarter_events
+        assert schemas is not None
         for event, data in events:
             with self.subTest(event=event):
                 self.assertIn(event, schemas)
-                self.assertValid(schemas[event]["$ref"].rsplit("/", 1)[-1], data)
+                ref = json_object(schemas[event], event)["$ref"]
+                self.assertValid(ref.rsplit("/", 1)[-1], data)
         self.assertValid("PromptChatApiPromptResponse", events[-1][1]["response"])
 
         status, response = self.chat_post(

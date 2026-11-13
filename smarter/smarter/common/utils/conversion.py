@@ -57,12 +57,18 @@ def _convert_snake_to_camel(name: str) -> str:
 # pylint: disable=W0613
 @overload
 def to_camel_case(data: str, convert_values: bool = False, is_recursive: bool = True) -> str: ...
+
+
 @overload
 def to_camel_case(
     data: SmarterDictType, convert_values: bool = False, is_recursive: bool = True
 ) -> SmarterDictType: ...
+
+
 @overload
 def to_camel_case(data: list[Any], convert_values: bool = False, is_recursive: bool = True) -> list[Any]: ...
+
+
 def to_camel_case(
     data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True
 ) -> ConvertibleCaseType:
@@ -152,12 +158,18 @@ def _convert_camel_to_snake(name: str):
 
 @overload
 def to_snake_case(data: str, convert_values: bool = False, is_recursive: bool = True) -> str: ...
+
+
 @overload
 def to_snake_case(
     data: SmarterDictType, convert_values: bool = False, is_recursive: bool = True
 ) -> SmarterDictType: ...
+
+
 @overload
 def to_snake_case(data: list[Any], convert_values: bool = False, is_recursive: bool = True) -> list[Any]: ...
+
+
 def to_snake_case(
     data: ConvertibleCaseType, convert_values: bool = False, is_recursive: bool = True
 ) -> ConvertibleCaseType:

@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.handlers.asgi import ASGIRequest
+from django.http import HttpRequest
 from django.utils.encoding import force_bytes
 from django.utils.http import (
     base36_to_int,
@@ -21,7 +21,7 @@ from smarter.lib.django.shortcuts import reverse
 DEFAULT_LINK_EXPIRATION = 86400
 """How many seconds a link stays valid, unless the generator is given another expiration: one day."""
 
-SmarterRequest = Union[ASGIRequest, Request]
+SmarterRequest = Union[HttpRequest, Request]
 """A Django or a DRF request, either of which :meth:`ExpiringTokenGenerator.encode_link` accepts."""
 
 

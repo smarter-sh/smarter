@@ -23,6 +23,8 @@ MODULE = "smarter.apps.llmclient.tasks.create_custom_domain_dns_record"
 class TestCreateCustomDomainDnsRecord(TestAccountMixin):
     """Test that the DNS record of a custom domain is gotten or created in its DNS zone."""
 
+    is_taskable: MagicMock
+
     def setUp(self):
         super().setUp()
         self.custom_domain = LLMClientCustomDomain.objects.create(

@@ -143,6 +143,7 @@ class TestPluginManagementCommands(PluginAppTestBase):
         )
         plugin_meta = self.plugin_meta(STATIC_PLUGIN_NAME)
         self.assertEqual(plugin_meta.version, "0.2.0")
+        assert plugin_meta.description is not None
         self.assertIn("modified", plugin_meta.description)
 
     def test_update_plugin_skill(self):

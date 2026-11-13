@@ -99,9 +99,11 @@ class TestTimestampedModel(TestAccountMixin):
 
         elapsed_updatd = self.account.elapsed_updated
         self.assertIsInstance(elapsed_updatd, (int, float))
+        assert elapsed_updatd is not None
         self.assertGreaterEqual(elapsed_updatd, 0)
 
         next_elapsed_updated = self.account.elapsed_updated
+        assert next_elapsed_updated is not None
         self.assertGreaterEqual(next_elapsed_updated, elapsed_updatd)
 
     def test_to_json(self):
@@ -184,7 +186,9 @@ class TestTimestampedModel(TestAccountMixin):
         """Test elapsed_updated for a model that was never saved, and for a naive timestamp."""
         self.assertIsNone(Account().elapsed_updated)
         account = Account(updated_at=datetime.datetime.now() - datetime.timedelta(seconds=30))
-        self.assertGreaterEqual(account.elapsed_updated, 30)  # type: ignore[operator]
+        elapsed_updated = account.elapsed_updated
+        assert elapsed_updated is not None
+        self.assertGreaterEqual(elapsed_updated, 30)
 
     def test_to_json_error(self):
         """Test that a serialization failure is reported as a SmarterValueError."""

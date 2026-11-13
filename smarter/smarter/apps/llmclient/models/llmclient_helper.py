@@ -551,7 +551,7 @@ class LLMClientHelper(SmarterRequestMixin):
         return self._llmclient
 
     @llmclient.setter
-    def llmclient(self, llmclient: LLMClient):
+    def llmclient(self, llmclient: Optional[LLMClient]):
         """Sets the LLMClient instance for this LLMClientHelper."""
         if isinstance(llmclient, LLMClient):
             self._llmclient = llmclient

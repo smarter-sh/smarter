@@ -436,7 +436,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             )
         if chat_config.status_code != 200:  # type: ignore[union-attr]
             raise APIV1CLIChatViewError(
-                f"Internal error. Failed to get prompt config for llmclient: {name} {chat_config.get('content')}"
+                f"Internal error. Failed to get prompt config for llmclient: {name} {chat_config.content.decode('utf-8', errors='replace')}"
             )
         logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
@@ -447,11 +447,13 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
                 raise APIV1CLIViewError(
                     f"Internal error. Prompt config 'content' is None. This should never happen. chat_config: {chat_config}"
                 )
-            chat_config_content = (
-                chat_config_content.decode("utf-8") if isinstance(chat_config_content, bytes) else chat_config_content
-            )
-            chat_config: SmarterDictType = json.loads(chat_config_content)
-            self._chat_config = chat_config.get(SCLIResponseGet.DATA.value, {})
+            if isinstance(chat_config_content, bytes):
+                chat_config_text = chat_config_content.decode("utf-8")
+            else:
+                # content that is not bytes, which json.loads() refuses with the TypeError handled below.
+                chat_config_text = chat_config_content
+            chat_config_body: SmarterDictType = json.loads(chat_config_text)
+            self._chat_config = chat_config_body.get(SCLIResponseGet.DATA.value, {})
             session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             if session_key is not None:
                 self._session_key = session_key

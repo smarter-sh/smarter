@@ -19,6 +19,7 @@ from smarter.apps.account import pipeline
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_avatar_url
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.apps.account.pipeline"
 IMAGE = "https://example.com/picture.png"
@@ -135,14 +136,16 @@ class TestSmarterSocialAuthExceptionMiddleware(TestAccountMixin):
 
     def test_call(self):
         middleware = pipeline.SmarterSocialAuthExceptionMiddleware(lambda request: HttpResponse("ok"))
-        self.assertEqual(middleware(RequestFactory().get("/")).content, b"ok")
+        self.assertEqual(http_response(middleware(RequestFactory().get("/"))).content, b"ok")
 
     def test_async_call(self):
         async def get_response(request):
             return HttpResponse("async ok")
 
         middleware = pipeline.SmarterSocialAuthExceptionMiddleware(get_response)
-        self.assertEqual(asyncio.run(middleware(RequestFactory().get("/"))).content, b"async ok")
+        pending = middleware(RequestFactory().get("/"))
+        assert asyncio.iscoroutine(pending)
+        self.assertEqual(http_response(asyncio.run(pending)).content, b"async ok")
 
     def test_process_exception(self):
         middleware = pipeline.SmarterSocialAuthExceptionMiddleware(lambda request: HttpResponse("ok"))

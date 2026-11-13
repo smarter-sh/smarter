@@ -4,12 +4,13 @@ import os
 from datetime import timedelta
 
 # Set the default Django settings module for the 'celery' program
-# and then instantiate the Celery singleton.
+# and then instantiate the Celery singleton. The imports must follow it,
+# because importing the Celery app reads the Django settings.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
 # pylint: disable=wrong-import-position,unused-import
-from smarter.common.conf import smarter_settings
-from smarter.lib.celery_conf import APP as app
+from smarter.common.conf import smarter_settings  # noqa: E402
+from smarter.lib.celery_conf import APP as app  # noqa: E402
 
 # Each entry names the queue of its task, the same queue that the task's @app.task declares,
 # because beat sends a task by name, without importing it. A queue that no worker consumes is

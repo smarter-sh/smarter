@@ -40,10 +40,17 @@ are for superusers only.
    * - ``client.Secrets``, ``client.Plugins``, ``client.Orchestrators``, ``client.Vectorsearches``
      - Read them, and manage them with manifests. A plugin's manifest kind is its class, e.g.
        ``SqlPlugin``, which ``client.Plugins`` looks up for you. ``Plugins.RetrieveManifest`` reads a
-       plugin's manifest by its id.
+       plugin's manifest by its id. ``Vectorsearches.Run`` runs a
+       :doc:`Vectorsearch <../../smarter-resources/smarter-vectorsearch>`.
+   * - ``client.Extensions``
+     - The platform's :doc:`extensions <../../smarter-platform/extensions>` and the extension
+       registry: ``List``, ``Registry``, ``Retrieve``, and for superusers ``CheckUpdates``,
+       ``Install``, ``Upload``, ``Configure``, ``Enable``, ``Disable``, ``Update``, ``Rollback``,
+       ``SetAvailability`` and ``Uninstall``.
    * - ``client.Accounts``
      - Accounts, and ``Accounts.Users``, ``Accounts.UserProfiles`` (each user's membership of an
-       account) and ``Accounts.Contacts``. Superusers only.
+       account) and ``Accounts.Contacts``, for superusers. Every user reads their own token usage,
+       ``Accounts.Usage``, and exports their own data, ``Accounts.DataExports``.
    * - ``client.History``
      - The chat sessions, their tool calls and their plugin uses, newest first: the user's own, their
        account's users' for an account admin, and every one for a superuser.
@@ -120,6 +127,116 @@ Vectorstores
 Documents are split, embedded and loaded asynchronously, and only once the vectorstore is deployed.
 The platform serves these endpoints when ``SMARTER_ENABLE_VECTORSTORE`` is true.
 
+Vectorsearches
+--------------
+
+A Vectorsearch is a saved retrieval pipeline over a vectorstore: its search type, ``k``, score
+threshold and metadata filter. ``Run`` searches with them, and an optional filter narrows the
+results further; the Vectorsearch's own metadata filter wins where both name the same key.
+
+.. code-block:: go
+
+   found, err := client.Vectorsearches.Run(ctx, smarter.ID("rMTAwMDAxMgx"), "How long is the refund window?",
+       smarter.JSONObject{"topic": "refunds"})
+   if err != nil {
+       return err
+   }
+   for _, hit := range found.Results {
+       fmt.Println(smarter.Deref(hit.Score), hit.Text, hit.Metadata)
+   }
+
+The error matches ``smarter.ErrBadRequest`` (400) when the Vectorsearch is disabled, and
+``smarter.ErrPaymentRequired`` (402) when a :doc:`budget <../../smarter-resources/smarter-budget>`
+has locked the Vectorsearch, your user profile or your account.
+
+Extensions
+----------
+
+:doc:`Extensions <../../smarter-platform/extensions>` add tools to the LLMClients that use them.
+Every user reads the extensions that their account may use; a superuser also sees their settings, and
+manages them. An extension is installed disabled: configure its settings, then enable it.
+
+.. code-block:: go
+
+   installed, err := client.Extensions.List(ctx)
+   if err != nil {
+       return err
+   }
+   for _, extension := range installed.Objects {
+       fmt.Println(extension.Slug, extension.InstalledVersion, extension.Enabled)
+   }
+   registry, err := client.Extensions.Registry(ctx, false)
+   if err != nil {
+       return err
+   }
+   for _, item := range registry.Objects {
+       fmt.Println(item.Slug, item.Action)
+   }
+
+   // superusers only
+   if _, err := client.Extensions.Install(ctx, "weather", ""); err != nil {
+       return err
+   }
+   _, err = client.Extensions.Configure(ctx, "weather", &smarter.ExtensionConfigureParams{
+       Values:  map[string]smarter.JSONValue{"weather_api_url": nil}, // nil resets a setting to its default
+       Secrets: map[string]smarter.ExtensionSecretInput{"google_maps_api_key": {SecretID: smarter.Ptr(6)}}, // or {Value: smarter.Ptr("...")}
+   })
+   if err != nil {
+       return err
+   }
+   result, err := client.Extensions.Enable(ctx, "weather")
+   if err != nil {
+       return err
+   }
+   fmt.Println(result.Message, result.Extension.Tools[0].FunctionName)
+
+``Upload`` installs an extension from its .zip archive, read from an ``io.Reader``,
+``SetAvailability(ctx, slug, false, accountIDs)`` limits it to some accounts, and
+``Rollback(ctx, slug, versionID)`` runs one of its earlier installed versions. A user who is not a
+superuser gets an error that matches ``smarter.ErrPermissionDenied`` from every action.
+
+Token usage and data exports
+----------------------------
+
+Every user may read the tokens and cost of their own LLM requests, the series that the web console's
+dashboard charts, over a window of 12 or 24 hours (by hour), 7 days or a month (by day), or a year
+(by month):
+
+.. code-block:: go
+
+   usage, err := client.Accounts.Usage(ctx, smarter.UsagePeriodicity7Days) // "" is the default, 24 hours
+   if err != nil {
+       return err
+   }
+   for _, point := range usage.Points {
+       fmt.Println(point.PeriodStart, point.TotalTokens, point.TotalCost)
+   }
+
+A data export is a zip file of the manifest of every resource that the user owns, with Secrets'
+values redacted. The platform builds it in the background, and emails the user a link to it: the API
+never returns the link or the file.
+
+.. code-block:: go
+
+   overview, err := client.Accounts.DataExports.Overview(ctx)
+   if err != nil {
+       return err
+   }
+   fmt.Println(overview.Email, overview.ExportsLeftToday)
+   export, err := client.Accounts.DataExports.Start(ctx)
+   if err != nil {
+       return err
+   }
+   progress, err := client.Accounts.DataExports.Retrieve(ctx, export.ID)
+   if err != nil {
+       return err
+   }
+   fmt.Println(export.Started, progress.Status, progress.Step)
+
+``Start`` returns the export that is already in progress, if there is one, with ``Started`` false.
+Its error matches ``smarter.ErrRateLimit`` (429) when the user has no email address or has started
+too many exports today, and the SDK doesn't retry that refusal.
+
 LLMHosts
 --------
 
@@ -158,7 +275,9 @@ provider's own SDK, with ``client.Proxies.BaseURL("openai")`` as its base url an
        JSON: smarter.JSONObject{"model": "gpt-4o-mini", "messages": []any{map[string]any{"role": "user", "content": "Hi"}}},
    })
 
-The platform serves proxies when ``SMARTER_ENABLE_PROXY`` is true.
+The error matches ``smarter.ErrPaymentRequired`` (402) when a budget has locked the proxy, its
+provider, your user profile or your account. The platform serves proxies when
+``SMARTER_ENABLE_PROXY`` is true.
 
 Endpoints the SDK does not wrap
 -------------------------------

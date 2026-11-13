@@ -1,5 +1,6 @@
 """Test the methods of :class:`smarter.apps.connection.models.SqlConnection` that connect to a database and query it, with an in-memory SQLite database, so that no database server is needed."""
 
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import paramiko
@@ -40,9 +41,13 @@ class TestSqlConnectionModel(SmarterTestBase):
         connection = sqlite_connection()
         self.assertTrue(connection.test_connection())
         self.assertTrue(connection.validate())
-        rows = json.loads(connection.execute_query("SELECT 1 AS one UNION SELECT 2 AS one;"))
+        result = connection.execute_query("SELECT 1 AS one UNION SELECT 2 AS one;")
+        assert isinstance(result, str)
+        rows = json.loads(result)
         self.assertEqual([row["one"] for row in rows], [1, 2])
-        rows = json.loads(connection.execute_query("SELECT 1 AS one UNION SELECT 2 AS one;", limit=1))
+        result = connection.execute_query("SELECT 1 AS one UNION SELECT 2 AS one;", limit=1)
+        assert isinstance(result, str)
+        rows = json.loads(result)
         self.assertEqual(len(rows), 1)
         connection.close()
         connection.close()
@@ -185,7 +190,7 @@ class TestSqlConnectionModel(SmarterTestBase):
         """Test that the proxy url has the proxy password's value, rather than the Secret."""
         password = MagicMock(spec=Secret)
         password.get_secret.return_value = "proxy-s3cret"
-        password.__str__.return_value = "<Secret proxy_password>"
+        cast(MagicMock, password.__str__).return_value = "<Secret proxy_password>"
         connection = sqlite_connection(proxy_protocol="http", proxy_host="proxy.example.com", proxy_username="u")
         with (
             patch.object(SqlConnection, "proxy_password", password, create=True),

@@ -10,6 +10,7 @@ from smarter.apps.mcpserver.protocol.tools.staff import (
     MAX_RESULT_CHARACTERS,
     truncate,
 )
+from smarter.lib.typing import required
 
 from .operations_base import TICKET, OperationsTestBase
 
@@ -31,7 +32,8 @@ class TestStaffTool(OperationsTestBase):
         schema = self.tool.input_schema()
         self.assertIn("ticket", schema["required"])
         self.assertFalse(schema["additionalProperties"])
-        self.assertTrue(self.tool.definition().annotations.read_only_hint)
+        annotations = required(self.tool.definition().annotations, "definition.annotations")
+        self.assertTrue(annotations.read_only_hint)
 
     def test_audit(self):
         text = self.tool.call({"ticket": TICKET, "contains": ["timeout"], "limit": 5})

@@ -155,8 +155,10 @@ class TestExtensionPromptIntegration(ExtensionTestMixin):
             {"id": extension.pk, "slug": "echo", "version": "1.0.0", "tool": "echo"},
         )
         self.assertEqual(provider.tool_display_name("ext_echo_echo"), "echo")
+        provider_messages = provider.messages
+        assert provider_messages is not None
         smarter_messages = [
-            m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) for m in provider.messages if m.get("role") == "smarter"
+            m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) for m in provider_messages if m.get("role") == "smarter"
         ]
         self.assertTrue(any("tools of these extensions: echo" in str(m) for m in smarter_messages))
 
@@ -190,8 +192,10 @@ class TestExtensionPromptIntegration(ExtensionTestMixin):
         self.assertEqual(len(provider.serialized_tool_calls), 2)  # type: ignore[arg-type]
         self.assertEqual(provider.second_response.choices[0].message.content, "done")  # type: ignore[union-attr]
         # every response is charged.
+        provider_messages = provider.messages
+        assert provider_messages is not None
         charges = [
-            m for m in provider.messages if "prompt charges" in str(m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY))
+            m for m in provider_messages if "prompt charges" in str(m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY))
         ]
         self.assertEqual(len(charges), 3)
 
@@ -233,8 +237,10 @@ class TestExtensionPromptIntegration(ExtensionTestMixin):
         with mock.patch(CREATE_PATCH, return_value=completion("ok")) as create:
             provider.handler(self.user_profile, self.prompt, self.data("Hi."))
         self.assertNotIn("tools", create.call_args.kwargs)
+        provider_messages = provider.messages
+        assert provider_messages is not None
         errors = [
-            m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) for m in provider.messages if m.get("role") == "smarter_error"
+            m.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY) for m in provider_messages if m.get("role") == "smarter_error"
         ]
         self.assertTrue(any("could not use the echo extension: the extension is disabled" in str(m) for m in errors))
 

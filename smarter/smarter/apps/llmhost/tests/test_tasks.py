@@ -27,6 +27,7 @@ from smarter.apps.llmhost.tasks import (
     reconcile_llmhost_computes,
     refresh_llmhost_status,
 )
+from smarter.lib.typing import required
 
 from .base_classes import LLMHostTestBase
 
@@ -47,7 +48,8 @@ class TestLLMHostTasks(LLMHostTestBase):
         self.assertEqual(launch_llmhost(llmhost.pk), "provisioning")
         self.assertIsNotNone(self.cluster.get("deployment", self.base_name(llmhost)))
         llmhost.refresh_from_db()
-        self.queued.assert_called_once_with((llmhost.compute.pk,), countdown=RECONCILE_INTERVAL_SECONDS)
+        compute = required(llmhost.compute, "llmhost.compute")
+        self.queued.assert_called_once_with((compute.pk,), countdown=RECONCILE_INTERVAL_SECONDS)
         self.assertEqual(destroy_llmhost(llmhost.pk, purge=True), "inactive")
         self.assertEqual(self.cluster.resources, {})
         self.assertEqual(self.queued.call_count, 2)
@@ -57,7 +59,7 @@ class TestLLMHostTasks(LLMHostTestBase):
         llmhost = self.new_llmhost("test_tasks_reconcile")
         launch_llmhost(llmhost.pk)
         llmhost.refresh_from_db()
-        compute = llmhost.compute
+        compute = required(llmhost.compute, "llmhost.compute")
         self.queued.reset_mock()
         state = reconcile_llmhost_compute(compute.pk)
         self.assertEqual((state["needed"], state["desired"], state["ready"]), (1, 1, 0))
@@ -99,7 +101,7 @@ class TestLLMHostTasks(LLMHostTestBase):
         llmhost = self.new_llmhost("test_tasks_reconcile_all")
         self.launch(llmhost)
         llmhost.refresh_from_db()
-        compute = llmhost.compute
+        compute = required(llmhost.compute, "llmhost.compute")
         self.assertIn(compute.name, reconcile_llmhost_computes())
         llmhost.status = "inactive"
         llmhost.save(update_fields=["status"])
@@ -127,7 +129,7 @@ class TestLLMHostTasks(LLMHostTestBase):
     def test_managed_hostname(self):
         """Test that only the default hostname of an Ingress is managed."""
         llmhost = self.new_llmhost("test_tasks_hostname")
-        self.assertTrue(managed_hostname(llmhost).startswith(self.base_name(llmhost)))
+        self.assertTrue(required(managed_hostname(llmhost), "managed_hostname").startswith(self.base_name(llmhost)))
         custom = self.new_llmhost("test_tasks_custom_host", network={"hostname": "llm.example.com"})
         self.assertIsNone(managed_hostname(custom))
         internal = self.new_llmhost("test_tasks_internal", network={"ingress": False})

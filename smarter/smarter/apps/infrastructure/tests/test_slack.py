@@ -76,7 +76,9 @@ class TestInMemorySlackService(InfrastructureTestBase):
     def test_post_message(self):
         message = self.slack.post_message("smarter", "*hello*")
         self.assertEqual(message, SlackMessage(channel_id="CSMARTER", ts="1700000000.000001"))
+        assert message is not None
         reply = self.slack.post_message(message.channel_id, "reply", thread_ts=message.ts)
+        assert reply is not None
         self.assertEqual(reply.channel_id, "CSMARTER")
         self.assertEqual([m.text for m in self.slack.messages], ["*hello*", "reply"])
         self.assertIsNone(self.slack.messages[0].thread_ts)

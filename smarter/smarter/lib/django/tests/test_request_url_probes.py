@@ -8,6 +8,7 @@ exercised, and the classifications that matter are asserted.
 """
 
 from functools import cached_property
+from typing import TypedDict
 from unittest.mock import patch
 from urllib.parse import urlsplit
 
@@ -17,6 +18,9 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
 from smarter.lib.django.request import SmarterRequestMixin
+
+# The WSGI environ of a request, passed to RequestFactory as extra keyword arguments.
+WsgiEnviron = TypedDict("WsgiEnviron", {"HTTP_HOST": str, "wsgi.url_scheme": str})
 
 SESSION_KEY = "9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126"
 
@@ -76,7 +80,7 @@ class TestSmarterRequestUrlProbes(TestAccountMixin):
     def srm(self, url: str, method: str = "get", data=None, user=None) -> SmarterRequestMixin:
         parts = urlsplit(url)
         path = parts.path + (f"?{parts.query}" if parts.query else "")
-        kwargs = {"HTTP_HOST": parts.netloc, "wsgi.url_scheme": parts.scheme}
+        kwargs: WsgiEnviron = {"HTTP_HOST": parts.netloc, "wsgi.url_scheme": parts.scheme}
         if method == "post":
             request = self.factory.post(path, data=json.dumps(data or {}), content_type="application/json", **kwargs)
         else:

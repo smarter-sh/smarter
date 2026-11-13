@@ -92,7 +92,7 @@ def get_cached_connection_detail_view_and_kind(
             return None
 
     account = get_cached_account_for_user(invalidate=False, user=user)
-    if not kind or not kind in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
+    if not kind or kind not in [SAMKinds.SQL_CONNECTION, SAMKinds.API_CONNECTION]:
         raise SmarterValueError(f"Unsupported connection kind: {kind}")
     if kind == SAMKinds.SQL_CONNECTION:
         try:

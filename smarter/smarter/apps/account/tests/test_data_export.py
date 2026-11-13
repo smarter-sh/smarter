@@ -50,6 +50,7 @@ from smarter.apps.infrastructure.services import (
     InMemoryEmailService,
     configure_email,
 )
+from smarter.apps.secret.models import Secret
 
 SECRET_VALUE = "sk-data-export-test-value-1234567890"
 TASK = "smarter.apps.account.tasks.create_data_export"
@@ -57,6 +58,9 @@ TASK = "smarter.apps.account.tasks.create_data_export"
 
 class TestDataExport(TestAccountMixin):
     """Export a user's manifests, zip them, save them to private storage, and email the link."""
+
+    secret_name: str
+    secret: Secret
 
     @classmethod
     def setUpClass(cls):

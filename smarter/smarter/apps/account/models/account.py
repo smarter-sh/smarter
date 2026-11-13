@@ -56,7 +56,7 @@ from smarter.lib.django import waffle
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import _AnyUser
@@ -357,7 +357,7 @@ class Account(MetaDataModel):
         if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
 
-        SmarterValidator.validate_account_number(self.account_number)
+        SmarterValidator.validate_account_number(required(self.account_number, "account_number"))
         super().save(*args, **kwargs)
         # UserProfile.cached_account reads accounts by pk, so a change must reach the cache.
         Account.get_cached_object(invalidate=True, pk=self.pk)

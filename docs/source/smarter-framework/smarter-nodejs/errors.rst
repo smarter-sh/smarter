@@ -22,6 +22,7 @@ which follows the platform's own rule (:doc:`ADR-012 <../../adr/012-error-handli
        └── APIStatusError               the API returned a 4xx or 5xx status
            ├── BadRequestError          400
            ├── AuthenticationError      401
+           ├── PaymentRequiredError     402, a budget forbids the charge
            ├── PermissionDeniedError    403
            ├── NotFoundError            404, also an instanceof ResourceNotFoundError
            ├── ConflictError            409
@@ -58,7 +59,10 @@ A request that failed for a transient reason is retried, by default twice, with 
 and jitter, honoring the response's ``Retry-After``. Transient means: no response, a timeout, or a
 408, 429, 502 or 504 status. A 503 is retried only when it didn't come from the platform itself,
 e.g. from a load balancer, because the platform answers 503 for a resource that isn't ready, which a
-retry won't change.
+retry won't change. For the same reason, the 429 with which the platform refuses a data export
+(``accounts.dataExports.start()``) is thrown at once, and so is a ``PaymentRequiredError`` (402): a
+budget has locked the account, user profile or resource that the request would charge, e.g. a
+Vectorsearch run or a Proxy's request, and a retry won't succeed until the budget allows it again.
 
 .. code-block:: typescript
 

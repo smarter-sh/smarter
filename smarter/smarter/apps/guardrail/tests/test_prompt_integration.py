@@ -21,6 +21,7 @@ from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.completion_usage import CompletionUsage
 from pydantic import SecretStr
 
+from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.services import GuardrailBlockedError
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
 from smarter.apps.prompt.models import Prompt
@@ -67,6 +68,8 @@ class TestGuardrailPromptIntegration(GuardrailTestBase):
 
     llmclient: LLMClient
     prompt: Prompt
+    redact: Guardrail
+    block: Guardrail
 
     @classmethod
     def setUpClass(cls):
@@ -164,7 +167,9 @@ class TestGuardrailPromptIntegration(GuardrailTestBase):
         user = self.user_message(provider)
         self.assertEqual(user, "My card is [REDACTED], and my email is [REDACTED].")
         self.assertEqual(provider.input_text, user)
-        self.assertEqual(provider.messages[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY], SYSTEM_ROLE)
+        messages = provider.messages
+        assert messages is not None
+        self.assertEqual(messages[0][OpenAIMessageKeys.MESSAGE_CONTENT_KEY], SYSTEM_ROLE)
         self.assertTrue(any("redacted" in m for m in self.smarter_messages(provider)))
 
     def test_input_blocked(self):
@@ -239,4 +244,5 @@ class TestGuardrailPromptIntegration(GuardrailTestBase):
         sent = str(create.call_args.kwargs["messages"])
         self.assertNotIn("4111 1111 1111 1111", sent)
         self.assertNotIn("jane.doe@example.com", sent)
-        self.assertNotIn("jane.doe@example.com", str(response.get("body", response)))
+        reply = response.get("body", response) if isinstance(response, dict) else response
+        self.assertNotIn("jane.doe@example.com", str(reply))

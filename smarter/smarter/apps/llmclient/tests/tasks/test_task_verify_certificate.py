@@ -16,6 +16,8 @@ CERTIFICATE_ARN = "arn:aws:acm:us-east-1:000000000000:certificate/test"
 class TestVerifyCertificate(SmarterTestBase):
     """Test that a TLS certificate is verified."""
 
+    is_taskable: MagicMock
+
     def setUp(self):
         super().setUp()
         self.infrastructure = MagicMock()

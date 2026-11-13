@@ -17,7 +17,8 @@ class TestPromptHelperLLMClient(SmarterTestBase):
         helper = MagicMock(_llmclient=None)
         llmclient = MagicMock()
         with patch(f"{MODULE}.get_cached_llmclient_by_request", return_value=llmclient) as lookup:
-            self.assertIs(PromptHelper.llmclient.fget(helper), llmclient)
+            # mypy types a property read from its class as its getter, not as the property.
+            self.assertIs(PromptHelper.llmclient.fget(helper), llmclient)  # type: ignore[attr-defined]
             lookup.assert_called_once_with(request=helper.smarter_request)
         self.assertIs(helper._llmclient, llmclient)
 
@@ -25,7 +26,8 @@ class TestPromptHelperLLMClient(SmarterTestBase):
         llmclient = MagicMock()
         helper = MagicMock(_llmclient=llmclient)
         with patch(f"{MODULE}.get_cached_llmclient_by_request") as lookup:
-            self.assertIs(PromptHelper.llmclient.fget(helper), llmclient)
+            # mypy types a property read from its class as its getter, not as the property.
+            self.assertIs(PromptHelper.llmclient.fget(helper), llmclient)  # type: ignore[attr-defined]
             lookup.assert_not_called()
 
 
@@ -51,6 +53,7 @@ class TestPromptHelperGetCachedChatUserAgent(SmarterTestBase):
     def test_a_user_agent_longer_than_its_column_is_truncated(self):
         """A User-Agent longer than Prompt.user_agent is truncated, rather than failing with a DataError."""
         max_length = Prompt._meta.get_field("user_agent").max_length
+        assert max_length is not None
         self.assertEqual(self.created_user_agent("x" * (max_length + 745)), "x" * max_length)
 
     def test_a_short_user_agent_is_stored_as_is(self):

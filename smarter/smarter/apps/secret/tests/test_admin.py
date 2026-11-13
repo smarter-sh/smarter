@@ -69,8 +69,9 @@ class TestSecretAdmin(TestAccountMixin):
         masked = self.model_admin.display_value(self.secret)
         self.assertNotEqual(masked, SECRET_VALUE)
 
-        self.assertEqual(self.model_admin.display_value("not a secret"), "********")
-        self.model_admin.request = object()
+        # deliberately wrong types: a value that isn't a Secret, and a request without a user, are masked.
+        self.assertEqual(self.model_admin.display_value("not a secret"), "********")  # type: ignore[arg-type]
+        self.model_admin.request = object()  # type: ignore[assignment]
         self.assertEqual(self.model_admin.display_value(self.secret), "********")
 
     def test_get_form_injects_the_user(self):

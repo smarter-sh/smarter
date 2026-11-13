@@ -14,6 +14,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import SmarterDictType, required
 
 from ..base import LLMClientApiBaseViewSet
 
@@ -29,6 +30,13 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 # pylint: disable=too-many-instance-attributes
 class TestLLMClientApiBaseViewSet(TestAccountMixin):
     """Test SAM LLMClient Broker."""
+
+    manifest: SmarterDictType
+    loader: SAMLoader
+    request: HttpRequest
+    client: APIClient
+    kwargs: SmarterDictType
+    broker: SAMLLMClientBroker
 
     # pylint: disable=W0212
     @classmethod
@@ -98,9 +106,10 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
 
     def test_base_class_properties(self):
         base_class = LLMClientApiBaseViewSet()
+        llmclient = required(self.broker.llmclient, "broker.llmclient")
 
         # set up the view, as Django does, then invoke dispatch in order to set our class properties
-        base_class.setup(self.request, name=self.broker.llmclient.name)
-        base_class.dispatch(self.request, name=self.broker.llmclient.name)
+        base_class.setup(self.request, name=llmclient.name)
+        base_class.dispatch(self.request, name=llmclient.name)
 
-        logger.debug(f"test_base_class_properties() request={self.request} name={self.broker.llmclient.name}")
+        logger.debug(f"test_base_class_properties() request={self.request} name={llmclient.name}")

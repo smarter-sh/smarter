@@ -23,6 +23,7 @@ from smarter.apps.mcpserver.services.helpdesk.users import (
 )
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.models import SAMJournal
+from smarter.lib.typing import required
 
 from .operations_base import OperationsTestBase
 
@@ -86,7 +87,7 @@ class TestSupportSnapshot(HelpdeskTestBase):
     def test_user_with_errors(self):
         snapshot = support_snapshot(f"  {self.admin_user.email.upper()} ")
         self.assertEqual(snapshot.users_found, 1, "the address is matched case insensitively")
-        account = snapshot.account
+        account = required(snapshot.account, "snapshot.account")
         self.assertEqual(account.username, self.admin_user.get_username())
         self.assertTrue(account.is_active)
         self.assertTrue(account.has_password)
@@ -100,7 +101,7 @@ class TestSupportSnapshot(HelpdeskTestBase):
         self.assertEqual(snapshot.errors, [])
 
     def test_social_user(self):
-        account = support_snapshot(SOCIAL_EMAIL).account
+        account = required(support_snapshot(SOCIAL_EMAIL).account, "snapshot.account")
         self.assertFalse(account.has_password)
         self.assertEqual(account.social_providers, ["google-oauth2"])
         self.assertEqual(account.accounts, [])
@@ -182,5 +183,5 @@ class TestHints(HelpdeskTestBase):
 
     def test_inactive_subscription(self):
         snapshot = support_snapshot(self.admin_user.email)
-        snapshot.account.subscription_active = False
+        required(snapshot.account, "snapshot.account").subscription_active = False
         self.assertIn("subscription is not active", " ".join(hints(snapshot)))

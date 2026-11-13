@@ -19,10 +19,14 @@ from smarter.apps.provider.serializers import (
     ProviderModelSerializer,
     ProviderSerializer,
 )
+from smarter.lib.typing import required
 
 
 class TestProviderContract(OpenApiResponseMixin, TestAccountMixin):
     """Test the Provider contract's models against the serializers, and the views' responses against the document."""
+
+    provider: Provider
+    model: ProviderModel
 
     @classmethod
     def setUpClass(cls):
@@ -48,7 +52,8 @@ class TestProviderContract(OpenApiResponseMixin, TestAccountMixin):
 
     def test_status_is_the_choices(self):
         self.assertEqual(
-            list(get_args(ProviderApiStatus)), [value for value, _ in Provider._meta.get_field("status").choices]
+            list(get_args(ProviderApiStatus)),
+            [value for value, _ in required(Provider._meta.get_field("status").choices, "status.choices")],
         )
 
     def test_models_are_the_serializers_output(self):

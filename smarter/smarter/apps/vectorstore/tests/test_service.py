@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.utils import timezone
 
+from smarter.apps.vectorstore.backends import QdrantBackend
 from smarter.apps.vectorstore.models import (
     PAGE_BREAK,
     VectorstoreDocument,
@@ -15,6 +16,7 @@ from smarter.apps.vectorstore.models import (
 from smarter.apps.vectorstore.service import VectorstoreService, VectorstoreServiceError
 from smarter.apps.vectorstore.signals import vectorstore_status_changed
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import VectorstoreTestBase
 
@@ -134,11 +136,12 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertTrue(filtered)
         self.assertTrue(all(r.metadata["team"] == "b" for r in filtered))
         self.assertEqual(service.search("vectors", search_type="similarity_score_threshold", score_threshold=1.01), [])
-        for kwargs in (
+        invalid: tuple[SmarterDictType, ...] = (
             {"query": " "},
             {"query": "x", "search_type": "fuzzy"},
             {"query": "x", "search_type": "similarity_score_threshold"},
-        ):
+        )
+        for kwargs in invalid:
             with self.subTest(kwargs=kwargs), self.assertRaises(SmarterValueError):
                 service.search(**kwargs)
 
@@ -178,7 +181,9 @@ class TestVectorstoreService(VectorstoreTestBase):
         vectorstore = self.new_vectorstore("test_service_managed", hosting="managed", selfHosted=None)
         service = VectorstoreService(vectorstore)
         with patch("smarter.apps.vectorstore.backends.qdrant.QdrantClient") as client:
-            _ = service.backend.client
+            backend = service.backend
+            assert isinstance(backend, QdrantBackend)
+            _ = backend.client
         client.assert_called_once_with(url="https://qdrant.example.com:6333", api_key="test-api-key", timeout=30)
         self.assertEqual(service.backend.infrastructure_ready(), (True, ""))
 
@@ -193,6 +198,7 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertEqual(service.prune_snapshots(), 1)  # snapshotRetention is 2
         self.assertEqual(backend.delete_snapshot.call_count, 1)
         newest = service.vectorstore.snapshots.order_by("-created_at").first()  # type: ignore[attr-defined]
+        assert newest is not None
         service.restore(newest)
         backend.restore_snapshot.assert_called_once_with(newest.name)
 

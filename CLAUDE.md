@@ -32,8 +32,11 @@ holds only what applies to nearly every task.
 4. **Don't build the Sphinx docs** (about 20 minutes). Check `:doc:` targets
    by file existence, or run `skills/smarter-sphinx-docs/scripts/check-docs.sh`.
 5. **The pre-commit hooks are the lint standard** (black, flake8, isort,
-   autoflake, bandit, mypy, codespell, pyupgrade, pydocstringformatter,
-   Prettier, ESLint). Ruff is not configured; ignore its backlog.
+   autoflake, bandit, mypy, pyright on new errors, complexity on new
+   violations, codespell, pyupgrade, pydocstringformatter, Prettier, ESLint).
+   mypy checks test bodies too (`check_untyped_defs`). flake8 (pyflakes and
+   pycodestyle) has no findings anywhere; complexity above 10 fails only when
+   a change adds or worsens it. Ruff is not configured; ignore its backlog.
 6. **Coverage:** at least 90% per Django app or subsystem, 95% where that takes
    moderate effort.
 7. **This repository is public.** No API keys, tokens, account IDs, private
@@ -159,9 +162,14 @@ staticfiles.
   that hold production data. From 1.0.0 on, released migrations are
   append-only: never edit, delete or regenerate one (ADR-020). See
   `smarter-migrations`.
-- **Breaking changes** (anything an operator must do by hand on upgrade, or a
-  break under ADR-023) need a `!` and a `BREAKING CHANGE:` footer with the
-  upgrade steps. See `docs/source/adr/020-semantic-versioning.rst`.
+- **Breaking changes: never a `!` or a `BREAKING CHANGE:` footer before
+  1.0.0.** Smarter is on 0.x, where semantic-release turns either one into
+  1.0.0 (`1.0.0-alpha.N` on alpha). Cutting 1.0.0 is the maintainers'
+  decision (ADR-020, rule 5), never a side effect of a commit. Before 1.0.0,
+  describe a breaking change and its upgrade steps in the commit body, under
+  its usual `fix` or `feat`. From 1.0.0 on, anything an operator must do by
+  hand on upgrade, or a break under ADR-023, needs both. See
+  `docs/source/adr/020-semantic-versioning.rst`.
 - **Tests:** one test module per source module; fixtures built once in
   `setUpClass`; test data as YAML under `tests/data/`. `SmarterTestBase` has no
   transaction rollback, so delete everything you create. Traps are listed in

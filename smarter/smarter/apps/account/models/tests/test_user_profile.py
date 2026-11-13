@@ -173,28 +173,28 @@ class TestUserProfile(TestAccountMixin):
         )
 
     def test_queryset_with_read_permission_for_superuser(self):
-        qs = SmarterBaseQuerySetWithPermissions(UserProfile)
+        qs: SmarterBaseQuerySetWithPermissions[UserProfile] = SmarterBaseQuerySetWithPermissions(UserProfile)
         result = qs.with_read_permission_for(self.admin_user)
         assert hasattr(result, "all")  # Should return a queryset
 
     def test_queryset_with_ownership_permission_for_superuser(self):
-        qs = SmarterBaseQuerySetWithPermissions(UserProfile)
+        qs: SmarterBaseQuerySetWithPermissions[UserProfile] = SmarterBaseQuerySetWithPermissions(UserProfile)
         result = qs.with_ownership_permission_for(self.admin_user)
         assert hasattr(result, "all")
 
     def test_queryset_with_ownership_permission_for_non_user(self):
-        qs = SmarterBaseQuerySetWithPermissions(UserProfile)
-        result = qs.with_ownership_permission_for(object())  # type: ignore
+        qs: SmarterBaseQuerySetWithPermissions[UserProfile] = SmarterBaseQuerySetWithPermissions(UserProfile)
+        result = qs.with_ownership_permission_for(object())  # type: ignore[arg-type]  # a wrong type, which must be refused
         assert hasattr(result, "none")
 
     def test_manager_returns_custom_queryset(self):
-        manager = SmarterBaseModelManager()
+        manager: SmarterBaseModelManager[UserProfile] = SmarterBaseModelManager()
         qs = manager.get_queryset()
         assert isinstance(qs, SmarterBaseQuerySetWithPermissions)
 
     def test_manager_filter_methods(self):
 
-        manager = SmarterBaseModelManager()
+        manager: SmarterBaseModelManager[UserProfile] = SmarterBaseModelManager()
 
         manager.filter()
         manager.exclude()
@@ -215,7 +215,7 @@ class TestUserProfile(TestAccountMixin):
         )
 
     def test_manager_permission_methods(self):
-        manager = SmarterBaseModelManager()
+        manager: SmarterBaseModelManager[UserProfile] = SmarterBaseModelManager()
         manager.with_read_permission_for(self.admin_user)
         manager.with_ownership_permission_for(self.admin_user)
 

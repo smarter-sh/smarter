@@ -5,6 +5,7 @@ from smarter.apps.vectorstore.models import (
     VectorstoreDocument,
     VectorstoreDocumentSource,
 )
+from smarter.lib.typing import required
 
 from .base_classes import VectorstoreTestBase
 
@@ -15,12 +16,12 @@ class TestVectorstoreModels(VectorstoreTestBase):
     def test_names(self):
         """Test the index name, unique on a shared service, and the Kubernetes name, stable across renames."""
         self_hosted = self.new_vectorstore("test_models_names")
-        self.assertEqual(self_hosted.default_index_name(), self_hosted.name.replace("_", "-"))
+        self.assertEqual(self_hosted.default_index_name(), required(self_hosted.name, "name").replace("_", "-"))
         self.assertEqual(self_hosted.kubernetes_name, f"vectorstore-{self_hosted.pk}")
         self_hosted.rename(new_name=f"renamed_{self.hash_suffix}")
         self.assertEqual(self_hosted.kubernetes_name, f"vectorstore-{self_hosted.pk}")
 
-        account = self.account.account_number.replace("-", "")
+        account = required(self.account.account_number, "account_number").replace("-", "")
         managed = self.new_vectorstore("test_models_managed", hosting="managed", selfHosted=None)
         self.assertTrue(managed.default_index_name().endswith(account))
         pinecone = self.new_vectorstore(

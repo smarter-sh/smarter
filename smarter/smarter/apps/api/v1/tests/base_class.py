@@ -7,7 +7,7 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
-from typing import Optional
+from typing import Optional, Union
 
 from rest_framework.test import APIClient
 
@@ -44,7 +44,7 @@ class ApiV1TestBase(TestAccountMixin):
         return super().tearDown()
 
     def get_response(
-        self, path, manifest: Optional[str] = None, data: Optional[SmarterDictType] = None
+        self, path, manifest: Union[str, SmarterDictType, None] = None, data: Optional[SmarterDictType] = None
     ) -> tuple[SmarterDictType, int]:
         """Prepare and get a response from an api/v1/ endpoint."""
         client = APIClient()

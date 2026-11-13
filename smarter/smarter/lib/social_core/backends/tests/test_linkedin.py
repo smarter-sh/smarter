@@ -26,11 +26,13 @@ class LinkedinTestBase(SmarterTestBase):
     """A backend with a fake strategy, and its settings in self.settings."""
 
     backend_class: type[LinkedinOAuth2 | LinkedinOpenIdConnect] = LinkedinOAuth2
+    backend: LinkedinOAuth2 | LinkedinOpenIdConnect
 
     def setUp(self):
         super().setUp()
         self.settings: SmarterDictType = {}
-        self.backend = self.backend_class(strategy=MagicMock())
+        self.strategy = MagicMock()
+        self.backend = self.backend_class(strategy=self.strategy)
         patcher = patch.object(
             self.backend_class, "setting", lambda backend, key, default=None: self.settings.get(key, default)
         )
@@ -42,6 +44,7 @@ class TestLinkedinOpenIdConnect(LinkedinTestBase):
     """Test validate_claims(), which skips the nonce validation."""
 
     backend_class = LinkedinOpenIdConnect
+    backend: LinkedinOpenIdConnect
 
     def test_validate_claims(self):
         now = timegm(datetime.datetime.now(datetime.timezone.utc).utctimetuple())
@@ -54,6 +57,8 @@ class TestLinkedinOpenIdConnect(LinkedinTestBase):
 
 class TestLinkedinOAuth2(LinkedinTestBase):
     """Test the OAuth2 backend's urls, user data, user details and errors."""
+
+    backend: LinkedinOAuth2
 
     def test_user_details_url(self):
         self.settings["FIELD_SELECTORS"] = ["emailAddress", "id"]
@@ -95,7 +100,7 @@ class TestLinkedinOAuth2(LinkedinTestBase):
         self.settings["FORCE_PROFILE_LANGUAGE"] = "fr"
         self.assertEqual(self.backend.user_data_headers("t")["Accept-Language"], "fr")
         self.settings["FORCE_PROFILE_LANGUAGE"] = True
-        self.backend.strategy.get_language.return_value = "de"
+        self.strategy.get_language.return_value = "de"
         self.assertEqual(self.backend.user_data_headers("t")["Accept-Language"], "de")
 
     def test_request_access_token(self):
@@ -114,6 +119,7 @@ class TestLinkedinOAuth2(LinkedinTestBase):
 
 class TestLinkedinMobileOAuth2(LinkedinTestBase):
     backend_class = LinkedinMobileOAuth2
+    backend: LinkedinMobileOAuth2
 
     def test_user_data_headers(self):
         self.assertEqual(self.backend.user_data_headers("t"), {"Authorization": "Bearer t", "x-li-src": "msdk"})

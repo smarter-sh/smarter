@@ -1277,7 +1277,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         first = SmarterRequestMixin(self.wsgi_request_factory().get("/a/"))
         second = SmarterRequestMixin(self.wsgi_request_factory().get("/b/"))
         with self.assertRaises(TypeError):
-            first < second  # pylint: disable=pointless-statement
+            # Comparing them is the error under test.
+            first < second  # type: ignore[operator]  # pylint: disable=pointless-statement
         self.assertNotEqual(first, second)
         self.assertEqual(hash(first), hash((first.url, first.user_profile)))
         self.assertIs(first.__eq__("not a request mixin"), NotImplemented)

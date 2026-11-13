@@ -20,6 +20,7 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
@@ -76,7 +77,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
 
     @property
     def broker(self) -> SAMAccountBroker:
-        return super().broker  # type: ignore
+        return super().broker  # type: ignore[return-value]
 
     @property
     def kwargs(self) -> SmarterDictType:
@@ -111,26 +112,29 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     def test_immutability(self):
         """Test that the broker instance is immutable after initialization."""
 
+        # each assignment below is to a read-only property or a frozen field, which the test proves is refused.
         with self.assertRaises(AttributeError):
-            self.broker.kind = "NewKind"
+            self.broker.kind = "NewKind"  # type: ignore[misc]
+
+        manifest = self.broker.manifest
+        assert manifest is not None
+        with self.assertRaises(ValidationError):
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            manifest.metadata.annotations = []  # type: ignore[misc,assignment]
 
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.annotations = []
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.tags = []
+            manifest.metadata.tags = []  # type: ignore[misc]
 
         # test any field in spec.config
         with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.companyName = "New Company Name"
+            manifest.spec.config.companyName = "New Company Name"  # type: ignore[misc]
 
         # test any field in status
-        if self.broker.manifest.status:
+        if manifest.status:
             with self.assertRaises(ValidationError):
-                self.broker.manifest.status.adminAccount = None
+                manifest.status.adminAccount = None  # type: ignore[misc,assignment]
 
     def test_ready(self):
         """Test that the test setup is ready."""
@@ -139,10 +143,14 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     def test_sam_broker_initialization(self):
         """Test that the SAMAccountBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**self.loader.manifest_metadata}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        manifest_metadata = self.loader.manifest_metadata
+        assert manifest_metadata is not None
+        metadata = {**manifest_metadata}
+        manifest_spec = self.loader.manifest_spec
+        assert manifest_spec is not None
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         spec = {
-            "config": SAMAccountSpecConfig(**self.loader.manifest_spec["config"]),
+            "config": SAMAccountSpecConfig(**manifest_spec["config"]),
         }
         SAMAccount(
             apiVersion=self.loader.manifest_api_version,
@@ -177,7 +185,9 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
 
     def test_manifest_model_initialization(self):
         """Test that the manifest property can initialize a SAMAccount model."""
-        sam_account = SAMAccount(**self.broker.manifest.model_dump())
+        manifest = self.broker.manifest
+        assert manifest is not None
+        sam_account = SAMAccount(**manifest.model_dump())
         self.assertIsInstance(sam_account, SAMAccount)
 
     def test_formatted_class_name(self):
@@ -245,7 +255,9 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         """
         # apply() creates the manifest's Account, and UserProfile.admin_for_account() then adds
         # the platform admin to it. Delete both, or the admin user is left with a second account.
-        account_name = self.broker.manifest.metadata.name
+        manifest = self.broker.manifest
+        assert manifest is not None
+        account_name = manifest.metadata.name
         if not Account.objects.filter(name=account_name).exists():
 
             def delete_applied_account():
@@ -260,28 +272,28 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.assertTrue(is_valid_response)
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
+        account = self.broker.brokered_account
+        assert account is not None
 
-        # self.broker.manifest.metadata.tags is a list of strings.
+        # manifest.metadata.tags is a list of strings.
         # verify that account.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
+        manifest_tags = set(manifest.metadata.tags or [])
         django_orm_tags = None
-        if isinstance(self.broker.brokered_account.tags, (TaggableManager, _TaggableManager)):
-            django_orm_tags = (
-                set(self.broker.brokered_account.tags_list) if self.broker.brokered_account.tags else set()
-            )
-        elif isinstance(self.broker.brokered_account.tags, set):
-            django_orm_tags = self.broker.brokered_account.tags
+        if isinstance(account.tags, (TaggableManager, _TaggableManager)):
+            django_orm_tags = set(account.tags_list) if account.tags else set()
+        elif isinstance(account.tags, set):
+            django_orm_tags = account.tags
         else:
-            self.fail(f"account.tags is of unexpected type: {type(self.broker.brokered_account.tags)}")
+            self.fail(f"account.tags is of unexpected type: {type(account.tags)}")
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # manifest.metadata.annotations is a map of keys to string values.
         # verify that account.annotations holds the same annotations.
         def sort_annotations(annotations):
             return dict(sorted((annotations or {}).items()))
 
-        manifest_annotations = json.dumps(sort_annotations(self.broker.manifest.metadata.annotations or []))
-        account_annotations = json.dumps(sort_annotations(self.broker.brokered_account.annotations or []))
+        manifest_annotations = json.dumps(sort_annotations(manifest.metadata.annotations or []))
+        account_annotations = json.dumps(sort_annotations(account.annotations or []))
         self.assertEqual(
             manifest_annotations,
             account_annotations,
@@ -289,64 +301,64 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         )
 
         self.assertEqual(
-            self.broker.manifest.metadata.name,
-            self.broker.brokered_account.name,
-            f"Account name does not match manifest name. manifest: {self.broker.manifest.metadata.name}, account: {self.broker.brokered_account.name}",
+            manifest.metadata.name,
+            account.name,
+            f"Account name does not match manifest name. manifest: {manifest.metadata.name}, account: {account.name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.companyName,
-            self.broker.brokered_account.company_name,
-            f"Account company_name does not match manifest companyName. manifest: {self.broker.manifest.spec.config.companyName}, account: {self.broker.brokered_account.company_name}",
+            manifest.spec.config.companyName,
+            account.company_name,
+            f"Account company_name does not match manifest companyName. manifest: {manifest.spec.config.companyName}, account: {account.company_name}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.address1 or "",
-            self.broker.brokered_account.address1 or "",
-            f"Account address1 does not match manifest address1. manifest: {self.broker.manifest.spec.config.address1}, account: {self.broker.brokered_account.address1}",
+            manifest.spec.config.address1 or "",
+            account.address1 or "",
+            f"Account address1 does not match manifest address1. manifest: {manifest.spec.config.address1}, account: {account.address1}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.address2 or "",
-            self.broker.brokered_account.address2 or "",
-            f"Account address2 does not match manifest address2. manifest: {self.broker.manifest.spec.config.address2}, account: {self.broker.brokered_account.address2}",
+            manifest.spec.config.address2 or "",
+            account.address2 or "",
+            f"Account address2 does not match manifest address2. manifest: {manifest.spec.config.address2}, account: {account.address2}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.city or "",
-            self.broker.brokered_account.city or "",
-            f"Account city does not match manifest city. manifest: {self.broker.manifest.spec.config.city}, account: {self.broker.brokered_account.city}",
+            manifest.spec.config.city or "",
+            account.city or "",
+            f"Account city does not match manifest city. manifest: {manifest.spec.config.city}, account: {account.city}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.state or "",
-            self.broker.brokered_account.state or "",
-            f"Account state does not match manifest state. manifest: {self.broker.manifest.spec.config.state}, account: {self.broker.brokered_account.state}",
+            manifest.spec.config.state or "",
+            account.state or "",
+            f"Account state does not match manifest state. manifest: {manifest.spec.config.state}, account: {account.state}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.postalCode or "",
-            self.broker.brokered_account.postal_code or "",
-            f"Account postal_code does not match manifest postalCode. manifest: {self.broker.manifest.spec.config.postalCode}, account: {self.broker.brokered_account.postal_code}",
+            manifest.spec.config.postalCode or "",
+            account.postal_code or "",
+            f"Account postal_code does not match manifest postalCode. manifest: {manifest.spec.config.postalCode}, account: {account.postal_code}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.country or "",
-            self.broker.brokered_account.country or "",
-            f"Account country does not match manifest country. manifest: {self.broker.manifest.spec.config.country}, account: {self.broker.brokered_account.country}",
+            manifest.spec.config.country or "",
+            account.country or "",
+            f"Account country does not match manifest country. manifest: {manifest.spec.config.country}, account: {account.country}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.phoneNumber or "",
-            self.broker.brokered_account.phone_number or "",
-            f"Account phone_number does not match manifest phoneNumber. manifest: {self.broker.manifest.spec.config.phoneNumber}, account: {self.broker.brokered_account.phone_number}",
+            manifest.spec.config.phoneNumber or "",
+            account.phone_number or "",
+            f"Account phone_number does not match manifest phoneNumber. manifest: {manifest.spec.config.phoneNumber}, account: {account.phone_number}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.timezone or "",
-            self.broker.brokered_account.timezone or "",
-            f"Account timezone does not match manifest timezone. manifest: {self.broker.manifest.spec.config.timezone}, account: {self.broker.brokered_account.timezone}",
+            manifest.spec.config.timezone or "",
+            account.timezone or "",
+            f"Account timezone does not match manifest timezone. manifest: {manifest.spec.config.timezone}, account: {account.timezone}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.currency or "",
-            self.broker.brokered_account.currency or "",
-            f"Account currency does not match manifest currency. manifest: {self.broker.manifest.spec.config.currency}, account: {self.broker.brokered_account.currency}",
+            manifest.spec.config.currency or "",
+            account.currency or "",
+            f"Account currency does not match manifest currency. manifest: {manifest.spec.config.currency}, account: {account.currency}",
         )
         self.assertEqual(
-            self.broker.manifest.spec.config.language or "",
-            self.broker.brokered_account.language or "",
-            f"Account language does not match manifest language. manifest: {self.broker.manifest.spec.config.language}, account: {self.broker.brokered_account.language}",
+            manifest.spec.config.language or "",
+            account.language or "",
+            f"Account language does not match manifest language. manifest: {manifest.spec.config.language}, account: {account.language}",
         )
 
     def test_describe(self):
@@ -391,7 +403,8 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
 
     def test_delete_account_not_found(self):
         """Test delete method raises not found for missing account."""
-        self.request._body = None  # pylint: disable=protected-access
+        # a request without a body, so that the broker has no manifest; HttpRequest types _body as bytes.
+        self.request._body = None  # type: ignore[assignment]  # pylint: disable=protected-access
         self._broker = self.SAMBrokerClass(self.request)
 
         with self.assertRaises(SAMBrokerErrorNotImplemented):
@@ -400,7 +413,8 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     def test_describe_account_not_found(self):
         """Test describe method raises not found for missing account."""
         request = self.request
-        request._body = None  # type: ignore
+        # a request without a body, so that the broker has no manifest; HttpRequest types _body as bytes.
+        request._body = None  # type: ignore[assignment]  # pylint: disable=protected-access
         self._broker = self.SAMBrokerClass(request)
         # with self.assertRaises(SAMBrokerErrorNotFound):
         #     self.broker.describe(request, {"name": "nonexistent-account"})
@@ -414,33 +428,37 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
 
-    def test_invalid_timezone(self):
-        """Test that applying a manifest with an invalid timezone raises an error."""
-        # Modify the manifest to have an invalid timezone
+    def account_config(self, **overrides) -> SAMAccountSpecConfig:
+        """
+        Validate the broker's Account config with some values replaced.
 
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.timezone = "Invalid/Timezone"
+        :param overrides: The values to replace, by field name, e.g. ``timezone="Europe/Paris"``.
+        :returns: The validated config.
+        """
+        manifest = self.broker.manifest
+        assert manifest is not None
+        data = {**manifest.spec.config.model_dump(), **overrides}
+        return SAMAccountSpecConfig.model_validate(data)
 
-    def test_invalid_currency(self):
-        """Test that applying a manifest with an invalid currency raises an error."""
-        # Modify the manifest to have an invalid currency
+    def test_invalid_locale_settings(self):
+        """An invalid timezone, currency, language or country is refused by its own validator, with its message."""
+        cases = (
+            ("timezone", "Invalid/Timezone", "Invalid IANA timezone"),
+            ("currency", "INVALID", "Invalid ISO 4217 currency code"),
+            ("language", "xx-XX", "Invalid language code"),
+            ("language", "en-XX", "Invalid BCP 47 language tag"),
+            ("country", "XX", "Invalid ISO 3166 country code"),
+        )
+        for field, value, message in cases:
+            with self.subTest(field=field, value=value):
+                with self.assertRaisesRegex(SmarterValueError, message):
+                    self.account_config(**{field: value})
 
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.currency = "INVALID"
-
-    def test_invalid_language(self):
-        """Test that applying a manifest with an invalid language raises an error."""
-        # Modify the manifest to have an invalid language
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.language = "xx-XX"
-
-    def test_invalid_country(self):
-        """Test that applying a manifest with an invalid country raises an error."""
-        # Modify the manifest to have an invalid country
-
-        with self.assertRaises(ValidationError):
-            self.broker.manifest.spec.config.country = "XX"
+    def test_valid_locale_settings(self):
+        """A valid timezone, currency, language and country are accepted as given."""
+        config = self.account_config(timezone="Europe/Paris", currency="EUR", language="fr-FR", country="FRA")
+        values = (config.timezone, config.currency, config.language, config.country)
+        self.assertEqual(values, ("Europe/Paris", "EUR", "fr-FR", "FRA"))
 
 
 class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):

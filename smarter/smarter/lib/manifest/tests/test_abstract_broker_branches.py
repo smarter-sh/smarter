@@ -9,6 +9,7 @@ implement, through SAMGuardrailBroker.
 """
 
 import os
+from typing import Callable, Optional
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.db import IntegrityError
@@ -28,9 +29,13 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.broker.abstract_broker_class import BrokerNotImplemented
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .test_abstract_broker import GUARDRAIL_DATA
+
+# the getter of the name property: mypy types AbstractBroker.name, read from the class, as the getter itself
+NAME_GETTER: Callable[[AbstractBroker], Optional[str]] = AbstractBroker.__dict__["name"].fget
 
 MISSING = Guardrail.DoesNotExist
 MULTIPLE = Guardrail.MultipleObjectsReturned
@@ -171,7 +176,8 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         broker._name = None
         broker.__dict__.pop("name", None)
         broker._manifest = manifest
-        self.assertEqual(AbstractBroker.name.fget(broker), manifest.metadata.name)
+        assert isinstance(manifest, AbstractSAMBase)
+        self.assertEqual(NAME_GETTER(broker), manifest.metadata.name)
 
     def test_a_missing_name_is_not_a_warning(self):
         """A broker with no manifest, loader or name parameter, e.g. for json-schema, logs no warning (issue #952)."""
@@ -183,8 +189,8 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
             patch.object(SAMGuardrailBroker, "params", new_callable=PropertyMock, return_value=None),
             self.assertNoLogs("smarter.lib.manifest.broker.abstract_broker_class", level="WARNING"),
         ):
-            self.assertIsNone(AbstractBroker.name.fget(broker))
-            self.assertIsNone(AbstractBroker.name.fget(broker))
+            self.assertIsNone(NAME_GETTER(broker))
+            self.assertIsNone(NAME_GETTER(broker))
 
     def test_a_broker_that_is_not_ready_is_not_a_warning(self):
         """A broker with no name, manifest, loader or ORM instance, e.g. for a list, logs no warning (issue #974)."""
@@ -206,12 +212,12 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
     def test_setter_validation(self):
         broker = self.broker
         with self.assertRaises(SmarterValueError):
-            broker.name_cached_property_setter(42)
+            broker.name_cached_property_setter(42)  # type: ignore[arg-type]  # deliberately not a str
         broker.__dict__["name"] = "cached"
         broker.name_cached_property_setter("renamed")
         self.assertNotIn("name", broker.__dict__)
         with self.assertRaises(SmarterValueError):
-            broker.api_version = 42
+            broker.api_version = 42  # type: ignore[assignment]  # deliberately not a str
 
     def test_loader_not_ready(self):
         broker = self.broker
@@ -221,7 +227,7 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         self.assertIsNone(broker.loader)
 
     def test_raise_for_unknown_keys_ignores_non_dicts(self):
-        self.assertIsNone(self.broker.raise_for_unknown_keys("not a dict"))
+        self.broker.raise_for_unknown_keys("not a dict")
 
     def test_manifest_to_django_orm_without_a_user_profile(self):
         broker = self.broker
@@ -327,7 +333,7 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
 
     def test_broker_not_implemented(self):
         """BrokerNotImplemented can't be instantiated, and each of its methods defers to AbstractBroker."""
-        concrete = type(
+        concrete: type[BrokerNotImplemented] = type(
             "ConcreteBrokerNotImplemented",
             (BrokerNotImplemented,),
             {"ORMMetaModelClass": None, "apply": lambda self, request, *args, **kwargs: None},

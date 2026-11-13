@@ -31,7 +31,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING])
 
@@ -75,7 +75,8 @@ class VectorsearchView(ViewBase):
 
         :returns: A queryset holding :attr:`vectorsearch`.
         """
-        return Vectorsearch.objects.filter(id=self.vectorsearch.id)  # type: ignore[return-value]
+        vectorsearch = required(self.vectorsearch, "vectorsearch")
+        return Vectorsearch.objects.filter(id=vectorsearch.id)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """

@@ -86,7 +86,7 @@ class TestPyrightNewErrors(unittest.TestCase):
 
     def test_main_without_changed_files(self):
         """Main returns 0 when nothing changed."""
-        with mock.patch.object(checker, "changed_files", return_value=[]):
+        with mock.patch.object(checker.new_findings, "changed_files", return_value=[]):
             self.assertEqual(checker.main([]), 0)
 
 

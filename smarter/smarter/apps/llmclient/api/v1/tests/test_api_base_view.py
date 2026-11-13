@@ -6,6 +6,7 @@ The view's request-derived properties are replaced, so that each guard is reache
 
 import asyncio
 import json
+from collections.abc import AsyncIterator
 from contextlib import ExitStack
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -89,9 +90,12 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
     def stream_events(response: StreamingHttpResponse) -> list[str]:
         """The frames of a streaming response."""
 
+        content = response.streaming_content
+        assert isinstance(content, AsyncIterator)
+
         async def collect():
             frames = []
-            async for chunk in response.streaming_content:
+            async for chunk in content:
                 frames.append(chunk.decode() if isinstance(chunk, (bytes, bytearray)) else chunk)
             return frames
 
@@ -146,7 +150,8 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
 
     def test_post_without_a_json_body_is_a_bad_request(self):
         """Test that an empty or non-JSON body is the client's mistake, a 400, and not a server error."""
-        for data in (None, {}, "", "not a dict"):
+        bodies: tuple[object, ...] = (None, {}, "", "not a dict")
+        for data in bodies:
             with self.subTest(data=data):
                 response = self.post(data=data)
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
@@ -268,6 +273,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         response = self.post_with_harness(handler, HTTP_X_SMARTER_CAPABILITIES="chat-contract-v2")
         self.assertEqual(response.status_code, 429)
         payload = PromptChatApiPromptResponse.model_validate(json.loads(response.content))
+        assert payload.error is not None
         self.assertEqual(payload.error.description, "Rate limit reached.")
         self.assertEqual(payload.error.errorClass, "PromptChatApiErrorLLMProvider")
         self.assertEqual(payload.data.messages[0].role, "smarter_error")

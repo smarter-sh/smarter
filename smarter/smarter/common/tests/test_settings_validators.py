@@ -9,6 +9,7 @@ exception, e.g. a TypeError or an AttributeError, is a bug in the validator.
 
 import inspect
 import os
+from typing import Optional
 from unittest.mock import Mock, PropertyMock, patch
 
 from pydantic import SecretStr
@@ -302,7 +303,7 @@ class TestSettingsMethods(SmarterTestBase):
         for name in names:
             cleared[name] = ""
             cleared[f"SMARTER_{name}"] = ""
-        cases = (
+        cases: tuple[tuple[dict[str, str], Optional[str]], ...] = (
             ({"GITHUB_TOKEN": "a", "GH_TOKEN": "b", "GITHUB_API_TOKEN": "c"}, "a"),
             ({"GH_TOKEN": "b", "SMARTER_GITHUB_API_TOKEN": "c"}, "b"),
             ({"SMARTER_GITHUB_API_TOKEN": "c"}, "c"),
@@ -314,6 +315,7 @@ class TestSettingsMethods(SmarterTestBase):
                 if expected is None:
                     self.assertIsNone(token)
                 else:
+                    assert token is not None
                     self.assertEqual(token.get_secret_value(), expected)
 
     def test_slack_bot_token(self):

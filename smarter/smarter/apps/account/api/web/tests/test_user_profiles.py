@@ -26,13 +26,16 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.api.web.urls import ApiWebReverseNames
 from smarter.lib import json
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 OAUTH_IMAGE = "https://example.com/second-account-picture.png"
 
 
 class TestUserProfiles(TestAccountMixin):
     """A student who is enrolled in two courses: the non-admin user, with a second, newer profile."""
+
+    second_account: Account
+    second_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):
@@ -94,7 +97,8 @@ class TestUserProfiles(TestAccountMixin):
         )
         self.assertEqual(profiles[0]["accountNumber"], self.second_account.account_number)
         self.assertEqual(profiles[0]["accountName"], self.second_account.company_name)
-        self.assertTrue(profiles[0]["createdAt"].startswith(str(self.second_profile.created_at.year)))
+        created_at = required(self.second_profile.created_at, "created_at")
+        self.assertTrue(profiles[0]["createdAt"].startswith(str(created_at.year)))
         self.assertEqual([p["isCurrent"] for p in profiles], [True, False])
 
     def test_select_makes_the_console_act_as_the_chosen_profile(self):
@@ -150,7 +154,9 @@ class TestUserProfiles(TestAccountMixin):
         self.assertEqual(get_cached_avatar_url(user_id=user.pk), OAUTH_IMAGE)
 
         self.select(self.non_admin_user_profile.pk)
-        self.assertEqual(UserProfile.get_selected_object(user.pk).pk, self.non_admin_user_profile.pk)
+        self.assertEqual(
+            required(UserProfile.get_selected_object(user.pk), "selected profile").pk, self.non_admin_user_profile.pk
+        )
         self.assertEqual(UserProfile.get_cached_object(user=user).pk, self.non_admin_user_profile.pk)
         self.assertEqual(get_cached_account_for_user(user=user).pk, self.account.pk)
         self.assertNotEqual(get_cached_avatar_url(user_id=user.pk), OAUTH_IMAGE)
@@ -164,7 +170,9 @@ class TestUserProfiles(TestAccountMixin):
         self.select(self.user_profile.pk)
         self.assertIsNone(UserProfile.get_selected_object(self.non_admin_user.pk))
         self.assertEqual(UserProfile.get_cached_object(user=self.non_admin_user).pk, self.second_profile.pk)
-        self.assertEqual(UserProfile.get_selected_object(self.admin_user.pk).pk, self.user_profile.pk)
+        self.assertEqual(
+            required(UserProfile.get_selected_object(self.admin_user.pk), "selected profile").pk, self.user_profile.pk
+        )
 
     def test_a_choice_of_a_deleted_profile_is_ignored(self):
         self.select(2**31 - 1)

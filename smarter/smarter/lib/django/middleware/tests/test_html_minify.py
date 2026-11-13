@@ -7,6 +7,7 @@ from django.test import RequestFactory
 
 from smarter.lib.django.middleware.html_minify import HTMLMinifyMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 HTML = "<html>\n  <head><!-- a comment --><title>Title</title></head>\n  <body><p>Hello</p></body>\n</html>"
 
@@ -94,9 +95,13 @@ class TestHTMLMinifyMiddleware(SmarterTestBase):
 
         middleware = HTMLMinifyMiddleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            self.assertNotIn("a comment", asyncio.run(middleware(self.factory.get("/dashboard/"))).content.decode())
+            minified = middleware(self.factory.get("/dashboard/"))
+            assert asyncio.iscoroutine(minified)
+            self.assertNotIn("a comment", http_response(asyncio.run(minified)).content.decode())
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=False):
-            self.assertIn("a comment", asyncio.run(middleware(self.factory.get("/dashboard/"))).content.decode())
+            unminified = middleware(self.factory.get("/dashboard/"))
+            assert asyncio.iscoroutine(unminified)
+            self.assertIn("a comment", http_response(asyncio.run(unminified)).content.decode())
 
     def test_async_process_response(self):
         import asyncio  # pylint: disable=import-outside-toplevel

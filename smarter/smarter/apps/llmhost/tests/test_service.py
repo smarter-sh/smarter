@@ -19,6 +19,7 @@ from smarter.apps.llmhost.signals import (
     llmhost_status_changed,
 )
 from smarter.apps.secret.models import Secret
+from smarter.lib.typing import required
 
 from .base_classes import HF_TOKEN, LLMHostTestBase
 
@@ -87,23 +88,25 @@ class TestLLMHostService(LLMHostTestBase):
         self.assertEqual(observation.status, "provisioning")
         self.assertEqual(self.kinds(), ["deployment", "ingress", "persistentvolumeclaim", "secret", "service"])
         llmhost.refresh_from_db()
-        self.assertEqual(llmhost.compute.name, "gpu_a10g_1x")
+        compute = required(llmhost.compute, "llmhost.compute")
+        self.assertEqual(compute.name, "gpu_a10g_1x")
         self.assertEqual(llmhost.status, "provisioning")
-        self.assertEqual(self.nodegroups.created, [llmhost.compute.nodegroup_name])
-        self.assertEqual(self.nodegroups.nodegroups[llmhost.compute.nodegroup_name].desired, 1)
-        pod = self.cluster.get("deployment", base_name)["spec"]["template"]
+        self.assertEqual(self.nodegroups.created, [compute.nodegroup_name])
+        self.assertEqual(self.nodegroups.nodegroups[compute.nodegroup_name].desired, 1)
+        pod = required(self.cluster.get("deployment", base_name), "deployment")["spec"]["template"]
         self.assertEqual(pod["metadata"]["labels"]["smarter.sh/compute"], "gpu_a10g_1x")
         self.assertEqual(pod["spec"]["nodeSelector"], {"smarter.sh/compute": "gpu_a10g_1x"})
         # once the node joins, the pods wait only for themselves.
-        self.join_nodes(llmhost.compute)
+        self.join_nodes(compute)
         self.assertEqual(self.service.observe(llmhost).status, "pending")
         self.assertIsNotNone(llmhost.deployed_at)
         self.assertEqual(llmhost.endpoint_url, f"http://{base_name}.smarter-platform-test.svc.cluster.local/v1")
         self.assertTrue(llmhost.public_url.startswith(f"https://{base_name}.{self.account.account_number}."))
-        self.assertEqual(llmhost.api_key_secret.name, "llmhost_test_service_launch_api_key")
-        k8s_secret = self.cluster.get("secret", base_name)
+        api_key_secret = required(llmhost.api_key_secret, "llmhost.api_key_secret")
+        self.assertEqual(api_key_secret.name, "llmhost_test_service_launch_api_key")
+        k8s_secret = required(self.cluster.get("secret", base_name), "secret")
         self.assertEqual(k8s_secret["stringData"]["HF_TOKEN"], HF_TOKEN)
-        self.assertEqual(k8s_secret["stringData"]["API_KEY"], llmhost.api_key_secret.get_secret())
+        self.assertEqual(k8s_secret["stringData"]["API_KEY"], api_key_secret.get_secret())
         self.assertGreaterEqual(len(k8s_secret["stringData"]["API_KEY"]), 32)
         self.assertEqual(self.events(llmhost), ["launched", "nodes_scaled", "status_changed"])
         launched.assert_called_once()
@@ -114,16 +117,20 @@ class TestLLMHostService(LLMHostTestBase):
         llmhost = self.new_llmhost("test_service_relaunch")
         self.launch(llmhost)
         llmhost.refresh_from_db()
-        api_key, deployed_at = llmhost.api_key_secret.get_secret(), llmhost.deployed_at
+        api_key, deployed_at = (
+            required(llmhost.api_key_secret, "llmhost.api_key_secret").get_secret(),
+            llmhost.deployed_at,
+        )
         llmhost.spec["scaling"] = {"replicas": 2}
         llmhost.spec["storage"] = {"accessMode": "ReadWriteMany"}
         llmhost.save()
         self.launch(llmhost)
         llmhost.refresh_from_db()
-        self.assertEqual(llmhost.api_key_secret.get_secret(), api_key)
+        self.assertEqual(required(llmhost.api_key_secret, "llmhost.api_key_secret").get_secret(), api_key)
         self.assertEqual(llmhost.deployed_at, deployed_at)
         self.assertEqual(llmhost.replicas, 2)
-        self.assertEqual(self.cluster.get("deployment", self.base_name(llmhost))["spec"]["replicas"], 2)
+        deployment = required(self.cluster.get("deployment", self.base_name(llmhost)), "deployment")
+        self.assertEqual(deployment["spec"]["replicas"], 2)
 
     def test_launch_api_key_secret(self):
         """Test that network.apiKeySecret is used, rather than a generated key."""
@@ -131,7 +138,8 @@ class TestLLMHostService(LLMHostTestBase):
         self.addCleanup(secret.delete)
         llmhost = self.new_llmhost("test_service_own_key", network={"apiKeySecret": "test_llmhost_my_api_key"})
         self.launch(llmhost)
-        self.assertEqual(self.cluster.get("secret", self.base_name(llmhost))["stringData"]["API_KEY"], "my-own-api-key")
+        k8s_secret = required(self.cluster.get("secret", self.base_name(llmhost)), "secret")
+        self.assertEqual(k8s_secret["stringData"]["API_KEY"], "my-own-api-key")
         self.assertFalse(Secret.objects.filter(name="llmhost_test_service_own_key_api_key").exists())
 
     def test_launch_without_secrets(self):
@@ -172,7 +180,7 @@ class TestLLMHostService(LLMHostTestBase):
             name=f"test_service_budget_{self.hash_suffix}", periodic_limit=Decimal("1.00"), message="Over budget."
         )
         self.addCleanup(budget.delete)
-        budget.attach(llmhost.compute)
+        budget.attach(required(llmhost.compute, "llmhost.compute"))
         charge = Charge.objects.create(
             resource_locator=llmhost.compute.record_locator,  # type: ignore[union-attr]
             charge_type=ChargeTypes.COMPUTE.value,
@@ -304,7 +312,8 @@ class TestLLMHostService(LLMHostTestBase):
         self.assertEqual(self.kinds(), ["persistentvolumeclaim"])
         # no other LLMHost needs its node, so it is removed.
         self.assertEqual(len(self.nodegroups.removed), 1)
-        self.assertEqual(self.nodegroups.nodegroups[llmhost.compute.nodegroup_name].desired, 0)
+        compute = required(llmhost.compute, "llmhost.compute")
+        self.assertEqual(self.nodegroups.nodegroups[compute.nodegroup_name].desired, 0)
         llmhost.refresh_from_db()
         self.assertEqual((llmhost.status, llmhost.ready_replicas), ("inactive", 0))
         self.assertIn("kept", llmhost.status_message)

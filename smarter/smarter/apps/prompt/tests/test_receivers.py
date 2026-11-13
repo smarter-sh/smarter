@@ -43,6 +43,7 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
     def test_session_invoked_logs_at_debug(self):
         """The session's string form includes its session_key, so it's logged at DEBUG, not INFO."""
         with patch.object(receivers, "logger") as mock_logger:
+            # the receiver must log a session invoked without a request, which its annotation doesn't allow.
             receivers.handle_chat_session_invoked(sender=SmarterTestBase, instance=MagicMock(), request=None)
         mock_logger.debug.assert_called_once()
         mock_logger.info.assert_not_called()
@@ -54,6 +55,30 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
                 receivers.handle_chat_response_success(sender=SmarterTestBase, prompt=None, request=None, response=None)
         mock_logger.warning.assert_not_called()
         mock_task.delay.assert_not_called()
+
+    def test_chat_response_success_saves_the_history_now(self):
+        """A finished prompt's history is saved before its response returns, not by a Celery task.
+
+        The next prompt of the conversation reads it, and a queued task could run after that prompt arrived.
+        """
+        prompt = MagicMock(id=7)
+        messages = [{"role": "user", "content": "What is 2 to the 10th power?"}]
+        with patch.object(receivers, "create_prompt_history") as mock_task:
+            receivers.handle_chat_response_success(
+                sender=SmarterTestBase, prompt=prompt, request=None, response={"id": "x"}, messages=messages
+            )
+        mock_task.assert_called_once_with(7, None, {"id": "x"}, messages)
+        mock_task.delay.assert_not_called()
+
+    def test_save_prompt_history_queues_the_task_when_the_save_fails(self):
+        """A save that fails is queued as the Celery task, which retries it, and is logged without the chat."""
+        with patch.object(receivers, "logger") as mock_logger:
+            with patch.object(receivers, "create_prompt_history") as mock_task:
+                mock_task.side_effect = RuntimeError(CHAT_CONTENT_MARKER)
+                receivers.save_prompt_history(7, None, None, [{"role": "user", "content": CHAT_CONTENT_MARKER}])
+        mock_task.delay.assert_called_once()
+        mock_logger.error.assert_called_once()
+        self.assertNotIn(CHAT_CONTENT_MARKER, str(mock_logger.error.call_args))
 
     def test_chat_response_failure_logs_no_chat_content(self):
         """A failed prompt logs the model and the number of messages, never the messages or the response (issue #970)."""

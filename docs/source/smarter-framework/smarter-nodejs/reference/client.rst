@@ -16,7 +16,9 @@ The client, ``new Smarter({...})``, and its options. See :doc:`../configuration`
    - ``Smarter.guardrails``, ``Smarter.mcpClients``, ``Smarter.vectorstores``,
      ``Smarter.llmHosts``, ``Smarter.secrets``, ``Smarter.plugins``,
      ``Smarter.orchestrators``, ``Smarter.vectorsearches``
-   - ``Smarter.accounts`` (and ``accounts.users``, ``accounts.contacts`` and ``accounts.userProfiles``)
+   - ``Smarter.extensions``: the platform's extensions, and the extension registry
+   - ``Smarter.accounts`` (and ``accounts.users``, ``accounts.contacts``, ``accounts.userProfiles``,
+     ``accounts.dataExports``, and every user's token usage, ``accounts.usage()``)
    - ``Smarter.history``, ``Smarter.journal``, ``Smarter.providers``, ``Smarter.proxies``
    - ``Smarter.whoami``, ``Smarter.version``, ``Smarter.status`` and ``Smarter.kinds``
 
@@ -28,7 +30,7 @@ The client, ``new Smarter({...})``, and its options. See :doc:`../configuration`
 
    .. js:attribute:: accounts
 
-      Accounts, and their users and contacts.
+      Accounts, and their users and contacts, and the user's token usage and data exports.
 
       :type: Accounts
 
@@ -37,6 +39,12 @@ The client, ``new Smarter({...})``, and its options. See :doc:`../configuration`
       The client's resolved configuration, without its api key.
 
       :type: Omit<ClientConfig, "apiKey">
+
+   .. js:attribute:: extensions
+
+      The platform's extensions, and the extension registry.
+
+      :type: Extensions
 
    .. js:attribute:: guardrails
 
@@ -198,7 +206,7 @@ The client, ``new Smarter({...})``, and its options. See :doc:`../configuration`
 
    The SDK's version.
 
-   :type: "1.0.2"
+   :type: "1.0.3-alpha.1"
 
 .. js:class:: SmarterOptions
 

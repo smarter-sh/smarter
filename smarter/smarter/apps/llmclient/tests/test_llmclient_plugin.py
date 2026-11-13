@@ -8,6 +8,7 @@ import yaml
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
 from smarter.apps.llmtool.tests.base_classes import PluginAppTestBase
+from smarter.lib.typing import required
 
 
 class TestLLMClientPlugin(PluginAppTestBase):
@@ -15,22 +16,25 @@ class TestLLMClientPlugin(PluginAppTestBase):
 
     def setUp(self):
         super().setUp()
+        self.static_plugin_meta = required(self.static_plugin.plugin_meta, "static_plugin.plugin_meta")
         self.llmclient = LLMClient.objects.create(
             name=f"test_llmclient_plugin_{self.hash_suffix}", user_profile=self.user_profile
         )
         self.addCleanup(self.llmclient.delete)
         self.llmclient_plugin = LLMClientPlugin.objects.create(
-            llmclient=self.llmclient, plugin_meta=self.static_plugin.plugin_meta
+            llmclient=self.llmclient, plugin_meta=self.static_plugin_meta
         )
 
     def test_str(self):
-        self.assertIn(self.static_plugin.plugin_meta.name, str(self.llmclient_plugin))
+        self.assertIn(self.static_plugin_meta.name, str(self.llmclient_plugin))
 
     def test_plugin(self):
         """Test that the LLMClientPlugin's plugin is the plugin of its PluginMeta."""
         plugin = self.llmclient_plugin.plugin
-        self.assertEqual(plugin.plugin_meta.pk, self.static_plugin.plugin_meta.pk)
-        self.assertIsNone(LLMClientPlugin(plugin_meta=self.static_plugin.plugin_meta).plugin)
+        assert plugin is not None
+        assert plugin.plugin_meta is not None
+        self.assertEqual(plugin.plugin_meta.pk, self.static_plugin_meta.pk)
+        self.assertIsNone(LLMClientPlugin(plugin_meta=self.static_plugin_meta).plugin)
 
     def test_plugins(self):
         plugins = LLMClientPlugin.plugins(self.llmclient)
@@ -53,7 +57,7 @@ class TestLLMClientPlugin(PluginAppTestBase):
             self.assertLogs("smarter.apps.llmclient.models.llmclient_plugin", level="ERROR") as logs,
         ):
             self.assertEqual(LLMClientPlugin.plugins(self.llmclient), [])
-        self.assertIn(self.static_plugin.plugin_meta.name, logs.output[0])
+        self.assertIn(self.static_plugin_meta.name, logs.output[0])
         self.assertIn("failed to load", logs.output[0])
 
     def test_plugins_skips_plugin_that_does_not_load(self):

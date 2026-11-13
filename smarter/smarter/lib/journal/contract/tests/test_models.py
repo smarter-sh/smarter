@@ -35,6 +35,7 @@ from smarter.lib.journal.serializers import (
     SAMJournalSerializer,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 KEY = "0123456789abcdef" * 4
 
@@ -59,12 +60,16 @@ class TestChoices(SmarterTestBase):
     """Test that the Literals of a journal entry are the choices of the SAMJournal model."""
 
     def test_thing(self):
-        choices = {value for value, _ in SAMJournal._meta.get_field("thing").choices}
+        field_choices = SAMJournal._meta.get_field("thing").choices
+        assert field_choices is not None
+        choices = {value for value, _ in field_choices}
         self.assertEqual(set(get_args(SAMJournalApiThing)), choices)
         self.assertEqual(choices, {value for value, _ in SmarterJournalThings.choices()})
 
     def test_command(self):
-        choices = {value for value, _ in SAMJournal._meta.get_field("command").choices}
+        field_choices = SAMJournal._meta.get_field("command").choices
+        assert field_choices is not None
+        choices = {value for value, _ in field_choices}
         self.assertEqual(set(get_args(SAMJournalApiCommand)), choices)
         self.assertEqual(choices, {value for value, _ in SmarterJournalCliCommands.choices()})
 
@@ -116,18 +121,20 @@ class TestErrorResponse(SmarterTestBase):
         self.assertEqual(set(SAMJournalApiErrorBody.model_fields), keys)
 
     def test_dump(self):
-        dumped = SAMJournalApiErrorResponse(error=error_body()).dump()
-        self.assertEqual(dumped["error"]["status"], 400)
-        self.assertIs(type(dumped["error"]["status"]), int)
-        self.assertEqual(dumped["error"]["stacktrace"], "Traceback ...")
+        error = json_object(SAMJournalApiErrorResponse(error=error_body()).dump()["error"])
+        self.assertEqual(error["status"], 400)
+        self.assertIs(type(error["status"]), int)
+        self.assertEqual(error["stacktrace"], "Traceback ...")
 
     def test_dump_without_stack_trace(self):
         dumped = SAMJournalApiErrorResponse(error=error_body()).dump(include_stack_trace=False)
-        self.assertNotIn("stacktrace", dumped["error"])
-        self.assertEqual(dumped["error"]["description"], "a description")
+        error = json_object(dumped["error"])
+        self.assertNotIn("stacktrace", error)
+        self.assertEqual(error["description"], "a description")
 
     def test_description_may_be_null(self):
-        self.assertIsNone(SAMJournalApiErrorResponse(error=error_body(description=None)).dump()["error"]["description"])
+        error = json_object(SAMJournalApiErrorResponse(error=error_body(description=None)).dump()["error"])
+        self.assertIsNone(error["description"])
 
     def test_response(self):
         """Test that a complete error response, with its envelope, validates."""
@@ -171,11 +178,15 @@ class TestOrmModel(SmarterTestBase):
             with self.subTest(field=field), self.assertRaises(ValidationError):
                 SAMJournalApiOrmModel(**{**values, field: value})
         with self.assertRaises(ValidationError):
-            SAMJournalApiOrmModel(**values, extra=True)
+            # deliberately an unknown field, to test that the model forbids it
+            SAMJournalApiOrmModel(**values, extra=True)  # type: ignore[call-arg]
 
 
 class TestSAMJournalRestApiModels(OpenApiResponseMixin, TestAccountMixin):
     """Test the journal's REST models against the serializers, and the views' responses against the document."""
+
+    journal: SAMJournal
+    anonymous: SAMJournal
 
     @classmethod
     def setUpClass(cls):

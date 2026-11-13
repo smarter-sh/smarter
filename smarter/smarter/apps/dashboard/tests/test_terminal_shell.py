@@ -111,6 +111,7 @@ class TestTerminalShell(SmarterTestBase):
             await recorder.wait_for(b"STARTED ")
             await asyncio.sleep(0.2)
             pid = shell.pid
+            assert pid is not None
             self.assertGreater(len(session_pids(pid)), 1)
             with patch.object(shell_module, "TERMINAL_TERMINATE_GRACE", 0.5):
                 await shell.terminate()
@@ -130,6 +131,7 @@ class TestTerminalShell(SmarterTestBase):
             with patch.object(shell_module.shutil, "which", return_value=None):
                 self.assertEqual(shell.argv(), ["bash", "--norc", "--noprofile"])
                 await shell.start()
+            assert shell.pid is not None
             self.assertEqual(os.getsid(shell.pid), shell.pid)
             shell.write(b"echo NO-SETSID\r")
             await recorder.wait_for(b"NO-SETSID")

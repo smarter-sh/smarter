@@ -8,6 +8,7 @@ from smarter.apps.mcpserver.services.repositories import (
     project_repositories,
     repository_names,
 )
+from smarter.lib.typing import required
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 SHA = "0123456789abcdef0123456789abcdef01234567"
@@ -47,6 +48,7 @@ class TestProjectRepositories(SmarterTestBase):
             with self.subTest(name=name):
                 repository = get_repository(name)
                 self.assertIsNotNone(repository)
+                assert repository is not None
                 self.assertEqual(repository.owner, "smarter-sh")
                 self.assertEqual(repository.ref, "main")
                 self.assertTrue(repository.title and repository.description)
@@ -55,12 +57,12 @@ class TestProjectRepositories(SmarterTestBase):
 
     def test_published_documentation(self):
         """The smarter and cache-results repositories publish their docs/source."""
-        smarter = get_repository("smarter")
+        smarter = required(get_repository("smarter"), "smarter")
         self.assertEqual(smarter.docs_root, "docs/source")
         self.assertEqual(smarter.docs_url, SMARTER_PROJECT_DOCS_ROOT_URL)
         self.assertEqual(SMARTER_PROJECT_DOCS_ROOT_URL, "https://docs.smarter.sh/")
-        self.assertIsNone(get_repository("smarter-cli").docs_url)
-        cache_results = get_repository("cache-results")
+        self.assertIsNone(required(get_repository("smarter-cli"), "smarter-cli").docs_url)
+        cache_results = required(get_repository("cache-results"), "cache-results")
         self.assertEqual(cache_results.docs_root, "docs/source")
         self.assertEqual(
             cache_results.documentation_url("docs/source/quickstart.rst"),
@@ -69,7 +71,7 @@ class TestProjectRepositories(SmarterTestBase):
 
     def test_github_urls(self):
         """The GitHub, api and archive urls of a repository."""
-        repository = get_repository("smarter-cli")
+        repository = required(get_repository("smarter-cli"), "smarter-cli")
         self.assertEqual(repository.full_name, "smarter-sh/smarter-cli")
         self.assertEqual(repository.github_url, "https://github.com/smarter-sh/smarter-cli")
         self.assertEqual(repository.commit_api_url, "https://api.github.com/repos/smarter-sh/smarter-cli/commits/main")
@@ -79,7 +81,7 @@ class TestProjectRepositories(SmarterTestBase):
 
     def test_file_url(self):
         """A file's url names the commit, or the branch, and highlights its lines."""
-        repository = get_repository("smarter-cli")
+        repository = required(get_repository("smarter-cli"), "smarter-cli")
         base = "https://github.com/smarter-sh/smarter-cli/blob"
         self.assertEqual(repository.file_url(SHA, "cmd/apply.go"), f"{base}/{SHA}/cmd/apply.go")
         self.assertEqual(repository.file_url(None, "cmd/apply.go"), f"{base}/main/cmd/apply.go")
@@ -89,7 +91,7 @@ class TestProjectRepositories(SmarterTestBase):
 
     def test_documentation_url(self):
         """A Sphinx source file under docs_root is published as an html page."""
-        smarter = get_repository("smarter")
+        smarter = required(get_repository("smarter"), "smarter")
         self.assertEqual(
             smarter.documentation_url("docs/source/smarter-resources/smarter-mcpclient.rst"),
             "https://docs.smarter.sh/smarter-resources/smarter-mcpclient.html",
@@ -100,11 +102,13 @@ class TestProjectRepositories(SmarterTestBase):
         )
         self.assertIsNone(smarter.documentation_url("docs/source/conf.py"))
         self.assertIsNone(smarter.documentation_url("README.md"))
-        self.assertIsNone(get_repository("smarter-cli").documentation_url("docs/source/index.rst"))
+        self.assertIsNone(
+            required(get_repository("smarter-cli"), "smarter-cli").documentation_url("docs/source/index.rst")
+        )
 
     def test_frozen(self):
         """A repository is immutable, and has no undeclared fields."""
-        repository = get_repository("smarter-cli")
+        repository = required(get_repository("smarter-cli"), "smarter-cli")
         with self.assertRaises(Exception):
             repository.name = "other"  # type: ignore[misc]
         with self.assertRaises(Exception):

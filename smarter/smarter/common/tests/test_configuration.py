@@ -1,36 +1,21 @@
-# pylint: disable=wrong-import-position
 """Test configuration Settings class.
 
 TODO: Add tests for: 480, 487, 531, 595, 602, 609, 612-617, 623, 626-631, 654, 662-664, 671-673, 686, 702, 710-712, 725, 740-741
 """
 
 import os
-
-# python stuff
 import re
-import sys
 
-# 3rd party stuff
 from django.test import tag
 from dotenv import load_dotenv
 from pydantic_core import ValidationError as PydanticValidationError
 
+from smarter.common.conf import Settings, settings_defaults
+from smarter.common.conf.services import Services
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.utils import get_semantic_version
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import INFRASTRUCTURE
-
-PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-from smarter.common.conf import (  # noqa: E402
-    Settings,
-    settings_defaults,
-)
-from smarter.common.conf.services import Services
-
-# our stuff
-from smarter.common.utils import get_semantic_version
-
-from ..exceptions import SmarterConfigurationError
 
 
 # pylint: disable=too-many-public-methods
@@ -123,29 +108,20 @@ class TestConfiguration(SmarterTestBase):
         """Test that we can't set readonly values with the class constructor."""
 
         mock_settings = Settings(aws_regions=["eu-west-1"], aws_region="eu-west-1")
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.aws_region = "us-west-1"
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.table_id = "TEST_facialrecognition"
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.collection_id = "TEST_facialrecognition-collection"
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.face_detect_attributes = "TEST_DEFAULT"
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.face_detect_quality_filter = "TEST_AUTO"
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.debug_mode = True
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.face_detect_max_faces_count = 25
-
-        with self.assertRaises(PydanticValidationError):
-            mock_settings.face_detect_threshold = 25
+        # by name: some are read-only properties, and the others aren't attributes of Settings at all
+        readonly_values: tuple[tuple[str, object], ...] = (
+            ("aws_region", "us-west-1"),
+            ("table_id", "TEST_facialrecognition"),
+            ("collection_id", "TEST_facialrecognition-collection"),
+            ("face_detect_attributes", "TEST_DEFAULT"),
+            ("face_detect_quality_filter", "TEST_AUTO"),
+            ("debug_mode", True),
+            ("face_detect_max_faces_count", 25),
+            ("face_detect_threshold", 25),
+        )
+        for name, value in readonly_values:
+            with self.assertRaises(PydanticValidationError):
+                setattr(mock_settings, name, value)
 
     def test_initialize_with_values(self):
         """Test that we can set values with the class constructor."""
@@ -189,7 +165,11 @@ class TestConfiguration(SmarterTestBase):
 
     @tag(INFRASTRUCTURE)
     def test_settings_aws_account_info(self):
-        """Test that the AWS account ID is valid."""
+        """Test that the AWS region is a region code, e.g. us-east-1, ca-central-1 or us-gov-west-1."""
         mock_settings = Settings(init_info="test_settings_aws_account_id()")
-        self.assertIsNotNone(mock_settings.aws_region)
-        self.assertTrue(mock_settings.aws_region.isalpha)
+        aws_region = mock_settings.aws_region
+        self.assertIsNotNone(aws_region)
+        assert aws_region is not None
+        # it was assertTrue(aws_region.isalpha), which tested the method, not its result, and so passed
+        # for any region; a region code, which has hyphens and a digit, is never alphabetic.
+        self.assertRegex(aws_region, r"^[a-z]{2}(-[a-z]+)+-[0-9]+$")

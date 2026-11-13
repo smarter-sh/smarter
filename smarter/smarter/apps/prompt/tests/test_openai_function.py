@@ -148,6 +148,7 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
             app_assistant="Smarty Pants",
             app_welcome_message="Welcome to Smarter!",
         )
+        assert self.plugin.plugin_meta is not None
         LLMClientPlugin.objects.create(
             llmclient=llmclient,
             plugin_meta=self.plugin.plugin_meta,

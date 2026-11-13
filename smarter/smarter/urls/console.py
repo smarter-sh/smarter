@@ -295,7 +295,7 @@ else:
 #
 urlpatterns += list(static(settings.STATIC_URL, document_root=settings.STATIC_ROOT))
 
-if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and not "test" in sys.argv:
+if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_settings.debug_mode and "test" not in sys.argv:
     import debug_toolbar
 
     urlpatterns += [

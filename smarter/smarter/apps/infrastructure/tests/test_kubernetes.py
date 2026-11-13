@@ -38,7 +38,7 @@ from smarter.apps.infrastructure.signals import (
     resource_applied,
 )
 from smarter.lib import json
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .base import InfrastructureTestBase
 
@@ -243,12 +243,14 @@ class TestKubernetesResources(KubernetesTestBase):
 
     def test_apply_when_not_ready(self):
         self.provider.ready = False
-        self.assertIsNone(self.kubernetes.apply_manifest(INGRESS_MANIFEST))
+        self.kubernetes.apply_manifest(INGRESS_MANIFEST)
         self.assertEqual(self.kubectl.applied, [])
 
     def test_get_and_list(self):
         self.kubectl.resources[("deployment", "app")] = {"kind": "Deployment", "metadata": {"name": "app"}}
-        self.assertEqual(self.kubernetes.get_resource("deployment", "app", NAMESPACE)["kind"], "Deployment")
+        self.assertEqual(
+            required(self.kubernetes.get_resource("deployment", "app", NAMESPACE), "app")["kind"], "Deployment"
+        )
         self.assertIsNone(self.kubernetes.get_resource("deployment", "nope", NAMESPACE))
         self.assertEqual(len(self.kubernetes.list_resources("deployment", NAMESPACE, selector="app=x")), 1)
         list_command = self.kubectl.commands[-1]
@@ -282,7 +284,7 @@ class TestKubernetesResources(KubernetesTestBase):
         self.assertFalse(self.kubernetes.delete_resources(["secret"], NAMESPACE, "a=b"))
         self.assertIsNone(self.kubernetes.get_resource("secret", "x", NAMESPACE))
         self.assertEqual(self.kubernetes.list_resources("pods", NAMESPACE), [])
-        self.assertIn("forbidden", self.kubernetes.get_pod_logs(NAMESPACE, "a=b"))
+        self.assertIn("forbidden", required(self.kubernetes.get_pod_logs(NAMESPACE, "a=b"), "logs"))
 
     def test_not_ready(self):
         self.provider.ready = False
@@ -540,7 +542,7 @@ class TestConfigureKubernetes(InfrastructureTestBase):
 
     def test_default(self):
         kubernetes = get_kubernetes()
-        self.assertIsInstance(kubernetes, KubectlKubernetesService)
+        assert isinstance(kubernetes, KubectlKubernetesService)
         self.assertIs(kubernetes.provider, self.provider)
         self.assertIs(get_kubernetes(), kubernetes)
         self.assertIs(infrastructure.kubernetes, kubernetes)
@@ -595,9 +597,9 @@ class TestInMemoryKubernetesService(InfrastructureTestBase):
         self.assertFalse(matches_selector({}, "app=web"))
 
     def test_find_resources(self):
-        self.assertEqual(len(self.cluster.find_resources("pod", "ns")), 2)
-        self.assertEqual(len(self.cluster.find_resources("pod")), 3, "every namespace")
-        self.assertEqual(len(self.cluster.find_resources("node")), 1)
+        self.assertEqual(len(required(self.cluster.find_resources("pod", "ns"), "pods")), 2)
+        self.assertEqual(len(required(self.cluster.find_resources("pod"), "pods")), 3, "every namespace")
+        self.assertEqual(len(required(self.cluster.find_resources("node"), "nodes")), 1)
         self.assertIsNone(self.cluster.find_resources("ingress", "ns"), "a kind that is not a key cannot be listed")
         self.assertEqual(self.cluster.calls[:2], [("pod", "ns"), ("pod", None)])
 
@@ -605,7 +607,9 @@ class TestInMemoryKubernetesService(InfrastructureTestBase):
         self.assertEqual(
             [p["metadata"]["name"] for p in self.cluster.list_resources("pod", "ns", "app=web")], ["web-1"]
         )
-        self.assertEqual(self.cluster.get_resource("pod", "web-2", "other")["metadata"]["name"], "web-2")
+        self.assertEqual(
+            required(self.cluster.get_resource("pod", "web-2", "other"), "web-2")["metadata"]["name"], "web-2"
+        )
         self.assertIsNone(self.cluster.get_resource("pod", "web-2", "ns"))
 
     def test_delete(self):
@@ -613,7 +617,9 @@ class TestInMemoryKubernetesService(InfrastructureTestBase):
         self.assertTrue(self.cluster.delete_resource("pod", "worker-1", "ns"), "deleting twice is fine")
         self.assertTrue(self.cluster.delete_resources(["pod"], "ns", "app=web"))
         self.assertEqual(self.cluster.find_resources("pod", "ns"), [])
-        self.assertEqual(len(self.cluster.find_resources("pod", "other")), 1, "other namespaces are kept")
+        self.assertEqual(
+            len(required(self.cluster.find_resources("pod", "other"), "pods")), 1, "other namespaces are kept"
+        )
 
     def test_apply_and_logs(self):
         self.cluster.apply_manifest("kind: Pod")

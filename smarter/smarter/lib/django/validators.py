@@ -386,7 +386,7 @@ class SmarterValidator:
             return False
 
     @staticmethod
-    def validate_is_not_none(value: str) -> str:
+    def validate_is_not_none(value: Optional[str]) -> str:
         """
         Validate that the value is not None.
 
@@ -409,7 +409,7 @@ class SmarterValidator:
         return value
 
     @staticmethod
-    def is_not_none(value: str) -> bool:
+    def is_not_none(value: Optional[str]) -> bool:
         """
         Check if the value is not None.
 

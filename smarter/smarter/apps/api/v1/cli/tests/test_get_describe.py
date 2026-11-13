@@ -31,6 +31,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_object
 
 from .base_class import ApiV1CliTestBase
 
@@ -121,8 +122,8 @@ class TestPluginKinds(ApiV1CliTestBase):
 
     def setUp(self):
         super().setUp()
-        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-plugin-manifest.yaml"))
-        response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)  # type: ignore[arg-type]
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-plugin-manifest.yaml")))
+        response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK, response)
         self.addCleanup(
             lambda: PluginMeta.objects.filter(name=self.plugin_name, user_profile=self.user_profile).delete()
@@ -166,11 +167,11 @@ class TestApplyResult(ApiV1CliTestBase):
     """Test that apply returns the resource's identity, and none of the broker's internals."""
 
     def test_apply_returns_only_the_resource(self):
-        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml"))
-        name = manifest["metadata"]["name"]  # type: ignore[index]
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml")))
+        name = manifest["metadata"]["name"]
         self.addCleanup(lambda: Secret.objects.filter(name=name, user_profile=self.user_profile).delete())
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path, manifest=manifest)  # type: ignore[arg-type]
+        response, status = self.get_response(path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK, response)
         self.assertEqual(response["data"], {"apiVersion": "smarter.sh/v1", "kind": "Secret", "name": name})
         for leaked in ("api_token", "auth_header", "cache_key", "loader", "ip_address", "orm_instance"):
@@ -192,7 +193,7 @@ class TestAnnotationSelectors(ApiV1CliTestBase):
         """Apply a Secret manifest, and delete the Secret after the test."""
         name = manifest["metadata"]["name"]
         self.addCleanup(lambda: Secret.objects.filter(name=name, user_profile=self.user_profile).delete())
-        response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)  # type: ignore[arg-type]
+        response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK, response)
 
     def names(self, kind: str, *selector: str) -> list[str]:
@@ -225,8 +226,8 @@ class TestAnnotationSelectors(ApiV1CliTestBase):
 
     def test_apply_select_describe(self):
         """Test that a map of annotations is applied, selected, described as strings, and replaced by the next apply."""
-        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml"))
-        self.apply(manifest)  # type: ignore[arg-type]
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml")))
+        self.apply(manifest)
         self.assertEqual(
             self.describe("annotated_secret"),
             {
@@ -244,24 +245,24 @@ class TestAnnotationSelectors(ApiV1CliTestBase):
         self.assertNotIn("annotated_secret", self.names(secret, "example.com/crm-account-id!=A-10042"))
         self.assertNotIn("annotated_secret", self.names(secret, "!example.com/active"))
 
-        manifest["metadata"]["annotations"] = {"example.com/crm-account-id": "A-20000"}  # type: ignore[index]
-        self.apply(manifest)  # type: ignore[arg-type]
+        manifest["metadata"]["annotations"] = {"example.com/crm-account-id": "A-20000"}
+        self.apply(manifest)
         self.assertEqual(self.describe("annotated_secret"), {"example.com/crm-account-id": "A-20000"})
         self.assertEqual(self.names(secret, "example.com/crm-account-id=A-10042"), [])
 
     def test_apply_legacy_list(self):
         """Test that the list of one-key maps of older manifests still applies, and is described as a map."""
-        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml"))
-        self.apply(manifest)  # type: ignore[arg-type]
-        annotations = self.describe(manifest["metadata"]["name"])  # type: ignore[index]
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml")))
+        self.apply(manifest)
+        annotations = self.describe(manifest["metadata"]["name"])
         self.assertEqual(annotations["smarter.sh/tests/owner"], "test bank")
         self.assertEqual(annotations["smarter.sh/tests/last-updated"], "2025-12-31")
 
     def test_invalid_annotations_are_a_bad_request(self):
         """Test that a manifest with an invalid key or a structured value answers 400."""
-        manifest = self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml"))
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "annotated-secret.yaml")))
         for annotations in ({"Bad Key": "x"}, {"example.com/list": ["a", "b"]}):
             with self.subTest(annotations=annotations):
-                manifest["metadata"]["annotations"] = annotations  # type: ignore[index]
-                response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)  # type: ignore[arg-type]
+                manifest["metadata"]["annotations"] = annotations
+                response, status = self.get_response(self.url(ApiV1CliReverseViews.apply), manifest=manifest)
                 self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)

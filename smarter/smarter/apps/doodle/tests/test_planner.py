@@ -49,6 +49,7 @@ class TestPlanner(DoodleTestMixin):
             self.assertIn("svg", theme.artwork.get_deferred_fields())
             self.assertNotEqual(theme.slug, DEFAULT_THEME_SLUG)
         default = planner.default_theme()
+        assert default is not None
         self.assertIn("svg", default.artwork.get_deferred_fields())
 
     def test_regional_theme_wins_at_equal_priority(self):
@@ -61,6 +62,7 @@ class TestPlanner(DoodleTestMixin):
     def test_plan_a_holiday(self):
         self.addCleanup(self.delete_doodles, DIWALI)
         doodle = planner.plan_doodle(DIWALI, DoodleRegion.SOUTH_ASIA)
+        assert doodle is not None
         self.assertEqual(doodle.theme.slug, "diwali")
         self.assertEqual(doodle.source, DoodleSource.CALENDAR)
         self.assertEqual(doodle.status, DoodleStatus.APPROVED)
@@ -71,37 +73,45 @@ class TestPlanner(DoodleTestMixin):
     def test_a_region_that_the_theme_does_not_apply_to(self):
         self.addCleanup(self.delete_doodles, DIWALI)
         doodle = planner.plan_doodle(DIWALI, DoodleRegion.MX)
+        assert doodle is not None
         self.assertEqual(doodle.theme.slug, DEFAULT_THEME_SLUG)
         self.assertEqual(doodle.source, DoodleSource.DEFAULT)
 
     def test_the_default_on_a_quiet_day(self):
         self.addCleanup(self.delete_doodles, QUIET_DAY)
         doodle = planner.plan_doodle(QUIET_DAY, DoodleRegion.GLOBAL)
+        assert doodle is not None
         self.assertEqual(doodle.theme.slug, DEFAULT_THEME_SLUG)
         self.assertEqual(doodle.reason, "Nothing is due.")
 
     def test_replanning_updates_the_doodle(self):
         self.addCleanup(self.delete_doodles, DIWALI)
         first = planner.plan_doodle(DIWALI, DoodleRegion.US)
+        assert first is not None
         Doodle.objects.filter(pk=first.pk).update(caption="stale")
         second = planner.plan_doodle(DIWALI, DoodleRegion.US)
+        assert second is not None
         self.assertEqual(first.pk, second.pk)
         self.assertEqual(second.caption, "Happy Diwali!")
 
     def test_a_doodle_that_a_person_chose_is_kept(self):
         self.addCleanup(self.delete_doodles, DIWALI)
         doodle = planner.plan_doodle(DIWALI, DoodleRegion.EUROPE)
+        assert doodle is not None
         halloween = self.theme("halloween")
         Doodle.objects.filter(pk=doodle.pk).update(theme=halloween, source=DoodleSource.HUMAN)
         kept = planner.plan_doodle(DIWALI, DoodleRegion.EUROPE)
+        assert kept is not None
         self.assertEqual(kept.theme.slug, "halloween")
 
     def test_a_doodle_that_the_editor_chose_is_kept(self):
         self.addCleanup(self.delete_doodles, DIWALI)
         doodle = planner.plan_doodle(DIWALI, DoodleRegion.OCEANIA)
+        assert doodle is not None
         default = self.theme(DEFAULT_THEME_SLUG)
         Doodle.objects.filter(pk=doodle.pk).update(theme=default, artwork=default.artwork, source=DoodleSource.LLM)
         kept = planner.plan_doodle(DIWALI, DoodleRegion.OCEANIA)
+        assert kept is not None
         self.assertEqual(kept.theme.slug, DEFAULT_THEME_SLUG)
 
     def test_nothing_to_plan_without_a_catalog(self):

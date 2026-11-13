@@ -66,7 +66,7 @@ logger_prefix = logging.SmarterFormattedText.text(__name__)
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.infrastructure_tasks_celery_task_queue,
 )
-def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Optional[str] = None):
+def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Optional[str] = None) -> None:
     """
     Destroy the A record for a given domain name in the cloud provider's DNS.
 

@@ -20,6 +20,8 @@ LINK = "https://platform.example.com/link/"
 class TestEmailTemplates(SmarterTestBase):
     """Each email uses the shared layout: no scripts, styles or svgs, and absolute image urls."""
 
+    rendered: dict[str, str]
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

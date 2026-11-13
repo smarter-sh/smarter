@@ -14,6 +14,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.typing import required
 from smarter.workers.celery import app
 
 from .models.account_contact import AccountContact
@@ -81,12 +82,13 @@ def create_charge(*args, **kwargs):
     )
 
     try:
+        # a missing value fails the charge, as the database's NOT NULL did before: it's logged below.
         Charge.objects.create(
-            resource_locator=resource_locator,
-            charge_type=charge_type,
-            completion_tokens=completion_tokens,
-            prompt_tokens=prompt_tokens,
-            total_tokens=total_tokens,
+            resource_locator=required(resource_locator, "resource_locator"),
+            charge_type=required(charge_type, "charge_type"),
+            completion_tokens=required(completion_tokens, "completion_tokens"),
+            prompt_tokens=required(prompt_tokens, "prompt_tokens"),
+            total_tokens=required(total_tokens, "total_tokens"),
             total_cost=Decimal(str(total_cost)),
         )
     # pylint: disable=W0703

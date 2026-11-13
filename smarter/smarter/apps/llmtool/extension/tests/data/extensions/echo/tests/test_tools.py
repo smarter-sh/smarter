@@ -6,6 +6,7 @@ from echo.tools import Echo, Fail, Refuse
 from pydantic import SecretStr
 
 from smarter.apps.llmtool.extension.testing import call_tool, tool_context
+from smarter.lib.unittest.narrowing import json_object
 
 
 class TestEcho(unittest.TestCase):
@@ -13,10 +14,12 @@ class TestEcho(unittest.TestCase):
 
     def test_echo(self):
         context = tool_context("echo", greeting="hi", repeat=2, api_key=SecretStr("k"))
-        self.assertEqual(call_tool(Echo, {"text": "x"}, context)["echo"], "hi x hi x")
+        result = json_object(call_tool(Echo, {"text": "x"}, context))
+        self.assertEqual(result["echo"], "hi x hi x")
 
     def test_errors(self):
-        self.assertIn("Invalid arguments", call_tool(Echo, "{}")["error"])
+        result = json_object(call_tool(Echo, "{}"))
+        self.assertIn("Invalid arguments", result["error"])
         self.assertEqual(call_tool(Refuse, {}), {"error": "I refuse"})
         with self.assertRaises(RuntimeError):
             call_tool(Fail, {})

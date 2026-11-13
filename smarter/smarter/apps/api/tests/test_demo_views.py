@@ -91,11 +91,12 @@ class TestStackademyPassword(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.name = f"stackademy_{self.hash_suffix}".lower()
-        patchers = [
-            mock.patch(f"{MODULE}.STACKADEMY_API_CONNECTION_NAME", self.name),
-            mock.patch(f"{MODULE}.smarter_cached_objects", mock.Mock(smarter_account=self.account)),
-        ]
-        for patcher in patchers:
+        replacements = (
+            (f"{MODULE}.STACKADEMY_API_CONNECTION_NAME", self.name),
+            (f"{MODULE}.smarter_cached_objects", mock.Mock(smarter_account=self.account)),
+        )
+        for target, new in replacements:
+            patcher = mock.patch(target, new)
             patcher.start()
             self.addCleanup(patcher.stop)
 

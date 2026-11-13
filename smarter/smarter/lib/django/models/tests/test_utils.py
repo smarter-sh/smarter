@@ -12,6 +12,7 @@ from smarter.lib.django.models.utils import (
     list_of_dicts_to_list,
     tags_changed,
 )
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -28,7 +29,7 @@ class TestModelUtils(SmarterTestBase):
 
     def test_list_of_dicts_to_list(self):
         """Test that each dict's value of the first dict's first key is returned, cleaned."""
-        data = [{"name": "first one", "x": 1}, {"name": "second"}, {"other": "skipped"}]
+        data: list[SmarterDictType] = [{"name": "first one", "x": 1}, {"name": "second"}, {"other": "skipped"}]
         self.assertEqual(list_of_dicts_to_list(data), ["first_one", "second"])
         self.assertIsNone(list_of_dicts_to_list([]))
         self.assertIsNone(list_of_dicts_to_list(["not a dict"]))  # type: ignore[list-item]

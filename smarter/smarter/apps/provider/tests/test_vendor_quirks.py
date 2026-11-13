@@ -20,7 +20,7 @@ table, which the simulator enforces, against the real api.
 import copy
 from contextlib import ExitStack
 from typing import Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from openai.types.chat import ChatCompletion
 
@@ -117,7 +117,9 @@ class TestVendorQuirks(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.client = OpenAISmarterClient.__new__(OpenAISmarterClient)
-        self.client.append_message = MagicMock()
+        patcher = patch.object(self.client, "append_message")
+        self.append_message = patcher.start()
+        self.addCleanup(patcher.stop)
         self.client.prompt = None
 
     def model_sets(self, seeded: bool) -> ExitStack:
@@ -248,11 +250,11 @@ class TestVendorQuirks(SmarterTestBase):
             if accepts_tools(model):
                 continue
             with self.subTest(model=model), self.model_sets(seeded=True):
-                self.client.append_message.reset_mock()
+                self.append_message.reset_mock()
                 vendor = FakeVendor()
                 self.send(vendor, model, CUSTOM_TEMPERATURE, tools=True)
                 self.assertNotIn("tools", vendor.requests[-1])
-                warnings = [call.kwargs["content"] for call in self.client.append_message.call_args_list]
+                warnings = [call.kwargs["content"] for call in self.append_message.call_args_list]
                 self.assertEqual(len(warnings), 1)
                 self.assertIn("defaultModel:", warnings[0])
 
@@ -261,7 +263,7 @@ class TestSimulator(SmarterTestBase):
     """Test the simulator against the vendor's answers that the survey recorded."""
 
     def test_recorded_answers(self):
-        cases = [
+        cases: list[tuple[SmarterDictType, Optional[str]]] = [
             ({"model": "gpt-4o-mini", "reasoning_effort": "none"}, None),
             ({"model": "gpt-4o-mini", "max_tokens": 16, "temperature": 0.2}, "ok"),
             ({"model": "chat-latest", "max_tokens": 16}, "max_tokens"),

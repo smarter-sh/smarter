@@ -67,6 +67,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_object
 
 from .base_classes import (
     BRAVE_API_KEY,
@@ -153,6 +154,7 @@ class TestWebsearchPlugin(PluginTestBase):
         for plugin in (self.websearch_plugin, self.websearch_docs_plugin, self.websearch_reader_plugin):
             self.assertIsInstance(plugin, WebsearchPlugin)
             self.assertTrue(plugin.ready)
+            assert plugin.id is not None
             self.assertTrue(PluginMeta.objects.filter(id=plugin.id, plugin_class="websearch").exists())
             self.assertTrue(PluginDataWebsearch.objects.filter(plugin_id=plugin.id).exists())
         self.assertEqual(self.brave_secret.get_secret(), BRAVE_API_KEY)  # type: ignore[union-attr]
@@ -179,6 +181,7 @@ class TestWebsearchPlugin(PluginTestBase):
 
     def test_plugin_controller(self):
         """Test that the plugin controller instantiates a WebsearchPlugin, as the chat providers do."""
+        assert self.websearch_plugin.id is not None
         plugin_meta = PluginMeta.objects.get(id=self.websearch_plugin.id)
         controller = PluginController(user_profile=self.user_profile, plugin_meta=plugin_meta)
         self.assertIsInstance(controller.plugin, WebsearchPlugin)
@@ -303,7 +306,7 @@ class TestWebsearchPlugin(PluginTestBase):
             retval = WebsearchPlugin(
                 plugin_id=plugin.id, user_profile=self.user_profile
             ).tool_call_fetch_plugin_response({"query": "q"})
-        self.assertIn("api key is unavailable", retval["error"])  # type: ignore[index]
+        self.assertIn("api key is unavailable", json_object(retval)["error"])
 
     # =========================================================================
     # creation
@@ -572,7 +575,7 @@ class TestWebsearchPlugin(PluginTestBase):
         plugin = self.new_websearch_plugin("websearch_fetch_by_searcher", fetch=None)
         with mock_web_host(web()):
             retval = plugin.tool_call_fetch_plugin_response({"url": "https://a.example/"})
-        self.assertIn("cannot read web pages", retval["error"])  # type: ignore[index]
+        self.assertIn("cannot read web pages", json_object(retval)["error"])
 
     # =========================================================================
     # tool calls: arguments, states and signals

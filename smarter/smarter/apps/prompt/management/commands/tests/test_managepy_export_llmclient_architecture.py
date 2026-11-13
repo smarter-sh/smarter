@@ -18,6 +18,7 @@ class TestExportLLMClientArchitecture(TestAccountMixin):
     """Test that an LLMClient's architecture is written as JSON, and without owners or urls with --public."""
 
     llmclient: LLMClient
+    guardrail: Guardrail
 
     @classmethod
     def setUpClass(cls):
@@ -65,6 +66,7 @@ class TestExportLLMClientArchitecture(TestAccountMixin):
         self.assertEqual((tree.kind, tree.name), ("LLMClient", self.llmclient.name))
         self.assertEqual(tree.recordLocator, self.llmclient.record_locator)
         self.assertTrue(tree.readable)
+        assert tree.owner is not None
         self.assertIn(self.admin_user.username, tree.owner)
         self.assertTrue(tree.url)
         self.assertTrue(tree.detailUrl)

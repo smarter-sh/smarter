@@ -47,6 +47,8 @@ class TestAccountContractModels(TestAccountMixin):
 class TestAccountApiContract(OpenApiResponseMixin, TestAccountMixin):
     """Test the accounts' REST models against the serializers, and the views' responses against the document."""
 
+    contact: AccountContact
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

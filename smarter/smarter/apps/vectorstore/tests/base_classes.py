@@ -44,6 +44,10 @@ class FakeKubernetes:
     """A Kubernetes service that records what it is asked to do."""
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
+        """Forget what was asked, and be ready again."""
         self.ready = True
         self.applied: list[str] = []
         self.deleted: list[tuple[list[str], str]] = []
@@ -82,7 +86,8 @@ class VectorstoreTestBase(TestAccountMixin):
     def setUpClass(cls):
         super().setUpClass()
         cls.kubernetes = FakeKubernetes()
-        configure_kubernetes(lambda: cls.kubernetes)
+        # FakeKubernetes duck-types the KubernetesService methods that QdrantKubernetes calls.
+        configure_kubernetes(lambda: cls.kubernetes)  # type: ignore[arg-type,return-value]
         cls.provider = Provider.objects.create(
             name=f"test_vs_provider_{cls.hash_suffix}",
             user_profile=cls.user_profile,
@@ -116,7 +121,7 @@ class VectorstoreTestBase(TestAccountMixin):
 
     def setUp(self):
         super().setUp()
-        self.kubernetes.__init__()  # pylint: disable=unnecessary-dunder-call
+        self.kubernetes.reset()
 
     def spec(self, **overrides) -> SmarterDictType:
         """A self-hosted Qdrant spec, with overrides."""

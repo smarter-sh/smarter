@@ -48,6 +48,7 @@ from smarter.apps.llmtool.signals import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json
+from smarter.lib.unittest.narrowing import json_object
 
 from .base_classes import (
     SKILL_PLUGIN_NAME,
@@ -116,6 +117,7 @@ class TestSkillPlugin(PluginTestBase):
     def test_001_fixture_plugins_persisted(self):
         """Test that the shared plugins exist in the database."""
         for plugin in (self.skill_plugin, self.skill_remote_plugin):
+            assert plugin.id is not None
             self.assertTrue(PluginMeta.objects.filter(id=plugin.id, plugin_class="skill").exists())
             self.assertTrue(PluginDataSkill.objects.filter(plugin_id=plugin.id).exists())
 
@@ -151,6 +153,7 @@ class TestSkillPlugin(PluginTestBase):
 
     def test_plugin_controller(self):
         """Test that the plugin controller instantiates a SkillPlugin from its PluginMeta, as the chat providers do."""
+        assert self.skill_plugin.id is not None
         plugin_meta = PluginMeta.objects.get(id=self.skill_plugin.id)
         controller = PluginController(user_profile=self.user_profile, plugin_meta=plugin_meta)
         self.assertIsInstance(controller.plugin, SkillPlugin)
@@ -227,8 +230,10 @@ class TestSkillPlugin(PluginTestBase):
         """Test that tool calls on a remote skill use the stored snapshot, and never the network."""
         with mock.patch(SKILL_SOURCES_REQUESTS_PATCH, side_effect=AssertionError("network used")):
             plugin = self.load_skill_plugin(remote=True)
-            self.assertEqual(plugin.tool_call_fetch_plugin_response(None)["name"], "test-skill")  # type: ignore[index]
-            self.assertTrue(plugin.tool_call_fetch_plugin_response({"resource": "forms.md"})["content"])  # type: ignore[index]
+            instructions = json_object(plugin.tool_call_fetch_plugin_response(None))
+            self.assertEqual(instructions["name"], "test-skill")
+            resource = json_object(plugin.tool_call_fetch_plugin_response({"resource": "forms.md"}))
+            self.assertTrue(resource["content"])
             self.assertTrue(plugin.to_json())
 
     # =========================================================================
@@ -402,13 +407,14 @@ class TestSkillPlugin(PluginTestBase):
             enum = plugin.custom_tool["function"]["parameters"]["properties"]["resource"]["enum"]  # type: ignore[index]
             for resource in enum:
                 retval = plugin.tool_call_fetch_plugin_response({"resource": resource})
-                self.assertEqual(retval["resource"], resource, f"remote={remote}")  # type: ignore[index]
+                self.assertEqual(json_object(retval)["resource"], resource, f"remote={remote}")
 
     # =========================================================================
     # tool calls
     # =========================================================================
     def test_tool_call_without_arguments(self):
         """Test that a tool call without arguments returns the instructions."""
+        function_args: object
         for function_args in (None, {}, "", "{}", "  "):
             retval = self.ask(function_args)
             self.assertEqual(retval["name"], "expense-reports", f"function_args={function_args!r}")  # type: ignore[index]
@@ -544,8 +550,11 @@ class TestSkillPlugin(PluginTestBase):
 
     def test_manifest_verbatim_skill_is_yaml_readable(self):
         """Test that a manifest rendered from the database presents the SKILL.md as a single multi-line string."""
-        skill = self.load_skill_plugin().manifest.spec.skillData.skill  # type: ignore[union-attr]
-        self.assertIn("\n# Expense reports\n", skill)  # type: ignore[operator]
+        manifest = self.load_skill_plugin().manifest
+        assert manifest is not None
+        skill = manifest.spec.skillData.skill
+        assert skill is not None
+        self.assertIn("\n# Expense reports\n", skill)
 
     # =========================================================================
     # lifecycle
@@ -615,7 +624,9 @@ class TestSkillPlugin(PluginTestBase):
         plugin_data = PluginDataSkill.objects.get(plugin_id=plugin.id)
         self.assertEqual(plugin_data.description, "Version two. Use when testing.")
         self.assertIn("New instructions.", plugin_data.skill_document)
-        self.assertGreater(plugin_data.source_retrieved_at, first_retrieved_at)  # type: ignore[operator]
+        assert plugin_data.source_retrieved_at is not None
+        assert first_retrieved_at is not None
+        self.assertGreater(plugin_data.source_retrieved_at, first_retrieved_at)
 
     def test_update_verbatim_to_remote_and_back(self):
         """Test switching a plugin between a verbatim and a remote skill."""
@@ -669,6 +680,7 @@ class TestSkillPlugin(PluginTestBase):
         plugin = self.new_skill_plugin("skill_delete")
         plugin_id = plugin.id
         self.assertTrue(plugin.delete())
+        assert plugin_id is not None
         self.assertFalse(PluginMeta.objects.filter(id=plugin_id).exists())
         self.assertFalse(PluginDataSkill.objects.filter(plugin_id=plugin_id).exists())
 
@@ -685,7 +697,7 @@ class TestSkillPlugin(PluginTestBase):
         example.pop("status", None)  # type: ignore[union-attr]
         plugin = SkillPlugin(manifest=SAMSkillPlugin(**example), user_profile=self.user_profile)  # type: ignore[arg-type]
         self.assertEqual(plugin.plugin_data.resource_paths, ["assets/template.md"])  # type: ignore[union-attr]
-        self.assertIn("Meeting notes", plugin.tool_call_fetch_plugin_response({})["instructions"])  # type: ignore[index]
+        self.assertIn("Meeting notes", json_object(plugin.tool_call_fetch_plugin_response({}))["instructions"])
 
     def test_example_manifests_create_working_plugins(self):
         """

@@ -53,7 +53,7 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
 
     @property
     def broker(self) -> SAMGuardrailBroker:
-        return super().broker  # type: ignore
+        return super().broker  # type: ignore[return-value]
 
     def broker_for(self, filename: str) -> SAMGuardrailBroker:
         """Return a broker for a manifest in ./data."""
@@ -95,8 +95,10 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         """Test that apply() stores the llm_judge fields, and failClosed."""
         self.broker_for("guardrail-llm-judge.yaml").apply(self.request, **self.kwargs)
         g = self.guardrail("test_guardrail_llm_judge")
-        self.assertEqual(sorted(g.config), ["judgePrompt", "model", "provider"])
-        self.assertIn("{text}", g.config["judgePrompt"])
+        config = g.config
+        assert config is not None
+        self.assertEqual(sorted(config), ["judgePrompt", "model", "provider"])
+        self.assertIn("{text}", config["judgePrompt"])
         self.assertTrue(g.fail_closed)
         self.assertEqual(g.threshold, 0.8)
 
@@ -198,9 +200,11 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         llmclient = self.attach_to_llmclient()
         dependencies = self.broker_for("guardrail.yaml").dependencies()
         self.assertEqual(len(dependencies), 1)
-        self.assertIsInstance(dependencies[0], SAMLLMClientBroker)
-        self.assertEqual(dependencies[0].name, llmclient.name)
-        self.assertEqual(dependencies[0].llmclient, llmclient)
+        dependency = dependencies[0]
+        self.assertIsInstance(dependency, SAMLLMClientBroker)
+        assert isinstance(dependency, SAMLLMClientBroker)
+        self.assertEqual(dependency.name, llmclient.name)
+        self.assertEqual(dependency.llmclient, llmclient)
 
     def test_dependencies_memoized(self):
         """Test that dependencies() queries once per broker instance."""

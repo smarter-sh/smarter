@@ -261,7 +261,10 @@ class PromptHelper(SmarterRequestMixin):
         """
         if self._llmclient:
             return self._llmclient
-        self._llmclient = get_cached_llmclient_by_request(request=self.smarter_request)
+        request = self.smarter_request
+        if request is None:
+            return None
+        self._llmclient = get_cached_llmclient_by_request(request=request)
         return self._llmclient
 
     @property

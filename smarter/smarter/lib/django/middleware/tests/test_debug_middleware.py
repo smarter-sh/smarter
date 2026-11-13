@@ -7,6 +7,7 @@ from django.test import RequestFactory
 
 from smarter.lib.django.middleware.debug import MiddlewareDebugMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 
 class TestMiddlewareDebugMiddleware(SmarterTestBase):
@@ -18,8 +19,8 @@ class TestMiddlewareDebugMiddleware(SmarterTestBase):
 
     def test_sync(self):
         middleware = MiddlewareDebugMiddleware(lambda request: HttpResponse("ok"))
-        self.assertEqual(middleware(self.factory.get("/a/")).content, b"ok")
-        self.assertEqual(middleware(self.factory.get("/healthz/")).content, b"ok")
+        self.assertEqual(http_response(middleware(self.factory.get("/a/"))).content, b"ok")
+        self.assertEqual(http_response(middleware(self.factory.get("/healthz/"))).content, b"ok")
         self.assertIn("MiddlewareDebugMiddleware", middleware.formatted_class_name)
 
     def test_sync_amnesty_skips_the_type_check(self):
@@ -40,5 +41,7 @@ class TestMiddlewareDebugMiddleware(SmarterTestBase):
             return HttpResponse("async ok")
 
         middleware = MiddlewareDebugMiddleware(get_response)
-        self.assertEqual(asyncio.run(middleware(self.factory.get("/a/"))).content, b"async ok")
+        response = middleware(self.factory.get("/a/"))
+        assert asyncio.iscoroutine(response)
+        self.assertEqual(http_response(asyncio.run(response)).content, b"async ok")
         self.assertEqual(len(calls), 1)
