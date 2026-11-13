@@ -228,7 +228,8 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
         form = super().get_form(request, obj, change=change, **kwargs)
 
         # Create a dynamic subclass to inject the request/user at initialization
-        class CustomForm(form):
+        # a class built from the form class that get_form() returned, which mypy can't use as a base.
+        class CustomForm(form):  # type: ignore[misc,valid-type]
             def __init__(self, *args, **kwargs):
                 # Inject custom kwargs here
                 kwargs["user"] = request.user

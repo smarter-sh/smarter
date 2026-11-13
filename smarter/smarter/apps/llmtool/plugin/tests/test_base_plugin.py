@@ -6,6 +6,7 @@ SqlPlugin and ApiPlugin subclasses, since PluginBase is abstract.
 """
 
 import copy
+from typing import Optional, Union
 from unittest import mock
 
 from django.db.models.query import QuerySet
@@ -49,6 +50,7 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.lib import json
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import (
     API_CONNECTION_NAME,
@@ -82,6 +84,8 @@ class TestPluginBase(PluginTestBase):
 
     def test_001_fixture_secrets_do_not_collide(self):
         """Test that the Api and Sql connection secrets are distinct records with their own values."""
+        assert self.api_secret is not None
+        assert self.sql_secret is not None
         self.assertNotEqual(self.api_secret.pk, self.sql_secret.pk)
         self.assertEqual(self.api_secret.get_secret(), self.api_key)
         self.assertEqual(self.api_connection.api_key.get_secret(), self.api_key)  # type: ignore[union-attr]
@@ -94,7 +98,9 @@ class TestPluginBase(PluginTestBase):
 
     def test_003_fixture_plugins_persisted(self):
         """Test that the shared plugins exist in the database."""
+        assert self.sql_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.sql_plugin.id, name=SQL_PLUGIN_NAME).exists())
+        assert self.api_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.api_plugin.id, name=API_PLUGIN_NAME).exists())
         self.assertTrue(PluginDataSql.objects.filter(plugin_id=self.sql_plugin.id).exists())
         self.assertTrue(PluginDataApi.objects.filter(plugin_id=self.api_plugin.id).exists())
@@ -134,6 +140,7 @@ class TestPluginBase(PluginTestBase):
 
     def test_base_init_by_plugin_meta(self):
         """Test initializing a plugin from a PluginMeta instance."""
+        assert self.api_plugin.id is not None
         plugin_meta = PluginMeta.objects.get(id=self.api_plugin.id)
         plugin = ApiPlugin(plugin_meta=plugin_meta, user_profile=self.user_profile)
         self.assertTrue(plugin.ready)
@@ -830,7 +837,8 @@ class TestPluginBase(PluginTestBase):
 
     def test_base_parameters_to_manifest_empty(self):
         """Test that empty parameters convert to None."""
-        for parameters in (None, {}, []):
+        cases: tuple[Optional[Union[SmarterDictType, list[SmarterDictType]]], ...] = (None, {}, [])
+        for parameters in cases:
             self.assertIsNone(PluginBase.parameters_to_manifest(parameters), f"parameters={parameters!r}")
 
     def test_base_parameters_to_manifest_no_properties(self):
@@ -920,6 +928,7 @@ class TestPluginBase(PluginTestBase):
     def test_base_create_persists_all_models(self):
         """Test that creating a plugin persists meta, selector, prompt and data."""
         plugin = self.new_api_plugin("api_create_models")
+        assert plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=plugin.id).exists())
         self.assertTrue(PluginSelector.objects.filter(plugin_id=plugin.id).exists())
         self.assertTrue(PluginPrompt.objects.filter(plugin_id=plugin.id).exists())
@@ -988,6 +997,7 @@ class TestPluginBase(PluginTestBase):
         self.assertEqual(len(deleting), 1)
         self.assertEqual(len(deleted), 1)
         self.assertEqual(deleted[0]["plugin_name"], "sql_delete")
+        assert plugin_id is not None
         self.assertFalse(PluginMeta.objects.filter(id=plugin_id).exists())
         self.assertFalse(PluginSelector.objects.filter(plugin_id=plugin_id).exists())
         self.assertFalse(PluginPrompt.objects.filter(plugin_id=plugin_id).exists())
@@ -1049,6 +1059,7 @@ class TestPluginBase(PluginTestBase):
         plugin = self.new_sql_plugin("sql_clone_original")
         self.addCleanup(self.delete_plugin_by_name, "sql_clone_original_copy")
         plugin.clone(new_name="sql_clone_original_copy")
+        assert plugin.id is not None
         self.assertEqual(PluginMeta.objects.get(id=plugin.id).name, "sql_clone_original")
         self.assertEqual(PluginDataSql.objects.get(plugin_id=plugin.id).sql_query, SQL_QUERY)
 

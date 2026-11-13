@@ -99,7 +99,9 @@ class CliApiGetItems(CliApiModel):
     )
 
 
-class CliApiGet(CliApiModel):
+# the field kwargs, the cli's name for the request's criteria, collides with the **kwargs of the __init__ that
+# pydantic.mypy generates, and mypy reports it here.
+class CliApiGet(CliApiModel):  # type: ignore[no-redef]
     """The ``data`` of a ``get`` response: the resources of a kind that match the request's criteria."""
 
     apiVersion: str = Field(..., description='The api version, e.g. "smarter.sh/v1".')

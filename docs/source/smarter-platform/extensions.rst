@@ -18,6 +18,13 @@ Plugins, and :doc:`../smarter-framework/smarter-extensions` for how to build one
 Only superusers can manage Extensions. Account administrators choose which of their LLMClients
 use the Extensions that are available to their account.
 
+Everything that the Extensions page does can also be done by a program, with an api key, through the
+REST api's ``/api/v1/extensions/`` routes, which the Smarter SDKs call: list the installed Extensions
+and the registry, install from the registry or upload an archive, and enable, disable, configure,
+update, roll back, change the availability of, or uninstall an Extension. As on the page, any user
+may read the Extensions that their account may use, and only superusers may act on them. See
+:doc:`../smarter-framework/smarter-api/api-contract`.
+
 The Extensions Page
 -------------------
 

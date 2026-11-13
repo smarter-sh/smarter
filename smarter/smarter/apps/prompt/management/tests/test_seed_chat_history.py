@@ -31,9 +31,11 @@ class TestSeedChatHistory(TestAccountMixin):
         self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
         self.addCleanup(Prompt.objects.filter(llmclient=self.llmclient).delete)
         self.seed_files = glob.glob(os.path.join(seed_chat_history.HERE, "data", "*.json"))
+        default_handler_patcher = patch(f"{MODULE}.default_handler")
+        self.default_handler: MagicMock = default_handler_patcher.start()
+        self.addCleanup(default_handler_patcher.stop)
         for patcher in (
             patch(f"{MODULE}.SMARTER_ACCOUNT_NUMBER", self.account.account_number),
-            patch(f"{MODULE}.default_handler"),
             patch.object(LLMClientPlugin, "plugins", return_value=[MagicMock(name="plugin")]),
         ):
             patcher.start()
@@ -47,8 +49,8 @@ class TestSeedChatHistory(TestAccountMixin):
     def test_seeds_every_prompt_file(self):
         self.assertTrue(self.seed_files)
         output = self.run_command()
-        self.assertEqual(seed_chat_history.default_handler.call_count, len(self.seed_files))
-        kwargs = seed_chat_history.default_handler.call_args.kwargs
+        self.assertEqual(self.default_handler.call_count, len(self.seed_files))
+        kwargs = self.default_handler.call_args.kwargs
         self.assertEqual(kwargs["prompt"].llmclient, self.llmclient)
         self.assertEqual(kwargs["prompt"].user_profile, self.user_profile)
         self.assertEqual(kwargs["user"], self.admin_user)
@@ -60,7 +62,7 @@ class TestSeedChatHistory(TestAccountMixin):
         with patch.object(LLMClientPlugin, "plugins", return_value=[]):
             with self.assertRaises(ValueError):
                 self.run_command()
-        seed_chat_history.default_handler.assert_not_called()
+        self.default_handler.assert_not_called()
 
     def test_requires_the_example_llmclient(self):
         LLMClient.objects.filter(pk=self.llmclient.pk).delete()
@@ -74,4 +76,4 @@ class TestSeedChatHistory(TestAccountMixin):
         with patch.object(seed_chat_history.UserProfile, "get_cached_object", return_value=None):
             with self.assertRaises(ValueError):
                 self.run_command()
-        seed_chat_history.default_handler.assert_not_called()
+        self.default_handler.assert_not_called()

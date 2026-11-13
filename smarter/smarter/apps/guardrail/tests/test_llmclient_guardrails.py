@@ -10,6 +10,7 @@ Test the LLMClient manifest's ``spec.guardrails``, and the LLMClientGuardrails m
 
 import copy
 import os
+from typing import TYPE_CHECKING
 
 import yaml
 
@@ -27,12 +28,17 @@ from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes import GuardrailTestBase, get_test_data
 
+if TYPE_CHECKING:
+    from smarter.apps.guardrail.models import Guardrail
+
 LLMCLIENT_NAME = "test_guardrail_llmclient"
 BUILTIN = "pii_redaction_input"
 
 
 class TestLLMClientGuardrails(TestSAMBrokerBaseClass, GuardrailTestBase):
     """Test that applying an LLMClient manifest attaches, detaches and describes its Guardrails."""
+
+    guardrail: "Guardrail"
 
     @classmethod
     def setUpClass(cls):

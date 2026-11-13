@@ -21,6 +21,7 @@ from smarter.apps.mcpclient.manifest.brokers.mcpclient import (
 )
 from smarter.apps.mcpclient.manifest.models.mcpclient.model import SAMMCPClient
 from smarter.apps.mcpclient.models import MCPClient, MCPConnectionStatus
+from smarter.apps.secret.models import Secret
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
@@ -47,6 +48,8 @@ class TestSmarterMCPClientBroker(TestSAMBrokerBaseClass):
     Saving an MCPClient queues a Celery refresh task. It is mocked, so that the
     tests do not depend on the Celery worker, nor contact the MCP server.
     """
+
+    token_secret: Secret
 
     @classmethod
     def setUpClass(cls):

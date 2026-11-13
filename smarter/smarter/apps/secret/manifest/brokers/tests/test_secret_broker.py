@@ -74,7 +74,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     @property
     def broker(self) -> SAMSecretBroker:
-        return super().broker  # type: ignore
+        return super().broker  # type: ignore[return-value]
 
     def test_setup(self):
         """Verify that setup initialized the broker correctly."""
@@ -101,10 +101,14 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
     def test_sam_broker_initialization(self):
         """Test that the SAMSecretBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**self.loader.manifest_metadata}
-        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        manifest_metadata = self.loader.manifest_metadata
+        assert manifest_metadata is not None
+        metadata = {**manifest_metadata}
+        manifest_spec = self.loader.manifest_spec
+        assert manifest_spec is not None
+        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         spec = {
-            "config": SAMSecretSpecConfig(**self.loader.manifest_spec["config"]),
+            "config": SAMSecretSpecConfig(**manifest_spec["config"]),
         }
         SAMSecret(
             apiVersion=self.loader.manifest_api_version,
@@ -140,7 +144,9 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
     def test_manifest_model_initialization(self):
         """Test that the manifest property can initialize a SAMSecret model."""
-        sam_secret = SAMSecret(**self.broker.manifest.model_dump())
+        manifest = self.broker.manifest
+        assert manifest is not None
+        sam_secret = SAMSecret(**manifest.model_dump())
         self.assertIsInstance(sam_secret, SAMSecret)
 
     def test_formatted_class_name(self):
@@ -212,23 +218,28 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
 
+        manifest = self.broker.manifest
+        assert manifest is not None
+        secret = self.broker.secret
+        assert secret is not None
+
         # metadata fields
-        self.assertEqual(self.broker.manifest.metadata.name, self.broker.secret.name)
-        self.assertEqual(self.broker.manifest.metadata.version, self.broker.secret.version)
-        self.assertEqual(self.broker.manifest.metadata.description, self.broker.secret.description)
+        self.assertEqual(manifest.metadata.name, secret.name)
+        self.assertEqual(manifest.metadata.version, secret.version)
+        self.assertEqual(manifest.metadata.description, secret.description)
 
         # verify that user_profile.tags (TaggableManager) contains the same tags.
-        manifest_tags = set(self.broker.manifest.metadata.tags or [])
-        django_orm_tags = set(self.broker.secret.tags_list) if self.broker.secret.tags else set()
+        manifest_tags = set(manifest.metadata.tags or [])
+        django_orm_tags = set(secret.tags_list) if secret.tags else set()
         self.assertEqual(manifest_tags, django_orm_tags)
 
-        # self.broker.manifest.metadata.annotations is a map of keys to string values.
+        # manifest.metadata.annotations is a map of keys to string values.
         # verify that user_profile.annotations holds the same annotations.
         def sort_annotations(annotations):
             return dict(sorted((annotations or {}).items()))
 
-        manifest_annotations = sort_annotations(self.broker.manifest.metadata.annotations or [])
-        account_annotations = sort_annotations(self.broker.secret.annotations or [])
+        manifest_annotations = sort_annotations(manifest.metadata.annotations or [])
+        account_annotations = sort_annotations(secret.annotations or [])
         self.assertEqual(
             manifest_annotations,
             account_annotations,
@@ -236,14 +247,14 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         )
 
         # spec fields
-        self.assertEqual(
-            self.broker.manifest.spec.config.value, self.broker.secret.get_secret(update_last_accessed=False)
-        )
-        self.assertEqual(self.broker.manifest.spec.config.expiration_date, self.broker.secret.expires_at)
+        self.assertEqual(manifest.spec.config.value, secret.get_secret(update_last_accessed=False))
+        self.assertEqual(manifest.spec.config.expiration_date, secret.expires_at)
 
     def test_apply_does_not_overwrite_platform_secret(self):
         """Test that apply() creates the user's own Secret when the Smarter platform admin already owns a Secret of the same name, leaving the platform's untouched."""
-        name = self.broker.manifest.metadata.name
+        manifest = self.broker.manifest
+        assert manifest is not None
+        name = manifest.metadata.name
         Secret.objects.filter(user_profile=self.user_profile, name=name).delete()
         platform_secret = secret_factory(
             user_profile=smarter_cached_objects.smarter_admin_user_profile,
@@ -258,7 +269,7 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
 
         secret = Secret.objects.get(user_profile=self.user_profile, name=name)
         self.assertNotEqual(secret.id, platform_secret.id)
-        self.assertEqual(secret.get_secret(update_last_accessed=False), self.broker.manifest.spec.config.value)
+        self.assertEqual(secret.get_secret(update_last_accessed=False), manifest.spec.config.value)
         platform_secret.refresh_from_db()
         self.assertEqual(platform_secret.user_profile, smarter_cached_objects.smarter_admin_user_profile)
         self.assertEqual(platform_secret.get_secret(update_last_accessed=False), "platform-value")
@@ -272,8 +283,10 @@ class TestSmarterSecretBroker(TestSAMBrokerBaseClass):
         """
         response = self.broker.apply(self.request, **self.kwargs)
 
+        manifest = self.broker.manifest
+        assert manifest is not None
         kwargs = {
-            "name": self.broker.manifest.metadata.name,
+            "name": manifest.metadata.name,
         }
         response = self.broker.describe(self.request, kwargs)
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)

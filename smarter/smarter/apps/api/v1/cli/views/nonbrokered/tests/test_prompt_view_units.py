@@ -70,7 +70,9 @@ class TestPromptViewUnits(SmarterTestBase):
     def test_messages_for_a_new_session(self):
         """A new session starts a new message list."""
         view = self.view(data={"prompt": "hello"}, params="new_session=true")
-        self.assertEqual([m["role"] for m in view.messages], ["system", "user"])
+        messages = view.messages
+        assert messages is not None
+        self.assertEqual([m["role"] for m in messages], ["system", "user"])
         self.assertIs(view.messages, view.messages)
 
     def test_messages_from_the_request(self):

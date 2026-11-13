@@ -45,6 +45,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptResponse,
 )
 from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
+from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.apps.llmclient.views.endpoints"
 SWITCH = f"{MODULE}.waffle.switch_is_active"
@@ -217,9 +218,9 @@ class TestLLMClientEndpointsView(TestAccountMixin):
         api_view = MagicMock(return_value=HttpResponse("api"))
         api_view.csrf_exempt = True
         view = browser_friendly(api_view)
-        self.assertTrue(view.csrf_exempt)
+        self.assertTrue(getattr(view, "csrf_exempt", False))
         request = self.request("/prompt/", "post")
-        response = view(request, name="x")
+        response = http_response(view(request, name="x"))
         self.assertEqual(response.content, b"api")
         api_view.assert_called_once_with(request, name="x")
 

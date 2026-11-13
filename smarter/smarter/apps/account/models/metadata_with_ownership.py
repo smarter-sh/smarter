@@ -378,16 +378,20 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
     @overload
     def select_related(self, clear: None, /) -> SmarterQuerySetWithPermissions[_MT]: ...
+
     @overload
     def select_related(self, *fields: str) -> SmarterQuerySetWithPermissions[_MT]: ...
+
     def select_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
         """Returns a SmarterQuerySetWithPermissions with select_related applied."""
         return self.get_queryset().select_related(*args, **kwargs)
 
     @overload
     def prefetch_related(self, clear: None, /) -> SmarterQuerySetWithPermissions[_MT]: ...
+
     @overload
     def prefetch_related(self, *lookups: str | Prefetch) -> SmarterQuerySetWithPermissions[_MT]: ...
+
     def prefetch_related(self, *args, **kwargs) -> SmarterQuerySetWithPermissions[_MT]:
         """Returns a SmarterQuerySetWithPermissions with prefetch_related applied."""
         return self.get_queryset().prefetch_related(*args, **kwargs)

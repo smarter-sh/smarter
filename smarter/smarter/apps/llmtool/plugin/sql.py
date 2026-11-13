@@ -700,7 +700,7 @@ class SqlPlugin(PluginBase):
 
     # pylint: disable=too-many-branches,too-many-statements
     def tool_call_fetch_plugin_response(
-        self, function_args: Union[SmarterDictType, list]
+        self, function_args: Union[SmarterDictType, list, str, None]
     ) -> Optional[Union[SmarterDictType, list, str]]:
         """
         Fetch information from a Plugin object in response to an OpenAI API tool call.

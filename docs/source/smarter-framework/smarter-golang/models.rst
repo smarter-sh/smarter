@@ -69,3 +69,9 @@ whose ``Ref()`` is the resource's ``smarter.ID``. Every resource has the metadat
 (``Name``, ``Description``, ``Version``, ``Tags`` and ``Annotations``), its ``ManifestURL``, and its
 ``DetailURL``: the page of the web console that shows its manifest, the resources that it uses, and
 those that use it.
+
+The responses that aren't resources have structs of their own, e.g. ``smarter.ExtensionDetail``,
+``smarter.TokenUsageSeries`` and ``smarter.DataExport``. Their JSON tags are the API's own names,
+which are camelCase, except in a few responses, e.g. the chat history's and the token usage
+series' (``period_start``). The SDK's tests check that each recorded response that its unit tests replay is
+valid under the platform's OpenAPI document.

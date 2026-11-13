@@ -49,6 +49,7 @@ from smarter.lib.manifest.broker import SAMBrokerError
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import SmarterDictType, required
 
 logger = logging.getLogger(__name__)
 MANIFEST_PATH_API_PLUGIN = os.path.abspath(
@@ -76,6 +77,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
     """
 
     test_sam_api_plugin_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMApiPlugin()"
+    loader: SAMLoader
 
     @classmethod
     def setUpClass(cls):
@@ -92,26 +94,36 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         super().setUp()
         self._manifest_filespec = MANIFEST_PATH_API_PLUGIN
 
+    @property
+    def manifest_metadata(self) -> SmarterDictType:
+        """The test manifest's metadata, which it always has."""
+        return required(self.loader.manifest_metadata, "loader.manifest_metadata")
+
+    @property
+    def manifest_spec(self) -> SmarterDictType:
+        """The test manifest's spec, which it always has."""
+        return required(self.loader.manifest_spec, "loader.manifest_spec")
+
     def test_model_initialization(self):
         """Test that the SAMApiPlugin model can be initialized with valid data."""
         SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMApiPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMApiPluginSpec(**self.manifest_spec),
             status=SAMPluginCommonStatus(**self.loader.manifest_status) if self.loader.manifest_status else None,
         )
 
     def test_apidata_endpoint_required_and_validation(self):
         """Test endpoint is required and validated as a URL endpoint."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"]["endpoint"] = "/v1/test"
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMApiPluginSpec(**manifest_spec),
         )
         # the validator should have added a trailing slash
@@ -123,7 +135,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
 
@@ -133,20 +145,20 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
 
     def test_apidata_method_default_and_validation(self):
         """Test method defaults to GET and validates allowed values."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"].pop("method", None)
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMApiPluginSpec(**manifest_spec),
         )
         self.assertEqual(model.spec.apiData.method, "GET")
@@ -156,7 +168,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMApiPluginSpec(**manifest_spec),
         )
         self.assertEqual(model.spec.apiData.method, SmarterHttpMethods.POST)
@@ -167,20 +179,20 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
 
     def test_apidata_url_params(self):
         """Test urlParams: present, None, wrong type, valid/invalid UrlParam."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"]["urlParams"] = [{"key": "city", "value": "SF"}]
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.urlParams, list)
@@ -189,7 +201,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.apiData.urlParams)
@@ -199,7 +211,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -208,20 +220,20 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
     def test_apidata_headers(self):
         """Test headers: present, None, wrong type, valid/invalid RequestHeader."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"]["headers"] = [{"name": "Authorization", "value": "Bearer token"}]
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.headers, list)
@@ -230,7 +242,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.apiData.headers)
@@ -240,7 +252,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -249,20 +261,20 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
     def test_apidata_body(self):
         """Test body: present, None, wrong type."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"]["body"] = {"foo": "bar"}
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.body, dict)
@@ -271,7 +283,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.body, list)
@@ -280,7 +292,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.apiData.body)
@@ -290,7 +302,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -302,11 +314,12 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
     def test_invalid_field_types(self):
         """Test that wrong types for fields raises ValidationError."""
         with self.assertRaises(Exception):
+            # the wrong types are the test; pyright types the constructor, mypy's pydantic plugin doesn't.
             SAMApiPlugin(
-                apiVersion=123,  # type: ignore
-                kind=456,  # type: ignore
-                metadata=self.loader.manifest_metadata,  # type: ignore
-                spec=self.loader.manifest_spec,  # type: ignore
+                apiVersion=123,  # pyright: ignore[reportArgumentType]
+                kind=456,  # pyright: ignore[reportArgumentType]
+                metadata=self.manifest_metadata,  # pyright: ignore[reportArgumentType]
+                spec=self.manifest_spec,  # pyright: ignore[reportArgumentType]
             )
 
     def test_alternative_initialization(self):
@@ -314,8 +327,8 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         data = {
             "apiVersion": self.loader.manifest_api_version,
             "kind": self.loader.manifest_kind,
-            "metadata": self.loader.manifest_metadata,
-            "spec": self.loader.manifest_spec,
+            "metadata": self.manifest_metadata,
+            "spec": self.manifest_spec,
         }
         SAMApiPlugin(**data)
 
@@ -325,19 +338,20 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMApiPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMApiPluginSpec(**self.manifest_spec),
         )
         with self.assertRaises(PydanticValidationError):
-            model.kind = "NewKind"
+            # a frozen model's field, which mypy refuses to assign; the test checks that it fails at runtime too.
+            model.kind = "NewKind"  # type: ignore[misc]
 
     def test_optional_status_field(self):
         """Test that status is optional and can be omitted."""
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMApiPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMApiPluginSpec(**self.manifest_spec),
         )
         self.assertIsNone(model.status)
 
@@ -347,7 +361,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec={"not": "a valid spec"},  # type: ignore
             )
 
@@ -358,26 +372,26 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata={"not": "a valid metadata"},  # type: ignore
-                spec=SAMApiPluginSpec(**self.loader.manifest_spec),
+                spec=SAMApiPluginSpec(**self.manifest_spec),
             )
 
     def test_empty_parameters(self):
         """Test that empty parameters list is valid if allowed by spec."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             manifest_spec["apiData"]["parameters"] = []
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
             spec=SAMApiPluginSpec(**manifest_spec),
         )
         self.assertEqual(model.spec.apiData.parameters, [])
 
     def test_parameter_missing_required_field(self):
         """Test that parameter missing required field raises ValidationError."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             param = dict(manifest_spec["apiData"]["parameters"][0])
@@ -388,13 +402,13 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
 
     def test_parameter_wrong_type(self):
         """Test that parameter with wrong type value raises ValidationError."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             param = dict(manifest_spec["apiData"]["parameters"][0])
@@ -404,7 +418,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
 
@@ -413,15 +427,15 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         model = SAMApiPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
-            metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
-            spec=SAMApiPluginSpec(**self.loader.manifest_spec),
+            metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
+            spec=SAMApiPluginSpec(**self.manifest_spec),
         )
         self.assertIn("SAMApiPlugin", repr(model))
         self.assertIn("SAMApiPlugin", str(model))
 
     def test_apidata_parameters_various_cases(self):
         """Test parameters: present, None, empty, wrong type, invalid Parameter."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             # Valid list
@@ -435,7 +449,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.parameters, list)
@@ -445,7 +459,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.apiData.parameters)
@@ -455,7 +469,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.apiData.parameters, [])
@@ -466,7 +480,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -476,13 +490,13 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
     def test_apidata_testvalues_various_cases(self):
         """Test testValues: present, None, wrong type, valid/invalid TestValue."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             # Valid list
@@ -490,7 +504,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsInstance(model.spec.apiData.testValues, list)
@@ -500,7 +514,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertIsNone(model.spec.apiData.testValues)
@@ -511,7 +525,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -521,13 +535,13 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
     def test_apidata_limit_default_and_validation(self):
         """Test limit: default, custom, below minimum, wrong type."""
-        manifest_spec = dict(self.loader.manifest_spec)
+        manifest_spec = dict(self.manifest_spec)
         if "apiData" in manifest_spec:
             manifest_spec["apiData"] = dict(manifest_spec["apiData"])
             # Remove limit for default
@@ -535,7 +549,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.apiData.limit, 100)
@@ -545,7 +559,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
             model = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                 spec=SAMApiPluginSpec(**manifest_spec),
             )
             self.assertEqual(model.spec.apiData.limit, 10)
@@ -556,7 +570,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -566,7 +580,7 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
                 SAMApiPlugin(
                     apiVersion=self.loader.manifest_api_version,
                     kind=self.loader.manifest_kind,
-                    metadata=SAMPluginCommonMetadata(**self.loader.manifest_metadata),
+                    metadata=SAMPluginCommonMetadata(**self.manifest_metadata),
                     spec=SAMApiPluginSpec(**manifest_spec),
                 )
 
@@ -611,6 +625,7 @@ class TestApiPluginLegacy(TestPluginBase, ManifestTestsMixin, ApiConnectionTestM
         self.assertIsInstance(self.connection_loader, SAMLoader)
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
+        assert self.connection_model is not None
 
         self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
 

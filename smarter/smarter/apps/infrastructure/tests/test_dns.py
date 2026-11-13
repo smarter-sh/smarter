@@ -22,6 +22,7 @@ from smarter.apps.infrastructure.signals import (
 )
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.validators import SmarterValueError
+from smarter.lib.typing import required
 
 from .base import InfrastructureTestBase
 
@@ -84,8 +85,8 @@ class TestDNSZones(InfrastructureTestBase):
     def test_get_zone(self):
         self.assertIsNone(self.dns.get_zone("example.com"))
         zone = self.dns.add_zone("example.com")
-        self.assertEqual(self.dns.get_zone("example.com").id, zone.id)
-        self.assertEqual(self.dns.get_zone_by_id(zone.id).name, "example.com")
+        self.assertEqual(required(self.dns.get_zone("example.com"), "zone").id, zone.id)
+        self.assertEqual(required(self.dns.get_zone_by_id(zone.id), "zone").name, "example.com")
         self.assertIsNone(self.dns.get_zone_by_id("ZNOPE"))
 
     def test_get_name_servers(self):
@@ -210,7 +211,7 @@ class TestDNSRecords(InfrastructureTestBase):
         self.assertFalse(self.dns.delete_record(self.zone.id, "www.example.com", "A"))
 
     def test_get_environment_a_record(self):
-        self.assertEqual(self.dns.get_environment_a_record("example.com").values, LOAD_BALANCER)
+        self.assertEqual(required(self.dns.get_environment_a_record("example.com"), "record").values, LOAD_BALANCER)
         self.assertIsNone(self.dns.get_environment_a_record("other.example.org"))
 
     def test_create_domain_a_record(self):
@@ -218,7 +219,9 @@ class TestDNSRecords(InfrastructureTestBase):
         record, created = self.dns.create_domain_a_record("app.example.com", "example.com")
         self.assertTrue(created)
         self.assertEqual(record.values, LOAD_BALANCER)
-        self.assertEqual(self.dns.get_record(self.zone.id, "app.example.com", "A").values, LOAD_BALANCER)
+        self.assertEqual(
+            required(self.dns.get_record(self.zone.id, "app.example.com", "A"), "record").values, LOAD_BALANCER
+        )
         _, created = self.dns.create_domain_a_record("app.example.com", "example.com")
         self.assertFalse(created)
 
@@ -229,7 +232,8 @@ class TestDNSRecords(InfrastructureTestBase):
         """
         custom = self.dns.add_zone("customer.example.org")
         self.dns.create_domain_a_record("app.customer.example.org", "example.com", zone_id=custom.id)
-        self.assertEqual(self.dns.get_record(custom.id, "app.customer.example.org", "A").values, LOAD_BALANCER)
+        record = required(self.dns.get_record(custom.id, "app.customer.example.org", "A"), "record")
+        self.assertEqual(record.values, LOAD_BALANCER)
         self.assertIsNone(self.dns.get_record(self.zone.id, "app.customer.example.org", "A"))
 
     def test_create_domain_a_record_without_parent_a_record(self):
@@ -272,7 +276,7 @@ class TestResolveDomain(InfrastructureTestBase):
             dns.record_wait_seconds = 0
             dns.get_or_create_record(zone.id, "app.1234-5678-9012.api.local.example.com", "A", values=["192.0.2.1"])
             found = dns.get_zone("api.localhost:9357")
-            self.assertIsNotNone(found)
+            assert found is not None
             self.assertEqual(found.id, zone.id)
             self.assertTrue(dns.delete_record(found.id, "app.1234-5678-9012.api.local.example.com", "A"))
 

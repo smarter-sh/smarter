@@ -71,9 +71,9 @@ class SmarterOpenAICompatibleEmbeddingService(SmarterEmbeddingServiceInterface):
     def embeddings(self) -> OpenAIEmbeddings:
         """Get the OpenAI embeddings."""
         if self._embeddings is None:
-            self._embeddings = OpenAIEmbeddings(
-                api_key=self.api_key,
-            )
+            # validated from its alias, api_key, as the constructor would: pydantic.mypy types the constructor by
+            # field name (openai_api_key) and pyright by alias, so a keyword argument satisfies only one of them.
+            self._embeddings = OpenAIEmbeddings.model_validate({"api_key": self.api_key})
         return self._embeddings
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:

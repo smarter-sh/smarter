@@ -1039,7 +1039,7 @@ MIDDLEWARE = [
     "smarter.lib.django.middleware.html_minify.HTMLMinifyMiddleware",
 ]
 
-if smarter_settings.debug_mode and not "test" in sys.argv:
+if smarter_settings.debug_mode and "test" not in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]

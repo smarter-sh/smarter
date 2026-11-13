@@ -35,6 +35,7 @@ from smarter.apps.prompt.contract.models import (
 )
 from smarter.apps.prompt.progress import PromptProgressEvents
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 SESSION_KEY = "e019a5c1cb2c1cb87992d2d03bccaf44c9d98406b46de5516a4fa03650038ac8"
 ENVELOPE = {"api": "smarter.sh/v1", "metadata": {"command": "prompt_config", "thing": "PromptConfig"}}
@@ -204,12 +205,14 @@ class TestChatConfigTransformations(SmarterTestBase):
         PromptChatApiConfigResponseV1.model_validate({**ENVELOPE, "data": data})
 
     def test_legacy_key_names_renames_keys_at_every_depth(self):
-        renamed = legacy_key_names(
-            {
-                "llmclient": {"url_llmclient": "u", "user_profile": [{"account_number": "1"}]},
-                "history": {"prompt_history": [], "llmclient_request_history": []},
-                "values": ["llmclient stays a value"],
-            }
+        renamed = json_object(
+            legacy_key_names(
+                {
+                    "llmclient": {"url_llmclient": "u", "user_profile": [{"account_number": "1"}]},
+                    "history": {"prompt_history": [], "llmclient_request_history": []},
+                    "values": ["llmclient stays a value"],
+                }
+            )
         )
         self.assertEqual(renamed["chatbot"]["url_chatbot"], "u")
         self.assertEqual(renamed["chatbot"]["user_profile"], [{"accountNumber": "1"}])
@@ -255,19 +258,28 @@ class TestOrmModels(SmarterTestBase):
 
         extension = MagicMock(pk=3, slug="weather", enabled=True, installed_version=MagicMock(version="1.0.0"))
         link = MagicMock(pk=2, created_at=now, updated_at=now, llmclient_id=7, extension=extension)
-        model = PromptChatApiLLMClientExtension.from_model(link)
-        self.assertEqual((model.name, model.extension, model.version, model.enabled), ("weather", 3, "1.0.0", True))
+        extension_model = PromptChatApiLLMClientExtension.from_model(link)
+        self.assertEqual(
+            (extension_model.name, extension_model.extension, extension_model.version, extension_model.enabled),
+            ("weather", 3, "1.0.0", True),
+        )
         extension.installed_version = None
         self.assertIsNone(PromptChatApiLLMClientExtension.from_model(link).version)
 
     def test_orm_models_are_strict(self):
         """The models of ORM rows have exactly their fields: an extra field, or an unknown choice, is an error."""
         with self.assertRaises(ValidationError):
-            PromptChatApiLLMClientPlugin(id=1, llmclient=1, plugin_meta=PLUGIN_META, user_profile={"email": "x"})
+            # an extra field, which the model must reject.
+            PromptChatApiLLMClientPlugin(
+                id=1, llmclient=1, plugin_meta=PLUGIN_META, user_profile={"email": "x"}  # type: ignore[call-arg]
+            )
         with self.assertRaises(ValidationError):
             PromptChatApiPluginMeta(**{**PLUGIN_META, "plugin_class": "PluginMeta"})
         with self.assertRaises(ValidationError):
-            PromptChatApiLLMClientExtension(id=1, llmclient=1, extension=1, name="weather", enabled=True, secret="x")
+            # an extra field, which the model must reject.
+            PromptChatApiLLMClientExtension(
+                id=1, llmclient=1, extension=1, name="weather", enabled=True, secret="x"  # type: ignore[call-arg]
+            )
 
     def test_v1_models_are_deprecated(self):
         with self.assertWarns(DeprecationWarning):

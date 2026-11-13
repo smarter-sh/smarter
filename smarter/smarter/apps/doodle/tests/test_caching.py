@@ -41,6 +41,7 @@ class TestDoodleCaching(DoodleTestMixin):
     def test_a_region_without_an_approved_doodle_gets_the_calendars_choice(self):
         day = DIWALI.isoformat()
         doodle = plan_doodle(DIWALI, DoodleRegion.SOUTH_ASIA)
+        assert doodle is not None
         default = self.theme(DEFAULT_THEME_SLUG)
         Doodle.objects.filter(pk=doodle.pk).update(
             theme=default, artwork=default.artwork, source=DoodleSource.LLM, status=DoodleStatus.PROPOSED
@@ -57,6 +58,7 @@ class TestDoodleCaching(DoodleTestMixin):
     def test_the_credit_of_a_doodle_that_the_editor_chose(self):
         day = DIWALI.isoformat()
         doodle = plan_doodle(DIWALI, DoodleRegion.EUROPE)
+        assert doodle is not None
         Doodle.objects.filter(pk=doodle.pk).update(source=DoodleSource.LLM)
         self.addCleanup(Doodle.objects.filter(pk=doodle.pk).delete)
         doodle_of_the_day.invalidate(day, DoodleRegion.EUROPE)
@@ -67,6 +69,7 @@ class TestDoodleCaching(DoodleTestMixin):
     def test_the_default_that_the_editor_chose_is_the_default(self):
         day = QUIET_DAY.isoformat()
         doodle = plan_doodle(QUIET_DAY, DoodleRegion.MX)
+        assert doodle is not None
         Doodle.objects.filter(pk=doodle.pk).update(source=DoodleSource.LLM)
         self.addCleanup(Doodle.objects.filter(pk=doodle.pk).delete)
         doodle_of_the_day.invalidate(day, DoodleRegion.MX)

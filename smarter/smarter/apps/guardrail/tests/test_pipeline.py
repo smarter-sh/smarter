@@ -136,7 +136,9 @@ class TestGuardrailPipeline(GuardrailTestBase):
         with fake_client(FakeGuardrailClient(fail=True)), capture_signal(guardrail_failed) as failed:
             result = GuardrailPipeline([failing]).run_pre(input_payload("forbidden"))
         self.assertFalse(result.blocked)
-        self.assertIn("failed", result.outcomes[0].error)
+        error = result.outcomes[0].error
+        assert error is not None
+        self.assertIn("failed", error)
         self.assertFalse(failed[0]["fail_closed"])
         self.assertEqual(self.events(failing).get().disposition, GuardrailDisposition.ERROR)
 
@@ -187,6 +189,8 @@ class TestGuardrailPipeline(GuardrailTestBase):
         outcome = GuardrailEngine().evaluate(
             g, input_payload("x"), GuardrailStage.PRE, StrategyContext(stage=GuardrailStage.PRE)
         )
+        assert outcome.error is not None
         self.assertIn("Invalid regex", outcome.error)
         self.assertEqual(outcome.findings, [])
+        assert outcome.duration_ms is not None
         self.assertGreaterEqual(outcome.duration_ms, 0)

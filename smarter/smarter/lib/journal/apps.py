@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
 from .const import namespace as app_name
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
-class JournalConfig(AppConfig, SmarterHelperMixin):
+class JournalConfig(AppConfig):
     """Django app configuration for the journal app."""
 
     default_auto_field = "django.db.models.BigAutoField"
@@ -25,4 +25,4 @@ class JournalConfig(AppConfig, SmarterHelperMixin):
         from . import receivers, signals  # noqa: F401
 
         app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, self.formatted_state_ready)
+        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, SmarterReadyState.READY)

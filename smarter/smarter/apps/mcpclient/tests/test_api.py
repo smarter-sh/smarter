@@ -14,6 +14,7 @@ from unittest import mock
 from django.urls import reverse
 from rest_framework.test import APIClient
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.mcpclient.api.v1.urls import MCPClientApiV1ReverseViews as Names
 from smarter.apps.mcpclient.connection import MCPServerConnection
@@ -21,6 +22,7 @@ from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
 from smarter.apps.mcpclient.models import MCPClient, MCPConnectionStatus
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.narrowing import json_list
 
 from .base_classes import (
     MCPCLIENT_NAME,
@@ -37,6 +39,11 @@ def url(name: str, **kwargs) -> str:
 
 class TestMCPClientApi(MCPClientTestBase):
     """Test the MCPClient api views, and their permissions."""
+
+    other_admin_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+    other_mcpclient: MCPClient
 
     @classmethod
     def setUpClass(cls):
@@ -74,7 +81,7 @@ class TestMCPClientApi(MCPClientTestBase):
         """Test that the list includes the account's MCPClients, and not another account's."""
         self.client.force_login(self.non_admin_user)
         data = self.get(url(Names.list_view))
-        items = data["results"] if isinstance(data, dict) and "results" in data else data
+        items = json_list(data["results"] if isinstance(data, dict) and "results" in data else data, "items")
         names = [item["name"] for item in items]
         self.assertIn(MCPCLIENT_NAME, names)
         self.assertNotIn(self.other_mcpclient.name, names)

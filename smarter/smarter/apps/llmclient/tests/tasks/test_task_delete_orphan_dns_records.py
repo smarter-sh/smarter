@@ -35,6 +35,10 @@ def a_record(name: str, record_type: str = "A") -> DNSRecord:
 class TestDeleteOrphanDNSRecords(SmarterTestBase):
     """Test that only the A records of LLMClient-shaped hosts that nothing uses are deleted."""
 
+    is_taskable: MagicMock
+    live_hosts: MagicMock
+    smarter_settings: MagicMock
+
     def setUp(self):
         super().setUp()
         self.infrastructure = MagicMock()

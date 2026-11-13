@@ -89,4 +89,5 @@ class TestSmarterHttpErrorPages(SmarterTestBase):
                 html = response_class(request).content.decode()
                 link = re.search(r"<a [^>]*>Return Home</a>", html)
                 self.assertIsNotNone(link, "the page has no Return Home button")
+                assert link is not None
                 self.assertIn(" autofocus", link[0])

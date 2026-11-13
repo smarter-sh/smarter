@@ -33,7 +33,8 @@ class TestApiConnectionModels(ApiConnectionTestMixin):
         self.assertEqual(connection.manifest_url, detail_url(connection, ConnectionReverseNames.api_detailview))  # type: ignore[union-attr]
 
     def test_manifest_url_unsupported_kind(self):
-        connection = ConnectionBase(id=1, name="test_unsupported_kind", kind="Plugin")
+        # a bare ConnectionBase, which no kind subclasses, to test the url of an unsupported kind.
+        connection = ConnectionBase(id=1, name="test_unsupported_kind", kind="Plugin")  # type: ignore[abstract]
         with self.assertRaises(SmarterConfigurationError):
             connection.manifest_url  # pylint: disable=W0104
 

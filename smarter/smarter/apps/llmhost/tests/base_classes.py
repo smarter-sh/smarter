@@ -17,8 +17,8 @@ creates those that do not exist, and deletes them afterwards.
 import copy
 import glob
 import os
-from typing import Any, Optional
-from unittest.mock import patch
+from typing import TYPE_CHECKING, Any, Optional, Union
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmhost.const import LABEL_COMPUTE
@@ -54,6 +54,9 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+if TYPE_CHECKING:
+    from unittest.mock import _patch
 
 logger = logging.getLogger(__name__)
 
@@ -275,6 +278,8 @@ class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
 
     cluster: InMemoryClusterBackend
     nodegroups: InMemoryNodeGroupBackend
+    _dns_patcher: "_patch[Union[MagicMock, AsyncMock]]"
+    hf_secret: Secret
 
     @classmethod
     def setUpClass(cls):

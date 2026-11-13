@@ -55,4 +55,4 @@ class TestConversionUtils(SmarterTestBase):
 
         self.assertEqual(to_snake_case(DummyClassName.__name__), "dummy_class_name")
         # anything but a str, dict or list is returned unchanged
-        self.assertIs(to_snake_case(DummyClassName), DummyClassName)
+        self.assertIs(to_snake_case(DummyClassName), DummyClassName)  # type: ignore[call-overload]

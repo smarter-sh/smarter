@@ -226,6 +226,8 @@ class TestSmarterValidatorBranches(SmarterTestBase):
         for side_effect in (None, ImportError("not yet")):
             with self.subTest(side_effect=side_effect):
                 spec = importlib.util.spec_from_file_location("validators_under_test", validators_module.__file__)
+                assert spec is not None
+                assert spec.loader is not None
                 module = importlib.util.module_from_spec(spec)
                 with patch("smarter.lib.django.waffle.switch_is_active", side_effect=side_effect, return_value=True):
                     spec.loader.exec_module(module)

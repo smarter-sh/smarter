@@ -6,7 +6,8 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.handlers.asgi import ASGIRequest
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -85,7 +86,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
         if user is None:
             self.fail("Authentication failed")
         request.user = user
-        middleware = SessionMiddleware(lambda request: None)
+        middleware = SessionMiddleware(lambda request: HttpResponse())
         middleware.process_request(request)
         request.session.save()
 
@@ -102,6 +103,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
             f"Expected an llmclient helper to be valid, but got {helper.ready} for url {self.llmclient.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
         )
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
+        assert helper.llmclient is not None
         self.assertTrue(
             helper.llmclient.url == self.llmclient.url,
             f"Expected {self.llmclient.url}, but got {helper.llmclient.url}",
@@ -118,7 +120,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
 
     def test_non_api_url(self):
         """Test a non-api url."""
-        request: ASGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:9357")
+        request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:9357")
         helper = LLMClientHelper(
             request=request,
             llmclient_id=None,
@@ -161,6 +163,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
         )
 
         llmclient = helper.llmclient
+        assert llmclient is not None
 
         self.assertEqual(self.custom_llmclient.name, llmclient.name)
 
@@ -179,6 +182,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
             f"Expected {self.account.account_number}, but got {helper.account_number}",
         )
         self.assertTrue(helper.is_custom_domain)
+        assert helper.llmclient is not None
         self.assertIn(
             self.custom_llmclient.url,
             helper.llmclient.url,
@@ -190,4 +194,5 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
         """Test no url."""
 
         with self.assertRaises((SmarterValueError, TypeError)):
-            LLMClientHelper()
+            # the test checks that a helper without a request is refused, which the signature doesn't allow.
+            LLMClientHelper()  # type: ignore[call-arg]

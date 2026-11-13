@@ -99,12 +99,15 @@ class TestRepositoryScripts(SmarterTestBase):
         )
         config = load_scripts_config(root)
         self.assertIsNotNone(config)
+        assert config is not None
         self.assertEqual(config.scripts, [RepositoryScript(path="a.sh", stage="pre", args=["x"], timeout=60)])
 
     def test_load_scripts_config_without_a_configuration(self):
         """No configuration file is no configuration, and an empty one has no scripts."""
         self.assertIsNone(load_scripts_config(self.repo()))
-        self.assertEqual(load_scripts_config(self.repo("")).scripts, [])
+        empty = load_scripts_config(self.repo(""))
+        assert empty is not None
+        self.assertEqual(empty.scripts, [])
 
     def test_load_scripts_config_failures(self):
         """Invalid YAML, an invalid configuration, a missing script and a script that isn't executable are errors."""

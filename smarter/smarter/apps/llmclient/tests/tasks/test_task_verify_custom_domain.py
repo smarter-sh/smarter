@@ -27,6 +27,10 @@ Status = LLMClientCustomDomain.VerificationStatusChoices
 class TestVerifyCustomDomain(TestAccountMixin):
     """Test that a custom domain is checked once per run, and that its owner is notified of the result."""
 
+    is_taskable: MagicMock
+    infrastructure: MagicMock
+    AccountContact: MagicMock
+
     def setUp(self):
         super().setUp()
         self.hosted_zone_id = f"ZTEST{self.hash_suffix}".upper()
@@ -140,6 +144,7 @@ class TestVerifyCustomDomain(TestAccountMixin):
     def test_ns_records_not_delegated(self):
         with patch(f"{MODULE}._ns_records_verified", return_value=False):
             blocker = _verification_blocker(self.hosted_zone_id, self.domain_name, None)
+        assert blocker is not None
         self.assertIn("not delegated", blocker)
         self.assertIn("ns-1.awsdns.com", blocker)
 
@@ -147,6 +152,7 @@ class TestVerifyCustomDomain(TestAccountMixin):
         self.infrastructure.certificates.certificate_status.return_value = "PENDING_VALIDATION"
         with patch(f"{MODULE}._ns_records_verified", return_value=True):
             blocker = _verification_blocker(self.hosted_zone_id, self.domain_name, None)
+        assert blocker is not None
         self.assertIn("PENDING_VALIDATION", blocker)
 
     def test_missing_certificate_is_requested(self):

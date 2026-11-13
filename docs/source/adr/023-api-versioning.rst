@@ -59,7 +59,10 @@ Each public interface is versioned on its own, and independently of the product.
 6. **Enforcement.** The committed ``openapi.json``, SAM JSON Schemas and chat contract schema are
    the record of each interface. A pull request that changes one of them in a way that breaks
    compatibility must add a new version instead, or carry a ``BREAKING CHANGE`` footer
-   (:doc:`ADR-020 <020-semantic-versioning>`), which makes the next release a major one.
+   (:doc:`ADR-020 <020-semantic-versioning>`), which makes the next release a major one. Before
+   1.0.0 there is no footer: on 0.x, semantic-release would turn it into 1.0.0, which only the
+   maintainers cut (:doc:`ADR-020 <020-semantic-versioning>`, rule 5). Until then, the commit's
+   body says what breaks and how to upgrade.
 
 Alternatives Considered
 -----------------------

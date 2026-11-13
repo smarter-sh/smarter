@@ -15,6 +15,7 @@ from smarter.lib.logging.redis_log_handler import (
     session_key_context,
     user_id_context,
 )
+from smarter.lib.unittest.narrowing import http_response
 
 
 class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
@@ -40,7 +41,7 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
     def test_authenticated_user(self):
         middleware = SmarterRequestLogContextMiddleware(self.get_response)
         before = user_id_context.get()
-        self.assertEqual(middleware(self.request(user=self.admin_user)).content, b"ok")
+        self.assertEqual(http_response(middleware(self.request(user=self.admin_user))).content, b"ok")
         self.assertEqual(self.seen, [get_user_context(self.admin_user)])
         self.assertEqual(user_id_context.get(), before)
 
@@ -72,10 +73,16 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
         request = self.request()
         request.auser = auser
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            self.assertEqual(asyncio.run(middleware(request)).content, b"async ok")
-            asyncio.run(middleware(self.request()))  # no auser
+            with_auser = middleware(request)
+            assert asyncio.iscoroutine(with_auser)
+            self.assertEqual(http_response(asyncio.run(with_auser)).content, b"async ok")
+            without_auser = middleware(self.request())  # no auser
+            assert asyncio.iscoroutine(without_auser)
+            asyncio.run(without_auser)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=False):
-            asyncio.run(middleware(request))
+            switched_off = middleware(request)
+            assert asyncio.iscoroutine(switched_off)
+            asyncio.run(switched_off)
         self.assertEqual(seen[0], get_user_context(admin_user))
         self.assertTrue(seen[1])
         self.assertEqual(len(seen), 3)
@@ -120,7 +127,9 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
 
         middleware = SmarterRequestLogContextMiddleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            asyncio.run(middleware(self.request(**{"X-Smarter-RequestId": "async-request-1"})))
+            response = middleware(self.request(**{"X-Smarter-RequestId": "async-request-1"}))
+            assert asyncio.iscoroutine(response)
+            asyncio.run(response)
         self.assertEqual(seen, ["async-request-1"])
         self.assertIsNone(request_id_context.get())
 
@@ -154,7 +163,9 @@ class TestSmarterRequestLogContextMiddleware(TestAccountMixin):
         session_key = "b" * 64
         middleware = SmarterRequestLogContextMiddleware(get_response)
         with patch("smarter.lib.django.waffle.async_switch_is_active", return_value=True):
-            asyncio.run(middleware(self.request(path=f"/?session_key={session_key}")))
+            response = middleware(self.request(path=f"/?session_key={session_key}"))
+            assert asyncio.iscoroutine(response)
+            asyncio.run(response)
         self.assertEqual(seen, [session_key])
         self.assertIsNone(session_key_context.get())
 

@@ -10,7 +10,7 @@ from django import get_version as get_django_version
 from google.genai import __version__ as google_genai_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
-from pandas.util._print_versions import show_versions as pandas_version
+from pandas import __version__ as pandas_version
 from pydantic import VERSION as pydantic_version
 from rest_framework import __version__ as rest_framework_version
 
@@ -66,7 +66,7 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                     "google_genai": google_genai_version,
                     "llamaai": "unknown",
                     "openai": openai_version,
-                    "pandas": pandas_version(),
+                    "pandas": pandas_version,
                     "pydantic": pydantic_version,
                     "python": platform.python_version(),
                     "rest_framework": rest_framework_version,

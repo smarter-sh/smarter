@@ -163,11 +163,11 @@ class TestAccountMixinMethods(TestAccountMixin):
         self.assertNotEqual(self.mixin, mixin2)
         self.assertTrue(self.mixin != mixin2)
         self.assertTrue(self.mixin == self.mixin)
-        # AccountMixin has no meaningful order, so ordering raises TypeError.
+        # AccountMixin has no meaningful order, so ordering raises TypeError, and mypy rightly refuses it.
         with self.assertRaises(TypeError):
-            self.mixin <= self.mixin  # pylint: disable=pointless-statement
+            self.mixin <= self.mixin  # type: ignore[operator]  # pylint: disable=pointless-statement
         with self.assertRaises(TypeError):
-            self.mixin < mixin2  # pylint: disable=pointless-statement
+            self.mixin < mixin2  # type: ignore[operator]  # pylint: disable=pointless-statement
 
     def test_hash(self):
         self.assertIsInstance(hash(self.mixin), int)

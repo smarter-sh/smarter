@@ -1,6 +1,7 @@
 """Test smarter.apps.mcpserver.protocol.tools.status: platform_status and eks_status, with the in-memory cluster and provider."""
 
 from datetime import datetime, timezone
+from typing import Optional
 from unittest import mock
 
 from smarter.apps.infrastructure.cluster_health import (
@@ -47,7 +48,7 @@ class StatusToolsTestBase(OperationsTestBase):
             HealthCheckResult("Task Broker", True),
             HealthCheckResult("Workers", True),
         ]
-        self.depths = {DEFAULT_QUEUE: 0, INFRASTRUCTURE_QUEUE: 0}
+        self.depths: dict[str, Optional[int]] = {DEFAULT_QUEUE: 0, INFRASTRUCTURE_QUEUE: 0}
         self.database = DatabaseLoad(connections=10, max_connections=150, running=1, slow_queries=0)
         self.providers = [
             ProviderStatus(

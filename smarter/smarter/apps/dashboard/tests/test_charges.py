@@ -10,12 +10,12 @@ from django.urls import reverse
 
 from smarter.apps.account.models import AggregatedCharges, Charge, ChargeTypes
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.dashboard.views.views.api.charges import (
+from smarter.apps.account.token_usage import (
     TokenUsageWindow,
     build_token_usage_series,
-    requested_periodicity,
     token_usage_series,
 )
+from smarter.apps.dashboard.views.views.api.charges import requested_periodicity
 from smarter.apps.dashboard.views.views.api.urls import DashboardApiReverseNames
 from smarter.lib import json
 

@@ -15,10 +15,12 @@ class TestPluginMetaLookups(PluginAppTestBase):
 
     def test_get_cached_object_by_plugin_class(self):
         meta = self.static_plugin.plugin_meta
+        assert meta is not None
         for invalidate in (True, False):
             found = PluginMeta.get_cached_object(
                 invalidate=invalidate, name=meta.name, user_profile=self.user_profile, plugin_class=meta.plugin_class
             )
+            assert found is not None
             self.assertEqual(found.pk, meta.pk)
         with self.assertRaises(PluginMeta.DoesNotExist):
             PluginMeta.get_cached_object(
@@ -28,11 +30,16 @@ class TestPluginMetaLookups(PluginAppTestBase):
     def test_get_cached_object_by_user(self):
         """Test the lookup by the user, or the username, and account, rather than the user profile."""
         meta = self.static_plugin.plugin_meta
+        assert meta is not None
         found = PluginMeta.get_cached_object(name=meta.name, user=self.admin_user, account=self.account)
+        assert found is not None
         self.assertEqual(found.pk, meta.pk)
         found = PluginMeta.get_cached_object(name=meta.name, username=self.admin_user.username, account=self.account)
+        assert found is not None
         self.assertEqual(found.pk, meta.pk)
-        self.assertEqual(PluginMeta.get_cached_object(pk=meta.pk).pk, meta.pk)
+        found = PluginMeta.get_cached_object(pk=meta.pk)
+        assert found is not None
+        self.assertEqual(found.pk, meta.pk)
 
     def test_get_cached_object_requires_pk_or_user(self):
         """Test that a lookup by an unknown username is refused with SmarterValueError."""
@@ -42,6 +49,7 @@ class TestPluginMetaLookups(PluginAppTestBase):
     def test_get_cached_plugins_for_user_profile_id(self):
         """Test that a user's plugins include their account admin's, and that an unknown user profile has none."""
         meta = self.static_plugin.plugin_meta
+        assert meta is not None
         for user_profile in (self.user_profile, self.non_admin_user_profile):
             with self.subTest(user_profile=user_profile):
                 plugins = PluginMeta.get_cached_plugins_for_user_profile_id(
@@ -65,7 +73,9 @@ class TestPluginMetaLookups(PluginAppTestBase):
 
     def test_get_cached_object_without_a_plugin_class(self):
         meta = self.static_plugin.plugin_meta
+        assert meta is not None
         found = PluginMeta.get_cached_object(name=meta.name, user_profile=self.user_profile)
+        assert found is not None
         self.assertEqual(found.pk, meta.pk)
 
     def test_get_cached_plugins_when_lookups_fail(self):

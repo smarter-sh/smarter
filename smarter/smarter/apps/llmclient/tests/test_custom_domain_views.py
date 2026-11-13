@@ -90,6 +90,7 @@ class TestCustomDomainViews(ResourceViewsTestMixin, TestAccountMixin):
     def test_list_api_reports_llmclient_and_dns_records(self):
         """A listed custom domain includes the llmclient that uses it, and its DNS records."""
         custom_domain = self.throwaway("in_use")
+        assert isinstance(custom_domain, LLMClientCustomDomain)
         LLMClientCustomDomainDNS.objects.create(
             custom_domain=custom_domain, record_name=custom_domain.domain_name, record_type="NS", record_value="ns-1"
         )

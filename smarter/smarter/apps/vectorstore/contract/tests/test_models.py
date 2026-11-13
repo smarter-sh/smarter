@@ -3,6 +3,8 @@
 import json
 from typing import get_args
 
+from django.db import models
+
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.vectorstore.backends.base import SEARCH_TYPES
 from smarter.apps.vectorstore.contract.models import (
@@ -30,6 +32,7 @@ from smarter.apps.vectorstore.serializers import (
     VectorstoreSnapshotSerializer,
 )
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
+from smarter.lib.typing import required
 
 
 def serialized(serializer) -> dict:
@@ -42,8 +45,8 @@ class TestVectorstoreContractModels(VectorstoreTestBase):
 
     def setUp(self):
         super().setUp()
-        self.service = self.ready_service("test_vectorstore_contract_models")
-        self.vectorstore = self.service.vectorstore
+        self.vectorstore_service = self.ready_service("test_vectorstore_contract_models")
+        self.vectorstore = self.vectorstore_service.vectorstore
 
     def test_choices(self):
         cases = [
@@ -57,7 +60,10 @@ class TestVectorstoreContractModels(VectorstoreTestBase):
         ]
         for literal, model, field in cases:
             with self.subTest(field=f"{model.__name__}.{field}"):
-                self.assertEqual(list(get_args(literal)), [value for value, _ in model._meta.get_field(field).choices])
+                model_field = model._meta.get_field(field)
+                assert isinstance(model_field, models.Field)
+                choices = required(model_field.choices, f"{model.__name__}.{field}.choices")
+                self.assertEqual(list(get_args(literal)), [value for value, _ in choices])
         self.assertEqual(get_args(VectorstoreApiSearchType), SEARCH_TYPES)
 
     def test_vectorstore_is_the_serializers_output(self):
@@ -70,7 +76,9 @@ class TestVectorstoreContractModels(VectorstoreTestBase):
         )
 
     def test_document_and_snapshot_are_the_serializers_output(self):
-        document, _ = self.service.add_document(name="a.txt", text="Smarter manifests describe AI applications. " * 20)
+        document, _ = self.vectorstore_service.add_document(
+            name="a.txt", text="Smarter manifests describe AI applications. " * 20
+        )
         self.assertEqual(
             VectorstoreApiDocument.from_model(document).model_dump(mode="json"),
             serialized(VectorstoreDocumentSerializer(document)),

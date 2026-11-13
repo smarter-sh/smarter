@@ -184,7 +184,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         return self._brokered_user
 
     @brokered_user.setter
-    def brokered_user(self, value: User) -> None:
+    def brokered_user(self, value: Optional[User]) -> None:
         """
         Set the `User` model instance for the current broker.
 

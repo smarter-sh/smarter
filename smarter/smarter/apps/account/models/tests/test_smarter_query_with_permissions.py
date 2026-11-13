@@ -3,7 +3,12 @@
 
 from django.test import Client
 
-from smarter.apps.account.models import SmarterQuerySetWithPermissions
+from smarter.apps.account.models import (
+    Account,
+    SmarterQuerySetWithPermissions,
+    User,
+    UserProfile,
+)
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
@@ -21,6 +26,17 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
     """Test SmarterQuerySetWithPermissions model."""
 
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestSmarterQuerySetWithPermissions()"
+
+    unrelated_account_admin: User
+    unrelated_account: Account
+    unrelated_account_user_profile: UserProfile
+    unrelated_non_admin_user: User
+    unrelated_non_admin_user_profile: UserProfile
+    account1_secret1: Secret
+    account1_secret2: Secret
+    account2_secret1: Secret
+    account2_secret2: Secret
+    test_secrets: list[Secret]
 
     @classmethod
     def setUpClass(cls):
@@ -107,7 +123,9 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
 
         # Create a mock queryset. We can use any model that inherits from MetaDataWithOwnershipModel,
         # and Secret is the most convenient.
-        self.queryset = SmarterQuerySetWithPermissions(model=Secret, using="default")
+        self.queryset: SmarterQuerySetWithPermissions[Secret] = SmarterQuerySetWithPermissions(
+            model=Secret, using="default"
+        )
         self.control_count = self.queryset.count()  # This should be 4, since we created four secrets in setUpClass()
 
     def test_with_read_permission_for_non_user(self):

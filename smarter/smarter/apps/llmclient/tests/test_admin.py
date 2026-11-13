@@ -3,6 +3,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.admin import smarter_restricted_admin_site
@@ -24,6 +25,19 @@ class TestLLMClientChildAdmins(TestAccountMixin):
     The non-admin user is used, because the test admin users are superusers, who may
     administer every record.
     """
+
+    other_admin_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+    llmclient: LLMClient
+    other_llmclient: LLMClient
+    plugin_meta: PluginMeta
+    other_plugin_meta: PluginMeta
+    plugin: LLMClientPlugin
+    other_plugin: LLMClientPlugin
+    extension: Extension
+    link: LLMClientExtensions
+    other_link: LLMClientExtensions
 
     @classmethod
     def setUpClass(cls):

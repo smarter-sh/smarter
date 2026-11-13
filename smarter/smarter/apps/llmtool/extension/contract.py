@@ -371,6 +371,18 @@ REQUEST_MODELS: tuple[type[BaseModel], ...] = (
 )
 """The api's requests, whose schemas describe what the api accepts: fields with defaults may be left out."""
 
+EXTENSION_API_MODELS: tuple[type[BaseModel], ...] = (
+    ExtensionListResponse,
+    ExtensionDetailResponse,
+    RegistryResponse,
+    ActionResponse,
+    InstallRequest,
+    RollbackRequest,
+    ConfigureRequest,
+    AvailabilityRequest,
+)
+"""The models of ``/api/v1/extensions/`` whose JSON Schemas the Smarter api's OpenAPI document includes."""
+
 CONTRACT_MODELS: tuple[type[BaseModel], ...] = RESPONSE_MODELS + REQUEST_MODELS
 """The models whose JSON Schemas the contract's schema has.
 
@@ -470,6 +482,7 @@ __all__ = [
     "REQUEST_MODELS",
     "RESPONSE_MODELS",
     "ConfigureRequest",
+    "EXTENSION_API_MODELS",
     "ErrorResponse",
     "ExtensionConsoleModel",
     "ExtensionDetail",

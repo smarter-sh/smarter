@@ -56,9 +56,8 @@ class TestValidators(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             validate_temperature(temperature)
 
-        temperature = "not_a_float"
         try:
-            validate_temperature(temperature)
+            validate_temperature("not_a_float")
         except ValueError:
             pass
         else:
@@ -78,9 +77,8 @@ class TestValidators(SmarterTestBase):
         with self.assertRaises(SmarterValueError):
             validate_max_completion_tokens(max_completion_tokens)
 
-        max_completion_tokens = "not_an_int"
         with self.assertRaises(TypeError):
-            validate_max_completion_tokens(max_completion_tokens)
+            validate_max_completion_tokens("not_an_int")
 
     def test_validate_endpoint(self):
         """Test validate_endpoint."""
@@ -108,9 +106,8 @@ class TestValidators(SmarterTestBase):
         # verify that no exception is raised
         validate_request_body(request_body)
 
-        request_body = "not_a_dict"
         with self.assertRaises(TypeError):
-            validate_request_body(request_body)
+            validate_request_body("not_a_dict")
 
     def test_validate_messages(self):
         """Test validate_messages."""

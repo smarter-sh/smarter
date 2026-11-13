@@ -182,9 +182,9 @@ class TestProviderModelVerification(ProviderTestBase):
         patcher = patch.object(model_checks, "openai")
         self.openai = patcher.start()
         self.addCleanup(patcher.stop)
-        patcher = patch.object(model_checks, "set_model_verification", record)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        record_patcher = patch.object(model_checks, "set_model_verification", record)
+        record_patcher.start()
+        self.addCleanup(record_patcher.stop)
         self.openai.chat.completions.create.return_value = completion("Hola")
         self.openai.chat.completions.create.return_value.__iter__.return_value = iter(["chunk"])
 

@@ -44,15 +44,15 @@ class TestSwitchIsActive(SmarterTestBase):
         # Test that an invalid switch name returns False
         self.assertFalse(switch_is_active("not_a_real_switch"))
         self.assertFalse(switch_is_active(""))
-        self.assertFalse(switch_is_active(None))
-        self.assertFalse(switch_is_active(12345))
+        self.assertFalse(switch_is_active(None))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
+        self.assertFalse(switch_is_active(12345))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
 
     def test_switch_name_type(self):
         # Test that non-string types return False
-        self.assertFalse(switch_is_active(None))
-        self.assertFalse(switch_is_active(123))
-        self.assertFalse(switch_is_active([]))
-        self.assertFalse(switch_is_active({}))
+        self.assertFalse(switch_is_active(None))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
+        self.assertFalse(switch_is_active(123))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
+        self.assertFalse(switch_is_active([]))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
+        self.assertFalse(switch_is_active({}))  # type: ignore[arg-type]  # a wrong type, to test that it is refused
 
     def test_switch_is_active_db_ready(self):
         # If the DB is ready, valid switches should return bool
@@ -81,8 +81,8 @@ class TestSwitchIsActive(SmarterTestBase):
         # Should not raise exceptions for any input
         try:
             switch_is_active("not_a_real_switch")
-            switch_is_active(None)
-            switch_is_active(123)
+            switch_is_active(None)  # type: ignore[arg-type]  # a wrong type, to test that it is refused
+            switch_is_active(123)  # type: ignore[arg-type]  # a wrong type, to test that it is refused
             switch_is_active("")
         # pylint: disable=broad-except
         except Exception as e:

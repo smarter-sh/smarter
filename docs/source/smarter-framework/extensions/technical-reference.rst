@@ -22,5 +22,6 @@ helpers. The rest is how the platform installs, loads and runs Extensions.
    reference/resources
    reference/testing
    reference/docs
+   reference/api
    reference/admin
    reference/exceptions

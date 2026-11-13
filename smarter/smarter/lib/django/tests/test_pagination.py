@@ -61,6 +61,8 @@ class TestDefaultSortFields(TestAccountMixin):
 class TestPagination(TestAccountMixin):
     """Test search_queryset(), sort_queryset() and paginate_listview() with the user's auth tokens."""
 
+    tokens: list[SmarterAuthToken]
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -272,6 +274,8 @@ class TestPagination(TestAccountMixin):
 
 class TestTagsAndAnnotations(TestAccountMixin):
     """Test tag_queryset(), annotate_queryset() and their query parameters, with the user's auth tokens."""
+
+    tokens: list[SmarterAuthToken]
 
     @classmethod
     def setUpClass(cls):

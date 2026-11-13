@@ -18,6 +18,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import required
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
@@ -35,6 +36,7 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
     broker_module = "smarter.apps.llmtool.manifest.brokers.api_plugin"
     apply_builds_plugin = True
     orm_spec_method = "plugin_api_spec_orm2pydantic"
+    api_connection: ApiConnection
 
     @classmethod
     def setUpClass(cls):
@@ -43,8 +45,9 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
         loader = SAMLoader(file_path=MANIFEST_PATH_API_CONNECTION)
         if not apply_manifest(username=cls.admin_user.username, manifest=loader.yaml_data, verbose=True):
             raise SmarterValueError("Failed to apply the test ApiConnection manifest.")
+        manifest_metadata = required(loader.manifest_metadata, "loader.manifest_metadata")
         cls.api_connection = ApiConnection.objects.get(
-            user_profile=cls.user_profile, name=loader.manifest_metadata.get("name")
+            user_profile=cls.user_profile, name=manifest_metadata.get("name")
         )
 
     @classmethod
@@ -89,9 +92,11 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
         """Test that the manifest property returns an immutable SAMApiPlugin."""
         manifest = self.broker.manifest
         self.assertIsInstance(manifest, SAMApiPlugin)
+        assert manifest is not None
         self.assertEqual(manifest.spec.connection, "test_api_connection")
         with self.assertRaises(ValidationError):
-            self.broker.manifest.metadata.name = "NewManifestName"
+            # a frozen model's field, which mypy refuses to assign; the test checks that it fails at runtime too.
+            manifest.metadata.name = "NewManifestName"  # type: ignore[misc]
         self.assertIsInstance(SAMApiPlugin(**manifest.model_dump()), SAMApiPlugin)
         broker = self.SAMBrokerClass(self.request, manifest)
         self.assertIsInstance(broker, SAMApiPluginBroker)
@@ -107,13 +112,19 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
         self.apply_manifest()
         plugin = self.broker.plugin
         self.assertIsInstance(plugin, ApiPlugin)
+        assert plugin is not None
         self.assertTrue(plugin.ready)
-        self.assertEqual(plugin.name, self.broker.manifest.metadata.name)
-        self.assertEqual(set(self.broker.manifest.metadata.tags or []), set(self.broker.plugin_meta.tags_list))
+        manifest = self.broker.manifest
+        plugin_meta = self.broker.plugin_meta
+        assert manifest is not None
+        assert plugin_meta is not None
+        self.assertEqual(plugin.name, manifest.metadata.name)
+        self.assertEqual(set(manifest.metadata.tags or []), set(plugin_meta.tags_list))
 
         plugin_data = self.broker.plugin_data
         self.assertIsInstance(plugin_data, PluginDataApi)
-        self.assertEqual(plugin_data.endpoint, self.broker.manifest.spec.apiData.endpoint)
+        assert plugin_data is not None
+        self.assertEqual(plugin_data.endpoint, manifest.spec.apiData.endpoint)
         self.assertEqual(plugin_data.connection, self.api_connection)
 
     def test_orm2pydantic(self):
@@ -121,13 +132,17 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
         self.apply_manifest()
         spec = self.broker.plugin_api_spec_orm2pydantic()
         self.assertIsInstance(spec, SAMApiPluginSpec)
-        self.assertEqual(spec.connection, self.broker.manifest.spec.connection)
-        self.assertEqual(spec.apiData.endpoint, self.broker.manifest.spec.apiData.endpoint)
+        manifest = self.broker.manifest
+        assert spec is not None
+        assert manifest is not None
+        self.assertEqual(spec.connection, manifest.spec.connection)
+        self.assertEqual(spec.apiData.endpoint, manifest.spec.apiData.endpoint)
         api_data = self.broker.plugin_data_orm2pydantic()
-        self.assertEqual(api_data.endpoint, self.broker.manifest.spec.apiData.endpoint)
+        assert api_data is not None
+        self.assertEqual(api_data.endpoint, manifest.spec.apiData.endpoint)
         self.assertEqual(
             {p.name for p in api_data.parameters or []},
-            {p.name for p in self.broker.manifest.spec.apiData.parameters or []},
+            {p.name for p in manifest.spec.apiData.parameters or []},
         )
 
     def test_get_and_describe(self):

@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonRes
 from django.middleware.csrf import CSRF_SECRET_LENGTH
 from django.test import RequestFactory, override_settings
 
+from smarter.apps.account.models import User
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django.middleware.csrf import SmarterCsrfViewMiddleware
 
@@ -59,13 +60,15 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.csrf.settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
     def test_process_request_with_llmclient(self, mock_waffle, mock_settings):
-        self.request.build_absolute_uri = MagicMock(return_value="https://example.com/")
+        patcher = patch.object(self.request, "build_absolute_uri", return_value="https://example.com/")
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.request.META["SERVER_NAME"] = "example.com"
         self.request.META["SERVER_PORT"] = "443"
         self.request.META["HTTP_HOST"] = "example.com:443"
         setattr(self.middleware, "request", self.request)  # type: ignore
-        result = self.middleware.process_request(self.request)
-        self.assertIsNone(result)
+        # Django's CsrfViewMiddleware.process_request() always returns None: the test is that it doesn't raise.
+        self.middleware.process_request(self.request)
 
     @patch("smarter.lib.django.middleware.csrf.smarter_settings")
     @patch("smarter.lib.django.middleware.csrf.waffle")
@@ -134,7 +137,8 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
 
     def renewed_cookie(self, request, response) -> str | None:
         """Run a request through process_request() and process_response(), and return the csrftoken it sets."""
-        self.assertIsNone(self.middleware.process_request(request))
+        # Django's CsrfViewMiddleware.process_request() always returns None.
+        self.middleware.process_request(request)
         response = self.middleware.process_response(request, response)
         cookie = response.cookies.get(settings.CSRF_COOKIE_NAME)
         return cookie.value if cookie else None
@@ -157,7 +161,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
 
     def test_the_csrf_cookie_is_not_renewed_for_other_responses(self):
         """Anonymous visitors, api responses, redirects, errors and POSTs don't renew the cookie."""
-        cases = {
+        cases: dict[str, tuple[HttpRequest, User | AnonymousUser, HttpResponse]] = {
             "anonymous": (RequestFactory().get("/"), AnonymousUser(), HttpResponse("<html></html>")),
             "json": (RequestFactory().get("/api/v1/x/"), self.admin_user, JsonResponse({})),
             "redirect": (RequestFactory().get("/"), self.admin_user, HttpResponseRedirect("/login/")),

@@ -1,7 +1,7 @@
 """Smarter API Manifest - Plugin.spec."""
 
 import os
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from pydantic import Field
 
@@ -22,10 +22,10 @@ class SAMPluginStaticSpecData(SmarterBasePydanticModel):
 
     class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"
 
-    staticData: Optional[dict] = Field(
-        None,
+    staticData: dict = Field(
+        ...,
         description=(
-            f"{class_identifier}.staticData[obj]: The static data returned by the {MANIFEST_KIND} when the "
+            f"{class_identifier}.staticData[obj]: Required. The static data returned by the {MANIFEST_KIND} when the "
             f"class is '{SAMPluginCommonMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
             "json data structures. Try to provide granular and specific data elements."
         ),

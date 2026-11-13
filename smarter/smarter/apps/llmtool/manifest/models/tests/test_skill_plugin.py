@@ -17,6 +17,7 @@ These tests do not use the database.
 import copy
 import glob
 import os
+from typing import Optional
 
 from smarter.apps.llmtool.manifest.models.skill_plugin.const import MANIFEST_KIND
 from smarter.apps.llmtool.manifest.models.skill_plugin.document import (
@@ -305,6 +306,7 @@ class TestSkillPluginManifest(SmarterTestBase):
 
     def test_allowed_tools_empty(self):
         """Test empty values."""
+        value: object
         for value in (None, "", "   ", []):
             self.assertEqual(parse_allowed_tools(value), [], f"value={value!r}")
 
@@ -372,6 +374,7 @@ class TestSkillPluginManifest(SmarterTestBase):
 
     def test_normalize_resources_empty(self):
         """Test empty resources."""
+        resources: Optional[dict[str, Optional[str]]]
         for resources in (None, {}):
             self.assertEqual(normalize_resources(resources), {})
 
@@ -592,8 +595,9 @@ class TestSkillPluginManifest(SmarterTestBase):
         """Test that a SKILL.md pasted into a YAML literal block scalar is preserved exactly."""
         manifest = get_readonly_yaml_file(os.path.join(TEST_DATA_PATH, "skill-plugin.yaml"))
         skill = SAMSkillPlugin(**manifest).spec.skillData.skill
-        self.assertTrue(skill.startswith("---\nname: expense-reports\n"))  # type: ignore[union-attr]
-        self.assertIn("\n## Instructions\n\n1. Collect the receipts", skill)  # type: ignore[operator]
+        assert skill is not None
+        self.assertTrue(skill.startswith("---\nname: expense-reports\n"))
+        self.assertIn("\n## Instructions\n\n1. Collect the receipts", skill)
 
     def test_manifest_requires_skill_data(self):
         """Test that spec.skillData is required."""

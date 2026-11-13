@@ -8,6 +8,7 @@ test, so that the running worker thread and the real Redis are never touched.
 import json
 import logging
 import queue
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 from django.core.exceptions import ImproperlyConfigured
@@ -24,26 +25,32 @@ class TestRedisLogHandler(SmarterTestBase):
 
     def setUp(self):
         super().setUp()
-        self.queue = queue.Queue(maxsize=3)
-        patcher = patch(f"{MODULE}.log_queue", self.queue)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        self.queue: queue.Queue[Optional[handler.LogQueueItem]] = queue.Queue(maxsize=3)
+        queue_patcher = patch(f"{MODULE}.log_queue", self.queue)
+        queue_patcher.start()
+        self.addCleanup(queue_patcher.stop)
         self.redis = MagicMock()
-        patcher = patch(f"{MODULE}.get_redis_cache", return_value=self.redis)
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        patcher = patch.dict(handler._publish_state, {"failing": False})  # pylint: disable=protected-access
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        patcher = patch.object(handler.RedisLogHandler, "publishing_enabled", True)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        redis_patcher = patch(f"{MODULE}.get_redis_cache", return_value=self.redis)
+        redis_patcher.start()
+        self.addCleanup(redis_patcher.stop)
+        state_patcher = patch.dict(handler._publish_state, {"failing": False})  # pylint: disable=protected-access
+        state_patcher.start()
+        self.addCleanup(state_patcher.stop)
+        publishing_patcher = patch.object(handler.RedisLogHandler, "publishing_enabled", True)
+        publishing_patcher.start()
+        self.addCleanup(publishing_patcher.stop)
 
-    def queued(self, *payloads):
+    def dequeued(self) -> handler.LogQueueItem:
+        """Return the next queued log record, which the test expects to be a record, not the shutdown sentinel."""
+        item = self.queue.get_nowait()
+        assert item is not None
+        return item
+
+    def queued(self, *payloads: handler.LogQueueItem) -> list[handler.LogQueueItem]:
         """Queue and dequeue payloads, as the worker does, so that flush() can mark them done."""
         for payload in payloads:
             self.queue.put_nowait(payload)
-        return [self.queue.get_nowait() for _ in payloads]
+        return [self.dequeued() for _ in payloads]
 
     def test_flush(self):
         """Test that each payload is published, added to its stream, and given its stream's ttl."""
@@ -190,7 +197,7 @@ class TestRedisLogHandler(SmarterTestBase):
         record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
         handler.RedisLogHandler().emit(record)
         self.assertEqual(self.queue.qsize(), 1)
-        self.assertEqual(self.queue.get_nowait()["channel"], handler.GLOBAL_CHANNEL)
+        self.assertEqual(self.dequeued()["channel"], handler.GLOBAL_CHANNEL)
 
     def test_emit_with_a_user_goes_to_the_users_channel_too(self):
         record = logging.LogRecord("test", logging.INFO, __file__, 1, "a message", None, None)
@@ -199,7 +206,7 @@ class TestRedisLogHandler(SmarterTestBase):
             handler.RedisLogHandler().emit(record)
         finally:
             handler.user_id_context.reset(token)
-        channels = [self.queue.get_nowait()["channel"] for _ in range(2)]
+        channels = [self.dequeued()["channel"] for _ in range(2)]
         self.assertEqual(channels, [handler.build_channel("User.a"), handler.GLOBAL_CHANNEL])
 
     def test_emit_publishes_nothing_when_disabled(self):
@@ -258,7 +265,7 @@ class TestRedisLogHandler(SmarterTestBase):
             finally:
                 handler.request_id_context.reset(token)
             log_handler.emit(record)
-        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(2)]
+        payloads = [json.loads(self.dequeued()["data"]) for _ in range(2)]
         self.assertEqual([payload.get("request_id") for payload in payloads], ["abc123", None])
 
     def test_bind_log_context(self):
@@ -303,7 +310,7 @@ class TestRedisLogHandler(SmarterTestBase):
             finally:
                 handler.session_key_context.reset(token)
             log_handler.emit(record)
-        payloads = [json.loads(self.queue.get_nowait()["data"]) for _ in range(2)]
+        payloads = [json.loads(self.dequeued()["data"]) for _ in range(2)]
         self.assertEqual([payload.get("session_key") for payload in payloads], [session_key, None])
 
     def test_bind_log_context_with_a_session_key(self):

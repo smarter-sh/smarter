@@ -13,6 +13,7 @@ from http import HTTPStatus
 from django.test import Client
 from django.urls import get_urlconf, reverse, set_urlconf
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.static import StaticPlugin
@@ -39,6 +40,11 @@ class TestPluginDetailView(PluginAppTestBase):
     A second account, with its own plugin, verifies that a user cannot view
     another account's plugins. The TestAccountMixin teardown deletes it.
     """
+
+    other_admin_user: User
+    other_account: Account
+    other_user_profile: UserProfile
+    other_plugin: StaticPlugin
 
     @classmethod
     def setUpClass(cls):
@@ -102,7 +108,9 @@ class TestPluginDetailView(PluginAppTestBase):
 
         resource, may.
         """
-        record_locator = self.other_plugin.plugin_meta.record_locator  # type: ignore[union-attr]
+        other_plugin_meta = self.other_plugin.plugin_meta
+        assert other_plugin_meta is not None
+        record_locator = other_plugin_meta.record_locator
         self.client.force_login(self.non_admin_user)
         assert_no_resource(self, record_locator)
         self.client.force_login(self.admin_user)

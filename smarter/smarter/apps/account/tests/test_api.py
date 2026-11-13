@@ -41,7 +41,7 @@ class TestUrls(TestAccountMixin):
         if self.client:
             self.client.logout()
 
-        self.client = None
+        self.client = None  # type: ignore[assignment]  # drops the test client; TestCase types it as a Client
 
         super().tearDown()
 

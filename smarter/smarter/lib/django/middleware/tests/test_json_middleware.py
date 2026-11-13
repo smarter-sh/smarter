@@ -7,6 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from smarter.lib import json
 from smarter.lib.django.middleware.json import SmarterJsonErrorMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import http_response
 
 
 class TestSmarterJsonErrorMiddleware(SmarterTestBase):
@@ -41,7 +42,7 @@ class TestSmarterJsonErrorMiddleware(SmarterTestBase):
         result = self.middleware.process_response(request, response)
         self.assertIsInstance(result, JsonResponse)
         self.assertEqual(result.status_code, 404)
-        result_json = json.loads(result.content.decode("utf-8"))
+        result_json = json.loads(http_response(result).content.decode("utf-8"))
         self.assertEqual(result_json, {"error": {"status_code": 404, "message": "Not Found"}})
 
     def test_process_response_json_accept_error_already_json(self):

@@ -49,7 +49,7 @@ from smarter.apps.infrastructure.signals import (
     infrastructure_connected,
 )
 from smarter.lib import json
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 from .base import InfrastructureTestBase
 
@@ -317,6 +317,9 @@ class TestAWSProvider(AWSTestBase):
 class TestRoute53DNSService(AWSTestBase):
     """Test the platform's DNS operations, through Route53DNSService, the Route53 helper and a fake client."""
 
+    # setUp replaces the base's in-memory provider, which configure_provider() reads from self.provider.
+    provider: AWSProvider  # type: ignore[assignment]
+
     def setUp(self):
         super().setUp()
         self.provider = self.aws_provider()
@@ -327,9 +330,9 @@ class TestRoute53DNSService(AWSTestBase):
         self.assertTrue(created)
         self.assertEqual((zone.id, zone.name), ("Z1", "example.com"))
         self.assertEqual(zone.name_servers, ["ns-z1-1.awsdns.com", "ns-z1-2.awsdns.com"])
-        self.assertEqual(self.dns.get_zone("example.com").id, "Z1")
+        self.assertEqual(required(self.dns.get_zone("example.com"), "zone").id, "Z1")
         # ids with Route53's /hostedzone/ prefix, which older rows store, work too.
-        self.assertEqual(self.dns.get_zone_by_id("/hostedzone/Z1").name, "example.com")
+        self.assertEqual(required(self.dns.get_zone_by_id("/hostedzone/Z1"), "zone").name, "example.com")
         self.assertEqual(self.dns.get_name_servers("Z1"), zone.name_servers)
         self.assertIsNone(self.dns.get_zone_by_id("ZNOPE"))
         self.assertIsNone(self.dns.get_zone("other.com"))
@@ -398,6 +401,9 @@ class TestRoute53DNSService(AWSTestBase):
 class TestACMCertificateService(AWSTestBase):
     """Test the platform's certificate operations, through ACMCertificateService, the ACM helper and a fake client."""
 
+    # setUp replaces the base's in-memory provider, which configure_provider() reads from self.provider.
+    provider: AWSProvider  # type: ignore[assignment]
+
     def setUp(self):
         super().setUp()
         self.provider = self.aws_provider()
@@ -412,10 +418,9 @@ class TestACMCertificateService(AWSTestBase):
         # the domain's one validation record, from ACM's DomainValidationOptions.
         records = self.certificates.create_validation_records(certificate_id)
         self.assertEqual([r.name for r in records], ["_x1.example.com"])
-        zone = self.provider.dns.get_zone("example.com")
-        self.assertEqual(
-            self.provider.dns.get_record(zone.id, "_x1.example.com", "CNAME").values, ["_x2.acm-validations.aws."]
-        )
+        zone = required(self.provider.dns.get_zone("example.com"), "zone")
+        record = required(self.provider.dns.get_record(zone.id, "_x1.example.com", "CNAME"), "record")
+        self.assertEqual(record.values, ["_x2.acm-validations.aws."])
 
         self.acm_client.certificates[certificate_id]["Status"] = "ISSUED"
         self.assertTrue(self.certificates.is_issued(certificate_id))

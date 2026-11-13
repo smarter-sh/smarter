@@ -142,9 +142,12 @@ class TestDoodleEditor(DoodleTestMixin):
         request = editor_request(DIWALI, ["south-asia", "mx"], artwork_allowed=False)
         self.assertEqual(request.date, DIWALI.isoformat())
         south_asia = request.region("south-asia")
+        assert south_asia is not None
         self.assertEqual([theme.id for theme in south_asia.catalog], ["diwali"])
         self.assertEqual(south_asia.observances, [])
-        self.assertEqual(request.region("mx").catalog, [])
+        mx = request.region("mx")
+        assert mx is not None
+        self.assertEqual(mx.catalog, [])
         self.assertIsNone(request.region("europe"))
 
     def test_observances(self):
@@ -211,7 +214,9 @@ class TestDoodleEditor(DoodleTestMixin):
                 self.assertIsNotNone(check_decision(decision, case_request))
 
         catalog_first = DoodleEditorDecision(**{**REVOLUTION_DAY_DECISION, "region": "south-asia"})
-        self.assertIn("catalog themes", check_decision(catalog_first, diwali_request))
+        refusal = check_decision(catalog_first, diwali_request)
+        assert refusal is not None
+        self.assertIn("catalog themes", refusal)
 
     # a day
     # ---------------------------------------------------------------------------------------------
@@ -225,6 +230,7 @@ class TestDoodleEditor(DoodleTestMixin):
         )
         with override_switch(ARTWORK, active=False), self.llm(result) as prompt:
             run = edit_day(DIWALI)
+            assert run is not None
         prompt.assert_called_once()
         self.assertEqual(run.status, DoodleEditorRunStatus.SUCCEEDED)
         self.assertIn("us: christmas is not a catalog theme", run.error)
@@ -243,6 +249,7 @@ class TestDoodleEditor(DoodleTestMixin):
         with override_switch(ARTWORK, active=True), override_switch(AUTO_APPROVE, active=False):
             with self.llm(decisions(REVOLUTION_DAY_DECISION), answer(f"Here:\n{SAFE_SVG}")) as prompt:
                 run = edit_day(REVOLUTION_DAY)
+                assert run is not None
         self.assertEqual(prompt.call_count, 2)
         artist_prompt = json.loads(prompt.call_args_list[1].args[2])
         self.assertEqual(artist_prompt["name"], "Revolution Day")
@@ -281,6 +288,7 @@ class TestDoodleEditor(DoodleTestMixin):
                 with override_switch(ARTWORK, active=True), patch.object(editor, "logger"):
                     with self.llm(decisions(REVOLUTION_DAY_DECISION), failure):
                         run = edit_day(REVOLUTION_DAY)
+                        assert run is not None
                 self.assertEqual(run.status, DoodleEditorRunStatus.SUCCEEDED)
                 doodle = Doodle.objects.get(date=REVOLUTION_DAY, region="mx")
                 self.assertEqual(doodle.source, DoodleSource.DEFAULT)
@@ -288,15 +296,17 @@ class TestDoodleEditor(DoodleTestMixin):
     def test_the_artist_must_exist(self):
         decision = DoodleEditorDecision(**REVOLUTION_DAY_DECISION)
         observance = observances(REVOLUTION_DAY, "mx")[0]
+        subject = editor.DoodleEditorSubject(id=observance.id, name=observance.name, link_url="")
         with patch.object(editor, "smarter_llmclient", return_value=None):
             with self.assertRaises(SmarterLLMClientPromptError):
-                editor.draw(decision, observance, REVOLUTION_DAY)
+                editor.draw(decision, subject, REVOLUTION_DAY)
 
     def test_a_failed_run_is_recorded_and_retried(self):
         with patch.object(editor, "logger"):
             for failure in [SmarterLLMClientPromptError("down"), answer("No.")]:
                 with self.llm(failure):
                     run = edit_day(QUIET_DAY)
+                    assert run is not None
                 self.assertEqual(run.status, DoodleEditorRunStatus.FAILED)
         self.assertTrue(needs_editing(QUIET_DAY))
         DoodleEditorRun.objects.create(date=QUIET_DAY, status=DoodleEditorRunStatus.FAILED, error="third")
@@ -309,6 +319,7 @@ class TestDoodleEditor(DoodleTestMixin):
 
     def test_regions_that_a_person_chose_are_left_alone(self):
         doodle = plan_doodle(QUIET_DAY, "ca")
+        assert doodle is not None
         Doodle.objects.filter(pk=doodle.pk).update(source=DoodleSource.HUMAN)
         regions = regions_to_edit(QUIET_DAY)
         self.assertNotIn("ca", regions)
@@ -366,6 +377,7 @@ class TestDoodleEditor(DoodleTestMixin):
         ):
             with self.llm(decisions(ECLIPSE_DECISION), answer(SAFE_SVG)) as prompt:
                 run = edit_day(TRENDING_DAY)
+                assert run is not None
         self.assertTrue(run.with_trends)
         editor_prompt = json.loads(prompt.call_args_list[0].args[2])
         oceania = [region for region in editor_prompt["regions"] if region["region"] == "oceania"][0]
@@ -379,7 +391,9 @@ class TestDoodleEditor(DoodleTestMixin):
     def test_trend_that_is_not_in_the_request(self):
         request = editor_request(TRENDING_DAY, ["oceania"], artwork_allowed=True)
         decision = DoodleEditorDecision(**ECLIPSE_DECISION)
-        self.assertIn("is not a trend", check_decision(decision, request))
+        refusal = check_decision(decision, request)
+        assert refusal is not None
+        self.assertIn("is not a trend", refusal)
 
     def test_trend_second_look_keeps_drawn_doodles(self):
         with override_switch(ARTWORK, active=True), override_switch(AUTO_APPROVE, active=True):
@@ -392,6 +406,7 @@ class TestDoodleEditor(DoodleTestMixin):
         self.tone = "'Revolution Day' isn't upbeat enough for a doodle"
         with override_switch(ARTWORK, active=True), self.llm(decisions(REVOLUTION_DAY_DECISION)) as prompt:
             run = edit_day(REVOLUTION_DAY)
+            assert run is not None
         prompt.assert_called_once()
         self.assertIn("isn't upbeat", run.error)
         self.assertFalse(Doodle.objects.filter(date=REVOLUTION_DAY, region="mx", source=DoodleSource.LLM).exists())
@@ -402,7 +417,9 @@ class TestDoodleEditor(DoodleTestMixin):
         guardrails = patch.object(editor.Guardrail, "get_cached_object")
         with guardrails as lookup:
             lookup.side_effect = editor.Guardrail.DoesNotExist
-            self.assertIn("doesn't exist", editor.tone_check(decision, subject))
+            refusal = editor.tone_check(decision, subject)
+            assert refusal is not None
+            self.assertIn("doesn't exist", refusal)
         cases = [
             (MagicMock(error=None, triggered=False), None),
             (MagicMock(error=None, triggered=True), "isn't upbeat"),
@@ -416,5 +433,6 @@ class TestDoodleEditor(DoodleTestMixin):
                 if expected is None:
                     self.assertIsNone(refusal)
                 else:
+                    assert refusal is not None
                     self.assertIn(expected, refusal)
                 self.assertIn("Solar eclipse", evaluate.call_args.args[1])

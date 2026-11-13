@@ -13,7 +13,7 @@ from smarter.apps.account.models.metadata_with_ownership import (
     SmarterQuerySetWithPermissions,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.secret.models import Secret
+from smarter.apps.secret.models import Secret, SecretQuerySet
 from smarter.common.exceptions import SmarterValueError
 
 
@@ -40,8 +40,11 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         # smarter.apps.secret.tests.test_secret_orm.TestSecretQuerySetPermissions.
         self.assertIn(self.shared, SmarterQuerySetWithPermissions(Secret).shared_with(user))
         self.assertNotIn(self.shared, Secret.objects.shared_with(user))
-        self.assertIn(self.mine, Secret.objects.all().owned_by(user))
-        self.assertNotIn(self.shared, Secret.objects.all().shared_with(user))
+        # the manager's all() is typed as Django's QuerySet, though it returns a SecretQuerySet.
+        everything = Secret.objects.all()
+        assert isinstance(everything, SecretQuerySet)
+        self.assertIn(self.mine, everything.owned_by(user))
+        self.assertNotIn(self.shared, everything.shared_with(user))
         self.assertIn(self.mine, Secret.objects.with_ownership_permission_for(user))
         self.assertNotIn(self.shared, Secret.objects.with_ownership_permission_for(user))
 
@@ -52,7 +55,9 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         self.assertEqual(Secret.objects.none().count(), 0)
         self.assertEqual(Secret.objects.complex_filter({"pk": self.mine.pk}).get(), self.mine)
         self.assertEqual(Secret.objects.select_related("user_profile").filter(pk=self.mine.pk).get(), self.mine)
-        self.assertEqual(Secret.objects.prefetch_related("tags").filter(pk=self.mine.pk).get(), self.mine)
+        # taggit's manager supports prefetching, which django-stubs can't see.
+        tagged = Secret.objects.prefetch_related("tags")  # type: ignore[misc]
+        self.assertEqual(tagged.filter(pk=self.mine.pk).get(), self.mine)
         self.assertEqual(Secret.objects.annotate().filter(pk=self.mine.pk).get(), self.mine)
         self.assertEqual(Secret.objects.alias().filter(pk=self.mine.pk).get(), self.mine)
         self.assertEqual(Secret.objects.order_by("name").filter(pk=self.mine.pk).get(), self.mine)
@@ -78,7 +83,7 @@ class TestMetaDataWithOwnership(TestAccountMixin):
             Secret.get_cached_object(name=self.name, user=self.non_admin_user, account=self.account), self.mine
         )
         with self.assertRaises(SmarterValueError):
-            Secret.get_cached_object(pk="not an int")
+            Secret.get_cached_object(pk="not an int")  # type: ignore[arg-type]  # a wrong type, which must be refused
 
     def test_get_cached_object_by_account(self):
         """Test the lookup by name and account, of a resource that the account's admin doesn't own."""
@@ -96,6 +101,7 @@ class TestMetaDataWithOwnership(TestAccountMixin):
     def test_clone(self):
         """Test that a clone has a new name, its owner may change, and an unnamed clone is suffixed."""
         clone = self.mine.clone(new_name=f"{self.name}_clone", user_profile=self.user_profile)
+        assert isinstance(clone, Secret)
         self.addCleanup(Secret.objects.filter(pk=clone.pk).delete)
         self.assertEqual((clone.name, clone.user_profile), (f"{self.name}_clone", self.user_profile))
         self.assertEqual(clone.encrypted_value, self.mine.encrypted_value)
@@ -116,15 +122,17 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         """A user who has no user profile can read, and owns, nothing."""
         user = User.objects.create(username=f"test_no_profile_{self.hash_suffix}")
         self.addCleanup(user.delete)
-        self.assertFalse(Secret.objects.all().with_read_permission_for(user).exists())
-        self.assertFalse(Secret.objects.all().with_ownership_permission_for(user).exists())
+        everything = Secret.objects.all()
+        assert isinstance(everything, SecretQuerySet)
+        self.assertFalse(everything.with_read_permission_for(user).exists())
+        self.assertFalse(everything.with_ownership_permission_for(user).exists())
 
     def test_authorize_a_resource_that_is_not_billable(self):
         with (
             patch.object(Secret, "is_billable_resource", new_callable=PropertyMock, return_value=False),
             patch("smarter.apps.account.models.metadata_with_ownership.charge_authorization") as charge,
         ):
-            self.assertIsNone(self.mine.authorize())
+            self.mine.authorize()
         charge.assert_not_called()
 
     def test_get_cached_object_by_session_key_needs_the_field(self):

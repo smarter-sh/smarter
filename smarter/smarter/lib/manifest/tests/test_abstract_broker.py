@@ -10,6 +10,7 @@ from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.db.models import QuerySet
 from django.utils.crypto import get_random_string
 
 from smarter.apps.account.models import Account, Budget, User, UserProfile
@@ -53,6 +54,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.record_locator import console_url
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
+from smarter.lib.typing import required
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 GUARDRAIL_DATA = os.path.join(HERE, "..", "..", "..", "apps", "guardrail", "manifest", "brokers", "tests", "data")
@@ -161,7 +163,8 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         row = SimpleNamespace(
             pk=guardrail.pk, kind=SimpleNamespace(value=KIND), name=self.name, user_profile=self.user_profile
         )
-        dependencies = self.orm_broker(self.user_profile).dependency_brokers(None, [row])
+        # a stand-in for a row, with the attributes that dependency_brokers() reads
+        dependencies = self.orm_broker(self.user_profile).dependency_brokers(None, [row])  # type: ignore[list-item]
         self.assertEqual(len(dependencies), 1)
         self.assertIsInstance(dependencies[0], SAMGuardrailBroker)
 
@@ -200,6 +203,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         broker = self.orm_broker(self.user_profile)
         readable_pks = broker.dependency_tree_readable_pks([guardrail])
         self.assertEqual(readable_pks, {guardrail.pk})
+        assert readable_pks is not None
         self.assertEqual(guardrail.pk in readable_pks, broker.dependency_tree_readable(guardrail))
         self.assertIsNone(broker.dependency_tree_readable_pks([]))
         self.assertIsNone(broker.dependency_tree_readable_pks([guardrail, self.account]))
@@ -207,9 +211,12 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
     def test_with_owners(self):
         """A QuerySet of owned rows reads their owners in the same query; anything else is unchanged."""
         rows = Guardrail.objects.filter(user_profile=self.user_profile)
-        self.assertIn("user_profile", str(AbstractBroker.with_owners(rows).query))
+        owned = AbstractBroker.with_owners(rows)
+        assert isinstance(owned, QuerySet)
+        self.assertIn("user_profile", str(owned.query))
         plain_list = [object()]
-        self.assertIs(AbstractBroker.with_owners(plain_list), plain_list)
+        # deliberately not models, which are returned unchanged
+        self.assertIs(AbstractBroker.with_owners(plain_list), plain_list)  # type: ignore[arg-type]
         budgets = Budget.objects.all()
         self.assertIs(AbstractBroker.with_owners(budgets), budgets)
 
@@ -262,6 +269,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         with self.assertRaises(SAMBrokerError):
             broker.get_or_create_secret(user_profile=self.user_profile, name=name)
         secret = broker.get_or_create_secret(user_profile=self.user_profile, name=name, value="a-value")
+        assert secret.description is not None
         self.assertIn("auto generated", secret.description)
         self.assertEqual(broker.get_or_create_secret(user_profile=self.user_profile, name=name), secret)
 
@@ -400,6 +408,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
 
         broker = SAMLLMClientBroker(None, name=self.name, kind="LLMClient", user_profile=self.non_admin_user_profile)
         tree = broker.dependency_tree()
+        assert tree is not None
         self.assertTrue(tree.readable)
         node = self.child(tree, "Guardrail")
         self.assertFalse(node.readable)
@@ -430,6 +439,7 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         """Test that a resource that uses nothing is a tree of one node."""
         self.create_guardrail(self.user_profile)
         tree = self.orm_broker(self.user_profile).dependency_tree()
+        assert tree is not None
         self.assertEqual((tree.kind, tree.name, tree.children), (KIND, self.name, []))
 
     def test_references_not_implemented(self):
@@ -476,12 +486,15 @@ class TestAbstractBroker(TestSAMBrokerBaseClass):
         }
         for kind, instance in instances.items():
             with self.subTest(kind=kind):
-                references = Brokers.get_broker(kind).references(instance)
+                broker_class = required(Brokers.get_broker(kind), kind)
+                references = broker_class.references(instance)
                 self.assertEqual([row for _, rows in references for row in rows], [])
 
-        references = dict(Brokers.get_broker(SAMKinds.ORCHESTRATOR.value).references(orchestrator))
-        self.assertEqual(list(references[SAMKinds.LLM_CLIENT.value]), [llmclient])
-        self.assertEqual(Brokers.get_broker(SAMKinds.GUARDRAIL.value).references(Guardrail()), [])
+        orchestrator_broker_class = required(Brokers.get_broker(SAMKinds.ORCHESTRATOR.value), "Orchestrator")
+        orchestrator_references = dict(orchestrator_broker_class.references(orchestrator))
+        self.assertEqual(list(orchestrator_references[SAMKinds.LLM_CLIENT.value]), [llmclient])
+        guardrail_broker_class = required(Brokers.get_broker(SAMKinds.GUARDRAIL.value), "Guardrail")
+        self.assertEqual(guardrail_broker_class.references(Guardrail()), [])
 
     def test_providers_named(self):
         """Test that a Provider's name is resolved as a prompt resolves it, and that no name is the default Provider."""

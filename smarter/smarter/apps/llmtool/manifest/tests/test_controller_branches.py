@@ -34,6 +34,7 @@ class TestPluginControllerBranches(TestAccountMixin):
             PluginController(user_profile=self.user_profile, manifest=fake_manifest(), plugin_meta=PluginMeta())
 
     def test_invalid_manifests_are_rejected(self):
+        manifest: object
         for manifest in (
             ["not", "a", "manifest"],
             {"metadata": {}},
@@ -42,7 +43,8 @@ class TestPluginControllerBranches(TestAccountMixin):
         ):
             with self.subTest(manifest=manifest):
                 with self.assertRaises(SAMPluginControllerError):
-                    PluginController(user_profile=self.user_profile, manifest=manifest)
+                    # each manifest is deliberately invalid, to test that it is rejected.
+                    PluginController(user_profile=self.user_profile, manifest=manifest)  # type: ignore[arg-type]
 
     def test_name_only(self):
         """A controller made from a name alone has no manifest, plugin class, plugin or serialization."""

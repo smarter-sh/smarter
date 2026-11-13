@@ -16,6 +16,7 @@ from smarter.apps.secret.manifest.transformers.secret import (
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import to_snake_case
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.typing import required
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA = os.path.join(HERE, "..", "..", "models", "tests", "data")
@@ -60,7 +61,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         )
         self.assertEqual(secret_transformer.description, "A secret for testing purposes")
         self.assertIsNone(secret_transformer.last_accessed, "Last accessed should be None")
-        self.assertEqual(secret_transformer.expires_at.date().isoformat(), "2026-12-31")
+        self.assertEqual(required(secret_transformer.expires_at, "expires_at").date().isoformat(), "2026-12-31")
         self.assertIsNone(secret_transformer.id, "ID should be None")
         self.assertIsNone(secret_transformer.secret, "Secret should not be set yet")
         self.assertIsNone(secret_transformer.secret_serializer, "Secret serializer should not be set yet")
@@ -95,42 +96,45 @@ class TestSmarterSecretTransformer(TestAccountMixin):
 
         self.assertTrue(secret_transformer.create())
         self.assertIsNotNone(secret_transformer.secret, "Secret should be set after creation")
+        secret = secret_transformer.secret
+        assert secret is not None
+        secret_manifest = secret_transformer.manifest
+        assert secret_manifest is not None
         self.assertIsNotNone(
-            secret_transformer.secret_serializer.data, "Secret serializer should be set after creation"
+            required(secret_transformer.secret_serializer, "secret_serializer").data,
+            "Secret serializer should be set after creation",
         )
-        self.assertEqual(secret_transformer.user_profile, secret_transformer.secret.user_profile)
+        self.assertEqual(secret_transformer.user_profile, secret.user_profile)
 
+        self.assertEqual(secret.name, secret_transformer.name, "Secret name should match the manifest name")
         self.assertEqual(
-            secret_transformer.secret.name, secret_transformer.name, "Secret name should match the manifest name"
-        )
-        self.assertEqual(
-            secret_transformer.secret.name,
-            secret_transformer.manifest.metadata.name,
+            secret.name,
+            secret_manifest.metadata.name,
             "Secret name should match the manifest metadata name",
         )
         self.assertEqual(
-            secret_transformer.secret.get_secret(update_last_accessed=False),
+            secret.get_secret(update_last_accessed=False),
             secret_transformer.value,
             f"Secret value should be {secret_transformer.value}",
         )
         self.assertEqual(
-            secret_transformer.secret.description,
+            secret.description,
             secret_transformer.description,
             "Secret description should match the manifest description",
         )
         self.assertEqual(
-            secret_transformer.secret.description,
-            secret_transformer.manifest.metadata.description,
+            secret.description,
+            secret_manifest.metadata.description,
             "Secret description should match the manifest metadata description",
         )
         self.assertEqual(
-            secret_transformer.secret.expires_at.date(),
-            secret_transformer.expires_at.date(),
+            required(secret.expires_at, "secret.expires_at").date(),
+            required(secret_transformer.expires_at, "expires_at").date(),
             "Secret expires_at should match the manifest expires_at",
         )
         self.assertEqual(
-            secret_transformer.secret.expires_at.date(),
-            secret_transformer.manifest.spec.config.expiration_date.date(),
+            required(secret.expires_at, "secret.expires_at").date(),
+            required(secret_manifest.spec.config.expiration_date, "expiration_date").date(),
             "Secret expires_at should match the manifest spec config expiration_date",
         )
 
@@ -157,43 +161,48 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertTrue(secret_transformer.update())
 
         self.assertIsNotNone(secret_transformer.secret, "Secret should be set after update")
-        self.assertIsNotNone(secret_transformer.secret_serializer.data, "Secret serializer should be set after update")
-        self.assertEqual(
-            secret_transformer.secret.name, secret_transformer.name, "Secret name should match the manifest name"
+        secret = secret_transformer.secret
+        assert secret is not None
+        secret_manifest = secret_transformer.manifest
+        assert secret_manifest is not None
+        self.assertIsNotNone(
+            required(secret_transformer.secret_serializer, "secret_serializer").data,
+            "Secret serializer should be set after update",
         )
+        self.assertEqual(secret.name, secret_transformer.name, "Secret name should match the manifest name")
         self.assertEqual(
-            secret_transformer.secret.name,
-            secret_transformer.manifest.metadata.name,
+            secret.name,
+            secret_manifest.metadata.name,
             "Secret name should match the manifest metadata name",
         )
         self.assertEqual(
-            secret_transformer.secret.get_secret(update_last_accessed=False),
+            secret.get_secret(update_last_accessed=False),
             secret_transformer.value,
             "Secret value should match the manifest value",
         )
         self.assertEqual(
-            secret_transformer.secret.get_secret(update_last_accessed=False),
+            secret.get_secret(update_last_accessed=False),
             secret_transformer.value,
             "Secret value should match the manifest value",
         )
         self.assertEqual(
-            secret_transformer.secret.description,
+            secret.description,
             secret_transformer.description,
             "Secret description should match the manifest description",
         )
         self.assertEqual(
-            secret_transformer.secret.description,
-            secret_transformer.manifest.metadata.description,
+            secret.description,
+            secret_manifest.metadata.description,
             "Secret description should match the manifest metadata description",
         )
         self.assertEqual(
-            secret_transformer.secret.expires_at.date(),
-            secret_transformer.expires_at.date(),
+            required(secret.expires_at, "secret.expires_at").date(),
+            required(secret_transformer.expires_at, "expires_at").date(),
             "Secret expires_at should match the manifest expires_at",
         )
         self.assertEqual(
-            secret_transformer.secret.expires_at.date(),
-            secret_transformer.manifest.spec.config.expiration_date.date(),
+            required(secret.expires_at, "secret.expires_at").date(),
+            required(secret_manifest.spec.config.expiration_date, "expiration_date").date(),
             "Secret expires_at should match the manifest spec config expiration_date",
         )
 
@@ -207,19 +216,21 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
+        secret = secret_transformer.secret
+        assert secret is not None
 
         # basic test of last_accessed
-        last_updated_before = secret_transformer.secret.last_accessed
-        value = secret_transformer.secret.get_secret()
+        last_updated_before = secret.last_accessed
+        value = secret.get_secret()
         self.assertIsNotNone(value, "Secret value should not be None")
         self.assertEqual(value, "a-different-test-password")
-        last_updated_after = secret_transformer.secret.last_accessed
+        last_updated_after = secret.last_accessed
         self.assertNotEqual(last_updated_before, last_updated_after, "Last accessed time should be updated")
 
         # test with disabled update_last_accessed
-        last_updated_before = secret_transformer.secret.last_accessed
-        secret_transformer.secret.get_secret(update_last_accessed=False)
-        last_updated_after = secret_transformer.secret.last_accessed
+        last_updated_before = secret.last_accessed
+        secret.get_secret(update_last_accessed=False)
+        last_updated_after = secret.last_accessed
         self.assertEqual(last_updated_before, last_updated_after, "Last accessed time should not be updated")
 
     def test_manager_08_initialize_by_name(self):
@@ -251,11 +262,11 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
-        secret_id = secret_transformer.secret.id
+        secret_id = required(secret_transformer.secret, "secret").id
 
         secret_transformer = SecretTransformer(secret_id=secret_id, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
-        self.assertEqual(secret_transformer.secret.id, secret_id)
+        self.assertEqual(required(secret_transformer.secret, "secret").id, secret_id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
         secret_transformer.delete()
@@ -276,7 +287,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
 
         secret_transformer = SecretTransformer(secret=secret, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
-        self.assertEqual(secret_transformer.secret.id, secret.id)
+        self.assertEqual(required(secret_transformer.secret, "secret").id, required(secret, "secret").id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_transformer.secret, Secret)
         secret_transformer.delete()
@@ -299,7 +310,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         secret_transformer = SecretTransformer(data=secret_dict, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
         self.assertIsInstance(secret_transformer.secret, Secret)
-        self.assertEqual(secret_transformer.secret.id, secret_transformer.id)
+        self.assertEqual(required(secret_transformer.secret, "secret").id, secret_transformer.id)
         self.assertTrue(secret_transformer.ready, "Secret manager should be ready")
         secret_transformer.delete()
 

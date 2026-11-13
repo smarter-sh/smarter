@@ -22,6 +22,10 @@ Status = LLMClientCustomDomain.VerificationStatusChoices
 class TestRegisterCustomDomain(TestAccountMixin):
     """Test that registering a custom domain creates its DNS zone and certificate, and starts its verification."""
 
+    is_taskable: MagicMock
+    infrastructure: MagicMock
+    verify_custom_domain: MagicMock
+
     def setUp(self):
         super().setUp()
         self.domain_name = f"test-register-{self.hash_suffix}.example.com".lower()

@@ -26,7 +26,7 @@ class TestSmarterUserBrokerPermissions(TestSAMBrokerBaseClass):
 
     @property
     def broker(self) -> SAMUserBroker:
-        return super().broker  # type: ignore
+        return super().broker  # type: ignore[return-value]
 
     def patch_property(self, name: str, value) -> PropertyMock:
         patcher = patch.object(SAMUserBroker, name, new_callable=PropertyMock, return_value=value)

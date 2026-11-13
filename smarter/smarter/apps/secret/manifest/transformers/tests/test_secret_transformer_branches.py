@@ -11,7 +11,7 @@ from smarter.apps.secret.manifest.transformers.secret import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.typing import SmarterDictType
+from smarter.lib.typing import SmarterDictType, required
 
 
 class TestSecretTransformerBranches(TestAccountMixin):
@@ -82,7 +82,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
         created = self.create_secret("orm")
         transformer = SecretTransformer(user_profile=self.user_profile, secret_id=created.id)
         self.assertEqual(transformer.value, "test-password")
-        self.assertEqual(transformer.encrypted_value, transformer.secret.encrypted_value)
+        self.assertEqual(transformer.encrypted_value, required(transformer.secret, "secret").encrypted_value)
         self.assertEqual(transformer.description, "A secret for testing purposes")
         self.assertIsNotNone(transformer.created_at)
         self.assertIsNotNone(transformer.updated_at)
@@ -90,8 +90,9 @@ class TestSecretTransformerBranches(TestAccountMixin):
         self.assertIsNone(transformer.last_accessed)
         manifest = transformer.manifest
         self.assertIsInstance(manifest, SAMSecret)
+        assert manifest is not None
         self.assertEqual(manifest.metadata.name, created.name)
-        self.assertEqual(manifest.status.accountNumber, self.account.account_number)
+        self.assertEqual(required(manifest.status, "status").accountNumber, self.account.account_number)
 
     def test_properties_without_a_secret(self):
         """A transformer with only a name has no ORM-backed properties."""
@@ -152,7 +153,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
         transformer._manifest = None
         with self.assertRaises(SmarterSecretTransformerError):
             transformer.name = "transformer_branches_other"
-        transformer.name = created.name
+        transformer.name = required(created.name, "name")
         self.assertEqual(transformer.name, created.name)
 
     def test_secret_setter(self):
@@ -160,18 +161,18 @@ class TestSecretTransformerBranches(TestAccountMixin):
         created = self.create_secret("setter")
         transformer = SecretTransformer(user_profile=self.user_profile, name="transformer_branches_missing")
         transformer._name = None
-        transformer.secret = created.secret
+        transformer.secret = required(created.secret, "secret")
         self.assertEqual(transformer.name, created.name)
         self.assertEqual(transformer.user_profile, self.user_profile)
 
     def test_create_updates_an_existing_secret(self):
         """Create() for a Secret that already exists updates it."""
         created = self.create_secret("recreate")
-        data = self.manifest_data(created.name)
+        data = self.manifest_data(required(created.name, "name"))
         data["metadata"]["description"] = "updated description"
         transformer = SecretTransformer(user_profile=self.user_profile, data=data)
         self.assertEqual(transformer.id, created.id)
-        self.assertEqual(Secret.objects.get(pk=created.id).description, "updated description")
+        self.assertEqual(Secret.objects.get(pk=required(created.id, "id")).description, "updated description")
 
     def test_create_without_orm_data(self):
         """Create() raises when the manifest can't be mapped to the ORM."""
@@ -192,7 +193,7 @@ class TestSecretTransformerBranches(TestAccountMixin):
     def test_save_and_delete(self):
         """Save() persists the Secret and delete() removes it."""
         created = self.create_secret("delete")
-        secret_id = created.id
+        secret_id = required(created.id, "id")
         self.assertTrue(created.save())
         self.assertTrue(created.delete())
         self.assertFalse(Secret.objects.filter(pk=secret_id).exists())

@@ -153,4 +153,4 @@ class TestGuardrailManifest(SmarterTestBase):
         """Test that the manifest is immutable."""
         manifest = SAMGuardrail(**get_test_data("guardrail.yaml"))
         with self.assertRaises(ValidationError):
-            manifest.spec.config.action = "block"
+            manifest.spec.config.action = "block"  # type: ignore[misc]  # a frozen field, which the test proves is refused

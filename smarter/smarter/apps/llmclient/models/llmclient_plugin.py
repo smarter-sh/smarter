@@ -170,7 +170,7 @@ class LLMClientPlugin(TimestampedModel):
         return cls.objects.create(llmclient=llmclient, plugin_meta=plugin.plugin_meta)
 
     @classmethod
-    def plugins(cls, llmclient: LLMClient) -> List[PluginBase]:
+    def plugins(cls, llmclient: Optional[LLMClient]) -> List[PluginBase]:
         """
         Returns a list of Plugin instances associated with the given LLMClient.
 

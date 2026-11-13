@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
 from smarter.lib.cache.tool_results import (
     CachedToolResult,
@@ -11,6 +11,7 @@ from smarter.lib.cache.tool_results import (
     is_error_result,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 
 class Arguments(BaseModel):
@@ -60,7 +61,12 @@ class TestToolResults(SmarterTestBase):
 
     def test_a_returned_error_is_never_cached(self):
         """A call that returns an error, rather than raising it, is returned, and run again on the next call."""
-        for error in ({"error": "no such city"}, "Error: the server is down", '{"error": "budget_exceeded"}'):
+        errors: tuple[JsonValue, ...] = (
+            {"error": "no such city"},
+            "Error: the server is down",
+            '{"error": "budget_exceeded"}',
+        )
+        for error in errors:
             with self.subTest(error=error):
                 call = MagicMock(return_value=error)
                 results = [cached_tool_call("test", self.key("tool", str(error)), {}, 60, call) for _ in range(2)]
@@ -71,7 +77,9 @@ class TestToolResults(SmarterTestBase):
         """An is_error check replaces the default conventions."""
         call = MagicMock(return_value={"status": "failed"})
         for _ in range(2):
-            cached_tool_call("test", self.key("tool"), {}, 60, call, is_error=lambda value: value["status"] == "failed")
+            cached_tool_call(
+                "test", self.key("tool"), {}, 60, call, is_error=lambda value: json_object(value)["status"] == "failed"
+            )
         self.assertEqual(call.call_count, 2)
         # without the check, the same result is not an error, and is cached.
         call.reset_mock()
@@ -81,10 +89,27 @@ class TestToolResults(SmarterTestBase):
 
     def test_is_error_result(self):
         """Errors are text that begins with Error:, or a JSON object, or its text, with an error key."""
-        for value in ("Error: down", "  Error: down", {"error": "x"}, '{"error": "x"}', ' {"error": null}'):
+        errors: tuple[JsonValue, ...] = (
+            "Error: down",
+            "  Error: down",
+            {"error": "x"},
+            '{"error": "x"}',
+            ' {"error": null}',
+        )
+        for value in errors:
             with self.subTest(value=value):
                 self.assertTrue(is_error_result(value))
-        for value in ("rows", "", '{"errors": 1}', '{"error" broken', "an Error: in the text", {"result": 2}, 3, None):
+        not_errors: tuple[JsonValue, ...] = (
+            "rows",
+            "",
+            '{"errors": 1}',
+            '{"error" broken',
+            "an Error: in the text",
+            {"result": 2},
+            3,
+            None,
+        )
+        for value in not_errors:
             with self.subTest(value=value):
                 self.assertFalse(is_error_result(value))
 

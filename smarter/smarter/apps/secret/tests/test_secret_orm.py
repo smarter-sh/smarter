@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 
 from django.utils.timezone import now
 
+from smarter.apps.account.models import User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
-from smarter.apps.secret.models import Secret
+from smarter.apps.secret.models import Secret, SecretQuerySet
 from smarter.apps.secret.signals import secret_edited
 from smarter.common.exceptions import SmarterValueError
 
@@ -105,7 +106,10 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
         self.assertEqual(edits, [])
         stored = Secret.objects.get(pk=secret.pk).last_accessed
         self.assertIsNotNone(stored)
-        self.assertLess(abs(stored - secret.last_accessed), timedelta(seconds=1))
+        assert stored is not None
+        last_accessed = secret.last_accessed
+        assert last_accessed is not None
+        self.assertLess(abs(stored - last_accessed), timedelta(seconds=1))
 
     def test_secret_encryption_and_decryption(self):
         """Test that encryption and decryption work as expected."""
@@ -146,6 +150,11 @@ class TestSecretQuerySetPermissions(TestAccountMixin):
     """
 
     ids: list[int]
+    platform_secret: Secret
+    admin_secret: Secret
+    mortal_secret: Secret
+    staff_user: User
+    staff_user_profile: UserProfile
 
     @classmethod
     def setUpClass(cls):
@@ -214,10 +223,9 @@ class TestSecretQuerySetPermissions(TestAccountMixin):
 
     def test_use_permission_includes_the_platform_secrets(self):
         """With_use_permission_for() keeps the platform's Secrets for the plugins whose endpoint Smarter fixes."""
-        used = set(
-            Secret.objects.filter(pk__in=self.ids)
-            .with_use_permission_for(self.non_admin_user)
-            .values_list("pk", flat=True)
-        )
+        # the manager's filter() is typed as the generic queryset, though it returns a SecretQuerySet.
+        queryset = Secret.objects.filter(pk__in=self.ids)
+        assert isinstance(queryset, SecretQuerySet)
+        used = set(queryset.with_use_permission_for(self.non_admin_user).values_list("pk", flat=True))
         self.assertEqual(used, set(self.ids))
         self.assertFalse(Secret.objects.with_use_permission_for(None).exists())  # type: ignore[arg-type]

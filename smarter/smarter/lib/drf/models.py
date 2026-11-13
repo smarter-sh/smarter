@@ -317,7 +317,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         """
         if not self.user.is_staff:
             raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
-        if self.created is None:
+        # knox's AuthToken, which defines created, has no type information.
+        if self.created is None:  # type: ignore[has-type]
             self.created = timezone.now()
         if isinstance(self.name, str) and self.name and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = to_snake_case(self.name)

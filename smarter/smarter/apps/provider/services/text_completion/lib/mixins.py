@@ -185,7 +185,7 @@ class ChatDbMixin(AccountMixin):
         return self._chat
 
     @prompt.setter
-    def prompt(self, value: Prompt):
+    def prompt(self, value: Optional[Prompt]):
         """
         Set the current prompt session instance.
 

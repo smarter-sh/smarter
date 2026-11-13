@@ -49,7 +49,7 @@ class SAMLoaderError(SAMExceptionBase):
         return "Smarter API Manifest Loader Error"
 
 
-def validate_key(key: str, key_value: Any, spec: Any) -> None:
+def validate_key(key: Union[str, Enum], key_value: Any, spec: Any) -> None:
     """
     Validate a manifest key and its value against a specification.
 

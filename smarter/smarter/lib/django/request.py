@@ -370,7 +370,8 @@ class SmarterRequestMixin(AccountMixin):
             foo = Foo(request)
             foo.invalidate_cached_properties()
         """
-        for name in cached_property_names(type(self)):
+        # a class is hashable; mypy checks the class against the instances' own __hash__ (python/mypy#11470).
+        for name in cached_property_names(type(self)):  # type: ignore[arg-type]
             self.__dict__.pop(name, None)
 
     @property

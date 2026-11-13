@@ -151,62 +151,6 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         logger.info("response=%s", json.dumps(response, indent=4))
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
 
-        # pylint: disable=W0612
-        expected_response = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Secret",
-                "metadata": {"count": 1},
-                "kwargs": {},
-                "data": {
-                    "titles": [
-                        {"name": "id", "type": "IntegerField"},
-                        {"name": "createdAt", "type": "DateTimeField"},
-                        {"name": "updatedAt", "type": "DateTimeField"},
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "version", "type": "CharField"},
-                        {"name": "annotations", "type": "JSONField"},
-                        {"name": "lastAccessed", "type": "DateTimeField"},
-                        {"name": "expiresAt", "type": "DateTimeField"},
-                        {"name": "encryptedValue", "type": "ModelField"},
-                        {"name": "account", "type": "PrimaryKeyRelatedField"},
-                        {"name": "userProfile", "type": "PrimaryKeyRelatedField"},
-                    ],
-                    "items": [
-                        {
-                            "apiVersion": "smarter.sh/v1",
-                            "kind": "Secret",
-                            "metadata": {
-                                "name": "smarter_test_base_e3ae3f4cd5be8d0f",
-                                "description": "TestApiCliV1Secret test description of the secret",
-                                "version": "1.0.0",
-                                "tags": [],
-                                "annotations": [],
-                            },
-                            "spec": {
-                                "config": {
-                                    "value": "testSecretValue_e3ae3f4cd5be8d0f",
-                                    "expirationDate": "2026-07-07T15:39:37.425Z",
-                                }
-                            },
-                            "status": {
-                                "accountNumber": "2671-0577-9207",
-                                "username": "test_admin_user_91cddd4c6761e0a2",
-                                "created": "2026-01-07T15:39:37.426Z",
-                                "modified": "2026-01-07T15:39:37.426Z",
-                                "lastAccessed": "2026-01-07T15:39:37.949Z",
-                            },
-                        }
-                    ],
-                },
-            },
-            "message": "Secrets got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Secret",
-            "metadata": {"key": "b37b76d5304a1a5aa19d0ce1400f5778633c5bf1c499e2049b3ee3546c606366"},
-        }
-
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Secret test_secret applied successfully")
@@ -268,98 +212,10 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
         response, status = self.get_response(path=url_with_query_params)
 
         logger.info("response=%s", response)
-        # pylint: disable=W0612
-        expected_response = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Secret",
-                "metadata": {
-                    "name": "testd086c76a2de4aece",
-                    "description": "TestApiCliV1Secret test description of the secret",
-                    "version": "1.0.0",
-                    "username": "testAdminUser_b388b2a865a89a14",
-                    "accountNumber": "3079-5428-0765",
-                    "tags": None,
-                    "annotations": None,
-                },
-                "spec": {
-                    "config": {
-                        "value": "testSecretValue_d086c76a2de4aece",
-                        "description": "TestApiCliV1Secret test description of the secret",
-                        "expiration_date": None,
-                    }
-                },
-                "status": {
-                    "accountNumber": "3079-5428-0765",
-                    "username": "testAdminUser_b388b2a865a89a14",
-                    "created": "2025-05-22T17:46:12.518907+00:00",
-                    "updated": "2025-05-22T17:46:12.518921+00:00",
-                    "last_accessed": "2025-05-22T17:46:12.742687+00:00",
-                },
-            },
-            "message": "Secret testd086c76a2de4aece described successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Secret",
-            "metadata": {"key": "7f93a8ce45b88595ec0cf2eb347e9c91939ca8815c9e927ff0c2769ecb5b8a79"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
         self.assertIsInstance(response, dict)
         logger.debug("response=%s", json.dumps(response, indent=4))
-        received = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "Secret",
-                "metadata": {"count": 1},
-                "kwargs": {},
-                "data": {
-                    "titles": [
-                        {"name": "id", "type": "IntegerField"},
-                        {"name": "createdAt", "type": "DateTimeField"},
-                        {"name": "updatedAt", "type": "DateTimeField"},
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "version", "type": "CharField"},
-                        {"name": "annotations", "type": "JSONField"},
-                        {"name": "lastAccessed", "type": "DateTimeField"},
-                        {"name": "expiresAt", "type": "DateTimeField"},
-                        {"name": "encryptedValue", "type": "ModelField"},
-                        {"name": "account", "type": "PrimaryKeyRelatedField"},
-                        {"name": "userProfile", "type": "PrimaryKeyRelatedField"},
-                    ],
-                    "items": [
-                        {
-                            "apiVersion": "smarter.sh/v1",
-                            "kind": "Secret",
-                            "metadata": {
-                                "name": "smarter_test_base_421d46e4225eb63b",
-                                "description": "TestApiCliV1Secret test description of the secret",
-                                "version": "1.0.0",
-                                "tags": [],
-                                "annotations": [],
-                            },
-                            "spec": {
-                                "config": {
-                                    "value": "testSecretValue_421d46e4225eb63b",
-                                    "expirationDate": "2026-07-07T15:24:43.503Z",
-                                }
-                            },
-                            "status": {
-                                "accountNumber": "0602-6859-0637",
-                                "username": "test_admin_user_08f44abde3443f54",
-                                "created": "2026-01-07T15:24:43.504Z",
-                                "modified": "2026-01-07T15:24:43.504Z",
-                                "lastAccessed": "2026-01-07T15:24:43.880Z",
-                            },
-                        }
-                    ],
-                },
-            },
-            "message": "Secrets got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "Secret",
-            "metadata": {"key": "e8ea54df1efbedbdbe727f6abcc92ea2f8b0f4513928d58114b0a2b9265f7222"},
-        }
 
         data: SmarterDictType = response[SCLIResponseGet.DATA.value]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)

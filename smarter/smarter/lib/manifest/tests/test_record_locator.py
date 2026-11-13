@@ -55,6 +55,7 @@ class TestRecordLocator(SmarterTestBase):
                 except NoReverseMatch:
                     # e.g. the Proxy and Vectorstore pages, while their waffle switches are off.
                     continue
+                assert url is not None
                 self.assertIn(HASHED_ID, url)
 
     def test_every_prefix_is_a_record_locator_prefix(self):

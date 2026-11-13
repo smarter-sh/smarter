@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test RBAC methods from MetaDataWithOwnershipModelManager class."""
 
+from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.models.metadata_with_ownership import (
     SmarterQuerySetWithPermissions,
 )
@@ -33,6 +34,15 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     """
 
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModelManager()"
+
+    other_non_admin_user: User
+    other_account: Account
+    other_non_admin_user_profile: UserProfile
+    secret_non_admin_user: Secret
+    secret_other_non_admin_user: Secret
+    secret_admin_user: Secret
+    secret_smarter_admin_user: Secret
+    secrets: list[Secret]
 
     @classmethod
     def setUpClass(cls):

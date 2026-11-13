@@ -222,7 +222,7 @@ class Secret(MetaDataWithOwnershipModel):
         is_new = self.pk is None
         if not self.name or not self.encrypted_value:
             raise SmarterValueError(
-                f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
+                f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value set: {bool(self.encrypted_value)}"
             )
         self.user_profile = self.user_profile
         super().save(*args, **kwargs)

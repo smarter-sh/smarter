@@ -22,7 +22,11 @@ from smarter.apps.dashboard.views.terminal_emulator.api.consumers import (
     TerminalConsumer,
     query_int,
 )
-from smarter.apps.dashboard.views.terminal_emulator.api.shell import TerminalShell
+from smarter.apps.dashboard.views.terminal_emulator.api.shell import (
+    ExitCallback,
+    OutputCallback,
+    TerminalShell,
+)
 from smarter.apps.dashboard.views.terminal_emulator.api.tickets import issue_ticket
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -95,8 +99,8 @@ class Session:
 class QuickShell(TerminalShell):
     """Bash without its startup files, which the tests don't need."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, command=SHELL, **kwargs)
+    def __init__(self, on_output: OutputCallback, on_exit: ExitCallback, cols: int = 80, rows: int = 24):
+        super().__init__(on_output, on_exit, cols=cols, rows=rows, command=SHELL)
 
 
 def run(coroutine):
@@ -168,6 +172,7 @@ class TestTerminalConsumer(TestAccountMixin):
             await session.communicator.connect(TIMEOUT)
             hello = await session.receive()
             consumer = next(iter(TerminalConsumer.sessions))
+            assert consumer.shell is not None
             await session.communicator.disconnect()
             await asyncio.wait_for(consumer.shell.wait_closed(), TIMEOUT)
             self.assertFalse(consumer.shell.running)
