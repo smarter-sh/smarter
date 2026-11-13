@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.45.0](https://github.com/smarter-sh/smarter/compare/v0.44.14...v0.45.0) (2026-11-13)
+
+### Features
+
+* **api:** add extensions, usage, data exports and vectorsearch runs ([b4bb7f9](https://github.com/smarter-sh/smarter/commit/b4bb7f98f0c7aadca82fe65d9a367adcf1a91e70))
+
+### Bug Fixes
+
+* **drf:** answer duplicate api key names with a 400, not a 500 ([9de0953](https://github.com/smarter-sh/smarter/commit/9de0953c48ffd73d3d72654933ea75a5eab22acf))
+* make flake8 check pyflakes and pycodestyle, ratchet complexity ([2263448](https://github.com/smarter-sh/smarter/commit/2263448aa55bff2265e893117f06bc35a54ef879))
+* **plugin:** require staticData in a static plugin manifest ([b17d70a](https://github.com/smarter-sh/smarter/commit/b17d70a7bcf629573a642c50699c28612ee5ca55))
+* **prompt:** save a prompt's history before its response returns ([ff55272](https://github.com/smarter-sh/smarter/commit/ff552724ef6af0e0955be62fb9ade23ba34feeb0))
+* type-check test bodies, and fix the bugs that mypy found ([90907dd](https://github.com/smarter-sh/smarter/commit/90907dd334ce1c3f0201fc57c174cb271297324e))
+
 ## [0.45.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.45.0-alpha.2...v0.45.0-alpha.3) (2026-11-13)
 
 ### Bug Fixes
