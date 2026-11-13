@@ -65,6 +65,16 @@ repos:
         types: [python]
         files: ^smarter/
         pass_filenames: false
+      # pyright, the engine of VS Code's Pylance, on the changed Python files. The repository has a backlog
+      # of pyright errors, so the hook fails only on the errors that a change adds, compared with HEAD:
+      # see scripts/pyright_new_errors.py. It needs Node.js (npx) and the project's venv.
+      - id: pyright-new-errors
+        name: pyright (new errors only)
+        entry: python3 -I scripts/pyright_new_errors.py
+        language: system
+        types: [python]
+        files: ^smarter/
+        require_serial: true
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -108,5 +118,5 @@ ci:
   autoupdate_branch: ""
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
-  skip: [helmlint, shellcheck, markdown-link-check, commitlint]
+  skip: [helmlint, shellcheck, markdown-link-check, commitlint, pyright-new-errors]
   submodules: false

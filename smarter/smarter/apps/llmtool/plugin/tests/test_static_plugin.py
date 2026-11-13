@@ -8,7 +8,11 @@ keys of nested dicts, are the *inquiry types* that the LLM can request via the
 for that inquiry type. ``./data/static-plugin-edge-cases.yaml`` documents these semantics.
 """
 
+import copy
+from typing import Union
 from unittest import mock
+
+from pydantic import ValidationError as PydanticValidationError
 
 from smarter.apps.llmtool.manifest.enum import SAMPluginCommonMetadataClass
 from smarter.apps.llmtool.manifest.models.static_plugin.const import MANIFEST_KIND
@@ -92,6 +96,7 @@ class TestStaticPlugin(PluginTestBase):
     def test_001_fixture_plugins_persisted(self):
         """Test that the shared plugins exist in the database."""
         for plugin in (self.static_plugin, self.static_edge_cases_plugin):
+            assert plugin.id is not None
             self.assertTrue(PluginMeta.objects.filter(id=plugin.id).exists())
             self.assertTrue(PluginDataStatic.objects.filter(plugin_id=plugin.id).exists())
 
@@ -204,6 +209,19 @@ class TestStaticPlugin(PluginTestBase):
     def test_to_json_validates_as_manifest(self):
         """Test that to_json produces a valid SAMStaticPlugin manifest."""
         self.assertIsInstance(SAMStaticPlugin(**self.load_static_plugin().to_json()), SAMStaticPlugin)  # type: ignore[arg-type]
+
+    def test_manifest_requires_static_data(self):
+        """A StaticPlugin manifest without staticData, or with a null one, is refused: it would answer nothing."""
+        for case in ("missing", "null"):
+            manifest = copy.deepcopy(self.static_plugin_yaml)
+            data = manifest["spec"]["data"]
+            if case == "missing":
+                data.pop("staticData")
+            else:
+                data["staticData"] = None
+            with self.subTest(staticData=case):
+                with self.assertRaisesRegex(PydanticValidationError, "staticData"):
+                    SAMStaticPlugin.model_validate(manifest)
 
     # =========================================================================
     # inquiry types
@@ -443,7 +461,8 @@ class TestStaticPlugin(PluginTestBase):
 
     def test_tool_call_missing_inquiry_type(self):
         """Test that missing arguments raise."""
-        for function_args in ({}, None, "", '{"other": 1}'):
+        cases: tuple[Union[SmarterDictType, str, None], ...] = ({}, None, "", '{"other": 1}')
+        for function_args in cases:
             with self.assertRaises(SmarterPluginError, msg=f"function_args={function_args!r}"):
                 self.load_static_plugin().tool_call_fetch_plugin_response(function_args)
 
@@ -593,6 +612,7 @@ class TestStaticPlugin(PluginTestBase):
 
     def test_to_tool_response_types(self):
         """Test that tool call responses are always a dict, list or str."""
+        value: object
         for value in ({}, [], "", None, 0, 1.5, True, "{}", "[]", "x"):
             self.assertIsInstance(StaticPlugin.to_tool_response(value), (dict, list, str), f"value={value!r}")
 
@@ -651,5 +671,6 @@ class TestStaticPlugin(PluginTestBase):
         plugin = self.new_static_plugin("static_delete")
         plugin_id = plugin.id
         self.assertTrue(plugin.delete())
+        assert plugin_id is not None
         self.assertFalse(PluginMeta.objects.filter(id=plugin_id).exists())
         self.assertFalse(PluginDataStatic.objects.filter(plugin_id=plugin_id).exists())
