@@ -93,7 +93,7 @@ class Command(SmarterCommand):
 
         existing_switches = Switch.objects.all()
         for switch in existing_switches:
-            if not switch.name in smarter_switches:
+            if switch.name not in smarter_switches:
                 self.stdout.write(self.style.NOTICE(f"Deleting orphaned switch {switch.name}."))
                 switch.delete()
 

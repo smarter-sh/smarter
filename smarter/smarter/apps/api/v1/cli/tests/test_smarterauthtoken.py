@@ -105,24 +105,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command."""
 
-        # pylint: disable=W0612
-        expected_output = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "AuthToken",
-                "metadata": {
-                    "name": "snake-case-name",
-                    "description": "An example Smarter API manifest for a AuthToken",
-                    "version": "1.0.0",
-                },
-                "spec": {"config": {"isActive": True, "username": "valid_smarter_username"}},
-            },
-            "message": "AuthToken example manifest successfully generated",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "bda17c93b9436934525733f32ad20279ca8868411954d69041b913627e931ad1"},
-        }
-
         kwargs = {"kind": KIND}
         path = reverse(self.namespace + ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
         response, status = self.get_response(path=path)
@@ -137,29 +119,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         path = reverse(self.namespace + ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-
-        # pylint: disable=W0612
-        expected_output = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "AuthToken",
-                "metadata": {
-                    "name": "test03b41ac45632817b",
-                    "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                    "version": "1.0.0",
-                },
-                "spec": {"config": {"isActive": True, "username": "testAdminUser_67dc143ec3cae0c1"}},
-                "status": {
-                    "created": "2025-05-22T13:22:38.473613+00:00",
-                    "modified": "2025-05-22T13:22:38.473628+00:00",
-                    "lastUsedAt": None,
-                },
-            },
-            "message": "AuthToken test03b41ac45632817b described successfully",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "353caf5c9b603e3c093c1d5a9e80bb4774e74da4e64a0d1601350fcdb48c370f"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -183,23 +142,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         # retrieve the current manifest by calling "describe"
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
-
-        # pylint: disable=W0612
-        expected_output = {
-            "data": {
-                "key_id": "1f75ac53-5a9d-4746-aea5-355bbd6456cb",
-                "name": "test_auth_token",
-                "description": "An example Smarter API manifest for a AuthToken",
-                "is_active": True,
-                "last_used_at": None,
-                "created_at": "2025-05-22T15:01:08.429107Z",
-                "updated_at": "2025-05-22T15:01:08.431207Z",
-            },
-            "message": "Successfully created AuthToken test_auth_token with secret token <-- 64-CHARACTER SECRET TOKEN VALUE -->. Please store this token securely. It will not be shown again.",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "93a6ec2afd7df6de526457b2234f117a454488e6af1d3fe577c46193b3dc61ef"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK)
 
@@ -243,51 +185,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
-        # pylint: disable=W0612
-        expected_output = {
-            "data": {
-                "apiVersion": "smarter.sh/v1",
-                "kind": "AuthToken",
-                "metadata": {"count": 2},
-                "kwargs": {},
-                "data": {
-                    "titles": [
-                        {"name": "keyId", "type": "UUIDField"},
-                        {"name": "name", "type": "CharField"},
-                        {"name": "description", "type": "CharField"},
-                        {"name": "isActive", "type": "BooleanField"},
-                        {"name": "lastUsedAt", "type": "DateTimeField"},
-                        {"name": "createdAt", "type": "DateTimeField"},
-                        {"name": "updatedAt", "type": "DateTimeField"},
-                    ],
-                    "items": [
-                        {
-                            "keyId": "e4824746-ef0d-4fcc-b2f7-44624448366f",
-                            "name": "testAdminUser_446b2324315ee523",
-                            "description": "testAdminUser_446b2324315ee523",
-                            "isActive": True,
-                            "lastUsedAt": "2025-05-22T14:50:38.036133Z",
-                            "createdAt": "2025-05-22T14:50:37.812581Z",
-                            "updatedAt": "2025-05-22T14:50:38.037580Z",
-                        },
-                        {
-                            "keyId": "47f6e801-f291-4b02-af8b-9bb08c3baf43",
-                            "name": "testd2ce00af3382939e",
-                            "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                            "isActive": True,
-                            "lastUsedAt": None,
-                            "createdAt": "2025-05-22T14:50:37.815417Z",
-                            "updatedAt": "2025-05-22T14:50:37.815450Z",
-                        },
-                    ],
-                },
-            },
-            "message": "AuthTokens got successfully",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "3b30e0fc485f6d89e587f93e28f15bef2fbd7e0f39f69fd5125dc213c1454e2b"},
-        }
-
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
@@ -323,51 +220,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        # pylint: disable=W0612
-        exected_output = {
-            "data": {
-                "kind": "AuthToken",
-                "loader": None,
-                "manifest": {
-                    "apiVersion": "smarter.sh/v1",
-                    "kind": "AuthToken",
-                    "metadata": {
-                        "name": "smarter_test_base_d25719c916639e90",
-                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                        "version": "1.0.0",
-                        "tags": [],
-                        "annotations": [],
-                    },
-                    "spec": {"config": {"isActive": True, "username": "test_admin_user_6ab50f5ccabe46aa"}},
-                },
-                "name": "smarter_test_base_d25719c916639e90",
-                "orm_instance": {
-                    "model": "drf.smarterauthtoken",
-                    "pk": "70c97c159aea40fbfe0413185a5fafafa80dee77cdd6bad14a33b60407168db774022bb8f0d32e7cac3c14fbafae5e77c9992e4e2bd0b7e47cecbb0b4ae8a303",
-                    "fields": {
-                        "created_at": "2026-01-12T01:59:44.781Z",
-                        "updated_at": "2026-01-12T01:59:44.781Z",
-                        "version": "1.0.0",
-                        "annotations": [],
-                        "account": 5231,
-                        "key_id": "7e6988c9-8b1a-44b6-8b09-6299efc0a095",
-                        "name": "smarter_test_base_d25719c916639e90",
-                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                        "tags": [],
-                        "last_used_at": None,
-                        "is_active": True,
-                    },
-                },
-                "orm_model_class": "SmarterAuthToken",
-                "params": {"name": "smarter_test_base_d25719c916639e90"},
-                "path": "/api/v1/cli/deploy/AuthToken/",
-            },
-            "message": "AuthToken smarter_test_base_d25719c916639e90 deployed successfully",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"command": "deploy"},
-        }
-
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
@@ -382,50 +234,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        # pylint: disable=W0612
-        expected_output = {
-            "data": {
-                "kind": "AuthToken",
-                "loader": None,
-                "manifest": {
-                    "apiVersion": "smarter.sh/v1",
-                    "kind": "AuthToken",
-                    "metadata": {
-                        "name": "smarter_test_base_5d8bfeeaa80d6e2b",
-                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                        "version": "1.0.0",
-                        "tags": [],
-                        "annotations": [],
-                    },
-                    "spec": {"config": {"isActive": True, "username": "test_admin_user_2df9155cfef65c74"}},
-                },
-                "name": "smarter_test_base_5d8bfeeaa80d6e2b",
-                "orm_instance": {
-                    "model": "drf.smarterauthtoken",
-                    "pk": "1d990eb973882dee9e697af5aa17cccb02e6e77726457780336f65d5d4fc6147f0e283d7faf8e9ff0168d5b7c43dba36c4b87262ac67bfdb4fa1e6bd510d1516",
-                    "fields": {
-                        "created_at": "2026-01-12T01:56:46.584Z",
-                        "updated_at": "2026-01-12T01:56:46.951Z",
-                        "version": "1.0.0",
-                        "annotations": [],
-                        "account": 5229,
-                        "key_id": "276ece08-3628-4123-9306-a71ac4ed36f5",
-                        "name": "smarter_test_base_5d8bfeeaa80d6e2b",
-                        "description": "TestApiCliV1SmarterAuthToken Test API Key",
-                        "tags": [],
-                        "last_used_at": None,
-                        "is_active": False,
-                    },
-                },
-                "orm_model_class": "SmarterAuthToken",
-                "params": {"name": "smarter_test_base_5d8bfeeaa80d6e2b"},
-            },
-            "message": "AuthToken smarter_test_base_5d8bfeeaa80d6e2b undeployed successfully",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"command": "undeploy"},
-        }
-
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.test_token_record.refresh_from_db()
@@ -437,14 +245,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         path = reverse(self.namespace + ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-
-        # pylint: disable=W0612
-        exected_output = {
-            "message": "AuthToken test06bfeb5de52cd5d3 deleted successfully",
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "bb31badf5706e7484c199e99a2985a1494802861c5ce62130fb3a8aa1185b694"},
-        }
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIn("deleted successfully", response["message"])
@@ -464,22 +264,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         path = reverse(self.namespace + ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
-
-        # pylint: disable=W0612
-        expected_output = {
-            "error": {
-                "errorClass": "str",
-                "stacktrace": "Traceback (most recent call last):\n  File /home/smarter_user/smarter/smarter/apps/api/v1/cli/views/base.py, line 345, in dispatch\n    response = super().dispatch(request, *args, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File /home/smarter_user/venv/lib/python3.12/site-packages/rest_framework/views.py, line 509, in dispatch\n    response = self.handle_exception(exc)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File /home/smarter_user/venv/lib/python3.12/site-packages/rest_framework/views.py, line 469, in handle_exception\n    self.raise_uncaught_exception(exc)\n  File /home/smarter_user/venv/lib/python3.12/site-packages/rest_framework/views.py, line 480, in raise_uncaught_exception\n    raise exc\n  File /home/smarter_user/venv/lib/python3.12/site-packages/rest_framework/views.py, line 506, in dispatch\n    response = handler(request, *args, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File /home/smarter_user/smarter/smarter/apps/api/v1/cli/views/logs.py, line 45, in post\n    return self.broker.logs(request=request, kwargs=kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File /home/smarter_user/smarter/smarter/lib/drf/manifest/brokers/auth_token.py, line 396, in logs\n    raise SAMBrokerErrorNotImplemented(message=Logs are not implemented, thing=self.kind, command=command)\nsmarter.lib.manifest.broker.SAMBrokerErrorNotImplemented: Smarter API AuthToken manifest broker: logs() not implemented error.  Logs are not implemented: Logs are not implemented\n",
-                "description": "Smarter API AuthToken manifest broker: logs() not implemented error.  Logs are not implemented",
-                "status": "501",
-                "args": "url=http://testserver/api/v1/cli/logs/AuthToken/?name=test7d07dcc4e2fd10c0",
-                "cause": "Python Exception",
-                "context": "thing=AuthToken, command=logs",
-            },
-            "api": "smarter.sh/v1",
-            "thing": "AuthToken",
-            "metadata": {"key": "76fa29bf20917097b4aedd0e23535dd7562e13a7af060563c8c6b2291e4ce7b4"},
-        }
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)

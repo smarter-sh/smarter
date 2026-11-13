@@ -30,10 +30,22 @@ repos:
     rev: 26.10.1
     hooks:
       - id: black
+  # flake8 checks pyflakes and pycodestyle (.flake8). Complexity (C901) has a backlog, so the
+  # complexity-new-violations hook fails only on the functions that a change makes too complex,
+  # compared with HEAD: see scripts/complexity_new_violations.py. Its flake8 is the same release.
   - repo: https://github.com/PyCQA/flake8
     rev: 7.5.0
     hooks:
       - id: flake8
+  - repo: local
+    hooks:
+      - id: complexity-new-violations
+        name: flake8 complexity (new violations only)
+        entry: python -I scripts/complexity_new_violations.py
+        language: python
+        additional_dependencies: ["flake8==7.5.0"]
+        types: [python]
+        require_serial: true
   - repo: https://github.com/PyCQA/isort
     rev: 10.0.0b2
     hooks:

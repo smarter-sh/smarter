@@ -832,32 +832,6 @@ class TestSqlConnectionLegacy(TestConnectionBase):
 
         logger.debug("test_django_orm_tcpip_ssh model_dump: %s", model_dump)
 
-        # pylint: disable=W0612
-        example_output = {
-            "dbEngine": "django.db.backends.mysql",
-            "hostname": "smarter-mariadb",
-            "port": 3306,
-            "database": "smarter",
-            "username": "smarter",
-            "timeout": 30,
-            "useSsl": True,
-            "sslCert": "/path/to/cert.pem",
-            "sslKey": "/path/to/key.pem",
-            "sslCa": "/path/to/ca.pem",
-            "proxyHost": None,
-            "proxyPort": None,
-            "proxyUsername": None,
-            "proxyPassword": None,
-            "sshKnownHosts": None,
-            "poolSize": 5,
-            "maxOverflow": 10,
-            "authenticationMethod": "none",
-            "userProfile": "<UserProfile: TestUserProfile_AdminUser_c8383754ac60882b>",
-            "name": "test_sql_connection",
-            "description": "points to the Django mysql database",
-            "password": "<Secret: test_secret_968d486895af353a>",
-        }
-
         django_model = SqlConnection(**model_dump)
         # with self.assertRaises(SmarterValueError):
         #     django_model.save()

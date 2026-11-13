@@ -43,22 +43,36 @@ def is_missing_value(value: Any) -> bool:
 
 @overload
 def get_env(var_name: str, default: bool, is_secret: bool = False, is_required: bool = False) -> bool: ...
+
+
 @overload
 def get_env(var_name: str, default: int, is_secret: bool = False, is_required: bool = False) -> int: ...
+
+
 @overload
 def get_env(var_name: str, default: float, is_secret: bool = False, is_required: bool = False) -> float: ...
+
+
 @overload
 def get_env(var_name: str, default: list[str], is_secret: bool = False, is_required: bool = False) -> list[str]: ...
+
+
 @overload
 def get_env(
     var_name: str, default: SmarterDictType, is_secret: bool = False, is_required: bool = False
 ) -> SmarterDictType: ...
+
+
 @overload
 def get_env(var_name: str, default: None, is_secret: bool = False, is_required: bool = False) -> Optional[str]: ...
+
+
 @overload
 def get_env(
     var_name: str, default: str = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False
 ) -> str: ...
+
+
 def get_env(
     var_name: str, default: EnvValueType = DEFAULT_MISSING_VALUE, is_secret: bool = False, is_required: bool = False
 ) -> EnvValueType:

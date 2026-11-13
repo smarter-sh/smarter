@@ -13,7 +13,8 @@ pyright twice on the same files: as they are in the working tree, and as they we
 which ``git archive`` exports into a temporary folder. Both runs use the working tree's
 ``pyproject.toml``, so that they have the same rules. An error is matched by its file, rule and
 message, not its line, because a change moves lines. Whatever is left in the working tree's run
-is new, and is printed with its line.
+is new, and is printed with its line. The git side, which it shares with
+``complexity_new_violations.py``, is in ``new_findings.py``.
 
 It needs Node.js (pyright runs with ``npx``), and the virtual environment that has the platform's
 packages (``--python``, default ``venv/bin/python``), so that pyright can resolve the imports.
@@ -24,12 +25,18 @@ import argparse
 import json
 import os
 import shutil
-import subprocess  # nosec B404: runs git and pyright, with fixed arguments
+import subprocess  # nosec B404: runs pyright, with fixed arguments
 import sys
-import tarfile
 import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
+
+SCRIPTS_FOLDER = Path(__file__).resolve().parent
+# python3 -I leaves the script's own folder off sys.path, so the shared module's folder is added.
+if str(SCRIPTS_FOLDER) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_FOLDER))
+
+import new_findings  # noqa: E402  pylint: disable=wrong-import-position
 
 PYRIGHT_VERSION = "1.1.414"
 """The pyright release, pinned so that a new release's checks don't look like new errors."""
@@ -111,64 +118,6 @@ def format_report(added: Counter, lines: dict[DiagnosticKey, list[int]], fixed: 
     return report
 
 
-def changed_files(base: str) -> list[str]:
-    """
-    The Python files under ``smarter/`` that differ from the base, or are new and not ignored.
-
-    :param base: The commit to compare with.
-    :returns: Their paths, relative to the repository's root.
-    """
-    git = shutil.which("git") or "git"
-    diff = subprocess.run(  # nosec B603: fixed arguments
-        [git, "diff", "--name-only", "--diff-filter=d", base], capture_output=True, text=True, check=True
-    )
-    untracked = subprocess.run(  # nosec B603: fixed arguments
-        [git, "ls-files", "--others", "--exclude-standard"], capture_output=True, text=True, check=True
-    )
-    paths = diff.stdout.splitlines() + untracked.stdout.splitlines()
-    files = []
-    for path in sorted(set(paths)):
-        if not path.startswith(SOURCE_ROOT):
-            continue
-        if not path.endswith(".py"):
-            continue
-        files.append(path)
-    return files
-
-
-def export_base(base: str, files: list[str], destination: Path) -> list[str]:
-    """
-    Export the base's source tree into a folder, with ``git archive``.
-
-    The whole of ``smarter/`` is exported, not only the files, so that pyright resolves their
-    imports of unchanged modules exactly as it does in the working tree.
-
-    :param base: The commit to export.
-    :param files: The files to check. New files, which the base doesn't have, are skipped.
-    :param destination: The folder to export into.
-    :returns: The files that the base has.
-    """
-    git = shutil.which("git") or "git"
-    existing = []
-    for path in files:
-        result = subprocess.run(  # nosec B603: fixed arguments
-            [git, "cat-file", "-e", f"{base}:{path}"], capture_output=True, check=False
-        )
-        if result.returncode == 0:
-            existing.append(path)
-    if not existing:
-        return existing
-    archive_path = destination / "base.tar"
-    with open(archive_path, "wb") as archive_file:
-        subprocess.run(  # nosec B603: fixed arguments
-            [git, "archive", base, "--", SOURCE_ROOT], stdout=archive_file, check=True
-        )
-    with tarfile.open(archive_path) as archive:
-        archive.extractall(destination, filter="data")
-    archive_path.unlink()
-    return existing
-
-
 def run_pyright(files: list[str], cwd: Path, python: Path) -> dict:
     """
     Run pyright on files, and parse its JSON output.
@@ -208,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     # Absolute, but not resolved: venv/bin/python is a symlink, and the system interpreter it
     # points to doesn't have the virtual environment's packages.
     python = root / args.python
-    files = args.files or changed_files(args.base)
+    files = args.files or new_findings.changed_files(args.base, SOURCE_ROOT)
     if not files:
         print("pyright: no changed Python files.")
         return 0
@@ -236,7 +185,11 @@ def compare(files: list[str], base: str, root: Path, python: Path) -> tuple[str,
     """
     with tempfile.TemporaryDirectory() as temporary_folder:
         base_root = Path(temporary_folder)
-        base_files = export_base(base, files, base_root)
+        base_files = new_findings.files_at_base(base, files)
+        if base_files:
+            # The whole of smarter/ is exported, not only the files, so that pyright resolves their
+            # imports of unchanged modules exactly as it does in the working tree.
+            new_findings.export_base(base, [SOURCE_ROOT], base_root)
         shutil.copy(root / "pyproject.toml", base_root / "pyproject.toml")
         current_output = run_pyright(files, root, python)
         base_output: dict = {}

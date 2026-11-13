@@ -1,36 +1,21 @@
-# pylint: disable=wrong-import-position
 """Test configuration Settings class.
 
 TODO: Add tests for: 480, 487, 531, 595, 602, 609, 612-617, 623, 626-631, 654, 662-664, 671-673, 686, 702, 710-712, 725, 740-741
 """
 
 import os
-
-# python stuff
 import re
-import sys
 
-# 3rd party stuff
 from django.test import tag
 from dotenv import load_dotenv
 from pydantic_core import ValidationError as PydanticValidationError
 
+from smarter.common.conf import Settings, settings_defaults
+from smarter.common.conf.services import Services
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.utils import get_semantic_version
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import INFRASTRUCTURE
-
-PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-from smarter.common.conf import (  # noqa: E402
-    Settings,
-    settings_defaults,
-)
-from smarter.common.conf.services import Services
-
-# our stuff
-from smarter.common.utils import get_semantic_version
-
-from ..exceptions import SmarterConfigurationError
 
 
 # pylint: disable=too-many-public-methods

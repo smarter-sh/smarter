@@ -1,26 +1,10 @@
-# pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
 import os
-import sys
-from pathlib import Path
 
-# python stuff
-from smarter.lib import json
-from smarter.lib.unittest.base_classes import SmarterTestBase
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-from smarter.apps.provider.services.text_completion.const import (  # noqa: E402
-    OpenAIMessageKeys,
-)
-
-# our stuff
-from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
+from smarter.apps.prompt.tests.test_setup import get_test_file
+from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
+from smarter.apps.provider.services.text_completion.utils import (
     exception_response_factory,
     get_content_for_role,
     get_message_history,
@@ -30,10 +14,12 @@ from smarter.apps.provider.services.text_completion.utils import (  # noqa: E402
     pair_tool_messages,
     parse_request,
 )
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.narrowing import json_object
 
-from ..tests.test_setup import get_test_file  # noqa: E402
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestUtils(SmarterTestBase):

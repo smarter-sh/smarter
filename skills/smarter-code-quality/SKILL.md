@@ -1,6 +1,6 @@
 ---
 name: smarter-code-quality
-description: Use before finishing any Smarter code change, to lint and format Python, Markdown, YAML and JSON with the repository's pre-commit hooks (black, flake8, isort, autoflake, bandit, mypy, pyright on new errors, codespell, pyupgrade, pydocstringformatter, Prettier). Explains which tools are authoritative and how to run them on changed files under zsh.
+description: Use before finishing any Smarter code change, to lint and format Python, Markdown, YAML and JSON with the repository's pre-commit hooks (black, flake8, isort, autoflake, bandit, mypy, pyright and complexity on new findings, codespell, pyupgrade, pydocstringformatter, Prettier). Explains which tools are authoritative and how to run them on changed files under zsh.
 ---
 
 # Smarter Code Quality
@@ -13,18 +13,19 @@ bypass a hook (`--no-verify`, `SKIP=`, blanket `# noqa`) to make a change pass.
 
 **Python**
 
-| Hook                 | Configuration                                 | Notes                                                                               |
-| -------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------- |
-| black                | `pyproject.toml`, line length 120             | Formatter. Let it reformat.                                                         |
-| isort                | `pyproject.toml`, `profile = black`           | Import order.                                                                       |
-| autoflake            | `--in-place`, `--remove-all-unused-imports`   | Removes unused imports, except in `__init__.py` files and migrations.               |
-| flake8               | `.flake8`                                     | Selects **only C101** (coding magic comment). It is not a general style check.      |
-| bandit               | `-ll`                                         | Medium or high severity security findings fail.                                     |
-| mypy                 | `mypy.ini`, django-stubs and pydantic plugins | Checks the whole package, test bodies included, in the project's `venv`. See below. |
-| pyright-new-errors   | `pyproject.toml`'s `[tool.pyright]`           | Fails on the pyright errors that a change adds, compared with HEAD. See below.      |
-| pyupgrade            |                                               | Modern syntax for Python 3.14.                                                      |
-| pydocstringformatter |                                               | Normalizes docstring layout.                                                        |
-| codespell            | `codespell.txt` ignore list                   | Also runs on docs and skills. Add real project words to `codespell.txt`.            |
+| Hook                      | Configuration                                 | Notes                                                                                  |
+| ------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| black                     | `pyproject.toml`, line length 120             | Formatter. Let it reformat.                                                            |
+| isort                     | `pyproject.toml`, `profile = black`           | Import order.                                                                          |
+| autoflake                 | `--in-place`, `--remove-all-unused-imports`   | Removes unused imports, except in `__init__.py` files and migrations.                  |
+| flake8                    | `.flake8`                                     | pyflakes (F) and pycodestyle (E, W), minus the checks black disagrees with. See below. |
+| complexity-new-violations | `.flake8`'s `max-complexity`                  | Fails on the functions that a change makes too complex, compared with HEAD. See below. |
+| bandit                    | `-ll`                                         | Medium or high severity security findings fail.                                        |
+| mypy                      | `mypy.ini`, django-stubs and pydantic plugins | Checks the whole package, test bodies included, in the project's `venv`. See below.    |
+| pyright-new-errors        | `pyproject.toml`'s `[tool.pyright]`           | Fails on the pyright errors that a change adds, compared with HEAD. See below.         |
+| pyupgrade                 |                                               | Modern syntax for Python 3.14.                                                         |
+| pydocstringformatter      |                                               | Normalizes docstring layout.                                                           |
+| codespell                 | `codespell.txt` ignore list                   | Also runs on docs and skills. Add real project words to `codespell.txt`.               |
 
 autoflake keeps the imports of a package's `__init__.py`, which re-export its
 modules' names (`--ignore-init-module-imports`), and doesn't touch migrations.
@@ -43,6 +44,46 @@ check it.
 **Everything**: trailing whitespace, end-of-file newline, YAML, JSON, TOML and
 XML syntax, merge conflict markers, private keys, AWS credentials, debug
 statements, and commitlint on commit messages.
+
+## flake8
+
+flake8 runs pyflakes (unused and undefined names, unused variables, redefinitions, f-strings
+without placeholders) and pycodestyle (blank lines, `x not in y`, imports at the top, ...), at
+line length 120. The pycodestyle checks that disagree with black are off (E203, E501, E701, E704,
+W503): black owns the formatting, and line length. Migrations and `__version__.py` are excluded,
+and two exceptions are narrow and commented in `.flake8`: the settings modules' star imports
+(F403, F405) and `docs/source/conf.py`'s imports after its `sys.path` and Django setup (E402).
+The whole repository has no findings: keep it that way.
+
+```console
+source venv/bin/activate
+git ls-files '*.py' | xargs flake8      # everything, as the hook sees it
+```
+
+Fix the cause. An unused variable that holds the result of a call with side effects loses the
+variable, not the call. A `# noqa` is for code that is right as it is, names its code, and says
+why, e.g. `# noqa: E402` on an import that must follow a `sys.path` change or
+`os.environ.setdefault("DJANGO_SETTINGS_MODULE", ...)`.
+
+## Complexity (mccabe, C901)
+
+`.flake8` sets `max-complexity = 10`, mccabe's cyclomatic complexity. The repository has a backlog
+of functions above it (`flake8 --select=C901 smarter` lists them), so the flake8 hook leaves C901
+out, and the `complexity-new-violations` hook checks only what a change makes worse, on the
+changed files:
+
+```console
+python3 -I scripts/complexity_new_violations.py --python venv/bin/python               # changed since HEAD
+python3 -I scripts/complexity_new_violations.py --python venv/bin/python --base alpha  # ... since another commit
+```
+
+It runs flake8's C901 check on the files in the working tree and as they were at the base, and
+matches functions by file and qualified name (`Class.method`), not line. A function fails when it
+is above 10 and wasn't at the base (a new function, or one the change pushed over the limit), or
+when a function of the backlog got more complex. Leaving a backlog function as it is, or making it
+simpler, passes. Fix a failure by splitting the function into named steps; don't raise the limit.
+The hook installs its own flake8 (`additional_dependencies`), so pre-commit.ci runs it too.
+`pre-commit autoupdate` doesn't change that pin: keep it at the flake8 hook's `rev`.
 
 ## How to run
 
@@ -101,6 +142,9 @@ Node.js (`npx`), and pre-commit.ci skips it. To run it by hand:
 python3 -I scripts/pyright_new_errors.py                 # Python files changed since HEAD
 python3 -I scripts/pyright_new_errors.py --base alpha    # ... since another commit
 ```
+
+The git side of both ratchet hooks (changed files, exporting the base with `git archive`) is in
+`scripts/new_findings.py`. A new hook of this kind uses it too.
 
 It runs pyright (pinned, with `npx`) on the files in the working tree and as they were at the
 base, matches errors by file, rule and message (lines move), and prints only the new ones, with

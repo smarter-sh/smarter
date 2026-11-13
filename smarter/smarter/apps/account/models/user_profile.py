@@ -201,16 +201,20 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
 
     @overload
     def select_related(self, clear: None, /) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+
     @overload
     def select_related(self, *fields: str) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+
     def select_related(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """Returns a SmarterBaseQuerySetWithPermissions with select_related applied."""
         return self.get_queryset().select_related(*args, **kwargs)
 
     @overload
     def prefetch_related(self, clear: None, /) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+
     @overload
     def prefetch_related(self, *lookups: str | Prefetch) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]: ...
+
     def prefetch_related(self, *args, **kwargs) -> SmarterBaseQuerySetWithPermissions[_GenericTypeVar]:
         """Returns a SmarterBaseQuerySetWithPermissions with prefetch_related applied."""
         return self.get_queryset().prefetch_related(*args, **kwargs)

@@ -9,7 +9,7 @@ from django.core.exceptions import FieldError
 from django.db.models import QuerySet
 from django.http.request import HttpRequest
 
-from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     SmarterStaffOnlyModelAdmin,

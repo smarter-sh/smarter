@@ -814,13 +814,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         serialized_tool_call: SmarterDictType = {}
         plugin: Optional[PluginBase] = None
         function_name = tool_call.function.name
-        # pylint: disable=W0612
-        try:
-            function_to_call = self.available_functions[function_name]
-        except KeyError as e:
+        if function_name not in self.available_functions:
             raise SmarterConfigurationError(
                 f"{self.formatted_class_name}: function '{function_name}' not found in available functions: {self.available_functions}"
-            ) from e
+            )
 
         function_args = json.loads(tool_call.function.arguments)
         serialized_tool_call["function_name"] = function_name

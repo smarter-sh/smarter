@@ -32,9 +32,11 @@ holds only what applies to nearly every task.
 4. **Don't build the Sphinx docs** (about 20 minutes). Check `:doc:` targets
    by file existence, or run `skills/smarter-sphinx-docs/scripts/check-docs.sh`.
 5. **The pre-commit hooks are the lint standard** (black, flake8, isort,
-   autoflake, bandit, mypy, pyright on new errors, codespell, pyupgrade,
-   pydocstringformatter, Prettier, ESLint). mypy checks test bodies too
-   (`check_untyped_defs`). Ruff is not configured; ignore its backlog.
+   autoflake, bandit, mypy, pyright on new errors, complexity on new
+   violations, codespell, pyupgrade, pydocstringformatter, Prettier, ESLint).
+   mypy checks test bodies too (`check_untyped_defs`). flake8 (pyflakes and
+   pycodestyle) has no findings anywhere; complexity above 10 fails only when
+   a change adds or worsens it. Ruff is not configured; ignore its backlog.
 6. **Coverage:** at least 90% per Django app or subsystem, 95% where that takes
    moderate effort.
 7. **This repository is public.** No API keys, tokens, account IDs, private

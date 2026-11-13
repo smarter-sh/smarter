@@ -10,8 +10,7 @@ Coding Style
 - Smarter Framework follows the `PEP 8 -- Style Guide for Python Code <https://peps.python.org/pep-0008/>`__.
 - Smarter Framework uses `Black <https://black.readthedocs.io/en/stable/>`__ as its code formatter.
 - `isort <https://pycqa.github.io/isort/>`__ to sort imports.
-- `flake8 <https://flake8.pycqa.org/en/latest/>`__ for linting.
-- `flake8-coding <https://pypi.org/project/flake8-coding/>`__ for coding style linting.
+- `flake8 <https://flake8.pycqa.org/en/latest/>`__ for linting: pyflakes, pycodestyle and mccabe's cyclomatic complexity.
 - `pylint <https://pylint.pycqa.org/en/latest/>`__ for code linting.
 - `pylint-django <https://pypi.org/project/pylint-django/>`__ for Django-specific linting.
 - `mypy <https://mypy.readthedocs.io/en/stable/>`__ for static type checking.

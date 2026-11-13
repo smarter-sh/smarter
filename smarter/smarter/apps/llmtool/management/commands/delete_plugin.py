@@ -71,7 +71,7 @@ class Command(SmarterCommand):
 
         try:
             plugin_meta = PluginMeta.objects.get(name=options["name"], user_profile=user_profile)  # type: ignore
-        except PluginMeta.DoesNotExist as e:
+        except PluginMeta.DoesNotExist:
             self.stdout.write(f"manage.py delete_plugin: Did not find a plugin named {name} for {user_profile}")
             return
 

@@ -242,20 +242,22 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**self.manifest_spec()),
         )
+        self.assertIn("SAMApiConnection", repr(model))
+        self.assertIn("SAMApiConnection", str(model))
 
-        def test_model_initialization(self):
-            """Test that the SAMSqlConnection model can be initialized with valid data."""
-            SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest.kind,
-                metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
-                spec=SAMApiConnectionSpec(**self.manifest_spec()),
-                status=(
-                    SAMConnectionCommonStatus(**self.loader.manifest_status)
-                    if self.loader and self.loader.manifest_status
-                    else None
-                ),
-            )
+    def test_model_initialization(self):
+        """Test that the SAMApiConnection model can be initialized with valid data."""
+        SAMApiConnection(
+            apiVersion=required(self.loader.manifest_api_version, "loader.manifest_api_version"),
+            kind=required(self.loader.manifest_kind, "loader.manifest_kind"),
+            metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
+            spec=SAMApiConnectionSpec(**self.manifest_spec()),
+            status=(
+                SAMConnectionCommonStatus(**self.loader.manifest_status)
+                if self.loader and self.loader.manifest_status
+                else None
+            ),
+        )
 
 
 class TestApiConnectionLegacy(TestConnectionBase):
