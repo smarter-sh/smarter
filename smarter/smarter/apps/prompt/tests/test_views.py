@@ -536,6 +536,21 @@ class TestPromptViews(ResourceViewsTestMixin, TestAccountMixin):
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.resource, api_key=api_key).exists())
         self.assertFalse(SmarterAuthToken.objects.filter(name="not_allowed").exists())
 
+    def test_deployment_api_keys_of_an_account_admin(self):
+        """Test that an account admin who isn't staff may create an api key in their account, as staff may."""
+        self.detach_api_keys()
+        member = self.make_non_admin_an_account_admin()
+        self.client.force_login(self.non_admin_user)
+        self.assertTrue(self.get_deployment()["apiKeys"]["canCreate"])
+
+        name = f"account_admin_{secrets.token_hex(4)}"
+        self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
+        response = self.api_key_action("create", {"name": name})
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
+        api_key = SmarterAuthToken.objects.get(name=name)
+        self.assertEqual(api_key.user, self.non_admin_user)
+        self.assertEqual(api_key.user_profile, member)
+
     def test_deployment_api_key_of_another_account(self):
         """Test that a staff user without a profile in the LLMClient's account can't create its api keys."""
         request = RequestFactory().post("/")

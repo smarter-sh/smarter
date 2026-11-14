@@ -136,6 +136,31 @@ class TestAccountMixin(SmarterTestBase):
 
         return True
 
+    def make_non_admin_an_account_admin(self) -> UserProfile:
+        """
+        Make ``non_admin_user`` the account admin of the test account, for this test only.
+
+        It sets ``UserProfile.is_account_admin`` with ``save()``, not ``update()``: the permission queries read the
+        user's cached profiles, which ``save()`` refreshes. The user stays neither staff nor superuser, and is an
+        ordinary member again after the test.
+
+        :returns: The profile, an account admin.
+        """
+        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        member.is_account_admin = True
+        member.save()
+        self.addCleanup(self.unset_account_admin, member)
+        return member
+
+    def unset_account_admin(self, user_profile: UserProfile) -> None:
+        """
+        Make the profile an ordinary member of its account again.
+
+        :param user_profile: The profile.
+        """
+        user_profile.is_account_admin = False
+        user_profile.save()
+
     def request_factory(self) -> RequestFactory:
         """Prepare and get a response from an api/v1/ endpoint."""
 

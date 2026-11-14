@@ -48,11 +48,6 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         self.assertIn(self.mine, Secret.objects.with_ownership_permission_for(user))
         self.assertNotIn(self.shared, Secret.objects.with_ownership_permission_for(user))
 
-    def unset_account_admin(self, user_profile: UserProfile) -> None:
-        """Make the profile an ordinary member again."""
-        user_profile.is_account_admin = False
-        user_profile.save()
-
     def test_account_admin_manages_their_account_only(self):
         """A profile's is_account_admin gives management of that account's resources, and of no other account's."""
         # pylint: disable=import-outside-toplevel
@@ -62,11 +57,7 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         user = self.non_admin_user
         self.assertNotIn(self.shared, generic.with_ownership_permission_for(user))
 
-        # save(), not update(): the permission queries read the user's cached profiles, which save() refreshes.
-        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
-        member.is_account_admin = True
-        member.save()
-        self.addCleanup(self.unset_account_admin, member)
+        self.make_non_admin_an_account_admin()
         self.assertIn(self.shared, generic.with_ownership_permission_for(user))
         self.assertFalse(user.is_staff)
 

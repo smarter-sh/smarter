@@ -84,6 +84,20 @@ class TestUserProfileReceivers(TestAccountMixin):
         user_profile.delete()
         self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [])
 
+    def test_save_refreshes_the_cached_profile(self):
+        """A UserProfile's save refreshes its cached copies, by user and account, by user, and by pk."""
+        user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.addCleanup(user_profile.delete)
+        self.assertFalse(UserProfile.get_cached_object(user=self.user, account=self.account).is_account_admin)
+        self.assertFalse(UserProfile.get_cached_object(user=self.user).is_account_admin)
+        self.assertFalse(UserProfile.get_cached_object(pk=user_profile.pk).is_account_admin)
+
+        user_profile.is_account_admin = True
+        user_profile.save()
+        self.assertTrue(UserProfile.get_cached_object(user=self.user, account=self.account).is_account_admin)
+        self.assertTrue(UserProfile.get_cached_object(user=self.user).is_account_admin)
+        self.assertTrue(UserProfile.get_cached_object(pk=user_profile.pk).is_account_admin)
+
 
 class TestAccountPostSave(TestAccountMixin):
     """Test that account_post_save() logs the Account without its contact details, which are personal data."""

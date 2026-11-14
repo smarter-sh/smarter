@@ -629,7 +629,7 @@
             "type": "integer"
           },
           "isStaff": {
-            "description": "User.is_staff: whether the user administers their account.",
+            "description": "User.is_staff: staff, who administer each of their accounts and may open the Django admin.",
             "title": "Isstaff",
             "type": "boolean"
           },

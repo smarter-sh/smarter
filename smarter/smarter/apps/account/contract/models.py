@@ -186,7 +186,9 @@ class AccountApiUserDetail(AccountApiModel):
     first_name: str = Field("", description="User.first_name.")
     last_name: str = Field("", description="User.last_name.")
     email: str = Field("", description="User.email.")
-    is_staff: bool = Field(..., description="User.is_staff: whether the user administers their account.")
+    is_staff: bool = Field(
+        ..., description="User.is_staff: staff, who administer each of their accounts and may open the Django admin."
+    )
     is_superuser: bool = Field(..., description="User.is_superuser: whether the user administers the platform.")
 
     @classmethod

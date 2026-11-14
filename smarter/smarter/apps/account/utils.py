@@ -761,8 +761,9 @@ def is_platform_staff(user: Optional[object]) -> bool:
     """
     Return whether a user is one of the platform's own staff: an active staff user of the Smarter account.
 
-    ``User.is_staff`` alone means that a user administers their own account, so every customer
-    account's admin has it, and some of them are superusers too. The platform's staff are the
+    ``User.is_staff`` alone means that a user administers each account they belong to, so many customer
+    accounts' admins have it, and some of them are superusers too. (An account admin may instead have
+    ``UserProfile.is_account_admin``, which administers one account and is never platform staff.) The platform's staff are the
     staff users of the Smarter account (``SMARTER_ACCOUNT_NUMBER``), which runs the platform. Users
     who sign up themselves also join the Smarter account, but not as staff.
 

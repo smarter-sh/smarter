@@ -210,7 +210,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, **kwargs):
     """
-    Log the save of a UserProfile, and invalidate the cache of its user's UserProfiles.
+    Log the save of a UserProfile, and invalidate the cached copies of it and of its user's UserProfiles.
 
     :param sender: The UserProfile model.
     :param instance: The saved UserProfile.
@@ -224,6 +224,15 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
     )
     # The user's cached list of UserProfiles, used by every permission queryset, changes with this one.
     UserProfile.get_cached_objects(invalidate=True, user=instance.user)
+    if created:
+        # Nothing has cached the new profile yet. Refreshing the user's cached default profile now would make
+        # the new one their default at once, e.g. moving a member of one account into the next account they join.
+        return
+    # An edit changes the cached copies of this one, e.g. of is_account_admin, which decides whether the user
+    # administers the account: by user and account, by user alone, and by pk, which the console's selected
+    # profile reads.
+    UserProfile.get_cached_object(invalidate=True, user=instance.user, account=instance.account)
+    UserProfile.get_cached_object(invalidate=True, pk=instance.pk)
 
 
 @receiver(post_delete, sender=UserProfile)
