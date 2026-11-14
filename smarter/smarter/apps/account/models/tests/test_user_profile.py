@@ -114,6 +114,19 @@ class TestUserProfile(TestAccountMixin):
         self.assertFalse(user_administers_account(None, member))
         self.assertTrue(user_administers_account(self.admin_user, None))
 
+    def test_admin_for_an_empty_account_is_its_own(self):
+        """An account without members gets an administrator of its own, never the platform's admin."""
+        account = Account.objects.create(name=f"test_empty_{self.hash_suffix}", company_name="Empty")
+        self.addCleanup(Account.objects.filter(pk=account.pk).delete)
+
+        admin_user = UserProfile.admin_for_account(account)
+
+        self.addCleanup(User.objects.filter(pk=admin_user.pk).delete)
+        self.assertNotEqual(admin_user, smarter_cached_objects.admin_user)
+        self.assertFalse(UserProfile.objects.filter(user=smarter_cached_objects.admin_user, account=account).exists())
+        self.assertTrue(UserProfile.objects.get(user=admin_user, account=account).is_account_admin)
+        self.assertFalse(admin_user.is_superuser)
+
     def test_admin_for_account(self):
         """
         Test the `admin_for_account` class method.

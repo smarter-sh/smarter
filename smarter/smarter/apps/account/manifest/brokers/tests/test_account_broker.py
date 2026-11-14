@@ -485,6 +485,14 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         with self.assertRaisesRegex(SAMAccountBrokerError, "no account has the number 0000-0000-0001"):
             self.broker.manifest_to_django_orm()
 
+    def test_cache_invalidations_add_no_member(self):
+        """Invalidating a new, empty account's caches doesn't add anyone to it, e.g. the platform's admin."""
+        account = Account.objects.create(name=f"test_empty_{self.hash_suffix}", company_name="Empty")
+        self.addCleanup(Account.objects.filter(pk=account.pk).delete)
+        self.broker.brokered_account = account
+        self.broker.cache_invalidations()
+        self.assertFalse(UserProfile.objects.filter(account=account).exists())
+
     def use_account_number(self, account_number):
         """Give the broker a copy of its manifest whose metadata.accountNumber is the given one."""
         manifest = self.broker.manifest

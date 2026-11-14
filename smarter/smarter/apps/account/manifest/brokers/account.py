@@ -579,7 +579,10 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         # brokered_account is retrieved by name, which is cached separately from pk.
         Account.get_cached_object(invalidate=True, name=self.brokered_account.name)  # type: ignore
         Account.get_cached_object(invalidate=True, account_number=self.brokered_account.account_number)  # type: ignore
-        UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
+        # only an account with members has a cached profile. get_cached_object() would otherwise find an
+        # administrator for a new, empty account, and create one.
+        if UserProfile.objects.filter(account=self.brokered_account).exists():
+            UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
         return super().cache_invalidations()
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:

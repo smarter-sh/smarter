@@ -22,7 +22,6 @@ from django.utils import translation
 from smarter.apps.account.profile_selection import selected_user_profile_id
 from smarter.apps.account.signals import new_user_created
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import mask_email
 from smarter.lib import logging
@@ -589,8 +588,10 @@ class UserProfile(MetaDataModel):
         """
         Return the designated user for the given account.
 
-        This method finds the first staff user associated with the account. If no staff user exists, it returns the first available user.
-        If the account has no users, an admin user is created and returned.
+        This method finds the first administrator of the account, by ``is_account_admin`` or ``User.is_staff``. If
+        there is none, it returns the first available user. If the account has no users, it creates an administrator
+        of the account's own, with :func:`~smarter.apps.account.utils.get_cached_admin_user_for_account`, and never
+        adds the platform's admin to it.
 
         :param account: Instance of :class:`Account`. The account for which to find the designated user.
         :returns: :class:`django.contrib.auth.models.User`
@@ -616,8 +617,11 @@ class UserProfile(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_admin_for_account(account_id: int, class_name: str) -> Optional[User]:
 
-            admins = cls.objects.filter(account_id=account_id, user__is_staff=True).order_by("user__id")
-            first_admin = admins.first()
+            # the account's administrators: by UserProfile.is_account_admin, or by User.is_staff.
+            admins = cls.objects.filter(account_id=account_id).filter(
+                models.Q(is_account_admin=True) | models.Q(user__is_staff=True)
+            )
+            first_admin = admins.order_by("user__id").first()
             if first_admin is not None:
                 return first_admin.user
 
@@ -637,16 +641,18 @@ class UserProfile(MetaDataModel):
                 logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
                 account,
             )
-            admin_user, _ = User.objects.get_or_create(
-                username=SMARTER_ADMIN_USERNAME, defaults={"is_superuser": True, "is_staff": True}
-            )
-            user_profile = cls.objects.create(user=admin_user, account=account)
+            # an account without members gets an administrator of its own, never the platform's admin, who would
+            # otherwise belong to every such account.
+            # pylint: disable=C0415
+            from smarter.apps.account.utils import get_cached_admin_user_for_account
+
+            admin_user = get_cached_admin_user_for_account(account=account)  # type: ignore[arg-type]
             logger.warning(
-                "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+                "%s.admin_for_account() Created an administrator for account %s.",
                 logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
                 account,
             )
-            return user_profile.user
+            return admin_user
 
         return _get_admin_for_account(account_id=account.id, class_name=UserProfile.__name__)  # type: ignore[return-value]
 

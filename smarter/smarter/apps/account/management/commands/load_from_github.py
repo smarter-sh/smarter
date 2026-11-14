@@ -393,7 +393,29 @@ class Command(SmarterCommand):
                         path=path, filespec=filespec, kind=str(manifest["kind"]), name=name, manifest=manifest
                     )
                 )
-        return sorted(retval, key=lambda m: (m.rank, m.path))
+        return sorted(retval, key=self.apply_order_key)
+
+    def apply_order_key(self, item: RepositoryManifest) -> tuple[int, int, str]:
+        """
+        Return a manifest's place in the order of application: its kind's rank, then its path.
+
+        A manifest of a folder that ``owners.yaml`` gives an owner belongs to a user, so it comes after the Users,
+        even if its kind ranks before them, e.g. a department's Secret: the Users are its owners. Everything else
+        keeps :meth:`SAMKinds.apply_order() <smarter_types.kinds.SAMKinds.apply_order>`.
+
+        :param item: The manifest.
+        :returns: ``(rank, 0 or 1, path)``: 1 for an owned manifest moved after the Users.
+        :rtype: tuple[int, int, str]
+        """
+        user_rank = SAMKinds.apply_rank(SAMKinds.USER)
+        owned = (
+            self.owners_config is not None
+            and item.kind not in (SAMKinds.ACCOUNT.value, SAMKinds.USER.value)
+            and self.owners_config.owner_for(item.path) is not None
+        )
+        if owned and item.rank <= user_rank:
+            return (user_rank, 1, item.path)
+        return (item.rank, 0, item.path)
 
     def select_manifests(
         self, manifests: list[RepositoryManifest], included: list[str], excluded: list[str]
@@ -442,7 +464,12 @@ class Command(SmarterCommand):
         try:
             with transaction.atomic():
                 call_command(
-                    "apply_manifest", username=user_profile.user.username, stdout=output, stderr=output, **options
+                    "apply_manifest",
+                    username=user_profile.user.username,
+                    account_number=str(user_profile.account.account_number),
+                    stdout=output,
+                    stderr=output,
+                    **options,
                 )
         except SAMBrokerErrorNotFound as exc:
             if not self.skip_missing_references:
@@ -690,7 +717,10 @@ class Command(SmarterCommand):
 
     def get_user_profile(self, account_number: Optional[str], username: Optional[str]) -> UserProfile:
         """
-        Return the owner of the resources: ``username``, or else the admin of the account ``account_number``.
+        Return the owner of the resources: ``username``'s profile in ``account_number``, or else the admin of the account.
+
+        A user may belong to several accounts, e.g. the Smarter admin, whom each new account adds, so with both,
+        the profile is the user's in that account.
 
         It is the user profile that ``manage.py apply_manifest`` applies the manifests as.
 
@@ -705,6 +735,12 @@ class Command(SmarterCommand):
                 user = User.objects.get(username=username)
             except User.DoesNotExist as e:
                 raise SmarterValueError(f"User {username} does not exist.") from e
+            if account_number:
+                # the user's profile in that account: a user, e.g. the Smarter admin, may belong to several.
+                profile = UserProfile.objects.filter(user=user, account__account_number=account_number).first()
+                if profile is None:
+                    raise SmarterValueError(f"User {username} does not belong to account {account_number}.")
+                return profile
         elif account_number:
             try:
                 account = Account.get_cached_object(invalidate=False, account_number=account_number)

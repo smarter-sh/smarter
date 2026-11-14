@@ -549,6 +549,25 @@ class TestLoadFromGithub(TestAccountMixin):
                 with self.assertRaises(SmarterValueError):
                     command.get_user_profile(account_number, username)
 
+    def test_owner_in_one_of_several_accounts(self):
+        """Test that a user with several accounts owns the resources as their profile in the account given."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        _, other_account, _ = mortal_user_factory()
+        other_profile = UserProfile.objects.create(
+            user=self.admin_user, account=other_account, name=f"{self.admin_user.username}_other"
+        )
+        command = Command()
+        self.assertEqual(
+            command.get_user_profile(other_account.account_number, self.admin_user.username), other_profile
+        )
+        self.assertEqual(
+            command.get_user_profile(self.account.account_number, self.admin_user.username), self.user_profile
+        )
+        with self.assertRaisesRegex(SmarterValueError, "does not belong to account"):
+            command.get_user_profile(other_account.account_number, self.non_admin_user.username)
+
     # -------------------------------------------------------------------------
     # owners.yaml: who applies each folder's manifests
     # -------------------------------------------------------------------------
@@ -596,6 +615,31 @@ class TestLoadFromGithub(TestAccountMixin):
         with self.assertRaisesRegex(CommandError, "its owner no_such_owner_x doesn't exist"):
             self.run_command()
         self.assertFalse(Secret.objects.filter(name=self.secret_name).exists())
+
+    def test_owned_manifests_come_after_the_users(self):
+        """Test that an owned folder's Secret, which a User owns, is applied after the Users, unlike other Secrets."""
+        root = self.repo(
+            {
+                "secrets/shared.yaml": manifest("Secret", "shared"),
+                "org/users/owner.yaml": manifest("User", "owner"),
+                "departments/hr/secret.yaml": manifest("Secret", "hr"),
+                "departments/hr/connection.yaml": manifest("SqlConnection", "hr_db"),
+            }
+        )
+        command = Command(stdout=StringIO())
+        command.owners_config = RepositoryOwnersConfig.model_validate(
+            {"owners": [{"path": "departments/hr", "username": "owner", "accountNumber": "1234-5678-0001"}]}
+        )
+        paths = [m.path for m in command.find_manifests(root)]
+        self.assertEqual(
+            paths,
+            [
+                "secrets/shared.yaml",
+                "org/users/owner.yaml",
+                "departments/hr/secret.yaml",
+                "departments/hr/connection.yaml",
+            ],
+        )
 
     def test_the_organization_is_applied_by_the_loader(self):
         """Test that Account and User manifests are applied by load_from_github's own user, wherever they are."""
