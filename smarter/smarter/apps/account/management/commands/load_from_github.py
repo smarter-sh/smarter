@@ -29,6 +29,11 @@ from django.core.management.base import CommandError
 from django.db import transaction
 
 from smarter.apps.account.models import Account, Budget, User, UserProfile
+from smarter.apps.account.repository_owners import (
+    OWNERS_CONFIG,
+    RepositoryOwnersConfig,
+    load_owners_config,
+)
 from smarter.apps.account.repository_scripts import (
     SCRIPT_STAGE_POST,
     SCRIPT_STAGE_PRE,
@@ -161,6 +166,8 @@ class Command(SmarterCommand):
 
     _url: Optional[str] = None
     user_profile: Optional[UserProfile] = None
+    owners_config: Optional[RepositoryOwnersConfig] = None
+    """The repository's ``owners.yaml``, or None if it has none."""
     verbose: bool = False
     skip_missing_references: bool = False
     commit: Optional[str] = None
@@ -362,6 +369,8 @@ class Command(SmarterCommand):
             )
             for file in sorted(files):
                 if file.startswith(".") or not file.endswith(MANIFEST_EXTENSIONS):
+                    continue
+                if root == local_path and file == OWNERS_CONFIG:
                     continue
                 filespec = os.path.join(root, file)
                 path = os.path.relpath(filespec, local_path)
@@ -585,43 +594,98 @@ class Command(SmarterCommand):
         """
         failed: list[str] = []
         for item in manifests:
-            manifest = item.manifest
-            if self.is_existing_detached_budget(item):
+            try:
+                owner_profile = self.owner_profile_for(item, user_profile)
+            except SmarterValueError as e:
+                failed.append(f"{item.path}: {e}")
+                continue
+            if owner_profile is None:
+                continue
+            failed += self.apply_manifest(item, owner_profile, deploy)
+        return failed
+
+    def owner_profile_for(self, item: RepositoryManifest, user_profile: UserProfile) -> Optional[UserProfile]:
+        """
+        Return the profile that applies a manifest: its folder's owner in ``owners.yaml``, else ``user_profile``.
+
+        Account and User manifests are always applied by ``user_profile``: they declare the organization that owns
+        the rest. An owned folder's manifests are applied only when the repository is loaded into the Smarter account,
+        and skipped otherwise, e.g. by ``initialize_account``: they belong to their owner, not to that account. See
+        :mod:`smarter.apps.account.repository_owners`.
+
+        :param item: The manifest.
+        :param user_profile: ``load_from_github``'s own user.
+        :returns: The profile to apply it as, or None to skip it.
+        :rtype: Optional[UserProfile]
+        :raises SmarterValueError: If its owner doesn't exist, or doesn't belong to the account that ``owners.yaml`` names.
+        """
+        if self.owners_config is None:
+            return user_profile
+        if item.kind in (SAMKinds.ACCOUNT.value, SAMKinds.USER.value):
+            return user_profile
+        owner = self.owners_config.owner_for(item.path)
+        if owner is None:
+            return user_profile
+        if user_profile.account != smarter_cached_objects.smarter_account:
+            self.stdout.write(f"Skipped {item.path}: it belongs to {owner.username}, of account {owner.accountNumber}.")
+            return None
+        owner_profile = (
+            UserProfile.objects.filter(user__username=owner.username, account__account_number=owner.accountNumber)
+            .select_related("user", "account")
+            .first()
+        )
+        if owner_profile is None:
+            raise SmarterValueError(
+                f"its owner {owner.username} doesn't exist, or doesn't belong to account {owner.accountNumber}."
+            )
+        return owner_profile
+
+    def apply_manifest(self, item: RepositoryManifest, user_profile: UserProfile, deploy: bool) -> list[str]:
+        """
+        Apply one manifest, as its owner, and deploy it if it is an LLMClient and ``deploy``.
+
+        :param item: The manifest.
+        :param user_profile: Its owner: ``load_from_github``'s own user, or its folder's owner in ``owners.yaml``.
+        :param deploy: Deploy an LLMClient that is not deployed.
+        :returns: A description of the failure, if it failed to apply or deploy, else nothing.
+        :rtype: list[str]
+        """
+        failed: list[str] = []
+        manifest = item.manifest
+        if self.is_existing_detached_budget(item):
+            self.stdout.write(
+                f"Kept Budget {item.name} as it is ({item.path}): applying its manifest, which attaches it to "
+                "nothing, would detach the resources attached to it since it was created."
+            )
+            return failed
+        if item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
+            if user_profile.account != smarter_cached_objects.smarter_account:
+                self.stdout.write(f"Skipped {item.path}: a staff-only LLMClient belongs to the Smarter account only.")
+                return failed
+        if item.kind == SAMKinds.LLM_CLIENT.value:
+            missing = self.missing_extensions(manifest.get("spec", {}).get("extensions") or [])
+            if missing:
                 self.stdout.write(
-                    f"Kept Budget {item.name} as it is ({item.path}): applying its manifest, which attaches it to "
-                    "nothing, would detach the resources attached to it since it was created."
+                    self.style.WARNING(
+                        f"Skipped {item.path}: it needs extensions that are not installed: {', '.join(missing)}."
+                    )
                 )
-                continue
-            if item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
-                if user_profile.account != smarter_cached_objects.smarter_account:
-                    self.stdout.write(
-                        f"Skipped {item.path}: a staff-only LLMClient belongs to the Smarter account only."
-                    )
-                    continue
-            if item.kind == SAMKinds.LLM_CLIENT.value:
-                missing = self.missing_extensions(manifest.get("spec", {}).get("extensions") or [])
-                if missing:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"Skipped {item.path}: it needs extensions that are not installed: {', '.join(missing)}."
-                        )
-                    )
-                    continue
-                manifest = self.keep_deployed(manifest, user_profile)
-            manifest = self.add_source_annotations(manifest, item.path)
-            error = self.apply(item.filespec, user_profile, manifest=json.dumps(manifest))
-            if error:
-                failed.append(f"{item.path}: {error}")
-                continue
-            if item.filespec in self.skipped:
-                continue
-            self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
-            if deploy and item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
-                # its staff use it in the workbench, and a deployed url would only answer them anyway.
-                self.stdout.write(f"Did not deploy LLMClient {item.name}: it is staff-only.")
-                continue
-            if deploy and item.kind == SAMKinds.LLM_CLIENT.value and not self.deploy_llmclient(item.name, user_profile):
-                failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
+                return failed
+            manifest = self.keep_deployed(manifest, user_profile)
+        manifest = self.add_source_annotations(manifest, item.path)
+        error = self.apply(item.filespec, user_profile, manifest=json.dumps(manifest))
+        if error:
+            failed.append(f"{item.path}: {error}")
+            return failed
+        if item.filespec in self.skipped:
+            return failed
+        self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
+        if deploy and item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
+            # its staff use it in the workbench, and a deployed url would only answer them anyway.
+            self.stdout.write(f"Did not deploy LLMClient {item.name}: it is staff-only.")
+            return failed
+        if deploy and item.kind == SAMKinds.LLM_CLIENT.value and not self.deploy_llmclient(item.name, user_profile):
+            failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
         return failed
 
     def get_user_profile(self, account_number: Optional[str], username: Optional[str]) -> UserProfile:
@@ -672,6 +736,7 @@ class Command(SmarterCommand):
         try:
             self.clone_repo(local_path)
             self.commit = self.head_commit(local_path)
+            self.owners_config = load_owners_config(local_path)
             scripts_config: Optional[RepositoryScriptsConfig] = None
             if options.get("run_scripts"):
                 scripts_config = load_scripts_config(local_path)

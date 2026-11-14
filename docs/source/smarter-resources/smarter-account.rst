@@ -37,6 +37,7 @@ Technical Reference
    account/hierarchy
    account/models
    account/receivers
+   account/repository_owners
    account/repository_scripts
    account/resources
    account/sam

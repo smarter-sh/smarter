@@ -103,6 +103,11 @@ that it happens to create. What `load_from_github` does:
   (before the manifests) or `post` (after), with a fixed environment
   (`apps/account/repository_scripts.py`). Keep that scheme generic: never teach `load_from_github`
   about one repository's script, folder or file names.
+- A repository's `owners.yaml`, at its root, maps folders to the user (and account) that applies,
+  and so owns, their manifests, so that an organization's departments each own their resources
+  (`apps/account/repository_owners.py`, ADR-036). Account and User manifests are always applied by
+  the loader. Owned folders are applied only when the repository is loaded into the Smarter account,
+  as `initialize_platform` does; `initialize_account`, which loads into a new account, skips them.
 
 Who loads what:
 
