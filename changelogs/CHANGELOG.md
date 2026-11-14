@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.16](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.15...v0.46.0-alpha.16) (2026-11-14)
+
+### Bug Fixes
+
+* **orchestrator:** run supervisor and router orchestrations ([61c4a01](https://github.com/smarter-sh/smarter/commit/61c4a01da148849249e897d44bcdeb3976888283))
+
 ## [0.46.0-alpha.15](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.14...v0.46.0-alpha.15) (2026-11-14)
 
 ### Features
