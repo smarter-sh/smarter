@@ -10,6 +10,7 @@ from redis.exceptions import RedisError
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.dashboard.views.terminal_emulator.api import streams
+from smarter.common.utils import mask_identifier
 from smarter.lib.logging.redis_log_handler import (
     build_channel,
     get_user_context,
@@ -47,6 +48,36 @@ class TestLogStreams(TestAccountMixin):
 
         self.assertEqual(response.status_code, 200)
         fake_pubsub.subscribe.assert_called_once_with(build_channel(get_user_context(self.non_admin_user)))
+
+    def test_stream_user_logs_logs_no_username_or_session_key(self):
+        """The view's log entries identify the user by id, and mask the chat session key."""
+        session_key = "c" * 64
+        request = RequestFactory().get("/api/web/dashboard/logs/stream/", {"session_key": session_key})
+        request.user = self.non_admin_user
+
+        fake_cache = MagicMock()
+
+        with (
+            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
+            patch.object(streams, "get_redis_connection", return_value=fake_cache),
+            patch.object(streams, "logger") as logger,
+        ):
+            response = streams.stream_user_logs(request)
+
+        self.assertEqual(response.status_code, 200)
+        logged_messages = []
+        for call in logger.info.call_args_list:
+            message = " ".join(str(arg) for arg in call.args)
+            logged_messages.append(message)
+        logged = "\n".join(logged_messages)
+        self.assertNotIn(self.non_admin_user.username, logged)
+        self.assertNotIn(session_key, logged)
+        self.assertIn(mask_identifier(session_key), logged)
+
+        called_for = logger.info.call_args_list[0].args
+        self.assertIn("user_id=%s", called_for[0])
+        self.assertEqual(called_for[2], self.non_admin_user.pk)
 
     def test_stream_user_logs_replays_stream_history_before_live_messages(self):
         """Historical Redis stream entries should be emitted as the first log events."""
