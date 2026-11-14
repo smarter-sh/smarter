@@ -451,6 +451,24 @@ ACCOUNT_ADMIN_USERNAME_SUFFIX = "-admin"
 """The username of the admin user that :func:`get_cached_admin_user_for_account` creates is its account number plus this."""
 
 
+def set_account_admin(user_profile: UserProfile, is_account_admin: bool = True) -> None:
+    """
+    Make the profile's user the administrator of its account, and only of that account.
+
+    It grants the role, ``UserProfile.is_account_admin``, and never takes it away: ``is_account_admin=False``
+    leaves the profile as it is. An account's administrator is never made a superuser, who may read every account.
+
+    :param user_profile: The user's profile in the account.
+    :param is_account_admin: Whether to make them its administrator.
+    """
+    if not is_account_admin:
+        return
+    if user_profile.is_account_admin:
+        return
+    user_profile.is_account_admin = True
+    user_profile.save()
+
+
 def account_admin_username(account_number: str) -> str:
     """
     The username of the admin user that :func:`get_cached_admin_user_for_account` creates for an account.
@@ -549,15 +567,17 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             has_real_profiles = account_profiles.filter(is_test=False).exists()
             is_test_account = has_profiles and not has_real_profiles
             username = account_admin_username(str(account.account_number))
+            # the administrator of this account only: UserProfile.is_account_admin. Never a superuser or a
+            # staff user, who would administer, or read, other accounts too.
             new_user = User.objects.create(
                 username=username,
                 email=f"{username}@{smarter_settings.root_domain}",
-                is_staff=True,
-                is_superuser=True,
+                is_staff=False,
+                is_superuser=False,
                 is_active=True,
             )
             user_profile = UserProfile.objects.create(
-                name=username, user=new_user, account=account, is_test=is_test_account
+                name=username, user=new_user, account=account, is_test=is_test_account, is_account_admin=True
             )
             return user_profile.user  # type: ignore[return-value]
 
@@ -769,6 +789,7 @@ __all__ = [
     "ACCOUNT_ADMIN_USERNAME_SUFFIX",
     "account_admin_username",
     "delete_created_admin_user",
+    "set_account_admin",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

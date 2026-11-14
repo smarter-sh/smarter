@@ -219,6 +219,10 @@ class TestGetCachedAdminUserForAccount(TestAccountMixin):
 
         admin_profile = UserProfile.objects.get(user=admin, account=account)
         self.assertFalse(admin_profile.is_test)
+        # the administrator of this account only, never a superuser or a staff user.
+        self.assertTrue(admin_profile.is_account_admin)
+        self.assertFalse(admin.is_superuser)
+        self.assertFalse(admin.is_staff)
 
     def test_finds_an_account_admin(self):
         """An account whose administrator is an account admin, not staff, gets that user, not a new superuser."""

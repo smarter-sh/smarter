@@ -31,8 +31,11 @@ from typing import Optional
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from smarter.apps.account.models import Account, User
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.utils import (
+    get_cached_smarter_admin_user_profile,
+    set_account_admin,
+)
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
@@ -66,6 +69,20 @@ class Command(SmarterCommand):
     Initialize the Smarter
     platform. Creates the minimal resources necessary to start using Smarter.
     """
+
+    @staticmethod
+    def make_account_admin(user: User, account_number: str) -> UserProfile:
+        """
+        Make the user a member and administrator of the account, and only of that account.
+
+        :param user: The user.
+        :param account_number: The account.
+        :returns: The user's profile in the account.
+        """
+        account = Account.objects.get(account_number=account_number)
+        user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
+        set_account_admin(user_profile)
+        return user_profile
 
     def initialize_account(
         self, account_number: str, username: str, email: str, password: Optional[str], company_name: Optional[str]
@@ -103,9 +120,11 @@ class Command(SmarterCommand):
             if password:
                 user.set_password(password)
                 user.email = email
-                user.is_superuser = True
+                # the account's administrator, not the platform's: never a superuser, who may read every
+                # account. is_staff is how the web console recognizes an account's administrator.
                 user.is_staff = True
                 user.save()
+                self.make_account_admin(user, account_number)
                 msg = f"Updated the existing User '{username}' for account {account_number}."
                 self.stdout.write(self.style.NOTICE(msg))
                 logger.info(msg)

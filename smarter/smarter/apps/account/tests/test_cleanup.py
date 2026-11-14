@@ -117,13 +117,16 @@ class TestPurgeTestArtifacts(SmarterTestBase):
         self.assertIsNone(ACCOUNT_ADMIN_USERNAME_PATTERN.match("admin"))
 
     def test_deleting_an_account_deletes_its_created_admin(self):
-        """The superuser that get_cached_admin_user_for_account() creates goes with its account."""
+        """The admin user that get_cached_admin_user_for_account() creates goes with its account."""
         account = Account.objects.create(name=f"test_cleanup_{self.hash_suffix}", company_name="Test Cleanup")
         self.addCleanup(Account.objects.filter(pk=account.pk).delete)
         created_admin = get_cached_admin_user_for_account(account=account)
         self.addCleanup(User.objects.filter(pk=created_admin.pk).delete)
         self.assertEqual(created_admin.username, account_admin_username(str(account.account_number)))
-        self.assertTrue(created_admin.is_superuser)
+        # the administrator of its account only, never a superuser.
+        self.assertFalse(created_admin.is_superuser)
+        self.assertFalse(created_admin.is_staff)
+        self.assertTrue(UserProfile.objects.get(user=created_admin, account=account).is_account_admin)
 
         account.delete()
 

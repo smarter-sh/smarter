@@ -44,7 +44,9 @@ class TestCreateUser(CommandTestBase):
         self.assertIn("Generated a random password", output)
         user = User.objects.get(username=self.username)
         self.assertTrue(user.is_staff)
-        self.assertTrue(UserProfile.objects.filter(user=user, account=self.account).exists())
+        # an admin administers this account, and is never a superuser, who may read every account.
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(UserProfile.objects.get(user=user, account=self.account).is_account_admin)
         self.assertTrue(AccountContact.objects.filter(account=self.account, email=self.email).exists())
         self.infrastructure.email.send_email.assert_called_once()
         # the email has the password: the admin gets no blind copy.
