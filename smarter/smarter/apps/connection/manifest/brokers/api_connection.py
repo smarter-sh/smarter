@@ -825,7 +825,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         command = SmarterJournalCliCommands(self.apply.__name__)
         readonly_fields = ["id", "created_at", "updated_at", "tags"]
 
-        if not self.user or not self.user.is_staff:
+        if not self.user or not self.administers_account:
             raise SAMConnectionBrokerError(
                 message="Only account admins can apply api connection manifests.",
                 thing=self.kind,
@@ -1061,7 +1061,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         )
         command = SmarterJournalCliCommands(self.delete.__name__)
 
-        if not self.user or not self.user.is_staff:
+        if not self.user or not self.administers_account:
             raise SAMConnectionBrokerError(
                 message="Only account admins can delete api connection manifests.",
                 thing=self.kind,

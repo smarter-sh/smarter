@@ -705,7 +705,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSecretBrokerError(
                 message="Only account admin can apply secret manifests.",
                 thing=self.kind,
@@ -931,7 +931,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSecretBrokerError(
                 message="Only account admin can apply delete manifests.",
                 thing=self.kind,

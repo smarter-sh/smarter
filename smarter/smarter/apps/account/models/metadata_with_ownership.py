@@ -276,11 +276,12 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 )
                 return self.all()
 
-            # staff users have ownership permission for resources owned within their account, or owned by themselves
-            if user_profile.user.is_staff:
+            # an account's administrators, by is_account_admin on this profile or by User.is_staff, have
+            # ownership permission for every resource owned within this profile's account.
+            if user_profile.administers_account:
                 retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
-                    "%s called for staff user: %s, returning resources.",
+                    "%s called for an administrator of the account: %s, returning resources.",
                     logger_prefix,
                     user_profile.user,
                 )
@@ -475,9 +476,10 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
         - If the user is not authenticated, they have no access.
         - If the user is a superuser, they have ownership permission for all resources.
-        - If the user is a staff user, they have ownership permission for resources that are:
-            - Owned by their UserProfile, OR
-            - Owned by any UserProfile within their Account.
+        - If the user administers an account through one of their profiles
+          (:attr:`UserProfile.administers_account <smarter.apps.account.models.UserProfile.administers_account>`:
+          the profile's ``is_account_admin``, or ``User.is_staff``), they have ownership permission for every
+          resource owned within that account.
         - If the user is a regular authenticated user, they have ownership permission only for resources they own.
 
         :param user: :class:`django.contrib.auth.models.User`

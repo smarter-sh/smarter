@@ -20,6 +20,7 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
     User,
     UserProfile,
+    user_administers_account,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
@@ -151,7 +152,8 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
     .. note::
 
-        - API keys can only be created for staff users. Attempting to create a key for a non-staff user
+        - API keys can only be created for an account's administrators: a superuser, a staff user, or a user
+          whose profile in the key's account has ``is_account_admin``. Attempting to create a key for anyone else
           will raise a ``SmarterBusinessRuleViolation``.
         - The ``identifier`` property returns a masked version of the key digest for display purposes.
         - Names are stored in snake_case, as every SAM manifest name is, so that ``get`` and
@@ -313,10 +315,14 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
 
         :param args: Passed to Django's ``save()``.
         :param kwargs: Passed to Django's ``save()``.
-        :raises SmarterBusinessRuleViolation: If the key's user is not staff.
+        :raises SmarterBusinessRuleViolation: If the key's owner doesn't administer their account.
         """
-        if not self.user.is_staff:
-            raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
+        # the owner's profile is the account that the key acts in.
+        owner_profile = None
+        if self.user_profile_id:  # type: ignore[attr-defined]
+            owner_profile = self.user_profile
+        if not user_administers_account(self.user, owner_profile):
+            raise SmarterBusinessRuleViolation("API Keys can only be created for account administrators.")
         # knox's AuthToken, which defines created, has no type information.
         if self.created is None:  # type: ignore[has-type]
             self.created = timezone.now()

@@ -485,6 +485,12 @@
             "title": "Id",
             "type": "integer"
           },
+          "isAccountAdmin": {
+            "default": false,
+            "description": "UserProfile.is_account_admin: whether the user administers this account, and only this one, without access to the Django admin site.",
+            "title": "Isaccountadmin",
+            "type": "boolean"
+          },
           "isTest": {
             "description": "UserProfile.is_test: whether a test created it.",
             "title": "Istest",

@@ -92,6 +92,20 @@ Accounts form a tree, and each account decides separately who may read its resou
    platform. Every other account keeps a null ``parent`` and ``share_scope``, so every user reads exactly
    what they read before.
 
+10. **Account administrators.** ``UserProfile.is_account_admin`` makes a user the administrator of that one
+    account: they manage every resource in it, apply its Secrets, Connections, plugins and users, and may have
+    an api key for it. It gives no rights in the user's other accounts, and no access to the Django admin site.
+    ``User.is_staff``, which had been the only mark of an account's administrator, keeps its meaning: it
+    administers every account the user belongs to, and opens the Django admin site, so it is for the platform's
+    own staff, not for a department's administrator. One function, ``user_administers_account()`` in
+    ``smarter.apps.account.models.user_profile``, decides it for the ownership rule, every broker's check, and
+    api keys.
+
+    - Only a superuser or a staff user may change a user's ``is_staff``, so an account's administrator can't
+      make themselves, or anyone, staff.
+    - A User manifest names its user by username, across the whole platform, so applying one to a user who
+      doesn't belong to the applier's account is refused, unless a superuser applies it.
+
 The other meanings of the Smarter account, such as its admin user, billing, ``initialize_platform`` and the
 staff-only LLMClients, are about the platform's operator, not about sharing, and are not affected.
 

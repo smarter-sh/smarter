@@ -774,7 +774,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=command,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can delete sql plugins.",
                 thing=self.kind,

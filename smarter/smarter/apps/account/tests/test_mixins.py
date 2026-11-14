@@ -31,6 +31,15 @@ class TestAccountMixinInit(TestAccountMixin):
         self.assertIsInstance(mixin.user_profile, UserProfile)
         self.assertTrue(mixin.am_ready)
 
+    def test_administers_account(self):
+        """The mixin's user administers its account by staff status, or by their own profile's is_account_admin."""
+        self.assertTrue(AccountMixin(user_profile=self.user_profile).administers_account)
+        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        self.assertFalse(AccountMixin(user_profile=member).administers_account)
+        member.is_account_admin = True
+        self.assertTrue(AccountMixin(user_profile=member).administers_account)
+        self.assertFalse(AccountMixin().administers_account)
+
     def test_init_with_account(self):
         mixin = AccountMixin(account=self.account)
         self.assertEqual(mixin.account, self.account)

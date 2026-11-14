@@ -226,7 +226,7 @@ class SAMConnectionBaseBroker(AbstractBroker[ConnectionT, ConnectionT]):
                 command=SmarterJournalCliCommands.APPLY,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can apply connection manifests.",
                 thing=self.kind,

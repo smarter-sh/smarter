@@ -50,6 +50,11 @@ When a resource names another, such as a SqlPlugin its Connection, Smarter finds
 the owner's own, then their account's, then that of the nearest account that shares with theirs. A department
 may override a shared resource by giving its own the same name. Only a superuser may apply an Account manifest.
 
+Each account can have its own administrators. A member whose profile in an account is marked
+``is_account_admin`` manages every resource in that account, and nothing in the other accounts that they belong
+to: the head of a department administers the department, without becoming an administrator of the company. Unlike
+a staff user, an account's administrator has no access to the Django admin site, and can't make anyone staff.
+
 The design, and the alternatives that were considered, are in :doc:`ADR-036 <../../../adr/036-account-hierarchy>`.
 
 
