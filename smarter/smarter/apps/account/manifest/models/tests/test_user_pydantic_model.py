@@ -53,6 +53,30 @@ class TestSmarterUserPydanticModel(TestAccountMixin):
             "spec": {"config": self.get_good_config_data()},
         }
 
+    def test_accounts(self):
+        """Spec.accounts lists memberships by account number, each at most once, and may be omitted."""
+        data = self.get_good_manifest_data()
+        self.assertIsNone(SAMUser(**data).spec.accounts)
+
+        data["spec"]["accounts"] = [
+            {"accountNumber": "1234-5678-0001", "isAccountAdmin": True},
+            {"accountNumber": "1234-5678-0002"},
+        ]
+        accounts = SAMUser(**data).spec.accounts
+        assert accounts is not None
+        self.assertEqual(
+            [(a.accountNumber, a.isAccountAdmin) for a in accounts],
+            [("1234-5678-0001", True), ("1234-5678-0002", False)],
+        )
+
+        data["spec"]["accounts"] = [{"accountNumber": "not-an-account"}]
+        with self.assertRaisesRegex(Exception, "Invalid account number"):
+            SAMUser(**data)
+
+        data["spec"]["accounts"] = [{"accountNumber": "1234-5678-0001"}, {"accountNumber": "1234-5678-0001"}]
+        with self.assertRaisesRegex(Exception, "listed only once"):
+            SAMUser(**data)
+
     def test_config_missing_required_fields(self):
         """Test that a missing required field of spec.config is rejected, and a missing optional one isn't."""
         for field in self.get_good_config_data():

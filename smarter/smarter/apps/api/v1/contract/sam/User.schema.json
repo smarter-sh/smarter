@@ -21,6 +21,27 @@
       "title": "SAMDependency",
       "type": "object"
     },
+    "SAMUserAccountMembership": {
+      "description": "Smarter API User Manifest User.spec.accounts[]: the user's membership of one account.",
+      "properties": {
+        "accountNumber": {
+          "description": "User.spec.accounts.accountNumber[str]. The number of an account that the User belongs to.",
+          "title": "Accountnumber",
+          "type": "string"
+        },
+        "isAccountAdmin": {
+          "default": false,
+          "description": "User.spec.accounts.isAccountAdmin[bool]. Optional. Whether the User administers this account, and only this one: manages every resource in it. Default: false.",
+          "title": "Isaccountadmin",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "accountNumber"
+      ],
+      "title": "SAMUserAccountMembership",
+      "type": "object"
+    },
     "SAMUserMetadata": {
       "description": "Smarter API User Manifest - Metadata class.",
       "properties": {
@@ -107,6 +128,22 @@
     "SAMUserSpec": {
       "description": "Smarter API User Manifest User.spec.",
       "properties": {
+        "accounts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SAMUserAccountMembership"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "User.spec.accounts[list]. Optional. The accounts that the User belongs to, e.g. the departments of an organization, each with whether the user administers it. Omitted, the user belongs to the account of whoever applies the manifest. Apply adds each membership that is missing and updates the others, but never removes one, which would delete every resource that the user owns in that account. A superuser may list any account; anyone else only accounts that they administer.",
+          "title": "Accounts"
+        },
         "config": {
           "$ref": "#/$defs/SAMUserSpecConfig",
           "description": "User.spec.config[object]. The configuration for the User."

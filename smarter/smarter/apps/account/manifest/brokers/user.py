@@ -11,11 +11,18 @@ from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.metadata import SAMUserMetadata
 from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.apps.account.manifest.models.user.spec import (
+    SAMUserAccountMembership,
     SAMUserSpec,
     SAMUserSpecConfig,
 )
 from smarter.apps.account.manifest.models.user.status import SAMUserStatus
-from smarter.apps.account.models import AccountContact, User, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    User,
+    UserProfile,
+    user_administers_account,
+)
 from smarter.apps.account.serializers import UserSerializer
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
@@ -251,12 +258,18 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 self._brokered_user_profile,
             )
         except UserProfile.DoesNotExist:
-            logger.warning(
-                "%s.brokered_user_profile() UserProfile does not exist for user: %s and account: %s",
-                self.formatted_class_name,
-                self.brokered_user,
-                self.account,
-            )
+            # a superuser sees a user of any account, e.g. one whose User manifest lists only an organization's
+            # departments, and not the account of the superuser who applied it.
+            if isinstance(self.user, User) and self.user.is_superuser:
+                profiles = UserProfile.objects.filter(user=self.brokered_user).order_by("pk")
+                self._brokered_user_profile = profiles.first()
+            if self._brokered_user_profile is None:
+                logger.warning(
+                    "%s.brokered_user_profile() UserProfile does not exist for user: %s and account: %s",
+                    self.formatted_class_name,
+                    self.brokered_user,
+                    self.account,
+                )
         return self._brokered_user_profile
 
     @brokered_user_profile.setter
@@ -574,7 +587,8 @@ class SAMUserBroker(AbstractBroker[User, User]):
                         email=self.brokered_user.email,
                         isStaff=self.brokered_user.is_staff,
                         isActive=self.brokered_user.is_active,
-                    )
+                    ),
+                    accounts=self.memberships_for_manifest(),
                 ),
                 status=SAMUserStatus(
                     # the brokered user's account, which is not necessarily the requester's.
@@ -720,10 +734,19 @@ class SAMUserBroker(AbstractBroker[User, User]):
         """
         Invalidate any relevant caches for the brokered user.
 
-        Invalidates the UserProfile cache for the brokered user and account.
+        Invalidates the cached UserProfile of the brokered user in each account they belong to, which with
+        ``spec.accounts`` need not include the current account.
         """
         logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
-        UserProfile.get_cached_object(invalidate=True, user=self.brokered_user, account=self.account)  # type: ignore
+        accounts = [self.account]
+        if isinstance(self.brokered_user, User) and self.brokered_user.pk:
+            for profile in UserProfile.objects.filter(user=self.brokered_user).select_related("account"):
+                accounts.append(profile.account)
+        for account in accounts:
+            try:
+                UserProfile.get_cached_object(invalidate=True, user=self.brokered_user, account=account)  # type: ignore
+            except UserProfile.DoesNotExist:
+                pass
         return super().cache_invalidations()
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -759,7 +782,8 @@ class SAMUserBroker(AbstractBroker[User, User]):
                     email="example.user@example.com",
                     isStaff=False,
                     isActive=True,
-                )
+                ),
+                accounts=None,
             ),
             status=SAMUserStatus(
                 account_number="1234-5678-9012",
@@ -847,6 +871,119 @@ class SAMUserBroker(AbstractBroker[User, User]):
             },
         }
         return self.json_response_ok(command=command, data=data)
+
+    def check_authority_over_memberships(self, command: SmarterJournalCliCommands) -> None:
+        """
+        Refuse ``spec.accounts`` that list an account which the applier doesn't administer, unless a superuser applies it.
+
+        :param command: The command, for the error.
+        :raises SAMUserBrokerError: if a listed account isn't one that the applier administers.
+        """
+        if self.manifest is None or self.manifest.spec.accounts is None:
+            return
+        if not isinstance(self.user, User):
+            return
+        if self.user.is_superuser:
+            return
+        for membership in self.manifest.spec.accounts:
+            applier_profile = UserProfile.objects.filter(
+                user=self.user, account__account_number=membership.accountNumber
+            ).first()
+            if not user_administers_account(self.user, applier_profile):
+                raise SAMUserBrokerError(
+                    message=f"Only an administrator of account {membership.accountNumber} may add users to it.",
+                    thing=self.kind,
+                    command=command,
+                )
+
+    def apply_memberships(self, brokered_user: User, memberships: list[SAMUserAccountMembership]) -> None:
+        """
+        Create each of the user's listed memberships that is missing, and update the others.
+
+        A membership that the list omits is left as it is: deleting a profile deletes every resource that it owns.
+
+        :param brokered_user: The user, saved.
+        :param memberships: ``spec.accounts``.
+        :raises SAMBrokerErrorNotFound: if a listed account doesn't exist.
+        """
+        manifest = required(self.manifest, "manifest")
+        tags = set(manifest.metadata.tags) if manifest.metadata.tags else set()
+        for membership in memberships:
+            account = Account.objects.filter(account_number=membership.accountNumber).first()
+            if account is None:
+                raise SAMBrokerErrorNotFound(
+                    f"Account {membership.accountNumber} does not exist.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.APPLY,
+                )
+            user_profile = UserProfile.objects.filter(user=brokered_user, account=account).first()
+            if user_profile is None:
+                user_profile = UserProfile(account=account, user=brokered_user, name=manifest.metadata.name)
+            user_profile.is_account_admin = membership.isAccountAdmin
+            user_profile.description = manifest.metadata.description
+            user_profile.version = manifest.metadata.version
+            user_profile.tags = tags
+            user_profile.annotations = manifest.metadata.annotations
+            user_profile.save()
+            logger.debug(
+                "%s.apply_memberships() user id %s belongs to account %s, administrator: %s",
+                self.formatted_class_name,
+                brokered_user.pk,
+                membership.accountNumber,
+                membership.isAccountAdmin,
+            )
+
+    def apply_own_account_profile(self, brokered_user: User) -> None:
+        """
+        Create or update the user's profile in the account of whoever applies the manifest, which has no ``spec.accounts``.
+
+        :param brokered_user: The user, saved.
+        """
+        manifest = required(self.manifest, "manifest")
+        # in this account only: brokered_user_profile may be, for a superuser, the user's profile in another one.
+        brokered_user_profile = UserProfile.objects.filter(user=brokered_user, account=self.account).first()
+        if not brokered_user_profile:
+            brokered_user_profile = UserProfile(
+                account=self.account,
+                user=brokered_user,
+                name=manifest.metadata.name,
+            )
+            self.brokered_user_profile = brokered_user_profile
+            logger.debug(
+                "%s.apply_own_account_profile() Created new (unsaved) UserProfile instance for %s",
+                self.formatted_class_name,
+                self.kind,
+            )
+        brokered_user_profile.description = manifest.metadata.description
+        brokered_user_profile.version = manifest.metadata.version
+        # Convert tags to set for TaggableManager compatibility
+        tags = set(manifest.metadata.tags) if manifest.metadata.tags else set()
+        brokered_user_profile.tags = tags
+        brokered_user_profile.annotations = manifest.metadata.annotations
+        brokered_user_profile.save()
+        brokered_user_profile.refresh_from_db()
+
+    def memberships_for_manifest(self) -> Optional[list[SAMUserAccountMembership]]:
+        """
+        The brokered user's memberships, for ``describe``: every one, but only for a superuser.
+
+        Anyone else sees the user as a member of the current account only, without ``spec.accounts``, so that a
+        user's other accounts aren't shown to the administrators of one of them.
+
+        :returns: The memberships, or None.
+        """
+        if not isinstance(self.user, User) or not self.user.is_superuser:
+            return None
+        if not isinstance(self.brokered_user, User):
+            return None
+        profiles = UserProfile.objects.filter(user=self.brokered_user).select_related("account").order_by("pk")
+        retval = []
+        for profile in profiles:
+            membership = SAMUserAccountMembership(
+                accountNumber=str(profile.account.account_number), isAccountAdmin=profile.is_account_admin
+            )
+            retval.append(membership)
+        return retval
 
     def check_authority_over_user(self, command: SmarterJournalCliCommands) -> None:
         """
@@ -945,6 +1082,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind, command=command)
 
         self.check_authority_over_user(command)
+        self.check_authority_over_memberships(command)
 
         try:
             with transaction.atomic():
@@ -961,7 +1099,6 @@ class SAMUserBroker(AbstractBroker[User, User]):
 
                 # User model
                 data = self.manifest_to_django_orm()
-                tags = data.get("tags", [])
                 for field in readonly_fields:
                     logger.debug(
                         "%s.apply() Removing readonly field %s from data for %s",
@@ -976,29 +1113,13 @@ class SAMUserBroker(AbstractBroker[User, User]):
                     logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
                 brokered_user.save()
 
-                # UserProfile model
-                brokered_user_profile = self.brokered_user_profile
-                if not brokered_user_profile:
-                    brokered_user_profile = UserProfile(
-                        account=self.account,
-                        user=brokered_user,
-                        name=self.manifest.metadata.name,
-                    )
-                    self.brokered_user_profile = brokered_user_profile
-                    logger.debug(
-                        "%s.apply() Created new (unsaved) UserProfile instance for %s",
-                        self.formatted_class_name,
-                        self.kind,
-                    )
-                brokered_user_profile.description = self.manifest.metadata.description
-                brokered_user_profile.version = self.manifest.metadata.version
-                # Convert tags to set for TaggableManager compatibility
-                tags = set(self.manifest.metadata.tags) if self.manifest.metadata.tags else set()
-                brokered_user_profile.tags = tags
-                brokered_user_profile.annotations = self.manifest.metadata.annotations
-                brokered_user_profile.save()
-
-                brokered_user_profile.refresh_from_db()
+                # the accounts that the manifest lists, e.g. an organization's departments, else the account of
+                # whoever applies it.
+                memberships = self.manifest.spec.accounts
+                if memberships is not None:
+                    self.apply_memberships(brokered_user, memberships)
+                else:
+                    self.apply_own_account_profile(brokered_user)
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(

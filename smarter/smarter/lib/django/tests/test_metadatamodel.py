@@ -62,6 +62,17 @@ class TestMetaDataModel(TestAccountMixin):
         self.assertIsInstance(cached_accounts, QuerySet)
         self.assertIn(self.account, cached_accounts)
 
+    def test_save_with_a_shared_name(self):
+        """A row whose name another row shares, e.g. one user's profiles in several accounts, saves again."""
+        shared_name = f"shared_{self.hash_suffix}"
+        first = Account.objects.create(name=shared_name, company_name="First")
+        self.addCleanup(Account.objects.filter(pk=first.pk).delete)
+        second = Account.objects.create(name=shared_name, company_name="Second")
+        self.addCleanup(Account.objects.filter(pk=second.pk).delete)
+        second.company_name = "Second, renamed"
+        second.save()
+        self.assertEqual(Account.objects.get(pk=second.pk).company_name, "Second, renamed")
+
     def test_rename_invalidates_the_old_name(self):
         """After a rename, the old name no longer finds the row in the cache."""
         old_name = self.account.name

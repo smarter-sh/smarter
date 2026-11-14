@@ -12,6 +12,7 @@
     "version": "1.0.0"
   },
   "spec": {
+    "accounts": null,
     "config": {
       "email": "example.user@example.com",
       "firstName": "Example",

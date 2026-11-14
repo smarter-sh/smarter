@@ -84,7 +84,11 @@ Accounts form a tree, and each account decides separately who may read its resou
    the same list. Each app's own per-user caches of resource lists, such as a user's shared resources in the
    web console, keep their usual timeout, and catch up with a change to the tree within it.
 8. **Manifests.** The ``Account`` manifest gains ``parent`` and ``shareScope``, each an account number, so an
-   organization's tree is declared and versioned like any other resource.
+   organization's tree is declared and versioned like any other resource. The ``User`` manifest gains
+   ``spec.accounts``, a list of the accounts that the user belongs to, each with ``isAccountAdmin``, so that its
+   people and their roles are declared the same way. Apply adds the memberships that are missing and updates the
+   others, but never removes one: deleting a profile deletes every resource that it owns. A superuser may list any
+   account; anyone else only the accounts that they administer.
 9. **Migration.** ``account`` is a released app that holds production data, so the fields are added in new
    migrations (:doc:`ADR-020 <020-semantic-versioning>`): ``0014_account_hierarchy`` adds them, and
    ``0015_root_account_shares_with_everyone`` sets the Smarter account's ``share_scope`` to itself.
