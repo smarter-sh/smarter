@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.2...v0.46.0-alpha.3) (2026-11-14)
+
+### Features
+
+* **account:** add an account administrator role to user profiles ([8f41e9b](https://github.com/smarter-sh/smarter/commit/8f41e9bcfdfa03935cf4b1af0a69b2a419d7535b))
+
+### Refactoring
+
+* **account:** switch stackademy to its renamed resources ([76fabbc](https://github.com/smarter-sh/smarter/commit/76fabbc52fd8e53a13980ae891a76bc305235016))
+
 ## [0.46.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.1...v0.46.0-alpha.2) (2026-11-14)
 
 ### Bug Fixes
