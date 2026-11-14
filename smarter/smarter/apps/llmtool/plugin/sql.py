@@ -24,8 +24,8 @@ from datetime import datetime
 from typing import Optional, Type, Union
 
 from cache_results import cache_results
-from django.core.exceptions import MultipleObjectsReturned
 
+from smarter.apps.account.hierarchy import resolve_by_name
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.const import PluginCacheTtl
 from smarter.apps.llmtool.manifest.enum import (
@@ -478,28 +478,20 @@ class SqlPlugin(PluginBase):
         connection_name = self._manifest.spec.connection if self._manifest else None
         if connection_name:
             # recast the Pydantic model to the PluginDataSql Django ORM model
+            # the nearest that the plugin's owner may read: their own, their account's, or that of an
+            # account that shares with theirs, e.g. their organization's IT department.
             plugin_data_sqlconnection: Optional[SqlConnection] = None
             account = self.user_profile.cached_account if self.user_profile else None
-            try:
-                plugin_data_sqlconnection = SqlConnection.objects.get(
-                    user_profile__account=account,
-                    name=connection_name,
-                )
-            except SqlConnection.DoesNotExist:
-                pass
-            except MultipleObjectsReturned:
+            if self.user_profile:
                 try:
-                    # narrow the search to exactly the user_profile
-                    # that authenticated the request.
-                    plugin_data_sqlconnection = SqlConnection.objects.get(
-                        user_profile=self.user_profile,
-                        name=connection_name,
+                    plugin_data_sqlconnection = resolve_by_name(
+                        SqlConnection.objects, connection_name, self.user_profile  # type: ignore[arg-type]
                     )
                 except SqlConnection.DoesNotExist:
                     pass
             if not plugin_data_sqlconnection:
                 raise SmarterSqlPluginError(
-                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}."
+                    f"{self.formatted_class_name}.plugin_data_django_model() error: SqlConnection {connection_name} does not exist for account {account}, or is not shared with it."
                 )
 
             plugin_data_sqlconnection.authorize()

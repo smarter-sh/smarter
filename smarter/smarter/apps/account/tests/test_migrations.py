@@ -22,6 +22,26 @@ class TestMigrations(SmarterTestBase):
                 module = importlib.import_module(f"{PACKAGE}.{name}")
                 self.assertTrue(issubclass(module.Migration, Migration))
 
+    def test_root_account_shares_with_everyone(self):
+        """Test 0015 on a database whose root shares nothing, and its reverse."""
+        # pylint: disable=C0415
+        from django.apps import apps
+
+        from smarter.apps.account.models import Account
+        from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+
+        migration = importlib.import_module(f"{PACKAGE}.0015_root_account_shares_with_everyone")
+        root = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        self.addCleanup(Account.objects.filter(pk=root.pk).update, share_scope_id=root.pk)
+
+        migration.reverse(apps, None)
+        self.assertIsNone(Account.objects.get(pk=root.pk).share_scope_id)  # type: ignore[attr-defined]
+        migration.forward(apps, None)
+        self.assertEqual(Account.objects.get(pk=root.pk).share_scope_id, root.pk)  # type: ignore[attr-defined]
+        # a second run leaves it as it is.
+        migration.forward(apps, None)
+        self.assertEqual(Account.objects.get(pk=root.pk).share_scope_id, root.pk)  # type: ignore[attr-defined]
+
     def test_no_missing_migrations(self):
         out = StringIO()
         try:

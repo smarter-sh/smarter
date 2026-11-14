@@ -11979,6 +11979,19 @@
             "title": "Language",
             "type": "string"
           },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.spec.configuration.parent[str]. Optional. The account number of the Account above this one in its organization, e.g. a department's company. Omitted means directly under the Smarter account, the root of the account tree.",
+            "title": "Parent"
+          },
           "phoneNumber": {
             "anyOf": [
               {
@@ -12004,6 +12017,19 @@
             "default": null,
             "description": "Account.spec.configuration.postalCode[str]. The postal code for the Account.",
             "title": "Postalcode"
+          },
+          "shareScope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.spec.configuration.shareScope[str]. Optional. The account number of this Account or one of its ancestors, whose whole subtree may read this account's resources, e.g. an IT department that shares its Secrets and Connections with its company. Omitted means that the account shares nothing.",
+            "title": "Sharescope"
           },
           "state": {
             "anyOf": [

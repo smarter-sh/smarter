@@ -46,3 +46,4 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/033-dry
    adr/034-web-console-api
    adr/035-single-page-app
+   adr/036-account-hierarchy

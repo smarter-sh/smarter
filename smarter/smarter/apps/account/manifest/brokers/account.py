@@ -293,6 +293,8 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 language=self.brokered_account.language or "en-US",
                 timezone=self.brokered_account.timezone or "America/New_York",
                 currency=self.brokered_account.currency or "USD",
+                parent=self.related_account_number(self.brokered_account.parent_id),  # type: ignore[attr-defined]
+                shareScope=self.related_account_number(self.brokered_account.share_scope_id),  # type: ignore[attr-defined]
             )
             self._manifest = SAMAccount(
                 apiVersion=self.api_version,
@@ -355,12 +357,54 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
+        # the account tree's fields are account numbers in the manifest, and accounts in the model.
+        parent_account_number = config_dump.pop("parent", None)
+        share_scope_account_number = config_dump.pop("share_scope", None)
+        parent = self.account_by_number(parent_account_number, "parent")
+        share_scope = self.account_by_number(share_scope_account_number, "shareScope")
         # Convert tags (list[str]) to set for TaggableManager compatibility
         return {
             **metadata,
             "account": self.brokered_account,
             **config_dump,
+            "parent": parent,
+            "share_scope": share_scope,
         }
+
+    def account_by_number(self, account_number: Optional[str], field_name: str) -> Optional[Account]:
+        """
+        The account that ``parent`` or ``shareScope`` names.
+
+        :param account_number: The account number from the manifest, or None.
+        :param field_name: The manifest field, for the error message.
+        :returns: The account, or None if the manifest omits the field.
+        :raises SAMAccountBrokerError: if no account has that number.
+        """
+        if account_number is None:
+            return None
+        account = Account.objects.filter(account_number=account_number).first()
+        if account is None:
+            raise SAMAccountBrokerError(
+                message=f"{field_name}: no account has the number {account_number}.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        return account
+
+    @staticmethod
+    def related_account_number(account_id: Optional[int]) -> Optional[str]:
+        """
+        The account number of ``parent`` or ``share_scope``, for a manifest.
+
+        :param account_id: The related account's id, or None.
+        :returns: Its account number, or None.
+        """
+        if account_id is None:
+            return None
+        account = Account.get_cached_object(pk=account_id)
+        if account is None:
+            return None
+        return account.account_number
 
     @camel_case()
     def django_orm_to_manifest_dict(self) -> SmarterDictType:
@@ -568,6 +612,8 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         spec = SAMAccountSpec(
             config=SAMAccountSpecConfig(
                 companyName="Example Company Inc.",
+                parent=None,
+                shareScope=None,
                 phoneNumber="555-123-4567",
                 address1="123 Example St.",
                 address2="Suite 100",

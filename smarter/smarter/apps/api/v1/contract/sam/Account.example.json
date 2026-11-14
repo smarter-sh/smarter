@@ -20,8 +20,10 @@
       "country": "US",
       "currency": "USD",
       "language": "en-US",
+      "parent": null,
       "phoneNumber": "555-123-4567",
       "postalCode": "12345",
+      "shareScope": null,
       "state": "EX",
       "timezone": "America/New_York"
     }

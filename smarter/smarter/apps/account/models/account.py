@@ -50,6 +50,7 @@ from django.test.client import RequestFactory
 from django.utils.functional import SimpleLazyObject
 
 from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -223,6 +224,11 @@ class Account(MetaDataModel):
     :param timezone: String. Timezone.
     :param currency: String. Currency code (default: 'USD').
     :param is_active: Boolean. If False, account is disabled for billing and resource management.
+    :param parent: Account. The account above this one in its organization. Null means directly under the
+        Smarter account, the root of the tree. See :mod:`smarter.apps.account.hierarchy`.
+    :param share_scope: Account. This account or one of its ancestors, whose whole subtree may read this
+        account's resources. Null means that the account shares nothing. The Smarter account always shares
+        with itself, the root, so every account may read its resources.
 
     **Example usage**::
 
@@ -267,6 +273,22 @@ class Account(MetaDataModel):
     is_active = models.BooleanField(
         default=True,
         help_text="Indicates whether the account is active. Inactive accounts cannot be used for billing or resource management, nor hosting Provider apis.",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="children",
+        help_text="The account above this one in its organization. Null means directly under the Smarter account, the root of the tree.",
+    )
+    share_scope = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="shared_with_subtrees",
+        help_text="This account or one of its ancestors, whose whole subtree may read this account's resources. Null means that the account shares nothing.",
     )
 
     @classmethod
@@ -358,10 +380,109 @@ class Account(MetaDataModel):
             self.account_number = self.randomized_account_number()
 
         SmarterValidator.validate_account_number(required(self.account_number, "account_number"))
+        self.validate_hierarchy()
         super().save(*args, **kwargs)
         # UserProfile.cached_account reads accounts by pk, so a change must reach the cache.
         Account.get_cached_object(invalidate=True, pk=self.pk)
         Account.get_cached_object(invalidate=True, account_number=self.account_number)
+
+        if self.is_root and self.share_scope_id is None:  # type: ignore[attr-defined]
+            # the root shares with every account. It can only name itself once it has a pk.
+            self.share_scope_id = self.pk  # type: ignore[attr-defined]
+            Account.objects.filter(pk=self.pk).update(share_scope_id=self.pk)
+
+        if self.hierarchy_changed(orig):
+            self.invalidate_hierarchy()
+
+    def delete(self, *args, **kwargs):
+        """
+        Delete the account, and forget every account's readable accounts if it shared its resources.
+
+        An account that has children can't be deleted (``on_delete=PROTECT``): move or delete them first.
+
+        :returns: Django's ``(count, per-model counts)``.
+        """
+        shared = self.share_scope_id is not None  # type: ignore[attr-defined]
+        retval = super().delete(*args, **kwargs)
+        if shared:
+            self.invalidate_hierarchy()
+        return retval
+
+    @property
+    def is_root(self) -> bool:
+        """
+        Whether this is the Smarter account, the root of the account tree.
+
+        :returns: True for the Smarter account.
+        """
+        return self.account_number == SMARTER_ACCOUNT_NUMBER
+
+    def hierarchy_changed(self, orig: Optional["Account"]) -> bool:
+        """
+        Whether a save changes the account tree, or who may read this account's resources.
+
+        :param orig: The account as it was in the database before the save, or None for a new account.
+        :returns: True if ``parent`` or ``share_scope`` changed, or a new account has either.
+        """
+        if orig is None:
+            has_parent = self.parent_id is not None  # type: ignore[attr-defined]
+            has_share_scope = self.share_scope_id is not None  # type: ignore[attr-defined]
+            return has_parent or has_share_scope
+        parent_changed = orig.parent_id != self.parent_id  # type: ignore[attr-defined]
+        share_scope_changed = orig.share_scope_id != self.share_scope_id  # type: ignore[attr-defined]
+        return parent_changed or share_scope_changed
+
+    def invalidate_hierarchy(self) -> None:
+        """Forget every account's readable accounts, after a change to the tree or to sharing."""
+        # pylint: disable=C0415
+        from smarter.apps.account.hierarchy import invalidate_readable_account_ids
+
+        logger.debug("%s.invalidate_hierarchy() account %s changed the account tree.", self.formatted_class_name, self)
+        invalidate_readable_account_ids()
+
+    def validate_hierarchy(self) -> None:
+        """
+        Check ``parent`` and ``share_scope`` before a save.
+
+        - The root, the Smarter account, has no parent.
+        - An account can't be its own ancestor.
+        - ``share_scope`` is this account or one of its ancestors.
+
+        :raises SmarterValueError: if either is invalid.
+        """
+        # pylint: disable=C0415
+        from smarter.apps.account.hierarchy import ancestor_ids
+
+        parent_id = self.parent_id  # type: ignore[attr-defined]
+        share_scope_id = self.share_scope_id  # type: ignore[attr-defined]
+
+        if self.is_root and parent_id is not None:
+            raise SmarterValueError("The Smarter account is the root of the account tree, and can't have a parent.")
+
+        ancestors: list[int] = []
+        if parent_id is not None:
+            try:
+                ancestors = ancestor_ids(parent_id)
+            except ValueError as e:
+                raise SmarterValueError(f"Account {self.account_number}: {e}") from e
+            if self.pk is not None and self.pk in ancestors:
+                raise SmarterValueError(f"Account {self.account_number} can't be its own ancestor.")
+        else:
+            # pylint: disable=C0415
+            from smarter.apps.account.hierarchy import root_account_id
+
+            root_id = root_account_id()
+            if root_id is not None and not self.is_root:
+                ancestors = [root_id]
+
+        if share_scope_id is None:
+            return
+        if self.pk is not None and share_scope_id == self.pk:
+            return
+        if share_scope_id not in ancestors:
+            raise SmarterValueError(
+                f"Account {self.account_number} may share its resources only with itself or one of its ancestors."
+            )
 
     @classmethod
     def get_by_account_number(cls, account_number):

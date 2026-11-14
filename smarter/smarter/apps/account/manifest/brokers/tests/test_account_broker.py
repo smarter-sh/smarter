@@ -20,6 +20,7 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
@@ -459,6 +460,47 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         config = self.account_config(timezone="Europe/Paris", currency="EUR", language="fr-FR", country="FRA")
         values = (config.timezone, config.currency, config.language, config.country)
         self.assertEqual(values, ("Europe/Paris", "EUR", "fr-FR", "FRA"))
+
+    def test_account_tree_fields(self):
+        """``parent`` and ``shareScope`` are account numbers, or omitted."""
+        config = self.account_config(parent=SMARTER_ACCOUNT_NUMBER, shareScope=SMARTER_ACCOUNT_NUMBER)
+        self.assertEqual((config.parent, config.shareScope), (SMARTER_ACCOUNT_NUMBER, SMARTER_ACCOUNT_NUMBER))
+        config = self.account_config()
+        self.assertIsNone(config.parent)
+        for field in ("parent", "shareScope"):
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(SmarterValueError, "Invalid account number"):
+                    self.account_config(**{field: "not-an-account"})
+
+    def test_manifest_to_django_orm_resolves_the_tree(self):
+        """``apply`` turns ``parent`` and ``shareScope`` into accounts, and refuses an unknown one."""
+        self.broker.brokered_account = self.account
+        self.use_tree(parent=SMARTER_ACCOUNT_NUMBER, shareScope=None)
+        data = self.broker.manifest_to_django_orm()
+        self.assertEqual(data["parent"].account_number, SMARTER_ACCOUNT_NUMBER)
+        self.assertIsNone(data["share_scope"])
+
+        self.use_tree(parent="0000-0000-0001", shareScope=None)
+        with self.assertRaisesRegex(SAMAccountBrokerError, "no account has the number 0000-0000-0001"):
+            self.broker.manifest_to_django_orm()
+
+    def use_tree(self, **fields):
+        """
+        Give the broker a copy of its manifest with other ``parent`` and ``shareScope``: manifests are frozen.
+
+        :param fields: ``parent`` and ``shareScope``.
+        """
+        manifest = self.broker.manifest
+        assert manifest is not None
+        config = manifest.spec.config.model_copy(update=fields)
+        spec = manifest.spec.model_copy(update={"config": config})
+        self.broker._manifest = manifest.model_copy(update={"spec": spec})  # pylint: disable=protected-access
+
+    def test_related_account_number(self):
+        """``describe`` shows ``parent`` and ``shareScope`` as account numbers."""
+        root = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        self.assertEqual(SAMAccountBroker.related_account_number(root.pk), SMARTER_ACCOUNT_NUMBER)
+        self.assertIsNone(SAMAccountBroker.related_account_number(None))
 
 
 class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):

@@ -64,7 +64,7 @@ class TestInitializeAccount(CommandTestBase):
                     "url": STACKADEMY_REPOSITORY_URL,
                     "account_number": self.account.account_number,
                     "username": self.non_admin_user.username,
-                    "exclude_kind": ["Budget"],
+                    "include_kind": EXAMPLE_KINDS_PER_ACCOUNT,
                     "deploy": True,
                 },
             ],

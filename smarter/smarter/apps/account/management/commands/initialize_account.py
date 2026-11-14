@@ -164,11 +164,13 @@ class Command(SmarterCommand):
                 e,
             )
 
-        # 4. The account's own copy of the Stackademy project, deployed. Without its Budget, which only a
-        # superuser may apply, and which initialize_platform applies once, to the Smarter account's
-        # LLMClient: a Budget's resources are declarative, so applying it here would move it to this
-        # account's. Its LLMClients are verified by initialize_platform, rather than with billable
-        # prompts each time that an account is created.
+        # 4. The account's own copy of the Stackademy project's plugins and LLMClients, deployed. Its
+        # Secrets and Connections belong to the Smarter admin, which initialize_platform applies, and
+        # which shares them with every account (ADR-036): the plugins find them there. Without its
+        # Budget, which only a superuser may apply, and which initialize_platform applies once, to the
+        # Smarter account's LLMClient: a Budget's resources are declarative, so applying it here would
+        # move it to this account's. Its LLMClients are verified by initialize_platform, rather than
+        # with billable prompts each time that an account is created.
 
         try:
             call_command(
@@ -176,7 +178,7 @@ class Command(SmarterCommand):
                 url=STACKADEMY_REPOSITORY_URL,
                 account_number=account_number,
                 username=username,
-                exclude_kind=[SAMKinds.BUDGET.value],
+                include_kind=EXAMPLE_KINDS_PER_ACCOUNT,
                 deploy=True,
             )
         except (CommandError, SystemExit) as e:
