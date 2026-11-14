@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.1...v0.46.0-alpha.2) (2026-11-14)
+
+### Bug Fixes
+
+* **account:** stop tests leaving orphaned accounts and superusers ([5ab7ed5](https://github.com/smarter-sh/smarter/commit/5ab7ed5b741518338093102bc0ad156ac9d87984))
+
 ## [0.46.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.45.3-alpha.1...v0.46.0-alpha.1) (2026-11-14)
 
 ### Features
