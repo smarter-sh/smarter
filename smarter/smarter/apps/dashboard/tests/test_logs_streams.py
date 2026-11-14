@@ -66,15 +66,17 @@ class TestLogStreams(TestAccountMixin):
             response = streams.stream_user_logs(request)
 
         self.assertEqual(response.status_code, 200)
+        # each message as the logger renders it: a %-style format, filled in with its arguments.
         logged_messages = []
         for call in logger.info.call_args_list:
-            message = " ".join(str(arg) for arg in call.args)
+            message_format = str(call.args[0])
+            message = message_format % call.args[1:]
             logged_messages.append(message)
         logged = "\n".join(logged_messages)
         self.assertNotIn(self.non_admin_user.username, logged)
         self.assertNotIn(session_key, logged)
         self.assertIn(mask_identifier(session_key), logged)
-        self.assertIn(f"user_id {self.non_admin_user.pk} ", logged)
+        self.assertIn(f"user_id={self.non_admin_user.pk} ", logged)
 
     def test_stream_user_logs_replays_stream_history_before_live_messages(self):
         """Historical Redis stream entries should be emitted as the first log events."""
@@ -315,7 +317,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache = MagicMock()
         fake_cache.xrevrange.side_effect = [
             [
-                (b"2-0", {b"data": f'{{"message": "other", "session_key": "{other}"}}'.encode()},
+                (b"2-0", {b"data": f'{{"message": "other", "session_key": "{other}"}}'.encode()}),
                 (b"1-0", {b"data": f'{{"message": "mine", "session_key": "{mine}"}}'.encode()}),
             ],
             [],
