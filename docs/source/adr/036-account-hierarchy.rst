@@ -109,6 +109,8 @@ Accounts form a tree, and each account decides separately who may read its resou
 
     - Only a superuser or a staff user may change a user's ``is_staff``, so an account's administrator can't
       make themselves, or anyone, staff.
+    - Staff administer an account only through their own profile in it. Staff of one account have no say in
+      another: they can't add anyone to it, themselves included, nor mint an api key for one of its users.
     - A User manifest names its user by username, across the whole platform, so applying one to a user who
       doesn't belong to the applier's account is refused, unless a superuser applies it.
 

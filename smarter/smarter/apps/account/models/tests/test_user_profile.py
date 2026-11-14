@@ -114,6 +114,16 @@ class TestUserProfile(TestAccountMixin):
         self.assertFalse(user_administers_account(None, member))
         self.assertTrue(user_administers_account(self.admin_user, None))
 
+    def test_staff_administer_only_their_own_accounts(self):
+        """A staff user administers an account through their own profile in it, and no account without one."""
+        staff = User.objects.create(username=f"test_staff_{self.hash_suffix}", is_staff=True)
+        self.addCleanup(staff.delete)
+        own = UserProfile.objects.create(user=staff, account=self.account, name=f"test_staff_{self.hash_suffix}")
+        self.assertTrue(user_administers_account(staff, own))
+        # no profile in the account, or another user's profile there: staff of one account have no say in another.
+        self.assertFalse(user_administers_account(staff, None))
+        self.assertFalse(user_administers_account(staff, self.non_admin_user_profile))
+
     def test_admin_for_an_empty_account_is_its_own(self):
         """An account without members gets an administrator of its own, never the platform's admin."""
         account = Account.objects.create(name=f"test_empty_{self.hash_suffix}", company_name="Empty")

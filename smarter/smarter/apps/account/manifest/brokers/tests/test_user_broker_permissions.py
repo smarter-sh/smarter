@@ -175,6 +175,17 @@ class TestSmarterUserBrokerPermissions(TestSAMBrokerBaseClass):
         self.addCleanup(UserProfile.objects.filter(pk=profile.pk).delete)
         broker.check_authority_over_memberships(SmarterJournalCliCommands.APPLY)
 
+    def test_staff_of_another_account_add_no_members(self):
+        """Staff of one account can't add anyone, themselves included, to an account they don't belong to."""
+        hr, _ = self.departments()
+        self.with_accounts((str(hr.account_number), True))
+        staff = User.objects.create(username=f"test_user_broker_staff_{self.hash_suffix}", is_staff=True)
+        self.addCleanup(staff.delete)
+        broker = self.broker
+        self.patch_property("user", staff)
+        with self.assertRaisesRegex(SAMUserBrokerError, f"Only an administrator of account {hr.account_number}"):
+            broker.check_authority_over_memberships(SmarterJournalCliCommands.APPLY)
+
     def test_describe_shows_memberships_to_a_superuser(self):
         """A superuser sees every membership; anyone else sees none of the user's other accounts."""
         hr, _ = self.departments()

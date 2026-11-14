@@ -74,6 +74,9 @@ class PluginBrokerEdgeCasesMixin:
         """Return the broker, with its user, plugin and plugin_meta replaced."""
         broker = self.broker  # type: ignore[attr-defined]
         self._patch_broker_property("user", MagicMock(is_staff=staff))
+        # the user is a test double without a profile of its own, which user_administers_account() requires of
+        # staff: these tests are about the plugin, not the admin rule, so the broker's answer is set directly.
+        self._patch_broker_property("administers_account", staff)
         if plugin is not None:
             if self.apply_builds_plugin and isinstance(plugin, self.plugin_class):
                 patcher = patch(f"{self.broker_module}.{self.plugin_class.__name__}", type(plugin))
