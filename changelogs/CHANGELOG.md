@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.10...v0.46.0-alpha.11) (2026-11-14)
+
+### Bug Fixes
+
+* **account:** let account admins who aren't staff create api keys ([2427861](https://github.com/smarter-sh/smarter/commit/2427861381686d5ab49b2d68a73fce11deaf5fa6))
+
 ## [0.46.0-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.9...v0.46.0-alpha.10) (2026-11-14)
 
 ### Bug Fixes
