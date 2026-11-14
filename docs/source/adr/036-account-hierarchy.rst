@@ -151,9 +151,13 @@ Worked example: Stackademy
      - none
      - Its own members. Its video editors also hold profiles in Stackademy Content.
 
-HR's ``SqlPlugin`` names the Connection ``stackademy_hr``, which Stackademy IT owns. The plugin finds it, and
-its Secret, in Stackademy IT. A user in Pixel Forge Studios can't read either, and neither can Accounting's
-members, whose own Connection's database user has no grant on HR's tables.
+Sharing is by account, not by resource: everything that Stackademy IT owns, every account of Stackademy may read.
+So Stackademy IT owns only what the whole company may use, e.g. the Connection to the public course catalogue.
+HR's Connection, to the database user that may read salaries, belongs to Stackademy HR, where no one outside HR may
+read it. The head of IT, who manages every department's credentials, is an administrator of each department's
+account, and owns them there. HR's ``SqlPlugin`` names the Connection ``stackademy_hr_db``, and finds it in its own
+account. A user in Pixel Forge Studios can't read it, and neither can Accounting's members, whose own Connection's
+database user has no grant on HR's tables.
 
 Alternatives Considered
 -----------------------

@@ -23,6 +23,7 @@ from smarter.apps.account.models import Account, User, UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
@@ -483,6 +484,37 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.use_tree(parent="0000-0000-0001", shareScope=None)
         with self.assertRaisesRegex(SAMAccountBrokerError, "no account has the number 0000-0000-0001"):
             self.broker.manifest_to_django_orm()
+
+    def use_account_number(self, account_number):
+        """Give the broker a copy of its manifest whose metadata.accountNumber is the given one."""
+        manifest = self.broker.manifest
+        assert manifest is not None
+        metadata = manifest.metadata.model_copy(update={"accountNumber": account_number})
+        self.broker._manifest = manifest.model_copy(update={"metadata": metadata})  # pylint: disable=protected-access
+
+    def test_new_account_gets_the_manifest_number(self):
+        """A new account gets metadata.accountNumber, so that its number is the same on every platform."""
+        self.use_account_number("2718-2818-9901")
+        account = Account()
+        self.broker.apply_account_number(account, SmarterJournalCliCommands.APPLY)
+        self.assertEqual(account.account_number, "2718-2818-9901")
+
+        self.use_account_number(None)
+        unnumbered = Account()
+        self.broker.apply_account_number(unnumbered, SmarterJournalCliCommands.APPLY)
+        self.assertEqual(unnumbered.account_number, Account().account_number)
+
+    def test_account_number_is_refused(self):
+        """A number that another account has, or that differs from an existing account's own, is refused."""
+        self.use_account_number(self.account.account_number)
+        with self.assertRaisesRegex(SAMAccountBrokerError, "Another account already has the number"):
+            self.broker.apply_account_number(Account(), SmarterJournalCliCommands.APPLY)
+        # the existing account itself, with its own number, is fine.
+        self.broker.apply_account_number(self.account, SmarterJournalCliCommands.APPLY)
+
+        self.use_account_number("2718-2818-9902")
+        with self.assertRaisesRegex(SAMAccountBrokerError, "can't change"):
+            self.broker.apply_account_number(self.account, SmarterJournalCliCommands.APPLY)
 
     def use_tree(self, **fields):
         """

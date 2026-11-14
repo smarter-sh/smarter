@@ -717,6 +717,37 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         }
         return self.json_response_ok(command=command, data=data)
 
+    def apply_account_number(self, brokered_account: Account, command: SmarterJournalCliCommands) -> None:
+        """
+        Give a new account the number that the manifest's ``metadata.accountNumber`` names, if it names one.
+
+        An organization's manifests refer to its accounts by number, e.g. a User manifest's ``spec.accounts`` or a
+        repository's ``owners.yaml``, so its accounts must have the same numbers on every platform that applies them.
+        Only a superuser applies an Account manifest. An account's number never changes, so a manifest whose number
+        differs from an existing account's is refused, as is a number that another account already has.
+
+        :param brokered_account: The account, saved or new.
+        :param command: The command, for the error.
+        :raises SAMAccountBrokerError: if the number belongs to another account, or differs from the account's own.
+        """
+        manifest = self.manifest
+        if manifest is None or not manifest.metadata.accountNumber:
+            return
+        account_number = str(manifest.metadata.accountNumber)
+        if brokered_account.pk is not None:
+            if brokered_account.account_number != account_number:
+                raise SAMAccountBrokerError(
+                    message=f"Account {brokered_account.account_number}'s number can't change to {account_number}.",
+                    thing=self.kind,
+                    command=command,
+                )
+            return
+        if Account.objects.filter(account_number=account_number).exists():
+            raise SAMAccountBrokerError(
+                message=f"Another account already has the number {account_number}.", thing=self.kind, command=command
+            )
+        brokered_account.account_number = account_number
+
     def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Applies the manifest by copying its data to the Django ORM `Account` model and saving the model to the database.
@@ -780,6 +811,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         if brokered_account is None:
             brokered_account = Account()
             self.brokered_account = brokered_account
+        self.apply_account_number(brokered_account, command)
         try:
             data = self.manifest_to_django_orm()
             tags = data.get("tags", [])

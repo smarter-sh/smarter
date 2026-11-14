@@ -11829,7 +11829,7 @@
               }
             ],
             "default": null,
-            "description": "Account.metadata.accountNumber[str]. Your preassigned 12-digit account number for your Smarter Account in the format '####-####-####'. Read only.",
+            "description": "Account.metadata.accountNumber[str]. The 12-digit number of the Smarter Account, in the format '####-####-####'. Applying a manifest that creates the account gives it this number, so that an organization's accounts have the same numbers on every platform; omitted, a new account gets a random one. It never changes: a manifest whose number differs from its existing account's is refused.",
             "title": "Accountnumber"
           },
           "annotations": {
