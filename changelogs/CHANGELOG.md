@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.4...v0.46.0-alpha.5) (2026-11-14)
+
+### Bug Fixes
+
+* **dashboard:** stop stream_user_logs() logging the username and the full chat session key ([b7aa505](https://github.com/smarter-sh/smarter/commit/b7aa50529907ef109f72b048bd4a5e7c3336ba20)), closes [#1001](https://github.com/smarter-sh/smarter/issues/1001) [#1000](https://github.com/smarter-sh/smarter/issues/1000)
+
 ## [0.46.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.3...v0.46.0-alpha.4) (2026-11-14)
 
 ### Bug Fixes
