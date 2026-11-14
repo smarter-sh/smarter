@@ -7,7 +7,8 @@ from django.db import connection
 from django.test import RequestFactory
 from django.utils.crypto import get_random_string
 
-from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.models import Account, AccountContact, User, UserProfile
+from smarter.apps.account.tests.cleanup import purge_test_artifacts
 from smarter.apps.account.user_merge import (
     UNIQUE_EMAIL_INDEX,
     create_unique_email_index,
@@ -16,7 +17,7 @@ from smarter.apps.account.user_merge import (
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
+from .factories import admin_user_factory, mortal_user_factory
 
 DUPLICATE_USERNAME_PREFIX = "test_duplicate_user_"
 """The username prefix of the users that :class:`DuplicateUsersMixin` creates, so that they can be cleaned up."""
@@ -58,15 +59,40 @@ class TestAccountMixin(SmarterTestBase):
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         try:
-            factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-            factory_account_teardown(
-                user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile
-            )
-        # pylint: disable=W0718
-        except Exception:
-            pass
+            cls.delete_account_fixtures()
         finally:
             super().tearDownClass()
+
+    @classmethod
+    def delete_account_fixtures(cls) -> None:
+        """
+        Delete the class's account, its profiles and both users, then whatever else tests left behind.
+
+        Each step runs whether or not the one before it failed, and a failure is logged rather than hidden:
+        a cleanup that stops halfway leaves an account without members, or users without profiles, that nothing
+        finds again. See :mod:`smarter.apps.account.tests.cleanup`.
+        """
+        account_id = cls.account.pk
+        user_ids = [cls.admin_user.pk, cls.non_admin_user.pk]
+        steps = (
+            ("contacts", lambda: AccountContact.objects.filter(account_id=account_id).delete()),
+            ("profiles", lambda: UserProfile.objects.filter(account_id=account_id).delete()),
+            ("users", lambda: User.objects.filter(pk__in=user_ids).delete()),
+            ("account", lambda: Account.objects.filter(pk=account_id).delete()),
+            ("leftovers", purge_test_artifacts),
+        )
+        for label, step in steps:
+            try:
+                step()
+            # pylint: disable=W0718
+            except Exception as e:
+                logger.error(
+                    "%s.delete_account_fixtures() could not delete the %s of account id %s: %s",
+                    cls.test_account_mixin_logger_prefix,
+                    label,
+                    account_id,
+                    type(e).__name__,
+                )
 
     def setUp(self):
         """We use different manifest test data depending on the test case."""

@@ -33,6 +33,7 @@ from .signals import (
     new_user_created,
 )
 from .utils import (
+    delete_created_admin_user,
     get_cached_default_account,
     get_cached_user_for_user_id,
     get_cached_user_for_username,
@@ -292,7 +293,10 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
 @receiver(post_delete, sender=Account)
 def account_post_delete(sender: type[Account], instance: Account, **kwargs):
     """
-    Log the deletion of an Account.
+    Log the deletion of an Account, and delete the admin user that was created for it.
+
+    That user, ``<account number>-admin``, exists only for its account, and is a superuser. Its profile goes with
+    the account, but without this the user would stay, a superuser that belongs to nothing.
 
     :param sender: The Account model.
     :param instance: The deleted Account.
@@ -303,6 +307,8 @@ def account_post_delete(sender: type[Account], instance: Account, **kwargs):
         instance.account_number,
         instance.id,  # type: ignore
     )
+    if instance.account_number:
+        delete_created_admin_user(str(instance.account_number))
 
 
 @receiver(post_save, sender=Charge)

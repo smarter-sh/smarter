@@ -447,6 +447,42 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
     return _in_memory_user_by_username(username, class_name=User.__name__)
 
 
+ACCOUNT_ADMIN_USERNAME_SUFFIX = "-admin"
+"""The username of the admin user that :func:`get_cached_admin_user_for_account` creates is its account number plus this."""
+
+
+def account_admin_username(account_number: str) -> str:
+    """
+    The username of the admin user that :func:`get_cached_admin_user_for_account` creates for an account.
+
+    :param account_number: The account's number, e.g. ``1234-5678-9012``.
+    :returns: e.g. ``1234-5678-9012-admin``.
+    """
+    retval = f"{account_number}{ACCOUNT_ADMIN_USERNAME_SUFFIX}"
+    return retval
+
+
+def delete_created_admin_user(account_number: str) -> bool:
+    """
+    Delete the admin user that :func:`get_cached_admin_user_for_account` created for an account, once it has no profile.
+
+    That user exists only for its account, and is a superuser. When the account is deleted, its profile goes with it,
+    but the user would stay: a superuser that belongs to nothing.
+
+    :param account_number: The deleted account's number.
+    :returns: True if a user was deleted.
+    """
+    username = account_admin_username(account_number)
+    created_admin = User.objects.filter(username=username).first()
+    if created_admin is None:
+        return False
+    if UserProfile.objects.filter(user=created_admin).exists():
+        return False
+    created_admin.delete()
+    logger.info("%s.delete_created_admin_user() deleted the admin user of account %s", HERE, account_number)
+    return True
+
+
 def get_cached_admin_user_for_account(account: Account, invalidate: Optional[bool] = False) -> User:
     """
     Retrieve the admin user for a given account, creating one if necessary.
@@ -512,7 +548,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             has_profiles = account_profiles.exists()
             has_real_profiles = account_profiles.filter(is_test=False).exists()
             is_test_account = has_profiles and not has_real_profiles
-            username = f"{account.account_number}-admin"
+            username = account_admin_username(str(account.account_number))
             new_user = User.objects.create(
                 username=username,
                 email=f"{username}@{smarter_settings.root_domain}",
@@ -730,6 +766,9 @@ def is_platform_staff(user: Optional[object]) -> bool:
 
 
 __all__ = [
+    "ACCOUNT_ADMIN_USERNAME_SUFFIX",
+    "account_admin_username",
+    "delete_created_admin_user",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

@@ -181,13 +181,40 @@ def shard_tests(tests: list[unittest.TestCase], shard: int, shards: int) -> list
     return selected
 
 
+def purge_test_leftovers(when: str) -> None:
+    """
+    Delete the accounts, users and profiles that tests left behind, and say so if there were any.
+
+    A failure is printed, not raised: the cleanup must not change the outcome of the run.
+
+    :param when: ``before`` or ``after`` the suite, for the message.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.account.tests.cleanup import purge_test_artifacts
+
+    try:
+        report = purge_test_artifacts()
+    # pylint: disable=broad-except
+    except Exception as e:
+        print(f"Could not delete the test accounts and users left {when} the run: {type(e).__name__}")
+        return
+    if report.deleted:
+        print(
+            f"Deleted the test accounts and users left {when} the run: {report.accounts} accounts, "
+            f"{report.users} users, {report.profiles} profiles, {report.contacts} contacts."
+        )
+    if report.failures:
+        print(f"Could not delete {len(report.failures)} of them: {', '.join(report.failures)}")
+
+
 class SmarterTestRunner(DiscoverRunner):
     """
-    Django's test runner, with three additions for Smarter's suite.
+    Django's test runner, with four additions for Smarter's suite.
 
     It skips the infrastructure and vendor tests unless they are asked for, writes a JUnit XML report when
-    :data:`JUNIT_XML_ENVIRONMENT_VARIABLE` names a file, and runs only one shard of the suite
-    when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one.
+    :data:`JUNIT_XML_ENVIRONMENT_VARIABLE` names a file, runs only one shard of the suite
+    when :data:`SHARD_ENVIRONMENT_VARIABLE` asks for one, and deletes the accounts and users that tests leave
+    behind, before and after the suite (:func:`purge_test_leftovers`).
     """
 
     def __init__(self, *args, tags: list[str] | None = None, exclude_tags: list[str] | None = None, **kwargs):
@@ -275,6 +302,24 @@ class SmarterTestRunner(DiscoverRunner):
 
     def run_suite(self, suite, **kwargs):
         """
+        Run the suite, and delete the accounts and users that tests leave behind, before and after it.
+
+        The tests share the dev database, without a transaction to roll back. Before the suite, the purge removes
+        what an interrupted run left. After it, in a ``finally``, what this run left, however it ended. See
+        :mod:`smarter.apps.account.tests.cleanup`.
+
+        :param suite: The test suite to run.
+        :param kwargs: Passed to :meth:`run_suite_with_report`.
+        :returns: The test result.
+        """
+        purge_test_leftovers("before")
+        try:
+            return self.run_suite_with_report(suite, **kwargs)
+        finally:
+            purge_test_leftovers("after")
+
+    def run_suite_with_report(self, suite, **kwargs):
+        """
         Run the suite, with xmlrunner instead of unittest's text runner when a JUnit XML report is asked for.
 
         xmlrunner still prints the usual progress and summary to the console.
@@ -318,6 +363,7 @@ __all__ = [
     "SmarterTestRunner",
     "include_infrastructure",
     "junit_xml_path",
+    "purge_test_leftovers",
     "requested_shard",
     "shard_tests",
     "testcase_class_name",
