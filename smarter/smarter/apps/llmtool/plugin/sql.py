@@ -13,8 +13,8 @@ A PLugin that uses a remote SQL database server to retrieve its return data.
 The Stackademy example project's SQL Plugin is built from these four resources. Their manifests are in
 the `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__ repository:
 
-- `secrets/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-db.yaml>`__
-- `connections/sql/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/connections/sql/smarter-test-db.yaml>`__
+- `secrets/stackademy-catalog-db-password.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/stackademy-catalog-db-password.yaml>`__
+- `connections/sql/stackademy-catalog-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/connections/sql/stackademy-catalog-db.yaml>`__
 - `plugins/sql/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/sql/stackademy-sql.yaml>`__
 - `llm-clients/stackademy-sql.yaml <https://github.com/smarter-sh/stackademy/blob/main/llm-clients/stackademy-sql.yaml>`__
 """

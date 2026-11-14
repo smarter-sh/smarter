@@ -529,7 +529,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
         console_prefix = f"{logging.SmarterFormattedText.text(__name__)}.get_cached_admin_user_for_account()"
         user_profile = (
             UserProfile.objects.filter(account=account)
-            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))
+            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True) | Q(is_account_admin=True))
             .select_related("user", "account")
             .order_by("pk")
             .first()

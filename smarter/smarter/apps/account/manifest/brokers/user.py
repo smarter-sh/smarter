@@ -848,6 +848,47 @@ class SAMUserBroker(AbstractBroker[User, User]):
         }
         return self.json_response_ok(command=command, data=data)
 
+    def check_authority_over_user(self, command: SmarterJournalCliCommands) -> None:
+        """
+        Refuse a User manifest that reaches beyond the applier's own account, unless a superuser applies it.
+
+        A user is found by username across the whole platform. So an account administrator could otherwise change a
+        user of another account, e.g. their email, or deactivate them. And ``isStaff`` sets ``User.is_staff``, which
+        opens the Django admin site and administers every account the user belongs to, so an administrator of one
+        account, through ``UserProfile.is_account_admin``, could otherwise make themselves staff.
+
+        :param command: The command, for the error.
+        :raises SAMUserBrokerError: if an existing user doesn't belong to the applier's account, or a user who isn't
+            staff would change a user's ``is_staff``.
+        """
+        if not isinstance(self.user, User):
+            return
+        if self.user.is_superuser:
+            return
+        existing = self.brokered_user
+        if isinstance(existing, User) and existing.pk:
+            member = UserProfile.objects.filter(user=existing, account=self.account).exists()
+            if not member:
+                raise SAMUserBrokerError(
+                    message=f"User {existing.username} belongs to another account.",
+                    thing=self.kind,
+                    command=command,
+                )
+        if self.user.is_staff:
+            return
+        current_is_staff = False
+        if isinstance(existing, User):
+            current_is_staff = existing.is_staff
+        requested_is_staff = current_is_staff
+        if self.manifest is not None and self.manifest.spec.config.isStaff is not None:
+            requested_is_staff = bool(self.manifest.spec.config.isStaff)
+        if requested_is_staff != current_is_staff:
+            raise SAMUserBrokerError(
+                message="Only staff may change whether a user is staff.",
+                thing=self.kind,
+                command=command,
+            )
+
     def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest data to the Django ORM `User` model and persist changes to the database.
@@ -893,7 +934,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 thing=self.kind,
                 command=command,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMUserBrokerError(
                 message="Only account admins can apply user manifests.",
                 thing=self.kind,
@@ -902,6 +943,8 @@ class SAMUserBroker(AbstractBroker[User, User]):
 
         if not self.manifest:
             raise SAMUserBrokerError("User manifest is not set", thing=self.kind, command=command)
+
+        self.check_authority_over_user(command)
 
         try:
             with transaction.atomic():
@@ -1147,7 +1190,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMUserBrokerError(
                 message="Only account admins can delete user manifests.",
                 thing=self.kind,
@@ -1202,7 +1245,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMUserBrokerError(
                 message="Only account admins can deploy user manifests.",
                 thing=self.kind,
@@ -1242,7 +1285,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMUserBrokerError(
                 message="Only account admins can undeploy user manifests.",
                 thing=self.kind,

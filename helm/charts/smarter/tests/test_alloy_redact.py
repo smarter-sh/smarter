@@ -138,7 +138,7 @@ class TestAlloyKeepsWhatIsNotACredential(unittest.TestCase):
         """SqlConnection.get_connection_string() masks the password as ******."""
         line = (
             "smarter.apps.connection.receivers.sql_connection_success() "
-            "django.db.backends.mysql://smarter:******@smarter-mariadb:3306/smarter_test_db is READY"
+            "django.db.backends.mysql://smarter:******@smarter-mariadb:3306/stackademy is READY"
         )
         self.assertEqual(redact(line), line)
 

@@ -805,7 +805,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can apply static plugins.",
                 thing=self.kind,
@@ -923,7 +923,7 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can delete static plugins.",
                 thing=self.kind,

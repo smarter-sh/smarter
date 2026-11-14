@@ -74,10 +74,7 @@ class TestLogStreams(TestAccountMixin):
         self.assertNotIn(self.non_admin_user.username, logged)
         self.assertNotIn(session_key, logged)
         self.assertIn(mask_identifier(session_key), logged)
-
-        called_for = logger.info.call_args_list[0].args
-        self.assertIn("user_id=%s", called_for[0])
-        self.assertEqual(called_for[2], self.non_admin_user.pk)
+        self.assertIn(f"user_id {self.non_admin_user.pk} ", logged)
 
     def test_stream_user_logs_replays_stream_history_before_live_messages(self):
         """Historical Redis stream entries should be emitted as the first log events."""
@@ -318,7 +315,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache = MagicMock()
         fake_cache.xrevrange.side_effect = [
             [
-                (b"2-0", {b"data": f'{{"message": "other", "session_key": "{other}"}}'.encode()}),
+                (b"2-0", {b"data": f'{{"message": "other", "session_key": "{other}"}}'.encode()},
                 (b"1-0", {b"data": f'{{"message": "mine", "session_key": "{mine}"}}'.encode()}),
             ],
             [],

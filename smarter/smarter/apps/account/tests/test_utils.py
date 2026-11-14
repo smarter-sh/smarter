@@ -220,6 +220,19 @@ class TestGetCachedAdminUserForAccount(TestAccountMixin):
         admin_profile = UserProfile.objects.get(user=admin, account=account)
         self.assertFalse(admin_profile.is_test)
 
+    def test_finds_an_account_admin(self):
+        """An account whose administrator is an account admin, not staff, gets that user, not a new superuser."""
+        user, account, user_profile = mortal_user_factory()
+        self.addCleanup(account.delete)
+        self.addCleanup(user.delete)
+        UserProfile.objects.filter(pk=user_profile.pk).update(is_account_admin=True)
+        admin_username = f"{account.account_number}-admin"
+
+        admin = utils.get_cached_admin_user_for_account(account=account, invalidate=True)
+
+        self.assertEqual(admin, user)
+        self.assertFalse(User.objects.filter(username=admin_username).exists())
+
 
 class TestAccountNumberFromUrl(SmarterTestBase):
     """Test that account_number_from_url correctly extracts account numbers from URLs and handles edge cases."""

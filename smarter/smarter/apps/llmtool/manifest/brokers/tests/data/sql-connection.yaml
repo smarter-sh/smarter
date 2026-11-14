@@ -31,9 +31,9 @@ spec:
     dbEngine: django.db.backends.mysql
     hostname: smarter-mariadb
     port: 3306
-    username: smarter_test_user
-    password: smarter_test_user
-    database: smarter_test_db
+    username: stackademy_catalog
+    password: stackademy_catalog_db_password
+    database: stackademy
     timeout: 30
     authenticationMethod: tcpip
     poolSize: 15

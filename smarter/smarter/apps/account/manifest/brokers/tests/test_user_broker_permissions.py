@@ -4,7 +4,8 @@ import os
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker, SAMUserBrokerError
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -54,6 +55,51 @@ class TestSmarterUserBrokerPermissions(TestSAMBrokerBaseClass):
         for command in ADMIN_COMMANDS:
             with self.subTest(command=command), self.assertRaises(SAMUserBrokerError):
                 getattr(broker, command)(self.request)
+
+    def test_account_admin_may_apply(self):
+        """A user whose profile has is_account_admin may apply a User manifest, though they aren't staff."""
+        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        member.is_account_admin = True
+        broker = self.broker
+        self.patch_property("user", self.non_admin_user)
+        self.patch_property("user_profile", member)
+        self.patch_property("account", self.account)
+        self.patch_property("brokered_user", None)
+        # check_authority_over_user() lets it through; nothing else is under test here.
+        broker.check_authority_over_user(SmarterJournalCliCommands.APPLY)
+        self.assertTrue(broker.administers_account)
+
+    def test_another_accounts_user_is_refused(self):
+        """An account's administrator can't change a user who doesn't belong to their account."""
+        outsider = self.throwaway_user(is_active=True)
+        broker = self.broker
+        self.patch_property("user", self.non_admin_user)
+        self.patch_property("account", self.account)
+        self.patch_property("brokered_user", outsider)
+        with self.assertRaisesRegex(SAMUserBrokerError, "belongs to another account"):
+            broker.check_authority_over_user(SmarterJournalCliCommands.APPLY)
+
+    def test_only_staff_change_is_staff(self):
+        """An account administrator who isn't staff can't make a user staff, themselves included."""
+        broker = self.broker
+        self.patch_property("user", self.non_admin_user)
+        self.patch_property("account", self.account)
+        self.patch_property("brokered_user", self.non_admin_user)
+        manifest = broker.manifest
+        assert manifest is not None
+        config = manifest.spec.config.model_copy(update={"isStaff": True})
+        spec = manifest.spec.model_copy(update={"config": config})
+        self.patch_property("manifest", manifest.model_copy(update={"spec": spec}))
+        with self.assertRaisesRegex(SAMUserBrokerError, "Only staff may change whether a user is staff"):
+            broker.check_authority_over_user(SmarterJournalCliCommands.APPLY)
+
+    def test_superuser_may_change_anyone(self):
+        """A superuser's User manifest may reach any user."""
+        outsider = self.throwaway_user(is_active=True)
+        broker = self.broker
+        self.patch_property("user", self.admin_user)
+        self.patch_property("brokered_user", outsider)
+        broker.check_authority_over_user(SmarterJournalCliCommands.APPLY)
 
     def test_commands_without_a_brokered_user(self):
         """Deploy and undeploy aren't ready, and delete and describe find nothing, without a brokered user."""

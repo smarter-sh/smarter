@@ -67,6 +67,22 @@ class Command(SmarterCommand):
         )
 
     # pylint: disable=broad-except
+    def rename_stackademy_resources(self, username: str) -> None:
+        """
+        Move every account's Stackademy plugins to Stackademy's renamed Secrets and Connections.
+
+        After load_from_github, which applies the renamed resources: ``manage.py rename_stackademy_resources``
+        moves the plugins from the old resources to them, and deletes the old ones that nothing uses. A failure is
+        logged, not raised: the old resources keep working until the next deployment tries again.
+
+        :param username: The Smarter admin, who owns the renamed resources.
+        """
+        try:
+            call_command("rename_stackademy_resources", username=username)
+        except (Exception, SystemExit) as e:
+            logger.error("%s.rename_stackademy_resources() failed: %s", logger_prefix, e)
+
+    # pylint: disable=broad-except
     def handle(self, *args, **options):
         """
         Initialize the Smarter platform.
@@ -233,7 +249,7 @@ class Command(SmarterCommand):
             # ApiConnection's Secret is also the password of this platform's Stackademy course catalogue,
             # /api/v1/demos/stackademy/course-catalogue/. run_scripts runs the scripts that the repository's
             # scripts/scripts.yaml lists, before and after its manifests: Stackademy's pre script creates its
-            # course database, smarter_test_db, and its read-only users, which its SqlConnection connects to, as
+            # course database, stackademy, and its read-only users, which its SqlConnection connects to, as
             # SMARTER_MYSQL_ROOT_USERNAME. Only here: initialize_account loads each account's copy of the
             # manifests without running the scripts again.
             call_command(
@@ -247,6 +263,8 @@ class Command(SmarterCommand):
         except (Exception, SystemExit) as e:
             logger.error("Failed to load the Stackademy project from %s: %s", STACKADEMY_REPOSITORY_URL, e)
             fatal.append("load_from_github")
+
+        self.rename_stackademy_resources(username)
 
         try:
             # after load_from_github. It prompts the Stackademy LLMClients, and exits when they don't work.

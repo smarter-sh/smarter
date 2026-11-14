@@ -63,6 +63,12 @@ class TestInitializePlatform(CommandTestBase):
         retired = names.index("delete_retired_examples")
         self.assertEqual(retired, first_load + 1)
         self.assertEqual(call.call_args_list[retired].kwargs, {"username": "admin"})
+        # Stackademy's plugins move to its renamed resources after it is loaded, and before it is verified.
+        last_load = len(names) - 1 - names[::-1].index("load_from_github")
+        renamed = names.index("rename_stackademy_resources")
+        self.assertEqual(renamed, last_load + 1)
+        self.assertLess(renamed, names.index("verify_stackademy"))
+        self.assertEqual(call.call_args_list[renamed].kwargs, {"username": "admin"})
         self.assertIn("verify_dns_configuration", names)
         # every deployment points the LLMClients' ingresses at the api's renamed Service.
         self.assertEqual(names[-2], "retarget_llmclient_ingresses")

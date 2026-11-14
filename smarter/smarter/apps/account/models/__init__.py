@@ -47,7 +47,7 @@ from .metadata_with_ownership import (
     MetaDataWithOwnershipModelManager,
     SmarterQuerySetWithPermissions,
 )
-from .user_profile import UserProfile, active_language
+from .user_profile import UserProfile, active_language, user_administers_account
 
 __all__ = [
     "Account",
@@ -75,6 +75,7 @@ __all__ = [
     "get_resolved_user",
     "is_authenticated_user",
     "UserProfile",
+    "user_administers_account",
     "ResolvedUserType",
     "LLMPrices",
     "MetaDataWithOwnershipModel",

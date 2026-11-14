@@ -232,6 +232,13 @@ class AccountApiProfile(AccountApiModel):
         description="UserProfile.profile_image: the url of the image that the user uploaded, which takes precedence.",
     )
     is_test: bool = Field(..., description="UserProfile.is_test: whether a test created it.")
+    is_account_admin: bool = Field(
+        False,
+        description=(
+            "UserProfile.is_account_admin: whether the user administers this account, and only this one, without "
+            "access to the Django admin site."
+        ),
+    )
 
     @classmethod
     def from_model(cls, user_profile: "UserProfile") -> "AccountApiProfile":
@@ -258,6 +265,7 @@ class AccountApiProfile(AccountApiModel):
             profile_image_url=user_profile.profile_image_url,
             profile_image=user_profile.avatar_url if user_profile.profile_image else None,
             is_test=user_profile.is_test,
+            is_account_admin=user_profile.is_account_admin,
         )
 
 

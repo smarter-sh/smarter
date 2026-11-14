@@ -663,7 +663,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSmarterAuthTokenBrokerError(
                 message="Only account admins can apply auth token manifests.",
                 thing=self.kind,
@@ -849,7 +849,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSmarterAuthTokenBrokerError(
                 message="Only account admins can delete auth tokens.",
                 thing=self.kind,

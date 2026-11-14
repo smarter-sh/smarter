@@ -782,7 +782,7 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can apply skill plugins.",
                 thing=self.kind,
@@ -906,7 +906,7 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can delete skill plugins.",
                 thing=self.kind,

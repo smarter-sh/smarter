@@ -192,8 +192,11 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_base_class_apply_requires_staff(self):
         """Test that the base broker's apply() refuses a user who isn't an account admin."""
+        # the broker's user is a superuser, who administers every account.
         self.broker.user.is_staff = False  # type: ignore[union-attr]
+        self.broker.user.is_superuser = False  # type: ignore[union-attr]
         self.addCleanup(setattr, self.broker.user, "is_staff", True)
+        self.addCleanup(setattr, self.broker.user, "is_superuser", True)
         with self.assertRaises(SAMBrokerError):
             SAMConnectionBaseBroker.apply(self.broker, self.request, **self.kwargs)
 

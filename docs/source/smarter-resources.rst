@@ -23,28 +23,25 @@ understood and applied by non-developers using the web console.
    kind: Secret
    metadata:
      description: |
-       An example secret manifest. This is a real credential used for authenticating to
-       the Smarter Remote SQL test database. This is a public-access test database
-       used for development and testing purposes only.  Do not use this credential
-       for production purposes.
-       See the annotations below for connection details.
-     name: smarter_test_user
-     version: 1.1.0
+       The password of stackademy_catalog, the read-only user of Stackademy's course database, stackademy. It is a
+       public password of a demonstration database, which anyone may read: never use it for anything else.
+       See the annotations below for the connection details.
+     name: stackademy_catalog_db_password
+     version: 2.0.0
      tags:
        - example
-       - test
        - stackademy
      annotations:
-       smarter.sh/test-db/host: localhost
-       smarter.sh/test-db/port: "3306"
-       smarter.sh/test-db/db: smarter_test_db
-       smarter.sh/test-db/user: smarter_test_user
-       smarter.sh/test-db/access: anyone can access this test database
+       smarter.sh/stackademy/host: smarter-mariadb
+       smarter.sh/stackademy/port: "3306"
+       smarter.sh/stackademy/db: stackademy
+       smarter.sh/stackademy/user: stackademy_catalog
+       smarter.sh/stackademy/access: anyone may read the course catalogue
    spec:
      config:
-       value: smarter_test_user
+       value: stackademy_catalog
 
-From `secrets/smarter-test-db.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-db.yaml>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
+From `secrets/stackademy-catalog-db-password.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/stackademy-catalog-db-password.yaml>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
 
 Smarter manifest files can be processed by the :doc:`Smarter CLI <smarter-framework/smarter-cli>` as well as by
 drag-and-drop on the web console, both of which interact seamlessly and securely

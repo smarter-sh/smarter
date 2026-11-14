@@ -314,6 +314,37 @@ def active_language() -> str:
         return settings.LANGUAGE_CODE
 
 
+def user_administers_account(user: object, user_profile: Optional["UserProfile"]) -> bool:
+    """
+    Whether a user administers an account: manages every resource in it.
+
+    A superuser administers every account. A user with ``User.is_staff`` administers each account they belong to,
+    which is how an account's administrator has been marked, and which also opens the Django admin site. A user
+    whose own profile in the account has ``is_account_admin`` administers that account only, and opens nothing
+    else: the role for a department's administrator in an organization of several accounts (ADR-036).
+
+    :param user: The user, e.g. a request's. None, or an anonymous user, administers nothing.
+    :param user_profile: The user's profile in the account, if any. A profile of another user never counts.
+    :returns: True if the user may manage every resource of the account.
+    """
+    if user is None:
+        return False
+    # "is True", so that only a real flag counts, never e.g. a test double's automatic attribute.
+    if getattr(user, "is_superuser", False) is True:
+        return True
+    if getattr(user, "is_staff", False) is True:
+        return True
+    if user_profile is None:
+        return False
+    user_pk = getattr(user, "pk", None)
+    if user_pk is None:
+        return False
+    if user_profile.user_id != user_pk:  # type: ignore[attr-defined]
+        return False
+    retval = bool(user_profile.is_account_admin)
+    return retval
+
+
 class UserProfile(MetaDataModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
@@ -370,6 +401,13 @@ class UserProfile(MetaDataModel):
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
+    is_account_admin = models.BooleanField(
+        default=False,
+        help_text=(
+            "Whether the user administers this account, and only this one: they manage every resource in it. "
+            "Unlike User.is_staff, it gives no access to the Django admin site, and no rights in the user's other accounts."
+        ),
+    )
     welcomed_at = models.DateTimeField(
         blank=True,
         null=True,
@@ -381,6 +419,18 @@ class UserProfile(MetaDataModel):
         default=settings.LANGUAGE_CODE,
         help_text="The user's preferred language, in which they are sent emails, e.g. the welcome email.",
     )
+
+    @property
+    def administers_account(self) -> bool:
+        """
+        Whether this profile's user administers its account: manages every resource in it.
+
+        See :func:`user_administers_account`.
+
+        :returns: True if the user may manage every resource of this profile's account.
+        """
+        retval = user_administers_account(self.user, self)
+        return retval
 
     @property
     def avatar_url(self) -> str:
@@ -914,4 +964,4 @@ class UserProfile(MetaDataModel):
         return f"<{self.__class__.__name__} pk={self.pk} user_id={self.user_id} account_id={self.account_id}>"  # type: ignore[attr-defined]
 
 
-__all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions"]
+__all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions", "user_administers_account"]
