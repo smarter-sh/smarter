@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.10](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.9...v0.46.0-alpha.10) (2026-11-14)
+
+### Bug Fixes
+
+* **account:** resolve guardrails by account tree, skip owned deploys ([d3a61ba](https://github.com/smarter-sh/smarter/commit/d3a61ba1772c8edf03c14c79b7756024a6c0c314))
+
 ## [0.46.0-alpha.9](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.8...v0.46.0-alpha.9) (2026-11-14)
 
 ### Bug Fixes
