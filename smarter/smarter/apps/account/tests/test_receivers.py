@@ -84,6 +84,24 @@ class TestUserProfileReceivers(TestAccountMixin):
         user_profile.delete()
         self.assertEqual(list(UserProfile.get_cached_objects(user=self.user)), [])
 
+    def test_joining_an_account_makes_it_the_default(self):
+        """A user who joins another account moves into it at once, and back when they leave it."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        first = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)
+        self.addCleanup(UserProfile.objects.filter(pk=first.pk).delete)
+        self.assertEqual(UserProfile.get_cached_object(user=self.user), first)
+
+        other_user, other_account, _ = mortal_user_factory()
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        second = UserProfile.objects.create(name=self.user.username, user=self.user, account=other_account)
+        self.assertEqual(UserProfile.get_cached_object(user=self.user), second)
+
+        second.delete()
+        self.assertEqual(UserProfile.get_cached_object(user=self.user), first)
+
     def test_save_refreshes_the_cached_profile(self):
         """A UserProfile's save refreshes its cached copies, by user and account, by user, and by pk."""
         user_profile = UserProfile.objects.create(name=self.user.username, user=self.user, account=self.account)

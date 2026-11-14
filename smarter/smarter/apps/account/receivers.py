@@ -224,13 +224,10 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
     )
     # The user's cached list of UserProfiles, used by every permission queryset, changes with this one.
     UserProfile.get_cached_objects(invalidate=True, user=instance.user)
-    if created:
-        # Nothing has cached the new profile yet. Refreshing the user's cached default profile now would make
-        # the new one their default at once, e.g. moving a member of one account into the next account they join.
-        return
-    # An edit changes the cached copies of this one, e.g. of is_account_admin, which decides whether the user
-    # administers the account: by user and account, by user alone, and by pk, which the console's selected
-    # profile reads.
+    # So do the cached copies of this one: by user and account, by pk, which the console's selected profile reads,
+    # and by user alone, the user's default profile. An edit changes e.g. is_account_admin, which decides whether
+    # the user administers the account. A new profile is the user's newest, so it becomes their default at once:
+    # a user who joins another account moves into it.
     UserProfile.get_cached_object(invalidate=True, user=instance.user, account=instance.account)
     UserProfile.get_cached_object(invalidate=True, pk=instance.pk)
 
@@ -238,7 +235,7 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
 @receiver(post_delete, sender=UserProfile)
 def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwargs):
     """
-    Log the deletion of a UserProfile, and invalidate the cache of its user's UserProfiles.
+    Log the deletion of a UserProfile, and invalidate the cached copies of it and of its user's UserProfiles.
 
     Nothing is invalidated when the User was deleted with it.
 
@@ -257,6 +254,20 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
         # Deleted together with its User, whose cached profiles nobody can look up any more.
         return
     UserProfile.get_cached_objects(invalidate=True, user=user)
+    # The user's default profile may have been this one: their newest profile becomes it again. The lookups that
+    # follow an invalidation then fail for the deleted profile, or for a user who has none left, which is expected.
+    try:
+        UserProfile.get_cached_object(invalidate=True, user=user)
+    except UserProfile.DoesNotExist:
+        pass
+    try:
+        UserProfile.get_cached_object(invalidate=True, user=user, account=instance.account)
+    except (UserProfile.DoesNotExist, Account.DoesNotExist):
+        pass
+    try:
+        UserProfile.get_cached_object(invalidate=True, pk=instance.pk)
+    except UserProfile.DoesNotExist:
+        pass
 
 
 # an Account's contact details are personal data, which the logs must not hold.

@@ -554,10 +554,14 @@ class TestLoadFromGithub(TestAccountMixin):
         # pylint: disable=import-outside-toplevel
         from smarter.apps.account.tests.factories import mortal_user_factory
 
-        _, other_account, _ = mortal_user_factory()
+        other_user, other_account, _ = mortal_user_factory()
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
         other_profile = UserProfile.objects.create(
             user=self.admin_user, account=other_account, name=f"{self.admin_user.username}_other"
         )
+        # the newest profile is the admin's default: the rest of the class needs theirs in this class's account.
+        self.addCleanup(UserProfile.objects.filter(pk=other_profile.pk).delete)
         command = Command()
         self.assertEqual(
             command.get_user_profile(other_account.account_number, self.admin_user.username), other_profile

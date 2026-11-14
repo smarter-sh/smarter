@@ -14,7 +14,6 @@ from smarter.apps.account.tests.cleanup import (
     ADMIN_USERNAME_PREFIX,
     MORTAL_ACCOUNT_NAME_PREFIX,
     MORTAL_USERNAME_PREFIX,
-    purge_test_artifacts,
 )
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import hash_factory, to_snake_case
@@ -171,6 +170,18 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
 
 
 def factory_account_teardown(user: User, account: Optional[Account], user_profile: Optional[UserProfile]):
+    """
+    Delete what a factory created: the profile, its account contact, the user and the account.
+
+    It deletes only these, so a test may call it for a secondary account in the middle of its class. What tests
+    leave behind is deleted by :func:`~smarter.apps.account.tests.cleanup.purge_test_artifacts`, which the test
+    runner calls before and after each run, never in the middle of one, where it would delete the fixtures of
+    classes that are still running.
+
+    :param user: The user.
+    :param account: The account, if any.
+    :param user_profile: The profile, if known; otherwise the user's profile in the account, or their first.
+    """
     if user and account and not user_profile:
         user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
@@ -203,10 +214,6 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
             logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
-
-    # whatever else tests created and failed to delete, found by the factories' marks rather than through
-    # relations that an earlier, partial cleanup may have broken.
-    purge_test_artifacts()
 
 
 def billing_address_factory():
