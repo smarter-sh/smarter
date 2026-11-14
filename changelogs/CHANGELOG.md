@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.14](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.13...v0.46.0-alpha.14) (2026-11-14)
+
+### Bug Fixes
+
+* **llmtool:** find a plugin by name in its account, not its admin's ([07b7483](https://github.com/smarter-sh/smarter/commit/07b7483ec452283b93dfd04067fad948d8c23fc1))
+
 ## [0.46.0-alpha.13](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.12...v0.46.0-alpha.13) (2026-11-14)
 
 ### Bug Fixes
