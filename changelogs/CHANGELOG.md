@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.46.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.45.3-alpha.1...v0.46.0-alpha.1) (2026-11-14)
+
+### Features
+
+* **account:** add an account hierarchy with resource sharing ([4727aa1](https://github.com/smarter-sh/smarter/commit/4727aa1e2f4236bee6fdccd5f7189d960933ff2f))
+
 ## [0.45.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.45.2...v0.45.3-alpha.1) (2026-11-14)
 
 ### Bug Fixes
