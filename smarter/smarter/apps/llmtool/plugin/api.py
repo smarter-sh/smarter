@@ -13,8 +13,8 @@ A Plugin that uses a remote REST API server to retrieve its return data.
 The Stackademy example project's API Plugin is built from these four resources. Their manifests are in
 the `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__ repository:
 
-- `secrets/smarter-test-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/smarter-test-api.yaml>`__
-- `connections/api/smarter-test-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/smarter-test-api.yaml.tpl>`__
+- `secrets/stackademy-catalog-api-key.yaml <https://github.com/smarter-sh/stackademy/blob/main/secrets/stackademy-catalog-api-key.yaml>`__
+- `connections/api/stackademy-catalog-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/stackademy-catalog-api.yaml.tpl>`__
 - `plugins/api/stackademy-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/plugins/api/stackademy-api.yaml>`__
 - `llm-clients/stackademy-api.yaml <https://github.com/smarter-sh/stackademy/blob/main/llm-clients/stackademy-api.yaml>`__
 """

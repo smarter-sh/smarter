@@ -17,19 +17,19 @@ logger = logging.getLogger(__name__)
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 """This test package's data folder, which holds the Secret manifests of the Stackademy test database."""
 MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD = os.path.abspath(
-    os.path.join(TEST_DATA_PATH, "secret-smarter-test-db.yaml")
+    os.path.join(TEST_DATA_PATH, "secret-stackademy-catalog-db.yaml")
 )
 """
-Path to the Secret manifest file 'secret-smarter-test-db.yaml' which.
+Path to the Secret manifest file 'secret-stackademy-catalog-db.yaml' which.
 
 contains the actual password value for the remote test database.
 """
 
 MANIFEST_PATH_SECRET_PROXY_PASSWORD = os.path.abspath(
-    os.path.join(TEST_DATA_PATH, "secret-smarter-test-db-proxy-password.yaml")
+    os.path.join(TEST_DATA_PATH, "secret-stackademy-catalog-db-proxy-password.yaml")
 )
 """
-Path to the Secret manifest file 'secret-smarter-test-db-proxy-password.yaml' which.
+Path to the Secret manifest file 'secret-stackademy-catalog-db-proxy-password.yaml' which.
 
 contains the actual password value for the proxy connection.
 """
@@ -66,7 +66,7 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             raise SmarterValueError(f"Failed to apply Secret manifest {test_secret_metadata.get('name')}.")
 
         # this should match spec.connection.password in ../data/sql-connection.yaml
-        # assumed to be: smarter_test_user
+        # assumed to be: stackademy_catalog_db_password
         test_secret_name = test_secret_metadata.get("name")
         if not test_secret_name:
             raise SmarterValueError("Failed to get test secret name from manifest metadata.")

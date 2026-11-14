@@ -228,7 +228,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--account_number",
             type=str,
-            help="The account number that will own the remote Api connection. Defaults to smarter_test_api",
+            help="The account number that will own the remote Api connection. Defaults to stackademy_catalog_api",
         )
         parser.add_argument(
             "--username",

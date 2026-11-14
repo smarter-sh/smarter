@@ -161,7 +161,7 @@ Agents have broken this rule repeatedly, so read it before any change that sets 
   user), then run `initialize_platform`, and nothing more.
 - **Data from another repository:** the command that handles that repository fetches and
   applies it, and `initialize_platform` calls that command. The Stackademy course database,
-  `smarter_test_db`, is the example: its SQL script and loader are in the stackademy
+  `stackademy`, is the example: its SQL script and loader are in the stackademy
   repository's `scripts/` folder, listed as a `pre` script in `scripts/scripts.yaml`, and
   `load_from_github --run_scripts`, which `initialize_platform` calls, runs them. Never copy a script from another repository into a
   ConfigMap or this repository.

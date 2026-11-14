@@ -91,7 +91,7 @@ Compose and the Makefile
        the one that `Stackademy Online Coding Academy
        <https://smarter.sh/case-studies/stackademy>`__ queries with tool calls.
      - `Makefile <https://github.com/smarter-sh/smarter/blob/main/Makefile>`__ (``docker-init``),
-       `scripts/smarter_test_db.sql <https://github.com/smarter-sh/stackademy/blob/main/scripts/smarter_test_db.sql>`__
+       `scripts/stackademy.sql <https://github.com/smarter-sh/stackademy/blob/main/scripts/stackademy.sql>`__
        in the Stackademy project
    * - Configuration
      - Every setting comes from the environment, through ``.env``, and is validated at start-up.

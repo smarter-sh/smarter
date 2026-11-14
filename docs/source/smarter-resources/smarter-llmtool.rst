@@ -131,7 +131,7 @@ Example Manifest
        model: gpt-6-luna
        temperature: 1.0
        maxTokens: 2048
-     connection: smarter_test_db
+     connection: stackademy_catalog_db
      sqlData:
        limit: 10
        sqlQuery: SELECT c.course_code, c.course_name, c.description, c.cost, prerequisite.course_code AS prerequisite_course_code, prerequisite.course_name AS prerequisite_course_name
