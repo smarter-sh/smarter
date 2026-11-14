@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.5...v0.46.0-alpha.6) (2026-11-14)
+
+### Features
+
+* **account:** add passwordSecret to the User manifest ([79c81b6](https://github.com/smarter-sh/smarter/commit/79c81b65c7f7ba95367adf7a80ac8b43839a3aa0))
+* **account:** list a user's account memberships in the User manifest ([637105e](https://github.com/smarter-sh/smarter/commit/637105eceaa6d8c2e289779ca84989d4699bb326))
+
 ## [0.46.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.4...v0.46.0-alpha.5) (2026-11-14)
 
 ### Bug Fixes
