@@ -8,6 +8,7 @@ from unittest.mock import patch
 from django.test import RequestFactory
 from rest_framework.test import APIClient
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
@@ -171,6 +172,27 @@ class TestOrchestrationRunContract(OpenApiResponseMixin, TestAccountMixin):
         response = self.client.get(run_url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertValidResponse("/orchestrators/{id}/runs/{run_id}/", "get", response.json(), HTTPStatus.NOT_FOUND)
+
+    def test_list_runs(self):
+        """The list holds the user's runs, newest first, as the document says; another user's never appear in it."""
+        first = self.start({"objective": "first"}).json()
+        second = self.start({"objective": "second"}).json()
+        response = self.client.get(self.runs_url(self.orchestrator.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse("/orchestrators/{id}/runs/", "get", response.json())
+        self.assertEqual([run["id"] for run in response.json()], [second["id"], first["id"]])
+
+        # a colleague who may read the Orchestrator sees none of this user's runs; a superuser sees them all.
+        self.client.force_login(self.admin_user)
+        self.assertEqual(len(self.client.get(self.runs_url(self.orchestrator.hashed_id)).json()), 2)
+        other, other_account, _ = mortal_user_factory()
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other.delete)
+        UserProfile.objects.create(user=other, account=self.account, name=f"test_run_colleague_{self.hash_suffix}")
+        self.client.force_login(other)
+        response = self.client.get(self.runs_url(self.orchestrator.hashed_id))
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertEqual(response.json(), [])
 
     def test_refused_starts(self):
         """A bad body is 400, an Orchestrator the user may not read 404, and one that can't run yet 400."""

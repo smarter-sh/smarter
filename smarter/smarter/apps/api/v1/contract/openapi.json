@@ -26943,6 +26943,50 @@
       }
     },
     "/orchestrators/{id}/runs/": {
+      "get": {
+        "description": "The newest runs of an Orchestrator that the user started, up to 20, newest first, each with its steps. A superuser gets every user's. Requires an api key.",
+        "operationId": "orchestrator_run_list",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrchestratorApiRun"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or that the user may not read."
+          }
+        },
+        "summary": "List the runs of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      },
       "post": {
         "description": "Start a run of an Orchestrator that the user may read, toward an objective. It answers 202 with the run, pending, which the platform then executes, one step at a time: poll the run until its status is succeeded, failed or max_iterations_exceeded. Each step calls a harness LLMClient as its owner, and is charged to it. The user must be able to read every harness LLMClient, or the run is refused with 403. A strategy that can't run yet is refused with 400. Requires an api key.",
         "operationId": "orchestrator_run",

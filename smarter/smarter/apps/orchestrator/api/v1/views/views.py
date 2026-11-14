@@ -328,13 +328,53 @@ def runner_profile(user: User, orchestrator: Orchestrator, current: Optional[Use
     return current
 
 
+RECENT_RUNS = 20
+"""How many runs ``GET .../runs/`` lists: the newest."""
+
+
+def readable_runs(user: User, orchestrator: Orchestrator):
+    """
+    Return the runs of the Orchestrator that the user may read: those they started, or every one for a superuser.
+
+    A run's result holds what the user who started it may read in other accounts, so nobody else may read it.
+
+    :param user: The request's user.
+    :param orchestrator: The Orchestrator.
+    :returns: The runs, newest first.
+    """
+    runs = OrchestrationRun.objects.filter(orchestrator=orchestrator).select_related(
+        "started_by__user", "started_by__account"
+    )
+    if not user.is_superuser:
+        runs = runs.filter(started_by__user=user)
+    return runs.order_by("-created_at", "-pk")
+
+
 class OrchestrationRunsView(SmarterAuthenticatedAPIView):
     """
-    Start a run of an Orchestrator: ``POST /api/v1/orchestrators/<hashed_id>/runs/`` with an objective.
+    The runs of an Orchestrator: ``GET /api/v1/orchestrators/<hashed_id>/runs/`` lists the user's newest, and ``POST``.
 
-    It answers ``202`` with the run, ``pending``, which a Celery task executes. See
+    with an objective starts one.
+
+    ``POST`` answers ``202`` with the run, ``pending``, which a Celery task executes. See
     :mod:`smarter.apps.orchestrator.runtime`.
     """
+
+    def get(self, request: Request, hashed_id: Optional[str] = None, orchestrator_id: Optional[int] = None):
+        """
+        List the newest runs of the Orchestrator that the user started, or every user's for a superuser.
+
+        :param request: The request.
+        :param hashed_id: The Orchestrator's hashed id, from the url.
+        :param orchestrator_id: Its id, from the url.
+        :returns: Up to :data:`RECENT_RUNS` runs, each an :class:`OrchestratorApiRun`, newest first.
+        :raises NotFound: If the user may not read the Orchestrator.
+        """
+        user = request_user(request)
+        orchestrator = readable_orchestrator(user, hashed_id, orchestrator_id)
+        runs = readable_runs(user, orchestrator)[:RECENT_RUNS]
+        data = [OrchestratorApiRun.from_model(run).model_dump(mode="json") for run in runs]
+        return Response(data)
 
     def post(self, request: Request, hashed_id: Optional[str] = None, orchestrator_id: Optional[int] = None):
         """
@@ -389,12 +429,8 @@ class OrchestrationRunView(SmarterAuthenticatedAPIView):
         """
         user = request_user(request)
         orchestrator = readable_orchestrator(user, hashed_id, orchestrator_id)
-        runs = OrchestrationRun.objects.select_related("started_by__user", "started_by__account")
-        run = runs.filter(pk=run_id, orchestrator=orchestrator).first()
+        run = readable_runs(user, orchestrator).filter(pk=run_id).first()
         if run is None:
-            raise NotFound("Run not found")
-        started_by_user_id = run.started_by.user_id if run.started_by else None  # type: ignore[attr-defined]
-        if not user.is_superuser and started_by_user_id != user.pk:
             raise NotFound("Run not found")
         data = OrchestratorApiRun.from_model(run).model_dump(mode="json")
         return Response(data)

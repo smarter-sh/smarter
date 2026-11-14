@@ -47,6 +47,17 @@ def orchestrator_paths() -> dict[str, OpenApiPathItem]:
     orchestrator_id = id_or_hashed_id(family.resource)
     run_paths = {
         family.path("{id}/runs/"): OpenApiPathItem(
+            get=rest_read(
+                family.operation_id("run_list"),
+                f"List the runs of {family.a}",
+                f"The newest runs of {family.a} that the user started, up to 20, newest first, each with its steps. "
+                "A superuser gets every user's.",
+                family.tag,
+                OrchestratorApiRun.__name__,
+                many=True,
+                parameters=[orchestrator_id],
+                note=API_KEY_ONLY,
+            ),
             post=rest_operation(
                 family.operation_id("run"),
                 f"Start a run of {family.a}",
@@ -60,7 +71,7 @@ def orchestrator_paths() -> dict[str, OpenApiPathItem]:
                 parameters=[orchestrator_id],
                 status="202",
                 request_body=json_body(OrchestratorApiRunRequest.__name__),
-            )
+            ),
         ),
         family.path("{id}/runs/{run_id}/"): OpenApiPathItem(
             get=rest_read(
