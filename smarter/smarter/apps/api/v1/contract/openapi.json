@@ -7676,6 +7676,242 @@
         "title": "OrchestratorApiOrchestrator",
         "type": "object"
       },
+      "OrchestratorApiRun": {
+        "additionalProperties": false,
+        "description": "A run of an Orchestrator: an attempt at an objective, its status, its steps and its result (ADR-037).\n\nA run starts ``pending``, and a Celery task executes it, so a client polls it until its status is final:\n``succeeded``, ``failed``, ``cancelled`` or ``max_iterations_exceeded``.",
+        "properties": {
+          "completedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When it ended.",
+            "title": "Completedat"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the run was requested.",
+            "title": "Createdat"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why the run failed, or stopped, if it did.",
+            "title": "Errormessage"
+          },
+          "id": {
+            "description": "The run's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "iterationCount": {
+            "description": "How many steps the run has taken.",
+            "minimum": 0,
+            "title": "Iterationcount",
+            "type": "integer"
+          },
+          "objective": {
+            "description": "OrchestrationRun.objective.",
+            "title": "Objective",
+            "type": "string"
+          },
+          "orchestrator": {
+            "description": "The Orchestrator's id.",
+            "title": "Orchestrator",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The run's result: its last step's text, once it succeeded.",
+            "title": "Result"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its execution began.",
+            "title": "Startedat"
+          },
+          "startedBy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountApiUserProfile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Who started the run."
+          },
+          "status": {
+            "description": "OrchestrationRun.status.",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "max_iterations_exceeded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "description": "Its steps, in order.",
+            "items": {
+              "$ref": "#/components/schemas/OrchestratorApiStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "orchestrator",
+          "objective",
+          "status",
+          "iterationCount"
+        ],
+        "title": "OrchestratorApiRun",
+        "type": "object"
+      },
+      "OrchestratorApiRunRequest": {
+        "additionalProperties": false,
+        "description": "The body of a request that starts a run: what the run is to achieve.",
+        "properties": {
+          "objective": {
+            "description": "What the run is to achieve, e.g. Prepare the board pack for Q4 2025. Every step receives it.",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Objective",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objective"
+        ],
+        "title": "OrchestratorApiRunRequest",
+        "type": "object"
+      },
+      "OrchestratorApiStep": {
+        "additionalProperties": false,
+        "description": "One step of a run: one call of a harness LLMClient, as its owner.\n\nIts messages, tokens and charges are those of its Prompt session, which the LLMClient's owner may read.",
+        "properties": {
+          "accountNumber": {
+            "description": "The account that the LLMClient belongs to.",
+            "title": "Accountnumber",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the step ended.",
+            "title": "Createdat"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why the step failed, if it did.",
+            "title": "Errormessage"
+          },
+          "llmclient": {
+            "description": "The harness LLMClient's name.",
+            "title": "Llmclient",
+            "type": "string"
+          },
+          "role": {
+            "description": "The harness's role.",
+            "enum": [
+              "planner",
+              "executor",
+              "critic",
+              "router",
+              "summarizer",
+              "tool_caller"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "sequence": {
+            "description": "OrchestrationStep.sequence: the step's position in the run.",
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "description": "OrchestrationStep.status.",
+            "enum": [
+              "succeeded",
+              "failed",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sequence",
+          "llmclient",
+          "accountNumber",
+          "role",
+          "status"
+        ],
+        "title": "OrchestratorApiStep",
+        "type": "object"
+      },
       "Parameter": {
         "description": "Parameter class for parameterized Plugins.\n\nThis structure is\nintended to match that which is used in the OpenAPI\nfunction calling specification.\nIt is used to define the parameters that a plugin can accept,\nand also for creating the function calling prompt api.",
         "properties": {
@@ -17427,8 +17663,21 @@
         "type": "object"
       },
       "SAMOrchestratorHarnessConfig": {
-        "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key \u2014 resolved\nagainst the account's existing LLMClients at apply time.",
+        "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key, resolved at\napply time: in accountNumber's account if given, which may be another\naccount, e.g. a department's, otherwise the nearest of the owner's account\ntree (ADR-036, ADR-037).",
         "properties": {
+          "accountNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The account that the LLMClient belongs to, e.g. a department's, which the Orchestrator's owner must be able to read. Defaults to the nearest LLMClient of that name in the owner's account tree (ADR-036).",
+            "title": "Accountnumber"
+          },
           "config": {
             "additionalProperties": true,
             "description": "Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",
@@ -26693,6 +26942,111 @@
         ]
       }
     },
+    "/orchestrators/{id}/runs/": {
+      "post": {
+        "description": "Start a run of an Orchestrator that the user may read, toward an objective. It answers 202 with the run, pending, which the platform then executes, one step at a time: poll the run until its status is succeeded, failed or max_iterations_exceeded. Each step calls a harness LLMClient as its owner, and is charged to it. The user must be able to read every harness LLMClient, or the run is refused with 403. A strategy that can't run yet is refused with 400. Requires an api key.",
+        "operationId": "orchestrator_run",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrchestratorApiRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestratorApiRun"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Start a run of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
+    "/orchestrators/{id}/runs/{run_id}/": {
+      "get": {
+        "description": "A run of an Orchestrator, with its steps and, once it succeeded, its result. Only the user who started it, or a superuser, may read it: anyone else gets 404. Requires an api key.",
+        "operationId": "orchestrator_run_retrieve",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The run's id.",
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestratorApiRun"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or that the user may not read."
+          }
+        },
+        "summary": "A run of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
     "/plugins/": {
       "get": {
         "description": "The plugins that the user owns, newest first: their metadata. Requires an api key.",
@@ -28095,7 +28449,7 @@
       "name": "journal"
     },
     {
-      "description": "The Orchestrators' REST reads. For superusers.",
+      "description": "The Orchestrators' REST reads, for superusers, and their runs, for any user who may read them.",
       "name": "orchestrators"
     },
     {

@@ -13,14 +13,27 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import NotFound
+from pydantic import ValidationError as PydanticValidationError
+from rest_framework.exceptions import (
+    APIException,
+    NotFound,
+    ParseError,
+    PermissionDenied,
+)
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.orchestrator.contract.models import OrchestratorApiOrchestrator
+from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.orchestrator.contract.models import (
+    OrchestratorApiOrchestrator,
+    OrchestratorApiRun,
+    OrchestratorApiRunRequest,
+)
 from smarter.apps.orchestrator.models import (
+    OrchestrationRun,
     Orchestrator,
 )
+from smarter.apps.orchestrator.runtime import OrchestrationRefused, start_run
 from smarter.apps.orchestrator.serializers import (
     OrchestratorSerializer,
 )
@@ -30,6 +43,7 @@ from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
+    SmarterAuthenticatedAPIView,
 )
 from smarter.lib.typing import SmarterDictType, required
 
@@ -251,3 +265,136 @@ class OrchestratorListView(ContractListMixin, ListViewBase):
             .prefetch_related("tags")
             .order_by("name")
         )
+
+
+###############################################################################
+# Run views (ADR-037)
+###############################################################################
+class OrchestrationRunRefused(APIException):
+    """A run that may not start, e.g. of a strategy that can't run yet: a 400 with its reason."""
+
+    status_code = HTTPStatus.BAD_REQUEST
+    default_code = "run_refused"
+
+
+def readable_orchestrator(user: User, hashed_id: Optional[str], orchestrator_id: Optional[int]) -> Orchestrator:
+    """
+    Return the Orchestrator that a run url names, if the user may read it.
+
+    :param user: The request's user.
+    :param hashed_id: The Orchestrator's hashed id, from the url, if it names it so.
+    :param orchestrator_id: Its id, from the url, otherwise.
+    :returns: The Orchestrator.
+    :raises NotFound: If there is none, or the user may not read it.
+    """
+    if hashed_id:
+        orchestrator_id = Orchestrator.id_from_hashed_id(hashed_id)
+    orchestrators = Orchestrator.objects.with_read_permission_for(user=user)  # type: ignore[attr-defined]
+    orchestrator = orchestrators.filter(pk=orchestrator_id).first()
+    if orchestrator is None:
+        raise NotFound("Orchestrator not found")
+    return orchestrator
+
+
+def request_user(request: Request) -> User:
+    """
+    Return the request's user, whom DRF has authenticated.
+
+    :param request: The request.
+    :returns: The user.
+    :raises NotFound: If the request has no user, which authentication doesn't let through.
+    """
+    user = get_resolved_user(request.user)
+    if not isinstance(user, User):
+        raise NotFound("Orchestrator not found")
+    return user
+
+
+def runner_profile(user: User, orchestrator: Orchestrator, current: Optional[UserProfile]) -> UserProfile:
+    """
+    Return the profile that a run records as its starter: the user's in the Orchestrator's account, if they have one.
+
+    :param user: The request's user.
+    :param orchestrator: The Orchestrator.
+    :param current: The request's user profile, for a user who reads the Orchestrator from another account.
+    :returns: The profile.
+    :raises NotFound: If the user has no profile at all.
+    """
+    in_account = UserProfile.objects.filter(user=user, account_id=orchestrator.user_profile.account_id).first()  # type: ignore[union-attr]
+    if in_account is not None:
+        return in_account
+    if current is None:
+        raise NotFound("Orchestrator not found")
+    return current
+
+
+class OrchestrationRunsView(SmarterAuthenticatedAPIView):
+    """
+    Start a run of an Orchestrator: ``POST /api/v1/orchestrators/<hashed_id>/runs/`` with an objective.
+
+    It answers ``202`` with the run, ``pending``, which a Celery task executes. See
+    :mod:`smarter.apps.orchestrator.runtime`.
+    """
+
+    def post(self, request: Request, hashed_id: Optional[str] = None, orchestrator_id: Optional[int] = None):
+        """
+        Start a run.
+
+        :param request: The request, whose body is an :class:`OrchestratorApiRunRequest`.
+        :param hashed_id: The Orchestrator's hashed id, from the url.
+        :param orchestrator_id: Its id, from the url.
+        :returns: The run, an :class:`OrchestratorApiRun`, with ``202``.
+        :raises NotFound: If the user may not read the Orchestrator.
+        :raises ParseError: If the body isn't an objective.
+        :raises PermissionDenied: If the user may not use every LLMClient of the Orchestrator.
+        :raises OrchestrationRunRefused: If the run may not start, e.g. its strategy can't run yet.
+        """
+        user = request_user(request)
+        orchestrator = readable_orchestrator(user, hashed_id, orchestrator_id)
+        try:
+            body = OrchestratorApiRunRequest.model_validate(request.data)
+        except PydanticValidationError as e:
+            raise ParseError("The body must be a JSON object with an objective.") from e
+        user_profile = runner_profile(user, orchestrator, self.user_profile)  # type: ignore[arg-type]
+        try:
+            run = start_run(orchestrator, user_profile, body.objective)
+        except OrchestrationRefused as e:
+            if e.status == HTTPStatus.FORBIDDEN:
+                raise PermissionDenied(str(e)) from e
+            raise OrchestrationRunRefused(str(e)) from e
+        data = OrchestratorApiRun.from_model(run).model_dump(mode="json")
+        return Response(data, status=HTTPStatus.ACCEPTED)
+
+
+class OrchestrationRunView(SmarterAuthenticatedAPIView):
+    """
+    A run of an Orchestrator: ``GET /api/v1/orchestrators/<hashed_id>/runs/<run_id>/``.
+
+    Only the user who started it, or a superuser, may read it: its result may hold what that user may read in other
+    accounts.
+    """
+
+    def get(
+        self, request: Request, run_id: int, hashed_id: Optional[str] = None, orchestrator_id: Optional[int] = None
+    ):
+        """
+        Return the run, with its steps.
+
+        :param request: The request.
+        :param run_id: The run's id, from the url.
+        :param hashed_id: The Orchestrator's hashed id, from the url.
+        :param orchestrator_id: Its id, from the url.
+        :returns: The run, an :class:`OrchestratorApiRun`.
+        :raises NotFound: If there is no such run of the Orchestrator, or the user didn't start it.
+        """
+        user = request_user(request)
+        orchestrator = readable_orchestrator(user, hashed_id, orchestrator_id)
+        runs = OrchestrationRun.objects.select_related("started_by__user", "started_by__account")
+        run = runs.filter(pk=run_id, orchestrator=orchestrator).first()
+        if run is None:
+            raise NotFound("Run not found")
+        started_by_user_id = run.started_by.user_id if run.started_by else None  # type: ignore[attr-defined]
+        if not user.is_superuser and started_by_user_id != user.pk:
+            raise NotFound("Run not found")
+        data = OrchestratorApiRun.from_model(run).model_dump(mode="json")
+        return Response(data)
