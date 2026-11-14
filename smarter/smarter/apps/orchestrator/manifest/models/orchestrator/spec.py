@@ -1,7 +1,7 @@
 """Pydantic manifest spec for the Orchestrator SAM (Smarter API Manifest) resource."""
 
 import os
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -20,11 +20,20 @@ class SAMOrchestratorHarnessConfig(BaseModel):
     """A single LLMClient (Harness) membership within the Orchestrator.
 
     Mirrors smarter.apps.orchestrator.models.OrchestratorHarness. The
-    llmClientName is a reference by name, not by primary key — resolved
-    against the account's existing LLMClients at apply time.
+    llmClientName is a reference by name, not by primary key, resolved at
+    apply time: in accountNumber's account if given, which may be another
+    account, e.g. a department's, otherwise the nearest of the owner's account
+    tree (ADR-036, ADR-037).
     """
 
     llmClientName: str = Field(description="Name of an existing LLMClient to attach as a Harness.")
+    accountNumber: Optional[str] = Field(
+        default=None,
+        description=(
+            "The account that the LLMClient belongs to, e.g. a department's, which the Orchestrator's owner must be "
+            "able to read. Defaults to the nearest LLMClient of that name in the owner's account tree (ADR-036)."
+        ),
+    )
     role: HarnessRole = Field(
         default=HarnessRole.EXECUTOR,
         description=(

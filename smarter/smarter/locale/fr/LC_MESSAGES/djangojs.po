@@ -2602,10 +2602,10 @@ msgstr "Suivre Smarter sur GitHub"
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid ""
-"The Smarter Project has around 500,000 lines of code, across two dozen "
+"The Smarter Project has around 750,000 lines of code, across two dozen "
 "repositories."
 msgstr ""
-"The Smarter Project compte environ 500 000 lignes de code, réparties dans "
+"The Smarter Project compte environ 750 000 lignes de code, réparties dans "
 "deux douzaines de dépôts."
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
@@ -2613,12 +2613,10 @@ msgid "Browse the repositories"
 msgstr "Parcourir les dépôts"
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
-msgid ""
-"The main Smarter repository alone has about 400,000 lines of code, including "
-"about 180,000 lines of Python and 45,000 of TypeScript."
+msgid "The main Smarter repository alone has about 365,000 lines of code."
 msgstr ""
-"Le dépôt principal de Smarter compte à lui seul environ 400 000 lignes de "
-"code, dont environ 180 000 lignes de Python et 45 000 de TypeScript."
+"Le dépôt principal de Smarter compte à lui seul environ 365 000 lignes de "
+"code."
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid "Browse the repository"

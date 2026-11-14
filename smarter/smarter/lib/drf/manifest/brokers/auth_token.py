@@ -8,7 +8,7 @@ from django.http import HttpRequest
 from pydantic_core import ValidationError as PydanticValidationError
 from rest_framework.serializers import ModelSerializer
 
-from smarter.apps.account.models import User
+from smarter.apps.account.models import User, UserProfile
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import logging
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
@@ -623,6 +623,38 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
         }
         return self.json_response_ok(command=command, data=data)
 
+    def check_api_key_user(self, api_key_user: User, command: SmarterJournalCliCommands) -> None:
+        """
+        Refuse an api key of a user whose key this broker's user may not manage.
+
+        :attr:`administers_account` lets this broker's user manage api keys in their account. A superuser may
+        manage anyone's. Anyone else, e.g. a department's account admin, only those of the account's own users,
+        and never of a user whose role is higher than theirs: a superuser's, or a staff user's unless they are staff.
+
+        :param api_key_user: The user of the api key, from the manifest's ``spec.config.username``.
+        :param command: The cli command, for the error.
+        :raises SAMSmarterAuthTokenBrokerError: If the key's user is outside the account, or holds a higher role.
+        """
+        if self.user is None or self.user.is_superuser:
+            return
+        account = self.user_profile.account if self.user_profile else None
+        if not UserProfile.objects.filter(user=api_key_user, account=account).exists():
+            raise SAMSmarterAuthTokenBrokerError(
+                f"User {api_key_user.username} does not belong to this account.",
+                thing=self.kind,
+                command=command,
+            )
+        higher_role = api_key_user.is_superuser
+        if api_key_user.is_staff and not self.user.is_staff:
+            higher_role = True
+        if higher_role:
+            raise SAMSmarterAuthTokenBrokerError(
+                f"User {self.user.username} does not have permission to create or modify API keys for users with "
+                "higher administrative roles.",
+                thing=self.kind,
+                command=command,
+            )
+
     def apply(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Apply the manifest: create or update the SmarterAuthToken, and save it.
@@ -637,8 +669,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
         :param args: Positional arguments, unused.
         :param kwargs: Keyword arguments from the cli api url.
         :returns: The journaled response, with the command result.
-        :raises SAMSmarterAuthTokenBrokerError: If the requesting user is not staff, or may not
-            manage keys for the manifest's user.
+        :raises SAMSmarterAuthTokenBrokerError: If the requesting user doesn't administer the account, or may not
+            manage keys for the manifest's user (see :meth:`check_api_key_user`).
         :raises SAMBrokerErrorNotReady: If the broker has no manifest.
         :raises SAMBrokerError: If the token can't be built or saved.
         """
@@ -663,7 +695,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSmarterAuthTokenBrokerError(
                 message="Only account admins can apply auth token manifests.",
                 thing=self.kind,
@@ -697,21 +729,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                     command=command,
                 ) from e
 
-            # ensure that the role of the user is equal to or less than the role of the owner
-            # of this process.
-            if not self.user.is_staff and not self.user.is_superuser:
-                raise SAMSmarterAuthTokenBrokerError(
-                    f"User {self.user.username} does not have permission to create or modify API keys.",
-                    thing=self.kind,
-                    command=command,
-                )
-            if not self.user.is_superuser:
-                if manifest_spec_config_user.is_superuser:
-                    raise SAMSmarterAuthTokenBrokerError(
-                        f"User {self.user.username} does not have permission to create or modify API keys for users with higher administrative roles.",
-                        thing=self.kind,
-                        command=command,
-                    )
+            self.check_api_key_user(manifest_spec_config_user, command)
 
             if self.smarter_auth_token is None:
                 # Set all required fields at instantiation. The manifest's metadata always has a
@@ -849,7 +867,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 command=command,
             )
 
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMSmarterAuthTokenBrokerError(
                 message="Only account admins can delete auth tokens.",
                 thing=self.kind,

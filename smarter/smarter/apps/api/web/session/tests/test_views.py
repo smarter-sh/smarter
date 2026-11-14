@@ -114,6 +114,21 @@ class TestConsoleSessionView(TestAccountMixin):
         self.assertEqual(session.badges.extension_updates, 0)  # type: ignore[union-attr]
         self.assertFalse(session.flags.terminal)
 
+    def test_administers_account(self):
+        """A user administers the console's account as a superuser, or as that account's admin without staff."""
+        self.client.force_login(self.non_admin_user)
+        self.assertFalse(self.get_session().user.administers_account)  # type: ignore[union-attr]
+
+        self.make_non_admin_an_account_admin()
+        session = self.get_session()
+        self.assertTrue(session.user.administers_account)  # type: ignore[union-attr]
+        self.assertFalse(session.user.is_staff)  # type: ignore[union-attr]
+        # the Django admin site stays staff-only.
+        self.assertIsNone(session.sidebar.admin)  # type: ignore[union-attr]
+
+        self.client.force_login(self.admin_user)
+        self.assertTrue(self.get_session().user.administers_account)  # type: ignore[union-attr]
+
     def test_superuser_terminal_and_badges(self):
         """The terminal is on only for a superuser, and only a superuser's badges are counted."""
         self.client.force_login(self.admin_user)

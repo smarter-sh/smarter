@@ -57,6 +57,7 @@ from redis.exceptions import RedisError
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.common.conf import smarter_settings
+from smarter.common.utils import mask_identifier
 from smarter.lib import logging
 from smarter.lib.logging.redis_log_handler import (
     build_channel,
@@ -415,6 +416,10 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     streamed. See :func:`_request_id`. With the ``session_key`` query parameter,
     only the records of that chat are streamed. See :func:`_session_key`.
 
+    The view's own log entries identify the user by id, and mask the session key:
+    the user context and the channel hold the username, and a session key lets
+    anyone holding it continue the chat.
+
     :param request: Incoming HTTP request. The view requires authentication
         via :func:`django.contrib.auth.decorators.login_required`.
     :type request: django.http.HttpRequest
@@ -439,21 +444,24 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     # either locates a user, or generates a unique job ID that is guaranteed to not have
     # any log data associated with it.
     user = get_resolved_user(request.user)
+    user_id: Optional[int] = None
     if not user or not user.is_authenticated:
         user_context = job_id_factory()
     else:
         user_context = get_user_context(user)
+        user_id = user.pk
     logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.stream_user_logs()"
     min_level = _min_log_level(request)
     request_id = _request_id(request)
     session_key = _session_key(request)
+    masked_session_key = mask_identifier(session_key)
     logger.info(
-        "%s called for user_context='%s' min_level=%s request_id=%s session_key=%s",
+        "%s called for user_id=%s min_level=%s request_id=%s session_key=%s",
         logger_prefix,
-        user_context,
+        user_id,
         logging.getLevelName(min_level),
         request_id,
-        session_key,
+        masked_session_key,
     )
 
     if not smarter_settings.enable_dashboard_server_logs:
@@ -468,7 +476,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         pubsub = redis_cache.pubsub()
         channel = build_channel(user_context)
         pubsub.subscribe(channel)
-        logger.info("%s Subscribed to Redis channel '%s' for log streaming.", logger_prefix, channel)
+        logger.info("%s Subscribed to the user's Redis channel for log streaming.", logger_prefix)
     except RedisError:
         logger.exception("%s Failed to connect to Redis for log streaming.", logger_prefix, exc_info=True)
         return HttpResponse(

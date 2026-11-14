@@ -9,6 +9,7 @@ from pydantic import Field, field_validator
 
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -139,6 +140,38 @@ class SAMAccountSpecConfig(AbstractSAMSpecBase):
             zoneinfo.ZoneInfo(v)
         except Exception as e:
             raise SmarterValueError("Invalid IANA timezone. Example: 'America/New_York'") from e
+        return v
+
+    parent: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.parent[str]. Optional. The account number of the {MANIFEST_KIND} above this one in "
+            "its organization, e.g. a department's company. Omitted means directly under the Smarter account, the "
+            "root of the account tree."
+        ),
+    )
+    shareScope: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.shareScope[str]. Optional. The account number of this {MANIFEST_KIND} or one of "
+            "its ancestors, whose whole subtree may read this account's resources, e.g. an IT department that "
+            "shares its Secrets and Connections with its company. Omitted means that the account shares nothing."
+        ),
+    )
+
+    @field_validator("parent", "shareScope")
+    def validate_account_reference(cls, v):
+        """
+        Check that ``parent`` and ``shareScope`` are account numbers, e.g. ``1234-5678-9012``.
+
+        :param v: The account number, or None.
+        :returns: The account number, or None.
+        :raises SmarterValueError: when it is not an account number.
+        """
+        if v is None:
+            return v
+        if not SmarterValidator.is_valid_account_number(v):
+            raise SmarterValueError("Invalid account number. Example: '1234-5678-9012'")
         return v
 
 

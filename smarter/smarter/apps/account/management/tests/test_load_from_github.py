@@ -20,6 +20,11 @@ from smarter.apps.account.management.commands.load_from_github import (
     Command,
     RepositoryManifest,
 )
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.repository_owners import (
+    OWNERS_CONFIG,
+    RepositoryOwnersConfig,
+)
 from smarter.apps.account.repository_scripts import SCRIPTS_CONFIG, SCRIPTS_FOLDER
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -544,6 +549,114 @@ class TestLoadFromGithub(TestAccountMixin):
                 with self.assertRaises(SmarterValueError):
                     command.get_user_profile(account_number, username)
 
+    def test_owner_in_one_of_several_accounts(self):
+        """Test that a user with several accounts owns the resources as their profile in the account given."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        other_user, other_account, _ = mortal_user_factory()
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        other_profile = UserProfile.objects.create(
+            user=self.admin_user, account=other_account, name=f"{self.admin_user.username}_other"
+        )
+        # the newest profile is the admin's default: the rest of the class needs theirs in this class's account.
+        self.addCleanup(UserProfile.objects.filter(pk=other_profile.pk).delete)
+        command = Command()
+        self.assertEqual(
+            command.get_user_profile(other_account.account_number, self.admin_user.username), other_profile
+        )
+        self.assertEqual(
+            command.get_user_profile(self.account.account_number, self.admin_user.username), self.user_profile
+        )
+        with self.assertRaisesRegex(SmarterValueError, "does not belong to account"):
+            command.get_user_profile(other_account.account_number, self.non_admin_user.username)
+
+    # -------------------------------------------------------------------------
+    # owners.yaml: who applies each folder's manifests
+    # -------------------------------------------------------------------------
+    def owned_repo(self, owner_username: str, account_number: str) -> str:
+        """A repository with a Secret in an owned folder, and owners.yaml, which names its owner."""
+        owners = f'owners:\n  - path: departments/hr\n    username: {owner_username}\n    accountNumber: "{account_number}"\n'
+        secret = manifest("Secret", self.secret_name, "  config:\n    value: x\n")
+        return self.repo({OWNERS_CONFIG: owners, "departments/hr/secret.yaml": secret})
+
+    def as_smarter_account(self) -> None:
+        """Make this test's account the platform's Smarter account, where owned folders are applied."""
+        patcher = patch(f"{MODULE}.smarter_cached_objects", MagicMock(smarter_account=self.account))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def owner_profile(self) -> UserProfile:
+        """The non-admin user, made an administrator of this account, so that they may apply Secrets."""
+        owner = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        owner.is_account_admin = True
+        owner.save()
+        self.addCleanup(UserProfile.objects.filter(pk=owner.pk).update, is_account_admin=False)
+        return owner
+
+    def test_owned_folder_is_applied_as_its_owner(self):
+        """Test that a manifest of an owned folder belongs to its owner, and owners.yaml isn't read as a manifest."""
+        owner = self.owner_profile()
+        self.as_smarter_account()
+        self.use_repo(self.owned_repo(self.non_admin_user.username, str(self.account.account_number)))
+        output = self.run_command()
+        self.assertTrue(Secret.objects.filter(name=self.secret_name, user_profile=owner).exists())
+        self.assertNotIn("owners.yaml", output)
+
+    def test_owned_folder_is_skipped_outside_the_smarter_account(self):
+        """Test that loading into another account, as initialize_account does, skips the owned folders."""
+        self.owner_profile()
+        self.use_repo(self.owned_repo(self.non_admin_user.username, str(self.account.account_number)))
+        output = self.run_command()
+        self.assertIn(f"Skipped departments/hr/secret.yaml: it belongs to {self.non_admin_user.username}", output)
+        self.assertFalse(Secret.objects.filter(name=self.secret_name).exists())
+
+    def test_missing_owner_fails_its_manifests(self):
+        """Test that an owner who doesn't exist fails the manifests of their folder."""
+        self.as_smarter_account()
+        self.use_repo(self.owned_repo("no_such_owner_x", str(self.account.account_number)))
+        with self.assertRaisesRegex(CommandError, "its owner no_such_owner_x doesn't exist"):
+            self.run_command()
+        self.assertFalse(Secret.objects.filter(name=self.secret_name).exists())
+
+    def test_owned_manifests_come_after_the_users(self):
+        """Test that an owned folder's Secret, which a User owns, is applied after the Users, unlike other Secrets."""
+        root = self.repo(
+            {
+                "secrets/shared.yaml": manifest("Secret", "shared"),
+                "org/users/owner.yaml": manifest("User", "owner"),
+                "departments/hr/secret.yaml": manifest("Secret", "hr"),
+                "departments/hr/connection.yaml": manifest("SqlConnection", "hr_db"),
+            }
+        )
+        command = Command(stdout=StringIO())
+        command.owners_config = RepositoryOwnersConfig.model_validate(
+            {"owners": [{"path": "departments/hr", "username": "owner", "accountNumber": "1234-5678-0001"}]}
+        )
+        paths = [m.path for m in command.find_manifests(root)]
+        self.assertEqual(
+            paths,
+            [
+                "secrets/shared.yaml",
+                "org/users/owner.yaml",
+                "departments/hr/secret.yaml",
+                "departments/hr/connection.yaml",
+            ],
+        )
+
+    def test_the_organization_is_applied_by_the_loader(self):
+        """Test that Account and User manifests are applied by load_from_github's own user, wherever they are."""
+        command = Command(stdout=StringIO())
+        command.owners_config = RepositoryOwnersConfig.model_validate(
+            {"owners": [{"path": "org", "username": "someone", "accountNumber": "1234-5678-0001"}]}
+        )
+        for kind in ("Account", "User"):
+            item = RepositoryManifest(path=f"org/{kind}.yaml", filespec="/x", kind=kind, name="x", manifest={})
+            self.assertEqual(command.owner_profile_for(item, self.user_profile), self.user_profile)
+        outside = RepositoryManifest(path="other/s.yaml", filespec="/x", kind="Secret", name="x", manifest={})
+        self.assertEqual(command.owner_profile_for(outside, self.user_profile), self.user_profile)
+
 
 class TestLoadFromGithubApply(TestAccountMixin):
     """Test apply(): one manifest, from its file, a template, or a given manifest, in a transaction."""
@@ -653,6 +766,16 @@ class TestLoadFromGithubLLMClients(TestAccountMixin):
 
     def llmclient(self, **fields) -> LLMClient:
         return LLMClient.objects.create(name=self.name, user_profile=self.user_profile, **fields)
+
+    def test_deploy_skipped_reason(self):
+        """Test that --deploy leaves staff-only LLMClients, and those of an owned folder, undeployed."""
+        manifest = {"kind": "LLMClient", "metadata": {"name": self.name}, "spec": {"config": {"prompt": {}}}}
+        self.command.user_profile = self.user_profile
+        self.assertIsNone(self.command.deploy_skipped_reason(manifest, self.user_profile))
+        owned_reason = self.command.deploy_skipped_reason(manifest, self.non_admin_user_profile)
+        self.assertIn(f"it belongs to {self.non_admin_user.username}", str(owned_reason))
+        staff_only = {"kind": "LLMClient", "spec": {"config": {"prompt": {"staffOnly": True}}}}
+        self.assertEqual(self.command.deploy_skipped_reason(staff_only, self.user_profile), "it is staff-only.")
 
     def test_keep_deployed_copies_the_manifest(self):
         """Test that keep_deployed sets deployed on a copy, from the LLMClient that exists."""

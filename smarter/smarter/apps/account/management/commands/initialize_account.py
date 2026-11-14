@@ -31,8 +31,11 @@ from typing import Optional
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from smarter.apps.account.models import Account, User
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from smarter.apps.account.models import Account, User, UserProfile
+from smarter.apps.account.utils import (
+    get_cached_smarter_admin_user_profile,
+    set_account_admin,
+)
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
@@ -66,6 +69,20 @@ class Command(SmarterCommand):
     Initialize the Smarter
     platform. Creates the minimal resources necessary to start using Smarter.
     """
+
+    @staticmethod
+    def make_account_admin(user: User, account_number: str) -> UserProfile:
+        """
+        Make the user a member and administrator of the account, and only of that account.
+
+        :param user: The user.
+        :param account_number: The account.
+        :returns: The user's profile in the account.
+        """
+        account = Account.objects.get(account_number=account_number)
+        user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
+        set_account_admin(user_profile)
+        return user_profile
 
     def initialize_account(
         self, account_number: str, username: str, email: str, password: Optional[str], company_name: Optional[str]
@@ -103,9 +120,11 @@ class Command(SmarterCommand):
             if password:
                 user.set_password(password)
                 user.email = email
-                user.is_superuser = True
+                # the account's administrator, not the platform's: never a superuser, who may read every
+                # account. is_staff is how the web console recognizes an account's administrator.
                 user.is_staff = True
                 user.save()
+                self.make_account_admin(user, account_number)
                 msg = f"Updated the existing User '{username}' for account {account_number}."
                 self.stdout.write(self.style.NOTICE(msg))
                 logger.info(msg)
@@ -164,11 +183,13 @@ class Command(SmarterCommand):
                 e,
             )
 
-        # 4. The account's own copy of the Stackademy project, deployed. Without its Budget, which only a
-        # superuser may apply, and which initialize_platform applies once, to the Smarter account's
-        # LLMClient: a Budget's resources are declarative, so applying it here would move it to this
-        # account's. Its LLMClients are verified by initialize_platform, rather than with billable
-        # prompts each time that an account is created.
+        # 4. The account's own copy of the Stackademy project's plugins and LLMClients, deployed. Its
+        # Secrets and Connections belong to the Smarter admin, which initialize_platform applies, and
+        # which shares them with every account (ADR-036): the plugins find them there. Without its
+        # Budget, which only a superuser may apply, and which initialize_platform applies once, to the
+        # Smarter account's LLMClient: a Budget's resources are declarative, so applying it here would
+        # move it to this account's. Its LLMClients are verified by initialize_platform, rather than
+        # with billable prompts each time that an account is created.
 
         try:
             call_command(
@@ -176,7 +197,7 @@ class Command(SmarterCommand):
                 url=STACKADEMY_REPOSITORY_URL,
                 account_number=account_number,
                 username=username,
-                exclude_kind=[SAMKinds.BUDGET.value],
+                include_kind=EXAMPLE_KINDS_PER_ACCOUNT,
                 deploy=True,
             )
         except (CommandError, SystemExit) as e:
@@ -226,7 +247,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--account_number",
             type=str,
-            help="The account number that will own the remote Api connection. Defaults to smarter_test_api",
+            help="The account number that will own the remote Api connection. Defaults to stackademy_catalog_api",
         )
         parser.add_argument(
             "--username",

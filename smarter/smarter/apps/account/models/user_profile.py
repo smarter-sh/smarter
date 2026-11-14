@@ -22,7 +22,6 @@ from django.utils import translation
 from smarter.apps.account.profile_selection import selected_user_profile_id
 from smarter.apps.account.signals import new_user_created
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ADMIN_USERNAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import mask_email
 from smarter.lib import logging
@@ -314,6 +313,40 @@ def active_language() -> str:
         return settings.LANGUAGE_CODE
 
 
+def user_administers_account(user: object, user_profile: Optional["UserProfile"]) -> bool:
+    """
+    Whether a user administers an account: manages every resource in it.
+
+    A superuser administers every account. A user with ``User.is_staff`` administers each account they belong to,
+    which is how an account's administrator has been marked, and which also opens the Django admin site, and no
+    other: staff of one account have no say in another, so their own profile in the account is required, as for
+    anyone else. A user whose own profile in the account has ``is_account_admin`` administers that account only,
+    and opens nothing else: the role for a department's administrator in an organization of several accounts
+    (ADR-036).
+
+    :param user: The user, e.g. a request's. None, or an anonymous user, administers nothing.
+    :param user_profile: The user's profile in the account, if any. None, or a profile of another user, makes
+        anyone but a superuser administer nothing.
+    :returns: True if the user may manage every resource of the account.
+    """
+    if user is None:
+        return False
+    # "is True", so that only a real flag counts, never e.g. a test double's automatic attribute.
+    if getattr(user, "is_superuser", False) is True:
+        return True
+    if user_profile is None:
+        return False
+    user_pk = getattr(user, "pk", None)
+    if user_pk is None:
+        return False
+    if user_profile.user_id != user_pk:  # type: ignore[attr-defined]
+        return False
+    if getattr(user, "is_staff", False) is True:
+        return True
+    retval = bool(user_profile.is_account_admin)
+    return retval
+
+
 class UserProfile(MetaDataModel):
     """
     UserProfile model for associating Django users with Smarter accounts.
@@ -370,6 +403,13 @@ class UserProfile(MetaDataModel):
     is_test = models.BooleanField(
         default=False, help_text="Indicates if this profile is used for unit testing purposes."
     )
+    is_account_admin = models.BooleanField(
+        default=False,
+        help_text=(
+            "Whether the user administers this account, and only this one: they manage every resource in it. "
+            "Unlike User.is_staff, it gives no access to the Django admin site, and no rights in the user's other accounts."
+        ),
+    )
     welcomed_at = models.DateTimeField(
         blank=True,
         null=True,
@@ -381,6 +421,18 @@ class UserProfile(MetaDataModel):
         default=settings.LANGUAGE_CODE,
         help_text="The user's preferred language, in which they are sent emails, e.g. the welcome email.",
     )
+
+    @property
+    def administers_account(self) -> bool:
+        """
+        Whether this profile's user administers its account: manages every resource in it.
+
+        See :func:`user_administers_account`.
+
+        :returns: True if the user may manage every resource of this profile's account.
+        """
+        retval = user_administers_account(self.user, self)
+        return retval
 
     @property
     def avatar_url(self) -> str:
@@ -539,8 +591,10 @@ class UserProfile(MetaDataModel):
         """
         Return the designated user for the given account.
 
-        This method finds the first staff user associated with the account. If no staff user exists, it returns the first available user.
-        If the account has no users, an admin user is created and returned.
+        This method finds the first administrator of the account, by ``is_account_admin`` or ``User.is_staff``. If
+        there is none, it returns the first available user. If the account has no users, it creates an administrator
+        of the account's own, with :func:`~smarter.apps.account.utils.get_cached_admin_user_for_account`, and never
+        adds the platform's admin to it.
 
         :param account: Instance of :class:`Account`. The account for which to find the designated user.
         :returns: :class:`django.contrib.auth.models.User`
@@ -566,8 +620,11 @@ class UserProfile(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_admin_for_account(account_id: int, class_name: str) -> Optional[User]:
 
-            admins = cls.objects.filter(account_id=account_id, user__is_staff=True).order_by("user__id")
-            first_admin = admins.first()
+            # the account's administrators: by UserProfile.is_account_admin, or by User.is_staff.
+            admins = cls.objects.filter(account_id=account_id).filter(
+                models.Q(is_account_admin=True) | models.Q(user__is_staff=True)
+            )
+            first_admin = admins.order_by("user__id").first()
             if first_admin is not None:
                 return first_admin.user
 
@@ -587,16 +644,18 @@ class UserProfile(MetaDataModel):
                 logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
                 account,
             )
-            admin_user, _ = User.objects.get_or_create(
-                username=SMARTER_ADMIN_USERNAME, defaults={"is_superuser": True, "is_staff": True}
-            )
-            user_profile = cls.objects.create(user=admin_user, account=account)
+            # an account without members gets an administrator of its own, never the platform's admin, who would
+            # otherwise belong to every such account.
+            # pylint: disable=C0415
+            from smarter.apps.account.utils import get_cached_admin_user_for_account
+
+            admin_user = get_cached_admin_user_for_account(account=account)  # type: ignore[arg-type]
             logger.warning(
-                "%s.admin_for_account() Created admin user for account %s. Use manage.py to set the password",
+                "%s.admin_for_account() Created an administrator for account %s.",
                 logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
                 account,
             )
-            return user_profile.user
+            return admin_user
 
         return _get_admin_for_account(account_id=account.id, class_name=UserProfile.__name__)  # type: ignore[return-value]
 
@@ -914,4 +973,4 @@ class UserProfile(MetaDataModel):
         return f"<{self.__class__.__name__} pk={self.pk} user_id={self.user_id} account_id={self.account_id}>"  # type: ignore[attr-defined]
 
 
-__all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions"]
+__all__ = ["UserProfile", "SmarterBaseModelManager", "SmarterBaseQuerySetWithPermissions", "user_administers_account"]

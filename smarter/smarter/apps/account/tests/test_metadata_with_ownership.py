@@ -48,6 +48,26 @@ class TestMetaDataWithOwnership(TestAccountMixin):
         self.assertIn(self.mine, Secret.objects.with_ownership_permission_for(user))
         self.assertNotIn(self.shared, Secret.objects.with_ownership_permission_for(user))
 
+    def test_account_admin_manages_their_account_only(self):
+        """A profile's is_account_admin gives management of that account's resources, and of no other account's."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        generic: SmarterQuerySetWithPermissions[Secret] = SmarterQuerySetWithPermissions(Secret)
+        user = self.non_admin_user
+        self.assertNotIn(self.shared, generic.with_ownership_permission_for(user))
+
+        self.make_non_admin_an_account_admin()
+        self.assertIn(self.shared, generic.with_ownership_permission_for(user))
+        self.assertFalse(user.is_staff)
+
+        # the same user is a plain member of another account, whose resources they don't manage.
+        _, other_account, other_owner = mortal_user_factory()
+        membership = UserProfile.objects.create(user=user, account=other_account, name=f"{self.name}_member")
+        self.addCleanup(UserProfile.objects.filter(pk=membership.pk).delete)
+        theirs = self.secret(other_owner, f"{self.name}_theirs")
+        self.assertNotIn(theirs, generic.with_ownership_permission_for(user))
+
     def test_manager_passthroughs(self):
         """Test that the manager's queryset methods return the permission queryset."""
         qs = Secret.objects.filter(pk=self.mine.pk)

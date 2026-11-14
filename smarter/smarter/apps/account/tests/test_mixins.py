@@ -7,7 +7,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.tests.factories import (
-    factory_account_teardown,
     mortal_user_factory,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -30,6 +29,15 @@ class TestAccountMixinInit(TestAccountMixin):
         self.assertIsInstance(mixin.account, Account)
         self.assertIsInstance(mixin.user_profile, UserProfile)
         self.assertTrue(mixin.am_ready)
+
+    def test_administers_account(self):
+        """The mixin's user administers its account by staff status, or by their own profile's is_account_admin."""
+        self.assertTrue(AccountMixin(user_profile=self.user_profile).administers_account)
+        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        self.assertFalse(AccountMixin(user_profile=member).administers_account)
+        member.is_account_admin = True
+        self.assertTrue(AccountMixin(user_profile=member).administers_account)
+        self.assertFalse(AccountMixin().administers_account)
 
     def test_init_with_account(self):
         mixin = AccountMixin(account=self.account)
@@ -196,10 +204,10 @@ class TestAccountMixinMethods(TestAccountMixin):
     def test_set_account_with_invalid_user_profile(self):
         # Should raise if user is not associated with account
         # the non-admin user is in self.account too, so use a user in another account
-        other_user, other_account, other_user_profile = mortal_user_factory()
-        try:
-            mixin = AccountMixin(user=self.admin_user)
-            with self.assertRaises(SmarterBusinessRuleViolation):
-                mixin.account = other_account
-        finally:
-            factory_account_teardown(user=other_user, account=other_account, user_profile=other_user_profile)
+        other_user, other_account, _ = mortal_user_factory()
+        # not factory_account_teardown(), which deletes every test profile, this class's fixtures too.
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        mixin = AccountMixin(user=self.admin_user)
+        with self.assertRaises(SmarterBusinessRuleViolation):
+            mixin.account = other_account

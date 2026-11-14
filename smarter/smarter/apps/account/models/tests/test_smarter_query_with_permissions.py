@@ -148,9 +148,13 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
 
     def test_with_read_permission_for_regular_unrelated_user(self):
         """Test that a regular user has read permissions only for their own objects."""
-        smarter_admin_read_count = self.queryset.with_read_permission_for(smarter_cached_objects.smarter_admin).count()
+        # this test's own secrets only: other accounts on the platform, e.g. an organization's departments, have
+        # secrets of their own, which the superuser reads too.
+        test_secret_ids = [secret.pk for secret in self.test_secrets]
+        smarter_admin_reads = self.queryset.with_read_permission_for(smarter_cached_objects.smarter_admin)
+        smarter_admin_read_count = smarter_admin_reads.filter(pk__in=test_secret_ids).count()
         result = self.queryset.with_read_permission_for(self.unrelated_non_admin_user)
-        self.assertEqual(smarter_admin_read_count - result.count(), 2)
+        self.assertEqual(smarter_admin_read_count - result.filter(pk__in=test_secret_ids).count(), 2)
 
         ownership_set = [
             smarter_cached_objects.smarter_admin_user_profile,
