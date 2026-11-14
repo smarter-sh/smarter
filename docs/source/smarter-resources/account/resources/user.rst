@@ -30,6 +30,11 @@ Applying the manifest adds each membership that is missing and updates the other
 removing a user from an account would delete everything that they own there. A superuser may list any account;
 an account's administrator may list only the accounts that they administer.
 
+A manifest never holds a password. ``spec.config.passwordSecret`` names a :doc:`Secret <../../secret/resources/secret>`
+instead, whose value becomes the user's password each time the manifest is applied, e.g. the published password of
+the demonstration users of the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
+Only a superuser may set it.
+
 Technical References
 --------------------
 

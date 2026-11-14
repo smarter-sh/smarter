@@ -7,6 +7,7 @@ from smarter.apps.account.manifest.brokers.user import SAMUserBroker, SAMUserBro
 from smarter.apps.account.manifest.models.user.spec import SAMUserAccountMembership
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
+from smarter.apps.secret.models import Secret
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound, SAMBrokerErrorNotReady
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
@@ -188,6 +189,51 @@ class TestSmarterUserBrokerPermissions(TestSAMBrokerBaseClass):
         self.assertEqual([(m.accountNumber, m.isAccountAdmin) for m in memberships], [(str(hr.account_number), True)])
         self.patch_property("user", self.non_admin_user)
         self.assertIsNone(broker.memberships_for_manifest())
+
+    def with_password_secret(self, secret_name: str):
+        """Give the broker a copy of its manifest whose passwordSecret names the Secret."""
+        manifest = self.broker.manifest
+        assert manifest is not None
+        config = manifest.spec.config.model_copy(
+            update={"passwordSecret": secret_name, "email": f"{self._testMethodName}@example.com"}
+        )
+        spec = manifest.spec.model_copy(update={"config": config})
+        self.patch_property("manifest", manifest.model_copy(update={"spec": spec}))
+
+    def password_secret(self, value: str) -> Secret:
+        """A Secret of the admin's, which the test deletes afterwards."""
+        name = f"test_password_{self._testMethodName}"[:100]
+        secret = Secret.objects.create(user_profile=self.user_profile, name=name, encrypted_value=Secret.encrypt(value))
+        self.addCleanup(Secret.objects.filter(pk=secret.pk).delete)
+        return secret
+
+    def test_superuser_sets_password_from_secret(self):
+        """A superuser's manifest sets the user's password to the Secret's value."""
+        secret = self.password_secret("a-published-demo-password")
+        member = self.throwaway_user(is_active=True)
+        self.with_password_secret(secret.name)
+        broker = self.broker
+        self.patch_property("user", self.admin_user)
+        self.patch_property("brokered_user", member)
+
+        response = broker.apply(self.request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(User.objects.get(pk=member.pk).check_password("a-published-demo-password"))
+
+    def test_only_a_superuser_sets_passwords(self):
+        """Anyone but a superuser is refused passwordSecret, an account's administrator included."""
+        self.with_password_secret("any_secret")
+        broker = self.broker
+        self.patch_property("user", self.non_admin_user)
+        with self.assertRaisesRegex(SAMUserBrokerError, "Only a superuser may set a user's password"):
+            broker.check_authority_over_user(SmarterJournalCliCommands.APPLY)
+
+    def test_missing_password_secret_is_not_found(self):
+        """A passwordSecret that names no Secret is reported, not ignored."""
+        member = self.throwaway_user(is_active=True)
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            self.broker.set_password_from_secret(member, f"no_such_secret_{self.hash_suffix}")
 
     def test_commands_without_a_brokered_user(self):
         """Deploy and undeploy aren't ready, and delete and describe find nothing, without a brokered user."""

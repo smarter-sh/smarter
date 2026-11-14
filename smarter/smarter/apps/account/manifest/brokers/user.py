@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List, Optional, Type
 from django.core import serializers
 from django.db import transaction
 
+from smarter.apps.account.hierarchy import resolve_by_name
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.metadata import SAMUserMetadata
 from smarter.apps.account.manifest.models.user.model import SAMUser
@@ -24,6 +25,7 @@ from smarter.apps.account.models import (
     user_administers_account,
 )
 from smarter.apps.account.serializers import UserSerializer
+from smarter.apps.secret.models import Secret
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -587,6 +589,8 @@ class SAMUserBroker(AbstractBroker[User, User]):
                         email=self.brokered_user.email,
                         isStaff=self.brokered_user.is_staff,
                         isActive=self.brokered_user.is_active,
+                        # a password is never described, nor which Secret set it.
+                        passwordSecret=None,
                     ),
                     accounts=self.memberships_for_manifest(),
                 ),
@@ -782,6 +786,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                     email="example.user@example.com",
                     isStaff=False,
                     isActive=True,
+                    passwordSecret=None,
                 ),
                 accounts=None,
             ),
@@ -985,6 +990,62 @@ class SAMUserBroker(AbstractBroker[User, User]):
             retval.append(membership)
         return retval
 
+    def apply_user_fields(self, brokered_user: User) -> None:
+        """
+        Copy the manifest's ``spec.config`` onto the user, and set their password if ``passwordSecret`` names a Secret.
+
+        Fields that a manifest may not change, e.g. ``username`` and ``is_superuser``, are left as they are.
+
+        :param brokered_user: The user, not yet saved.
+        """
+        readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser", "tags", "user_profile"]
+        data = self.manifest_to_django_orm()
+        for field in readonly_fields:
+            data.pop(field, None)
+        # the name of a Secret, not a field of User.
+        password_secret_name = data.pop("password_secret", None)
+        for key, value in data.items():
+            setattr(brokered_user, key, value)
+            logger.debug("%s.apply_user_fields() Setting %s to %s", self.formatted_class_name, key, value)
+        if password_secret_name:
+            self.set_password_from_secret(brokered_user, password_secret_name)
+
+    def set_password_from_secret(self, brokered_user: User, secret_name: str) -> None:
+        """
+        Set the user's password to the value of the Secret that ``passwordSecret`` names.
+
+        The Secret is found by name as other references are, nearest first, from the applier's profile. Its value is
+        never logged.
+
+        :param brokered_user: The user, not yet saved.
+        :param secret_name: The Secret's name.
+        :raises SAMBrokerErrorNotFound: if no Secret of that name may be read, or it has no value.
+        """
+        if not isinstance(self.user_profile, UserProfile):
+            raise SAMBrokerErrorNotFound(
+                f"Secret {secret_name} can't be found without the applier's profile.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        try:
+            secret: Secret = resolve_by_name(Secret.objects, secret_name, self.user_profile)  # type: ignore[arg-type]
+        except Secret.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Secret {secret_name} does not exist.", thing=self.kind, command=SmarterJournalCliCommands.APPLY
+            ) from e
+        password = secret.get_secret(update_last_accessed=False)
+        if not password:
+            raise SAMBrokerErrorNotFound(
+                f"Secret {secret_name} has no value.", thing=self.kind, command=SmarterJournalCliCommands.APPLY
+            )
+        brokered_user.set_password(password)
+        logger.debug(
+            "%s.set_password_from_secret() set the password of user %s from Secret id %s",
+            self.formatted_class_name,
+            brokered_user.username,
+            secret.pk,
+        )
+
     def check_authority_over_user(self, command: SmarterJournalCliCommands) -> None:
         """
         Refuse a User manifest that reaches beyond the applier's own account, unless a superuser applies it.
@@ -994,14 +1055,23 @@ class SAMUserBroker(AbstractBroker[User, User]):
         opens the Django admin site and administers every account the user belongs to, so an administrator of one
         account, through ``UserProfile.is_account_admin``, could otherwise make themselves staff.
 
+        ``passwordSecret`` sets the user's password, so only a superuser may use it: an account's administrator could
+        otherwise take over a user who also belongs to other accounts, e.g. a company's chief executive.
+
         :param command: The command, for the error.
-        :raises SAMUserBrokerError: if an existing user doesn't belong to the applier's account, or a user who isn't
-            staff would change a user's ``is_staff``.
+        :raises SAMUserBrokerError: if an existing user doesn't belong to the applier's account, a user who isn't
+            staff would change a user's ``is_staff``, or anyone but a superuser sets ``passwordSecret``.
         """
         if not isinstance(self.user, User):
             return
         if self.user.is_superuser:
             return
+        if self.manifest is not None and self.manifest.spec.config.passwordSecret:
+            raise SAMUserBrokerError(
+                message="Only a superuser may set a user's password with passwordSecret.",
+                thing=self.kind,
+                command=command,
+            )
         existing = self.brokered_user
         if isinstance(existing, User) and existing.pk:
             member = UserProfile.objects.filter(user=existing, account=self.account).exists()
@@ -1063,7 +1133,6 @@ class SAMUserBroker(AbstractBroker[User, User]):
         """
         command = SmarterJournalCliCommands(self.apply.__name__)
         logger.debug("%s.apply() called", self.formatted_class_name)
-        readonly_fields = ["id", "date_joined", "last_login", "username", "is_superuser", "tags"]
 
         if not isinstance(self.user, User):
             raise SAMUserBrokerError(
@@ -1097,20 +1166,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                         "%s.apply() Created new (unsaved) User instance for %s", self.formatted_class_name, self.kind
                     )
 
-                # User model
-                data = self.manifest_to_django_orm()
-                for field in readonly_fields:
-                    logger.debug(
-                        "%s.apply() Removing readonly field %s from data for %s",
-                        self.formatted_class_name,
-                        field,
-                        self.kind,
-                    )
-                    data.pop(field, None)
-                data.pop("user_profile", None)
-                for key, value in data.items():
-                    setattr(brokered_user, key, value)
-                    logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+                self.apply_user_fields(brokered_user)
                 brokered_user.save()
 
                 # the accounts that the manifest lists, e.g. an organization's departments, else the account of

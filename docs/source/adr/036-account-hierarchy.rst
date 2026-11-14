@@ -88,7 +88,9 @@ Accounts form a tree, and each account decides separately who may read its resou
    ``spec.accounts``, a list of the accounts that the user belongs to, each with ``isAccountAdmin``, so that its
    people and their roles are declared the same way. Apply adds the memberships that are missing and updates the
    others, but never removes one: deleting a profile deletes every resource that it owns. A superuser may list any
-   account; anyone else only the accounts that they administer.
+   account; anyone else only the accounts that they administer. Its ``spec.config.passwordSecret`` names a Secret whose value
+   becomes the user's password, which only a superuser may set, so that a manifest never holds a password; Secrets
+   are therefore applied before Users (smarter-types' ``SAMKinds.apply_order()``).
 9. **Migration.** ``account`` is a released app that holds production data, so the fields are added in new
    migrations (:doc:`ADR-020 <020-semantic-versioning>`): ``0014_account_hierarchy`` adds them, and
    ``0015_root_account_shares_with_everyone`` sets the Smarter account's ``share_scope`` to itself.

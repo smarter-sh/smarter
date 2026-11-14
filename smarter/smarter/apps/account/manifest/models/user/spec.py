@@ -43,6 +43,14 @@ class SAMUserSpecConfig(AbstractSAMSpecBase):
             f"{class_identifier}.isActive[bool]. Designates whether this {MANIFEST_KIND} should be treated as active."
         ),
     )
+    passwordSecret: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.passwordSecret[str]. Optional. The name of a Secret whose value becomes the "
+            f"{MANIFEST_KIND}'s password, each time the manifest is applied, e.g. the published password of a "
+            "demonstration user. A manifest never holds a password itself. Only a superuser may set it."
+        ),
+    )
 
 
 class SAMUserAccountMembership(AbstractSAMSpecBase):

@@ -18,7 +18,8 @@
       "firstName": "Example",
       "isActive": true,
       "isStaff": false,
-      "lastName": "User"
+      "lastName": "User",
+      "passwordSecret": null
     }
   }
 }

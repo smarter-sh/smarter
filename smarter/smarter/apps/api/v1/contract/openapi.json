@@ -19831,6 +19831,19 @@
             "default": null,
             "description": "User.spec.configuration.lastName[str]. Optional. The last name of the User.",
             "title": "Lastname"
+          },
+          "passwordSecret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "User.spec.configuration.passwordSecret[str]. Optional. The name of a Secret whose value becomes the User's password, each time the manifest is applied, e.g. the published password of a demonstration user. A manifest never holds a password itself. Only a superuser may set it.",
+            "title": "Passwordsecret"
           }
         },
         "required": [
