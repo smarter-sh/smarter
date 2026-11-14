@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.6...v0.46.0-alpha.7) (2026-11-14)
+
+### Features
+
+* **account:** let a repository's owners.yaml say who owns each folder ([ce36b37](https://github.com/smarter-sh/smarter/commit/ce36b374cde80629f19162d4cc7d0b77b4c5e537))
+
+### Bug Fixes
+
+* **account:** never make an account's administrator a superuser ([a2c849c](https://github.com/smarter-sh/smarter/commit/a2c849cd0d1ef439e9f1344259227af57ccf65e9))
+
 ## [0.46.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.5...v0.46.0-alpha.6) (2026-11-14)
 
 ### Features
