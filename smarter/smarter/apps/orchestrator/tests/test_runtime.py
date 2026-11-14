@@ -6,6 +6,7 @@ The provider's handler is replaced with a fake that answers each step, so no LLM
 
 import json
 from http import HTTPStatus
+from typing import Optional
 from unittest.mock import patch
 
 from smarter.apps.account.models import UserProfile
@@ -42,16 +43,24 @@ def lambda_response(text: str, status: int = HTTPStatus.OK.value) -> dict:
 class FakeHandler:
     """The provider's handler: answers each step with its LLMClient's name, and records what it received."""
 
-    def __init__(self, fail_for: str = ""):
+    def __init__(self, fail_for: str = "", script: Optional[dict[str, list[str]]] = None):
         self.calls: list[tuple] = []
         self.fail_for = fail_for
+        self.script = script or {}
 
     def __call__(self, user_profile, prompt, data, plugins=None):
         self.calls.append((user_profile, prompt, data))
         name = prompt.llmclient.name
         if name == self.fail_for:
             return lambda_response("", status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        answers = self.script.get(name)
+        if answers:
+            return lambda_response(answers.pop(0))
         return lambda_response(f"the answer of {name}")
+
+    def names(self) -> list[str]:
+        """The LLMClients called, in order."""
+        return [prompt.llmclient.name for _, prompt, _ in self.calls]
 
 
 class TestOrchestrationRuntime(TestAccountMixin):
@@ -64,20 +73,27 @@ class TestOrchestrationRuntime(TestAccountMixin):
     def setUpClass(cls):
         super().setUpClass()
         cls.llmclients = {}
-        for name in ("first", "second", "summary"):
+        for name in ("first", "second", "summary", "planner", "router"):
             cls.llmclients[name] = LLMClient.objects.create(
                 name=f"test_runtime_{name}_{cls.hash_suffix}", user_profile=cls.user_profile, deployed=False
             )
         cls.orchestrator = Orchestrator.objects.create(
             name=f"test_runtime_{cls.hash_suffix}", user_profile=cls.user_profile, max_iterations=10
         )
-        harnesses = (("first", ROLE.EXECUTOR, 0), ("second", ROLE.EXECUTOR, 1), ("summary", ROLE.SUMMARIZER, 2))
+        harnesses = (
+            ("first", ROLE.EXECUTOR, 0),
+            ("second", ROLE.EXECUTOR, 1),
+            ("summary", ROLE.SUMMARIZER, 2),
+            ("planner", ROLE.PLANNER, 3),
+            ("router", ROLE.ROUTER, 4),
+        )
         for name, role, order in harnesses:
             OrchestratorHarness.objects.create(
                 orchestrator=cls.orchestrator,
                 llmclient=cls.llmclients[name],
                 role=role,
                 execution_order=order,
+                is_active=role not in (ROLE.PLANNER, ROLE.ROUTER),
                 config={"instructions": f"Write as {name}."},
             )
 
@@ -93,7 +109,16 @@ class TestOrchestrationRuntime(TestAccountMixin):
             strategy=OrchestrationStrategy.SEQUENTIAL, max_iterations=10, is_active=True
         )
         self.orchestrator.refresh_from_db()
+        OrchestratorHarness.objects.filter(orchestrator=self.orchestrator, role__in=[ROLE.PLANNER, ROLE.ROUTER]).update(
+            is_active=False
+        )
         self.addCleanup(OrchestrationRun.objects.filter(orchestrator=self.orchestrator).delete)
+
+    def use_strategy(self, strategy: str, coordinator_role: str) -> None:
+        """Run the strategy, with its coordinator active."""
+        Orchestrator.objects.filter(pk=self.orchestrator.pk).update(strategy=strategy)
+        OrchestratorHarness.objects.filter(orchestrator=self.orchestrator, role=coordinator_role).update(is_active=True)
+        self.orchestrator.refresh_from_db()
 
     def use(self, handler: FakeHandler) -> FakeHandler:
         """Make the provider's handler the fake, until the end of the test."""
@@ -168,7 +193,8 @@ class TestOrchestrationRuntime(TestAccountMixin):
         self.assertEqual(run.result, {"text": f"the answer of {self.llmclients['summary'].name}"})
         self.assertEqual(run.iteration_count, 3)
         steps = list(OrchestrationStep.objects.filter(run=run).order_by("sequence"))
-        self.assertEqual([step.harness.llmclient.name for step in steps], [c.name for c in self.llmclients.values()])
+        expected = [self.llmclients[name].name for name in ("first", "second", "summary")]
+        self.assertEqual([step.harness.llmclient.name for step in steps], expected)
         self.assertTrue(all(step.status == OrchestrationStep.StepStatus.SUCCEEDED for step in steps))
 
         messages = [data["messages"][0]["content"] for _, _, data in handler.calls]
@@ -269,3 +295,83 @@ class TestOrchestrationRuntime(TestAccountMixin):
             run = self.executed(self.new_run())
         self.assertEqual(run.status, OrchestrationRunStatus.FAILED)
         self.assertIn("gave no answer", OrchestrationStep.objects.filter(run=run).get().error_message or "")
+
+    # -------------------------------------------------------------------------
+    # router and supervisor
+    # -------------------------------------------------------------------------
+    def test_router_run(self):
+        """The router chooses one assistant, which answers; the summarizer answers last.
+
+        The router doesn't answer.
+        """
+        self.use_strategy(OrchestrationStrategy.ROUTER, ROLE.ROUTER)
+        second = self.llmclients["second"].name
+        router = self.llmclients["router"].name
+        handler = self.use(FakeHandler(script={router: [f'Here it is: ```json\n{{"harness": "{second}"}}\n```']}))
+        run = self.executed(self.new_run())
+        self.assertEqual(run.status, OrchestrationRunStatus.SUCCEEDED, run.error_message)
+        self.assertEqual(handler.names(), [router, second, self.llmclients["summary"].name])
+        router_message = handler.calls[0][2]["messages"][0]["content"]
+        self.assertIn(f"- {self.llmclients['first'].name}:", router_message)
+        self.assertNotIn(f"- {router}:", router_message)
+
+    def test_router_that_chooses_no_assistant(self):
+        """A router whose answer names no participant fails the run."""
+        self.use_strategy(OrchestrationStrategy.ROUTER, ROLE.ROUTER)
+        router = self.llmclients["router"].name
+        self.use(FakeHandler(script={router: ['{"harness": "no_such_assistant"}']}))
+        run = self.executed(self.new_run())
+        self.assertEqual(run.status, OrchestrationRunStatus.FAILED)
+        self.assertIn("chose no assistant", run.error_message or "")
+
+    def test_supervisor_run(self):
+        """The planner asks assistants until it finishes; it keeps one session, and is told each answer."""
+        self.use_strategy(OrchestrationStrategy.SUPERVISOR, ROLE.PLANNER)
+        first = self.llmclients["first"].name
+        planner = self.llmclients["planner"].name
+        script = {
+            planner: [
+                json.dumps({"next": first, "message": "What is the headcount?"}),
+                "I am not sure.",
+                json.dumps({"done": True, "result": "The headcount is 40."}),
+            ]
+        }
+        handler = self.use(FakeHandler(script=script))
+        run = self.executed(self.new_run())
+        self.assertEqual(run.status, OrchestrationRunStatus.SUCCEEDED, run.error_message)
+        self.assertEqual(handler.names(), [planner, first, planner, planner, self.llmclients["summary"].name])
+        messages = [data["messages"][0]["content"] for _, _, data in handler.calls]
+        self.assertIn("What is the headcount?", messages[1])
+        self.assertIn(f"{first} answered:\nthe answer of {first}", messages[2])
+        self.assertIn("named no assistant", messages[3])
+        self.assertIn("planner answered:\nThe headcount is 40.", messages[4].replace(planner, "planner"))
+        planner_sessions = {prompt.pk for _, prompt, _ in handler.calls if prompt.llmclient.name == planner}
+        self.assertEqual(len(planner_sessions), 1)
+
+    def test_supervisor_that_never_finishes(self):
+        """A planner that never finishes is stopped by maxIterations."""
+        self.use_strategy(OrchestrationStrategy.SUPERVISOR, ROLE.PLANNER)
+        Orchestrator.objects.filter(pk=self.orchestrator.pk).update(max_iterations=3)
+        first = self.llmclients["first"].name
+        planner = self.llmclients["planner"].name
+        ask = json.dumps({"next": first})
+        self.use(FakeHandler(script={planner: [ask, ask, ask]}))
+        run = self.executed(self.new_run())
+        self.assertEqual(run.status, OrchestrationRunStatus.MAX_ITERATIONS_EXCEEDED)
+        self.assertEqual(run.iteration_count, 3)
+
+    def test_coordinator_is_required(self):
+        """A supervisor without a planner, or a router without a router, may not run."""
+        for strategy in (OrchestrationStrategy.SUPERVISOR, OrchestrationStrategy.ROUTER):
+            with self.subTest(strategy=strategy):
+                Orchestrator.objects.filter(pk=self.orchestrator.pk).update(strategy=strategy)
+                self.orchestrator.refresh_from_db()
+                with self.assertRaisesRegex(runtime.OrchestrationRefused, "needs an active harness with the role"):
+                    runtime.check_may_run(self.orchestrator, self.admin_user)
+
+    def test_parse_decision(self):
+        """A coordinator's JSON is found in prose or a code block; anything else is no decision."""
+        self.assertEqual(runtime.parse_decision('Sure: ```json\n{"harness": "a"}\n```'), {"harness": "a"})
+        for text in ("no json here", "{not json}", "[1, 2]", "} backwards {"):
+            with self.subTest(text=text):
+                self.assertIsNone(runtime.parse_decision(text))

@@ -60,21 +60,32 @@ Smarter runs Orchestrators, one step at a time, by calling each harness LLMClien
    any. Outputs are text, as the harness's assistant wrote them. A run's ``result`` is the last step's output,
    or the summarizer's.
 
-7. **Strategies arrive in phases.** The first version runs:
+7. **Strategies.** A run executes:
 
    - ``sequential``: every active harness but the summarizer, in ``executionOrder``, each given the outputs
      before it;
    - ``parallel``: the same harnesses, each given only the objective;
-   - and, in both, a ``summarizer`` harness, if there is one, last, given every output.
+   - ``router``: the first active ``router`` harness receives the objective and a roster of the others, each
+     LLMClient's name and description, and answers with JSON that names one, ``{"harness": "<name>"}``, which
+     then answers the objective. A choice that names no harness fails the run;
+   - ``supervisor``: the first active ``planner`` receives the objective and the roster, and answers with JSON,
+     either ``{"next": "<name>", "message": "<question>"}``, to ask a harness, or ``{"done": true, "result":
+     "<answer>"}``. Each answer, or failure, goes back to it, and an answer that is neither is sent back too,
+     until it finishes or ``maxIterations`` stops the run. The planner keeps one session, so it remembers the
+     conversation;
+   - and, after any of them, a ``summarizer`` harness, if there is one, given every output.
 
-   A run of any other strategy is refused with a message that names it, and the manifest still applies.
-   ``supervisor`` and ``router``, whose planner or router chooses the next step, come next, and ``voting`` and
-   ``debate`` after them, each with its own ADR amendment.
+   The router and the planner coordinate: they never answer the objective themselves, and only take part in the
+   strategy that they coordinate. A JSON answer may be wrapped in prose or a code block. A run of ``voting`` or
+   ``debate`` is refused with a message that names it, and the manifest still applies; each will come with its own
+   ADR amendment.
 
 8. **Limits and failure.** ``maxIterations`` bounds the steps of a run. Before each step,
    ``charge_authorization()`` checks the Orchestrator, the harness LLMClient and the runner's profile, so a
    budget that has run out stops the run at the next step. A step that fails fails a ``sequential`` run; in a
-   ``parallel`` run it is recorded, and the summarizer is told which harness failed. A run that fails keeps its
+   ``parallel`` run it is recorded, and the summarizer is told which harness failed; in a ``supervisor`` run the
+   planner is told. A failed router, planner or summarizer, or the chosen harness of a ``router`` run, fails the
+   run. A run that fails keeps its
    completed steps.
 
 9. **Contracts.** The run's request and response are Pydantic models (ADR-031), in the api's OpenAPI document.

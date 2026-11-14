@@ -73,10 +73,15 @@ one, and answers ``202`` with the run, ``pending``. The platform executes it in 
 ``max_iterations_exceeded``. The run lists its steps, and, once it succeeded, its ``result``.
 
 - **Strategies.** ``sequential`` calls every active harness but the summarizer, in ``executionOrder``, and gives each
-  the objective and every answer before it. ``parallel`` gives each only the objective. Either way, a
-  ``summarizer`` harness, if there is one, answers last, from every answer. A harness's ``config.instructions`` ends
-  the message that it receives. The other strategies can't run yet, and their runs are refused.
-- **Each step is a prompt** of its LLMClient, as its owner, in a session of its own: its tools, guardrails and
+  the objective and every answer before it. ``parallel`` gives each only the objective. In ``router``, a harness
+  with the role ``router`` reads the objective and the other harnesses' names and descriptions, and chooses the
+  one that answers. In ``supervisor``, a harness with the role ``planner`` asks the others questions, one at a time,
+  and reads each answer, until it gives the result. Router and planner reply in JSON, which Smarter asks them for,
+  so give their LLMClients no tools of their own, or they may answer the objective themselves. After any strategy,
+  a ``summarizer`` harness, if there is one, answers last, from every answer. A harness's ``config.instructions``
+  ends the messages that it receives. ``voting`` and ``debate`` can't run yet, and their runs are refused.
+- **Each step is a prompt** of its LLMClient, as its owner, in its session for the run, one per harness, so that a
+  harness asked twice remembers the first time: its tools, guardrails and
   budgets apply, and its tokens are charged to it. A department's assistant reads its department's records, and its
   department pays for it. The user who started the run is each step's acting user, whom MCP servers learn of.
 - **Who may run it.** Any user who may read the Orchestrator, and every one of its harness LLMClients. A user who
