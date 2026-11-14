@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager, _TaggableManager
 
+from smarter.apps.account.hierarchy import resolve_by_name
 from smarter.apps.account.models import User
 from smarter.apps.account.utils import (
     is_platform_staff,
@@ -1240,10 +1241,12 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
 
     def resolve_guardrail(self, name: str) -> Optional[Guardrail]:
         """
-        Return the Guardrail named ``name`` that this broker's user may use.
+        Return the Guardrail named ``name`` that this broker's user may use, the nearest.
 
-        The user's own Guardrail takes precedence over one that is shared with them, such as
-        the built-in guardrails of the Smarter admin user.
+        Their own, else their account's, else that of the nearest account that shares with theirs, e.g. an
+        organization's IT department, ending with the built-in guardrails of the Smarter admin user. See
+        :func:`smarter.apps.account.hierarchy.resolve_by_name`: only the profile's account tree counts, so an
+        LLMClient's guardrails don't depend on who wrote it.
 
         :param name: The name of the Guardrail.
         :returns: The Guardrail, or ``None`` if the user has none by that name.
@@ -1251,15 +1254,13 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         """
         if not self.user_profile:
             return None
-        own = Guardrail.objects.filter(name=name, user_profile=self.user_profile).first()
-        if own is not None:
-            return own
-        return (
-            Guardrail.objects.filter(name=name)
-            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
-            .order_by("-updated_at")
-            .first()
-        )
+        try:
+            retval: Optional[Guardrail] = resolve_by_name(
+                Guardrail.objects, name, self.user_profile  # type: ignore[arg-type]
+            )
+        except Guardrail.DoesNotExist:
+            return None
+        return retval
 
     def resolve_mcpclient(self, name: str) -> Optional[MCPClient]:
         """

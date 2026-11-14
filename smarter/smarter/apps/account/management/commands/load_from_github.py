@@ -667,6 +667,25 @@ class Command(SmarterCommand):
             )
         return owner_profile
 
+    def deploy_skipped_reason(self, manifest: SmarterDictType, user_profile: UserProfile) -> Optional[str]:
+        """
+        Return why ``--deploy`` leaves an LLMClient undeployed, or None to deploy it.
+
+        - A staff-only LLMClient: its staff use it in the workbench, and a deployed url would only answer them anyway.
+        - An LLMClient of a folder that ``owners.yaml`` gives an owner, e.g. a department's assistant over its own
+          records: deploying it gives it a public url, which its owner decides, not the platform's load.
+
+        :param manifest: The LLMClient manifest.
+        :param user_profile: Its owner.
+        :returns: The reason, or None.
+        :rtype: Optional[str]
+        """
+        if self.is_staff_only(manifest):
+            return "it is staff-only."
+        if self.user_profile is not None and user_profile != self.user_profile:
+            return f"it belongs to {user_profile.user.username}, who decides whether to deploy it."
+        return None
+
     def apply_manifest(self, item: RepositoryManifest, user_profile: UserProfile, deploy: bool) -> list[str]:
         """
         Apply one manifest, as its owner, and deploy it if it is an LLMClient and ``deploy``.
@@ -707,11 +726,28 @@ class Command(SmarterCommand):
         if item.filespec in self.skipped:
             return failed
         self.stdout.write(f"Applied {item.kind} {item.name}, from {item.path}.")
-        if deploy and item.kind == SAMKinds.LLM_CLIENT.value and self.is_staff_only(manifest):
-            # its staff use it in the workbench, and a deployed url would only answer them anyway.
-            self.stdout.write(f"Did not deploy LLMClient {item.name}: it is staff-only.")
+        if not deploy or item.kind != SAMKinds.LLM_CLIENT.value:
             return failed
-        if deploy and item.kind == SAMKinds.LLM_CLIENT.value and not self.deploy_llmclient(item.name, user_profile):
+        return self.deploy_applied_llmclient(item, manifest, user_profile)
+
+    def deploy_applied_llmclient(
+        self, item: RepositoryManifest, manifest: SmarterDictType, user_profile: UserProfile
+    ) -> list[str]:
+        """
+        Deploy an LLMClient that ``apply_manifest`` just applied, unless :meth:`deploy_skipped_reason` gives a reason.
+
+        :param item: The LLMClient's manifest, as the repository holds it.
+        :param manifest: The manifest as it was applied.
+        :param user_profile: Its owner.
+        :returns: A description of the failure, if it failed to deploy, else nothing.
+        :rtype: list[str]
+        """
+        failed: list[str] = []
+        reason = self.deploy_skipped_reason(manifest, user_profile)
+        if reason:
+            self.stdout.write(f"Did not deploy LLMClient {item.name}: {reason}")
+            return failed
+        if not self.deploy_llmclient(item.name, user_profile):
             failed.append(f"{item.path}: LLMClient {item.name} failed to deploy.")
         return failed
 

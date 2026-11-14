@@ -763,6 +763,16 @@ class TestLoadFromGithubLLMClients(TestAccountMixin):
     def llmclient(self, **fields) -> LLMClient:
         return LLMClient.objects.create(name=self.name, user_profile=self.user_profile, **fields)
 
+    def test_deploy_skipped_reason(self):
+        """Test that --deploy leaves staff-only LLMClients, and those of an owned folder, undeployed."""
+        manifest = {"kind": "LLMClient", "metadata": {"name": self.name}, "spec": {"config": {"prompt": {}}}}
+        self.command.user_profile = self.user_profile
+        self.assertIsNone(self.command.deploy_skipped_reason(manifest, self.user_profile))
+        owned_reason = self.command.deploy_skipped_reason(manifest, self.non_admin_user_profile)
+        self.assertIn(f"it belongs to {self.non_admin_user.username}", str(owned_reason))
+        staff_only = {"kind": "LLMClient", "spec": {"config": {"prompt": {"staffOnly": True}}}}
+        self.assertEqual(self.command.deploy_skipped_reason(staff_only, self.user_profile), "it is staff-only.")
+
     def test_keep_deployed_copies_the_manifest(self):
         """Test that keep_deployed sets deployed on a copy, from the LLMClient that exists."""
         original = {"kind": "LLMClient", "metadata": {"name": self.name}}
