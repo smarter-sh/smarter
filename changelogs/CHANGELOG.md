@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.0-alpha.12](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.11...v0.46.0-alpha.12) (2026-11-14)
+
+### Bug Fixes
+
+* **account:** staff administer only the accounts they belong to ([d2ca953](https://github.com/smarter-sh/smarter/commit/d2ca9533a75ef75a70a12eaac0ffaecff2135abd))
+
 ## [0.46.0-alpha.11](https://github.com/smarter-sh/smarter/compare/v0.46.0-alpha.10...v0.46.0-alpha.11) (2026-11-14)
 
 ### Bug Fixes
