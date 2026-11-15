@@ -376,7 +376,9 @@ hpa:
 # Backing Services Configuration
 # -----------------------------------------------------------------------------
 databaseInit:
-  enabled: true   # post-install/post-upgrade Job: create db + user, migrate, initialize platform
+  # post-install/post-upgrade Job: create db + user, migrate, initialize platform. Also a pre-upgrade Job
+  # that migrates before the rollout (job-migrate.yaml), so that new pods never run without their schema.
+  enabled: true
   notifyEmail: "" # the Job emails its log here when it completes. Empty: smarter_settings.email_admin
   # the Slack channel, e.g. smarter, that the Job also posts its outcome to, with its log in the message's
   # thread. Empty: don't post. Needs env.SMARTER_SLACK_BOT_TOKEN, and a bot with the scopes chat:write and
