@@ -8,6 +8,7 @@ import unittest
 import xml.etree.ElementTree as ET  # nosec B405: parses a report that this test writes
 from unittest import mock
 
+from smarter.apps.account.tests.cleanup import PurgeReport
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import (
     INFRASTRUCTURE,
@@ -17,6 +18,7 @@ from smarter.lib.unittest.runner import (
     VENDOR_ENVIRONMENT_VARIABLE,
     SmarterTestRunner,
     junit_xml_path,
+    purge_test_leftovers,
     requested_shard,
     shard_tests,
     testcase_class_name,
@@ -112,9 +114,44 @@ class TestSmarterTestRunner(SmarterTestBase):
         super().tearDown()
 
     def run_example_suite(self, environ: dict[str, str]) -> unittest.TestResult:
-        with mock.patch.dict(os.environ, environ, clear=True), mock.patch("sys.stderr", io.StringIO()):
+        # not the purge: it would delete this run's own test accounts, in the middle of the run.
+        with (
+            mock.patch.dict(os.environ, environ, clear=True),
+            mock.patch("sys.stderr", io.StringIO()),
+            mock.patch("smarter.lib.unittest.runner.purge_test_leftovers"),
+        ):
             runner = SmarterTestRunner(verbosity=0)
             return runner.run_suite(example_suite())
+
+    def test_purges_before_and_after_the_suite(self):
+        """The leftovers of tests are deleted before the suite, and after it, also when it raises."""
+        with (
+            mock.patch.dict(os.environ, environ_without_report(), clear=True),
+            mock.patch("smarter.lib.unittest.runner.purge_test_leftovers") as purge,
+            mock.patch.object(SmarterTestRunner, "run_suite_with_report", side_effect=KeyboardInterrupt),
+        ):
+            runner = SmarterTestRunner(verbosity=0)
+            with self.assertRaises(KeyboardInterrupt):
+                runner.run_suite(example_suite())
+        self.assertEqual([c.args for c in purge.call_args_list], [("before",), ("after",)])
+
+    def test_purge_reports_what_it_deleted(self):
+        """The purge says what it deleted and what it could not, and never raises."""
+        report = PurgeReport(profiles=1, accounts=2, users=3, failures=["User id 9: ProtectedError"])
+        with (
+            mock.patch("smarter.apps.account.tests.cleanup.purge_test_artifacts", return_value=report),
+            mock.patch("sys.stdout", io.StringIO()) as stdout,
+        ):
+            purge_test_leftovers("after")
+        self.assertIn("2 accounts, 3 users, 1 profiles", stdout.getvalue())
+        self.assertIn("User id 9: ProtectedError", stdout.getvalue())
+
+        with (
+            mock.patch("smarter.apps.account.tests.cleanup.purge_test_artifacts", side_effect=RuntimeError),
+            mock.patch("sys.stdout", io.StringIO()) as stdout,
+        ):
+            purge_test_leftovers("before")
+        self.assertIn("Could not delete the test accounts and users left before the run", stdout.getvalue())
 
     def test_skips_infrastructure_by_default(self):
         self.assertIn(INFRASTRUCTURE, SmarterTestRunner(verbosity=0).exclude_tags)
@@ -180,6 +217,7 @@ class TestSmarterTestRunner(SmarterTestBase):
         with (
             mock.patch.dict(os.environ, {JUNIT_XML_ENVIRONMENT_VARIABLE: path}),
             mock.patch("sys.stderr", io.StringIO()),
+            mock.patch("smarter.lib.unittest.runner.purge_test_leftovers"),
         ):
             runner = SmarterTestRunner(verbosity=0)
             runner.run_suite(example_suite())

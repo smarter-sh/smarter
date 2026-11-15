@@ -29,8 +29,8 @@ is still in use from being deleted.
     └── SqlPlugin stackademy_sql        /llm-tools/plugins/rMTAwMDAyMwx/
         ├── Provider openai             /provider/providers/rMTAwMDAwNwx/
         │   └── Secret openai_api_key   /secret/secrets/rMTAwMDAxMQx/
-        └── SqlConnection smarter_test_db   /connection/connections/sql-connection/rMTAwMDAwMQx/
-            └── Secret smarter_test_user    /secret/secrets/rMTAwMDAxNQx/
+        └── SqlConnection stackademy_catalog_db           /connection/connections/sql-connection/rMTAwMDAwMQx/
+            └── Secret stackademy_catalog_db_password /secret/secrets/rMTAwMDAxNQx/
 
 A resource that two others use appears under each of them. A resource that the user may not read keeps its
 kind and record locator, but not its name, its owner, its url, or what it uses in turn.

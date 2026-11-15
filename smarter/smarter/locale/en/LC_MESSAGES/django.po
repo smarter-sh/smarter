@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-08 14:58+0000\n"
+"POT-Creation-Date: 2026-11-15 00:34+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -209,42 +209,28 @@ msgid ""
 msgstr ""
 
 #: smarter/templates/account/authentication/email/account-activation.html
-msgid "Thank you for using Smarter!"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Account"
 msgstr ""
 
 #: smarter/templates/account/authentication/email/account-activation.html
-msgid "If you require assistance"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/account-activation.html
 #: smarter/templates/account/authentication/email/password-reset.html
 #, python-format
-msgid "Call our customer care number: %(phone)s"
+msgid ""
+"Need help? Email the platform's administrator at <a href=\"mailto:"
+"%(support_email)s\" style=\"color:#7E8299; font-"
+"weight:600\">%(support_email)s</a>."
 msgstr ""
 
 #: smarter/templates/account/authentication/email/account-activation.html
 #: smarter/templates/account/authentication/email/password-reset.html
+#: smarter/templates/account/email/data-export.html
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
 #, python-format
-msgid "Email: %(email)s"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/account-activation.html
-#: smarter/templates/account/authentication/email/password-reset.html
-msgid "Contact:"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/account-activation.html
-#: smarter/templates/account/authentication/email/password-reset.html
-#, python-format
-msgid "Office Hours: %(hours)s"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/password-reset.html
-msgid "Smarter Logo"
+msgid ""
+"%(product_name)s is free, open source software, licensed under the <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
 msgstr ""
 
 #: smarter/templates/account/authentication/email/password-reset.html
@@ -259,20 +245,11 @@ msgid ""
 msgstr ""
 
 #: smarter/templates/account/authentication/email/password-reset.html
-msgid "This link will expire in 24 hours, so be sure to use it right away."
-msgstr ""
-
-#: smarter/templates/account/authentication/email/password-reset.html
-#, python-format
-msgid "Thank you for being part of %(product_name)s!"
-msgstr ""
-
-#: smarter/templates/account/authentication/email/password-reset.html
 msgid "Reset Password"
 msgstr ""
 
 #: smarter/templates/account/authentication/email/password-reset.html
-msgid "Or, talk to a human!"
+msgid "This link will expire in 24 hours, so be sure to use it right away."
 msgstr ""
 
 #: smarter/templates/account/email/data-export.html
@@ -352,16 +329,6 @@ msgid ""
 "data. Change your password, and tell the platform's administrator at <a "
 "href=\"mailto:%(support_email)s\" style=\"color:#7E8299; font-"
 "weight:600\">%(support_email)s</a>."
-msgstr ""
-
-#: smarter/templates/account/email/data-export.html
-#: smarter/templates/account/email/slack-invitation.html
-#: smarter/templates/account/email/welcome.html
-#, python-format
-msgid ""
-"%(product_name)s is free, open source software, licensed under the <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
 msgstr ""
 
 #: smarter/templates/account/email/slack-invitation.html
@@ -698,10 +665,6 @@ msgid ""
 "target=\"_blank\">Quick Start</a> for evaluation, and <a href=\"https://"
 "docs.smarter.sh/smarter-framework/guides/developer-setup.html\" "
 "rel=\"noopener\" target=\"_blank\">running from source</a> for developers."
-msgstr ""
-
-#: smarter/templates/account/email/welcome.html
-msgid "Sorry, your browser doesn't support embedded videos."
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html

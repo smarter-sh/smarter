@@ -9,6 +9,12 @@ from smarter.apps.account.models import (
     User,
     UserProfile,
 )
+from smarter.apps.account.tests.cleanup import (
+    ADMIN_ACCOUNT_NAME_PREFIX,
+    ADMIN_USERNAME_PREFIX,
+    MORTAL_ACCOUNT_NAME_PREFIX,
+    MORTAL_USERNAME_PREFIX,
+)
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import logging
@@ -22,14 +28,14 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 def admin_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = to_snake_case(f"testAdminUser_{hashed_slug}")
+    username = to_snake_case(f"{ADMIN_USERNAME_PREFIX}{hashed_slug}")
     email = f"test-admin-{hashed_slug}@mail.com"
     first_name = f"TestAdminFirstName_{hashed_slug}"
     last_name = f"TestAdminLastName_{hashed_slug}"
 
     # annotations is a MetaDataModel property, not a field, which Model.__init__() accepts but mypy does not.
     account = account or Account.objects.create(  # type: ignore[misc]
-        name=f"test_account_admin_user_{hashed_slug}",
+        name=f"{ADMIN_ACCOUNT_NAME_PREFIX}{hashed_slug}",
         description="Account for admin user testing purposes",
         version=COMMON_VERSION,
         is_default_account=False,
@@ -107,14 +113,14 @@ def platform_staff_profile_factory(user: User) -> UserProfile:
 
 def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Account, UserProfile]:
     hashed_slug = hash_factory()
-    username = str(to_snake_case(f"testMortalUser_{hashed_slug}"))
+    username = str(to_snake_case(f"{MORTAL_USERNAME_PREFIX}{hashed_slug}"))
     email = f"test-mortal-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
     last_name = f"TestMortalLastName_{hashed_slug}"
 
     # annotations is a MetaDataModel property, not a field, which Model.__init__() accepts but mypy does not.
     account = account or Account.objects.create(  # type: ignore[misc]
-        name=f"test_account_mortal_user_{hashed_slug}",
+        name=f"{MORTAL_ACCOUNT_NAME_PREFIX}{hashed_slug}",
         description="Account for mortal user testing purposes",
         version=COMMON_VERSION,
         is_default_account=False,
@@ -164,6 +170,18 @@ def mortal_user_factory(account: Optional[Account] = None) -> tuple[User, Accoun
 
 
 def factory_account_teardown(user: User, account: Optional[Account], user_profile: Optional[UserProfile]):
+    """
+    Delete what a factory created: the profile, its account contact, the user and the account.
+
+    It deletes only these, so a test may call it for a secondary account in the middle of its class. What tests
+    leave behind is deleted by :func:`~smarter.apps.account.tests.cleanup.purge_test_artifacts`, which the test
+    runner calls before and after each run, never in the middle of one, where it would delete the fixtures of
+    classes that are still running.
+
+    :param user: The user.
+    :param account: The account, if any.
+    :param user_profile: The profile, if known; otherwise the user's profile in the account, or their first.
+    """
     if user and account and not user_profile:
         user_profile = UserProfile.get_cached_object(user=user, account=account)
     elif user and not user_profile:
@@ -196,36 +214,6 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
             logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
     except Account.DoesNotExist:
         pass
-
-    # This cleans up sloppy test runs where the unit tests created test artifacts but failed to clean them up.
-    accounts: list[Account] = []
-    test_user_profiles = UserProfile.objects.filter(is_test=True)
-    for user_profile in test_user_profiles:
-        if user_profile.account not in accounts:
-            accounts.append(user_profile.account)
-        user = user_profile.user
-        user_profile.delete()
-        user.delete()
-        logger.warning(
-            "%s.factory_account_teardown() had to intervene to delete test UserProfile: %s (account: %s)",
-            HERE,
-            user_profile,
-            user_profile.account,
-        )
-    for account in accounts:
-        account.delete()
-        logger.warning("%s.factory_account_teardown() had to intervene to delete test Account: %s", HERE, account)
-
-    account_contacts = AccountContact.objects.filter(is_test=True)
-    if account_contacts.exists():
-        for account_contact in account_contacts:
-            logger.warning(
-                "%s.factory_account_teardown() had to intervene to delete test AccountContact: %s (account: %s)",
-                HERE,
-                account_contact,
-                account_contact.account,
-            )
-        account_contacts.delete()
 
 
 def billing_address_factory():

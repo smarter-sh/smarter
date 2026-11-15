@@ -56,7 +56,7 @@ spec:
       - name: limit
         value: 1
     urlParams: null
-  connection: smarter_test_api
+  connection: stackademy_catalog_api
   prompt:
     maxTokens: 2048
     model: gpt-6-luna

@@ -39,6 +39,7 @@ from django.db import models
 from django.http import HttpResponse, StreamingHttpResponse
 from django.http.response import HttpResponseBase
 
+from smarter.apps.account.hierarchy import resolve_by_name
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.models.budget import (
     SmarterChargeAuthorizationFailed,
@@ -147,42 +148,26 @@ def check_upstream_host(proxy: Proxy) -> None:
 
 def resolve_proxy(name: str, user_profile: UserProfile) -> Proxy:
     """
-    The Proxy that a caller means by ``name``: of those that the caller may read, their own, else their account's, else the built-in one, which the Smarter admin owns.
+    The Proxy that a caller means by ``name``: of those that the caller may read, the nearest.
 
-    Ties go to the most recently updated.
+    Their own, else their account's, else that of the nearest account that shares with theirs, ending with the
+    built-in ones, which the Smarter admin owns. Ties go to the most recently updated. See
+    :func:`smarter.apps.account.hierarchy.resolve_by_name`.
 
     :raises ProxyNotFound: if the caller may read no Proxy of that name.
     """
-    # pylint: disable=C0415
-    from smarter.apps.account.utils import smarter_cached_objects
-
-    matches = list(
-        Proxy.objects.with_read_permission_for(user_profile.user)  # type: ignore[attr-defined]
-        .filter(name=name)
-        .select_related(
-            "provider",
-            "provider__api_key",
-            "api_key_secret",
-            "user_profile__user",
-            "user_profile__account",
-        )
+    queryset = Proxy.objects.select_related(  # type: ignore[attr-defined]
+        "provider",
+        "provider__api_key",
+        "api_key_secret",
+        "user_profile__user",
+        "user_profile__account",
     )
-    if not matches:
-        raise ProxyNotFound(f"Proxy {name} does not exist, or is not shared with you.")
-    smarter_account_id = smarter_cached_objects.smarter_account.pk
-
-    def precedence(proxy: Proxy) -> tuple[int, float]:
-        if proxy.user_profile_id == user_profile.pk:  # type: ignore[attr-defined]
-            rank = 0
-        elif proxy.user_profile.account_id == user_profile.account_id:  # type: ignore[attr-defined]
-            rank = 1
-        elif proxy.user_profile.account_id == smarter_account_id:  # type: ignore[attr-defined]
-            rank = 2
-        else:
-            rank = 3
-        return rank, -(proxy.updated_at.timestamp() if proxy.updated_at else 0)
-
-    return min(matches, key=precedence)
+    try:
+        retval = resolve_by_name(queryset, name, user_profile)
+    except Proxy.DoesNotExist as e:
+        raise ProxyNotFound(f"Proxy {name} does not exist, or is not shared with you.") from e
+    return retval
 
 
 def proxies_for(user_profile: UserProfile) -> models.QuerySet[Proxy]:

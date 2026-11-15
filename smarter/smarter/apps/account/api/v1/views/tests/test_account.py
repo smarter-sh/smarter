@@ -61,7 +61,11 @@ class TestAccountView(TestAccountMixin):
 
     def test_post_create_account_success(self):
         """POST creates a new account and user profile."""
-        data = {"name": "Test Account New Name"}
+        # a name of its own, and a cleanup: every run of this test used to leave an account named
+        # test_account_new_name in the database.
+        name = f"test_account_views_{self.hash_suffix}"
+        self.addCleanup(Account.objects.filter(name=name).delete)
+        data = {"name": name}
         response = self.client.post(self.url, data, content_type="application/json")
         self.assertIn(
             response.status_code,

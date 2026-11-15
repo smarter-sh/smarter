@@ -103,6 +103,11 @@ that it happens to create. What `load_from_github` does:
   (before the manifests) or `post` (after), with a fixed environment
   (`apps/account/repository_scripts.py`). Keep that scheme generic: never teach `load_from_github`
   about one repository's script, folder or file names.
+- A repository's `owners.yaml`, at its root, maps folders to the user (and account) that applies,
+  and so owns, their manifests, so that an organization's departments each own their resources
+  (`apps/account/repository_owners.py`, ADR-036). Account and User manifests are always applied by
+  the loader. Owned folders are applied only when the repository is loaded into the Smarter account,
+  as `initialize_platform` does; `initialize_account`, which loads into a new account, skips them.
 
 Who loads what:
 
@@ -161,7 +166,7 @@ Agents have broken this rule repeatedly, so read it before any change that sets 
   user), then run `initialize_platform`, and nothing more.
 - **Data from another repository:** the command that handles that repository fetches and
   applies it, and `initialize_platform` calls that command. The Stackademy course database,
-  `smarter_test_db`, is the example: its SQL script and loader are in the stackademy
+  `stackademy`, is the example: its SQL script and loader are in the stackademy
   repository's `scripts/` folder, listed as a `pre` script in `scripts/scripts.yaml`, and
   `load_from_github --run_scripts`, which `initialize_platform` calls, runs them. Never copy a script from another repository into a
   ConfigMap or this repository.

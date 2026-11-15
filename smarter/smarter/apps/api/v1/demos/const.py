@@ -2,7 +2,7 @@
 
 namespace = "demos"
 
-STACKADEMY_API_CONNECTION_NAME = "smarter_test_api"
+STACKADEMY_API_CONNECTION_NAME = "stackademy_catalog_api"
 """
 The Stackademy ApiConnection, whose ``apiKey`` Secret is the password of the Stackademy course catalogue.
 

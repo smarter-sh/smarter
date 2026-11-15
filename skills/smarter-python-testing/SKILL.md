@@ -86,9 +86,10 @@ class names its views differently, add a small adapter class (see
 - **`admin_user` is a superuser.** Ownership and read-permission queries return
   every account's rows for a superuser. Use `non_admin_user` to prove that
   another account gets a 404.
-- **`factory_account_teardown()` sweeps every `is_test=True` account**,
-  including your own class's fixtures. Never call it mid-class. Delete a
-  secondary account's objects directly.
+- **Never purge test data mid-run.** `purge_test_artifacts()` deletes every
+  `is_test=True` profile, your own class's fixtures included, so only the test
+  runner calls it, before and after each run. `factory_account_teardown()`
+  deletes only what it's given, so it's safe for a secondary account.
 - **Celery is not eager.** `.delay()` sends the task to the live worker
   container. Patch the task where the code under test imports it, or call the
   task function directly (it runs synchronously, and exceptions re-raise

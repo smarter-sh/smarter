@@ -326,18 +326,13 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             user = user_profile.user
             account = account or user_profile.account
 
-        try:
-            user_profile = user_profile or UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
-        except (UserProfile.DoesNotExist, User.DoesNotExist):
-            logger.debug(
-                "%s.get_cached_object() - No UserProfile found for user: %s, account: %s",
-                logger_prefix,
-                user.username if user else None,
-                account.id if account else None,  # type: ignore[attr-defined]
+        if user_profile is None and user is not None:
+            user_profile = cls.user_profile_of(user, account, invalidate)
+        found_by_account = account is not None and bool(name)
+        if not user_profile and not pk and not found_by_account:
+            raise SmarterValueError(
+                "a pk, a UserProfile and a name, or an account and a name, are required to get a PluginMeta."
             )
-            user_profile = None
-        if not user_profile and not pk:
-            raise SmarterValueError("either a pk or UserProfile + name is required to get a PluginMeta object.")
 
         if invalidate and user_profile and name:
             _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
@@ -364,9 +359,37 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             return None
 
         if user_profile is None:
-            # not reached: without a pk, a missing UserProfile raised SmarterValueError above.
             raise SmarterValueError("a UserProfile is required to get a PluginMeta object by plugin_class.")
         return _get_model_by_name_and_userprofile_and_plugin_class(name, user_profile.id, plugin_class)
+
+    @classmethod
+    def user_profile_of(
+        cls, user: User, account: Optional[Account], invalidate: Optional[bool]
+    ) -> Optional[UserProfile]:
+        """
+        Return a user's own profile, in the account if one is given, for a lookup of the user's plugins.
+
+        Only a user's own profile: an account alone would resolve to the account's admin, whose plugins are not the
+        account's, e.g. those of a department head when the head of IT also administers the department. A plugin's
+        name is unique in its account, so :meth:`get_cached_object` finds a plugin by a name and an account,
+        whoever owns it.
+
+        :param user: The user.
+        :param account: The account, or None for the user's default profile.
+        :param invalidate: Whether to refresh the cached profile.
+        :returns: The profile, or None if the user has none there.
+        """
+        try:
+            retval = UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
+        except (UserProfile.DoesNotExist, User.DoesNotExist):
+            logger.debug(
+                "%s.user_profile_of() - No UserProfile found for user: %s, account: %s",
+                f"{SmarterFormattedText.text(__name__)}.{PluginMeta.__name__}",
+                user.username,
+                account.id if account else None,  # type: ignore[attr-defined]
+            )
+            return None
+        return retval
 
     # pylint: disable=W0222
     @classmethod

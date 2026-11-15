@@ -41,13 +41,13 @@ other.
    * - Folder
      - Resources
    * - ``secrets/``
-     - Three :doc:`Secrets </smarter-resources/smarter-secret>`: the passwords of the Stackademy test
+     - Three :doc:`Secrets </smarter-resources/smarter-secret>`: the passwords of the Stackademy course
        database and its proxy, and of the Stackademy course catalogue api.
    * - ``connections/sql/``
-     - The :doc:`SqlConnection </smarter-resources/smarter-connection>` ``smarter_test_db``, to the
-       Stackademy test database.
+     - The :doc:`SqlConnection </smarter-resources/smarter-connection>` ``stackademy_catalog_db``, to the
+       Stackademy course database.
    * - ``connections/api/``
-     - The ApiConnection ``smarter_test_api``, to the course catalogue api of the platform that
+     - The ApiConnection ``stackademy_catalog_api``, to the course catalogue api of the platform that
        applies it. It is a :doc:`manifest template <manifest-templates>`, ``*.yaml.tpl``.
    * - ``plugins/sql/``
      - The :doc:`SqlPlugin </smarter-resources/smarter-llmtool>` ``stackademy_sql``, which queries the
@@ -62,7 +62,7 @@ other.
        what ``stackademy_sql`` may spend.
    * - ``scripts/``
      - Not manifests: the scripts that a platform runs when it loads the repository, listed in
-       ``scripts.yaml``. ``create-course-database.sh`` runs ``smarter_test_db.sql``, which creates
+       ``scripts.yaml``. ``create-course-database.sh`` runs ``stackademy.sql``, which creates
        the course database, its ``courses`` table and its read-only users.
 
 Its pre-commit hooks check every manifest against the JSON Schema of its kind, which the Smarter
@@ -74,12 +74,12 @@ What the Platform Provides
 The data that the course advisors read is served by the platform, so that the project works on every
 Smarter platform without an external service:
 
-- the ``smarter_test_db`` database, whose ``courses`` table is the course catalogue, in the
+- the ``stackademy`` database, whose ``courses`` table is the course catalogue, in the
   platform's own database server. The repository's ``scripts/create-course-database.sh`` creates
   it, and ``manage.py initialize_platform`` runs that script, and
 
 - the course catalogue api, ``/api/v1/demos/stackademy/course-catalogue/``, which accepts the
-  value of the ``smarter_test_api`` Secret of the Smarter account as its password.
+  value of the ``apiKey`` Secret of the Smarter account's ``stackademy_catalog_api`` as its password.
 
 How a Platform Loads It
 -----------------------

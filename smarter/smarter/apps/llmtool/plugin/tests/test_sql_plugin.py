@@ -224,6 +224,36 @@ class TestSqlPlugin(PluginTestBase):
         with self.assertRaises(SmarterSqlPluginError):
             SqlPlugin(manifest=self.sql_manifest(name), user_profile=other_user_profile)
 
+    def test_sql_connection_shared_by_another_account_is_found(self):
+        """Test that a SqlPlugin uses a connection that an account above it shares, e.g. its IT department's."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.models import Account, AccountContact
+        from smarter.apps.account.tests.factories import admin_user_factory
+
+        other_user, other_account, other_user_profile = admin_user_factory()
+        # the fixtures' account shares with its own subtree, and the other account is its child.
+        account = Account.objects.get(pk=self.account.pk)
+        account.share_scope = account
+        account.save()
+        other_account.parent = account
+        other_account.save()
+
+        def cleanup():
+            # do NOT use factory_account_teardown() here. it also sweeps every
+            # test UserProfile and Account, including this class's fixtures.
+            PluginMeta.objects.filter(user_profile=other_user_profile).delete()
+            AccountContact.objects.filter(account=other_account).delete()
+            other_user_profile.delete()
+            other_user.delete()
+            other_account.delete()
+            unshared = Account.objects.get(pk=self.account.pk)
+            unshared.share_scope = None
+            unshared.save()
+
+        self.addCleanup(cleanup)
+        plugin = SqlPlugin(manifest=self.sql_manifest("sql_shared_connection"), user_profile=other_user_profile)
+        self.assertEqual(plugin.plugin_data.connection, self.sql_connection)  # type: ignore[union-attr]
+
     def test_sql_placeholder_not_in_parameters_raises(self):
         """Test that a query placeholder without a matching parameter is rejected."""
         name = "sql_bad_placeholder"

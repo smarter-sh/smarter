@@ -40,6 +40,59 @@ Smarter administration interface or a declarative Smarter API Manifest (SAM),
 eliminating the need to hand-write orchestration logic or distribute
 multi-agent control flow across individual applications.
 
+Harnesses in other accounts
+---------------------------
+
+A harness names its LLMClient by ``llmClientName``. Without an ``accountNumber``, Smarter uses the nearest LLMClient
+of that name in the Orchestrator owner's account tree: the owner's own, else their account's, else that of an
+account that shares with theirs. With ``accountNumber``, it uses that account's LLMClient, which the owner must be
+able to read, e.g. as a member of the account. So an organization's executives can combine the assistants of their
+departments, each of which stays in its department's account:
+
+.. code-block:: yaml
+
+    spec:
+      config:
+        strategy: parallel
+        harnesses:
+          - llmClientName: stackademy_hr_assistant
+            accountNumber: "2718-2818-0002"
+          - llmClientName: stackademy_accounting_assistant
+            accountNumber: "2718-2818-0003"
+          - llmClientName: stackademy_board_pack
+            role: summarizer
+            config:
+              instructions: Write the board pack's one page from these answers.
+
+Running an Orchestrator
+-----------------------
+
+A run is an attempt at an objective. ``POST /api/v1/orchestrators/<id>/runs/`` with ``{"objective": "..."}`` starts
+one, and answers ``202`` with the run, ``pending``. The platform executes it in the background, so poll
+``GET /api/v1/orchestrators/<id>/runs/<run_id>/`` until its status is ``succeeded``, ``failed`` or
+``max_iterations_exceeded``. The run lists its steps, and, once it succeeded, its ``result``.
+
+- **Strategies.** ``sequential`` calls every active harness but the summarizer, in ``executionOrder``, and gives each
+  the objective and every answer before it. ``parallel`` gives each only the objective. In ``router``, a harness
+  with the role ``router`` reads the objective and the other harnesses' names and descriptions, and chooses the
+  one that answers. In ``supervisor``, a harness with the role ``planner`` asks the others questions, one at a time,
+  and reads each answer, until it gives the result. Router and planner reply in JSON, which Smarter asks them for,
+  so give their LLMClients no tools of their own, or they may answer the objective themselves. After any strategy,
+  a ``summarizer`` harness, if there is one, answers last, from every answer. A harness's ``config.instructions``
+  ends the messages that it receives. ``voting`` and ``debate`` can't run yet, and their runs are refused.
+- **Each step is a prompt** of its LLMClient, as its owner, in its session for the run, one per harness, so that a
+  harness asked twice remembers the first time: its tools, guardrails and
+  budgets apply, and its tokens are charged to it. A department's assistant reads its department's records, and its
+  department pays for it. The user who started the run is each step's acting user, whom MCP servers learn of.
+- **Who may run it.** Any user who may read the Orchestrator, and every one of its harness LLMClients. A user who
+  may not read one of them is refused with ``403``, so an Orchestrator is never a way into an account that the user
+  doesn't belong to. Only the user who started a run, or a superuser, may read it.
+- **Limits.** ``maxIterations`` bounds the steps of a run. A budget that has run out fails the step that it would
+  charge. A failed step ends a ``sequential`` run; in a ``parallel`` run, the summarizer is told which harness
+  failed.
+
+:doc:`ADR-037 <../adr/037-orchestration-runtime>` records the design.
+
 .. seealso::
 
     - :doc:`Smarter Installation Guide <../smarter-platform/installation>`
@@ -56,6 +109,7 @@ Technical Reference
    orchestrator/management
    orchestrator/manifest
    orchestrator/models
+   orchestrator/runtime
    orchestrator/serializers
    orchestrator/signals
    orchestrator/tasks
