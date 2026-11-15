@@ -20,7 +20,10 @@ the ``upbeat_occasion_input`` Guardrail, a small LLM, must judge it fun and upbe
 fails is ignored, and the calendar's doodle stays. A drawn doodle is proposed, and a superuser
 approves it in the admin, unless the ``enable_doodle_auto_approve`` switch is on.
 
-Every prompt is recorded as a :class:`~smarter.apps.doodle.models.DoodleEditorRun`. A day is asked
+Both LLMClients are prompted in-process, as their owner, with
+:func:`smarter.apps.llmclient.prompting.prompt_in_process`: their system prompts, guardrails and
+budgets apply, as they would to a person's prompt. Every editor prompt is recorded as a
+:class:`~smarter.apps.doodle.models.DoodleEditorRun`. A day is asked
 once, or until it has failed :data:`~smarter.apps.doodle.const.EDITOR_MAX_ATTEMPTS` times.
 """
 
@@ -34,7 +37,6 @@ from django.utils import timezone
 from django.utils.text import slugify
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.guardrail.api.v1.views.views import evaluate as evaluate_guardrail
 from smarter.apps.guardrail.models import Guardrail, GuardrailStage
@@ -42,14 +44,15 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.prompting import (
     SmarterLLMClientPromptError,
     assistant_text,
-    prompt_llmclient,
-    single_use_api_key,
+    extract_json_object,
+    prompt_in_process,
 )
 from smarter.apps.llmtool.nlp import (
     simple_search,
     thesaurus_match,
     within_levenshtein_distance,
 )
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -153,6 +156,9 @@ OBSERVANCE_CATEGORIES = (
     DoodleCategory.SPORT,
 )
 """The categories that a drawn observance may have."""
+
+USER_AGENT = "smarter-doodle"
+"""The user agent of the editor's and the artist's ``Prompt`` sessions, which no browser opened."""
 
 WIKIPEDIA = re.compile(r"^https://[a-z-]{2,12}\.wikipedia\.org/wiki/[^\s<>\"']+$")
 """The only links that a drawn doodle's caption may have: a Wikipedia article, of any edition."""
@@ -358,14 +364,12 @@ def parse_answer(text: Optional[str]) -> DoodleEditorAnswer:
     """
     if not text:
         raise SmarterValueError("The editor gave no answer.")
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end < start:
+    data = extract_json_object(text)
+    if data is None:
         raise SmarterValueError("The editor's answer has no JSON object.")
     try:
-        data = json.loads(text[start : end + 1])
         answer = DoodleEditorAnswer.model_validate(data)
-    except (json.JSONDecodeError, ValidationError) as e:
+    except ValidationError as e:
         raise SmarterValueError(f"The editor's answer isn't valid: {e}") from e
     return answer
 
@@ -495,15 +499,15 @@ def smarter_llmclient(name: str) -> Optional[LLMClient]:
     return llmclient
 
 
-def smarter_admin_profile() -> UserProfile:
+def session_url() -> str:
     """
-    Return the user profile of the Smarter account's admin, who owns the doodle's LLMClients.
+    Return the url that the editor's and the artist's ``Prompt`` sessions come from: the doodle's api.
 
-    :returns: The profile.
-    :rtype: UserProfile
+    :returns: The url.
+    :rtype: str
     """
-    profile = smarter_cached_objects.smarter_admin_user_profile
-    return profile
+    url = f"{smarter_settings.environment_url}/api/v1/doodles/"
+    return url
 
 
 def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: datetime.date) -> DoodleTheme:
@@ -532,8 +536,7 @@ def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: date
         raise SmarterLLMClientPromptError(f"The LLMClient {ARTIST_LLMCLIENT} doesn't exist.")
     prefix = "ai"
     prompt = json.dumps({"name": subject.name, "subject": decision.subject, "prefix": prefix})
-    with single_use_api_key(smarter_admin_profile(), "doodle_artist") as token_key:
-        result = prompt_llmclient(artist, token_key, prompt)
+    result = prompt_in_process(artist, prompt, session_url(), USER_AGENT)
     answer = assistant_text(result) or ""
     props_svg = sanitize_svg(extract_svg(answer), prefix)
     alt_text = str(decision.alt_text)
@@ -692,8 +695,7 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
     run = DoodleEditorRun(date=day, request=request_json, with_trends=with_trends)
 
     try:
-        with single_use_api_key(smarter_admin_profile(), "doodle_editor") as token_key:
-            result = prompt_llmclient(editor, token_key, json.dumps(request_json))
+        result = prompt_in_process(editor, json.dumps(request_json), session_url(), USER_AGENT)
         text = assistant_text(result)
         run.response = text or ""
         answer = parse_answer(text)

@@ -451,6 +451,7 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
 
    smarter-instructor
    smarter-instructors/example-courses/index
+   case-studies/index
 
 .. toctree::
    :maxdepth: 1

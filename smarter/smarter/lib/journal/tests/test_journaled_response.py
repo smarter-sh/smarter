@@ -7,20 +7,20 @@ from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
+from ..contract.const import JOURNAL_KEY_PATTERN
 from ..http import SmarterJournaledJsonErrorResponse, SmarterJournaledJsonResponse
-
-JOURNAL_KEY = "a" * 64
 
 
 class TestSmarterJournaledJsonResponse(SmarterTestBase):
     """Test the SmarterJournaledJsonResponse class."""
 
     @patch("smarter.lib.journal.http.waffle")
-    @patch("smarter.lib.journal.http.SAMJournal")
-    def test_response_with_authenticated_user(self, mock_samjournal, mock_waffle):
+    @patch("smarter.lib.journal.http.queue_journal_entry")
+    def test_response_with_authenticated_user(self, mock_queue, mock_waffle):
         mock_waffle.switch_is_active.return_value = True
         mock_request = Mock()
         mock_request.user.is_authenticated = True
+        mock_request.user.pk = 1
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
         mock_request.META = {}
@@ -28,9 +28,6 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request.POST = {}
         mock_request.COOKIES = {}
         mock_request.headers = {}
-        mock_journal = Mock()
-        mock_journal.key = JOURNAL_KEY
-        mock_samjournal.objects.create.return_value = mock_journal
 
         data: SmarterDictType = {}
         resp = SmarterJournaledJsonResponse(
@@ -43,11 +40,13 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.CREATED)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertEqual(data["metadata"]["key"], JOURNAL_KEY)
+        record = mock_queue.call_args.args[0]
+        self.assertEqual(data["metadata"]["key"], record.key)
+        self.assertRegex(record.key, JOURNAL_KEY_PATTERN)
 
     @patch("smarter.lib.journal.http.waffle")
-    @patch("smarter.lib.journal.http.SAMJournal")
-    def test_response_with_anonymous_user(self, mock_samjournal, mock_waffle):
+    @patch("smarter.lib.journal.http.queue_journal_entry")
+    def test_response_with_anonymous_user(self, mock_queue, mock_waffle):
         mock_waffle.switch_is_active.return_value = True
         mock_request = Mock()
         mock_request.user.is_authenticated = False
@@ -57,9 +56,6 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request.POST = {}
         mock_request.COOKIES = {}
         mock_request.headers = {}
-        mock_journal = Mock()
-        mock_journal.key = JOURNAL_KEY
-        mock_samjournal.objects.create.return_value = mock_journal
 
         data: SmarterDictType = {}
         resp = SmarterJournaledJsonResponse(
@@ -72,7 +68,9 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         self.assertEqual(resp.status_code, HTTPStatus.OK)
         data = json.loads(resp.content.decode("utf-8"))
         self.assertIn("api", data)
-        self.assertEqual(data["metadata"]["key"], JOURNAL_KEY)
+        record = mock_queue.call_args.args[0]
+        self.assertEqual(data["metadata"]["key"], record.key)
+        self.assertRegex(record.key, JOURNAL_KEY_PATTERN)
 
     @patch("smarter.lib.journal.http.waffle")
     def test_response_waffle_inactive(self, mock_waffle):

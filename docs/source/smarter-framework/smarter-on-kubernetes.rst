@@ -87,6 +87,16 @@ they can never delay the operational tasks that record prompt history, charges a
 The Helm chart also runs a Job, ``smarter-job-init``, on every install and upgrade. It migrates the
 database, initializes the platform, loads the example resources and deploys the built-in LLMClients.
 On a new cluster, that one Job queues a deployment for every built-in LLMClient at once.
+
+Before an upgrade's rollout, a second Job, ``smarter-job-migrate``, a ``pre-upgrade`` hook, runs only
+``manage.py migrate``, so that the new release's pods never take requests before the columns and
+tables that their code reads exist. ``smarter-job-init`` runs after the rollout, and its migrate then
+has nothing left to do. A failed migration fails ``helm upgrade`` before any pod is replaced. Until
+the rollout finishes, the previous release's pods run against the new schema, which is why a
+migration that removes or renames a column needs two releases: one that stops reading it, then one
+that drops it. On a fresh install, there is no ``pre-install``
+migration: the chart's Secret doesn't exist yet, and ``smarter-job-init`` creates the database
+before it migrates.
 When it completes, it emails its whole log, with credentials redacted, to the chart's
 ``databaseInit.notifyEmail``, or by default to the platform's admin, ``SMARTER_EMAIL_ADMIN``, with
 ``manage.py email_job_log``. The email reports whether the Job succeeded, and carries the log as an
@@ -198,7 +208,8 @@ Docker and Kubernetes Compared
        long. A SqlConnection's ``timeout`` is its driver's connect and query timeout.
    * - Upgrades
      - Rebuild the image and restart the containers.
-     - ``helm upgrade``: a rolling update with ``maxUnavailable: 0``, then the init Job.
+     - ``helm upgrade``: the migration Job, a rolling update with ``maxUnavailable: 0``, then the
+       init Job.
    * - Logs
      - ``docker logs <container>``.
      - ``kubectl logs`` per pod. Smarter reads the logs of the pods it creates itself, such as

@@ -4,7 +4,9 @@ from django.dispatch import Signal
 
 journal_entry_created = Signal()
 """
-Signal sent when a journaled response has written its journal entry.
+Signal sent when a journal entry is saved, by the Celery worker that saves it, or by the response.
+
+itself when the entry could not be queued.
 
 **Arguments:**
 
@@ -12,23 +14,24 @@ Signal sent when a journaled response has written its journal entry.
 
 Example::
 
-    journal_entry_created.send(sender=self.__class__, journal=journal)
+    journal_entry_created.send(sender=SAMJournal, journal=journal)
 """
 
 journal_entry_failed = Signal()
 """
-Signal sent when a journaled response could not write its journal entry.
+Signal sent when a journal entry could not be saved.
 
-The response is returned without a key.
+It is sent by the journaled response when the entry could neither be queued nor saved, and the
+response is returned without a key, or by the Celery task, when its last try fails.
 
 **Arguments:**
 
-- ``user`` (``User``): The user who made the request, or None.
+- ``user`` (``User`` or ``int``): The user who made the request, the user's id from the task, or None.
 - ``thing`` (``str``): The journal's thing, e.g. Guardrail.
 - ``command`` (``str``): The journal's command, e.g. apply.
 - ``status`` (``int``): The response's http status.
-- ``request`` (``HttpRequest``): The request.
-- ``response`` (``dict``): The response's JSON, or None if it could not be serialized.
+- ``request`` (``HttpRequest``): The request, or None from the task.
+- ``response`` (``dict``): The response's JSON, or None if it could not be serialized, or from the task.
 - ``error`` (``Exception``): The error that prevented the entry from being saved.
 
 Example::

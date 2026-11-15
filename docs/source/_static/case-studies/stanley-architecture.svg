@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 860" width="1200" height="860" role="img" aria-label="Exhibit: how Stanley is wired to the AI model and to Stackademy's database">
+<title>Exhibit: how Stanley is wired to the AI model and to Stackademy's database</title>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker><marker id="dk-arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A78BFA"/></marker></defs>
+<rect width="1200" height="860" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="860" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="860" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#3DD68C"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#3DD68C" text-anchor="start">Ask Stanley</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">Stanley's facts come from the database.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">The AI model writes the sentences. Every course, price and prerequisite in them is a row of the courses table.</text>
+<rect x="50" y="236" width="240" height="196" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="256" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(83,269) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="70" y="334" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#F59E0B" text-anchor="start">Prospective student</text>
+<text x="70" y="360" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#C9CAD3" text-anchor="start">any hour, any country</text>
+<text x="70" y="381" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#C9CAD3" text-anchor="start">Smarter Chat, on a page</text>
+<text x="70" y="402" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#C9CAD3" text-anchor="start">in allowedOrigins</text>
+<rect x="330" y="196" width="530" height="520" rx="22" fill="#4FA3FF" fill-opacity="0.04" stroke="#4FA3FF" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="8 6"/>
+<rect x="352" y="212" width="333" height="24" rx="12" fill="#4FA3FF" fill-opacity="0.16"/>
+<text x="518.5" y="228.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="600" fill="#4FA3FF" text-anchor="middle">Smarter platform · five manifests, no code</text>
+<rect x="360" y="252" width="480" height="108" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="360" y="270" width="4" height="72" rx="2" fill="#4FA3FF"/>
+<rect x="382" y="280" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(395,293) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 1.6 2.4 2.4 4 2.4s3-.8 4-2.4M9 9.5h.01M15 9.5h.01"/></g>
+<text x="452" y="288" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="19" font-weight="700" fill="#4FA3FF" text-anchor="start">Stanley</text>
+<text x="452" y="313" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">LLMClient · stackademy_sql</text>
+<text x="452" y="338" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="400" fill="#C9CAD3" text-anchor="start">Instructions: use the tool, don't guess</text>
+<rect x="360" y="392" width="480" height="108" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="360" y="410" width="4" height="72" rx="2" fill="#3DD68C"/>
+<rect x="382" y="420" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(395,433) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v5M15 3v5M6 8h12v3.5a6 6 0 0 1-12 0zM12 17.5V21"/></g>
+<text x="452" y="428" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="19" font-weight="700" fill="#3DD68C" text-anchor="start">One tool</text>
+<text x="452" y="453" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">SqlPlugin · stackademy_sql</text>
+<text x="452" y="478" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="400" fill="#C9CAD3" text-anchor="start">A reviewed SELECT over courses; 2 values</text>
+<rect x="360" y="532" width="480" height="108" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="360" y="550" width="4" height="72" rx="2" fill="#3DD68C"/>
+<rect x="382" y="560" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(395,573) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></g>
+<text x="452" y="568" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="19" font-weight="700" fill="#3DD68C" text-anchor="start">The connection</text>
+<text x="452" y="593" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">SqlConnection · stackademy_catalog_db</text>
+<text x="452" y="618" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="400" fill="#C9CAD3" text-anchor="start">+ Secret: the password</text>
+<path d="M600,360 L600,392" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="360" r="5" fill="#3DD68C"/>
+<circle cx="600" cy="392" r="5" fill="#3DD68C"/>
+<path d="M600,500 L600,532" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="500" r="5" fill="#3DD68C"/>
+<circle cx="600" cy="532" r="5" fill="#3DD68C"/>
+<rect x="360" y="660" width="480" height="40" rx="18" fill="#F59E0B" fill-opacity="0.08" stroke="#F59E0B" stroke-opacity="0.55" stroke-width="1.2"/>
+<text x="600" y="686" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="600" fill="#F59E0B" text-anchor="middle">Budget stackademy_project · $2,500 a month, then a hard stop</text>
+<path d="M290,334 C325.0,334 325.0,306 360,306" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="290" cy="334" r="5" fill="#FFC50C"/>
+<circle cx="360" cy="306" r="5" fill="#FFC50C"/>
+<rect x="910" y="236" width="240" height="196" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="910" y="254" width="4" height="160" rx="2" fill="#A78BFA"/>
+<rect x="932" y="256" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(945,269) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></g>
+<text x="932" y="334" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#A78BFA" text-anchor="start">AI model</text>
+<text x="932" y="358" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">openai · gpt-6-luna</text>
+<text x="932" y="384" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#C9CAD3" text-anchor="start">Chooses the tool's values,</text>
+<text x="932" y="405" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14.5" font-weight="400" fill="#C9CAD3" text-anchor="start">writes the answer</text>
+<path d="M840,290 L910,290" fill="none" stroke="#A78BFA" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="840" cy="290" r="5" fill="#A78BFA"/>
+<circle cx="910" cy="290" r="5" fill="#A78BFA"/>
+<path d="M840,322 L910,322" fill="none" stroke="#A78BFA" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="840" cy="322" r="5" fill="#A78BFA"/>
+<circle cx="910" cy="322" r="5" fill="#A78BFA"/>
+<text x="885" y="282" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#8D8FA0" text-anchor="middle">ask</text>
+<text x="885" y="342" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#8D8FA0" text-anchor="middle">tool call</text>
+<rect x="971" y="444" width="179" height="24" rx="12" fill="#A78BFA" fill-opacity="0.16"/>
+<text x="1060.5" y="460.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#A78BFA" text-anchor="middle">never sees the database</text>
+<rect x="910" y="486" width="240" height="230" rx="18" fill="#3DD68C" fill-opacity="0.08" stroke="#3DD68C" stroke-opacity="0.55" stroke-width="1.2"/>
+<rect x="930" y="504" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(943,517) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v13c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-13M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></g>
+<text x="994" y="526" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#3DD68C" text-anchor="start">MariaDB</text>
+<text x="994" y="548" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">stackademy</text>
+<text x="930" y="588" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">as stackademy_catalog:</text>
+<text x="930" y="612" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#3DD68C" text-anchor="start">courses</text>
+<text x="1012" y="612" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#3DD68C" text-anchor="start">← the query</text>
+<text x="930" y="634" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#C9CAD3" text-anchor="start">cohorts, modules, lessons</text>
+<text x="930" y="664" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#F87171" text-anchor="start">21 other tables refused:</text>
+<text x="930" y="685" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">students, employees, pay ...</text>
+<path d="M840,586 L910,586" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="840" cy="586" r="5" fill="#3DD68C"/>
+<circle cx="910" cy="586" r="5" fill="#3DD68C"/>
+<text x="885" y="576" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="600" fill="#3DD68C" text-anchor="middle">SELECT</text>
+<path d="M840,614 L910,614" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="840" cy="614" r="5" fill="#3DD68C"/>
+<circle cx="910" cy="614" r="5" fill="#3DD68C"/>
+<text x="885" y="634" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#3DD68C" text-anchor="middle">rows</text>
+<rect x="50" y="740" width="1100" height="70" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="758" width="4" height="34" rx="2" fill="#3DD68C"/>
+<text x="78" y="769" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">Smarter, not the model, runs the query: it binds the model's values as parameters, connects as a read-only user,</text>
+<text x="78" y="791" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">and hands the rows back. Change a price in courses, and Stanley's next answer has it. There is no copy to update.</text>
+<text x="50" y="838" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: smarter-sh/stackademy, llm-clients/, plugins/sql/, connections/sql/ and budgets/.</text>
+</svg>
