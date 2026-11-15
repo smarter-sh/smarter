@@ -43,6 +43,17 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_save_only_staff(self):
         self.auth_token.user.is_staff = False
+        self.auth_token.user.is_superuser = False
+        with self.assertRaises(Exception):
+            self.auth_token.save()
+
+    def test_save_for_an_account_admin(self):
+        """A key may belong to a user who isn't staff, if their profile administers the key's account."""
+        self.auth_token.user.is_staff = False
+        self.auth_token.user.is_superuser = False
+        self.auth_token.user_profile.is_account_admin = True
+        self.auth_token.save()
+        self.auth_token.user_profile.is_account_admin = False
         with self.assertRaises(Exception):
             self.auth_token.save()
 

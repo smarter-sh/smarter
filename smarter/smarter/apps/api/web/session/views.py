@@ -23,7 +23,12 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.account.models import (
+    User,
+    UserProfile,
+    get_resolved_user,
+    user_administers_account,
+)
 from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.apps.account.oauth import github_oauth_enabled, google_oauth_enabled
 from smarter.apps.account.utils import get_cached_avatar_url
@@ -209,6 +214,7 @@ def console_user(user: User, user_profile: Optional[UserProfile]) -> ConsoleUser
         last_name=user.last_name or "",
         is_superuser=user.is_superuser,
         is_staff=user.is_staff,
+        administers_account=user_administers_account(user, user_profile),
         profile_image_url=profile_image_url,
         user_profile_count=user_profile_count,
     )

@@ -25,6 +25,7 @@ from django.db import models
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.lib import logging
 from smarter.lib.django.listview import ListviewPageRequest
@@ -244,8 +245,8 @@ def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optio
     """
     Return a resource's manifest, as ``smarter describe`` returns it to its owner.
 
-    The resource is described on behalf of its owner, because a broker finds a resource by its name among those of
-    its own user. A resource that has no owner, e.g. a Budget, is described on behalf of the user who reads it. The
+    The resource is described on behalf of its owner, in its own account, because a broker finds a resource by its
+    name among those of its own user profile. A resource that has no owner, e.g. a Budget, is described on behalf of the user who reads it. The
     caller has already checked that the user may read it (see :func:`readable_instance`).
 
     :param kind: The resource's SAM kind.
@@ -257,15 +258,21 @@ def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optio
     :rtype: tuple[Optional[SmarterDictType], str]
     """
     broker_class = Brokers.get_broker(kind)
-    owner = getattr(getattr(instance, "user_profile", None), "user", None)
+    owner_profile = getattr(instance, "user_profile", None)
+    owner = getattr(owner_profile, "user", None)
     if owner is None and not hasattr(instance, "user_profile"):
         owner = reader
     name = getattr(instance, "name", None)
     if broker_class is None or owner is None or not name:
         return None, f"A {kind} has no manifest."
     request = ListviewPageRequest(owner)
+    # the owner's profile in the resource's own account: the owner's default profile may be another account's, e.g.
+    # the newest account that they joined, where the broker wouldn't find the resource.
+    broker_kwargs: SmarterDictType = {"name": name, "kind": kind}
+    if isinstance(owner_profile, UserProfile):
+        broker_kwargs["user_profile"] = owner_profile
     try:
-        broker = broker_class(request, name=name, kind=kind)
+        broker = broker_class(request, **broker_kwargs)
         response = broker.describe(request)
         data = json.loads(response.content).get("data")
     # a broken resource must not break its detail: its other tabs still work. pylint: disable=W0718

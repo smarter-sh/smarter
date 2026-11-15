@@ -13,6 +13,7 @@ from smarter.apps.account.models.user_profile import (
     SmarterBaseModelManager,
     SmarterBaseQuerySetWithPermissions,
     UserProfile,
+    user_administers_account,
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import smarter_cached_objects
@@ -88,6 +89,53 @@ class TestUserProfile(TestAccountMixin):
         """
 
         self.user_profile.save()
+
+    def test_administers_account(self):
+        """A superuser, a staff user, or the profile's own is_account_admin administers its account."""
+        member = self.non_admin_user_profile
+        self.assertTrue(self.user_profile.administers_account)
+        self.assertFalse(member.administers_account)
+
+        UserProfile.objects.filter(pk=member.pk).update(is_account_admin=True)
+        self.addCleanup(UserProfile.objects.filter(pk=member.pk).update, is_account_admin=False)
+        member = UserProfile.objects.get(pk=member.pk)
+        self.assertTrue(member.administers_account)
+        self.assertFalse(member.user.is_staff)
+
+    def test_user_administers_account(self):
+        """Only the user's own profile counts, and anything but a User administers nothing."""
+        member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        member.is_account_admin = True
+        self.assertTrue(user_administers_account(self.non_admin_user, member))
+        # another user's profile, even one that administers the account, doesn't make this user an administrator.
+        other_user = User(pk=self.non_admin_user.pk + 100000, username="someone_else")
+        self.assertFalse(user_administers_account(other_user, member))
+        self.assertFalse(user_administers_account(self.non_admin_user, None))
+        self.assertFalse(user_administers_account(None, member))
+        self.assertTrue(user_administers_account(self.admin_user, None))
+
+    def test_staff_administer_only_their_own_accounts(self):
+        """A staff user administers an account through their own profile in it, and no account without one."""
+        staff = User.objects.create(username=f"test_staff_{self.hash_suffix}", is_staff=True)
+        self.addCleanup(staff.delete)
+        own = UserProfile.objects.create(user=staff, account=self.account, name=f"test_staff_{self.hash_suffix}")
+        self.assertTrue(user_administers_account(staff, own))
+        # no profile in the account, or another user's profile there: staff of one account have no say in another.
+        self.assertFalse(user_administers_account(staff, None))
+        self.assertFalse(user_administers_account(staff, self.non_admin_user_profile))
+
+    def test_admin_for_an_empty_account_is_its_own(self):
+        """An account without members gets an administrator of its own, never the platform's admin."""
+        account = Account.objects.create(name=f"test_empty_{self.hash_suffix}", company_name="Empty")
+        self.addCleanup(Account.objects.filter(pk=account.pk).delete)
+
+        admin_user = UserProfile.admin_for_account(account)
+
+        self.addCleanup(User.objects.filter(pk=admin_user.pk).delete)
+        self.assertNotEqual(admin_user, smarter_cached_objects.admin_user)
+        self.assertFalse(UserProfile.objects.filter(user=smarter_cached_objects.admin_user, account=account).exists())
+        self.assertTrue(UserProfile.objects.get(user=admin_user, account=account).is_account_admin)
+        self.assertFalse(admin_user.is_superuser)
 
     def test_admin_for_account(self):
         """

@@ -41,6 +41,23 @@ class TestPluginMetaLookups(PluginAppTestBase):
         assert found is not None
         self.assertEqual(found.pk, meta.pk)
 
+    def test_get_cached_object_by_account_finds_a_members_plugin(self):
+        """Test that an account and a name find a plugin of a member who isn't the account's admin.
+
+        A plugin's name is unique in its account. The lookup used to go through the account's admin's profile, so a
+        department head's plugin was not found when the head of IT also administered the department, and applying it
+        again tried to create it a second time.
+        """
+        plugin = self.new_static_plugin(
+            f"test_member_plugin_{self.hash_suffix}", user_profile=self.non_admin_user_profile
+        )
+        meta = plugin.plugin_meta
+        assert meta is not None
+        self.assertNotEqual(UserProfile.admin_for_account(self.account), self.non_admin_user)
+        found = PluginMeta.get_cached_object(invalidate=True, name=meta.name, account=self.account)
+        assert found is not None
+        self.assertEqual(found.pk, meta.pk)
+
     def test_get_cached_object_requires_pk_or_user(self):
         """Test that a lookup by an unknown username is refused with SmarterValueError."""
         with self.assertRaises(SmarterValueError):

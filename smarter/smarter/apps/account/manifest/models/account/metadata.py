@@ -1,4 +1,4 @@
-"""Smarter API Manifest - Account.metadata"""
+"""Smarter API Manifest - Account.metadata."""
 
 import os
 from typing import ClassVar, Optional
@@ -20,6 +20,9 @@ class SAMAccountMetadata(AbstractSAMMetadataBase):
     accountNumber: Optional[str] = Field(
         None,
         description=(
-            f"{class_identifier}.accountNumber[str]. Your preassigned 12-digit account number for your Smarter {MANIFEST_KIND} in the format '####-####-####'. Read only."
+            f"{class_identifier}.accountNumber[str]. The 12-digit number of the Smarter {MANIFEST_KIND}, in the format "
+            "'####-####-####'. Applying a manifest that creates the account gives it this number, so that an "
+            "organization's accounts have the same numbers on every platform; omitted, a new account gets a random "
+            "one. It never changes: a manifest whose number differs from its existing account's is refused."
         ),
     )

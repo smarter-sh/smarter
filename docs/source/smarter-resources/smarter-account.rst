@@ -34,8 +34,10 @@ Technical Reference
    account/api
    account/commands
    account/const
+   account/hierarchy
    account/models
    account/receivers
+   account/repository_owners
    account/repository_scripts
    account/resources
    account/sam

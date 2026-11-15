@@ -173,7 +173,7 @@ class DeploymentApiKeys(LLMClientDeploymentModel):
     api_keys: list[DeploymentApiKey] = Field(..., description="Newest first.")
     attached: Optional[DeploymentAttachedApiKey] = None
     can_manage: bool = Field(..., description="Whether the user may attach and detach api keys: ownership.")
-    can_create: bool = Field(..., description="Whether the user may create an api key: staff.")
+    can_create: bool = Field(..., description="Whether the user may create an api key: they administer the account.")
     create_url: str
     attach_url: str
     detach_url: str

@@ -28,7 +28,7 @@ class TestGettingStartedApiView(TestAccountMixin):
         return {step["name"]: step for step in json.loads(response.content)["steps"]}
 
     def test_steps(self):
-        """Test that each step has its fields, and that only staff users have the API key step."""
+        """Test that each step has its fields, and that only account admins have the API key step."""
         staff_steps = self.steps(self.admin_user)
         self.assertIn("Create an API key", staff_steps)
         for step in staff_steps.values():
@@ -39,6 +39,11 @@ class TestGettingStartedApiView(TestAccountMixin):
         mortal_steps = self.steps(self.non_admin_user)
         self.assertNotIn("Create an API key", mortal_steps)
         self.assertIn("Create an LLM Client", mortal_steps)
+
+    def test_account_admin_has_the_api_key_step(self):
+        """Test that an account admin who isn't staff has the API key step: they may create API keys."""
+        self.make_non_admin_an_account_admin()
+        self.assertIn("Create an API key", self.steps(self.non_admin_user))
 
     def test_a_new_user_has_done_nothing(self):
         """Test that the built-in and shared resources that every user can see don't count as the user's own."""

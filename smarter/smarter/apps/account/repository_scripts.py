@@ -252,7 +252,7 @@ def run_script(local_path: str, script: RepositoryScript, env: dict[str, str]) -
 
     .. code-block:: text
 
-        smarter.apps.account.repository_scripts.run_script() scripts/create-course-database.sh: checked: smarter_test_db.courses has 48 courses
+        smarter.apps.account.repository_scripts.run_script() scripts/create-course-database.sh: checked: stackademy.courses has 48 courses
 
     :param local_path: The repository's clone.
     :param script: The script's configuration.

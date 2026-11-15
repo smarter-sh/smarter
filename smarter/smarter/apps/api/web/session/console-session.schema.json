@@ -774,6 +774,11 @@
       "additionalProperties": false,
       "description": "The signed-in user.",
       "properties": {
+        "administersAccount": {
+          "description": "Whether the user administers the account that the console acts for: a superuser, staff, or an admin of that account only, e.g. a department's head.",
+          "title": "Administersaccount",
+          "type": "boolean"
+        },
         "email": {
           "title": "Email",
           "type": "string"
@@ -816,6 +821,7 @@
         "lastName",
         "isSuperuser",
         "isStaff",
+        "administersAccount",
         "profileImageUrl",
         "userProfileCount"
       ],

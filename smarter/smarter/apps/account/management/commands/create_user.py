@@ -61,6 +61,7 @@ from smarter.apps.account.models import (
     UserProfile,
     welcome_email_languages,
 )
+from smarter.apps.account.utils import set_account_admin
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
 from smarter.lib.django import waffle
@@ -256,6 +257,8 @@ class Command(SmarterCommand):
             if language and user_profile.language != language:
                 user_profile.language = language
                 user_profile.save()
+            # an admin administers this account: UserProfile.is_account_admin, as well as is_staff.
+            set_account_admin(user_profile, bool(is_admin))
         # pylint: disable=broad-except
         except Exception as e:
             raise CommandError(f"Error creating user profile for user {username}: {str(e)}")

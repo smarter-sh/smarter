@@ -7,6 +7,8 @@ from smarter.common.utils import to_snake_case
 from .const import namespace
 from .views.default import DefaultOrchestratorApiView
 from .views.views import (
+    OrchestrationRunsView,
+    OrchestrationRunView,
     OrchestratorListView,
     OrchestratorView,
 )
@@ -53,6 +55,8 @@ class OrchestratorApiV1ReverseViews:
     # --------------------------------------------------------------------------
     orchestrator_view_by_hashed_id = to_snake_case(OrchestratorView.__name__) + BY_HASHED_ID
     default_orchestrator_api_view_by_hashed_id = to_snake_case(DefaultOrchestratorApiView.__name__) + BY_HASHED_ID
+    orchestration_runs_view_by_hashed_id = to_snake_case(OrchestrationRunsView.__name__) + BY_HASHED_ID
+    orchestration_run_view_by_hashed_id = to_snake_case(OrchestrationRunView.__name__) + BY_HASHED_ID
 
     # legacy reverse() references by orchestrator_id
     # --------------------------------------------------------------------------
@@ -62,6 +66,8 @@ class OrchestratorApiV1ReverseViews:
     # --------------------------------------------------------------------------
     orchestrator_list_view = to_snake_case(OrchestratorListView.__name__)
     orchestrator_view_by_id = to_snake_case(OrchestratorView.__name__) + BY_ID
+    orchestration_runs_view_by_id = to_snake_case(OrchestrationRunsView.__name__) + BY_ID
+    orchestration_run_view_by_id = to_snake_case(OrchestrationRunView.__name__) + BY_ID
 
 
 urlpatterns = [
@@ -79,6 +85,16 @@ urlpatterns = [
         DefaultOrchestratorApiView.as_view(),
         name=OrchestratorApiV1ReverseViews.default_orchestrator_api_view_by_id,
     ),
+    path(
+        "<int:orchestrator_id>/runs/",
+        OrchestrationRunsView.as_view(),
+        name=OrchestratorApiV1ReverseViews.orchestration_runs_view_by_id,
+    ),
+    path(
+        "<int:orchestrator_id>/runs/<int:run_id>/",
+        OrchestrationRunView.as_view(),
+        name=OrchestratorApiV1ReverseViews.orchestration_run_view_by_id,
+    ),
     # --------------------------------------------------------------------------
     # paths by hashed_id
     # --------------------------------------------------------------------------
@@ -91,5 +107,15 @@ urlpatterns = [
         "<str:hashed_id>/orchestrator/",
         DefaultOrchestratorApiView.as_view(),
         name=OrchestratorApiV1ReverseViews.default_orchestrator_api_view_by_hashed_id,
+    ),
+    path(
+        "<str:hashed_id>/runs/",
+        OrchestrationRunsView.as_view(),
+        name=OrchestratorApiV1ReverseViews.orchestration_runs_view_by_hashed_id,
+    ),
+    path(
+        "<str:hashed_id>/runs/<int:run_id>/",
+        OrchestrationRunView.as_view(),
+        name=OrchestratorApiV1ReverseViews.orchestration_run_view_by_hashed_id,
     ),
 ]

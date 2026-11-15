@@ -446,7 +446,7 @@ class MetaDataModel(TimestampedModel):
             # a blank name, e.g. a UserProfile created by the oauth pipeline, was never cached by name,
             # and get_cached_object() refuses to look one up.
             if self.name:
-                self.__class__.get_cached_object(invalidate=True, name=self.name)  # type: ignore
+                self.invalidate_cached_name(self.name)
             # a rename leaves the old name's cached copy behind, which would still return this row.
             loaded_name = self._loaded_name
             if loaded_name and loaded_name != self.name:
@@ -472,16 +472,18 @@ class MetaDataModel(TimestampedModel):
     @classmethod
     def invalidate_cached_name(cls, name: str) -> None:
         """
-        Drop the cached copy of the row that had ``name``, without reading anything.
+        Drop the cached copy of the row that had ``name``.
 
-        :meth:`get_cached_object` with ``invalidate=True`` would look the name up again, and a
-        renamed row no longer has it.
+        :meth:`get_cached_object` with ``invalidate=True`` drops it, then looks the name up again. That
+        lookup fails when no row has the name any more, e.g. after a rename, or when several rows share
+        it, e.g. the profiles of one user in several accounts. Either way the cached copy is already
+        gone, so the failure is ignored.
 
         :param name: The name the row was cached by.
         """
         try:
             cls.get_cached_object(invalidate=True, name=name)  # type: ignore
-        except cls.DoesNotExist:
+        except (cls.DoesNotExist, cls.MultipleObjectsReturned):
             pass
 
     def __str__(self) -> str:

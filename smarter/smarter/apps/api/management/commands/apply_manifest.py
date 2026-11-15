@@ -105,6 +105,15 @@ class Command(SmarterCommand):
             help="Username of the admin user to use when applying the manifest.",
         )
         parser.add_argument(
+            "--account_number",
+            type=str,
+            default=None,
+            help=(
+                "The account in which to apply the manifest, as the user's profile in it. Without it, the user's "
+                "first profile, which is ambiguous for a user who belongs to several accounts."
+            ),
+        )
+        parser.add_argument(
             "--verbose",
             # a flag: with type=bool, any value, even False, turned verbose output on.
             action="store_true",
@@ -144,7 +153,12 @@ class Command(SmarterCommand):
             self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
             return
 
-        user_profile = UserProfile.get_cached_object(user=self.user)
+        account_number = options.get("account_number")
+        if account_number:
+            # a user, e.g. the Smarter admin, or a department's administrator, may belong to several accounts.
+            user_profile = UserProfile.objects.filter(user=self.user, account__account_number=account_number).first()
+        else:
+            user_profile = UserProfile.get_cached_object(user=self.user)
         if not isinstance(user_profile, UserProfile):
             self.handle_completed_failure(msg="No admin user profile found.")
             return

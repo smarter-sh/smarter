@@ -447,6 +447,60 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
     return _in_memory_user_by_username(username, class_name=User.__name__)
 
 
+ACCOUNT_ADMIN_USERNAME_SUFFIX = "-admin"
+"""The username of the admin user that :func:`get_cached_admin_user_for_account` creates is its account number plus this."""
+
+
+def set_account_admin(user_profile: UserProfile, is_account_admin: bool = True) -> None:
+    """
+    Make the profile's user the administrator of its account, and only of that account.
+
+    It grants the role, ``UserProfile.is_account_admin``, and never takes it away: ``is_account_admin=False``
+    leaves the profile as it is. An account's administrator is never made a superuser, who may read every account.
+
+    :param user_profile: The user's profile in the account.
+    :param is_account_admin: Whether to make them its administrator.
+    """
+    if not is_account_admin:
+        return
+    if user_profile.is_account_admin:
+        return
+    user_profile.is_account_admin = True
+    user_profile.save()
+
+
+def account_admin_username(account_number: str) -> str:
+    """
+    The username of the admin user that :func:`get_cached_admin_user_for_account` creates for an account.
+
+    :param account_number: The account's number, e.g. ``1234-5678-9012``.
+    :returns: e.g. ``1234-5678-9012-admin``.
+    """
+    retval = f"{account_number}{ACCOUNT_ADMIN_USERNAME_SUFFIX}"
+    return retval
+
+
+def delete_created_admin_user(account_number: str) -> bool:
+    """
+    Delete the admin user that :func:`get_cached_admin_user_for_account` created for an account, once it has no profile.
+
+    That user exists only for its account, and is a superuser. When the account is deleted, its profile goes with it,
+    but the user would stay: a superuser that belongs to nothing.
+
+    :param account_number: The deleted account's number.
+    :returns: True if a user was deleted.
+    """
+    username = account_admin_username(account_number)
+    created_admin = User.objects.filter(username=username).first()
+    if created_admin is None:
+        return False
+    if UserProfile.objects.filter(user=created_admin).exists():
+        return False
+    created_admin.delete()
+    logger.info("%s.delete_created_admin_user() deleted the admin user of account %s", HERE, account_number)
+    return True
+
+
 def get_cached_admin_user_for_account(account: Account, invalidate: Optional[bool] = False) -> User:
     """
     Retrieve the admin user for a given account, creating one if necessary.
@@ -493,7 +547,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
         console_prefix = f"{logging.SmarterFormattedText.text(__name__)}.get_cached_admin_user_for_account()"
         user_profile = (
             UserProfile.objects.filter(account=account)
-            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True))
+            .filter(Q(user__is_staff=True) | Q(user__is_superuser=True) | Q(is_account_admin=True))
             .select_related("user", "account")
             .order_by("pk")
             .first()
@@ -512,16 +566,18 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             has_profiles = account_profiles.exists()
             has_real_profiles = account_profiles.filter(is_test=False).exists()
             is_test_account = has_profiles and not has_real_profiles
-            username = f"{account.account_number}-admin"
+            username = account_admin_username(str(account.account_number))
+            # the administrator of this account only: UserProfile.is_account_admin. Never a superuser or a
+            # staff user, who would administer, or read, other accounts too.
             new_user = User.objects.create(
                 username=username,
                 email=f"{username}@{smarter_settings.root_domain}",
-                is_staff=True,
-                is_superuser=True,
+                is_staff=False,
+                is_superuser=False,
                 is_active=True,
             )
             user_profile = UserProfile.objects.create(
-                name=username, user=new_user, account=account, is_test=is_test_account
+                name=username, user=new_user, account=account, is_test=is_test_account, is_account_admin=True
             )
             return user_profile.user  # type: ignore[return-value]
 
@@ -705,8 +761,9 @@ def is_platform_staff(user: Optional[object]) -> bool:
     """
     Return whether a user is one of the platform's own staff: an active staff user of the Smarter account.
 
-    ``User.is_staff`` alone means that a user administers their own account, so every customer
-    account's admin has it, and some of them are superusers too. The platform's staff are the
+    ``User.is_staff`` alone means that a user administers each account they belong to, so many customer
+    accounts' admins have it, and some of them are superusers too. (An account admin may instead have
+    ``UserProfile.is_account_admin``, which administers one account and is never platform staff.) The platform's staff are the
     staff users of the Smarter account (``SMARTER_ACCOUNT_NUMBER``), which runs the platform. Users
     who sign up themselves also join the Smarter account, but not as staff.
 
@@ -730,6 +787,10 @@ def is_platform_staff(user: Optional[object]) -> bool:
 
 
 __all__ = [
+    "ACCOUNT_ADMIN_USERNAME_SUFFIX",
+    "account_admin_username",
+    "delete_created_admin_user",
+    "set_account_admin",
     "get_cached_default_account",
     "get_cached_account_for_user",
     "get_cached_user_for_user_id",

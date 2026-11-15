@@ -19,7 +19,7 @@ from smarter.lib.drf.token_authentication import (
 )
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
-from .models import Account, User, UserProfile
+from .models import Account, User, UserProfile, user_administers_account
 from .serializers import (
     AccountMiniSerializer,
     UserMiniSerializer,
@@ -552,6 +552,21 @@ class AccountMixin(SmarterHelperMixin):
             self._account = self._user_profile.account
             self._am_ready = True
             self._am_log_ready_status()
+
+    @property
+    def administers_account(self) -> bool:
+        """
+        Whether the current user administers the current account: manages every resource in it.
+
+        See :func:`~smarter.apps.account.models.user_profile.user_administers_account`.
+
+        :returns: True if the current user may manage every resource of the current account.
+        """
+        user_profile = self.user_profile
+        if not isinstance(user_profile, UserProfile):
+            user_profile = None
+        retval = user_administers_account(self.user, user_profile)
+        return retval
 
     @property
     def am_ready(self) -> bool:

@@ -267,10 +267,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
         return get_handler
 
     def get_smarter_harness(
-        self, request: ProviderRequestType, provider_name: Optional[str] = None, **kwargs
+        self, request: Optional[ProviderRequestType], provider_name: Optional[str] = None, **kwargs
     ) -> SmarterChatHarnessProtocol:
         """
         A convenience method to get a handler by provider name.
+
+        The handler doesn't read ``request``, so code without one, e.g. an Orchestrator's run in a Celery task,
+        passes None.
 
         :param request: The incoming HTTP request object.
         :param provider_name: The name of the provider for which to retrieve the handler. If not provided, the default provider will be used.

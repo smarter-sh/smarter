@@ -20,8 +20,10 @@ from smarter.apps.account.manifest.models.account.spec import (
     SAMAccountSpecConfig,
 )
 from smarter.apps.account.models import Account, User, UserProfile
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotFound,
@@ -459,6 +461,86 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         config = self.account_config(timezone="Europe/Paris", currency="EUR", language="fr-FR", country="FRA")
         values = (config.timezone, config.currency, config.language, config.country)
         self.assertEqual(values, ("Europe/Paris", "EUR", "fr-FR", "FRA"))
+
+    def test_account_tree_fields(self):
+        """``parent`` and ``shareScope`` are account numbers, or omitted."""
+        config = self.account_config(parent=SMARTER_ACCOUNT_NUMBER, shareScope=SMARTER_ACCOUNT_NUMBER)
+        self.assertEqual((config.parent, config.shareScope), (SMARTER_ACCOUNT_NUMBER, SMARTER_ACCOUNT_NUMBER))
+        config = self.account_config()
+        self.assertIsNone(config.parent)
+        for field in ("parent", "shareScope"):
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(SmarterValueError, "Invalid account number"):
+                    self.account_config(**{field: "not-an-account"})
+
+    def test_manifest_to_django_orm_resolves_the_tree(self):
+        """``apply`` turns ``parent`` and ``shareScope`` into accounts, and refuses an unknown one."""
+        self.broker.brokered_account = self.account
+        self.use_tree(parent=SMARTER_ACCOUNT_NUMBER, shareScope=None)
+        data = self.broker.manifest_to_django_orm()
+        self.assertEqual(data["parent"].account_number, SMARTER_ACCOUNT_NUMBER)
+        self.assertIsNone(data["share_scope"])
+
+        self.use_tree(parent="0000-0000-0001", shareScope=None)
+        with self.assertRaisesRegex(SAMAccountBrokerError, "no account has the number 0000-0000-0001"):
+            self.broker.manifest_to_django_orm()
+
+    def test_cache_invalidations_add_no_member(self):
+        """Invalidating a new, empty account's caches doesn't add anyone to it, e.g. the platform's admin."""
+        account = Account.objects.create(name=f"test_empty_{self.hash_suffix}", company_name="Empty")
+        self.addCleanup(Account.objects.filter(pk=account.pk).delete)
+        self.broker.brokered_account = account
+        self.broker.cache_invalidations()
+        self.assertFalse(UserProfile.objects.filter(account=account).exists())
+
+    def use_account_number(self, account_number):
+        """Give the broker a copy of its manifest whose metadata.accountNumber is the given one."""
+        manifest = self.broker.manifest
+        assert manifest is not None
+        metadata = manifest.metadata.model_copy(update={"accountNumber": account_number})
+        self.broker._manifest = manifest.model_copy(update={"metadata": metadata})  # pylint: disable=protected-access
+
+    def test_new_account_gets_the_manifest_number(self):
+        """A new account gets metadata.accountNumber, so that its number is the same on every platform."""
+        self.use_account_number("2718-2818-9901")
+        account = Account()
+        self.broker.apply_account_number(account, SmarterJournalCliCommands.APPLY)
+        self.assertEqual(account.account_number, "2718-2818-9901")
+
+        self.use_account_number(None)
+        unnumbered = Account()
+        self.broker.apply_account_number(unnumbered, SmarterJournalCliCommands.APPLY)
+        self.assertEqual(unnumbered.account_number, Account().account_number)
+
+    def test_account_number_is_refused(self):
+        """A number that another account has, or that differs from an existing account's own, is refused."""
+        self.use_account_number(self.account.account_number)
+        with self.assertRaisesRegex(SAMAccountBrokerError, "Another account already has the number"):
+            self.broker.apply_account_number(Account(), SmarterJournalCliCommands.APPLY)
+        # the existing account itself, with its own number, is fine.
+        self.broker.apply_account_number(self.account, SmarterJournalCliCommands.APPLY)
+
+        self.use_account_number("2718-2818-9902")
+        with self.assertRaisesRegex(SAMAccountBrokerError, "can't change"):
+            self.broker.apply_account_number(self.account, SmarterJournalCliCommands.APPLY)
+
+    def use_tree(self, **fields):
+        """
+        Give the broker a copy of its manifest with other ``parent`` and ``shareScope``: manifests are frozen.
+
+        :param fields: ``parent`` and ``shareScope``.
+        """
+        manifest = self.broker.manifest
+        assert manifest is not None
+        config = manifest.spec.config.model_copy(update=fields)
+        spec = manifest.spec.model_copy(update={"config": config})
+        self.broker._manifest = manifest.model_copy(update={"spec": spec})  # pylint: disable=protected-access
+
+    def test_related_account_number(self):
+        """``describe`` shows ``parent`` and ``shareScope`` as account numbers."""
+        root = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        self.assertEqual(SAMAccountBroker.related_account_number(root.pk), SMARTER_ACCOUNT_NUMBER)
+        self.assertIsNone(SAMAccountBroker.related_account_number(None))
 
 
 class TestSmarterAccountBrokerBranches(TestSAMBrokerBaseClass):

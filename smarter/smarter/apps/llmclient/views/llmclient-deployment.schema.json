@@ -153,7 +153,7 @@
           "default": null
         },
         "canCreate": {
-          "description": "Whether the user may create an api key: staff.",
+          "description": "Whether the user may create an api key: they administer the account.",
           "title": "Cancreate",
           "type": "boolean"
         },
