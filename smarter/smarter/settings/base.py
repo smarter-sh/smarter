@@ -1730,6 +1730,9 @@ LOGGING = {
         "asyncio_shielded_cancel": {
             "()": "smarter.lib.logging.filters.AsyncioShieldedCancelFilter",
         },
+        "access_log_query": {
+            "()": "smarter.lib.logging.filters.AccessLogQueryFilter",
+        },
     },
     "handlers": {
         "default": {
@@ -1762,6 +1765,7 @@ LOGGING = {
         },
         "uvicorn.access": {
             "handlers": ["uvicorn"],
+            "filters": ["access_log_query"],
             "level": smarter_settings.log_level_name,
             "propagate": False,
         },
@@ -1814,6 +1818,9 @@ asyncio_shielded_cancel
     Uses :class:`smarter.lib.logging.filters.AsyncioShieldedCancelFilter` to suppress
     asyncio's ``CancelledError exception in shielded future`` error, which a client
     that disconnects in the middle of a request causes under uvicorn.
+access_log_query
+    Uses :class:`smarter.lib.logging.filters.AccessLogQueryFilter` to mask the sensitive
+    query parameters, such as a chat's ``session_key``, in uvicorn's access log.
 
 Handlers
 --------
@@ -1840,6 +1847,9 @@ Loggers
 -------
 asyncio
     Propagates to the root logger, with the asyncio_shielded_cancel filter.
+uvicorn.access
+    The uvicorn handler only, with the access_log_query filter, which masks a session key in
+    the request's query string before the handler's health_check filter sees the record.
 celery, celery.task
     Both propagate to the root logger and use the same log level as the rest
     of the application.

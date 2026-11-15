@@ -96,7 +96,7 @@ Compose and the Makefile
    * - Configuration
      - Every setting comes from the environment, through ``.env``, and is validated at start-up.
      - `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__,
-       `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+       `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__
    * - Something to question
      - ``mariadb:latest`` and ``redis:latest`` are not pinned to a version, so two students can
        run different databases from the same file.

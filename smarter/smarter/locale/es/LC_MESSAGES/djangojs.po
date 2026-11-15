@@ -2686,11 +2686,11 @@ msgstr "Explorar el repositorio"
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid ""
-"Smarter is written in Python, with Django and Django REST Framework, and its "
-"web console is written in React."
+"Smarter's backend is written in Python. The primary PyPi libraries that it "
+"uses include Django, Django REST Framework, Pydantic, and OpenAI."
 msgstr ""
-"Smarter está escrito en Python, con Django y Django REST Framework, y su "
-"consola web está escrita en React."
+"El backend de Smarter está escrito en Python. Las principales bibliotecas de "
+"PyPi que utiliza incluyen Django, Django REST Framework, Pydantic y OpenAI."
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid "Read about its technologies"

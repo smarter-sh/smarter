@@ -11,6 +11,7 @@ from rest_framework import serializers
 
 from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_request
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.utils import mask_identifier
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -366,10 +367,12 @@ class PromptHelper(SmarterRequestMixin):
             # A session belongs to one llmclient. A key of another llmclient's session, e.g. a
             # session_key cookie that the browser sends to every host of the platform's domain,
             # starts a new session rather than continuing the other llmclient's chat.
+            # The key is masked: it is a credential for the other llmclient's chat.
+            masked_session_key = mask_identifier(self.session_key)
             logger.warning(
                 "%s.get_cached_chat() - session_key %s belongs to llmclient %s, not %s. Starting a new session.",
                 self.formatted_class_name,
-                self.session_key,
+                masked_session_key,
                 prompt.llmclient_id,  # type: ignore[attr-defined]
                 self.llmclient.id,  # type: ignore[attr-defined]
             )
@@ -398,6 +401,8 @@ class PromptHelper(SmarterRequestMixin):
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
                 # The User-Agent header has no length limit, but its column does: a longer value
                 # would make the database raise DataError, and the request fail with a 500.
+
+                # pylint: disable=W0212
                 user_agent_field = Prompt._meta.get_field("user_agent")
                 user_agent_max_length = None
                 if isinstance(user_agent_field, models.CharField):
@@ -406,7 +411,8 @@ class PromptHelper(SmarterRequestMixin):
                 if not user_agent:
                     user_agent = "user_agent"
                 user_agent = user_agent[:user_agent_max_length]
-                prompt = Prompt.objects.create(
+                # annotated, so that type checkers without the Django plugin (Pylance) know it's not None.
+                new_prompt: Prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
                     llmclient=self.llmclient,
@@ -414,6 +420,7 @@ class PromptHelper(SmarterRequestMixin):
                     user_agent=user_agent,
                     url=django_friendly_url,
                 )
+                prompt = new_prompt
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 

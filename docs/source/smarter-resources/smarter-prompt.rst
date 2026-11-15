@@ -15,7 +15,15 @@ serving :doc:`prompt responses <prompt/example-response>`, and orchestrating the
 Smarter resources associated with a session, including :doc:`Account <smarter-account>`,
 :doc:`LLMClient <smarter-llmclient>`, and :doc:`Plugin <smarter-llmtool>`.
 
-Smarter sessions do not expire unless deleted by an administrator as part of MySQL database disk space maintenance operations.
+Each prompt of a session saves its request, its response and the conversation's messages as a
+:py:class:`~smarter.apps.prompt.models.PromptHistory` row, and each tool or plugin that it used as a
+:py:class:`~smarter.apps.prompt.models.PromptToolCall` or
+:py:class:`~smarter.apps.prompt.models.PromptPluginUsage` row. Smarter keeps these rows for
+``SMARTER_PROMPT_HISTORY_MAX_AGE`` days, 90 by default
+(:py:attr:`smarter_settings.prompt_history_max_age <smarter.common.conf.settings.llm.LLMSettings.prompt_history_max_age>`).
+Celery Beat runs :py:func:`~smarter.apps.prompt.tasks.purge_prompt_history` once a day, which
+deletes the older rows, then the sessions that are older than that and have none left. A session
+that is still in use keeps its recent prompts; one that has been idle for longer is deleted.
 
 
 .. note::
@@ -29,7 +37,7 @@ Smarter sessions do not expire unless deleted by an administrator as part of MyS
   configuration object, and are stored as browser cookies, identified by a GUID-like string that,
   with a high level of certainty, uniquely identifies the session. Sessions are specific to the device
   and browser in which they were created; a session started on one device or browser cannot be
-  continued on another.evice/browser, you cannot continue that session on another device/browser.
+  continued on another.
 
 Usage
 -----
