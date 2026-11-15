@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.1...v0.46.2-alpha.1) (2026-11-15)
+
+### Refactoring
+
+* **llmclient:** share in-process prompting across apps ([1806c86](https://github.com/smarter-sh/smarter/commit/1806c86e391c2f40f2896f6d1bbee23e86dddd13))
+
+### Performance
+
+* **journal:** write entries in Celery and deduplicate their documents ([5619c6b](https://github.com/smarter-sh/smarter/commit/5619c6b40d9578b107fb83e7b78e4aad5d887505))
+
 ## [0.46.1](https://github.com/smarter-sh/smarter/compare/v0.46.0...v0.46.1) (2026-11-15)
 
 ### Bug Fixes
