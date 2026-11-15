@@ -2,6 +2,7 @@
 
 from django.db import models
 
+from smarter.apps.account.models import UserProfile
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
@@ -37,6 +38,17 @@ class OrchestrationRun(TimestampedModel):
     )
     objective = models.TextField(
         help_text="Natural-language statement of the agentic objective for this run.",
+    )
+    started_by = models.ForeignKey(
+        UserProfile,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="orchestration_runs",
+        help_text=(
+            "The user profile that started the run, who may use every harness LLMClient, and is each step's acting "
+            "user (ADR-037). Each step runs as its LLMClient's owner. Null after that profile is deleted."
+        ),
     )
     status = models.CharField(
         max_length=32,

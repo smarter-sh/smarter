@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 from taggit.managers import TaggableManager, _TaggableManager
 
+from smarter.apps.account.hierarchy import resolve_by_name
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.models import LLMClient  # adjust to actual location
 from smarter.apps.llmtool.signals import broker_ready
@@ -272,6 +273,51 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
 
         return retval
 
+    def resolve_harness_llmclient(self, harness_config: SAMOrchestratorHarnessConfig) -> LLMClient:
+        """
+        Return the LLMClient that a harness names, which the Orchestrator's owner may read.
+
+        With ``accountNumber``, the LLMClient of that name in that account, e.g. a department's assistant for an
+        organization's executives. Without it, the nearest LLMClient of that name in the owner's account tree
+        (:func:`smarter.apps.account.hierarchy.resolve_by_name`). See ADR-037.
+
+        :param harness_config: The harness, from the manifest.
+        :returns: The LLMClient.
+        :raises SAMOrchestratorBrokerError: If there is no such LLMClient, or the owner may not read it.
+        """
+        name = harness_config.llmClientName
+        account_number = harness_config.accountNumber
+        if account_number is None:
+            try:
+                return resolve_by_name(LLMClient.objects, name, self.user_profile)  # type: ignore[arg-type]
+            except LLMClient.DoesNotExist as e:
+                raise SAMOrchestratorBrokerError(
+                    f"LLMClient '{name}' not found for account {self.account}", thing=self.kind
+                ) from e
+        llmclient = LLMClient.objects.filter(user_profile__account__account_number=account_number, name=name).first()
+        readable = False
+        if llmclient is not None and self.user is not None:
+            readable_llmclients = LLMClient.objects.filter(pk=llmclient.pk).with_read_permission_for(self.user)  # type: ignore[attr-defined]
+            readable = readable_llmclients.exists()
+        if not readable:
+            # the same message whether it is missing or not readable: a name in another account is not disclosed.
+            raise SAMOrchestratorBrokerError(
+                f"LLMClient '{name}' not found in account {account_number}, or you may not read it", thing=self.kind
+            )
+        return llmclient  # type: ignore[return-value]
+
+    def harness_account_number(self, membership: OrchestratorHarness) -> Optional[str]:
+        """
+        Return the account number that a harness's manifest names: its LLMClient's account, if it isn't the Orchestrator's.
+
+        :param membership: The harness.
+        :returns: The account number, or None for an LLMClient of the Orchestrator's own account.
+        """
+        llmclient_account = membership.llmclient.user_profile.account  # type: ignore[union-attr]
+        if self.account is not None and llmclient_account.pk == self.account.pk:
+            return None
+        return llmclient_account.account_number
+
     def sync_harnesses(self) -> None:
         """
         Reconcile OrchestratorHarness membership rows against the manifest's.
@@ -301,13 +347,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
         seen_llmclient_ids = set()
 
         for harness_config in harness_configs:
-            try:
-                llmclient = LLMClient.objects.get(user_profile__account=self.account, name=harness_config.llmClientName)
-            except LLMClient.DoesNotExist as e:
-                raise SAMOrchestratorBrokerError(
-                    f"LLMClient '{harness_config.llmClientName}' not found for account {self.account}",
-                    thing=self.kind,
-                ) from e
+            llmclient = self.resolve_harness_llmclient(harness_config)
 
             OrchestratorHarness.objects.update_or_create(
                 orchestrator=self.orchestrator,
@@ -378,10 +418,11 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             orchestrator_dict.pop(status_field, None)
 
         memberships = OrchestratorHarness.objects.filter(orchestrator=self.orchestrator)
-        memberships = memberships.select_related("llmclient").order_by("execution_order")
+        memberships = memberships.select_related("llmclient__user_profile__account").order_by("execution_order")
         harnesses = [
             SAMOrchestratorHarnessConfig(
                 llmClientName=membership.llmclient.name,
+                accountNumber=self.harness_account_number(membership),
                 role=HarnessRole(membership.role),
                 executionOrder=membership.execution_order,
                 isActive=membership.is_active,

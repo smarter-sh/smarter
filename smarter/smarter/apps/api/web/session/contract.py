@@ -131,6 +131,13 @@ class ConsoleUser(ConsoleSessionModel):
     last_name: str
     is_superuser: bool
     is_staff: bool
+    administers_account: bool = Field(
+        ...,
+        description=(
+            "Whether the user administers the account that the console acts for: a superuser, staff, or an "
+            "admin of that account only, e.g. a department's head."
+        ),
+    )
     profile_image_url: str = Field(..., description="The user's avatar, or the default image.")
     user_profile_count: int = Field(..., description="How many accounts the user belongs to.")
 

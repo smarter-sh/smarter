@@ -293,6 +293,8 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 language=self.brokered_account.language or "en-US",
                 timezone=self.brokered_account.timezone or "America/New_York",
                 currency=self.brokered_account.currency or "USD",
+                parent=self.related_account_number(self.brokered_account.parent_id),  # type: ignore[attr-defined]
+                shareScope=self.related_account_number(self.brokered_account.share_scope_id),  # type: ignore[attr-defined]
             )
             self._manifest = SAMAccount(
                 apiVersion=self.api_version,
@@ -355,12 +357,54 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.APPLY,
             )
+        # the account tree's fields are account numbers in the manifest, and accounts in the model.
+        parent_account_number = config_dump.pop("parent", None)
+        share_scope_account_number = config_dump.pop("share_scope", None)
+        parent = self.account_by_number(parent_account_number, "parent")
+        share_scope = self.account_by_number(share_scope_account_number, "shareScope")
         # Convert tags (list[str]) to set for TaggableManager compatibility
         return {
             **metadata,
             "account": self.brokered_account,
             **config_dump,
+            "parent": parent,
+            "share_scope": share_scope,
         }
+
+    def account_by_number(self, account_number: Optional[str], field_name: str) -> Optional[Account]:
+        """
+        The account that ``parent`` or ``shareScope`` names.
+
+        :param account_number: The account number from the manifest, or None.
+        :param field_name: The manifest field, for the error message.
+        :returns: The account, or None if the manifest omits the field.
+        :raises SAMAccountBrokerError: if no account has that number.
+        """
+        if account_number is None:
+            return None
+        account = Account.objects.filter(account_number=account_number).first()
+        if account is None:
+            raise SAMAccountBrokerError(
+                message=f"{field_name}: no account has the number {account_number}.",
+                thing=self.kind,
+                command=SmarterJournalCliCommands.APPLY,
+            )
+        return account
+
+    @staticmethod
+    def related_account_number(account_id: Optional[int]) -> Optional[str]:
+        """
+        The account number of ``parent`` or ``share_scope``, for a manifest.
+
+        :param account_id: The related account's id, or None.
+        :returns: Its account number, or None.
+        """
+        if account_id is None:
+            return None
+        account = Account.get_cached_object(pk=account_id)
+        if account is None:
+            return None
+        return account.account_number
 
     @camel_case()
     def django_orm_to_manifest_dict(self) -> SmarterDictType:
@@ -535,7 +579,10 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         # brokered_account is retrieved by name, which is cached separately from pk.
         Account.get_cached_object(invalidate=True, name=self.brokered_account.name)  # type: ignore
         Account.get_cached_object(invalidate=True, account_number=self.brokered_account.account_number)  # type: ignore
-        UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
+        # only an account with members has a cached profile. get_cached_object() would otherwise find an
+        # administrator for a new, empty account, and create one.
+        if UserProfile.objects.filter(account=self.brokered_account).exists():
+            UserProfile.get_cached_object(invalidate=True, account=self.brokered_account)
         return super().cache_invalidations()
 
     def example_manifest(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -568,6 +615,8 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         spec = SAMAccountSpec(
             config=SAMAccountSpecConfig(
                 companyName="Example Company Inc.",
+                parent=None,
+                shareScope=None,
                 phoneNumber="555-123-4567",
                 address1="123 Example St.",
                 address2="Suite 100",
@@ -671,6 +720,37 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         }
         return self.json_response_ok(command=command, data=data)
 
+    def apply_account_number(self, brokered_account: Account, command: SmarterJournalCliCommands) -> None:
+        """
+        Give a new account the number that the manifest's ``metadata.accountNumber`` names, if it names one.
+
+        An organization's manifests refer to its accounts by number, e.g. a User manifest's ``spec.accounts`` or a
+        repository's ``owners.yaml``, so its accounts must have the same numbers on every platform that applies them.
+        Only a superuser applies an Account manifest. An account's number never changes, so a manifest whose number
+        differs from an existing account's is refused, as is a number that another account already has.
+
+        :param brokered_account: The account, saved or new.
+        :param command: The command, for the error.
+        :raises SAMAccountBrokerError: if the number belongs to another account, or differs from the account's own.
+        """
+        manifest = self.manifest
+        if manifest is None or not manifest.metadata.accountNumber:
+            return
+        account_number = str(manifest.metadata.accountNumber)
+        if brokered_account.pk is not None:
+            if brokered_account.account_number != account_number:
+                raise SAMAccountBrokerError(
+                    message=f"Account {brokered_account.account_number}'s number can't change to {account_number}.",
+                    thing=self.kind,
+                    command=command,
+                )
+            return
+        if Account.objects.filter(account_number=account_number).exists():
+            raise SAMAccountBrokerError(
+                message=f"Another account already has the number {account_number}.", thing=self.kind, command=command
+            )
+        brokered_account.account_number = account_number
+
     def apply(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Applies the manifest by copying its data to the Django ORM `Account` model and saving the model to the database.
@@ -734,6 +814,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         if brokered_account is None:
             brokered_account = Account()
             self.brokered_account = brokered_account
+        self.apply_account_number(brokered_account, command)
         try:
             data = self.manifest_to_django_orm()
             tags = data.get("tags", [])

@@ -122,6 +122,31 @@ class TestLLMClientGuardrails(TestSAMBrokerBaseClass, GuardrailTestBase):
         self.assertEqual(broker.resolve_guardrail("test_guardrail"), self.guardrail)
         self.assertIsNone(broker.resolve_guardrail("no_such_guardrail"))
 
+    def test_resolve_follows_the_account_tree(self):
+        """Test that a Guardrail of another account is found only when that account shares it with this one."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.models import Account
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        _, it_account, it_profile = mortal_user_factory()
+        shared = self.new_guardrail(f"test_it_guardrail_{self.hash_suffix}", user_profile=it_profile)
+        broker = self.apply()
+        self.assertIsNone(broker.resolve_guardrail(shared.name))
+
+        # the IT account becomes this account's parent, and shares with its subtree, which includes this account.
+        account = Account.objects.get(pk=self.account.pk)
+        account.parent = it_account
+        account.save()
+        self.addCleanup(self.detach, account)
+        it_account.share_scope = it_account
+        it_account.save()
+        self.assertEqual(broker.resolve_guardrail(shared.name), shared)
+
+    def detach(self, account) -> None:
+        """Move the account back under the root."""
+        account.parent = None
+        account.save()
+
     def test_describe(self):
         """Test that describe() renders spec.guardrails."""
         self.apply()

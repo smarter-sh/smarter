@@ -1,12 +1,14 @@
 # pylint: disable=wrong-import-position,protected-access
 """Test SAMSmarterAuthTokenBroker."""
 
+import copy
 import os
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
 
+from smarter.apps.account.models import User, UserProfile
 from smarter.lib import json, logging
 from smarter.lib.drf.manifest.brokers.auth_token import (
     LOGGED_FIELDS,
@@ -620,3 +622,56 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
             self.broker.deploy(self.request, **self.kwargs)
         with self.assertRaises(SAMBrokerErrorNotReady):
             self.broker.undeploy(self.request, **self.kwargs)
+
+
+class TestSmarterAuthTokenBrokerAccountAdmin(TestSmarterAuthTokenBrokerBase):
+    """Test that an account admin who isn't staff manages api keys of their own account's users, and no others."""
+
+    def setUp(self):
+        super().setUp()
+        self.member = self.make_non_admin_an_account_admin()
+
+    def broker_for(self, username: str) -> SAMSmarterAuthTokenBroker:
+        """
+        A broker of a new api key of ``username``, applied by the account admin.
+
+        :param username: The api key's user.
+        :returns: The broker.
+        """
+        data = copy.deepcopy(required(self.loader.json_data, "the test manifest"))
+        name = f"test_account_admin_token_{self.hash_suffix}"
+        data["metadata"]["name"] = name
+        data["spec"]["config"]["username"] = username
+        self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
+        broker = SAMSmarterAuthTokenBroker(request=self.request, loader=SAMLoader(manifest=json.dumps(data)))
+        for prop, value in (("user", self.non_admin_user), ("user_profile", self.member), ("account", self.account)):
+            patcher = patch.object(SAMSmarterAuthTokenBroker, prop, new_callable=PropertyMock, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        return broker
+
+    def test_applies_their_own_api_key(self):
+        """An account admin creates their own api key, which acts in their account."""
+        broker = self.broker_for(self.non_admin_user.username)
+        self.assertTrue(broker.administers_account)
+        broker.apply(self.request, name=broker.manifest.metadata.name)  # type: ignore[union-attr]
+        api_key = SmarterAuthToken.objects.get(name=broker.manifest.metadata.name)  # type: ignore[union-attr]
+        self.assertEqual(api_key.user, self.non_admin_user)
+        self.assertEqual(api_key.user_profile, self.member)
+
+    def test_refuses_a_user_of_another_account(self):
+        """An account admin can't create an api key of a user who doesn't belong to their account."""
+        outsider = User.objects.create(username=f"test_token_outsider_{self.hash_suffix}")
+        self.addCleanup(outsider.delete)
+        broker = self.broker_for(outsider.username)
+        with self.assertRaisesRegex(SAMBrokerError, "does not belong to this account"):
+            broker.apply(self.request, name=broker.manifest.metadata.name)  # type: ignore[union-attr]
+
+    def test_refuses_a_staff_user(self):
+        """An account admin who isn't staff can't create an api key of a staff user, whose role is higher."""
+        staff = User.objects.create(username=f"test_token_staff_{self.hash_suffix}", is_staff=True)
+        self.addCleanup(staff.delete)
+        UserProfile.objects.create(user=staff, account=self.account, name=f"test_token_staff_{self.hash_suffix}")
+        broker = self.broker_for(staff.username)
+        with self.assertRaisesRegex(SAMBrokerError, "higher administrative roles"):
+            broker.apply(self.request, name=broker.manifest.metadata.name)  # type: ignore[union-attr]

@@ -485,6 +485,12 @@
             "title": "Id",
             "type": "integer"
           },
+          "isAccountAdmin": {
+            "default": false,
+            "description": "UserProfile.is_account_admin: whether the user administers this account, and only this one, without access to the Django admin site.",
+            "title": "Isaccountadmin",
+            "type": "boolean"
+          },
           "isTest": {
             "description": "UserProfile.is_test: whether a test created it.",
             "title": "Istest",
@@ -623,7 +629,7 @@
             "type": "integer"
           },
           "isStaff": {
-            "description": "User.is_staff: whether the user administers their account.",
+            "description": "User.is_staff: staff, who administer each of their accounts and may open the Django admin.",
             "title": "Isstaff",
             "type": "boolean"
           },
@@ -7670,6 +7676,242 @@
         "title": "OrchestratorApiOrchestrator",
         "type": "object"
       },
+      "OrchestratorApiRun": {
+        "additionalProperties": false,
+        "description": "A run of an Orchestrator: an attempt at an objective, its status, its steps and its result (ADR-037).\n\nA run starts ``pending``, and a Celery task executes it, so a client polls it until its status is final:\n``succeeded``, ``failed``, ``cancelled`` or ``max_iterations_exceeded``.",
+        "properties": {
+          "completedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When it ended.",
+            "title": "Completedat"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the run was requested.",
+            "title": "Createdat"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why the run failed, or stopped, if it did.",
+            "title": "Errormessage"
+          },
+          "id": {
+            "description": "The run's primary key.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "iterationCount": {
+            "description": "How many steps the run has taken.",
+            "minimum": 0,
+            "title": "Iterationcount",
+            "type": "integer"
+          },
+          "objective": {
+            "description": "OrchestrationRun.objective.",
+            "title": "Objective",
+            "type": "string"
+          },
+          "orchestrator": {
+            "description": "The Orchestrator's id.",
+            "title": "Orchestrator",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The run's result: its last step's text, once it succeeded.",
+            "title": "Result"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When its execution began.",
+            "title": "Startedat"
+          },
+          "startedBy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountApiUserProfile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Who started the run."
+          },
+          "status": {
+            "description": "OrchestrationRun.status.",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "max_iterations_exceeded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "steps": {
+            "description": "Its steps, in order.",
+            "items": {
+              "$ref": "#/components/schemas/OrchestratorApiStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "orchestrator",
+          "objective",
+          "status",
+          "iterationCount"
+        ],
+        "title": "OrchestratorApiRun",
+        "type": "object"
+      },
+      "OrchestratorApiRunRequest": {
+        "additionalProperties": false,
+        "description": "The body of a request that starts a run: what the run is to achieve.",
+        "properties": {
+          "objective": {
+            "description": "What the run is to achieve, e.g. Prepare the board pack for Q4 2025. Every step receives it.",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Objective",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objective"
+        ],
+        "title": "OrchestratorApiRunRequest",
+        "type": "object"
+      },
+      "OrchestratorApiStep": {
+        "additionalProperties": false,
+        "description": "One step of a run: one call of a harness LLMClient, as its owner.\n\nIts messages, tokens and charges are those of its Prompt session, which the LLMClient's owner may read.",
+        "properties": {
+          "accountNumber": {
+            "description": "The account that the LLMClient belongs to.",
+            "title": "Accountnumber",
+            "type": "string"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "When the step ended.",
+            "title": "Createdat"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why the step failed, if it did.",
+            "title": "Errormessage"
+          },
+          "llmclient": {
+            "description": "The harness LLMClient's name.",
+            "title": "Llmclient",
+            "type": "string"
+          },
+          "role": {
+            "description": "The harness's role.",
+            "enum": [
+              "planner",
+              "executor",
+              "critic",
+              "router",
+              "summarizer",
+              "tool_caller"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "sequence": {
+            "description": "OrchestrationStep.sequence: the step's position in the run.",
+            "minimum": 1,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "status": {
+            "description": "OrchestrationStep.status.",
+            "enum": [
+              "succeeded",
+              "failed",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sequence",
+          "llmclient",
+          "accountNumber",
+          "role",
+          "status"
+        ],
+        "title": "OrchestratorApiStep",
+        "type": "object"
+      },
       "Parameter": {
         "description": "Parameter class for parameterized Plugins.\n\nThis structure is\nintended to match that which is used in the OpenAPI\nfunction calling specification.\nIt is used to define the parameters that a plugin can accept,\nand also for creating the function calling prompt api.",
         "properties": {
@@ -11823,7 +12065,7 @@
               }
             ],
             "default": null,
-            "description": "Account.metadata.accountNumber[str]. Your preassigned 12-digit account number for your Smarter Account in the format '####-####-####'. Read only.",
+            "description": "Account.metadata.accountNumber[str]. The 12-digit number of the Smarter Account, in the format '####-####-####'. Applying a manifest that creates the account gives it this number, so that an organization's accounts have the same numbers on every platform; omitted, a new account gets a random one. It never changes: a manifest whose number differs from its existing account's is refused.",
             "title": "Accountnumber"
           },
           "annotations": {
@@ -11979,6 +12221,19 @@
             "title": "Language",
             "type": "string"
           },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.spec.configuration.parent[str]. Optional. The account number of the Account above this one in its organization, e.g. a department's company. Omitted means directly under the Smarter account, the root of the account tree.",
+            "title": "Parent"
+          },
           "phoneNumber": {
             "anyOf": [
               {
@@ -12004,6 +12259,19 @@
             "default": null,
             "description": "Account.spec.configuration.postalCode[str]. The postal code for the Account.",
             "title": "Postalcode"
+          },
+          "shareScope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Account.spec.configuration.shareScope[str]. Optional. The account number of this Account or one of its ancestors, whose whole subtree may read this account's resources, e.g. an IT department that shares its Secrets and Connections with its company. Omitted means that the account shares nothing.",
+            "title": "Sharescope"
           },
           "state": {
             "anyOf": [
@@ -17395,8 +17663,21 @@
         "type": "object"
       },
       "SAMOrchestratorHarnessConfig": {
-        "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key \u2014 resolved\nagainst the account's existing LLMClients at apply time.",
+        "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key, resolved at\napply time: in accountNumber's account if given, which may be another\naccount, e.g. a department's, otherwise the nearest of the owner's account\ntree (ADR-036, ADR-037).",
         "properties": {
+          "accountNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The account that the LLMClient belongs to, e.g. a department's, which the Orchestrator's owner must be able to read. Defaults to the nearest LLMClient of that name in the owner's account tree (ADR-036).",
+            "title": "Accountnumber"
+          },
           "config": {
             "additionalProperties": true,
             "description": "Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",
@@ -19614,6 +19895,27 @@
         "title": "SAMUser",
         "type": "object"
       },
+      "SAMUserAccountMembership": {
+        "description": "Smarter API User Manifest User.spec.accounts[]: the user's membership of one account.",
+        "properties": {
+          "accountNumber": {
+            "description": "User.spec.accounts.accountNumber[str]. The number of an account that the User belongs to.",
+            "title": "Accountnumber",
+            "type": "string"
+          },
+          "isAccountAdmin": {
+            "default": false,
+            "description": "User.spec.accounts.isAccountAdmin[bool]. Optional. Whether the User administers this account, and only this one: manages every resource in it. Default: false.",
+            "title": "Isaccountadmin",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accountNumber"
+        ],
+        "title": "SAMUserAccountMembership",
+        "type": "object"
+      },
       "SAMUserMetadata": {
         "description": "Smarter API User Manifest - Metadata class.",
         "properties": {
@@ -19700,6 +20002,22 @@
       "SAMUserSpec": {
         "description": "Smarter API User Manifest User.spec.",
         "properties": {
+          "accounts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SAMUserAccountMembership"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "User.spec.accounts[list]. Optional. The accounts that the User belongs to, e.g. the departments of an organization, each with whether the user administers it. Omitted, the user belongs to the account of whoever applies the manifest. Apply adds each membership that is missing and updates the others, but never removes one, which would delete every resource that the user owns in that account. A superuser may list any account; anyone else only accounts that they administer.",
+            "title": "Accounts"
+          },
           "config": {
             "$ref": "#/components/schemas/SAMUserSpecConfig",
             "description": "User.spec.config[object]. The configuration for the User."
@@ -19762,6 +20080,19 @@
             "default": null,
             "description": "User.spec.configuration.lastName[str]. Optional. The last name of the User.",
             "title": "Lastname"
+          },
+          "passwordSecret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "User.spec.configuration.passwordSecret[str]. Optional. The name of a Secret whose value becomes the User's password, each time the manifest is applied, e.g. the published password of a demonstration user. A manifest never holds a password itself. Only a superuser may set it.",
+            "title": "Passwordsecret"
           }
         },
         "required": [
@@ -26611,6 +26942,155 @@
         ]
       }
     },
+    "/orchestrators/{id}/runs/": {
+      "get": {
+        "description": "The newest runs of an Orchestrator that the user started, up to 20, newest first, each with its steps. A superuser gets every user's. Requires an api key.",
+        "operationId": "orchestrator_run_list",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrchestratorApiRun"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "The list."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or that the user may not read."
+          }
+        },
+        "summary": "List the runs of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      },
+      "post": {
+        "description": "Start a run of an Orchestrator that the user may read, toward an objective. It answers 202 with the run, pending, which the platform then executes, one step at a time: poll the run until its status is succeeded, failed or max_iterations_exceeded. Each step calls a harness LLMClient as its owner, and is charged to it. The user must be able to read every harness LLMClient, or the run is refused with 403. A strategy that can't run yet is refused with 400. Requires an api key.",
+        "operationId": "orchestrator_run",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrchestratorApiRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestratorApiRun"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid request, or 404 for a row that the user may not read or own."
+          }
+        },
+        "summary": "Start a run of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
+    "/orchestrators/{id}/runs/{run_id}/": {
+      "get": {
+        "description": "A run of an Orchestrator, with its steps and, once it succeeded, its result. Only the user who started it, or a superuser, may read it: anyone else gets 404. Requires an api key.",
+        "operationId": "orchestrator_run_retrieve",
+        "parameters": [
+          {
+            "description": "The Orchestrator's numeric id, e.g. 12, or its hashed id, e.g. rMTAwMDAxMgx.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The run's id.",
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrchestratorApiRun"
+                }
+              }
+            },
+            "description": "The row."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 404 for a row that does not exist, or that the user may not read."
+          }
+        },
+        "summary": "A run of an Orchestrator",
+        "tags": [
+          "orchestrators"
+        ]
+      }
+    },
     "/plugins/": {
       "get": {
         "description": "The plugins that the user owns, newest first: their metadata. Requires an api key.",
@@ -28013,7 +28493,7 @@
       "name": "journal"
     },
     {
-      "description": "The Orchestrators' REST reads. For superusers.",
+      "description": "The Orchestrators' REST reads, for superusers, and their runs, for any user who may read them.",
       "name": "orchestrators"
     },
     {

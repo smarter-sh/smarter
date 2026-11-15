@@ -725,7 +725,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can apply websearch plugins.",
                 thing=self.kind,
@@ -843,7 +843,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=SmarterJournalCliCommands.APPLY,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMBrokerError(
                 message="Only account admins can delete websearch plugins.",
                 thing=self.kind,

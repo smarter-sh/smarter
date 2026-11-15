@@ -72,6 +72,9 @@ class TestApiConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
             patch.object(
                 SAMApiConnectionBroker, "user", new_callable=PropertyMock, return_value=MagicMock(is_staff=True)
             ),
+            # the user is a test double without a profile of its own, which staff need to administer the account:
+            # this block is about the missing connection, so the broker's answer is set directly.
+            patch.object(SAMApiConnectionBroker, "administers_account", new_callable=PropertyMock, return_value=True),
             patch.object(SAMApiConnectionBroker, "connection", new_callable=PropertyMock, return_value=None),
         ):
             with self.assertRaises(SAMBrokerErrorNotReady):

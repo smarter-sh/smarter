@@ -17,7 +17,7 @@ Celery Beat, whose scheduled tasks would change the rows of running tests.
 
 Steps:
 
-1. Dump the local database (``smarter-mariadb``: the ``smarter`` and ``smarter_test_db`` databases and the
+1. Dump the local database (``smarter-mariadb``: the ``smarter`` and ``stackademy`` databases and the
    users), so that every shard starts from the platform that ``initialize_platform`` set up, as the one-stack
    run does. The dev stack's MariaDB must be running; the rest of it may be stopped.
 2. Start every shard's MariaDB and Redis, load the dump into each, then start its api and workers, and wait for
@@ -44,7 +44,7 @@ COMPOSE_FILE = REPOSITORY_ROOT / "docker-compose.shard.yml"
 DEFAULT_OUT = REPOSITORY_ROOT / ".test-shards"
 DEV_MARIADB = "smarter-mariadb"
 ROOT_PASSWORD = "smarter"
-DATABASES = ["smarter", "smarter_test_db"]
+DATABASES = ["smarter", "stackademy"]
 PROJECT_PREFIX = "smarter-shard-"
 STORES = ["smarter-mariadb", "smarter-redis"]
 APPLICATIONS = ["smarter-api", "smarter-worker", "smarter-worker-infrastructure"]

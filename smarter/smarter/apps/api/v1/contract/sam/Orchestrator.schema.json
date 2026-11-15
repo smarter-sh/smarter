@@ -48,8 +48,21 @@
       "type": "object"
     },
     "SAMOrchestratorHarnessConfig": {
-      "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key \u2014 resolved\nagainst the account's existing LLMClients at apply time.",
+      "description": "A single LLMClient (Harness) membership within the Orchestrator.\n\nMirrors smarter.apps.orchestrator.models.OrchestratorHarness. The\nllmClientName is a reference by name, not by primary key, resolved at\napply time: in accountNumber's account if given, which may be another\naccount, e.g. a department's, otherwise the nearest of the owner's account\ntree (ADR-036, ADR-037).",
       "properties": {
+        "accountNumber": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The account that the LLMClient belongs to, e.g. a department's, which the Orchestrator's owner must be able to read. Defaults to the nearest LLMClient of that name in the owner's account tree (ADR-036).",
+          "title": "Accountnumber"
+        },
         "config": {
           "additionalProperties": true,
           "description": "Per-membership overrides (e.g. temperature, system prompt fragment, tool allowlist).",

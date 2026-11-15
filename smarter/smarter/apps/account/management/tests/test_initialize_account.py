@@ -8,6 +8,7 @@ from django.core.management.base import CommandError
 from smarter.apps.account.management.commands.initialize_account import (
     EXAMPLE_KINDS_PER_ACCOUNT,
 )
+from smarter.apps.account.models import UserProfile
 from smarter.apps.llmclient.const import (
     EXAMPLE_MANIFESTS_REPOSITORY_URL,
     STACKADEMY_REPOSITORY_URL,
@@ -45,7 +46,10 @@ class TestInitializeAccount(CommandTestBase):
         self.addCleanup(User.objects.filter(pk=self.non_admin_user.pk).update, is_superuser=False, is_staff=False)
         self.run_command("initialize_account", **self.options())
         user = User.objects.get(pk=self.non_admin_user.pk)
-        self.assertTrue(user.is_superuser)
+        # the administrator of the account only: staff, as the web console expects, but never a superuser.
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(UserProfile.objects.get(user=user, account=self.account).is_account_admin)
         self.assertEqual(self.names()[0], "create_account")
         # the account's own example plugins and LLMClients, then its own Stackademy project, both deployed.
         loads = [c.kwargs for c in self.call.call_args_list if c.args[0] == "load_from_github"]
@@ -64,7 +68,7 @@ class TestInitializeAccount(CommandTestBase):
                     "url": STACKADEMY_REPOSITORY_URL,
                     "account_number": self.account.account_number,
                     "username": self.non_admin_user.username,
-                    "exclude_kind": ["Budget"],
+                    "include_kind": EXAMPLE_KINDS_PER_ACCOUNT,
                     "deploy": True,
                 },
             ],

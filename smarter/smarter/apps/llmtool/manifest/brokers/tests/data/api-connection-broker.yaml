@@ -17,11 +17,11 @@ metadata:
 spec:
   connection:
     baseUrl: http://localhost:9357/
-    apiKey: smarter_test_user
+    apiKey: stackademy_catalog_db_password
     authMethod: token
     timeout: 10
     proxyProtocol: http
     proxyHost: proxy.example.com
     proxyPort: 8080
     proxyUsername: proxyUser
-    proxyPassword: smarter_test_db_proxy_password
+    proxyPassword: stackademy_catalog_db_proxy_password

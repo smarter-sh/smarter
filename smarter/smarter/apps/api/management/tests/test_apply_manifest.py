@@ -40,6 +40,41 @@ class TestApplyManifestCommand(CommandTestBase):
         with self.assertRaises(SmarterValueError):
             self.run_command("apply_manifest", username=self.admin_user.username)
 
+    def test_apply_in_one_of_the_users_accounts(self):
+        """Test that --account_number applies the manifest as the user's profile in that account, of several."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.account.models import UserProfile
+        from smarter.apps.account.tests.factories import mortal_user_factory
+
+        other_user, other_account, _ = mortal_user_factory()
+        self.addCleanup(other_account.delete)
+        self.addCleanup(other_user.delete)
+        other_profile = UserProfile.objects.create(
+            user=self.admin_user, account=other_account, name=f"{self.admin_user.username}_other"
+        )
+        # the newest profile is the admin's default: the rest of the class needs theirs in this class's account.
+        self.addCleanup(UserProfile.objects.filter(pk=other_profile.pk).delete)
+        self.addCleanup(Guardrail.objects.filter(name="test_guardrail", user_profile=other_profile).delete)
+        self.run_command(
+            "apply_manifest",
+            filespec=GUARDRAIL_MANIFEST,
+            username=self.admin_user.username,
+            account_number=other_account.account_number,
+        )
+        self.assertTrue(Guardrail.objects.filter(name="test_guardrail", user_profile=other_profile).exists())
+        self.assertFalse(Guardrail.objects.filter(name="test_guardrail", user_profile=self.user_profile).exists())
+
+        # an account that the user doesn't belong to applies nothing.
+        self.run_command(
+            "apply_manifest",
+            filespec=GUARDRAIL_MANIFEST,
+            username=self.non_admin_user.username,
+            account_number=other_account.account_number,
+        )
+        self.assertFalse(
+            Guardrail.objects.filter(name="test_guardrail", user_profile__user=self.non_admin_user).exists()
+        )
+
     def test_unknown_kind(self):
         with open(GUARDRAIL_MANIFEST, encoding="utf-8") as f:
             text = f.read().replace("kind: Guardrail", "kind: NotAKind")

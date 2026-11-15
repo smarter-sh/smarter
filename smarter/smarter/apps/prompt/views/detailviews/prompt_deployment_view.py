@@ -18,7 +18,7 @@ from typing import Optional
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from pydantic import BaseModel, ValidationError
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import UserProfile, user_administers_account
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
 from smarter.apps.llmclient.views.deployment_contract import (
     ApiKeyActionResponse,
@@ -88,6 +88,39 @@ def can_manage(request: HttpRequest, llmclient: LLMClient) -> bool:
     return LLMClient.objects.filter(pk=llmclient.pk).with_ownership_permission_for(request.user).exists()  # type: ignore[attr-defined]
 
 
+def profile_in_llmclient_account(request: HttpRequest, llmclient: LLMClient) -> Optional[UserProfile]:
+    """
+    The user's profile in the llmclient's account, in which an api key that they create acts.
+
+    :param request: The request.
+    :type request: django.http.HttpRequest
+    :param llmclient: The llmclient.
+    :type llmclient: LLMClient
+    :returns: The profile, or None if the user doesn't belong to the account.
+    :rtype: Optional[UserProfile]
+    """
+    return UserProfile.objects.filter(user=request.user, account=llmclient.user_profile.account).first()
+
+
+def can_create_api_keys(request: HttpRequest, llmclient: LLMClient) -> bool:
+    """
+    Whether the user may create an api key in the llmclient's account: they administer it.
+
+    See :func:`smarter.apps.account.models.user_profile.user_administers_account`: staff, a superuser, or an
+    account admin of that account, e.g. a department's head in an organization of several accounts.
+
+    :param request: The request.
+    :type request: django.http.HttpRequest
+    :param llmclient: The llmclient.
+    :type llmclient: LLMClient
+    :rtype: bool
+    """
+    user_profile = profile_in_llmclient_account(request, llmclient)
+    if user_profile is None:
+        return False
+    return user_administers_account(request.user, user_profile)
+
+
 def manageable_api_keys(request: HttpRequest, llmclient: LLMClient):
     """
     The api keys of the llmclient's account that the user may manage, newest first.
@@ -146,7 +179,7 @@ def api_keys_section(request: HttpRequest, llmclient: LLMClient, manage: bool) -
             DeploymentAttachedApiKey(name=attached_key.name, is_active=attached_key.is_active) if attached_key else None
         ),
         can_manage=manage,
-        can_create=bool(request.user.is_staff),  # type: ignore[union-attr]
+        can_create=can_create_api_keys(request, llmclient),
         create_url=url(PromptApiWebReverseNames.deployment_api_key_create_by_hashed_id),
         attach_url=url(PromptApiWebReverseNames.deployment_api_key_attach_by_hashed_id),
         detach_url=url(PromptApiWebReverseNames.deployment_api_key_detach_by_hashed_id),
@@ -364,29 +397,30 @@ class LLMClientDeploymentApiKeyCreateView(LLMClientDeploymentApiView):
 
     def handle(self, request: HttpRequest, llmclient: LLMClient, body: Optional[BaseModel]) -> Optional[NewApiKey]:
         """
-        Create a staff user's api key in the LLMClient's account, and attach it if asked and allowed.
+        Create an account admin's api key in the LLMClient's account, and attach it if asked and allowed.
 
         :param request: The request.
         :param llmclient: The LLMClient of the url.
         :param body: The parsed request body.
         :returns: The new api key's name and its secret, which is shown only once.
-        :raises DeploymentApiError: when the user is not staff or not in the LLMClient's account, or the name
-            is invalid or already used.
+        :raises DeploymentApiError: when the user is not in the LLMClient's account or doesn't administer it, or
+            the name is invalid or already used.
         """
         assert isinstance(body, CreateApiKeyRequest)  # nosec B101: request_model is CreateApiKeyRequest.
-        user = request.user
-        if not user.is_staff:  # type: ignore[union-attr]
-            raise DeploymentApiError("not_admin", "Only an account admin can create api keys.", HTTPStatus.FORBIDDEN)
-        name = to_snake_case(body.name.strip())
-        if not name or not SmarterValidator.is_valid_snake_case(name):
-            raise DeploymentApiError("invalid_name", "Give the api key a name, in snake_case, e.g. my_site_chat.")
-        user_profile = UserProfile.objects.filter(user=user, account=llmclient.user_profile.account).first()
+        user_profile = profile_in_llmclient_account(request, llmclient)
         if user_profile is None:
             raise DeploymentApiError(
                 "not_account_admin",
                 "Only an admin of the LLMClient's account can create its api keys.",
                 HTTPStatus.FORBIDDEN,
             )
+        # the request's user, whom the profile, found by that user, carries as a User.
+        user = user_profile.user
+        if not user_administers_account(user, user_profile):
+            raise DeploymentApiError("not_admin", "Only an account admin can create api keys.", HTTPStatus.FORBIDDEN)
+        name = to_snake_case(body.name.strip())
+        if not name or not SmarterValidator.is_valid_snake_case(name):
+            raise DeploymentApiError("invalid_name", "Give the api key a name, in snake_case, e.g. my_site_chat.")
         if SmarterAuthToken.objects.filter(user=user, name=name).exists():
             raise DeploymentApiError("duplicate_name", f"You already have an api key named {name}.")
         attach = body.attach and can_manage(request, llmclient)

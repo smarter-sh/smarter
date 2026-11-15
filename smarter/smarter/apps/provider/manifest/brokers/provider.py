@@ -603,7 +603,7 @@ class SAMProviderBroker(AbstractBroker[Provider, Provider]):
                 thing=self.kind,
                 command=command,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMProviderBrokerError(
                 message="Only account admins can apply provider manifests.",
                 thing=self.kind,
@@ -841,7 +841,7 @@ class SAMProviderBroker(AbstractBroker[Provider, Provider]):
                 thing=self.kind,
                 command=command,
             )
-        if not self.user.is_staff:
+        if not self.administers_account:
             raise SAMProviderBrokerError(
                 message="Only account admins can delete providers.",
                 thing=self.kind,

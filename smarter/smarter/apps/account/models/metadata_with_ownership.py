@@ -128,11 +128,12 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         Permission logic:
         - If the user is not authenticated, they have no access.
         - If the user is a superuser, they have access to all resources.
-        - If the user is a regular authenticated user, they have access to resources that are:
+        - If the user is a regular authenticated user, they have access to resources that are owned in:
 
-            - Owned by their UserProfile, OR
-            - Owned by their Account admin UserProfile, OR
-            - Owned by the Smarter admin UserProfile.
+            - their own Account, OR
+            - an Account that shares its resources with theirs: one whose ``share_scope`` is their Account or
+              one of its ancestors. The Smarter account shares with every account.
+              See :mod:`smarter.apps.account.hierarchy`.
 
         - Last, the model may hide some of these from the user, with its
           :meth:`MetaDataWithOwnershipModel.restrict_readable`, e.g. an LLMClient that only the
@@ -147,7 +148,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             If the user has multiple UserProfiles, the result is the union of all resources they can read for each profile.
         """
         # pylint: disable=C0415
-        from smarter.apps.account.utils import smarter_cached_objects
+        from smarter.apps.account.hierarchy import readable_account_ids
 
         if not isinstance(user, User):
             logger.debug(
@@ -182,14 +183,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 )
                 return self.all()
 
-            retval = self.filter(
-                models.Q(user_profile__account=smarter_cached_objects.smarter_account)
-                | models.Q(user_profile__account=user_profile.account)
-            )
+            account_ids = readable_account_ids(user_profile.account_id)  # type: ignore[attr-defined]
+            retval = self.filter(user_profile__account_id__in=account_ids)
             logger.debug(
-                "%s user is not a superuser. Returning resources owned by account %s + platform.",
+                "%s user is not a superuser. Returning resources owned by account %s and the %s accounts that share with it.",
                 logger_prefix,
                 user_profile.account.account_number,
+                len(account_ids) - 1,
             )
             return retval
 
@@ -276,11 +276,12 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
                 )
                 return self.all()
 
-            # staff users have ownership permission for resources owned within their account, or owned by themselves
-            if user_profile.user.is_staff:
+            # an account's administrators, by is_account_admin on this profile or by User.is_staff, have
+            # ownership permission for every resource owned within this profile's account.
+            if user_profile.administers_account:
                 retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
-                    "%s called for staff user: %s, returning resources.",
+                    "%s called for an administrator of the account: %s, returning resources.",
                     logger_prefix,
                     user_profile.user,
                 )
@@ -475,9 +476,10 @@ class MetaDataWithOwnershipModelManager(SmarterBaseModelManager[_MT]):
 
         - If the user is not authenticated, they have no access.
         - If the user is a superuser, they have ownership permission for all resources.
-        - If the user is a staff user, they have ownership permission for resources that are:
-            - Owned by their UserProfile, OR
-            - Owned by any UserProfile within their Account.
+        - If the user administers an account through one of their profiles
+          (:attr:`UserProfile.administers_account <smarter.apps.account.models.UserProfile.administers_account>`:
+          the profile's ``is_account_admin``, or ``User.is_staff``), they have ownership permission for every
+          resource owned within that account.
         - If the user is a regular authenticated user, they have ownership permission only for resources they own.
 
         :param user: :class:`django.contrib.auth.models.User`

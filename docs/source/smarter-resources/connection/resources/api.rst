@@ -15,30 +15,27 @@ It encapsulates the necessary configuration and credentials (``Smarter Secret``)
    # platform. To apply this file yourself, save a copy as a .yaml file with your platform's address in baseUrl.
    #
    # The course catalogue is password protected: this connection sends its apiKey Secret as a bearer
-   # token, and the course catalogue accepts the apiKey Secret of the Smarter account's smarter_test_api.
+   # token, and the course catalogue accepts the apiKey Secret of the Smarter account's stackademy_catalog_api.
    apiVersion: smarter.sh/v1
    kind: ApiConnection
    metadata:
      description: Api connection to this platform's Stackademy course catalogue, /api/v1/demos/stackademy/course-catalogue/
-     name: smarter_test_api
-     version: 0.1.0
+     name: stackademy_catalog_api
+     version: 1.0.0
      tags:
-       - test
+       - stackademy
        - api
-       - sample
      annotations:
-       - smarter.sh/smarter-test-api/creator: QA Team
-       - smarter.sh/smarter-test-api/purpose: unit testing
-       - smarter.sh/smarter-test-api/release-date: 2024-06-15
-       - smarter.sh/smarter-test-api/backward-compatibility: true
+       smarter.sh/stackademy/owner: Stackademy IT
+       smarter.sh/stackademy/purpose: the course catalogue api, for the Stackademy API advisor
    spec:
      connection:
        baseUrl: ${environment_platform_scheme}://${environment_platform_domain}
        timeout: 30
        authMethod: token
-       apiKey: smarter_test_api
+       apiKey: stackademy_catalog_api_key
 
-From `connections/api/smarter-test-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/smarter-test-api.yaml.tpl>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
+From `connections/api/stackademy-catalog-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/stackademy-catalog-api.yaml.tpl>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
 
 Technical References
 --------------------

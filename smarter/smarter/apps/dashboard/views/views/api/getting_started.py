@@ -14,7 +14,12 @@ from http import HTTPStatus
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.models import User, UserProfile, get_resolved_user
+from smarter.apps.account.models import (
+    User,
+    UserProfile,
+    get_resolved_user,
+    user_administers_account,
+)
 from smarter.apps.dashboard.views.views.api.my_resources import get_secrets
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import PluginMeta
@@ -31,8 +36,8 @@ class GettingStartedView(SmarterAuthenticatedWebView):
     """
     The onboarding steps of the user, and whether each is done.
 
-    The API key step is only for staff users, who are the only users that may
-    create API keys.
+    The API key step is only for users who administer their account, who are the only users that may
+    create API keys: see :func:`~smarter.apps.account.models.user_profile.user_administers_account`.
 
     Response shape:
 
@@ -63,7 +68,7 @@ class GettingStartedView(SmarterAuthenticatedWebView):
             raise PermissionDenied("The getting-started steps of an anonymous user are not available.")
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         steps = []
-        if getattr(user, "is_staff", False):
+        if user_administers_account(user, user_profile):
             steps.append(
                 {
                     "name": "Create an API key",

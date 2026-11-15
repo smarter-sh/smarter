@@ -130,6 +130,11 @@ jobs:
         uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
         id: semantic
         with:
+          # semantic-release loads its plugins from its own dependencies first, so this, not package.json, decides
+          # @semantic-release/github's version. The action's default, 24.2.9, bundles @semantic-release/github 11,
+          # whose success step fails a release that it has already published when a released commit mentions a pull
+          # request as #N, as a merge of a pull request's title may; 25 bundles 12, which skips such references.
+          semantic_version: 25.0.9
           branches: |
             [
               '+([0-9])?(.{+([0-9]),x}).x',
