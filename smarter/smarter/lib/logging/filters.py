@@ -13,6 +13,8 @@ meaningful application events.
 - :class:`AsyncioShieldedCancelFilter`: a logging filter that excludes asyncio's ``CancelledError``
   errors from a shielded future, which a client that disconnects in the middle of a request causes
   under uvicorn.
+- :class:`AccessLogQueryFilter`: a logging filter that masks the sensitive query parameters, such
+  as a chat's ``session_key``, in uvicorn's access log records.
 
 **Example:**
 
@@ -40,6 +42,10 @@ Uvicorn access log entries whose normalized path is one of the health check path
 import asyncio
 
 from smarter.common.mixins import SmarterHelperMixin
+
+# The module, not the smarter.common.utils package, which imports much more: Django loads these
+# filters while it configures logging, before its apps are ready.
+from smarter.common.utils.utils import mask_url_query
 from smarter.lib import logging
 
 
@@ -154,6 +160,78 @@ class HealthCheckFilter(logging.Filter, SmarterHelperMixin):
             return True
 
         return path not in self.health_check_urls
+
+
+class AccessLogQueryFilter(logging.Filter):
+    """
+    Logging filter to mask sensitive query parameters in uvicorn's access log.
+
+    Uvicorn logs every request's path with its query string. Clients send a chat's session key
+    there, e.g. ``POST /api/v1/llm-clients/<id>/config/?session_key=<key>``, and anyone holding the
+    key could read and continue that chat. This filter replaces the path argument of each
+    ``uvicorn.access`` record with :func:`~smarter.common.utils.mask_url_query` of it, so the
+    log shows ``?session_key=****325c05``. It never suppresses a record. Records of other
+    loggers, records without a query, and records whose path can't be read are emitted unchanged.
+
+    Attach it to the ``uvicorn.access`` logger, not to a handler, so that it masks the record
+    before any handler sees it:
+
+    **Example:**
+
+    To use this filter in a Django logging configuration::
+
+        LOGGING = {
+            ...
+            'filters': {
+                'access_log_query': {
+                    '()': 'smarter.lib.logging.filters.AccessLogQueryFilter',
+                },
+            },
+            'loggers': {
+                'uvicorn.access': {
+                    'filters': ['access_log_query'],
+                },
+            },
+            ...
+        }
+    """
+
+    path_index = 2
+    """The position of the path in a uvicorn access log record's arguments, see :class:`HealthCheckFilter`."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """
+        Mask the sensitive query parameters in a uvicorn access log record's path.
+
+        **Example:**
+
+        >>> f = AccessLogQueryFilter()
+        >>> args = ("127.0.0.1:1", "POST", "/config/?session_key=77846410f51045319bd666642e325c05", "1.1", 200)
+        >>> record = logging.makeLogRecord({"name": "uvicorn.access", "msg": '%s - "%s %s HTTP/%s" %d', "args": args})
+        >>> f.filter(record)
+        True
+        >>> record.args[2]
+        '/config/?session_key=****325c05'
+
+        :param record: The log record to be filtered. Its ``args`` are replaced when its path changes.
+        :returns: True, always: the record is emitted, masked.
+        """
+        if record.name != "uvicorn.access":
+            return True
+        if not isinstance(record.args, tuple):
+            return True
+        if len(record.args) <= self.path_index:
+            return True
+        path = record.args[self.path_index]
+        if not isinstance(path, str):
+            return True
+        masked_path = mask_url_query(path)
+        if masked_path == path:
+            return True
+        args = list(record.args)
+        args[self.path_index] = masked_path
+        record.args = tuple(args)
+        return True
 
 
 class AsyncioShieldedCancelFilter(logging.Filter):

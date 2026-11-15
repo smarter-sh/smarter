@@ -102,7 +102,9 @@ class TestUtils(SmarterTestBase):
 
         url = f"https://example.com/api/web/dashboard/logs/stream/?level=DEBUG&session_key={key}"
         masked = mask_url_query(url)
-        self.assertEqual(masked, "https://example.com/api/web/dashboard/logs/stream/?level=DEBUG&session_key=****abcdef")
+        self.assertEqual(
+            masked, "https://example.com/api/web/dashboard/logs/stream/?level=DEBUG&session_key=****abcdef"
+        )
 
     def test_mask_url_query_without_a_sensitive_parameter(self):
         """A url without a query, or without a sensitive parameter, is unchanged."""
@@ -110,6 +112,17 @@ class TestUtils(SmarterTestBase):
         self.assertEqual(mask_url_query("https://example.com/?level=DEBUG"), "https://example.com/?level=DEBUG")
         self.assertEqual(mask_url_query(""), "")
         self.assertEqual(mask_url_query(None), "")
+
+    def test_mask_url_query_keeps_other_queries_exactly(self):
+        """A query without a sensitive parameter keeps its encoding, e.g. %20 doesn't become +."""
+        path = "/api/v1/search/?q=hello%20world&tag=a%2Fb"
+        self.assertEqual(mask_url_query(path), path)
+
+    def test_mask_url_query_of_a_path(self):
+        """A path with a query string, as the uvicorn access log has it, is masked too."""
+        key = "0123456789abcdef" * 4
+        masked = mask_url_query(f"/api/v1/llm-clients/abc/config/?session_key={key}")
+        self.assertEqual(masked, "/api/v1/llm-clients/abc/config/?session_key=****abcdef")
 
     def test_mask_string_basic(self):
         string_length = 12

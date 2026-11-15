@@ -11,6 +11,7 @@ from rest_framework import serializers
 
 from smarter.apps.llmclient.models import LLMClient, get_cached_llmclient_by_request
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.utils import mask_identifier
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -366,10 +367,12 @@ class PromptHelper(SmarterRequestMixin):
             # A session belongs to one llmclient. A key of another llmclient's session, e.g. a
             # session_key cookie that the browser sends to every host of the platform's domain,
             # starts a new session rather than continuing the other llmclient's chat.
+            # The key is masked: it is a credential for the other llmclient's chat.
+            masked_session_key = mask_identifier(self.session_key)
             logger.warning(
                 "%s.get_cached_chat() - session_key %s belongs to llmclient %s, not %s. Starting a new session.",
                 self.formatted_class_name,
-                self.session_key,
+                masked_session_key,
                 prompt.llmclient_id,  # type: ignore[attr-defined]
                 self.llmclient.id,  # type: ignore[attr-defined]
             )

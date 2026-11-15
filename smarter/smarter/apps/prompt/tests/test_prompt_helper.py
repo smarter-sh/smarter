@@ -2,11 +2,38 @@
 
 from unittest.mock import MagicMock, patch
 
+from smarter.apps.prompt.models import prompt_helper
 from smarter.apps.prompt.models.prompt import Prompt
 from smarter.apps.prompt.models.prompt_helper import PromptHelper
+from smarter.common.utils import mask_identifier
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 MODULE = "smarter.apps.prompt.models.prompt_helper"
+
+
+class TestPromptHelperGetCachedChatOtherLLMClient(SmarterTestBase):
+    """Test the warning that ``get_cached_chat()`` logs for another llmclient's session key."""
+
+    def test_the_session_key_is_logged_masked(self):
+        """The other llmclient's session key, a credential for its chat, is logged masked (issue #1000)."""
+        session_key = "0123456789abcdef" * 4
+        other_llmclients_prompt = MagicMock(llmclient_id=12)
+        helper = MagicMock(
+            smarter_request=MagicMock(),
+            session_key=session_key,
+            llmclient=MagicMock(id=14),
+            user_agent="Mozilla/5.0",
+        )
+        with (
+            patch(f"{MODULE}.get_cached_prompt_by_session_key", return_value=other_llmclients_prompt),
+            patch.object(Prompt, "objects"),
+            patch.object(prompt_helper, "logger") as mock_logger,
+        ):
+            PromptHelper.get_cached_chat(helper)
+        mock_logger.warning.assert_called_once()
+        logged = str(mock_logger.warning.call_args)
+        self.assertNotIn(session_key, logged)
+        self.assertIn(mask_identifier(session_key), logged)
 
 
 class TestPromptHelperLLMClient(SmarterTestBase):
