@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.1...v0.46.2-alpha.2) (2026-11-15)
+
+### Bug Fixes
+
+* **journal:** prune orphaned blobs and stop retrying deleted rows ([90cd4d5](https://github.com/smarter-sh/smarter/commit/90cd4d5b5d370f4e7c4fce79c2601d923682b04f))
+
 ## [0.46.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.1...v0.46.2-alpha.1) (2026-11-15)
 
 ### Refactoring
