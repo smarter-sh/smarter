@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.2...v0.46.2-alpha.3) (2026-11-15)
+
+### Bug Fixes
+
+* **prompt:** mask the session_key in the urls that handle_chat_config_invoked() and SmarterSecurityMiddleware log ([115dd82](https://github.com/smarter-sh/smarter/commit/115dd82f39436a05c6e0a84f8161c834fa11200c)), closes [#1004](https://github.com/smarter-sh/smarter/issues/1004) [#1000](https://github.com/smarter-sh/smarter/issues/1000)
+
 ## [0.46.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.1...v0.46.2-alpha.2) (2026-11-15)
 
 ### Bug Fixes
