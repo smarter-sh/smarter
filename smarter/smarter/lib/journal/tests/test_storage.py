@@ -11,6 +11,8 @@ from smarter.lib.journal.storage import (
     JournalDocumentDecoder,
     JournalDocumentEncoder,
     JournalStorageError,
+    blob_references,
+    node_references,
     pack,
     unpack,
 )
@@ -188,3 +190,27 @@ class TestJournalStorage(SmarterTestBase):
     def test_error_message(self):
         """Test the storage error's message prefix."""
         self.assertIn("Journal Storage", JournalStorageError("x").get_formatted_err_message)
+
+    def test_blob_references(self):
+        """Test that the references of a skeleton, a blob and a chain's node reach every blob of a document."""
+        document: JsonValue = {
+            "text": "t" * 2000,
+            "list": [{"item": i, "long": f"{i} " + "l" * 2000} for i in range(3)],
+            "escaped": {REF_KEY: "x" * 2000},
+        }
+        encoder = JournalDocumentEncoder()
+        skeleton = encoder.encode(document)
+        found = set()
+        pending = blob_references(skeleton)
+        while pending:
+            digest, is_node = pending.pop()
+            if (digest, is_node) in found:
+                continue
+            found.add((digest, is_node))
+            value = unpack(encoder.blobs[digest])
+            if is_node:
+                pending.extend(node_references(value))
+            else:
+                pending.extend(blob_references(value))
+        self.assertEqual({digest for digest, _ in found}, set(encoder.blobs))
+        self.assertEqual(node_references("not a node"), [])

@@ -16,7 +16,7 @@ The task is idempotent: a retry of an entry that was saved does nothing.
 """
 
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from django.db import DataError
@@ -28,7 +28,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
 
 from .contract.const import JOURNAL_KEY_PATTERN
-from .models import SAMJournal
+from .models import BLOB_PRUNE_GRACE, SAMJournal, SAMJournalBlob
 from .signals import journal_entry_created, journal_entry_failed
 from .sources import (
     JournalSourceNotReady,
@@ -199,8 +199,24 @@ def queue_journal_entry(record: SAMJournalEntryRecord, sources: Sequence[SAMJour
     logger.debug("%s queued journal entry %s", prefix, record.key)
 
 
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def prune_journal_blobs(grace_days: int = BLOB_PRUNE_GRACE.days) -> int:
+    """
+    Celery task: delete the journal's blobs that no entry references.
+
+    Celery Beat runs it weekly.
+
+    :param grace_days: How many days an unreferenced blob is kept after its last use.
+    :returns: The number of blobs deleted.
+    """
+    grace = timedelta(days=grace_days)
+    deleted = SAMJournalBlob.objects.prune(grace=grace)
+    return deleted
+
+
 __all__ = [
     "SAMJournalEntryRecord",
+    "prune_journal_blobs",
     "SOURCE_RETRY_MAX_COUNTDOWN",
     "create_journal_entry",
     "queue_journal_entry",

@@ -5,7 +5,6 @@ import secrets
 from http import HTTPStatus
 from unittest.mock import patch
 
-from celery.exceptions import Retry
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -17,24 +16,19 @@ from smarter.apps.prompt.journal import (
     CHAT_HISTORY_SOURCE,
     PROMPT_HISTORY_ID,
     PROMPT_ID,
-    chat_history_messages,
-    chat_history_source,
     resolve_chat_history,
 )
 from smarter.apps.prompt.models import Prompt, PromptHistory
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.models import SAMJournal
 from smarter.lib.journal.sources import (
+    UNRESOLVED_KEY,
     JournalSourceGone,
     JournalSourceLookup,
-    JournalSourceNotReady,
     get_at_path,
+    value_digest,
 )
-from smarter.lib.journal.tasks import (
-    SAMJournalEntryRecord,
-    create_journal_entry,
-    queue_journal_entry,
-)
+from smarter.lib.journal.tasks import create_journal_entry, queue_journal_entry
 
 MESSAGES = [
     {"role": "system", "content": "journal thread marker. " * 100, "smarter_is_new": False},
@@ -115,43 +109,22 @@ class TestPromptJournal(TestAccountMixin):
                 self.assertEqual(get_at_path(entry.response, CHAT_HISTORY_PATH), sent_thread)
 
     def test_resolve_chat_history(self):
-        """Test that the resolver waits for a row that is not written yet, and gives up on one that is gone."""
+        """Test that the resolver reads the row, and reports a deleted row as gone, never as not ready."""
         lookup: JournalSourceLookup = {PROMPT_HISTORY_ID: self.row.pk, PROMPT_ID: self.prompt.pk}
         self.assertTrue(resolve_chat_history(lookup))
-        with self.assertRaises(JournalSourceNotReady):
-            resolve_chat_history({PROMPT_HISTORY_ID: self.row.pk + 1000000, PROMPT_ID: self.prompt.pk})
         with self.assertRaises(JournalSourceGone):
-            resolve_chat_history({PROMPT_HISTORY_ID: self.row.pk + 1000000, PROMPT_ID: self.prompt.pk + 1000000})
+            resolve_chat_history({PROMPT_HISTORY_ID: self.row.pk + 1000000, PROMPT_ID: self.prompt.pk})
 
-    def test_row_written_after_the_response(self):
-        """Test that an entry whose row is written later, e.g. by a Celery task, is journaled once it exists."""
-        record = SAMJournalEntryRecord(
-            key=secrets.token_hex(32),
-            created_at=self.row.created_at,
-            user_id=None,
-            thing="ChatConfig",
-            command="chat_config",
-            status_code=HTTPStatus.OK,
-            request={},
-            response={"data": {"history": {"chat_history": "placeholder"}}},
-        )
-        self.addCleanup(SAMJournal.objects.filter(key=record.key).delete)
-        later = PromptHistory(prompt=self.prompt, request={}, response={}, messages=MESSAGES)
-        # the id that the row will have, before it exists.
-        later.pk = PromptHistory.objects.order_by("-pk").values_list("pk", flat=True)[0] + 1000
-        queued: list[dict] = []
-        response_with_thread = {"data": {"history": {"chat_history": chat_history_messages(later)}}}
-        record = record.model_copy(update={"response": response_with_thread})
-        with patch("smarter.lib.journal.tasks.create_journal_entry.delay", side_effect=queued.append):
-            queue_journal_entry(record, [chat_history_source(later)])
-        payload = queued[0]
-        with patch.object(create_journal_entry, "retry", side_effect=Retry("retried")) as retry:
-            with self.assertRaises(Retry):
-                create_journal_entry(payload)
-        self.assertIsNone(retry.call_args.kwargs["max_retries"])
-        self.assertFalse(SAMJournal.objects.filter(key=record.key).exists())
-        later.save(force_insert=True)
-        self.addCleanup(PromptHistory.objects.filter(pk=later.pk).delete)
+    def test_deleted_row_is_journaled_as_its_reference(self):
+        """Test that an entry whose row was deleted before the worker ran is saved at once, with the reference."""
+        response, payload = self.config(HTTP_X_SMARTER_CAPABILITIES=CHAT_CONTRACT_V2_CAPABILITY)
+        PromptHistory.objects.filter(pk=self.row.pk).delete()
         create_journal_entry(payload)
-        entry = SAMJournal.objects.get(key=record.key)
-        self.assertEqual(entry.response, response_with_thread)
+        entry = SAMJournal.objects.get(key=payload["key"])
+        self.addCleanup(entry.delete)
+        marker = get_at_path(entry.response, CHAT_HISTORY_PATH)
+        assert isinstance(marker, dict)
+        reference = marker[UNRESOLVED_KEY]
+        assert isinstance(reference, dict)
+        sent_thread = get_at_path(json.loads(response.content), CHAT_HISTORY_PATH)
+        self.assertEqual(reference["digest"], value_digest(sent_thread))

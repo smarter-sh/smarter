@@ -13,13 +13,12 @@ from pydantic import JsonValue, TypeAdapter
 from smarter.lib.journal.sources import (
     JournalSourceGone,
     JournalSourceLookup,
-    JournalSourceNotReady,
     SAMJournalSource,
     register_journal_source,
 )
 
 from .contract.models import PromptChatApiMessage
-from .models import Prompt, PromptHistory
+from .models import PromptHistory
 
 CHAT_HISTORY_SOURCE = "prompt.chat_history"
 """The name of the source of a configuration's ``data.history.chat_history``."""
@@ -31,7 +30,7 @@ PROMPT_HISTORY_ID = "prompt_history_id"
 """The lookup's key of the PromptHistory row's id."""
 
 PROMPT_ID = "prompt_id"
-"""The lookup's key of the row's Prompt, the chat session, which tells a row that is not written yet from one that is gone."""
+"""The lookup's key of the row's Prompt, the chat session: it says which session a missing row belonged to."""
 
 MESSAGES_ADAPTER = TypeAdapter(list[PromptChatApiMessage])
 """Validates and dumps the thread as the configuration does: a list of the contract's messages."""
@@ -67,18 +66,19 @@ def resolve_chat_history(lookup: JournalSourceLookup) -> JsonValue:
 
     :param lookup: The source's lookup, from :func:`chat_history_source`.
     :returns: The thread, as the client received it.
-    :raises JournalSourceNotReady: If the row isn't written yet, while its chat session exists.
-    :raises JournalSourceGone: If the row and its chat session were deleted.
+    :raises JournalSourceGone: If the row was deleted.
+
+    The lookup is the id of a row that the configuration read, so the row was written before the entry
+    was queued, and a missing row was deleted, e.g. with its chat session. It is never
+    :class:`~smarter.lib.journal.sources.JournalSourceNotReady`, which would retry forever.
     """
     prompt_history_id = int(lookup[PROMPT_HISTORY_ID])
     row = PromptHistory.objects.filter(pk=prompt_history_id).first()
     if row is not None:
         messages = chat_history_messages(row)
         return messages
-    prompt_id = int(lookup[PROMPT_ID])
-    if not Prompt.objects.filter(pk=prompt_id).exists():
-        raise JournalSourceGone(f"PromptHistory {prompt_history_id} and its Prompt {prompt_id} were deleted.")
-    raise JournalSourceNotReady(f"PromptHistory {prompt_history_id} is not written yet.")
+    prompt_id = lookup.get(PROMPT_ID)
+    raise JournalSourceGone(f"PromptHistory {prompt_history_id} of Prompt {prompt_id} was deleted.")
 
 
 def register() -> None:

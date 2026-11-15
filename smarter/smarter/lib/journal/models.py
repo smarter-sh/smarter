@@ -11,6 +11,7 @@ large and repeated parts are :class:`SAMJournalBlob` rows that every entry share
 :mod:`smarter.lib.journal.storage`.
 """
 
+from datetime import timedelta
 from typing import Optional, Union
 
 from django.conf import settings
@@ -19,17 +20,37 @@ from django.utils import timezone
 from pydantic import JsonValue
 
 from smarter.common.utils import hash_factory
+from smarter.lib import logging
 
 from .enum import SmarterJournalCliCommands, SmarterJournalThings
 from .storage import (
+    BlobReference,
     JournalDocumentDecoder,
     JournalDocumentEncoder,
+    blob_references,
+    node_references,
     pack,
     unpack,
 )
 
+logger = logging.getSmarterLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
+
 DOCUMENT_FIELDS = ("request_document", "response_document")
 """The columns of :class:`SAMJournal` that hold its documents: a query that lists entries defers them."""
+
+BLOB_TOUCH_INTERVAL = timedelta(days=1)
+"""A reused blob whose ``last_used_at`` is older than this is touched by :meth:`SAMJournalBlobManager.save_blobs`."""
+
+BLOB_PRUNE_GRACE = timedelta(days=7)
+"""An unreferenced blob is pruned only if it was last used longer ago than this.
+
+It must be longer than :data:`BLOB_TOUCH_INTERVAL`, so that a blob that a writer is reusing is never
+pruned.
+"""
+
+PRUNE_BATCH_SIZE = 1000
+"""The number of blobs that :meth:`SAMJournalBlobManager.prune` reads, or deletes, per query."""
 
 
 class SAMJournalManager(models.Manager["SAMJournal"]):
@@ -59,10 +80,14 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
 
     def save_blobs(self, blobs: dict[str, bytes]) -> int:
         """
-        Save the blobs that the database doesn't have yet.
+        Save the blobs that the database doesn't have yet, and touch the stale ones that it has.
 
         Blobs are content addressed, so a blob that exists already has the same bytes. Another writer
         may save the same blob at the same time: the conflict is ignored.
+
+        A reused blob whose ``last_used_at`` is older than :data:`BLOB_TOUCH_INTERVAL` is touched first,
+        so that :meth:`prune` can't delete it before the entry that reuses it is saved. A blob that
+        :meth:`prune` deleted before it was touched is not found, and is saved again.
 
         :param blobs: Each blob's compressed bytes, by digest, from
             :attr:`smarter.lib.journal.storage.JournalDocumentEncoder.blobs`.
@@ -71,6 +96,9 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
         if not blobs:
             return 0
         digests = list(blobs.keys())
+        now = timezone.now()
+        stale_before = now - BLOB_TOUCH_INTERVAL
+        self.filter(digest__in=digests, last_used_at__lt=stale_before).update(last_used_at=now)
         existing_digests = self.filter(digest__in=digests).values_list("digest", flat=True)
         existing = set(existing_digests)
         new_blobs = []
@@ -96,19 +124,128 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
             raise KeyError(digest) from e
         return bytes(blob.data)
 
+    def reachable(self) -> set[str]:
+        """
+        Return the digests of every blob that a journal entry references, directly or through other blobs.
+
+        Every entry's skeletons are read, and every blob that they reach, once: the whole journal. It
+        is meant to run rarely, e.g. weekly, from :meth:`prune`.
+
+        :returns: The digests.
+        """
+        visited: set[BlobReference] = set()
+        reachable: set[str] = set()
+        pending: list[BlobReference] = []
+        # pages by key, not .iterator(): MySQL's driver would buffer every document at once.
+        last_key = ""
+        while True:
+            entries = SAMJournal.objects.filter(key__gt=last_key).order_by("key")
+            page = list(entries.values_list("key", *DOCUMENT_FIELDS)[:PRUNE_BATCH_SIZE])
+            if not page:
+                break
+            for key, request_document, response_document in page:
+                last_key = key
+                for stored in (request_document, response_document):
+                    if stored:
+                        skeleton = unpack(stored)
+                        pending.extend(blob_references(skeleton))
+            self.mark(pending, visited, reachable)
+        return reachable
+
+    def mark(self, pending: list[BlobReference], visited: set[BlobReference], reachable: set[str]) -> None:
+        """
+        Mark the pending blobs reachable, and every blob that they reference, reading them in batches.
+
+        A blob is visited once as a plain blob and once as a chain's node, because the two read its
+        value differently.
+
+        :param pending: The blobs to mark, which this empties.
+        :param visited: The blobs already marked, which this extends.
+        :param reachable: The digests of the blobs already marked, which this extends.
+        """
+        prefix = f"{logger_prefix}.{self.__class__.__name__}.mark()"
+        while pending:
+            batch: list[BlobReference] = []
+            while pending and len(batch) < PRUNE_BATCH_SIZE:
+                reference = pending.pop()
+                if reference in visited:
+                    continue
+                visited.add(reference)
+                reachable.add(reference[0])
+                batch.append(reference)
+            digests = [digest for digest, _ in batch]
+            loaded = dict(self.filter(digest__in=digests).values_list("digest", "data"))
+            for digest, is_node in batch:
+                data = loaded.get(digest)
+                if data is None:
+                    logger.error("%s an entry references the missing journal blob %s", prefix, digest)
+                    continue
+                value = unpack(data)
+                if is_node:
+                    pending.extend(node_references(value))
+                else:
+                    pending.extend(blob_references(value))
+
+    def prune(self, grace: timedelta = BLOB_PRUNE_GRACE, dry_run: bool = False) -> int:
+        """
+        Delete the blobs that no journal entry references, and that weren't used within ``grace``.
+
+        The journal's entries are deleted only when their user is, or by hand, so there is little to
+        prune. Mark and sweep suits that: nothing is counted on each write. A writer may reuse an
+        unreferenced blob while this runs, so the delete itself requires ``last_used_at`` to be older
+        than ``grace``, which a reused blob isn't (see :meth:`save_blobs`).
+
+        :param grace: How long an unreferenced blob is kept after its last use.
+        :param dry_run: If True, count the blobs that would be deleted, and delete none.
+        :returns: The number of blobs deleted, or that would be.
+        :raises ValueError: If ``grace`` isn't longer than :data:`BLOB_TOUCH_INTERVAL`.
+        """
+        prefix = f"{logger_prefix}.{self.__class__.__name__}.prune()"
+        if grace <= BLOB_TOUCH_INTERVAL:
+            raise ValueError(f"grace must be longer than {BLOB_TOUCH_INTERVAL}, which is {grace}.")
+        cutoff = timezone.now() - grace
+        reachable = self.reachable()
+        unreferenced = []
+        last_digest = ""
+        while True:
+            old_blobs = self.filter(last_used_at__lt=cutoff, digest__gt=last_digest).order_by("digest")
+            page = list(old_blobs.values_list("digest", flat=True)[:PRUNE_BATCH_SIZE])
+            if not page:
+                break
+            last_digest = page[-1]
+            for digest in page:
+                if digest not in reachable:
+                    unreferenced.append(digest)
+        if dry_run:
+            logger.info("%s %s unreferenced journal blobs would be deleted", prefix, len(unreferenced))
+            return len(unreferenced)
+        deleted = 0
+        for start in range(0, len(unreferenced), PRUNE_BATCH_SIZE):
+            batch = unreferenced[start : start + PRUNE_BATCH_SIZE]
+            count, _ = self.filter(digest__in=batch, last_used_at__lt=cutoff).delete()
+            deleted += count
+        logger.info("%s deleted %s unreferenced journal blobs, of %s reachable", prefix, deleted, len(reachable))
+        return deleted
+
 
 class SAMJournalBlob(models.Model):
     """
     A part of one or more journal entries' documents: a large dict or string, or one item of a long list.
 
     Its primary key is the SHA-256 of its JSON, so each part is stored once, however many entries
-    contain it. A blob is never changed, and is not deleted with the entries that reference it.
+    contain it. Its data never changes. It is not deleted with the entries that reference it, but by
+    :meth:`SAMJournalBlobManager.prune`, once no entry references it.
 
     See :mod:`smarter.lib.journal.storage`.
     """
 
     digest = models.CharField(primary_key=True, max_length=64, editable=False)
     data = models.BinaryField(help_text="The blob's JSON, compressed with zlib.")
+    last_used_at = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        help_text="When an entry last saved or reused the blob, to within a day. See SAMJournalBlobManager.prune.",
+    )
 
     objects = SAMJournalBlobManager()
 

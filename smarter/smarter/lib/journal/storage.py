@@ -21,9 +21,12 @@ A document is encoded, by :class:`JournalDocumentEncoder`, into a small skeleton
   first k nodes. A turn of a conversation stores only its new messages, and a branch of a conversation,
   e.g. a message edited and sent again, shares the messages before it.
 
-Blobs are never updated nor deleted, and two writers that store the same blob store the same bytes,
-so entries may be written in any order, by any number of Celery workers, with no locking. The skeleton
-and every blob are compressed with zlib.
+A blob's bytes never change, and two writers that store the same blob store the same bytes, so
+entries may be written in any order, by any number of Celery workers, with no locking. The skeleton
+and every blob are compressed with zlib. Blobs that no entry references any more, e.g. after a user
+and their entries were deleted, are deleted by
+:meth:`smarter.lib.journal.models.SAMJournalBlobManager.prune`, with :func:`blob_references` and
+:func:`node_references`.
 
 A dict of the document whose keys begin with :data:`RESERVED_PREFIX` is wrapped in
 ``{"$journal:escape": ...}``, so that no document can be mistaken for a reference.
@@ -140,6 +143,61 @@ def is_reference(value: JsonValue, key: str, size: int) -> bool:
     if len(value) != size:
         return False
     return key in value
+
+
+BlobReference = tuple[str, bool]
+"""A blob that a value references: its digest, and whether it is a chain's node."""
+
+
+def blob_references(value: JsonValue) -> list[BlobReference]:
+    """
+    Return the blobs that an encoded value references directly: its references and its chains' last nodes.
+
+    The blobs themselves may reference more blobs. See :func:`node_references`.
+
+    :param value: A skeleton, or the value of a blob that isn't a chain's node.
+    :returns: The referenced blobs.
+    """
+    found: list[BlobReference] = []
+    pending: list[JsonValue] = [value]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, list):
+            pending.extend(item)
+            continue
+        if not isinstance(item, dict):
+            continue
+        if is_reference(item, ESCAPE_KEY, 1):
+            escaped = item[ESCAPE_KEY]
+            if isinstance(escaped, dict):
+                pending.extend(escaped.values())
+            continue
+        if is_reference(item, REF_KEY, 1):
+            found.append((str(item[REF_KEY]), False))
+            continue
+        if is_reference(item, LIST_KEY, 2) and LENGTH_KEY in item:
+            found.append((str(item[LIST_KEY]), True))
+            continue
+        pending.extend(item.values())
+    return found
+
+
+def node_references(node: JsonValue) -> list[BlobReference]:
+    """
+    Return the blobs that a chain's node references: its parent, and its item's blobs.
+
+    :param node: The node's value.
+    :returns: The referenced blobs, none if the value isn't a node.
+    """
+    if not isinstance(node, dict):
+        return []
+    found: list[BlobReference] = []
+    parent = node.get(PARENT_KEY)
+    if parent is not None:
+        found.append((str(parent), True))
+    item_references = blob_references(node.get(VALUE_KEY))
+    found.extend(item_references)
+    return found
 
 
 class JournalDocumentEncoder:
@@ -327,6 +385,9 @@ class JournalDocumentDecoder:
 __all__ = [
     "BLOB_MIN_BYTES",
     "BlobReader",
+    "BlobReference",
+    "blob_references",
+    "node_references",
     "JournalDocumentDecoder",
     "JournalDocumentEncoder",
     "JournalStorageError",
