@@ -16,7 +16,7 @@ as a shared vocabulary. :doc:`ADR 004 </adr/004-12-factor>` makes
 has a concrete home: a `settings module per environment
 <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__, configuration
 validated by a `Pydantic Settings class
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__, one
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__, one
 `multi-stage Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__ for every
 process type, sessions kept in Redis, and liveness and readiness probes in the
 `Helm chart <https://github.com/smarter-sh/smarter/tree/main/helm/charts/smarter/templates>`__.

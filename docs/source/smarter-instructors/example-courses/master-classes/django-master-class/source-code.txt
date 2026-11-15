@@ -17,7 +17,7 @@ Configuration and Startup
        class, and only then copied into Django's settings. One settings module per environment
        inherits from ``base.py``. :doc:`ADR 004 </adr/004-12-factor>`,
        :doc:`ADR 007 </adr/007-settings>`.
-     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+     - `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__,
        `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
        `common/conf/defaults.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/defaults.py>`__,
        `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,

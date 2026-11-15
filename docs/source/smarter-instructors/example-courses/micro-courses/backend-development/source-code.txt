@@ -105,7 +105,7 @@ Beyond the Request
    * - Settings
      - Every setting is read from the environment and validated by a Pydantic ``Settings``
        class. :doc:`ADR 007 </adr/007-settings>`.
-     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+     - `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__,
        `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__
    * - Management commands
      - A ``SmarterCommand`` base class, and commands that create accounts, users and API keys,

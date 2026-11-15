@@ -1,7 +1,7 @@
 Asynchronous Tasks
 ==================
 
-.. automodule:: smarter.apps.provider.tasks
+.. automodule:: smarter.apps.prompt.tasks
     :members:
     :undoc-members:
     :show-inheritance:

@@ -5,9 +5,18 @@ Celery tasks for prompt app.
 These tasks are i/o intensive operations for creating prompt and plugin history records with
 Celery workers in order to avoid blocking the main app thread. This is advance work to lay groundwork for
 future high-traffic scenarios.
+
+- :func:`purge_prompt_history` deletes the prompt history (PromptHistory, PromptToolCall,
+  PromptPluginUsage, and idle Prompts) older than ``smarter_settings.prompt_history_max_age``
+  days. Celery Beat runs it daily.
 """
 
+import datetime
+from typing import Optional
+
 from django.db import DataError
+from django.db.models import QuerySet
+from django.utils import timezone
 
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import PluginMeta
@@ -37,6 +46,9 @@ module_prefix = "smarter.apps.prompt.tasks."
 
 # Errors that fail the same way on every retry, e.g. a value too long for its column.
 NOT_RETRYABLE = (DataError,)
+
+PROMPT_HISTORY_PURGE_BATCH_SIZE = 1000
+"""The most rows that :func:`purge_prompt_history` deletes from a table in one statement."""
 
 
 @app.task(
@@ -185,3 +197,74 @@ def create_prompt_plugin_usage(*args, **kwargs):
         plugin=plugin_meta,
         input_text=input_text,
     )
+
+
+def delete_in_batches(queryset: QuerySet) -> int:
+    """
+    Delete the rows of ``queryset`` in batches of :data:`PROMPT_HISTORY_PURGE_BATCH_SIZE`.
+
+    A large table isn't locked in one long delete, e.g. on the first purge of a platform that
+    has kept its prompt history for years.
+
+    :param queryset: The rows to delete.
+    :returns: The number of rows deleted, including those deleted by a cascade.
+    :rtype: int
+    """
+    model = queryset.model
+    ordered = queryset.order_by("pk")
+    ids = ordered.values_list("pk", flat=True)
+    deleted = 0
+    while True:
+        batch = list(ids[:PROMPT_HISTORY_PURGE_BATCH_SIZE])
+        if not batch:
+            break
+        rows = model.objects.filter(pk__in=batch)
+        batch_deleted, _ = rows.delete()
+        deleted += batch_deleted
+    return deleted
+
+
+@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+def purge_prompt_history(days: Optional[int] = None) -> dict[str, int]:
+    """
+    Delete the prompt history older than ``days``.
+
+    Celery Beat runs it daily. It deletes the PromptHistory, PromptToolCall and
+    PromptPluginUsage rows older than ``days``, then the Prompts (the chat sessions) that
+    are older than ``days`` and have none of these rows left. A session that is still in use
+    is kept, with its recent rows. A Prompt is deleted with :meth:`Prompt.delete`, which
+    clears its cached lookup, and its OrchestrationSteps are deleted with it.
+
+    :param days: The number of days of prompt history to keep. Defaults to
+        ``smarter_settings.prompt_history_max_age``.
+    :returns: The number of rows deleted, by model name.
+    :rtype: dict[str, int]
+    """
+    if days is None:
+        days = smarter_settings.prompt_history_max_age
+    cutoff = timezone.now() - datetime.timedelta(days=days)
+
+    deleted: dict[str, int] = {}
+    for model in (PromptHistory, PromptToolCall, PromptPluginUsage):
+        expired_rows = model.objects.filter(created_at__lt=cutoff)
+        deleted[model.__name__] = delete_in_batches(expired_rows)
+
+    idle_prompts = Prompt.objects.filter(
+        created_at__lt=cutoff,
+        prompthistory__isnull=True,
+        prompttoolcall__isnull=True,
+        promptpluginusage__isnull=True,
+    )
+    deleted_prompts = 0
+    for prompt in idle_prompts.iterator():
+        prompt.delete()
+        deleted_prompts += 1
+    deleted[Prompt.__name__] = deleted_prompts
+
+    logger.info(
+        "%s deleted the prompt history older than %s days: %s",
+        SmarterFormattedText.text(module_prefix + "purge_prompt_history()"),
+        days,
+        deleted,
+    )
+    return deleted

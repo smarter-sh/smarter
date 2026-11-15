@@ -401,6 +401,8 @@ class PromptHelper(SmarterRequestMixin):
                 django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
                 # The User-Agent header has no length limit, but its column does: a longer value
                 # would make the database raise DataError, and the request fail with a 500.
+
+                # pylint: disable=W0212
                 user_agent_field = Prompt._meta.get_field("user_agent")
                 user_agent_max_length = None
                 if isinstance(user_agent_field, models.CharField):
@@ -409,7 +411,8 @@ class PromptHelper(SmarterRequestMixin):
                 if not user_agent:
                     user_agent = "user_agent"
                 user_agent = user_agent[:user_agent_max_length]
-                prompt = Prompt.objects.create(
+                # annotated, so that type checkers without the Django plugin (Pylance) know it's not None.
+                new_prompt: Prompt = Prompt.objects.create(
                     session_key=self.session_key,
                     user_profile=self.user_profile,
                     llmclient=self.llmclient,
@@ -417,6 +420,7 @@ class PromptHelper(SmarterRequestMixin):
                     user_agent=user_agent,
                     url=django_friendly_url,
                 )
+                prompt = new_prompt
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
 

@@ -165,6 +165,7 @@ class SettingsDefaults:
     LISTVIEW_CACHE_EXPIRATION: int = int(get_env("LISTVIEW_CACHE_EXPIRATION", 60 * 60))  # 1 hour
     LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
     MAX_TOOL_ROUNDS: int = int(get_env("MAX_TOOL_ROUNDS", 5))
+    PROMPT_HISTORY_MAX_AGE: int = int(get_env("PROMPT_HISTORY_MAX_AGE", 90))  # days
     PROMPT_RESPONSE_CACHE_EXPIRATION: int = int(get_env("PROMPT_RESPONSE_CACHE_EXPIRATION", 60 * 60))  # 1 hour
     LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)
     LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
