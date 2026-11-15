@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 400" width="1080" height="400" role="img" aria-label="Exhibit: the four orchestration strategies that Smarter runs">
+<title>Exhibit: the four orchestration strategies that Smarter runs</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
+<rect x="0" y="0" width="1080" height="400" fill="#FFFFFF"/>
+<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">The four orchestration strategies that Smarter runs</text>
+<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">A summarizer, when there is one, answers last after any of them. Voting and debate are declared, but not yet run.</text>
+<rect x="24" y="76" width="248" height="290" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="38" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Sequential</text>
+<text x="38" y="118" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">each sees the answers before it</text>
+<rect x="288" y="76" width="248" height="290" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="302" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Parallel</text>
+<text x="302" y="118" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">each sees only the objective</text>
+<rect x="552" y="76" width="248" height="290" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="566" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Router</text>
+<text x="566" y="118" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">a router picks one assistant</text>
+<rect x="816" y="76" width="248" height="290" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="830" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F5F8B" text-anchor="start">Supervisor</text>
+<text x="830" y="118" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">a planner asks, one at a time</text>
+<rect x="111" y="140" width="74" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="148.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">A</text>
+<line x1="148" y1="170" x2="148" y2="194" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="111" y="196" width="74" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="148.0" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">B</text>
+<line x1="148" y1="226" x2="148" y2="250" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="111" y="252" width="74" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="148.0" y="272" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">C</text>
+<line x1="148" y1="282" x2="148" y2="300" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="101" y="302" width="94" height="30" rx="15" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.2"/>
+<text x="148.0" y="322" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">summary</text>
+<rect x="375" y="140" width="74" height="30" rx="15" fill="#FBEFFF" stroke="#6639BA" stroke-width="1.2"/>
+<text x="412.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">objective</text>
+<rect x="308" y="222" width="60" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="338.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">A</text>
+<line x1="412" y1="170" x2="338" y2="220" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<line x1="338" y1="252" x2="412" y2="300" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="382" y="222" width="60" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="412.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">B</text>
+<line x1="412" y1="170" x2="412" y2="220" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<line x1="412" y1="252" x2="412" y2="300" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="456" y="222" width="60" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="486.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">C</text>
+<line x1="412" y1="170" x2="486" y2="220" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<line x1="486" y1="252" x2="412" y2="300" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="365" y="302" width="94" height="30" rx="15" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.2"/>
+<text x="412.0" y="322" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">summary</text>
+<rect x="639" y="140" width="74" height="30" rx="15" fill="#FBEFFF" stroke="#6639BA" stroke-width="1.2"/>
+<text x="676.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">router</text>
+<rect x="572" y="222" width="60" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="602.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">A</text>
+<rect x="646" y="222" width="60" height="30" rx="15" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.2"/>
+<text x="676.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">B</text>
+<rect x="720" y="222" width="60" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="750.0" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">C</text>
+<line x1="676" y1="170" x2="676" y2="220" stroke="#1A7F37" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+<path d="M662,170 L607,218" fill="none" stroke="#57606A" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M690,170 L745,218" fill="none" stroke="#57606A" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="676" y="290" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="normal" fill="#57606A" text-anchor="middle">{"harness": "B"}</text>
+<rect x="903" y="140" width="74" height="30" rx="15" fill="#FBEFFF" stroke="#6639BA" stroke-width="1.2"/>
+<text x="940.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">planner</text>
+<rect x="836" y="236" width="74" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="873.0" y="256" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">A</text>
+<rect x="970" y="236" width="74" height="30" rx="15" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="1007.0" y="256" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F2328" text-anchor="middle">B</text>
+<path d="M916,170 C886,190 876,210 873,234" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M856,236 C856,200 886,180 903,160" fill="none" stroke="#57606A" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<path d="M964,170 C994,190 1006,210 1007,234" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="940" y="300" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="middle">{"next": "A", "message": ...}</text>
+<text x="940" y="318" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="middle">{"done": true, "result": ...}</text>
+<text x="24" y="386" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: ADR-037, items 7 and 8; smarter.apps.orchestrator.runtime, STRATEGY_RUNNERS.</text>
+</svg>

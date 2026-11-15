@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 500" width="1060" height="500" role="img" aria-label="Exhibit: what each department's database user may read">
+<title>Exhibit: what each department's database user may read</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
+<rect x="0" y="0" width="1060" height="500" fill="#FFFFFF"/>
+<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">What each department's database user may read</text>
+<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">Table-level grants, generated with the data and checked on every load: only HR's user reads compensation.</text>
+<text x="286.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Catalogue</text>
+<text x="398.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Directory</text>
+<text x="510.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">HR records</text>
+<text x="622.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Admissions</text>
+<text x="734.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Finance</text>
+<text x="846.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Production</text>
+<text x="958.0" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="middle">Board views</text>
+<text x="24" y="137" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_catalog</text>
+<rect x="234" y="116" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="286.0" y="137" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="346" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="458" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="570" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="682" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="794" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="906" y="116" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="24" y="181" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_hr</text>
+<rect x="234" y="160" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="346" y="160" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="398.0" y="181" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="458" y="160" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="510.0" y="181" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="570" y="160" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="682" y="160" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="794" y="160" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="906" y="160" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="24" y="225" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_admissions</text>
+<rect x="234" y="204" width="104" height="32" rx="5" fill="#8CD49A" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="286.0" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F2328" text-anchor="middle">some</text>
+<rect x="346" y="204" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="458" y="204" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="570" y="204" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="622.0" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="682" y="204" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="794" y="204" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="906" y="204" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="24" y="269" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_accounting</text>
+<rect x="234" y="248" width="104" height="32" rx="5" fill="#8CD49A" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="286.0" y="269" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F2328" text-anchor="middle">some</text>
+<rect x="346" y="248" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="398.0" y="269" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="458" y="248" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="570" y="248" width="104" height="32" rx="5" fill="#8CD49A" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="622.0" y="269" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F2328" text-anchor="middle">some</text>
+<rect x="682" y="248" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="734.0" y="269" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="794" y="248" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="906" y="248" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="24" y="313" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_content</text>
+<rect x="234" y="292" width="104" height="32" rx="5" fill="#8CD49A" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="286.0" y="313" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F2328" text-anchor="middle">some</text>
+<rect x="346" y="292" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="398.0" y="313" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="458" y="292" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="570" y="292" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="682" y="292" width="104" height="32" rx="5" fill="#8CD49A" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="734.0" y="313" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F2328" text-anchor="middle">some</text>
+<rect x="794" y="292" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="846.0" y="313" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="906" y="292" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="24" y="357" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_executive</text>
+<rect x="234" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="346" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="458" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="570" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="682" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="794" y="336" width="104" height="32" rx="5" fill="#F6F8FA" stroke="#FFFFFF" stroke-width="1.2"/>
+<rect x="906" y="336" width="104" height="32" rx="5" fill="#1A7F37" stroke="#FFFFFF" stroke-width="1.2"/>
+<text x="958.0" y="357" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">all</text>
+<rect x="455" y="108" width="110" height="268" rx="8" fill="none" stroke="#CF222E" stroke-width="2"/>
+<text x="510.0" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#CF222E" text-anchor="middle">salaries: HR only</text>
+<text x="24" y="444" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Catalogue: courses, cohorts, modules, lessons. Directory: departments, employees. HR records: compensation, time off, requisitions.</text>
+<text x="24" y="461" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Admissions: students, enrollments, payments, contracts. Finance: ledger, budgets, invoices. Production: assets, tasks. Board views: totals only.</text>
+<text x="24" y="486" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: smarter-sh/stackademy, GRANTS in scripts/generate_backoffice.py.</text>
+</svg>

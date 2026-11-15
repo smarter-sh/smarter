@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 540" width="1080" height="540" role="img" aria-label="Exhibit: Stackademy's accounts, people and assistants">
+<title>Exhibit: Stackademy's accounts, people and assistants</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
+<rect x="0" y="0" width="1080" height="540" fill="#FFFFFF"/>
+<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">Stackademy's accounts, people and assistants</text>
+<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">Each department is an account under the company. Administrators manage one account; the Head of IT administers every one.</text>
+<rect x="400" y="76" width="280" height="52" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M400,106 v-22 a8,8 0 0 1 8,-8 h264 a8,8 0 0 1 8,8 v22 z" fill="#F6F8FA"/>
+<line x1="400" y1="106" x2="680" y2="106" stroke="#C9D1D9" stroke-width="1"/>
+<text x="412" y="96" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#57606A" text-anchor="start">Smarter platform (root)</text>
+<text x="412" y="118" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">3141-5926-5359 · shares with every account</text>
+<line x1="540" y1="128" x2="540" y2="156" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="330" y="158" width="420" height="100" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M330,188 v-22 a8,8 0 0 1 8,-8 h404 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="330" y1="188" x2="750" y2="188" stroke="#C9D1D9" stroke-width="1"/>
+<text x="342" y="178" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Stackademy Corp · 2718-2818-0000</text>
+<text x="342" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Vera Jaramillo, CEO · administrator; member of every department</text>
+<text x="342" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Odette Hartigan, CFO · member</text>
+<text x="342" y="242" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Atlas, the Board Pack · quarterly board pack orchestration</text>
+<rect x="612" y="162" width="80" height="18" rx="9" fill="#57606A" stroke="#57606A" stroke-width="1"/>
+<text x="652.0" y="175" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">members only</text>
+<path d="M540,258 V300 H120 V326" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="24" y="328" width="192" height="176" rx="8" fill="#FBEFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M24,358 v-22 a8,8 0 0 1 8,-8 h176 a8,8 0 0 1 8,8 v22 z" fill="#FBEFFF"/>
+<line x1="24" y1="358" x2="216" y2="358" stroke="#C9D1D9" stroke-width="1"/>
+<text x="36" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Stackademy IT</text>
+<text x="36" y="376" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">2718-2818-0001</text>
+<text x="36" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Tomas Hartigan</text>
+<text x="36" y="413" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Head of IT · admin</text>
+<rect x="36" y="446" width="165" height="18" rx="9" fill="#6639BA" stroke="#6639BA" stroke-width="1"/>
+<text x="118.5" y="459" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">shares with all of Stackademy</text>
+<text x="36" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Shares: PII guardrail</text>
+<path d="M540,258 V300 H330 V326" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="234" y="328" width="192" height="176" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M234,358 v-22 a8,8 0 0 1 8,-8 h176 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="234" y1="358" x2="426" y2="358" stroke="#C9D1D9" stroke-width="1"/>
+<text x="246" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Stackademy HR</text>
+<text x="246" y="376" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">2718-2818-0002</text>
+<text x="246" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Avery Ivanova</text>
+<text x="246" y="413" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">HR Director · admin</text>
+<text x="246" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Quinn Sandoval · member</text>
+<rect x="246" y="446" width="77" height="18" rx="9" fill="#57606A" stroke="#57606A" stroke-width="1"/>
+<text x="284.5" y="459" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">members only</text>
+<text x="246" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Assistant: Harper</text>
+<path d="M540,258 V300 H540 V326" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="444" y="328" width="192" height="176" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M444,358 v-22 a8,8 0 0 1 8,-8 h176 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="444" y1="358" x2="636" y2="358" stroke="#C9D1D9" stroke-width="1"/>
+<text x="456" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Stackademy Accounting</text>
+<text x="456" y="376" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">2718-2818-0003</text>
+<text x="456" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Odette Hartigan</text>
+<text x="456" y="413" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">CFO · admin</text>
+<text x="456" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Kofi Sandoval · member</text>
+<rect x="456" y="446" width="77" height="18" rx="9" fill="#57606A" stroke="#57606A" stroke-width="1"/>
+<text x="494.5" y="459" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">members only</text>
+<text x="456" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Assistant: Ledger</text>
+<path d="M540,258 V300 H750 V326" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="654" y="328" width="192" height="176" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M654,358 v-22 a8,8 0 0 1 8,-8 h176 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="654" y1="358" x2="846" y2="358" stroke="#C9D1D9" stroke-width="1"/>
+<text x="666" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Course Content</text>
+<text x="666" y="376" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">2718-2818-0004</text>
+<text x="666" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Odette Eriksen</text>
+<text x="666" y="413" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Head of Content · admin</text>
+<text x="666" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Tomas Underhill · member</text>
+<rect x="666" y="446" width="77" height="18" rx="9" fill="#57606A" stroke="#57606A" stroke-width="1"/>
+<text x="704.5" y="459" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">members only</text>
+<text x="666" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Assistant: Reel</text>
+<path d="M540,258 V300 H960 V326" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="864" y="328" width="192" height="176" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M864,358 v-22 a8,8 0 0 1 8,-8 h176 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="864" y1="358" x2="1056" y2="358" stroke="#C9D1D9" stroke-width="1"/>
+<text x="876" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Admissions</text>
+<text x="876" y="376" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">2718-2818-0005</text>
+<text x="876" y="396" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Dmitri Dumont</text>
+<text x="876" y="413" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Director · admin</text>
+<text x="876" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">Wren Dumont · member</text>
+<rect x="876" y="446" width="77" height="18" rx="9" fill="#57606A" stroke="#57606A" stroke-width="1"/>
+<text x="914.5" y="459" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">members only</text>
+<text x="876" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Assistant: Ada</text>
+<text x="24" y="526" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: smarter-sh/stackademy, org/accounts/ and org/users/. All people are fictional.</text>
+</svg>

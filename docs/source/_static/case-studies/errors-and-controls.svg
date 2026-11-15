@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 520" width="1080" height="520" role="img" aria-label="Exhibit: four errors, and the control that now prevents each">
+<title>Exhibit: four errors, and the control that now prevents each</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
+<rect x="0" y="0" width="1080" height="520" fill="#FFFFFF"/>
+<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">Four errors, and the control that now prevents each</text>
+<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">Each was found by comparing an assistant's figure with the database, before any reached a real reader.</text>
+<text x="32" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="start">Kind of error</text>
+<text x="250" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="start">What happened</text>
+<text x="588" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="start">Effect</text>
+<text x="826" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#57606A" text-anchor="start">Control</text>
+<rect x="24" y="104" width="1032" height="88" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="32" y="134" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Arithmetic by the model</text>
+<text x="250" y="130" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Atlas added Q2's expense accounts itself</text>
+<text x="588" y="130" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">$1,033,137.84 for</text>
+<text x="588" y="147" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">$1,029,137.84 · off by $4,000</text>
+<line x1="800" y1="148" x2="814" y2="148" stroke="#1A7F37" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+<text x="826" y="130" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">The database totals every</text>
+<text x="826" y="147" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">figure; the prompt forbids</text>
+<text x="826" y="164" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">adding up</text>
+<rect x="24" y="202" width="1032" height="88" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="32" y="232" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">A truncated result</text>
+<text x="250" y="228" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">The budget tool returned at most 25 rows, so</text>
+<text x="250" y="245" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">a quarter was cut short</text>
+<text x="588" y="228" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">Admissions over budget by</text>
+<text x="588" y="245" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">$20,548.92, not $21,659.57</text>
+<line x1="800" y1="246" x2="814" y2="246" stroke="#1A7F37" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+<text x="826" y="228" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">Totals per department computed</text>
+<text x="826" y="245" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">in SQL, one row each</text>
+<rect x="24" y="300" width="1032" height="88" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="32" y="330" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">A period boundary</text>
+<text x="250" y="326" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Views grouped by quarter without the year:</text>
+<text x="250" y="343" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Dec. 2024 prepaid tuition counted as Q4 2025</text>
+<text x="588" y="326" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">Q4 revenue $1,086,086.17, not</text>
+<text x="588" y="343" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">$1,081,466.17 · +$4,620</text>
+<line x1="800" y1="344" x2="814" y2="344" stroke="#1A7F37" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+<text x="826" y="326" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">Fiscal-year filter, a</text>
+<text x="826" y="343" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">reconciliation check on load, a</text>
+<text x="826" y="360" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">regression test</text>
+<rect x="24" y="398" width="1032" height="88" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="32" y="428" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">A confident correction</text>
+<text x="250" y="424" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">The summarizer trusted the flawed view over</text>
+<text x="250" y="441" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">the department's right figure</text>
+<text x="588" y="424" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">Every Q4 board pack overstated</text>
+<text x="588" y="441" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#CF222E" text-anchor="start">net income by $4,620</text>
+<line x1="800" y1="442" x2="814" y2="442" stroke="#1A7F37" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+<text x="826" y="424" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">One set of totals, from one</text>
+<text x="826" y="441" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">source, reconciled to the</text>
+<text x="826" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1A7F37" text-anchor="start">ledger</text>
+<text x="24" y="506" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: the Stackademy back office's verification, November 2026; smarter-sh/stackademy commit history.</text>
+</svg>

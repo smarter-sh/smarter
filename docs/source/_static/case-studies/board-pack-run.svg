@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 540" width="1080" height="540" role="img" aria-label="Exhibit: a run of the quarterly board pack">
+<title>Exhibit: a run of the quarterly board pack</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
+<rect x="0" y="0" width="1080" height="540" fill="#FFFFFF"/>
+<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">A run of the quarterly board pack</text>
+<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">Four departments answer independently, each from its own records and on its own budget; Atlas writes the page.</text>
+<rect x="24" y="196" width="170" height="100" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M24,226 v-22 a8,8 0 0 1 8,-8 h154 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
+<line x1="24" y1="226" x2="194" y2="226" stroke="#C9D1D9" stroke-width="1"/>
+<text x="36" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Vera Jaramillo</text>
+<text x="36" y="246" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">CEO, starts a run:</text>
+<text x="36" y="263" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Prepare the board pack</text>
+<text x="36" y="280" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">for Q4 2025.</text>
+<line x1="196" y1="246" x2="226" y2="246" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="211.0" y="240.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="middle">POST</text>
+<rect x="228" y="176" width="200" height="140" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M228,206 v-22 a8,8 0 0 1 8,-8 h184 a8,8 0 0 1 8,8 v22 z" fill="#FBEFFF"/>
+<line x1="228" y1="206" x2="428" y2="206" stroke="#C9D1D9" stroke-width="1"/>
+<text x="240" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Orchestrator</text>
+<text x="240" y="226" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">stackademy_quarterly_</text>
+<text x="240" y="243" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">board_pack</text>
+<text x="240" y="260" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">strategy: parallel</text>
+<text x="240" y="277" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Stackademy Corp</text>
+<text x="240" y="334" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#CF222E" text-anchor="start">checks: the runner may use</text>
+<text x="240" y="349" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#CF222E" text-anchor="start">every harness, or 403</text>
+<path d="M430,246 C470,246 470,122 506,122" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="508" y="82" width="300" height="82" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="522" y="106" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#1F5F8B" text-anchor="start">Harper · Stackademy HR</text>
+<text x="522" y="126" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">reads as stackademy_hr</text>
+<text x="522" y="146" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">headcount, hiring</text>
+<path d="M810,122 C850,122 850,246 878,246" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M430,246 C470,246 470,220 506,220" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="508" y="180" width="300" height="82" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="522" y="204" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#1F5F8B" text-anchor="start">Ledger · Stackademy Accounting</text>
+<text x="522" y="224" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">reads as stackademy_accounting</text>
+<text x="522" y="244" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">results, budgets, invoices</text>
+<path d="M810,220 C850,220 850,246 878,246" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M430,246 C470,246 470,318 506,318" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="508" y="278" width="300" height="82" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="522" y="302" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#1F5F8B" text-anchor="start">Reel · Course Content</text>
+<text x="522" y="322" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">reads as stackademy_content</text>
+<text x="522" y="342" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">courses in production</text>
+<path d="M810,318 C850,318 850,246 878,246" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M430,246 C470,246 470,416 506,416" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="508" y="376" width="300" height="82" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<text x="522" y="400" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#1F5F8B" text-anchor="start">Ada · Admissions</text>
+<text x="522" y="420" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">reads as stackademy_admissions</text>
+<text x="522" y="440" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">enrollments, contracts</text>
+<path d="M810,416 C850,416 850,246 878,246" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="880" y="176" width="180" height="140" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
+<path d="M880,206 v-22 a8,8 0 0 1 8,-8 h164 a8,8 0 0 1 8,8 v22 z" fill="#DAFBE1"/>
+<line x1="880" y1="206" x2="1060" y2="206" stroke="#C9D1D9" stroke-width="1"/>
+<text x="892" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">Atlas</text>
+<text x="892" y="226" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">summarizer</text>
+<text x="892" y="243" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">Stackademy Corp</text>
+<text x="892" y="260" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">views of totals</text>
+<text x="892" y="277" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">checks the figures</text>
+<line x1="970" y1="318" x2="970" y2="366" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="880" y="368" width="180" height="56" rx="8" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.2"/>
+<text x="970" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1A7F37" text-anchor="middle">The board pack</text>
+<text x="970" y="410" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="middle">one page, about 30 s</text>
+<text x="24" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">Each step is an ordinary prompt of its LLMClient, run as that LLMClient's owner: its tools, guardrail and budget apply.</text>
+<text x="24" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">The CFO, who isn't a member of HR, is refused: an orchestrator is never a way into an account its runner doesn't belong to.</text>
+<text x="24" y="526" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: ADR-037; smarter.apps.orchestrator.runtime; departments/executive/orchestrators/ in smarter-sh/stackademy.</text>
+</svg>
