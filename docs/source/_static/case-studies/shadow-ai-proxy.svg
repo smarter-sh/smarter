@@ -12,46 +12,54 @@
 <rect x="50" y="204" width="4" height="38" rx="2" fill="#F87171"/>
 <text x="78" y="216" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" text-anchor="start"><tspan dx="0" font-weight="700" fill="#F87171">Before</tspan><tspan dx="10" font-weight="400" fill="#FFFFFF">seven projects called three providers directly, with provider keys</tspan></text>
 <text x="78" y="242" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">in scripts, notebooks, a spreadsheet and a CI variable, and one invoice a month, charged to IT.</text>
-<rect x="50" y="300" width="270" height="80" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
-<rect x="64" y="314" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
-<g transform="translate(77,327) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
-<text x="128" y="336" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Month-end commentary</text>
-<text x="128" y="359" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Accounting</text>
-<path d="M320,340 L392,340" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
-<circle cx="320" cy="340" r="5" fill="#FFC50C"/>
-<circle cx="392" cy="340" r="5" fill="#FFC50C"/>
-<rect x="50" y="396" width="270" height="80" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
-<rect x="64" y="410" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
-<g transform="translate(77,423) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
-<text x="128" y="432" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Résumé screener</text>
-<text x="128" y="455" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">HR</text>
-<path d="M320,436 L392,436" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
-<circle cx="320" cy="436" r="5" fill="#FFC50C"/>
-<circle cx="392" cy="436" r="5" fill="#FFC50C"/>
-<rect x="50" y="492" width="270" height="80" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
-<rect x="64" y="506" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
-<g transform="translate(77,519) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
-<text x="128" y="528" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Enrollment follow-up</text>
-<text x="128" y="551" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Admissions</text>
-<path d="M320,532 L392,532" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
-<circle cx="320" cy="532" r="5" fill="#FFC50C"/>
-<circle cx="392" cy="532" r="5" fill="#FFC50C"/>
-<rect x="50" y="588" width="270" height="80" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
-<rect x="64" y="602" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
-<g transform="translate(77,615) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
-<text x="128" y="624" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Lesson reviewer</text>
-<text x="128" y="647" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Course Content</text>
-<path d="M320,628 L392,628" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
-<circle cx="320" cy="628" r="5" fill="#FFC50C"/>
-<circle cx="392" cy="628" r="5" fill="#FFC50C"/>
-<rect x="50" y="684" width="270" height="80" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
-<rect x="64" y="698" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
-<g transform="translate(77,711) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
-<text x="128" y="720" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Helpdesk bot + 2 more</text>
-<text x="128" y="743" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">IT, HR, Admissions</text>
-<path d="M320,724 L392,724" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
-<circle cx="320" cy="724" r="5" fill="#FFC50C"/>
-<circle cx="392" cy="724" r="5" fill="#FFC50C"/>
+<rect x="50" y="300" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="308" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,321) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="330" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Course chatbot</text>
+<text x="128" y="352" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Admissions, the website</text>
+<path d="M320,334 L392,334" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="334" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="334" r="5" fill="#FFC50C"/>
+<rect x="50" y="380" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="388" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,401) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="410" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Month-end commentary</text>
+<text x="128" y="432" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Accounting</text>
+<path d="M320,414 L392,414" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="414" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="414" r="5" fill="#FFC50C"/>
+<rect x="50" y="460" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="468" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,481) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="490" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Résumé screener</text>
+<text x="128" y="512" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">HR</text>
+<path d="M320,494 L392,494" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="494" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="494" r="5" fill="#FFC50C"/>
+<rect x="50" y="540" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="548" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,561) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="570" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Enrollment follow-up</text>
+<text x="128" y="592" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Admissions</text>
+<path d="M320,574 L392,574" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="574" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="574" r="5" fill="#FFC50C"/>
+<rect x="50" y="620" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="628" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,641) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="650" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Lesson reviewer</text>
+<text x="128" y="672" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Course Content</text>
+<path d="M320,654 L392,654" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="654" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="654" r="5" fill="#FFC50C"/>
+<rect x="50" y="700" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="708" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,721) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="730" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Helpdesk bot + 1 more</text>
+<text x="128" y="752" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">IT, Admissions</text>
+<path d="M320,734 L392,734" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="734" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="734" r="5" fill="#FFC50C"/>
 <text x="386" y="276" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#F59E0B" text-anchor="end">Smarter API key</text>
 <rect x="392" y="286" width="476" height="490" rx="22" fill="#4FA3FF" fill-opacity="0.04" stroke="#4FA3FF" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="8 6"/>
 <rect x="414" y="302" width="452" height="24" rx="12" fill="#4FA3FF" fill-opacity="0.16"/>

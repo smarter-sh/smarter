@@ -22,14 +22,15 @@ At a glance
    * - Solution
      - Phase 1: a Smarter **Proxy** for each project, a drop-in replacement for the AI service it called, with a
        Smarter API key of its own, so that every project keeps running and every call goes through Smarter. Phase 2:
-       the projects that sent private data out were rebuilt as LLMClients with **SqlPlugins**, **ApiPlugins** and an
-       **MCPClient**, which send the AI model the few rows a question needs, instead of whole tables.
+       the projects that sent private data or company know-how out were rebuilt as LLMClients with **SqlPlugins**,
+       **ApiPlugins** and an **MCPClient**, which send the AI model the few rows a question needs, instead of whole
+       tables. The first was the website's course chatbot, which became Stanley (:doc:`ask-stanley`).
    * - Smarter features
      - Proxy; Secret; Smarter API keys; Budget; cost accounting; LLMClient; SqlPlugin; ApiPlugin; MCPClient; Guardrail.
    * - Outcome
      - Seven projects found, each with an owner, a purpose and a budget. No AI provider key outside Smarter. Every
-       call attributed to a project and a person. Three projects no longer send private records out; their prompts
-       are about one-fortieth of their former size.
+       call attributed to a project and a person. Five projects rebuilt: three no longer send private records out,
+       and two no longer send Stackademy's course designs. Their prompts are a small fraction of their former size.
 
 Executive summary
 -----------------
@@ -38,8 +39,9 @@ AI arrived at Stackademy the way it arrives at most companies: department by dep
 An accountant wrote a notebook that drafts the month-end commentary. Admissions wired a model into its follow-up
 emails. HR scripted a résumé screener. Each was a good idea, built quickly by someone who needed it to get their work
 done faster, with an API key pasted into a script. The will to build was already there. What was missing was a place
-to build well, under the company's rules. By the end of 2025, Stackademy paid an AI services vendor more each month than the month before,
-$51,264 for the year against a budget of $40,400, and IT, which paid the bill, could not say what it paid for.
+to build well, under the company's rules. By the end of 2025, Stackademy paid an AI services vendor more each month
+than the month before, $51,264 for the year against a budget of $40,400, and IT, which paid the bill, could not say
+what it paid for.
 
 The questions that mattered were basic, and no one could answer them. How many AI projects are there? What does each
 one do, and for whom? Which providers do they call, with whose keys? And the one that kept the Chief Financial
@@ -53,12 +55,13 @@ From then on, every call that any project made went through Smarter, which attri
 the person, stops it at the project's budget, and refuses anything but the endpoints the project needs. Nothing
 stopped working. A seventh project, which no one had listed, revealed itself the day the old keys were revoked.
 
-The first phase also showed which projects were dangerous: three of them sent prompts of tens of thousands of tokens,
-because they pasted whole tables into every prompt and let the model find the answer. In the second phase, those three
-were rebuilt as Smarter LLMClients whose tools fetch only what a question needs: **SqlPlugins** over each department's
-read-only database user, an **ApiPlugin** over the course catalogue's API, and an **MCPClient** over the course
-repository. Private records stay in the database; the model sees a few rows; and each prompt costs a fraction of what
-it did.
+The first phase also showed which projects were dangerous: five of them sent prompts of thousands, or tens of
+thousands, of tokens, because they pasted whole tables or document sets into every prompt and let the model find the
+answer. In the second phase, those five were rebuilt as Smarter LLMClients whose tools fetch only what a question
+needs: **SqlPlugins** over each department's read-only database user, an **ApiPlugin** over the course catalogue's
+API, and an **MCPClient** over the course repository. The first was the course chatbot on Stackademy's website, which
+became **Stanley**, the assistant that :doc:`ask-stanley` describes. Private records and course designs stay in the
+database; the model sees a few rows; and each prompt costs a fraction of what it did.
 
 Background
 ----------
@@ -126,7 +129,7 @@ The people
    * - Dmitri Dumont
      - Admissions Director
      - Admissions and Sales
-     - Owns the enrollment follow-up emails
+     - Owns the website's course chatbot and the enrollment follow-up emails
    * - Odette Eriksen
      - Head of Course Content
      - Course Content
@@ -169,8 +172,8 @@ Stackademy's leadership set five requirements:
    revocable, per project, without breaking the others.
 4. **Bounded and attributed spending.** Each project's tokens counted, charged to its department, and stopped at a
    limit.
-5. **No private data sent where it needn't go.** Where a project sends salaries, students' records or the ledger to an
-   AI provider, change the project so that it doesn't.
+5. **No private data sent where it needn't go.** Where a project sends salaries, students' records, the ledger or
+   Stackademy's course designs to an AI provider, change the project so that it doesn't.
 
 The first four are about control, and must hold from the first day. The fifth is about design, and takes longer: it
 means changing how a project works, not only where it sends its calls.
@@ -255,8 +258,9 @@ header each SDK sends it in, ``x-api-key`` for Anthropic and ``x-goog-api-key`` 
 
 .. figure:: /_static/case-studies/shadow-ai-proxy.svg
    :alt: Before, seven projects called three providers directly, with provider keys in scripts, notebooks, a
-         spreadsheet and a CI variable, and one invoice a month, charged to IT. After, each project, the month-end
-         commentary, the résumé screener, the enrollment follow-up, the lesson reviewer, the helpdesk bot and two more,
+         spreadsheet and a CI variable, and one invoice a month, charged to IT. After, each project, the website's course
+         chatbot, the month-end commentary, the résumé screener, the enrollment follow-up, the lesson reviewer, the
+         helpdesk bot and the ad copy drafter,
          calls Smarter with its own Smarter API key. Inside Smarter, in the project's department account, are its
          Smarter API key, one per project, revocable, with its last use; its Proxy, with allowedPaths such as
          chat/completions; the department's Budget, which answers 402 at the limit; the Secret that holds the
@@ -346,9 +350,9 @@ in the error shape that the OpenAI and Anthropic SDKs already report, and the CF
 The inventory
 ~~~~~~~~~~~~~
 
-Tomas's team asked each department head for their projects, searched Stackademy's repositories for the providers'
-SDKs and for strings shaped like provider keys, and matched what they found against the expense reports. Six
-projects were declared. Each was moved to its Proxy, one at a time, with its owner. Then the old provider keys were
+Tomas's team asked each department head for their projects, searched Stackademy's repositories and website for the
+providers' SDKs and for strings shaped like provider keys, and matched what they found against the expense reports.
+Six projects were declared. Each was moved to its Proxy, one at a time, with its owner. Then the old provider keys were
 revoked, and the next morning one more project failed: a Google Sheets script that a former contractor had written
 for Admissions, which drafts course descriptions for ads. No one had listed it, because no one remembered it was
 there. It got a Proxy and an owner too.
@@ -364,6 +368,11 @@ After a month of traffic through the Proxies, the inventory looked like this:
      - Provider
      - What it sent
      - Finding
+   * - Course chatbot, on the website
+     - Admissions
+     - OpenAI
+     - The course brochures, and an export of every course's modules and lessons, with every question
+     - **Proprietary**: all 48 course designs; out of date
    * - Month-end commentary, a notebook
      - Accounting
      - OpenAI
@@ -389,11 +398,6 @@ After a month of traffic through the Proxies, the inventory looked like this:
      - OpenAI
      - Employees' IT tickets
      - Acceptable; stays on its Proxy
-   * - Interview question generator
-     - HR
-     - OpenAI
-     - Job titles and descriptions
-     - Acceptable; stays on its Proxy
    * - Ad copy drafter, a spreadsheet script
      - Admissions
      - OpenAI
@@ -402,23 +406,34 @@ After a month of traffic through the Proxies, the inventory looked like this:
 
 A Proxy doesn't keep the prompts it forwards, by design: it is a passthrough, and storing every prompt would make
 Smarter a second copy of whatever a project sends. What it does keep is enough to know where to look. Each charge
-records the project, the caller, the model and the tokens, and three Proxies stood out at once: the month-end
-notebook averaged prompts of about 90,000 tokens, the follow-up job about 35,000 for a three-paragraph email, and the
-lesson reviewer more than 100,000. A prompt that large is a prompt with a dataset in it. Reading those projects'
-code found what was in the datasets, and the HR screener, whose prompts were smaller, was found by the same reading,
-because it was on the list.
+records the project, the caller, the model and the tokens, and four Proxies stood out at once: the month-end
+notebook averaged prompts of about 90,000 tokens, the follow-up job about 35,000 for a three-paragraph email, the
+lesson reviewer more than 100,000, and the website chatbot more than 10,000 for a one-line question about a course. A
+prompt that large is a prompt with a dataset in it. Reading those projects' code found what was in the datasets, and
+the HR screener, whose prompts were smaller, was found by the same reading, because it was on the list.
 
 Phase 2: rebuild what sends too much
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The three projects that sent private records out, and the lesson reviewer, all made the same design choice: give the
-model all the data, and let it find the answer. It is the quickest thing to build, and it is a leak by construction.
+The five projects that stood out all made the same design choice: give the model all the data, and let it find the
+answer. Their builders called it RAG, retrieval-augmented generation, but nothing was retrieved: the whole dataset
+went with every prompt. It is the quickest thing to build, and it is a leak by construction.
 Every prompt sends the whole table to the provider, whatever the question; it costs tokens in proportion to the size
 of the table, not of the answer; and it gets slower and dearer as the table grows.
 
 Each was rebuilt as an LLMClient in its department's account, whose tools fetch only what a question needs. The
 model asks for a tool to be run, with the values it chooses; Smarter runs it; and the model gets back a few rows, not
 the table.
+
+**Admissions' course chatbot**, rebuilt with a **SqlPlugin**, went first: it was public, it was the simplest, and
+its two faults were plain to see. Its knowledge was a copy of the course brochures and the course outlines that its
+developer had at hand when it was built, so it could not keep up with the catalogue: it didn't know the newest
+courses, and quoted prices that had changed. And every question, from anyone on the internet, sent the AI provider all
+48 courses with their 176 modules and 528 lessons, which are Stackademy's course designs, its know-how, including
+courses not yet released. It became **Stanley**, an LLMClient whose one tool, the SqlPlugin ``stackademy_sql``, runs a
+reviewed query over the live ``courses`` table, and returns at most ten rows that match the student's question: a
+course's code, name, short description, price and prerequisite, and nothing about how it is taught.
+:doc:`ask-stanley` tells the rebuild in full. It proved the pattern that the four others followed.
 
 **Accounting's month-end commentary**, rebuilt with **SqlPlugins**. Kofi's notebook asked one question of the whole
 ledger: *what changed this month, and why?* Accounting's assistant, Ledger, already answers it from three reviewed
@@ -436,8 +451,9 @@ Kofi's laptop, the rest of Accounting can ask it too.
          stackademy_accounting_results for the fourth quarter of 2025; Smarter runs the reviewed query as Accounting's
          read-only database user; three totals come back, revenue, expenses and net income. The ledger stays in the
          database, and Ledger's guardrail, budget and chat history apply to every question. The same pattern rebuilt
-         the others: HR's requisitions instead of every salary; one student's enrollments and the catalogue's API
-         instead of 320 students' records; a read-only GitHub MCPClient instead of whole course folders.
+         the others: the live courses table instead of every course design, for Stanley; HR's requisitions instead
+         of every salary; one student's records instead of 320; a read-only GitHub MCPClient instead of whole course
+         folders.
    :width: 100%
 
    Exhibit 3. Phase 2. The model gets the rows a question needs, from a reviewed query, and never the table.
@@ -530,7 +546,8 @@ The order mattered more than the technology.
 3. **Budgets.** Each project's Proxy joined its department's Budget.
 4. **Revoke the old keys.** Only after every declared project had moved, so that whatever broke was undeclared.
 5. **Measure, then rebuild.** A month of charges, read by project, ranked the rebuilds by prompt size and by what the
-   prompts held. The three projects that sent private records went first.
+   prompts held. The website's course chatbot went first, as the pilot, because it was public and its data was the
+   simplest; the three projects that sent private records followed, and the lesson reviewer last.
 
 Phase 1 took about two weeks, most of it waiting for owners. Each rebuild in phase 2 took a few days, much of it
 deciding what the project really needed from the data.
@@ -556,6 +573,9 @@ Results
      - A yearly budget line, overrun by 27% → a monthly budget per department, enforced on its Proxies and assistants
    * - Projects sending private records to an AI provider
      - Three: every salary, every student's record, the whole ledger → none
+   * - Course designs sent to an AI provider
+     - All 48 courses' modules and lessons, with every question on the website → none; at most ten rows of
+       ``courses``
    * - Tokens per call, the three rebuilt projects
      - About 35,000 to 90,000 → about 1,000 to 3,000, the rows each question needs
    * - Endpoints a leaked project key could reach
@@ -577,7 +597,7 @@ spending at Stackademy with no supplier list, no cost center, no owner and no re
    * - Roles and permissions
      - Who holds a key for each project, which endpoints it may call, and who may change its Proxy
    * - Asset register
-     - Seven projects, each a named Proxy with a description and an owner; and, after phase 2, four assistants and
+     - Seven projects, each a named Proxy with a description and an owner; and, after phase 2, five assistants and
        their tools
    * - Audit trail
      - For every call, who made it, through which project, with which model and how many tokens; for the rebuilt
@@ -585,7 +605,8 @@ spending at Stackademy with no supplier list, no cost center, no owner and no re
 
 The prompt sizes are estimates that a reader can check. The ``gl_entries`` table has 2,502 lines, at roughly 35 tokens
 each as a CSV row, about 88,000 tokens; ``stackademy_accounting_results`` returns three totals. The same arithmetic
-applies to the 320 students and 725 enrollments of 2025, against one student's rows.
+applies to the 320 students and 725 enrollments of 2025, against one student's rows, and to the chatbot's 48
+courses, 176 modules and 528 lessons, about 37,000 characters, against Stanley's ten rows.
 
 Lessons for practitioners
 -------------------------
@@ -622,5 +643,5 @@ Sources
 - :doc:`/smarter-resources/smarter-budget` and :doc:`/smarter-platform/cost-accounting`
 - :doc:`/smarter-resources/smarter-llmclient`, :doc:`/smarter-resources/smarter-llmtool`,
   :doc:`/smarter-resources/smarter-mcpclient` and :doc:`/smarter-resources/smarter-guardrail`
-- :doc:`confidential-by-construction`, for the departments' database users and budgets, and :doc:`ask-stanley`, for
-  the catalogue's SqlPlugin and ApiPlugin
+- :doc:`ask-stanley`, for the rebuild of the website's course chatbot, and :doc:`confidential-by-construction`, for
+  the departments' database users and budgets

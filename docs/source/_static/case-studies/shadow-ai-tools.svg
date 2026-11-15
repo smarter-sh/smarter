@@ -49,7 +49,7 @@
 <text x="638" y="629" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="400" fill="#C9CAD3" text-anchor="start">budget and chat history apply to every question.</text>
 <rect x="50" y="690" width="1100" height="70" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
 <rect x="50" y="708" width="4" height="34" rx="2" fill="#3DD68C"/>
-<text x="78" y="719" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">The same pattern rebuilt the others: HR's requisitions instead of every salary; one student's enrollments and the</text>
-<text x="78" y="741" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">catalogue's API instead of 320 students' records; a read-only GitHub MCPClient instead of whole course folders.</text>
+<text x="78" y="719" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">The same pattern rebuilt the others: the live courses table instead of every course design (Stanley); HR's requisitions</text>
+<text x="78" y="741" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">instead of every salary; one student's records instead of 320; a read-only GitHub MCPClient instead of course folders.</text>
 <text x="50" y="778" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: departments/accounting/plugins/ and scripts/backoffice.sql in smarter-sh/stackademy.</text>
 </svg>

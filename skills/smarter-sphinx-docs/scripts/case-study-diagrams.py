@@ -980,26 +980,27 @@ def shadow_ai_proxy():
 
     # the projects, each with its own Smarter API key
     projects = [
+        ("Course chatbot", "Admissions, the website", "openai"),
         ("Month-end commentary", "Accounting", "openai"),
         ("Résumé screener", "HR", "openai"),
         ("Enrollment follow-up", "Admissions", "anthropic"),
         ("Lesson reviewer", "Course Content", "googleai"),
-        ("Helpdesk bot + 2 more", "IT, HR, Admissions", "openai"),
+        ("Helpdesk bot + 1 more", "IT, Admissions", "openai"),
     ]
     top = 300
-    pitch = 96
+    pitch = 80
     for i, (name, department, _provider) in enumerate(projects):
         y = top + i * pitch
-        card(svg, 50, y, 270, 80)
-        chip(svg, 64, y + 14, "user", AMBER)
-        text(svg, 128, y + 36, name, size=15.5, weight=700, fill=INK)
-        text(svg, 128, y + 59, department, size=13.5, fill=INK3)
-        curve(svg, 320, y + 40, 392, y + 40)
+        card(svg, 50, y, 270, 68)
+        chip(svg, 64, y + 8, "user", AMBER)
+        text(svg, 128, y + 30, name, size=15.5, weight=700, fill=INK)
+        text(svg, 128, y + 52, department, size=13.5, fill=INK3)
+        curve(svg, 320, y + 34, 392, y + 34)
     text(svg, 386, top - 24, "Smarter API key", size=12, weight=600, fill=AMBER, anchor="end")
 
     # the Smarter platform
     svg.add(
-        f'<rect x="392" y="{top - 14}" width="476" height="{5 * pitch + 10}" rx="22" fill="{BLUE}" '
+        f'<rect x="392" y="{top - 14}" width="476" height="490" rx="22" fill="{BLUE}" '
         f'fill-opacity="0.04" stroke="{BLUE}" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="8 6"/>'
     )
     pill(svg, 414, top + 2, "Smarter · a Proxy per project, in its department's account", BLUE, align="left", size=13)
@@ -1121,8 +1122,8 @@ def shadow_ai_tools():
         78,
         719,
         [
-            "The same pattern rebuilt the others: HR's requisitions instead of every salary; one student's enrollments and the",
-            "catalogue's API instead of 320 students' records; a read-only GitHub MCPClient instead of whole course folders.",
+            "The same pattern rebuilt the others: the live courses table instead of every course design (Stanley); HR's requisitions",
+            "instead of every salary; one student's records instead of 320; a read-only GitHub MCPClient instead of course folders.",
         ],
         size=15,
         leading=22,

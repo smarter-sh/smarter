@@ -1,9 +1,10 @@
 Ask Stanley: Answers for Prospective Students, at Any Hour
 ==========================================================
 
-*Prospective students ask Stackademy the same questions every day, from eleven countries and at all hours, and
-three advisors in one time zone answer them. With Smarter, an assistant answers from the course catalogue itself,
-the moment the question is asked, and never invents a course.*
+*Prospective students ask Stackademy the same questions every day, from eleven countries and at all hours. Its
+website's first chatbot answered them from an old copy of the course brochures, and sent every course design
+Stackademy owns to an AI provider with each question. With Smarter, an assistant answers from the course catalogue
+itself, the moment the question is asked, and the AI provider sees only the few courses that answer it.*
 
 At a glance
 -----------
@@ -16,19 +17,23 @@ At a glance
        fiscal year 2025, from 11 countries; an Admissions and Sales department of a director and three advisors.
    * - Problem
      - Prospective students need timely and accurate answers: which courses there are, what they cost, what to take
-       first. Advisors answer accurately, but only during their working day, one question at a time. A general AI
-       chatbot answers at once, but has never seen Stackademy's catalogue, so it guesses.
+       first. Advisors answer accurately, but only during their working day. The website's chatbot, built before
+       Stackademy had an AI platform, answered at once, but from a copy of the course brochures and outlines that
+       nothing kept up to date, and it sent all 48 course designs, Stackademy's know-how, to its AI provider with
+       every question.
    * - Solution
      - ``stackademy_sql``, an LLMClient called **Stanley**, which answers prospective students in plain language
        from the catalogue in Stackademy's own database, through one reviewed SQL query, over a read-only database
-       user.
+       user. It was the first of the departments' own AI projects that Stackademy rebuilt on Smarter, as
+       :doc:`shadow-ai` tells.
    * - Smarter features
      - LLMClient; SqlPlugin; SqlConnection and Secret; Budget; Smarter Chat and ``allowedOrigins``; manifests in a git
-       repository.
+       repository; and a Proxy, for the chatbot it replaced, until it did.
    * - Outcome
      - Every prospective student can get an answer at any hour, from the catalogue as it is at that moment. Every
-       course, price and prerequisite in an answer comes from the database. Five manifests, no code, and at most
-       $2,500 a month.
+       course, price and prerequisite in an answer comes from the database. The AI provider sees at most ten rows
+       of the catalogue per question, and none of its course designs. Five manifests, no code, and at most $2,500 a
+       month.
 
 Executive summary
 -----------------
@@ -39,16 +44,24 @@ the prices and which course leads to which. But they work one time zone's office
 students don't live in it. A question asked in Manila or Lagos in the evening waits until the next morning in North
 America, and some students don't wait.
 
-The obvious remedy, an AI chatbot on the website, makes it worse. A general model has never seen Stackademy's
-catalogue, which lives in a private database, so it can only decline or invent: a plausible course, at a plausible
-price, that doesn't exist. Being fast and wrong is worse than being slow and right, because a student may enroll on
-the strength of the wrong answer.
+Admissions had already tried the obvious remedy, an AI chatbot on the website, before Stackademy had an AI
+platform. A developer built it as a simple RAG solution: the course brochures and an export of every course's
+outline, pasted into the prompt of every question. It answered at once, and it had two faults that grew with time.
+Its knowledge was a copy, made once from whatever marketing material the developer had at hand, and nothing kept it
+up to date: new courses were missing, and old prices stayed. And every question, from anyone on the internet, sent
+the AI provider all 48 courses with their 176 modules and 528 lessons, which are Stackademy's course designs, its
+know-how, unreleased courses included. Being fast and wrong is worse than being slow and right, because a student may
+enroll on the strength of the wrong answer; and being fast by giving away the course designs is a cost no one had
+chosen.
 
-Stackademy's goal was **both**: the speed of a chatbot and the accuracy of an advisor. Stanley, the LLMClient
+When Stackademy brought its departments' AI projects under Smarter, the chatbot was the first it rebuilt. The goal
+was **both**: the speed of a chatbot and the accuracy of an advisor, without the giveaway. Stanley, the LLMClient
 ``stackademy_sql``, gets its speed from the AI model and its accuracy from the database. It has one tool, a
 SqlPlugin whose query searches the ``courses`` table by subject and by price; the model chooses the values, Smarter
-runs the query, and the model answers from the rows that come back. Stanley is told not to guess, and to decline
-questions that aren't about Stackademy's courses.
+runs the query, and the model answers from the rows that come back. Those rows are the catalogue as it is at that
+moment, and they are all the provider sees: a few courses' codes, names, descriptions, prices and prerequisites,
+never their modules or lessons. Stanley is told not to guess, and to decline questions that aren't about
+Stackademy's courses.
 
 Stanley is also safe to put in front of strangers. It reads the database as ``stackademy_catalog``, a user that may
 read only the catalogue's four tables, and it can't write a query of its own. A Budget caps what it may spend, so
@@ -76,6 +89,26 @@ Stanley's chat window now suggests:
 The answers are all in one table. The catalogue is the ``courses`` table of Stackademy's MariaDB database,
 ``stackademy``, which also holds the back office of every department (see :doc:`confidential-by-construction`).
 When Course Content publishes a course or changes a price, it changes that table, and nowhere else.
+
+How each course is taught is in two more tables, ``course_modules`` and ``lessons``: 176 modules and 528 lessons,
+with their titles, order, lengths and status. They are Course Content's work, and what sets Stackademy's courses apart
+from anyone else's, and they include courses that aren't released yet. A prospective student needs none of it to
+choose a course.
+
+The first chatbot
+~~~~~~~~~~~~~~~~~
+
+Admissions' first chatbot was one of the AI projects that Stackademy's departments built for themselves, before the
+company had a platform for them (:doc:`shadow-ai` tells how it found them all). A developer wrote it with an AI
+provider's SDK and the provider's API key, and gave it its knowledge the quickest way: the course brochures that
+Admissions had at hand, and an export of every course's modules and lessons, pasted into the prompt of every
+question. Retrieval in name only, it sent more than 10,000 tokens of course material with a one-line question.
+
+In the first phase of bringing the projects under control, the chatbot kept running unchanged, through a Smarter
+Proxy, which gave it a key, a budget and its own charges. Those charges are what singled it out: its prompts were
+hundreds of times longer than its questions. Stanley replaced it in the second phase. The first chatbot is this
+case's scenario, as the other legacy projects are in :doc:`shadow-ai`; Stanley, his manifests and the database are
+real.
 
 The people
 ~~~~~~~~~~
@@ -115,15 +148,18 @@ The problem is to give every prospective student an answer that is both:
 1. **Timely.** An answer while the student is still deciding, at whatever hour that is where they live, not on the
    next business day in North America.
 2. **Accurate.** Real courses, real codes, real prices and real prerequisites, as they are in the catalogue today.
-   An answer that names a course that doesn't exist, or quotes last year's price, is worse than no answer.
+   An answer that names a course that doesn't exist, or quotes last year's price, is worse than no answer. Nothing
+   that has to be copied by hand stays accurate.
 
-And three constraints apply to any solution:
+And four constraints apply to any solution:
 
-3. **Safe to expose.** The chat is public, so whatever it can reach, anyone on the internet can try to reach. It
+3. **Need to know.** Send the AI provider only what a question needs. The course designs are Stackademy's know-how, and
+   no prospective student's question needs them.
+4. **Safe to expose.** The chat is public, so whatever it can reach, anyone on the internet can try to reach. It
    must not be able to read a student's record, an employee's salary, or any table but the catalogue.
-4. **Bounded in cost.** Every question costs tokens, and on a public page the number of questions isn't Stackademy's
+5. **Bounded in cost.** Every question costs tokens, and on a public page the number of questions isn't Stackademy's
    to decide. The spending must be.
-5. **No software project.** IT has two engineers, and a platform to run. Whatever is built must not need them to
+6. **No software project.** IT has two engineers, and a platform to run. Whatever is built must not need them to
    write, host and maintain a chatbot application.
 
 Options considered
@@ -136,7 +172,12 @@ Options considered
    * - Option
      - For
      - Against
-   * - Advisors answer by email and phone (the status quo)
+   * - Keep the website's chatbot, the brochures and course outlines pasted into every prompt (the status quo)
+     - Fluent, immediate, already built; on its Proxy, it has a key and a budget
+     - Its copy goes out of date with the first new course or price, and no one owns keeping it current; every
+       question sends all 48 course designs to the AI provider; more than 10,000 tokens per question; a model that
+       doesn't find the answer in its prompt may still invent one
+   * - Advisors answer by email and phone
      - Accurate and personal; advisors can also sell
      - One time zone's office hours for students in eleven countries; three people; the same three questions,
        answered by hand, every day
@@ -148,10 +189,9 @@ Options considered
      - Always available; cheap
      - Can't answer a combined question, such as *"AI, under $800, and what do I need first?"*; a copy of the
        catalogue drifts from the catalogue
-   * - A general AI chatbot, with the catalogue pasted into its instructions
-     - Fluent, immediate, quick to set up
-     - The pasted copy goes out of date with the first new course or price; a model that doesn't find the answer
-       in its prompt may still invent one
+   * - Refresh the chatbot's copy from the database every night
+     - Up to date within a day; little to change
+     - Still sends the whole catalogue, and the course designs, with every question; still pays for them in tokens
    * - An assistant that writes its own SQL over the database
      - Answers anything the database can
      - On a public page, anyone may phrase the question that writes the query; every table the user can read is
@@ -285,6 +325,20 @@ with the model:
   courses, and to answer anything else with *"I am sorry, but I can only provide information about the courses
   offered by Stackademy University."* A student who asks for the capital of France is politely declined.
 
+Need to know: only what the question needs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The first chatbot sent everything it knew with every question, so that the model could find the answer. Stanley
+sends nothing until the model asks, and then only what the query returns:
+
+- **Only matching courses.** The query filters ``courses`` by the subject and the price that the model chose, and
+  Smarter trims the result to ten rows. *"Do you offer any courses on AI?"* sends the provider four courses, not 48.
+- **Only what a student needs to choose.** Each row is a course's code, name, short description, price and
+  prerequisite. The query never reads ``course_modules`` or ``lessons``, so the course designs never reach the
+  provider, whatever is asked.
+- **Smaller, and cheaper.** A question costs a few hundred tokens of course data, where the first chatbot's cost
+  more than 10,000.
+
 Timely: a chat window that never closes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -409,7 +463,11 @@ Each of these is a change to a manifest, reviewed as a pull request, not a softw
 Implementation
 --------------
 
-Stanley is the oldest part of Stackademy, and the reason the repository exists. The project's manifests, its checks
+Replacing the first chatbot took one change on the website: its chat window gave way to Stanley's, a Smarter Chat
+embedded in the page. The old chatbot's Proxy was then deactivated, so that nothing could still call it with its
+key, and its brochures and course export were deleted.
+
+Stanley is the oldest part of the Stackademy repository, and the reason it exists. The project's manifests, its checks
 and its README arrived in one commit, ``837ce4b``; ``6129664`` let ``smarter.sh`` embed both Stanleys' chats, with
 ``allowedOrigins``; ``4ae399e`` linked their chat windows' info to this case study; and ``3f0f9bc`` renamed the course
 database and its resources to ``stackademy`` when the departments' back office joined it.
@@ -436,7 +494,13 @@ Results
    * - Where an answer's courses, prices and prerequisites come from
      - An advisor's knowledge of the catalogue → the ``courses`` table, at the moment of the question
    * - Where the courses in an AI's answer come from
-     - A general chatbot's guess → only the rows Stanley's tool returns, under instructions not to guess
+     - The first chatbot's copy of the brochures, as old as its last paste → only the rows Stanley's tool returns,
+       from the live catalogue, under instructions not to guess
+   * - Course data sent to the AI provider per question
+     - All 48 courses, 176 modules and 528 lessons, more than 10,000 tokens → at most ten rows of ``courses``, a few
+       hundred tokens
+   * - Course designs sent to the AI provider
+     - Every module and lesson, unreleased courses included, with every question → none
    * - Tables a public chat can reach
      - 4 of the database's 25, the catalogue's, through one fixed query; no student or employee record
    * - What it took to build
@@ -450,9 +514,12 @@ Lessons for practitioners
 -------------------------
 
 - **Timely and accurate come from different places.** The model makes an answer fast; only your own data makes it
-  right. An assistant needs both, and a general chatbot has only the first.
+  right. An assistant needs both, and a chatbot that answers from a copy has only the first.
 - **Ask the source, don't copy it.** A catalogue pasted into a prompt, or onto a FAQ page, starts going out of date
   the day it's copied. A tool that queries the table at the moment of the question can't.
+- **Pasting everything is not retrieval.** A prompt that carries your whole catalogue gives your know-how to the AI
+  provider with every question, and pays for it in tokens. A tool sends the rows the question needs, and nothing it
+  doesn't ask for.
 - **On a public page, fix the query.** A model that writes SQL answers more, but on the internet the question is
   anyone's to phrase. One reviewed query, over a user that can read only what the public may see, makes the worst
   question harmless.
@@ -476,3 +543,4 @@ Sources
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-guardrail`
 - :doc:`/smarter-framework/smarter-chat/embedding` and :doc:`/smarter-framework/smarter-wordpress`
 - :doc:`The Stackademy page </smarter-framework/smarter-manifests/stackademy>`
+- :doc:`shadow-ai`, for how Stackademy found its departments' AI projects, and rebuilt the first chatbot first
