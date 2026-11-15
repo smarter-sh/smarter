@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.2-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.3...v0.46.2-alpha.4) (2026-11-15)
+
+### Bug Fixes
+
+* **helm:** migrate in a pre-upgrade job before new pods take requests ([4e39d91](https://github.com/smarter-sh/smarter/commit/4e39d9198860fed56871cd0b5707a462f6d1b143)), closes [#1007](https://github.com/smarter-sh/smarter/issues/1007)
+
 ## [0.46.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.2...v0.46.2-alpha.3) (2026-11-15)
 
 ### Bug Fixes
