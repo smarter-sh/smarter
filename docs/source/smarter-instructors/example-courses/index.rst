@@ -23,6 +23,13 @@ The course designs come in two kinds:
   :doc:`master-classes/python-agentic-ai` each have 18 hours of instruction, as a
   three-day classroom course or a six-week online course.
 
+To go with them, the :doc:`/case-studies/index` are detailed reports, in the format of a consulting firm's case.
+Five are about how Stackademy, the example company that every Smarter platform loads, put AI assistants to work
+across its departments: its organization, the confidentiality of its records, a multi-agent board pack, an
+assistant for prospective students, and taking control of the AI projects its departments had already built. A sixth
+is about how the Smarter Project's own sign-in page chooses and draws its doodle of the day. Each has exhibits, and
+its executive summary stands on its own.
+
 The :doc:`Smarter Instructor Guide </smarter-instructor>` explains how to get Smarter running and
 how to set it up for a class before you teach any of them. Many of the courses draw on the
 `Smarter case studies <https://smarter.sh/case-studies>`__, teaching cases with labs and

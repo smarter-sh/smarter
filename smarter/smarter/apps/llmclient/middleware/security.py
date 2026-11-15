@@ -9,6 +9,7 @@ from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddl
 
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterHelperMixin
+from smarter.common.utils import mask_url_query
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import (
@@ -48,6 +49,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     - **Logging:**
       Uses a custom logger that respects feature flags (waffle switches) for granular control over middleware and llmclient logging.
+      Urls are logged with :func:`~smarter.common.utils.mask_url_query`, because a chat's session key can be in the query string.
 
     **Request Validation Steps:**
 
@@ -122,7 +124,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         logger.debug(
             "%s.process_request() called for %s",
             logger_prefix,
-            self.smarter_build_absolute_uri(request),
+            mask_url_query(self.smarter_build_absolute_uri(request)),
         )
 
         # 1.) If the request is from an internal ip address, allow it to pass through
@@ -133,7 +135,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             logger.debug(
                 "%s %s found in amnesty_urls: %s",
                 logger_prefix,
-                self.smarter_build_absolute_uri(request),
+                mask_url_query(self.smarter_build_absolute_uri(request)),
                 self.amnesty_urls,
             )
             return None
@@ -151,11 +153,13 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             logger.debug(
                 "%s %s identified as an internal IP address, exiting.",
                 logger_prefix,
-                self.smarter_build_absolute_uri(request),
+                mask_url_query(self.smarter_build_absolute_uri(request)),
             )
             return None
 
         url = self.smarter_build_absolute_uri(request)
+        # what the log may show of the url: a chat's session key in its query string is masked.
+        masked_url = mask_url_query(url)
 
         # 2.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
@@ -202,7 +206,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
             logger.debug(
                 "%s %s identified as an ACME challenge request, exiting.",
                 logger_prefix,
-                url,
+                masked_url,
             )
             return None
 
@@ -224,10 +228,10 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #     to instantiate a LLMClientHelper object just to check if the host is a domain
         #     for a deployed LLMClient.
         # ---------------------------------------------------------------------
-        logger.debug("%s instantiating LLMClientHelper() for url: %s", logger_prefix, url)
+        logger.debug("%s instantiating LLMClientHelper() for url: %s", logger_prefix, masked_url)
         llmclient: Optional[LLMClient] = get_cached_llmclient_by_request(request=request)
         if llmclient is not None:
-            logger.info("%s LLMClientHelper() verified that %s is an llmclient.", logger_prefix, url)
+            logger.info("%s LLMClientHelper() verified that %s is an llmclient.", logger_prefix, masked_url)
             return None
 
         # ---------------------------------------------------------------------
@@ -235,7 +239,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         # a rejected request is the client's error, a 4xx, which Django logs as a warning too ("Bad Request: ...").
         # Most are scanners probing an LLMClient's host for other paths, e.g. /wp-json/ or /.env.
-        logger.warning("%s %s failed security tests.", logger_prefix, url)
+        logger.warning("%s %s failed security tests.", logger_prefix, masked_url)
         return SmarterHttpResponseBadRequest(
             request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
         )

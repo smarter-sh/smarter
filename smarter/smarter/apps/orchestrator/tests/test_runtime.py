@@ -13,6 +13,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.models.budget import SmarterBudgetExceeded
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.llmclient import prompting
 from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.orchestrator import runtime
 from smarter.apps.orchestrator.models import (
@@ -269,20 +270,15 @@ class TestOrchestrationRuntime(TestAccountMixin):
         member = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
         run = OrchestrationRun.objects.create(orchestrator=self.orchestrator, objective="x", started_by=member)
         self.use(FakeHandler())
-        with patch.object(runtime, "acting_user", wraps=runtime.acting_user) as acting:
+        with patch.object(prompting, "acting_user", wraps=prompting.acting_user) as acting:
             self.executed(run)
         self.assertEqual({call.args[0] for call in acting.call_args_list}, {self.non_admin_user})
 
     # -------------------------------------------------------------------------
     # messages and answers
     # -------------------------------------------------------------------------
-    def test_assistant_text_and_instructions(self):
-        """The last assistant message is the answer, and only non-empty text instructions count."""
-        result = {
-            "messages": [{"role": "assistant", "content": "a"}, {"role": "tool"}, {"role": "assistant", "content": "b"}]
-        }
-        self.assertEqual(runtime.assistant_text(result), "b")
-        self.assertEqual(runtime.assistant_text({}), "")
+    def test_instructions(self):
+        """Only non-empty text instructions count."""
         harness = OrchestratorHarness(config={"instructions": "  "})
         self.assertIsNone(runtime.harness_instructions(harness))
         harness.config = "not a dict"
@@ -368,10 +364,3 @@ class TestOrchestrationRuntime(TestAccountMixin):
                 self.orchestrator.refresh_from_db()
                 with self.assertRaisesRegex(runtime.OrchestrationRefused, "needs an active harness with the role"):
                     runtime.check_may_run(self.orchestrator, self.admin_user)
-
-    def test_parse_decision(self):
-        """A coordinator's JSON is found in prose or a code block; anything else is no decision."""
-        self.assertEqual(runtime.parse_decision('Sure: ```json\n{"harness": "a"}\n```'), {"harness": "a"})
-        for text in ("no json here", "{not json}", "[1, 2]", "} backwards {"):
-            with self.subTest(text=text):
-                self.assertIsNone(runtime.parse_decision(text))

@@ -19,6 +19,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.tasks import write_journal_entry
 
 
 class TestJournaledResponses(TestAccountMixin):
@@ -29,6 +30,13 @@ class TestJournaledResponses(TestAccountMixin):
         patcher = patch("smarter.lib.django.waffle.switch_is_active", return_value=True)
         patcher.start()
         self.addCleanup(patcher.stop)
+        # .delay() isn't eager in tests: save the entry in this process, in the test database.
+        queue_patcher = patch(
+            "smarter.lib.journal.http.queue_journal_entry",
+            side_effect=lambda record, sources=(): write_journal_entry(record),
+        )
+        queue_patcher.start()
+        self.addCleanup(queue_patcher.stop)
         self.factory = RequestFactory()
 
     def request(self, user=None):
@@ -54,7 +62,9 @@ class TestJournaledResponses(TestAccountMixin):
         journal = self.journal(response)
         self.assertEqual(journal.user, self.admin_user)
         self.assertEqual(journal.command, "apply")
-        self.assertEqual(journal.response["data"], {"a": 1})
+        stored = journal.response
+        assert isinstance(stored, dict)
+        self.assertEqual(stored["data"], {"a": 1})
         self.assertEqual(journal.status_code, HTTPStatus.OK)
         metadata = json.loads(response.content)[SmarterJournalApiResponseKeys.METADATA]
         self.assertEqual(metadata["command"], "apply")
@@ -103,7 +113,10 @@ class TestJournaledResponses(TestAccountMixin):
 
     def test_journal_error_is_not_raised(self):
         """Test that a failure to save the journal doesn't fail the response."""
-        with patch("smarter.lib.journal.http.SAMJournal.objects.create", side_effect=Exception("db down")):
+        with (
+            patch("smarter.lib.journal.http.queue_journal_entry", side_effect=Exception("db down")),
+            patch("smarter.lib.journal.http.journal_entry_failed.send") as failed,
+        ):
             response = SmarterJournaledJsonResponse(
                 request=self.request(self.admin_user),
                 data={"data": 1},
@@ -111,6 +124,29 @@ class TestJournaledResponses(TestAccountMixin):
                 status=HTTPStatus.OK,
             )
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        # the response has no key, because its entry was neither queued nor saved.
+        metadata = json.loads(response.content)[SmarterJournalApiResponseKeys.METADATA]
+        self.assertNotIn(SCLIResponseMetadata.KEY, metadata)
+        failed.assert_called_once()
+
+    def test_large_response_is_journaled(self):
+        """Test that a response whose documents are stored as blobs and chains reads back unchanged."""
+        messages = [{"role": "user", "content": f"message {i} " + "x" * 100} for i in range(20)]
+        data = {"data": {"messages": messages, "system": "s" * 2000}}
+        response = SmarterJournaledJsonResponse(
+            request=self.request(self.admin_user),
+            data=data,
+            thing="LLMClient",
+            command=SmarterJournalCliCommands.PROMPT,
+            status=HTTPStatus.OK,
+        )
+        journal = self.journal(response)
+        reread = SAMJournal.objects.get(key=journal.key)
+        self.assertIsNotNone(reread.response_document)
+        stored = reread.response
+        assert isinstance(stored, dict)
+        self.assertEqual(stored["data"], data["data"])
+        self.assertEqual(reread.thing, "LLMClient")
 
     def test_error_response(self):
         """Test the error response's description: from the exception's message, a string, or as given."""
