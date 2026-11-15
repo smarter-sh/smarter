@@ -163,12 +163,14 @@ def mask_url_query(url: Optional[str]) -> str:
     Clients send a chat's session key in the query string, e.g. ``/config/?session_key=<key>``,
     and anyone holding it could read and continue that chat. Each parameter named in
     :data:`SENSITIVE_QUERY_PARAMETERS` gets :func:`mask_identifier` of its value. The rest of
-    the url, including the other parameters, is kept.
+    the url, including the other parameters, is kept. A url without a sensitive parameter is
+    returned exactly as it was, so that the uvicorn access log, which passes every request's path
+    through this function, doesn't change the encoding of other requests' queries.
 
-    :param url: The url, e.g. the request's absolute uri.
+    :param url: The url, e.g. the request's absolute uri, or a path with its query string.
     :type url: Optional[str]
-    :returns: The url with its sensitive query values masked, the url itself if it has no query,
-        or an empty string if ``url`` is empty.
+    :returns: The url with its sensitive query values masked, the url itself if it has no
+        sensitive query parameter, or an empty string if ``url`` is empty.
     :rtype: str
 
     **Example usage:**
@@ -188,10 +190,14 @@ def mask_url_query(url: Optional[str]) -> str:
         return url
     parameters = parse_qsl(split_url.query, keep_blank_values=True)
     masked_parameters = []
+    found_sensitive_parameter = False
     for name, value in parameters:
         if name in SENSITIVE_QUERY_PARAMETERS:
             value = mask_identifier(value)
+            found_sensitive_parameter = True
         masked_parameters.append((name, value))
+    if not found_sensitive_parameter:
+        return url
     masked_query = urlencode(masked_parameters, safe="*")
     masked_split_url = split_url._replace(query=masked_query)
     masked_url = urlunsplit(masked_split_url)

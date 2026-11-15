@@ -75,7 +75,7 @@ Talking to the LLM
        found that a placeholder key was stored and sent as a real one.
        `Commit 07a42204c <https://github.com/smarter-sh/smarter/commit/07a42204cdfb8e48f51cdaa92b873f6a7efcb619>`__
        built the Proxy. :doc:`ADR 007 </adr/007-settings>`, :doc:`ADR 016 </adr/016-security>`.
-     - `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__,
+     - `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__,
        `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
        `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__,
        `apps/secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,

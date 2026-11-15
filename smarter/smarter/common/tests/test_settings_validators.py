@@ -141,6 +141,17 @@ class TestSettingsValidators(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             call(validator, "many", {})
 
+    def test_prompt_history_max_age(self):
+        """Test that the prompt history's max age parses days, defaults to 90, and rejects text and zero."""
+        validator = Settings.parse_prompt_history_max_age
+        self.assertEqual(call(validator, "30", {}), 30)
+        self.assertEqual(call(validator, 365, {}), 365)
+        self.assertEqual(call(validator, "", {}), 90)
+        self.assertEqual(call(validator, None, {}), 90)
+        for value in ("forever", "0", "-1"):
+            with self.subTest(value=value), self.assertRaises(SmarterConfigurationError):
+                call(validator, value, {})
+
     def test_mysql_port(self):
         """Test that the database port parses an environment variable's string, defaults, and rejects non-ports."""
         validator = Settings.validate_mysql_port
@@ -237,7 +248,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_smtp_host_and_from_email(self):
         """Test that SMTP_HOST and SMTP_FROM_EMAIL are used when set, and derived otherwise."""
-        module = "smarter.common.conf.settings"
+        module = "smarter.common.conf.settings.email"
         settings = smarter_settings.model_copy(update={"aws_region": "us-west-2"})
         with patch(f"{module}.settings_defaults") as defaults:
             defaults.SMTP_HOST = "smtp.example.com"
@@ -252,7 +263,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_admin_credentials(self):
         """Test that the admin username falls back to its default, and the password is None when missing, or a placeholder."""
-        module = "smarter.common.conf.settings"
+        module = "smarter.common.conf.settings.security"
         with patch(f"{module}.settings_defaults") as defaults:
             defaults.ADMIN_USERNAME = "admin"
             defaults.ADMIN_PASSWORD = None
@@ -271,12 +282,16 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_optional_values_are_none_when_missing(self):
         """Test that the optional cluster name and SMTP credentials are None when missing, or a placeholder."""
-        module = "smarter.common.conf.settings"
+        package = "smarter.common.conf.settings"
         for value in (None, "", DEFAULT_MISSING_VALUE):
-            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.AWS_EKS_CLUSTER_NAME = DEFAULT_MISSING_VALUE
-                defaults.SMTP_PASSWORD = None
-                defaults.SMTP_USERNAME = None
+            with (
+                self.subTest(value=value),
+                patch(f"{package}.aws.settings_defaults") as aws_defaults,
+                patch(f"{package}.email.settings_defaults") as email_defaults,
+            ):
+                aws_defaults.AWS_EKS_CLUSTER_NAME = DEFAULT_MISSING_VALUE
+                email_defaults.SMTP_PASSWORD = None
+                email_defaults.SMTP_USERNAME = None
                 self.assertIsNone(call(Settings.validate_aws_eks_cluster_name, value, {}))
                 self.assertIsNone(call(Settings.validate_smtp_password, value, {}))
                 self.assertIsNone(call(Settings.validate_smtp_username, value, {}))
@@ -285,7 +300,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_github_token(self):
         """Test that the GitHub token is None when missing, or a placeholder, and must be a SecretStr."""
-        module = "smarter.common.conf.settings"
+        module = "smarter.common.conf.settings.integrations"
         placeholders = (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml"))
         for value in placeholders:
             with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
@@ -320,7 +335,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_slack_bot_token(self):
         """Test that the Slack bot token is None when missing, or a placeholder, and must be a SecretStr."""
-        module = "smarter.common.conf.settings"
+        module = "smarter.common.conf.settings.integrations"
         for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")):
             with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
                 defaults.SLACK_BOT_TOKEN = None
@@ -350,7 +365,7 @@ class TestSettingsMissingDefaults(SmarterTestBase):
 
     def test_aws_profile_and_region_without_defaults(self):
         """An empty AWS profile or region is None when its default is missing, and the default otherwise."""
-        module = "smarter.common.conf.settings"
+        module = "smarter.common.conf.settings.aws"
         for name, validator in (
             ("AWS_PROFILE", Settings.validate_aws_profile),
             ("AWS_REGION", Settings.validate_aws_region),
@@ -367,7 +382,7 @@ class TestSettingsMissingDefaults(SmarterTestBase):
         for name in ("environment_cdn_url", "root_cdn_url", "platform_url"):
             with (
                 self.subTest(url=name),
-                patch("smarter.common.conf.settings.SmarterValidator.urlify", return_value=None),
+                patch("smarter.common.conf.settings.domains.SmarterValidator.urlify", return_value=None),
             ):
                 with self.assertRaises(SmarterConfigurationError):
-                    Settings.__dict__[name].func(smarter_settings)
+                    getattr(Settings, name).func(smarter_settings)

@@ -55,7 +55,7 @@ Secrets and Outbound Requests
      - Encrypted with Fernet, with a key that is itself a setting held as a Pydantic
        ``SecretStr``, so it is never printed.
      - `secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
-       `common/conf/settings.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+       `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__
    * - Credentials out of prompts
      - An API Plugin reaches its API through a Connection whose key is a Secret, and Smarter
        adds it to the request, so the model never sees it. A Proxy keeps provider keys on the
