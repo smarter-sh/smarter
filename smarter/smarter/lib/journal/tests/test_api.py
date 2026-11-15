@@ -23,7 +23,7 @@ class TestSAMJournalApi(TestAccountMixin):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.journal = SAMJournal.objects.create(
+        cls.journal = SAMJournal.objects.create_entry(
             user=cls.admin_user,
             thing=SmarterJournalThings.GUARDRAIL.value,
             command=SmarterJournalCliCommands.APPLY.value,

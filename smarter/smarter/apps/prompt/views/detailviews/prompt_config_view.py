@@ -58,6 +58,8 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptPluginUsage,
     PromptChatApiPromptToolCall,
 )
+from smarter.apps.prompt.journal import chat_history_source
+from smarter.apps.prompt.models import PromptHistory
 from smarter.apps.prompt.signals import prompt_config_invoked
 from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterPromptSession,
@@ -194,6 +196,8 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
     llmclient_name: Optional[str] = None
     _llmclient_helper: Optional[LLMClientHelper] = None
     _llmclient: Optional[LLMClient] = None
+    chat_history_row: Optional[PromptHistory] = None
+    """The PromptHistory row that :meth:`chat_history` read the thread from, which the journal reads again."""
 
     @property
     def formatted_class_name(self) -> str:
@@ -456,11 +460,15 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         """
         if self.session is None:
             return PromptChatApiHistory()
-        # the messages are "prompt_history" in PromptHelper.
+        # the messages are "prompt_history" in PromptHelper. The row is read once, and kept, so that
+        # the journal can read the same thread from it.
         chat_helper = self.session.chat_helper
         session_key = self.session.session_key
+        row = chat_helper.latest_prompt_history if chat_helper is not None else None
+        self.chat_history_row = row
+        messages = row.prompt_history if row is not None else []
         history = PromptChatApiHistory(
-            chat_history=(chat_helper.prompt_history if chat_helper is not None else None) or [],  # type: ignore[arg-type]
+            chat_history=messages or [],  # type: ignore[arg-type]
         )
         if self.verbose:
             history.prompt_tool_call_history = [
@@ -756,7 +764,18 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             return self.error_response(
                 request, PromptChatApiErrorInternal("The LLMClient's configuration could not be built.")
             )
-        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
+        # the thread is in the journal's database already: the journal reads it from its row, rather
+        # than receive it with every configuration it journals.
+        journal_sources = []
+        if self.chat_history_row is not None:
+            journal_sources.append(chat_history_source(self.chat_history_row))
+        return SmarterJournaledJsonResponse(
+            request=request,
+            data=data,
+            thing=self.thing,
+            command=self.command,
+            journal_sources=journal_sources,
+        )
 
     # pylint: disable=unused-argument
     def get(
