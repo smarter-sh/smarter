@@ -58,7 +58,7 @@ enrollment belongs to a student and a cohort, a payment to an enrollment, a ledg
 instructor's salary to an employee. A generator, ``scripts/generate_backoffice.py``, writes the whole database
 from a fixed random seed: 40 employees, 320 students, 725 enrollments in 2025, 2,502 general ledger lines and the
 departments' monthly budgets. Every question about it has the same answer every time, which makes it possible to
-check an assistant's answers, the subject of :doc:`when-the-numbers-dont-add-up`.
+check an assistant's answers.
 
 The departments' needs overlap. HR needs the directory of employees, and compensation. Accounting needs the
 directory too, to allocate payroll, and enrollments and payments, to recognize revenue, but not compensation
@@ -128,7 +128,7 @@ with every privilege revoked, then granted ``SELECT`` on its tables, one by one:
    GRANT SELECT ON `stackademy`.`job_requisitions` TO 'stackademy_hr'@'%';
 
 .. figure:: /_static/case-studies/access-matrix.svg
-   :alt: A matrix of seven database users against seven groups of tables. Only the HR user reads HR records; the
+   :alt: A matrix of six database users against seven groups of tables. Only the HR user reads HR records; the
          executive user reads only the board views.
    :width: 100%
 
@@ -195,8 +195,8 @@ a limit on the rows it returns. The model chooses a tool and fills in its parame
 
 .. figure:: /_static/case-studies/access-path.svg
    :alt: A chain from Harper, HR's assistant, through its SQL tools, the SqlConnection stackademy_hr_db and its
-         Secret, the database user stackademy_hr, to HR's tables. Below it, the department's budget and the
-         database's own grants.
+         Secret, the database user stackademy_hr, to HR's tables, all in Stackademy HR's account. Below it, IT's
+         PII guardrail, the department's budget and the database's own grants.
    :width: 100%
 
    Exhibit 2. How HR's assistant reaches HR's records, and nothing else.
@@ -295,31 +295,6 @@ Lessons for practitioners
   someone in another department manages it.
 - **Cap spending where it is decided.** A budget per department makes the cost of each assistant visible to the
   people who use it, and stops one department's experiment from spending another's money.
-
-Teaching notes
---------------
-
-**Discussion questions**
-
-1. Accounting may read ``employees`` but not ``compensation``, yet it posts payroll to the ledger, by department.
-   Can Accounting deduce an individual's salary from the ledger? In a department of one? What would you change?
-2. A colleague proposes letting the assistants write SQL, "but only SELECT, and only over their own user". What
-   does that add, and what does it risk, given the grants? Which department would you try it in first?
-3. The guardrail redacts card and social security numbers from messages to the model, but not from the tools'
-   results. Should it? What would it cost?
-4. Each department has the same budget. How would you set them instead, and who should decide?
-
-**Exercises**
-
-1. On a platform with Stackademy loaded, connect to MariaDB as ``stackademy_accounting`` and try
-   ``SELECT * FROM compensation``. Record the error, then run ``SHOW GRANTS`` and compare it with
-   ``scripts/backoffice-grants.txt``.
-2. Sign in as ``quinn_sandoval`` (HR) and ask Harper for the average salary in Course Content. Then sign in as
-   ``kofi_sandoval`` (Accounting) and ask Ledger the same. Explain each answer.
-3. Write a SqlPlugin for Admissions that lists a cohort's enrollments by status, with the cohort as a parameter.
-   Apply it in Admissions' account, and show that a member of HR can't use it.
-4. Lower HR's budget to $1 in a fork of the repository, load it, and use Harper until the budget blocks it. What
-   does the user see, and what does the CFO see?
 
 Sources
 -------

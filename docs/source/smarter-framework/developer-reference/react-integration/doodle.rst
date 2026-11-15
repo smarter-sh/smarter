@@ -127,7 +127,9 @@ When a Smarter AI application chose or drew the day's doodle, the panel says so,
 project's description: *Chosen by a Smarter AI application*, or *Drawn by a Smarter AI
 application*, with a Learn how link to
 `An LLM Editor and an SVG Artist <https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__,
-the blog post that walks through how the doodle is chosen and drawn.
+the blog post that walks through how the doodle is chosen and drawn. The case study
+:doc:`/case-studies/the-smarter-doodle` explains the design's choices, with real decisions of the
+editor.
 
 Waffle switches
 ---------------

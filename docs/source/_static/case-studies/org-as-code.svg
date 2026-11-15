@@ -1,76 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 470" width="1080" height="470" role="img" aria-label="Exhibit: the organization, declared in a git repository">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700" role="img" aria-label="Exhibit: the organization, declared in a git repository">
 <title>Exhibit: the organization, declared in a git repository</title>
-<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
-<rect x="0" y="0" width="1080" height="470" fill="#FFFFFF"/>
-<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">The organization, declared in a git repository</text>
-<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">One repository holds the accounts, the people and every department's resources. owners.yaml says who applies each folder.</text>
-<rect x="24" y="78" width="370" height="352" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
-<path d="M24,108 v-22 a8,8 0 0 1 8,-8 h354 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
-<line x1="24" y1="108" x2="394" y2="108" stroke="#C9D1D9" stroke-width="1"/>
-<text x="36" y="98" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">smarter-sh/stackademy</text>
-<text x="38" y="132" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">org/accounts/</text>
-<text x="236" y="132" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">6 Account manifests</text>
-<text x="38" y="158" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">org/users/</text>
-<text x="236" y="158" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">10 User manifests</text>
-<text x="38" y="184" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">owners.yaml</text>
-<text x="236" y="184" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">folder → owner, account</text>
-<text x="38" y="210" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">secrets/</text>
-<text x="236" y="210" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">the demo password</text>
-<text x="38" y="236" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">departments/it/</text>
-<text x="236" y="236" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">PII guardrail</text>
-<text x="38" y="262" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">departments/hr/</text>
-<text x="236" y="262" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">assistant, plugins</text>
-<text x="60" y="288" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">connections/</text>
-<text x="236" y="288" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">database credentials</text>
-<text x="38" y="314" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">departments/accounting/</text>
-<text x="236" y="314" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">content/, admissions/</text>
-<text x="38" y="340" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">departments/executive/</text>
-<text x="236" y="340" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">Board Pack, orchestrator</text>
-<text x="38" y="366" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">budgets/</text>
-<text x="236" y="366" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">one per department</text>
-<text x="38" y="392" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">scripts/</text>
-<text x="236" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="start">the database, generated</text>
-<rect x="440" y="176" width="196" height="138" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
-<path d="M440,206 v-22 a8,8 0 0 1 8,-8 h180 a8,8 0 0 1 8,8 v22 z" fill="#EAF2F9"/>
-<line x1="440" y1="206" x2="636" y2="206" stroke="#C9D1D9" stroke-width="1"/>
-<text x="452" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1F5F8B" text-anchor="start">load_from_github</text>
-<text x="452" y="226" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">run by initialize_platform:</text>
-<text x="452" y="243" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">applies every manifest,</text>
-<text x="452" y="260" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">in dependency order,</text>
-<text x="452" y="277" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">as its folder's owner,</text>
-<text x="452" y="294" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#1F2328" text-anchor="start">in its owner's account</text>
-<line x1="396" y1="236" x2="438" y2="236" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
-<text x="676" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">Folder</text>
-<text x="898" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">Applied as · in</text>
-<rect x="666" y="104" width="398" height="44" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="131" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">departments/hr/</text>
-<text x="898" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">Avery Ivanova</text>
-<text x="898" y="139" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Stackademy HR</text>
-<path d="M638,245 C652,245 652,126 664,126" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="666" y="158" width="398" height="44" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="185" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">departments/hr/connections/</text>
-<text x="898" y="176" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">Tomas Hartigan</text>
-<text x="898" y="193" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Stackademy HR</text>
-<path d="M638,245 C652,245 652,180 664,180" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="666" y="212" width="398" height="44" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="239" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">departments/accounting/</text>
-<text x="898" y="230" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">Odette Hartigan</text>
-<text x="898" y="247" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Stackademy Accounting</text>
-<path d="M638,245 C652,245 652,234 664,234" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="666" y="266" width="398" height="44" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="293" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">departments/it/</text>
-<text x="898" y="284" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">Tomas Hartigan</text>
-<text x="898" y="301" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Stackademy IT</text>
-<path d="M638,245 C652,245 652,288 664,288" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="666" y="320" width="398" height="44" rx="8" fill="#FFFFFF" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="347" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">departments/executive/</text>
-<text x="898" y="338" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">Vera Jaramillo</text>
-<text x="898" y="355" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Stackademy Corp</text>
-<path d="M638,245 C652,245 652,342 664,342" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<rect x="666" y="374" width="398" height="44" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="676" y="401" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="normal" fill="#1F2328" text-anchor="start">org/accounts/, org/users/</text>
-<text x="898" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2328" text-anchor="start">the platform admin</text>
-<text x="898" y="409" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">creates the organization</text>
-<path d="M638,245 C652,245 652,396 664,396" fill="none" stroke="#57606A" stroke-width="1.2" marker-end="url(#arrow)"/>
-<text x="24" y="456" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: smarter-sh/stackademy; smarter.apps.account.repository_owners. owners.yaml is generated from the back office.</text>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker></defs>
+<rect width="1200" height="700" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="700" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="700" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#4FA3FF"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#4FA3FF" text-anchor="start">Organizing for AI</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">The whole organization is one git repository.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">It holds the accounts, the people and every department's resources. owners.yaml says who applies each folder.</text>
+<rect x="50" y="200" width="405" height="430" rx="18" fill="#14151B" stroke="rgba(255,255,255,0.09)"/>
+<circle cx="74" cy="224" r="5.5" fill="#4A4D59"/>
+<circle cx="92" cy="224" r="5.5" fill="#4A4D59"/>
+<circle cx="110" cy="224" r="5.5" fill="#4A4D59"/>
+<text x="140" y="229" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">smarter-sh/stackademy</text>
+<line x1="50" y1="248" x2="455" y2="248" stroke="rgba(255,255,255,0.09)"/>
+<text x="72" y="284" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">org/accounts/</text>
+<text x="282" y="284" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">6 Account manifests</text>
+<text x="72" y="315" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">org/users/</text>
+<text x="282" y="315" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">10 User manifests</text>
+<text x="72" y="346" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#F59E0B" text-anchor="start">owners.yaml</text>
+<text x="282" y="346" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">folder → owner, account</text>
+<text x="72" y="377" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">secrets/</text>
+<text x="282" y="377" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">the demo password</text>
+<text x="72" y="408" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">departments/it/</text>
+<text x="282" y="408" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">PII guardrail</text>
+<text x="72" y="439" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">departments/hr/</text>
+<text x="282" y="439" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">assistant, plugins</text>
+<text x="92" y="470" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">connections/</text>
+<text x="282" y="470" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">database credentials</text>
+<text x="72" y="501" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">departments/accounting/</text>
+<text x="282" y="501" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">content/, admissions/</text>
+<text x="72" y="532" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">departments/executive/</text>
+<text x="282" y="532" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Board Pack, orchestrator</text>
+<text x="72" y="563" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">budgets/</text>
+<text x="282" y="563" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">one per department</text>
+<text x="72" y="594" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#4FA3FF" text-anchor="start">scripts/</text>
+<text x="282" y="594" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">the database, generated</text>
+<path d="M455,415 L495,415" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="455" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="495" cy="415" r="5" fill="#FFC50C"/>
+<rect x="495" y="320" width="240" height="190" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="515" y="338" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(528,351) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2.5"/><circle cx="6" cy="18.5" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8v8M18 10.5c0 3.5-4 4.5-9.5 6"/></g>
+<text x="515" y="418" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="15.5" font-weight="700" fill="#F59E0B" text-anchor="start">load_from_github</text>
+<text x="515" y="444" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">run by initialize_platform:</text>
+<text x="515" y="463" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">applies every manifest,</text>
+<text x="515" y="482" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">in dependency order</text>
+<text x="782" y="188" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="600" fill="#8D8FA0" text-anchor="start">Applied as its folder's owner, in its owner's account</text>
+<rect x="780" y="204" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="222" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="230" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">departments/hr/</text>
+<text x="800" y="253" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">Avery Ivanova</text>
+<text x="1132" y="253" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">Stackademy HR</text>
+<path d="M735,415 C757.5,415 757.5,235 780,235" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="235" r="5" fill="#FFC50C"/>
+<rect x="780" y="276" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="294" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="302" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">departments/hr/connections/</text>
+<text x="800" y="325" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">Tomas Hartigan</text>
+<text x="1132" y="325" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">Stackademy HR</text>
+<path d="M735,415 C757.5,415 757.5,307 780,307" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="307" r="5" fill="#FFC50C"/>
+<rect x="780" y="348" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="366" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="374" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">departments/accounting/</text>
+<text x="800" y="397" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">Odette Hartigan</text>
+<text x="1132" y="397" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">Stackademy Accounting</text>
+<path d="M735,415 C757.5,415 757.5,379 780,379" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="379" r="5" fill="#FFC50C"/>
+<rect x="780" y="420" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="438" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="446" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">departments/it/</text>
+<text x="800" y="469" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">Tomas Hartigan</text>
+<text x="1132" y="469" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">Stackademy IT</text>
+<path d="M735,415 C757.5,415 757.5,451 780,451" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="451" r="5" fill="#FFC50C"/>
+<rect x="780" y="492" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="510" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="518" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">departments/executive/</text>
+<text x="800" y="541" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">Vera Jaramillo</text>
+<text x="1132" y="541" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">Stackademy Corp</text>
+<path d="M735,415 C757.5,415 757.5,523 780,523" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="523" r="5" fill="#FFC50C"/>
+<rect x="780" y="564" width="370" height="62" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="780" y="582" width="4" height="26" rx="2" fill="#F59E0B"/>
+<text x="800" y="590" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF" text-anchor="start">org/accounts/, org/users/</text>
+<text x="800" y="613" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="start">the platform admin</text>
+<text x="1132" y="613" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">creates the organization</text>
+<path d="M735,415 C757.5,415 757.5,595 780,595" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="735" cy="415" r="5" fill="#FFC50C"/>
+<circle cx="780" cy="595" r="5" fill="#FFC50C"/>
+<text x="50" y="678" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: smarter-sh/stackademy; smarter.apps.account.repository_owners. owners.yaml is generated from the back office.</text>
 </svg>

@@ -255,10 +255,6 @@ Results
    * - Strategies
      - Sequential, parallel, router and supervisor run; voting and debate are refused, to be designed separately
 
-The interim also found something no one was looking for. Comparing Atlas's figures with the departments' revealed
-four errors in how the company's figures were computed and reported, one of them in every board pack. That is the
-subject of :doc:`when-the-numbers-dont-add-up`.
-
 Lessons for practitioners
 -------------------------
 
@@ -272,32 +268,6 @@ Lessons for practitioners
   the runtime a decision rather than an emergency.
 - **Choose the simplest strategy that fits.** The board's sections don't depend on each other, so ``parallel``
   suffices; a supervisor would add model calls, cost and nondeterminism without adding anything the page needs.
-
-Teaching notes
---------------
-
-**Discussion questions**
-
-1. The CFO is refused because they aren't a member of HR. Is that the right outcome for a CFO? List three ways to
-   give the CFO a board pack, and the access each grants.
-2. A run's cost is spread over the departments' budgets, and no single budget caps a run. Who should pay for the
-   board pack: the departments, or the executives? How would you implement your answer?
-3. Atlas checks the departments' totals with its own tools. What happens when they disagree? Read
-   :doc:`when-the-numbers-dont-add-up` after you answer.
-4. When would ``supervisor`` be worth its cost for a board pack? Describe a question that ``parallel`` can't answer
-   well.
-
-**Exercises**
-
-1. On a platform with Stackademy loaded, sign in as ``vera_jaramillo`` and run the board pack for Q4 2025 from the
-   Orchestrator's page. Open each step's prompt session and identify which tools each department's assistant
-   called.
-2. Sign in as ``odette_hartigan`` (CFO) and try the same run. Record the response, and find the rule in ADR-037
-   that produces it.
-3. Copy the Orchestrator, change its strategy to ``sequential``, and run it. Compare the two runs: which
-   department's answer changed, and why?
-4. Write a ``router`` Orchestrator for the executives that sends a question to the one department that can answer
-   it, with a router LLMClient of your own. Test it with three questions, one of which no department can answer.
 
 Sources
 -------

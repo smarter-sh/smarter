@@ -1,38 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" width="1000" height="430" role="img" aria-label="Exhibit: what a member of Stackademy HR may read">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740" role="img" aria-label="Exhibit: what a member of Stackademy HR may read">
 <title>Exhibit: what a member of Stackademy HR may read</title>
-<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606A"/></marker><marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker></defs>
-<rect x="0" y="0" width="1000" height="430" fill="#FFFFFF"/>
-<text x="24" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="bold" fill="#1F2328" text-anchor="start">What a member of Stackademy HR may read</text>
-<text x="24" y="56" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#57606A" text-anchor="start">A member reads an account's resources if their own account is that account, or descends from its share scope.</text>
-<rect x="390" y="80" width="230" height="62" rx="8" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.6"/>
-<text x="404" y="106" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1A7F37" text-anchor="start">Smarter platform</text>
-<text x="404" y="126" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">share scope: itself, the root</text>
-<rect x="390" y="170" width="230" height="62" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="404" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#57606A" text-anchor="start">Stackademy Corp</text>
-<text x="404" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">share scope: itself, its members</text>
-<rect x="90" y="270" width="230" height="62" rx="8" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.6"/>
-<text x="104" y="296" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1A7F37" text-anchor="start">Stackademy IT</text>
-<text x="104" y="316" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">share scope: Stackademy Corp</text>
-<rect x="390" y="270" width="230" height="62" rx="8" fill="#DAFBE1" stroke="#1A7F37" stroke-width="1.6"/>
-<text x="404" y="296" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1A7F37" text-anchor="start">Stackademy HR</text>
-<text x="404" y="316" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">share scope: itself</text>
-<rect x="690" y="270" width="230" height="62" rx="8" fill="#F6F8FA" stroke="#C9D1D9" stroke-width="1.2"/>
-<text x="704" y="296" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#57606A" text-anchor="start">Stackademy Accounting</text>
-<text x="704" y="316" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">share scope: itself</text>
-<line x1="505" y1="142" x2="505" y2="168" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
-<path d="M505,232 V252 H205 V268" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
-<line x1="505" y1="232" x2="505" y2="268" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
-<path d="M505,252 H805 V268" fill="none" stroke="#57606A" stroke-width="1.6" marker-end="url(#arrow)"/>
-<rect x="632" y="92" width="179" height="18" rx="9" fill="#1A7F37" stroke="#1A7F37" stroke-width="1"/>
-<text x="721.5" y="105" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">readable: shares with everyone</text>
-<rect x="110" y="340" width="212" height="18" rx="9" fill="#1A7F37" stroke="#1A7F37" stroke-width="1"/>
-<text x="216.0" y="353" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">readable: shares with Corp's subtree</text>
-<rect x="410" y="340" width="163" height="18" rx="9" fill="#1A7F37" stroke="#1A7F37" stroke-width="1"/>
-<text x="491.5" y="353" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">readable: their own account</text>
-<rect x="710" y="340" width="190" height="18" rx="9" fill="#CF222E" stroke="#CF222E" stroke-width="1"/>
-<text x="805.0" y="353" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">not readable: shares with no one</text>
-<rect x="632" y="182" width="179" height="18" rx="9" fill="#CF222E" stroke="#CF222E" stroke-width="1"/>
-<text x="721.5" y="195" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="9.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">not readable: its members only</text>
-<text x="24" y="386" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#1F2328" text-anchor="start">So Harper, HR's assistant, can use IT's PII guardrail and the platform's built-in resources, but not Accounting's connection, and Accounting can't use HR's.</text>
-<text x="24" y="416" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Source: ADR-036, smarter.apps.account.hierarchy.readable_account_ids().</text>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker></defs>
+<rect width="1200" height="740" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="740" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="740" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#4FA3FF"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#4FA3FF" text-anchor="start">Organizing for AI</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">What HR can read, and what it can't.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">A member reads an account's resources if their own account is that account, or descends from its share scope.</text>
+<path d="M600,300 L600,336" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="300" r="5" fill="#FFC50C"/>
+<circle cx="600" cy="336" r="5" fill="#FFC50C"/>
+<path d="M600,440 C600,463.0 215,463.0 215,486" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="440" r="5" fill="#FFC50C"/>
+<circle cx="215" cy="486" r="5" fill="#FFC50C"/>
+<path d="M600,440 L600,486" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="440" r="5" fill="#FFC50C"/>
+<circle cx="600" cy="486" r="5" fill="#FFC50C"/>
+<path d="M600,440 C600,463.0 985,463.0 985,486" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="600" cy="440" r="5" fill="#FFC50C"/>
+<circle cx="985" cy="486" r="5" fill="#FFC50C"/>
+<rect x="435" y="196" width="330" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="435" y="214" width="4" height="68" rx="2" fill="#3DD68C"/>
+<rect x="455" y="222" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(468,235) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></g>
+<text x="523" y="234" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="start">Smarter platform</text>
+<text x="523" y="258" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">share scope: itself, the root</text>
+<text x="523" y="282" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#3DD68C" text-anchor="start">Readable: shares with everyone</text>
+<rect x="435" y="336" width="330" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1" opacity="0.55"/>
+<rect x="435" y="354" width="4" height="68" rx="2" fill="#F87171"/>
+<rect x="455" y="362" width="52" height="52" rx="14" fill="#F87171" fill-opacity="0.18"/>
+<g transform="translate(468,375) scale(1.0833)" fill="none" stroke="#F87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></g>
+<text x="523" y="374" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#C9CAD3" text-anchor="start">Stackademy Corp</text>
+<text x="523" y="398" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">share scope: itself, its members</text>
+<text x="523" y="422" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#F87171" text-anchor="start">Not readable: its members only</text>
+<rect x="50" y="486" width="330" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="504" width="4" height="68" rx="2" fill="#3DD68C"/>
+<rect x="70" y="512" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(83,525) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></g>
+<text x="138" y="524" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="start">Stackademy IT</text>
+<text x="138" y="548" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">share scope: Stackademy Corp</text>
+<text x="138" y="572" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#3DD68C" text-anchor="start">Readable: shares with Corp's subtree</text>
+<rect x="435" y="486" width="330" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="435" y="504" width="4" height="68" rx="2" fill="#3DD68C"/>
+<rect x="455" y="512" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(468,525) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></g>
+<text x="523" y="524" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="start">Stackademy HR</text>
+<text x="523" y="548" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">share scope: itself</text>
+<text x="523" y="572" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#3DD68C" text-anchor="start">Readable: their own account</text>
+<rect x="820" y="486" width="330" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1" opacity="0.55"/>
+<rect x="820" y="504" width="4" height="68" rx="2" fill="#F87171"/>
+<rect x="840" y="512" width="52" height="52" rx="14" fill="#F87171" fill-opacity="0.18"/>
+<g transform="translate(853,525) scale(1.0833)" fill="none" stroke="#F87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></g>
+<text x="908" y="524" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="700" fill="#C9CAD3" text-anchor="start">Stackademy Accounting</text>
+<text x="908" y="548" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="start">share scope: itself</text>
+<text x="908" y="572" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#F87171" text-anchor="start">Not readable: shares with no one</text>
+<rect x="536" y="597" width="136" height="24" rx="12" fill="#F59E0B" fill-opacity="0.16"/>
+<text x="604.0" y="613.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F59E0B" text-anchor="middle">Harper's account</text>
+<rect x="50" y="628" width="1100" height="70" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="646" width="4" height="34" rx="2" fill="#F59E0B"/>
+<text x="78" y="657" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">So Harper, HR's assistant, can use IT's PII guardrail and the platform's built-in resources, but not</text>
+<text x="78" y="679" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Accounting's connection, and Accounting can't use HR's.</text>
+<text x="50" y="718" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: ADR-036, smarter.apps.account.hierarchy.readable_account_ids().</text>
 </svg>
