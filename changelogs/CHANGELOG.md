@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.2](https://github.com/smarter-sh/smarter/compare/v0.46.1...v0.46.2) (2026-11-15)
+
+### Bug Fixes
+
+* **helm:** migrate in a pre-upgrade job before new pods take requests ([4e39d91](https://github.com/smarter-sh/smarter/commit/4e39d9198860fed56871cd0b5707a462f6d1b143)), closes [#1007](https://github.com/smarter-sh/smarter/issues/1007)
+* **journal:** prune orphaned blobs and stop retrying deleted rows ([90cd4d5](https://github.com/smarter-sh/smarter/commit/90cd4d5b5d370f4e7c4fce79c2601d923682b04f))
+* **prompt:** mask the session_key in the urls that handle_chat_config_invoked() and SmarterSecurityMiddleware log ([115dd82](https://github.com/smarter-sh/smarter/commit/115dd82f39436a05c6e0a84f8161c834fa11200c)), closes [#1004](https://github.com/smarter-sh/smarter/issues/1004) [#1000](https://github.com/smarter-sh/smarter/issues/1000)
+
+### Refactoring
+
+* **llmclient:** share in-process prompting across apps ([1806c86](https://github.com/smarter-sh/smarter/commit/1806c86e391c2f40f2896f6d1bbee23e86dddd13))
+
+### Performance
+
+* **journal:** write entries in Celery and deduplicate their documents ([5619c6b](https://github.com/smarter-sh/smarter/commit/5619c6b40d9578b107fb83e7b78e4aad5d887505))
+
 ## [0.46.2-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.2-alpha.3...v0.46.2-alpha.4) (2026-11-15)
 
 ### Bug Fixes
