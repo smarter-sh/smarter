@@ -36,6 +36,7 @@ from .utils import (
     mask_email,
     mask_identifier,
     mask_string,
+    mask_url_query,
 )
 from .version import get_semantic_version
 
@@ -59,6 +60,7 @@ __all__ = [
     "mask_email",
     "mask_identifier",
     "mask_string",
+    "mask_url_query",
     "rfc1034_compliant_str",
     "rfc1034_compliant_to_snake",
     "recursive_sort_dict",
