@@ -1,9 +1,10 @@
 """
 The orchestration runtime: start an Orchestrator's run, then execute it, one step at a time (ADR-037).
 
-A step is a prompt. It calls its harness LLMClient through the same handler as the LLMClient prompt api, as the
-LLMClient's owner, in a ``Prompt`` session of its own, so that tools, guardrails, the journal, charges and budgets
-apply to it exactly as to any other prompt. The user who started the run is each step's acting user, whom MCP
+A step is a prompt. It calls its harness LLMClient in-process, with
+:func:`smarter.apps.llmclient.prompting.send_message`, through the same handler as the LLMClient prompt api, as the
+LLMClient's owner, in a ``Prompt`` session of its own, so that tools, guardrails, the chat history, charges and
+budgets apply to it exactly as to any other prompt. The user who started the run is each step's acting user, whom MCP
 servers learn of.
 
 .. code-block:: python
@@ -17,7 +18,6 @@ It runs the ``sequential``, ``parallel``, ``supervisor`` and ``router`` strategi
 after any of them. ``voting`` and ``debate`` are refused, by name.
 """
 
-import json
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import Optional
@@ -30,8 +30,14 @@ from smarter.apps.account.models.budget import (
     SmarterBudgetExceeded,
     charge_authorization,
 )
-from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
-from smarter.apps.mcpserver.services.acting_user import acting_user
+from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.llmclient.prompting import (
+    SmarterLLMClientPromptError,
+    assistant_text,
+    extract_json_object,
+    new_session,
+    send_message,
+)
 from smarter.apps.orchestrator.exceptions import SmarterOrchestratorException
 from smarter.apps.orchestrator.models import (
     OrchestrationRun,
@@ -41,10 +47,8 @@ from smarter.apps.orchestrator.models import (
 )
 from smarter.apps.orchestrator.models.orchestration_run import OrchestrationRunStatus
 from smarter.apps.orchestrator.models.orchestrator import OrchestrationStrategy
-from smarter.apps.prompt.contract.builders import prompt_result_v2
 from smarter.apps.prompt.models import Prompt
 from smarter.common.conf import smarter_settings
-from smarter.common.utils import hash_factory
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import required
@@ -65,9 +69,6 @@ The others are refused, by name.
 
 STEP_USER_AGENT = "smarter-orchestrator"
 """The user agent of a step's Prompt session, which no browser opened."""
-
-STEP_IP_ADDRESS = "127.0.0.1"
-"""The ip address of a step's Prompt session: the platform's own."""
 
 
 class OrchestrationRefused(SmarterOrchestratorException):
@@ -253,23 +254,6 @@ def harness_instructions(harness: OrchestratorHarness) -> Optional[str]:
     return instructions.strip()
 
 
-def assistant_text(result: dict) -> str:
-    """
-    Return the text that the LLMClient answered, from a prompt's result in version 2 of the chat contract.
-
-    :param result: The result, as :func:`smarter.apps.prompt.contract.builders.prompt_result_v2` returns it.
-    :returns: The last assistant message's text, or an empty string.
-    """
-    retval = ""
-    for message in result.get("messages") or []:
-        if message.get("role") != "assistant":
-            continue
-        content = message.get("content")
-        if isinstance(content, str):
-            retval = content
-    return retval
-
-
 def new_step_prompt(run: OrchestrationRun, llmclient: LLMClient) -> Prompt:
     """
     Return a new Prompt session for a step, owned by its LLMClient's owner.
@@ -279,45 +263,29 @@ def new_step_prompt(run: OrchestrationRun, llmclient: LLMClient) -> Prompt:
     :returns: The session.
     """
     url = f"{smarter_settings.environment_url}/api/v1/orchestrators/{run.orchestrator.hashed_id}/runs/{run.pk}/"
-    prompt = Prompt.objects.create(
-        session_key=hash_factory(length=64),
-        user_profile=llmclient.user_profile,
-        llmclient=llmclient,
-        ip_address=STEP_IP_ADDRESS,
-        user_agent=STEP_USER_AGENT,
-        url=url,
-    )
+    prompt = new_session(llmclient, url, STEP_USER_AGENT)
     return prompt
 
 
-def call_llmclient(run: OrchestrationRun, llmclient: LLMClient, prompt: Prompt, message: str) -> tuple[str, str]:
+def call_llmclient(run: OrchestrationRun, prompt: Prompt, message: str) -> tuple[str, str]:
     """
-    Send one message to an LLMClient, as its prompt api does, as its owner, with the run's starter acting.
+    Send one message to a step's LLMClient, as its prompt api does, as its owner, with the run's starter acting.
 
     :param run: The run.
-    :param llmclient: The LLMClient.
-    :param prompt: The step's session.
+    :param prompt: The step's session, whose LLMClient answers.
     :param message: The message.
     :returns: The text it answered, and an error, or an empty string if it succeeded.
     """
-    # pylint: disable=import-outside-toplevel
-    from smarter.apps.provider.services.text_completion.providers import (
-        smarter_compatible_client,
-    )
-
-    handler = smarter_compatible_client.get_smarter_harness(request=None, provider_name=llmclient.provider)
-    plugins = LLMClientPlugin.plugins(llmclient=llmclient)
-    data = {"session_key": prompt.session_key, "messages": [{"role": "user", "content": message}]}
-    starter = run.started_by.user if run.started_by else None
-    with acting_user(starter):
-        response = handler(llmclient.user_profile, prompt, data, plugins=plugins)
-    result, error, _ = prompt_result_v2(response)
+    starter = None
+    if run.started_by is not None:
+        starter = run.started_by.user
+    try:
+        result = send_message(prompt, message, acting=starter)
+    except SmarterLLMClientPromptError as e:
+        return "", str(e)
     text = assistant_text(result)
-    if error:
-        description = str(error.get("description") or "The LLM provider failed.")
-        return text, description
     if not text:
-        return text, "The LLMClient gave no answer."
+        return "", "The LLMClient gave no answer."
     return text, ""
 
 
@@ -371,7 +339,7 @@ class RunContext:
         prompt = self.session(harness)
         try:
             charge_authorization(locators, on_behalf_of=STEP_USER_AGENT)
-            text, error = call_llmclient(run, llmclient, prompt, message)
+            text, error = call_llmclient(run, prompt, message)
         except SmarterBudgetExceeded as e:
             text, error = "", str(e.message)
         # a step's failure is recorded, and its message kept from the log: it may quote the LLM provider.
@@ -422,29 +390,6 @@ def roster(plan: RunPlan) -> str:
         description = harness.llmclient.description or "no description"
         lines.append(f"- {harness.llmclient.name}: {description}")
     return "\n".join(lines)
-
-
-def parse_decision(text: str) -> Optional[dict]:
-    """
-    Return the JSON object in a coordinator's answer, e.g. ``{"harness": "stackademy_hr_assistant"}``.
-
-    The answer should be only the object, but a model may wrap it in prose or a code block, so the text from its
-    first ``{`` to its last ``}`` is parsed.
-
-    :param text: The answer.
-    :returns: The object, or None if there is none.
-    """
-    start = text.find("{")
-    end = text.rfind("}")
-    if start < 0 or end <= start:
-        return None
-    try:
-        value = json.loads(text[start : end + 1])
-    except ValueError:
-        return None
-    if not isinstance(value, dict):
-        return None
-    return value
 
 
 def coordinator_message(lines: list[str], instructions: Optional[str]) -> str:
@@ -506,7 +451,7 @@ def run_router(context: RunContext) -> list[StepOutput]:
         harness_instructions(router),
     )
     choice = context.required_step(router, message)
-    decision = parse_decision(choice.text) or {}
+    decision = extract_json_object(choice.text) or {}
     chosen = context.plan.participant_named(decision.get("harness"))
     if chosen is None:
         raise OrchestrationStepFailed(f"{choice.harness_name} chose no assistant of this Orchestrator.")
@@ -545,7 +490,7 @@ def run_supervisor(context: RunContext) -> list[StepOutput]:
     ]
     while True:
         decision_output = context.required_step(planner, coordinator_message(lines, instructions))
-        decision = parse_decision(decision_output.text) or {}
+        decision = extract_json_object(decision_output.text) or {}
         if decision.get("done") is True:
             result = decision.get("result")
             text = str(result) if result else decision_output.text
@@ -654,7 +599,6 @@ __all__ = [
     "SUPPORTED_STRATEGIES",
     "check_may_run",
     "execute_run",
-    "parse_decision",
     "plan_run",
     "start_run",
     "step_message",

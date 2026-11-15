@@ -128,9 +128,7 @@ class TestDoodleEditor(DoodleTestMixin):
         llmclient = MagicMock(id=1) if exists else None
         with (
             patch.object(editor, "smarter_llmclient", return_value=llmclient),
-            patch.object(editor, "smarter_admin_profile", return_value=MagicMock()),
-            patch.object(editor, "single_use_api_key", return_value=contextlib.nullcontext("a-key")),
-            patch.object(editor, "prompt_llmclient", side_effect=list(results)) as prompt,
+            patch.object(editor, "prompt_in_process", side_effect=list(results)) as prompt,
             patch.object(editor, "tone_check", return_value=self.tone),
         ):
             yield prompt
@@ -251,7 +249,7 @@ class TestDoodleEditor(DoodleTestMixin):
                 run = edit_day(REVOLUTION_DAY)
                 assert run is not None
         self.assertEqual(prompt.call_count, 2)
-        artist_prompt = json.loads(prompt.call_args_list[1].args[2])
+        artist_prompt = json.loads(prompt.call_args_list[1].args[1])
         self.assertEqual(artist_prompt["name"], "Revolution Day")
         self.assertEqual(run.status, DoodleEditorRunStatus.SUCCEEDED)
 
@@ -340,10 +338,18 @@ class TestDoodleEditor(DoodleTestMixin):
             with self.llm(result):
                 self.assertEqual(edit_days([QUIET_DAY, QUIET_DAY]), 1)
 
-    def test_smarter_llmclient_and_admin(self):
+    def test_smarter_llmclient_and_session(self):
         self.assertIsNone(editor.smarter_llmclient("test_no_such_llmclient"))
-        profile = editor.smarter_admin_profile()
-        self.assertTrue(profile.user.is_staff)
+        self.assertTrue(editor.session_url().endswith("/api/v1/doodles/"))
+
+    def test_prompts_in_process(self):
+        """The editor and the artist are prompted in-process, as their owner, in sessions of the doodle."""
+        result = decisions({"region": "global", "choice": "default", "reason": "Quiet."})
+        with override_switch(ARTWORK, active=False), self.llm(result) as prompt:
+            edit_day(QUIET_DAY)
+        _, _, url, user_agent = prompt.call_args.args
+        self.assertEqual(url, editor.session_url())
+        self.assertEqual(user_agent, editor.USER_AGENT)
 
     # trends: the editor's second look at a day, and the tone check of what it would draw
     # ---------------------------------------------------------------------------------------------
@@ -379,7 +385,7 @@ class TestDoodleEditor(DoodleTestMixin):
                 run = edit_day(TRENDING_DAY)
                 assert run is not None
         self.assertTrue(run.with_trends)
-        editor_prompt = json.loads(prompt.call_args_list[0].args[2])
+        editor_prompt = json.loads(prompt.call_args_list[0].args[1])
         oceania = [region for region in editor_prompt["regions"] if region["region"] == "oceania"][0]
         self.assertEqual(oceania["trends"][0]["id"], ECLIPSE.id)
         doodle = Doodle.objects.get(date=TRENDING_DAY, region="oceania")

@@ -63,9 +63,11 @@ The Smarter Doodle Editor and Artist
 
 The doodle is itself a Smarter AI application. Two staff-only LLMClients of the Smarter account,
 from the `example manifests <https://github.com/smarter-sh/example-manifests>`__, choose and draw
-it, and the platform's own code prompts them through the chat api, with
-:mod:`smarter.apps.llmclient.prompting`, so their system prompts, guardrails, journal and cost
-accounting apply as they would to anyone's prompt.
+it, and the platform's own code prompts them in-process, as their owner, with
+:func:`~smarter.apps.llmclient.prompting.prompt_in_process`: through the same provider handler
+as the chat api, without an api key or an http request, so their system prompts, guardrails,
+budgets and chat history apply as they would to anyone's prompt. An Orchestrator's steps are
+prompted the same way.
 
 - **smarter_doodle_editor** chooses each region's doodle of each new day. The planner prompts it
   once a day, with JSON: for each region, the catalog themes that are due, and the region's other
