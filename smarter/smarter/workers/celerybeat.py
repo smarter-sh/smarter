@@ -61,6 +61,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(days=7),
         "options": OPERATIONAL,
     },
+    "purge-prompt-history": {
+        "task": "smarter.apps.prompt.tasks.purge_prompt_history",
+        "schedule": timedelta(days=1),
+        "options": OPERATIONAL,
+    },
     "purge-guardrail-events": {
         "task": "smarter.apps.guardrail.tasks.purge_guardrail_events",
         "schedule": timedelta(days=1),

@@ -18,7 +18,7 @@ It shows the patterns that small projects never reach, each in code that student
   the `registry of kinds <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__
   and :doc:`/smarter-framework/smarter-broker-model`.
 - **Pydantic for every contract:** manifests, API responses and the
-  `Settings class <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+  `Settings class <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__
   that validates every environment variable (:doc:`ADR 031 </adr/031-pydantic-over-json>`).
 - **Ownership and multi-tenancy:** an
   `abstract base model <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__
