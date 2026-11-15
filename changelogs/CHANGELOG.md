@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.3-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.3-alpha.1...v0.46.3-alpha.2) (2026-11-15)
+
+### Bug Fixes
+
+* **prompt:** prune old prompt history daily, split the settings module ([97bba53](https://github.com/smarter-sh/smarter/commit/97bba53e0b7e103558419e9f25e26c283eebf373))
+
 ## [0.46.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.2...v0.46.3-alpha.1) (2026-11-15)
 
 ### Bug Fixes
