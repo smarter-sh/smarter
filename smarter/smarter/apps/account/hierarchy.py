@@ -186,7 +186,8 @@ def resolve_by_name(queryset: "SmarterQuerySetWithPermissions[_RT]", name: str, 
     :param name: The resource's name.
     :param user_profile: The profile that names it, e.g. a plugin's owner.
     :returns: The resource.
-    :raises DoesNotExist: the model's own, if no account in the profile's tree has a resource of that name.
+    :raises django.core.exceptions.ObjectDoesNotExist: the model's own ``DoesNotExist``, which subclasses it, if no
+        account in the profile's tree has a resource of that name.
     """
     model = queryset.model
     readable = readable_account_ids(user_profile.account_id)  # type: ignore[attr-defined]

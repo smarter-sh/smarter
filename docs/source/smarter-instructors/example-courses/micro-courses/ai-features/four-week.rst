@@ -111,6 +111,9 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        ``verify_stackademy``, not copied (:doc:`ADR 033 </adr/033-dry>`); phase 2 (`commit
        d07b91f67
        <https://github.com/smarter-sh/smarter/commit/d07b91f677ff0b8428ac36c62be9b5670f7492b1>`__).
+       Then the third copy: when the Orchestrator prompted LLMClients in-process too, the doodle
+       moved to its ``send_message()``, and only ``verify_stackademy``, which tests the chat api
+       itself, kept the http path.
    * - 2
      - Lecture 5
      - **A menu, not a blank page.** ``editor_request()`` and the Pydantic contract,

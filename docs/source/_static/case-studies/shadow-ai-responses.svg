@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" role="img" aria-label="Exhibit: three ways to respond to the AI projects that departments have already built">
+<title>Exhibit: three ways to respond to the AI projects that departments have already built</title>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker><marker id="dk-arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A78BFA"/></marker></defs>
+<rect width="1200" height="560" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="560" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="560" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#F59E0B"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#F59E0B" text-anchor="start">Shadow AI</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">Three ways to respond.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">People already build with AI. Stackademy chose the third way: make the easy path the governed one.</text>
+<rect x="50" y="196" width="360" height="300" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="214" width="4" height="264" rx="2" fill="#8D8FA0"/>
+<rect x="76" y="220" width="52" height="52" rx="14" fill="#8D8FA0" fill-opacity="0.18"/>
+<g transform="translate(89,233) scale(1.0833)" fill="none" stroke="#8D8FA0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></g>
+<text x="144" y="254" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="start">1  Ignore it</text>
+<text x="78" y="312" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Everyone keeps building alone.</text>
+<text x="78" y="335" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Nothing is shared, and no one</text>
+<text x="78" y="358" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">sees it.</text>
+<text x="78" y="404" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="600" fill="#8D8FA0" text-anchor="start">At Stackademy</text>
+<text x="78" y="430" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">The AI invoice grows $288 a</text>
+<text x="78" y="451" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">month; data leaves unseen.</text>
+<rect x="420" y="196" width="360" height="300" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="420" y="214" width="4" height="264" rx="2" fill="#F87171"/>
+<rect x="446" y="220" width="52" height="52" rx="14" fill="#F87171" fill-opacity="0.18"/>
+<g transform="translate(459,233) scale(1.0833)" fill="none" stroke="#F87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></g>
+<text x="514" y="254" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="22" font-weight="700" fill="#F87171" text-anchor="start">2  Ban it</text>
+<text x="448" y="312" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Some people stop. Others go</text>
+<text x="448" y="335" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">around the rule. The business</text>
+<text x="448" y="358" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">slows down.</text>
+<text x="448" y="404" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="600" fill="#8D8FA0" text-anchor="start">At Stackademy</text>
+<text x="448" y="430" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">Month-end, the nightly emails and</text>
+<text x="448" y="451" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">the screener stop; the rest hide.</text>
+<rect x="790" y="196" width="360" height="300" rx="18" fill="#3DD68C" fill-opacity="0.08" stroke="#3DD68C" stroke-opacity="0.55" stroke-width="1.2"/>
+<rect x="816" y="220" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(829,233) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></g>
+<text x="884" y="254" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="22" font-weight="700" fill="#3DD68C" text-anchor="start">3  Enable it</text>
+<text x="818" y="312" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">One place to build and run AI,</text>
+<text x="818" y="335" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">under the company's rules, with</text>
+<text x="818" y="358" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">nothing rewritten on day one.</text>
+<text x="818" y="404" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="600" fill="#8D8FA0" text-anchor="start">At Stackademy</text>
+<text x="818" y="430" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#3DD68C" text-anchor="start">A Proxy per project at once;</text>
+<text x="818" y="451" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#3DD68C" text-anchor="start">the leaky ones rebuilt next.</text>
+<rect x="1061" y="226" width="65" height="24" rx="12" fill="#3DD68C" fill-opacity="0.16"/>
+<text x="1093.5" y="242.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#3DD68C" text-anchor="middle">chosen</text>
+<text x="50" y="538" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: the Smarter presentation deck; account 5300 and ap_invoices in smarter-sh/stackademy.</text>
+</svg>

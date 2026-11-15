@@ -6,17 +6,27 @@ from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
-from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 
 
 # Register your models here.
 class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
     """SAMJournal model admin."""
 
-    readonly_fields = ("created_at",)
+    readonly_fields = ("created_at", "request", "response")
     list_display = ("created_at", "user", "thing_display", "command_display", "status_code")
     raw_id_fields = ("user",)
     ordering = ("-created_at",)
+
+    def get_queryset(self, request):
+        """
+        Return the entries without their documents, which are read only when one entry is shown.
+
+        :param request: The admin's request.
+        :returns: The entries.
+        """
+        queryset = super().get_queryset(request)
+        return queryset.defer(*DOCUMENT_FIELDS)
 
     @admin.display(description="Thing", ordering="thing")
     def thing_display(self, obj: SAMJournal) -> str:

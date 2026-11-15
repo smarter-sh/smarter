@@ -7,6 +7,8 @@
 # - Purpose: Creates the database if it does not exist, typically run as a Helm hook.
 # - Usage: Only rendered if databaseInit.enabled is set in values.yaml.
 # - Notes: Update resource requests/limits and SQL logic as needed for your environment.
+# - On an upgrade, job-migrate.yaml has already migrated, as a pre-upgrade hook, before the
+#   rollout. This Job's migrate then finds nothing to do; it migrates a fresh install.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico

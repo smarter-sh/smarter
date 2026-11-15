@@ -17,7 +17,7 @@ class TestSAMJournalSerializers(SmarterTestBase):
 
     def setUp(self):
         super().setUp()
-        self.journal = SAMJournal.objects.create(
+        self.journal = SAMJournal.objects.create_entry(
             thing=SmarterJournalThings.LLM_CLIENT.value,
             command=SmarterJournalCliCommands.PROMPT.value,
             request={"url": "http://localhost:9357/"},

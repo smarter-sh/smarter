@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1010" width="1200" height="1010" role="img" aria-label="Exhibit: how a day's doodle is chosen and drawn">
+<title>Exhibit: how a day's doodle is chosen and drawn</title>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker></defs>
+<rect width="1200" height="1010" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="1010" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="1010" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#F59E0B"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#F59E0B" text-anchor="start">The Smarter Doodle</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">Code sets the menu. AI makes the call.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">Python plans, gathers and checks. Smarter AI resources choose, judge and draw. A person approves new art.</text>
+<text x="52" y="210" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#4FA3FF" text-anchor="start" letter-spacing="1.4">Python and Django</text>
+<text x="540" y="210" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">smarter.apps.doodle</text>
+<text x="612" y="374" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="700" fill="#A78BFA" text-anchor="start" letter-spacing="1.4">Smarter AI resources</text>
+<text x="1100" y="374" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="400" fill="#8D8FA0" text-anchor="end">YAML manifests</text>
+<rect x="50" y="236" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="262" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(83,275) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></g>
+<text x="140" y="272" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#4FA3FF" text-anchor="start">1  Planner</text>
+<text x="140" y="297" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Celery Beat, every 6 hours</text>
+<text x="140" y="322" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">7 days ahead, 12 regions, 19 reviewed themes</text>
+<rect x="50" y="360" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="386" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(83,399) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></g>
+<text x="140" y="396" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#4FA3FF" text-anchor="start">2  Candidates</text>
+<text x="140" y="421" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">editor_request()</text>
+<text x="140" y="446" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Each region's menu: catalog, holidays, trends</text>
+<rect x="610" y="386" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="630" y="412" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(643,425) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></g>
+<text x="700" y="422" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#A78BFA" text-anchor="start">3  Doodle Editor</text>
+<text x="700" y="447" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">smarter_doodle_editor · LLMClient</text>
+<text x="700" y="472" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Picks one item per region, and says why</text>
+<rect x="50" y="484" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="510" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(83,523) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></g>
+<text x="140" y="520" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#4FA3FF" text-anchor="start">4  Checks</text>
+<text x="140" y="545" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">check_decision()</text>
+<text x="140" y="570" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">On the menu? Blocked words, caption, link</text>
+<rect x="431" y="502" width="93" height="24" rx="12" fill="#F87171" fill-opacity="0.16"/>
+<text x="477.5" y="518.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F87171" text-anchor="middle">can refuse</text>
+<rect x="610" y="514" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="630" y="540" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(643,553) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 1.6 2.4 2.4 4 2.4s3-.8 4-2.4M9 9.5h.01M15 9.5h.01"/></g>
+<text x="700" y="550" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#A78BFA" text-anchor="start">5  Tone judge</text>
+<text x="700" y="575" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">upbeat_occasion_input · Guardrail</text>
+<text x="700" y="600" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">A small LLM: is it plainly cheerful?</text>
+<rect x="991" y="532" width="93" height="24" rx="12" fill="#F87171" fill-opacity="0.16"/>
+<text x="1037.5" y="548.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F87171" text-anchor="middle">can refuse</text>
+<rect x="610" y="638" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="630" y="664" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(643,677) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.4 3.6a2 2 0 0 1 2.8 2.8L12 15.6 9.2 12.8z"/><path d="M9.2 12.8C6 12.8 4 15 4 20c4 0 6.8-1.6 8-4.4"/></g>
+<text x="700" y="674" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#A78BFA" text-anchor="start">6  Doodle Artist</text>
+<text x="700" y="699" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">smarter_doodle_artist · LLMClient</text>
+<text x="700" y="724" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Draws the decorations, in flat SVG shapes</text>
+<rect x="50" y="668" width="490" height="104" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="694" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(83,707) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></g>
+<text x="140" y="704" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#4FA3FF" text-anchor="start">7  Sanitizer</text>
+<text x="140" y="729" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">sanitize_svg()</text>
+<text x="140" y="754" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Allowlist: no scripts, links or url()</text>
+<rect x="431" y="686" width="93" height="24" rx="12" fill="#F87171" fill-opacity="0.16"/>
+<text x="477.5" y="702.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F87171" text-anchor="middle">can refuse</text>
+<path d="M295.0,340 L295.0,360" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="295.0" cy="340" r="5" fill="#FFC50C"/>
+<circle cx="295.0" cy="360" r="5" fill="#FFC50C"/>
+<path d="M540,412.0 C575.0,412.0 575.0,438.0 610,438.0" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="540" cy="412.0" r="5" fill="#FFC50C"/>
+<circle cx="610" cy="438.0" r="5" fill="#FFC50C"/>
+<path d="M610,438.0 C575.0,438.0 575.0,536.0 540,536.0" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="610" cy="438.0" r="5" fill="#FFC50C"/>
+<circle cx="540" cy="536.0" r="5" fill="#FFC50C"/>
+<path d="M540,536.0 C575.0,536.0 575.0,566.0 610,566.0" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="540" cy="536.0" r="5" fill="#FFC50C"/>
+<circle cx="610" cy="566.0" r="5" fill="#FFC50C"/>
+<path d="M855.0,618 L855.0,638" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="855.0" cy="618" r="5" fill="#FFC50C"/>
+<circle cx="855.0" cy="638" r="5" fill="#FFC50C"/>
+<path d="M610,690.0 C575.0,690.0 575.0,720.0 540,720.0" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="610" cy="690.0" r="5" fill="#FFC50C"/>
+<circle cx="540" cy="720.0" r="5" fill="#FFC50C"/>
+<rect x="50" y="800" width="490" height="128" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="70" y="826" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(83,839) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="140" y="836" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#F59E0B" text-anchor="start">8  Superuser</text>
+<text x="140" y="861" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Django admin · Preview the week</text>
+<text x="140" y="886" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Approves new drawings, or rejects them</text>
+<text x="140" y="909" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Reviewed catalog art needs no one.</text>
+<path d="M295.0,772 L295.0,800" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="295.0" cy="772" r="5" fill="#FFC50C"/>
+<circle cx="295.0" cy="800" r="5" fill="#FFC50C"/>
+<rect x="610" y="800" width="490" height="128" rx="18" fill="#3DD68C" fill-opacity="0.08" stroke="#3DD68C" stroke-opacity="0.55" stroke-width="1.2"/>
+<text x="634" y="836" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#3DD68C" text-anchor="start">Sign-in page</text>
+<text x="634" y="861" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">/api/v1/doodles/today/</text>
+<text x="634" y="886" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Each region's doodle,</text>
+<text x="634" y="909" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">from local midnight</text>
+<svg x="912" y="814" width="172" height="112" viewBox="0 0 520 340">  <rect width="520" height="340" rx="12" fill="#2a1c5a"/>
+  <style>
+    .dd-flow { stroke-dasharray: 3 7; animation: dd-flow 1.8s linear infinite; }
+    @keyframes dd-flow { to { stroke-dashoffset: -20; } }
+    .dd-float { animation: dd-float 6s ease-in-out infinite; }
+    .dd-float-b { animation-delay: -1.5s; }
+    .dd-float-c { animation-delay: -3s; }
+    .dd-float-d { animation-delay: -4.5s; }
+    @keyframes dd-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .dd-typing circle { animation: dd-blink 1.4s ease-in-out infinite; }
+    .dd-typing circle:nth-child(2) { animation-delay: 0.2s; }
+    .dd-typing circle:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dd-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+    .dd-twinkle { animation: dd-twinkle 5s ease-in-out infinite; }
+    .dd-twinkle-b { animation-delay: -2.5s; }
+    @keyframes dd-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+  <g id="doodle-base">
+    <g fill="#ffffff">
+      <circle class="dd-twinkle" cx="150" cy="36" r="1.6" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="196" cy="68" r="1.2" />
+      <circle class="dd-twinkle" cx="330" cy="58" r="1.4" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="372" cy="24" r="1.8" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="262" cy="30" r="1.1" />
+      <circle class="dd-twinkle" cx="30" cy="180" r="1.3" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="494" cy="176" r="1.3" />
+    </g>
+    <ellipse cx="260" cy="310" rx="200" ry="10" fill="#ffffff" opacity="0.05" />
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round">
+      <path class="dd-flow" d="M185 150 C152 150 146 122 118 122" />
+      <path class="dd-flow" d="M185 200 C152 200 146 230 115 230" />
+      <path class="dd-flow" d="M335 150 C368 150 374 122 402 122" />
+      <path class="dd-flow" d="M335 200 C368 200 374 230 405 230" />
+      <path class="dd-flow" d="M260 232 L260 252" />
+    </g>
+    <g>
+      <rect x="185" y="105" width="150" height="127" rx="14" fill="#ffffff" />
+      <path d="M185 119 a14 14 0 0 1 14 -14 h122 a14 14 0 0 1 14 14 v8 h-150 z" fill="#f1effe" />
+      <circle cx="199" cy="116" r="3" fill="#ff5733" />
+      <circle cx="209" cy="116" r="3" fill="#ffc145" />
+      <circle cx="219" cy="116" r="3" fill="#00c2a8" />
+      <rect x="243" y="137" width="80" height="22" rx="11" fill="#ff5733" />
+      <rect x="254" y="146" width="56" height="4" rx="2" fill="#ffffff" opacity="0.9" />
+      <rect x="197" y="166" width="98" height="30" rx="11" fill="#ecebfe" />
+      <rect x="207" y="174" width="72" height="4" rx="2" fill="#6c5ce7" opacity="0.6" />
+      <rect x="207" y="184" width="48" height="4" rx="2" fill="#6c5ce7" opacity="0.4" />
+      <rect x="197" y="203" width="42" height="18" rx="9" fill="#ecebfe" />
+      <g class="dd-typing" fill="#6c5ce7">
+        <circle cx="208" cy="212" r="2.6" />
+        <circle cx="218" cy="212" r="2.6" />
+        <circle cx="228" cy="212" r="2.6" />
+      </g>
+    </g>
+    <g class="dd-float">
+      <circle cx="92" cy="122" r="26" fill="#00c2a8" />
+      <path d="M82 112 h6.5 a4 4 0 1 0 7 0 h6.5 v6.5 a4 4 0 1 1 0 7 v6.5 h-20 z" fill="#ffffff" />
+    </g>
+    <g class="dd-float dd-float-b">
+      <circle cx="89" cy="230" r="26" fill="#ffc145" />
+      <path d="M89 216 l12 5 v8 c0 8 -5 13 -12 16 c-7 -3 -12 -8 -12 -16 v-8 z" fill="#ffffff" />
+      <path d="M84 230 l4 4 l7 -8" fill="none" stroke="#ffc145" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <g class="dd-float dd-float-c">
+      <circle cx="428" cy="122" r="26" fill="#4fc3f7" />
+      <path d="M417 113 v18 a11 4 0 0 0 22 0 v-18 z" fill="#ffffff" />
+      <ellipse cx="428" cy="113" rx="11" ry="4" fill="#e3f6fd" />
+      <path d="M417 122 a11 4 0 0 0 22 0" fill="none" stroke="#4fc3f7" stroke-width="1.6" />
+    </g>
+    <g class="dd-float dd-float-d">
+      <circle cx="431" cy="230" r="26" fill="#ff6b9a" />
+      <circle cx="424" cy="230" r="6" fill="none" stroke="#ffffff" stroke-width="3" />
+      <path d="M430 230 h12 m-4 0 v5 m-4 -5 v4" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+    </g>
+    <g>
+      <rect x="190" y="252" width="140" height="26" rx="13" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.3" />
+      <text x="260" y="269" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#ffffff"><tspan fill="#ffc145">kind</tspan>: LLMClient</text>
+    </g>
+  </g>
+  <g id="doodle-props"><circle cx="38" cy="34" r="8" fill="#ffc145" />
+  <polygon points="66,20 70,31 82,32 73,40 76,52 66,45 56,52 59,40 50,32 62,31" fill="#ff6b9a" />
+  <rect x="26" y="67" width="15" height="15" rx="3" transform="rotate(-18 33.5 74.5)" fill="#4fc3f7" />
+  <circle cx="78" cy="73" r="5" fill="#00c2a8" />
+  <line x1="105" y1="79" x2="139" y2="34" stroke="#ff6b9a" stroke-width="8" stroke-linecap="round" />
+  <polygon points="135,30 150,20 143,39" fill="#ffc145" />
+  <line x1="111" y1="72" x2="124" y2="81" stroke="#6c5ce7" stroke-width="3" stroke-linecap="round" />
+  <circle cx="169" cy="36" r="7" fill="#00c2a8" />
+  <rect x="159" y="64" width="13" height="13" rx="2" transform="rotate(20 165.5 70.5)" fill="#ffc145" />
+  <polygon points="183,48 191,56 183,64 175,56" fill="#4fc3f7" />
+  <circle cx="478" cy="31" r="9" fill="#4fc3f7" />
+  <polygon points="445,20 450,31 462,32 453,40 456,52 445,45 435,52 438,40 429,32 441,31" fill="#ffc145" />
+  <line x1="414" y1="79" x2="382" y2="34" stroke="#00c2a8" stroke-width="8" stroke-linecap="round" />
+  <polygon points="386,30 371,20 378,39" fill="#ff6b9a" />
+  <line x1="408" y1="71" x2="397" y2="81" stroke="#6c5ce7" stroke-width="3" stroke-linecap="round" />
+  <rect x="485" y="65" width="15" height="15" rx="3" transform="rotate(18 492.5 72.5)" fill="#ff6b9a" />
+  <circle cx="352" cy="37" r="6" fill="#ffc145" />
+  <polygon points="340,62 348,70 340,78 332,70" fill="#00c2a8" />
+  <polygon points="220,102 220,85 241,91 258,83 258,103 241,97" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="258,83 276,91 296,85 296,102 276,97 258,103" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <line x1="258" y1="84" x2="258" y2="103" stroke="#ff6b9a" stroke-width="3" />
+  <line x1="228" y1="91" x2="243" y2="95" stroke="#4fc3f7" stroke-width="2" stroke-linecap="round" />
+  <line x1="273" y1="92" x2="288" y2="89" stroke="#00c2a8" stroke-width="2" stroke-linecap="round" />
+  <polygon points="22,298 22,287 48,291 74,287 74,299 48,295" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="48,291 48,295 48,307 22,310 22,298" fill="#4fc3f7" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="48,295 48,307 74,310 74,299" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <rect x="91" y="298" width="57" height="10" rx="3" fill="#ff6b9a" />
+  <rect x="97" y="286" width="52" height="9" rx="3" fill="#00c2a8" />
+  <circle cx="157" cy="297" r="6" fill="#ffc145" />
+  <polygon points="450,298 450,287 476,291 502,287 502,299 476,295" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="476,291 476,295 476,307 450,310 450,298" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="476,295 476,307 502,310 502,299" fill="#ff6b9a" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <rect x="369" y="298" width="57" height="10" rx="3" fill="#4fc3f7" />
+  <rect x="373" y="286" width="52" height="9" rx="3" fill="#ffc145" />
+  <polygon points="355,288 362,295 355,302 348,295" fill="#00c2a8" />
+</g></svg>
+<path d="M540,864.0 L610,864.0" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="540" cy="864.0" r="5" fill="#3DD68C"/>
+<circle cx="610" cy="864.0" r="5" fill="#3DD68C"/>
+<path d="M1100,438.0 C1136,438.0 1136,438.0 1136,468.0 L1136,800 C1136,830 1136,830 1100,830" fill="none" stroke="#3DD68C" stroke-width="2.4" stroke-opacity="0.85" stroke-dasharray="7 6"/>
+<circle cx="1100" cy="438.0" r="5" fill="#3DD68C"/>
+<circle cx="1100" cy="830" r="5" fill="#3DD68C"/>
+<text transform="translate(1158,608.0) rotate(90)" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="600" fill="#3DD68C" text-anchor="middle">catalog or default: shown at once</text>
+<rect x="610" y="210" width="490" height="136" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="610" y="228" width="4" height="100" rx="2" fill="#F87171"/>
+<text x="638" y="244" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="21" font-weight="700" fill="#F87171" text-anchor="start">Fail safe</text>
+<text x="638" y="272" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">Any refusal or failure, at any step, keeps</text>
+<text x="638" y="295" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">the doodle that the calendar planned. Nothing</text>
+<text x="638" y="318" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">worse than the plain scene can reach the page.</text>
+<text x="50" y="988" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: smarter.apps.doodle; smarter/ in smarter-sh/example-manifests. The sign-in page shows Japan's Culture Day.</text>
+</svg>

@@ -29,7 +29,7 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
-from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 from smarter.lib.journal.serializers import (
     SAMJournalMiniSerializer,
     SAMJournalSerializer,
@@ -151,7 +151,7 @@ class TestOrmModel(SmarterTestBase):
     """Test SAMJournalApiOrmModel."""
 
     def test_from_model(self):
-        journal = SAMJournal.objects.create(
+        journal = SAMJournal.objects.create_entry(
             thing=SmarterJournalThings.SECRET.value,
             command=SmarterJournalCliCommands.DESCRIBE.value,
             request={"url": "http://localhost:9357/"},
@@ -166,10 +166,10 @@ class TestOrmModel(SmarterTestBase):
         self.assertEqual(model.command, "describe")
         self.assertEqual(model.response, {"data": [1, "two", None]})
         self.assertEqual(model.status_code, 200)
-        self.assertEqual(
-            set(SAMJournalApiOrmModel.model_fields),
-            {field.attname.removesuffix("_id") for field in SAMJournal._meta.concrete_fields},
-        )
+        # the documents are stored in DOCUMENT_FIELDS, and read and written as request and response.
+        columns = {field.attname.removesuffix("_id") for field in SAMJournal._meta.concrete_fields}
+        row_fields = (columns - set(DOCUMENT_FIELDS)) | {"request", "response"}
+        self.assertEqual(set(SAMJournalApiOrmModel.model_fields), row_fields)
 
     def test_forbids_other_values(self):
         values = {"key": KEY, "thing": "Secret", "command": "get", "request": {}, "response": {}, "status_code": 200}
@@ -191,7 +191,7 @@ class TestSAMJournalRestApiModels(OpenApiResponseMixin, TestAccountMixin):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.journal = SAMJournal.objects.create(
+        cls.journal = SAMJournal.objects.create_entry(
             user=cls.admin_user,
             thing=SmarterJournalThings.GUARDRAIL.value,
             command=SmarterJournalCliCommands.APPLY.value,
@@ -199,7 +199,7 @@ class TestSAMJournalRestApiModels(OpenApiResponseMixin, TestAccountMixin):
             response={"data": {"a": 1}},
             status_code=HTTPStatus.OK,
         )
-        cls.anonymous = SAMJournal.objects.create(
+        cls.anonymous = SAMJournal.objects.create_entry(
             user=None,
             thing=SmarterJournalThings.GUARDRAIL.value,
             command=SmarterJournalCliCommands.GET.value,

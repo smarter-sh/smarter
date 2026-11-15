@@ -56,6 +56,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=6),
         "options": OPERATIONAL,
     },
+    "prune-journal-blobs": {
+        "task": "smarter.lib.journal.tasks.prune_journal_blobs",
+        "schedule": timedelta(days=7),
+        "options": OPERATIONAL,
+    },
     "purge-guardrail-events": {
         "task": "smarter.apps.guardrail.tasks.purge_guardrail_events",
         "schedule": timedelta(days=1),

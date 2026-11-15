@@ -12,7 +12,7 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.common.conf import smarter_settings
 from smarter.common.helpers.console_helpers import SmarterFormattedText
-from smarter.common.utils import request_to_json
+from smarter.common.utils import mask_url_query, request_to_json
 from smarter.common.utils.request_to_json import RequestData
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -139,11 +139,17 @@ def handle_chat_config_invoked(
     """
     Handle prompt config invoked signal.
 
+    The url is logged with :func:`~smarter.common.utils.mask_url_query`, because clients send the
+    chat's session key in its query string, and the key is a credential for the chat.
+
     prompt_config_invoked.send(sender=self.__class__, instance=self, request=self.smarter_request, data=retval)
     """
     url: Optional[str] = instance.url
+    masked_url = mask_url_query(url)
 
-    logger.info("%s by %s url=%s", f"{logger_prefix}.handle_chat_config_invoked()", get_sender_name(sender), url)
+    logger.info(
+        "%s by %s url=%s", f"{logger_prefix}.handle_chat_config_invoked()", get_sender_name(sender), masked_url
+    )
     # SmarterFormattedText.json() of the whole configuration is costly, and it is evaluated before the call, so only
     # when it will be logged.
     if logger.isEnabledFor(logging.DEBUG):

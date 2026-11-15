@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340" role="img">
+  <title>Colorful books and art supplies decorate a Smarter LLMClient for Culture Day.</title>
+  <rect width="520" height="340" rx="12" fill="#2a1c5a"/>
+  <style>
+    .dd-flow { stroke-dasharray: 3 7; animation: dd-flow 1.8s linear infinite; }
+    @keyframes dd-flow { to { stroke-dashoffset: -20; } }
+    .dd-float { animation: dd-float 6s ease-in-out infinite; }
+    .dd-float-b { animation-delay: -1.5s; }
+    .dd-float-c { animation-delay: -3s; }
+    .dd-float-d { animation-delay: -4.5s; }
+    @keyframes dd-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .dd-typing circle { animation: dd-blink 1.4s ease-in-out infinite; }
+    .dd-typing circle:nth-child(2) { animation-delay: 0.2s; }
+    .dd-typing circle:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dd-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+    .dd-twinkle { animation: dd-twinkle 5s ease-in-out infinite; }
+    .dd-twinkle-b { animation-delay: -2.5s; }
+    @keyframes dd-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+  <g id="doodle-base">
+
+    <g fill="#ffffff">
+      <circle class="dd-twinkle" cx="150" cy="36" r="1.6" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="196" cy="68" r="1.2" />
+      <circle class="dd-twinkle" cx="330" cy="58" r="1.4" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="372" cy="24" r="1.8" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="262" cy="30" r="1.1" />
+      <circle class="dd-twinkle" cx="30" cy="180" r="1.3" />
+      <circle class="dd-twinkle dd-twinkle-b" cx="494" cy="176" r="1.3" />
+    </g>
+
+
+    <ellipse cx="260" cy="310" rx="200" ry="10" fill="#ffffff" opacity="0.05" />
+
+
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round">
+      <path class="dd-flow" d="M185 150 C152 150 146 122 118 122" />
+      <path class="dd-flow" d="M185 200 C152 200 146 230 115 230" />
+      <path class="dd-flow" d="M335 150 C368 150 374 122 402 122" />
+      <path class="dd-flow" d="M335 200 C368 200 374 230 405 230" />
+      <path class="dd-flow" d="M260 232 L260 252" />
+    </g>
+
+
+    <g>
+      <rect x="185" y="105" width="150" height="127" rx="14" fill="#ffffff" />
+      <path d="M185 119 a14 14 0 0 1 14 -14 h122 a14 14 0 0 1 14 14 v8 h-150 z" fill="#f1effe" />
+      <circle cx="199" cy="116" r="3" fill="#ff5733" />
+      <circle cx="209" cy="116" r="3" fill="#ffc145" />
+      <circle cx="219" cy="116" r="3" fill="#00c2a8" />
+
+      <rect x="243" y="137" width="80" height="22" rx="11" fill="#ff5733" />
+      <rect x="254" y="146" width="56" height="4" rx="2" fill="#ffffff" opacity="0.9" />
+
+      <rect x="197" y="166" width="98" height="30" rx="11" fill="#ecebfe" />
+      <rect x="207" y="174" width="72" height="4" rx="2" fill="#6c5ce7" opacity="0.6" />
+      <rect x="207" y="184" width="48" height="4" rx="2" fill="#6c5ce7" opacity="0.4" />
+
+      <rect x="197" y="203" width="42" height="18" rx="9" fill="#ecebfe" />
+      <g class="dd-typing" fill="#6c5ce7">
+        <circle cx="208" cy="212" r="2.6" />
+        <circle cx="218" cy="212" r="2.6" />
+        <circle cx="228" cy="212" r="2.6" />
+      </g>
+    </g>
+
+
+    <g class="dd-float">
+      <circle cx="92" cy="122" r="26" fill="#00c2a8" />
+      <path d="M82 112 h6.5 a4 4 0 1 0 7 0 h6.5 v6.5 a4 4 0 1 1 0 7 v6.5 h-20 z" fill="#ffffff" />
+    </g>
+
+
+    <g class="dd-float dd-float-b">
+      <circle cx="89" cy="230" r="26" fill="#ffc145" />
+      <path d="M89 216 l12 5 v8 c0 8 -5 13 -12 16 c-7 -3 -12 -8 -12 -16 v-8 z" fill="#ffffff" />
+      <path d="M84 230 l4 4 l7 -8" fill="none" stroke="#ffc145" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+
+
+    <g class="dd-float dd-float-c">
+      <circle cx="428" cy="122" r="26" fill="#4fc3f7" />
+      <path d="M417 113 v18 a11 4 0 0 0 22 0 v-18 z" fill="#ffffff" />
+      <ellipse cx="428" cy="113" rx="11" ry="4" fill="#e3f6fd" />
+      <path d="M417 122 a11 4 0 0 0 22 0" fill="none" stroke="#4fc3f7" stroke-width="1.6" />
+    </g>
+
+
+    <g class="dd-float dd-float-d">
+      <circle cx="431" cy="230" r="26" fill="#ff6b9a" />
+      <circle cx="424" cy="230" r="6" fill="none" stroke="#ffffff" stroke-width="3" />
+      <path d="M430 230 h12 m-4 0 v5 m-4 -5 v4" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+    </g>
+
+
+    <g>
+      <rect x="190" y="252" width="140" height="26" rx="13" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.3" />
+      <text x="260" y="269" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" fill="#ffffff"><tspan fill="#ffc145">kind</tspan>: LLMClient</text>
+    </g>
+  </g>
+  <g id="doodle-props"><circle cx="38" cy="34" r="8" fill="#ffc145" />
+  <polygon points="66,20 70,31 82,32 73,40 76,52 66,45 56,52 59,40 50,32 62,31" fill="#ff6b9a" />
+  <rect x="26" y="67" width="15" height="15" rx="3" transform="rotate(-18 33.5 74.5)" fill="#4fc3f7" />
+  <circle cx="78" cy="73" r="5" fill="#00c2a8" />
+  <line x1="105" y1="79" x2="139" y2="34" stroke="#ff6b9a" stroke-width="8" stroke-linecap="round" />
+  <polygon points="135,30 150,20 143,39" fill="#ffc145" />
+  <line x1="111" y1="72" x2="124" y2="81" stroke="#6c5ce7" stroke-width="3" stroke-linecap="round" />
+  <circle cx="169" cy="36" r="7" fill="#00c2a8" />
+  <rect x="159" y="64" width="13" height="13" rx="2" transform="rotate(20 165.5 70.5)" fill="#ffc145" />
+  <polygon points="183,48 191,56 183,64 175,56" fill="#4fc3f7" />
+  <circle cx="478" cy="31" r="9" fill="#4fc3f7" />
+  <polygon points="445,20 450,31 462,32 453,40 456,52 445,45 435,52 438,40 429,32 441,31" fill="#ffc145" />
+  <line x1="414" y1="79" x2="382" y2="34" stroke="#00c2a8" stroke-width="8" stroke-linecap="round" />
+  <polygon points="386,30 371,20 378,39" fill="#ff6b9a" />
+  <line x1="408" y1="71" x2="397" y2="81" stroke="#6c5ce7" stroke-width="3" stroke-linecap="round" />
+  <rect x="485" y="65" width="15" height="15" rx="3" transform="rotate(18 492.5 72.5)" fill="#ff6b9a" />
+  <circle cx="352" cy="37" r="6" fill="#ffc145" />
+  <polygon points="340,62 348,70 340,78 332,70" fill="#00c2a8" />
+  <polygon points="220,102 220,85 241,91 258,83 258,103 241,97" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="258,83 276,91 296,85 296,102 276,97 258,103" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <line x1="258" y1="84" x2="258" y2="103" stroke="#ff6b9a" stroke-width="3" />
+  <line x1="228" y1="91" x2="243" y2="95" stroke="#4fc3f7" stroke-width="2" stroke-linecap="round" />
+  <line x1="273" y1="92" x2="288" y2="89" stroke="#00c2a8" stroke-width="2" stroke-linecap="round" />
+  <polygon points="22,298 22,287 48,291 74,287 74,299 48,295" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="48,291 48,295 48,307 22,310 22,298" fill="#4fc3f7" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="48,295 48,307 74,310 74,299" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <rect x="91" y="298" width="57" height="10" rx="3" fill="#ff6b9a" />
+  <rect x="97" y="286" width="52" height="9" rx="3" fill="#00c2a8" />
+  <circle cx="157" cy="297" r="6" fill="#ffc145" />
+  <polygon points="450,298 450,287 476,291 502,287 502,299 476,295" fill="white" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="476,291 476,295 476,307 450,310 450,298" fill="#ffc145" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="476,295 476,307 502,310 502,299" fill="#ff6b9a" stroke="#6c5ce7" stroke-width="2" stroke-linejoin="round" />
+  <rect x="369" y="298" width="57" height="10" rx="3" fill="#4fc3f7" />
+  <rect x="373" y="286" width="52" height="9" rx="3" fill="#ffc145" />
+  <polygon points="355,288 362,295 355,302 348,295" fill="#00c2a8" />
+</g>
+</svg>

@@ -291,8 +291,13 @@ class TestApplicationEntryPoints(SmarterTestBase):
 
             self.assertEqual(schedule["delete-orphan-dns-records"]["task"], delete_orphan_dns_records.name)
             self.assertEqual(schedule["delete-orphan-dns-records"]["options"], module.INFRASTRUCTURE)
+            from smarter.lib.journal.tasks import prune_journal_blobs
+
+            self.assertEqual(schedule["prune-journal-blobs"]["task"], prune_journal_blobs.name)
+            self.assertEqual(schedule["prune-journal-blobs"]["options"], module.OPERATIONAL)
             for entry in schedule.values():
-                self.assertTrue(entry["task"].startswith("smarter.apps."))
+                # the tasks of the Django apps, and of the framework's apps in smarter.lib, e.g. the journal.
+                self.assertTrue(entry["task"].startswith(("smarter.apps.", "smarter.lib.")))
         finally:
             APP.conf.beat_schedule = saved_schedule
             APP.conf.beat_schedule_filename = saved_filename

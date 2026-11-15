@@ -29,6 +29,7 @@ import random
 import warnings
 from functools import lru_cache
 from typing import Optional, Union
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from warnings import deprecated
 
 from cryptography.fernet import Fernet
@@ -39,6 +40,9 @@ logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
+
+#: Query parameters whose values grant access to something, and so are masked by :func:`mask_url_query`.
+SENSITIVE_QUERY_PARAMETERS: tuple[str, ...] = ("session_key",)
 
 
 def is_async_context():
@@ -150,6 +154,48 @@ def mask_identifier(value: Optional[str], visible: int = 6, mask_char: str = "*"
     if len(value) <= visible:
         return mask_char * 4
     return mask_char * 4 + value[-visible:]
+
+
+def mask_url_query(url: Optional[str]) -> str:
+    """
+    Mask the values of a url's sensitive query parameters, for logging.
+
+    Clients send a chat's session key in the query string, e.g. ``/config/?session_key=<key>``,
+    and anyone holding it could read and continue that chat. Each parameter named in
+    :data:`SENSITIVE_QUERY_PARAMETERS` gets :func:`mask_identifier` of its value. The rest of
+    the url, including the other parameters, is kept.
+
+    :param url: The url, e.g. the request's absolute uri.
+    :type url: Optional[str]
+    :returns: The url with its sensitive query values masked, the url itself if it has no query,
+        or an empty string if ``url`` is empty.
+    :rtype: str
+
+    **Example usage:**
+
+    .. code-block:: python
+
+        from smarter.common.utils import mask_url_query
+
+        mask_url_query("https://example.com/config/?session_key=77846410f51045319bd666642e325c05")
+        # 'https://example.com/config/?session_key=****325c05'
+    """
+    if not url:
+        return ""
+    url = str(url)
+    split_url = urlsplit(url)
+    if not split_url.query:
+        return url
+    parameters = parse_qsl(split_url.query, keep_blank_values=True)
+    masked_parameters = []
+    for name, value in parameters:
+        if name in SENSITIVE_QUERY_PARAMETERS:
+            value = mask_identifier(value)
+        masked_parameters.append((name, value))
+    masked_query = urlencode(masked_parameters, safe="*")
+    masked_split_url = split_url._replace(query=masked_query)
+    masked_url = urlunsplit(masked_split_url)
+    return masked_url
 
 
 @deprecated("Use Pydantic's ``SecretStr`` or other secure alternatives for string masking.")
@@ -297,4 +343,6 @@ __all__ = [
     "bool_environment_variable",
     "generate_fernet_encryption_key",
     "mask_string",
+    "mask_url_query",
+    "SENSITIVE_QUERY_PARAMETERS",
 ]
