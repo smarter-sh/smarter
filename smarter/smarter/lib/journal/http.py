@@ -4,20 +4,23 @@ Journaled JSON responses of the Smarter api, and its common error response.
 
 Every response of the cli api, and of other Smarter apis, is a :class:`SmarterJournaledJsonResponse`
 or a :class:`SmarterJournaledJsonErrorResponse`. Each adds the api version and metadata envelope to
-its data, and, while the ``ENABLE_JOURNAL`` switch is on, saves the request and response as a
-:class:`~smarter.lib.journal.models.SAMJournal` entry.
+its data, and, while the ``ENABLE_JOURNAL`` switch is on, queues the request and response to be
+saved as a :class:`~smarter.lib.journal.models.SAMJournal` entry by a Celery worker
+(:func:`smarter.lib.journal.tasks.create_journal_entry`).
 """
 
+from collections.abc import Sequence
 from http import HTTPStatus
 from json import JSONEncoder
 from typing import Any, Optional, Union
 
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, JsonResponse
+from django.utils import timezone
 
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.common.utils import is_authenticated_request
+from smarter.common.utils import hash_factory, is_authenticated_request
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
@@ -35,8 +38,9 @@ from .contract.models import (
     SAMJournalApiMetadata,
 )
 from .enum import SmarterJournalCliCommands, SmarterJournalThings
-from .models import SAMJournal
-from .signals import journal_entry_created, journal_entry_failed
+from .signals import journal_entry_failed
+from .sources import SAMJournalSource
+from .tasks import SAMJournalEntryRecord, queue_journal_entry
 
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
@@ -49,8 +53,10 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     This class is designed to provide a consistent response format for all Smarter API endpoints,
     embedding contextual information about the request and operation performed. It automatically
     attaches metadata such as the API version, the entity ("thing") being operated on, and the
-    command executed. When journaling is enabled, it also creates a corresponding journal entry
-    in the database, capturing the request, response, user, and status code for audit and traceability.
+    command executed. When journaling is enabled, it also queues a corresponding journal entry,
+    capturing the request, response, user, and status code for audit and traceability. The entry's
+    key is chosen, and returned in the metadata, before a Celery worker saves the entry, so the entry
+    may not exist yet when the client receives the response.
 
     Smarter-specific parameters include the original Django request object, the noun ("thing") being
     journaled, the command performed, and the API response data. Standard Django JsonResponse parameters
@@ -90,6 +96,9 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     :param command: The CLI command executed on the resource.
     :param json_dumps_params: Additional kwargs for ``json.dumps()``.
     :param status: The HTTP status code. Defaults to 200.
+    :param journal_sources: The parts of ``data`` that Smarter has already saved, e.g. a chat thread,
+        which the journal's worker reads from the database instead of receiving them through the
+        Celery broker. See :mod:`smarter.lib.journal.sources`.
     :param kwargs: Of these, only ``content_type``, ``status``, ``headers`` and ``reason`` are passed
         to :class:`django.http.JsonResponse`. The rest are ignored.
     """
@@ -105,6 +114,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         command: Optional[SmarterJournalCliCommands] = None,
         json_dumps_params: Optional[SmarterDictType] = None,
         status: int = HTTPStatus.OK.value,
+        journal_sources: Sequence[SAMJournalSource] = (),
         **kwargs,
     ):
         if not isinstance(data, (dict, list)):
@@ -174,9 +184,9 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             try:
                 serializable_data = json.to_jsonable(data)
                 # SAMJournal.user is a User, or None for an anonymous request.
-                journal_user = None
+                journal_user_id = None
                 if user and not isinstance(user, AnonymousUser) and getattr(user, "is_authenticated", False):
-                    journal_user = user
+                    journal_user_id = user.pk
                 # SAMJournal.thing and .command are blank, not NULL, when the response has none.
                 # Django saves a value that isn't a str as str(value): so does this.
                 journal_thing = ""
@@ -185,19 +195,23 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
                 journal_command = ""
                 if command is not None:
                     journal_command = str(command)
-                journal = SAMJournal.objects.create(
-                    user=journal_user,
+                # the key is chosen now, so that the response can return it, and the entry is
+                # saved by a Celery worker, off this request's thread.
+                record = SAMJournalEntryRecord(
+                    key=hash_factory(length=64),
+                    created_at=timezone.now(),
+                    user_id=journal_user_id,
                     thing=journal_thing,
                     command=journal_command,
-                    request=request_data,
-                    response=serializable_data,
                     status_code=status,
+                    request=json.to_jsonable(request_data),
+                    response=serializable_data,
                 )
-                journal_entry_created.send(sender=self.__class__, journal=journal)
+                queue_journal_entry(record, journal_sources)
                 if isinstance(data, dict):
                     # add the journal's key to the metadata, which keeps its command and thing.
                     envelope.metadata = SAMJournalApiMetadata(
-                        command=envelope.metadata.command, thing=envelope.metadata.thing, key=journal.key
+                        command=envelope.metadata.command, thing=envelope.metadata.thing, key=record.key
                     )
                     data.update(envelope.dump())
             # pylint: disable=broad-except

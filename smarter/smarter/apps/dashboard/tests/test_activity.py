@@ -28,7 +28,7 @@ class TestActivityApiView(TestAccountMixin):
         self.url = reverse(f"{DashboardApiReverseNames.namespace}:{DashboardApiReverseNames.activity}")
 
     def journal(self, user, command: str, status_code: int = HTTPStatus.OK, response=None) -> SAMJournal:
-        entry = SAMJournal.objects.create(
+        entry = SAMJournal.objects.create_entry(
             user=user,
             thing="Plugin",
             command=command,

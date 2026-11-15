@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="Exhibit: phase 1, every legacy AI project calls its AI provider through a Smarter Proxy">
+<title>Exhibit: phase 1, every legacy AI project calls its AI provider through a Smarter Proxy</title>
+<defs><linearGradient id="dk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1C24"/><stop offset="1" stop-color="#24203A"/></linearGradient><radialGradient id="dk-orange" cx="0.04" cy="1.12" r="0.62"><stop offset="0" stop-color="#EA580C" stop-opacity="0.32"/><stop offset="0.55" stop-color="#EA580C" stop-opacity="0.08"/><stop offset="1" stop-color="#EA580C" stop-opacity="0"/></radialGradient><radialGradient id="dk-purple" cx="0.98" cy="-0.06" r="0.5"><stop offset="0" stop-color="#7239EA" stop-opacity="0.3"/><stop offset="1" stop-color="#7239EA" stop-opacity="0"/></radialGradient><marker id="dk-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/></marker><marker id="dk-arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3DD68C"/></marker><marker id="dk-arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A78BFA"/></marker></defs>
+<rect width="1200" height="900" rx="24" fill="url(#dk-bg)"/>
+<rect width="1200" height="900" rx="24" fill="url(#dk-orange)"/>
+<rect width="1200" height="900" rx="24" fill="url(#dk-purple)"/>
+<rect x="50" y="52" width="26" height="4" rx="2" fill="#F59E0B"/>
+<text x="88" y="59" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="600" fill="#F59E0B" text-anchor="start">Shadow AI · phase 1</text>
+<text x="48" y="116" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="46" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-1.2">Two lines changed. Every call goes through Smarter.</text>
+<text x="50" y="154" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="18" font-weight="400" fill="#C9CAD3" text-anchor="start">Each project keeps its code and its provider's SDK; only its base URL and its API key change.</text>
+<rect x="50" y="186" width="1100" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="204" width="4" height="38" rx="2" fill="#F87171"/>
+<text x="78" y="216" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" text-anchor="start"><tspan dx="0" font-weight="700" fill="#F87171">Before</tspan><tspan dx="10" font-weight="400" fill="#FFFFFF">seven projects called three providers directly, with provider keys</tspan></text>
+<text x="78" y="242" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16" font-weight="400" fill="#C9CAD3" text-anchor="start">in scripts, notebooks, a spreadsheet and a CI variable, and one invoice a month, charged to IT.</text>
+<rect x="50" y="300" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="308" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,321) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="330" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Course chatbot</text>
+<text x="128" y="352" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Admissions, the website</text>
+<path d="M320,334 L392,334" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="334" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="334" r="5" fill="#FFC50C"/>
+<rect x="50" y="380" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="388" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,401) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="410" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Month-end commentary</text>
+<text x="128" y="432" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Accounting</text>
+<path d="M320,414 L392,414" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="414" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="414" r="5" fill="#FFC50C"/>
+<rect x="50" y="460" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="468" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,481) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="490" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Résumé screener</text>
+<text x="128" y="512" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">HR</text>
+<path d="M320,494 L392,494" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="494" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="494" r="5" fill="#FFC50C"/>
+<rect x="50" y="540" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="548" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,561) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="570" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Enrollment follow-up</text>
+<text x="128" y="592" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Admissions</text>
+<path d="M320,574 L392,574" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="574" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="574" r="5" fill="#FFC50C"/>
+<rect x="50" y="620" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="628" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,641) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="650" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Lesson reviewer</text>
+<text x="128" y="672" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">Course Content</text>
+<path d="M320,654 L392,654" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="654" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="654" r="5" fill="#FFC50C"/>
+<rect x="50" y="700" width="270" height="68" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="64" y="708" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(77,721) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></g>
+<text x="128" y="730" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#FFFFFF" text-anchor="start">Helpdesk bot + 1 more</text>
+<text x="128" y="752" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#8D8FA0" text-anchor="start">IT, Admissions</text>
+<path d="M320,734 L392,734" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="320" cy="734" r="5" fill="#FFC50C"/>
+<circle cx="392" cy="734" r="5" fill="#FFC50C"/>
+<text x="386" y="276" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#F59E0B" text-anchor="end">Smarter API key</text>
+<rect x="392" y="286" width="476" height="490" rx="22" fill="#4FA3FF" fill-opacity="0.04" stroke="#4FA3FF" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="8 6"/>
+<rect x="414" y="302" width="452" height="24" rx="12" fill="#4FA3FF" fill-opacity="0.16"/>
+<text x="640.0" y="318.5" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="600" fill="#4FA3FF" text-anchor="middle">Smarter · a Proxy per project, in its department's account</text>
+<rect x="414" y="340" width="432" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="414" y="358" width="4" height="38" rx="2" fill="#F59E0B"/>
+<rect x="432" y="351" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(445,364) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16 7l3 3M14 9l2 2"/></g>
+<text x="500" y="372" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#F59E0B" text-anchor="start">Smarter API key</text>
+<text x="500" y="395" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">one per project; revocable; last used</text>
+<rect x="414" y="426" width="432" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="414" y="444" width="4" height="38" rx="2" fill="#4FA3FF"/>
+<rect x="432" y="437" width="52" height="52" rx="14" fill="#4FA3FF" fill-opacity="0.18"/>
+<g transform="translate(445,450) scale(1.0833)" fill="none" stroke="#4FA3FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/></g>
+<text x="500" y="458" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#4FA3FF" text-anchor="start">Proxy</text>
+<text x="500" y="481" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">allowedPaths, e.g. chat/completions</text>
+<rect x="414" y="512" width="432" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="414" y="530" width="4" height="38" rx="2" fill="#F59E0B"/>
+<rect x="432" y="523" width="52" height="52" rx="14" fill="#F59E0B" fill-opacity="0.18"/>
+<g transform="translate(445,536) scale(1.0833)" fill="none" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.6 9.4c-.5-.9-1.4-1.4-2.6-1.4-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1.2 0-2.1-.5-2.6-1.4M12 6.5V8M12 16v1.5"/></g>
+<text x="500" y="544" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#F59E0B" text-anchor="start">Budget</text>
+<text x="500" y="567" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">the department's; 402 at the limit</text>
+<rect x="414" y="598" width="432" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="414" y="616" width="4" height="38" rx="2" fill="#3DD68C"/>
+<rect x="432" y="609" width="52" height="52" rx="14" fill="#3DD68C" fill-opacity="0.18"/>
+<g transform="translate(445,622) scale(1.0833)" fill="none" stroke="#3DD68C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></g>
+<text x="500" y="630" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#3DD68C" text-anchor="start">Secret</text>
+<text x="500" y="653" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">the provider's key, which never leaves</text>
+<rect x="414" y="684" width="432" height="74" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="414" y="702" width="4" height="38" rx="2" fill="#A78BFA"/>
+<rect x="432" y="695" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(445,708) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M3 15h18M9.5 9.5V20"/></g>
+<text x="500" y="716" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#A78BFA" text-anchor="start">Charges</text>
+<text x="500" y="739" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="14" font-weight="400" fill="#C9CAD3" text-anchor="start">tokens by project, person and model</text>
+<rect x="930" y="350" width="220" height="100" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="930" y="368" width="4" height="64" rx="2" fill="#A78BFA"/>
+<rect x="948" y="374" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(961,387) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></g>
+<text x="1012" y="396" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#A78BFA" text-anchor="start">OpenAI</text>
+<text x="1012" y="420" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#8D8FA0" text-anchor="start">openai SDK</text>
+<path d="M868,440 C899.0,440 899.0,400 930,400" fill="none" stroke="#A78BFA" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="868" cy="440" r="5" fill="#A78BFA"/>
+<circle cx="930" cy="400" r="5" fill="#A78BFA"/>
+<rect x="930" y="500" width="220" height="100" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="930" y="518" width="4" height="64" rx="2" fill="#A78BFA"/>
+<rect x="948" y="524" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(961,537) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></g>
+<text x="1012" y="546" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#A78BFA" text-anchor="start">Anthropic</text>
+<text x="1012" y="570" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#8D8FA0" text-anchor="start">anthropic SDK</text>
+<path d="M868,480 C899.0,480 899.0,550 930,550" fill="none" stroke="#A78BFA" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="868" cy="480" r="5" fill="#A78BFA"/>
+<circle cx="930" cy="550" r="5" fill="#A78BFA"/>
+<rect x="930" y="650" width="220" height="100" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="930" y="668" width="4" height="64" rx="2" fill="#A78BFA"/>
+<rect x="948" y="674" width="52" height="52" rx="14" fill="#A78BFA" fill-opacity="0.18"/>
+<g transform="translate(961,687) scale(1.0833)" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></g>
+<text x="1012" y="696" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="16.5" font-weight="700" fill="#A78BFA" text-anchor="start">Google Gemini</text>
+<text x="1012" y="720" font-family="'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#8D8FA0" text-anchor="start">google-genai SDK</text>
+<path d="M868,520 C899.0,520 899.0,700 930,700" fill="none" stroke="#A78BFA" stroke-width="2.4" stroke-opacity="0.85"/>
+<circle cx="868" cy="520" r="5" fill="#A78BFA"/>
+<circle cx="930" cy="700" r="5" fill="#A78BFA"/>
+<text x="1150" y="330" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="12" font-weight="600" fill="#A78BFA" text-anchor="end">+ the provider's key</text>
+<rect x="50" y="790" width="1100" height="70" rx="18" fill="#23252E" fill-opacity="0.82" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="50" y="808" width="4" height="34" rx="2" fill="#F59E0B"/>
+<text x="78" y="819" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">Nothing stops working, and from the first call each project has an owner, a key, a budget and its own charges.</text>
+<text x="78" y="841" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="15" font-weight="400" fill="#C9CAD3" text-anchor="start">The Proxy forwards prompts as they are, so a project that sends private data still does, until phase 2.</text>
+<text x="50" y="878" font-family="Inter, 'Helvetica Neue', Lato, Arial, sans-serif" font-size="13" font-weight="400" fill="#8D8FA0" text-anchor="start">Source: smarter.apps.proxy and docs/source/smarter-resources/smarter-proxy.rst.</text>
+</svg>

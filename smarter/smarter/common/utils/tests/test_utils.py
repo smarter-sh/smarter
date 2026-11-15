@@ -11,6 +11,7 @@ from smarter.common.utils.utils import (
     mask_email,
     mask_identifier,
     mask_string,
+    mask_url_query,
 )
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -90,6 +91,25 @@ class TestUtils(SmarterTestBase):
         self.assertEqual(mask_identifier("short"), "****")
         self.assertEqual(mask_identifier(""), "")
         self.assertEqual(mask_identifier(None), "")
+
+    def test_mask_url_query(self):
+        """A session_key in the query is masked, and the rest of the url is kept (issue #1000)."""
+        key = "0123456789abcdef" * 4
+        url = f"https://example.com/api/v1/llm-clients/abc/config/?session_key={key}"
+        masked = mask_url_query(url)
+        self.assertEqual(masked, "https://example.com/api/v1/llm-clients/abc/config/?session_key=****abcdef")
+        self.assertNotIn(key, masked)
+
+        url = f"https://example.com/api/web/dashboard/logs/stream/?level=DEBUG&session_key={key}"
+        masked = mask_url_query(url)
+        self.assertEqual(masked, "https://example.com/api/web/dashboard/logs/stream/?level=DEBUG&session_key=****abcdef")
+
+    def test_mask_url_query_without_a_sensitive_parameter(self):
+        """A url without a query, or without a sensitive parameter, is unchanged."""
+        self.assertEqual(mask_url_query("https://example.com/config/"), "https://example.com/config/")
+        self.assertEqual(mask_url_query("https://example.com/?level=DEBUG"), "https://example.com/?level=DEBUG")
+        self.assertEqual(mask_url_query(""), "")
+        self.assertEqual(mask_url_query(None), "")
 
     def test_mask_string_basic(self):
         string_length = 12

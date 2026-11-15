@@ -40,6 +40,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from django.conf import settings
+from pydantic import JsonValue
 from social_django.models import UserSocialAuth
 
 from smarter.apps.account.login_audit import LoginFailure, login_identity
@@ -48,7 +49,6 @@ from smarter.apps.infrastructure.exceptions import SmarterInfrastructureError
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.infrastructure.services.logs import LOG_RETENTION, LogQuery
 from smarter.lib.journal.models import SAMJournal
-from smarter.lib.typing import SmarterDictType
 
 MAX_FAILED_REQUESTS = 15
 """The most failed requests that a snapshot lists, newest first."""
@@ -258,7 +258,7 @@ def failed_sign_ins(snapshot: SupportSnapshot) -> None:
             snapshot.last_failed_sign_in = line.timestamp
 
 
-def error_details(response: Optional[SmarterDictType]) -> tuple[str, str]:
+def error_details(response: JsonValue) -> tuple[str, str]:
     """
     Read the error's class and description from a journaled response.
 

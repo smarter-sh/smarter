@@ -20,7 +20,9 @@ class PromptConfig(AppConfig):
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
-        """Import signals."""
-        from . import progress, receivers, signals  # noqa: F401
+        """Import signals, and register the app's journal sources."""
+        from . import journal, progress, receivers, signals  # noqa: F401
+
+        journal.register()
 
         logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)

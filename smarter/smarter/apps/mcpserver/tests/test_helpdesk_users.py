@@ -49,7 +49,7 @@ class HelpdeskTestBase(OperationsTestBase):
         self.add_sign_in_failure(self.admin_user.email.upper(), "wrong_password", minutes_ago=10)
         self.add_sign_in_failure("someone-else@example.com", "unknown_account", minutes_ago=5)
         self.journal = [
-            SAMJournal.objects.create(
+            SAMJournal.objects.create_entry(
                 user=self.admin_user,
                 thing=SmarterJournalThings.PROMPT.value,
                 command=SmarterJournalCliCommands.PROMPT.value,
@@ -57,7 +57,7 @@ class HelpdeskTestBase(OperationsTestBase):
                 response={"error": {"error_class": "SmarterProviderError", "description": "the provider timed out"}},
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             ),
-            SAMJournal.objects.create(
+            SAMJournal.objects.create_entry(
                 user=self.admin_user,
                 thing=SmarterJournalThings.PROMPT.value,
                 command=SmarterJournalCliCommands.PROMPT.value,

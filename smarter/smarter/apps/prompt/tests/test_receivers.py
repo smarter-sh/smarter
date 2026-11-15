@@ -6,6 +6,7 @@ See :class:`smarter.lib.unittest.receivers.ReceiversTestMixin`.
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.prompt import receivers
+from smarter.common.utils import mask_identifier
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.receivers import ReceiversTestMixin
 
@@ -47,6 +48,17 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
             receivers.handle_chat_session_invoked(sender=SmarterTestBase, instance=MagicMock(), request=None)
         mock_logger.debug.assert_called_once()
         mock_logger.info.assert_not_called()
+
+    def test_chat_config_invoked_masks_the_session_key(self):
+        """The config url's session_key, a credential for the chat, is logged masked (issue #1000)."""
+        session_key = "0123456789abcdef" * 4
+        instance = MagicMock(url=f"https://example.com/api/v1/llm-clients/abc/config/?session_key={session_key}")
+        with patch.object(receivers, "logger") as mock_logger:
+            receivers.handle_chat_config_invoked(sender=SmarterTestBase, instance=instance, request=None, data={})
+        mock_logger.info.assert_called_once()
+        logged = str(mock_logger.info.call_args)
+        self.assertNotIn(session_key, logged)
+        self.assertIn(mask_identifier(session_key), logged)
 
     def test_chat_response_success_without_a_prompt_logs_no_warning(self):
         """The passthrough api never has a Prompt, so a response without one is expected: no warning, no history."""

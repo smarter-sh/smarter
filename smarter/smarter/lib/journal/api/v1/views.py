@@ -25,7 +25,7 @@ from smarter.lib.journal.contract.models import (
     SAMJournalApiEntrySummary,
     SAMJournalApiPage,
 )
-from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 from smarter.lib.journal.serializers import (
     SAMJournalMiniSerializer,
     SAMJournalSerializer,
@@ -111,8 +111,9 @@ class SAMJournalListView(SmarterAdminListAPIView):
     serializer_class = SAMJournalMiniSerializer
 
     def get_queryset(self) -> QuerySet[SAMJournal]:
-        """Return every journal entry with its user, newest first."""
-        return journal_entries()
+        """Return every journal entry with its user, newest first, without its documents."""
+        entries = journal_entries()
+        return entries.defer(*DOCUMENT_FIELDS)
 
     def list(self, request: Request, *args, **kwargs):
         """
