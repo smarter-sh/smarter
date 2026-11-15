@@ -9,7 +9,7 @@ tutorial projects never reach: a `broker layer
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__
 that turns YAML manifests into database rows, Pydantic models for every manifest and contract, a
 Pydantic `Settings
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__ class,
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__ class,
 Celery workers and a `beat schedule
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`__, and
 caching with `@cache_results

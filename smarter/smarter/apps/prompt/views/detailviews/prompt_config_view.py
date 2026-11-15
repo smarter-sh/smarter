@@ -69,7 +69,7 @@ from smarter.common.const import (
     SmarterHttpMethods,
 )
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.common.utils import is_authenticated_request
+from smarter.common.utils import is_authenticated_request, mask_identifier
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
@@ -727,11 +727,13 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             # a host that isn't a workbench or platform api url serves deployed LLMClients only.
             return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
 
+        # the session key is a credential for the chat, so only its masked form is logged.
+        masked_session_key = mask_identifier(self.session.session_key) if self.session else "(Missing session)"
         verbose_logger.debug(
             "%s.dispatch() completed with llmclient=%s, session_key=%s",
             self.formatted_class_name,
             self.llmclient,
-            self.session.session_key if self.session else "(Missing session)",
+            masked_session_key,
         )
         return super().dispatch(request, *args, **kwargs)  # type: ignore[return-value]
 

@@ -10,7 +10,7 @@ from unittest.mock import patch
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.common.conf import Settings, settings_defaults
-from smarter.common.conf.settings import validate_throttle_rate
+from smarter.common.conf.util import validate_throttle_rate
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.unittest.base_classes import SmarterTestBase

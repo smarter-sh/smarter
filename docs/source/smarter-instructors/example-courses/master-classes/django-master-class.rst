@@ -8,7 +8,7 @@ its code is public. It serves a web console, an API, and every deployed chatbot 
 own, from `one site with many hosts
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/hosts.py>`__. It
 validates every setting with a `Pydantic Settings class
-<https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/settings.py>`__
+<https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__
 before Django reads it. It extends the ORM with an `ownership manager
 <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__
 that makes every resource belong to an account and lets accounts share them. It runs ten
