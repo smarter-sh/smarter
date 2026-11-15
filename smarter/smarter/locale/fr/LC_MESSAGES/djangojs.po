@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-08 14:58+0000\n"
+"POT-Creation-Date: 2026-11-15 00:34+0000\n"
 "PO-Revision-Date: 2026-10-16 20:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: French\n"
@@ -15,6 +15,86 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid "Apply Smarter YAML Manifest"
+msgstr "Appliquer un manifeste YAML Smarter"
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid ""
+"Paste or type a manifest, open a file, drag one onto this page, or start "
+"from an example. It is checked as you type, and hovering over a field shows "
+"what it is. Apply creates its resource, or updates it if it exists."
+msgstr ""
+"Collez ou saisissez un manifeste, ouvrez un fichier, glissez-en un sur cette "
+"page, ou partez d'un exemple. Il est vérifié pendant la saisie, et le survol "
+"d'un champ montre ce qu'il est. Appliquer crée sa ressource, ou la met à "
+"jour si elle existe."
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx, packages/smarter-extension-console/src/components/common.tsx
+msgid "Dismiss"
+msgstr "Ignorer"
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid ""
+"Paste or type a manifest, open a file, drag one here, or start from an "
+"example."
+msgstr ""
+"Collez ou saisissez un manifeste, ouvrez un fichier, glissez-en un ici, ou "
+"partez d'un exemple."
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid "Replace the manifest?"
+msgstr "Remplacer le manifeste ?"
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid "Replace the manifest in the editor with %(source)s?"
+msgstr "Remplacer le manifeste de l'éditeur par %(source)s ?"
+
+#. Translators: used in packages/smarter-apply-manifest/src/App.tsx
+msgid "Your changes to it will be lost. Download it first to keep them."
+msgstr ""
+"Vos modifications seront perdues. Téléchargez-le d'abord pour les conserver."
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/Actions/Component.tsx
+msgid "Manifest file"
+msgstr "Fichier du manifeste"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/Actions/Component.tsx, packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
+msgid "File Open"
+msgstr "Ouvrir un fichier"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/Actions/Component.tsx
+msgid "Start from an example"
+msgstr "Partir d'un exemple"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/Actions/Component.tsx
+msgid "Loading the example…"
+msgstr "Chargement de l'exemple…"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/Actions/Component.tsx
+msgid "Start from an example…"
+msgstr "Partir d'un exemple…"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/DropOverlay/Component.tsx
+msgid "Drop Zone"
+msgstr "Zone de dépôt"
+
+#. Translators: used in packages/smarter-apply-manifest/src/components/DropOverlay/Component.tsx
+msgid "Drop a manifest file to open it in the editor."
+msgstr "Déposez un fichier de manifeste pour l'ouvrir dans l'éditeur."
+
+#. Translators: used in packages/smarter-apply-manifest/src/lib/manifests.tsx
+msgid "%(name)s is too large to be a manifest."
+msgstr "%(name)s est trop volumineux pour être un manifeste."
+
+#. Translators: used in packages/smarter-apply-manifest/src/lib/manifests.tsx
+msgid "%(name)s could not be read."
+msgstr "%(name)s n'a pas pu être lu."
+
+#. Translators: used in packages/smarter-apply-manifest/src/lib/manifests.tsx
+msgid "The example %(kind)s manifest could not be loaded."
+msgstr "Le manifeste d'exemple de %(kind)s n'a pas pu être chargé."
 
 #. Translators: used in packages/smarter-authtoken-list/src/App.tsx
 msgid "Your AuthTokens"
@@ -51,7 +131,7 @@ msgstr "Actives"
 msgid "Inactive"
 msgstr "Inactif"
 
-#. Translators: used in packages/smarter-authtoken-list/src/components/DetailView/Component.tsx, packages/smarter-authtoken-list/src/components/ListView/Component.tsx, packages/smarter-budget-list/src/components/BudgetList/Component.tsx, packages/smarter-connection-list/src/components/ListView/Component.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-guardrail-list/src/components/ListView/Component.tsx, packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, packages/smarter-llmclient-deployment/src/components/Hero.tsx, packages/smarter-llmclient-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx, packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-llmhost-list/src/components/ListView/Component.tsx, packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, packages/smarter-llmtool-list/src/components/ListView/Component.tsx, packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, packages/smarter-provider-list/src/components/DetailView/Component.tsx, packages/smarter-provider-list/src/components/ListView/Component.tsx, packages/smarter-proxy-list/src/components/ListView/Component.tsx, packages/smarter-secret-list/src/components/ListView/Component.tsx, packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, packages/smarter-vectorstore-list/src/components/DetailView/Component.tsx, packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
+#. Translators: used in packages/smarter-authtoken-list/src/components/DetailView/Component.tsx, packages/smarter-authtoken-list/src/components/ListView/Component.tsx, packages/smarter-budget-list/src/components/BudgetList/Component.tsx, packages/smarter-connection-list/src/components/ListView/Component.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-guardrail-list/src/components/ListView/Component.tsx, packages/smarter-infrastructure-resource-list/src/components/InfrastructureResourceList/Component.tsx, packages/smarter-llmclient-deployment/src/components/ApiKeys.tsx, packages/smarter-llmclient-deployment/src/components/Hero.tsx, packages/smarter-llmclient-list/src/components/ListView/Component.tsx, packages/smarter-llmhost-compute-list/src/components/DetailView/Component.tsx, packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-llmhost-list/src/components/ListView/Component.tsx, packages/smarter-llmtool-list/src/components/ExtensionListView/Component.tsx, packages/smarter-llmtool-list/src/components/ListView/Component.tsx, packages/smarter-mcpclient-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx, packages/smarter-provider-list/src/components/DetailView/Component.tsx, packages/smarter-provider-list/src/components/ListView/Component.tsx, packages/smarter-proxy-list/src/components/ListView/Component.tsx, packages/smarter-secret-list/src/components/ListView/Component.tsx, packages/smarter-vectorsearch-list/src/components/ListView/Component.tsx, packages/smarter-vectorstore-list/src/components/DetailView/Component.tsx, packages/smarter-vectorstore-list/src/components/ListView/Component.tsx
 msgid "Status"
 msgstr "Statut"
 
@@ -482,7 +562,7 @@ msgstr "Suivant"
 msgid "Close (Esc)"
 msgstr "Fermer (Esc)"
 
-#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, packages/smarter-workbench/src/components/DocsDialog/Component.tsx
+#. Translators: used in packages/smarter-common/src/components/ResourceDetail/Component.tsx, packages/smarter-common/src/lib/modalDialogue.tsx, packages/smarter-dashboard-user-menu/src/components/DataExport/Component.tsx, packages/smarter-welcome/src/components/WelcomeDialog/Component.tsx, packages/smarter-workbench/src/components/DocsDialog/Component.tsx
 msgid "Close"
 msgstr "Fermer"
 
@@ -518,7 +598,7 @@ msgstr "Propriétaire"
 msgid "Owner email"
 msgstr "E-mail du propriétaire"
 
-#. Translators: used in packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
+#. Translators: used in packages/smarter-common/src/components/ResourceDetail/DetailFields.tsx, packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx, packages/smarter-prompt-passthrough/src/components/LLMProviderMetaData/ProviderDetails.tsx
 msgid "Account"
 msgstr "Compte"
 
@@ -1710,7 +1790,7 @@ msgstr ""
 "Pourquoi le domaine n'est pas encore vérifié, ou pourquoi sa vérification a "
 "échoué."
 
-#. Translators: used in packages/smarter-custom-domain-list/src/components/DetailView/Component.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
+#. Translators: used in packages/smarter-custom-domain-list/src/components/DetailView/Component.tsx, packages/smarter-custom-domain-list/src/components/ListView/Component.tsx, packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
 msgid "LLMClient"
 msgstr "LLMClient"
 
@@ -1777,7 +1857,7 @@ msgstr[1] "%(recordCount)s enregistrements DNS"
 msgid "Verifying"
 msgstr "Vérification en cours"
 
-#. Translators: used in packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, packages/smarter-vectorstore-list/src/lib/format.tsx
+#. Translators: used in packages/smarter-custom-domain-list/src/components/StatusBar/VerificationBadge.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx, packages/smarter-vectorstore-list/src/lib/format.tsx
 msgid "Failed"
 msgstr "Échec"
 
@@ -2553,20 +2633,24 @@ msgid "Language"
 msgstr "Langue"
 
 #. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
-msgid "Profile Image"
-msgstr "Photo de profil"
-
-#. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
-msgid "Change Profile Image"
-msgstr "Changer la photo de profil"
-
-#. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
 msgid "Superuser"
 msgstr "Superutilisateur"
 
 #. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
 msgid "Staff"
 msgstr "Personnel"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+msgid "Account Admin"
+msgstr "Administrateur du compte"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx
+msgid "Profile Image"
+msgstr "Photo de profil"
+
+#. Translators: used in packages/smarter-dashboard-user-menu/src/components/MenuHeader/Component.tsx, packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
+msgid "Change Profile Image"
+msgstr "Changer la photo de profil"
 
 #. Translators: used in packages/smarter-dashboard-user-menu/src/components/ProfileImageItems/Component.tsx
 msgid "Remove Profile Image"
@@ -3099,10 +3183,6 @@ msgid "The publisher's trust badge"
 msgstr "Le badge de confiance de l'éditeur"
 
 #. Translators: used in packages/smarter-extension-console/src/components/common.tsx
-msgid "Dismiss"
-msgstr "Ignorer"
-
-#. Translators: used in packages/smarter-extension-console/src/components/common.tsx
 msgid "Working"
 msgstr "En cours"
 
@@ -3180,7 +3260,7 @@ msgstr "Source"
 msgid "Enabled"
 msgstr "Activée"
 
-#. Translators: used in packages/smarter-extension-console/src/components/ExtensionList.tsx, packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
+#. Translators: used in packages/smarter-extension-console/src/components/ExtensionList.tsx, packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-prompt-passthrough/src/components/LLMProviderPassthroughResponse/ResponseSummary.tsx
 msgid "Error"
 msgstr "Erreur"
 
@@ -3369,7 +3449,7 @@ msgstr "Désinstaller %(displayName)s"
 msgid "Slug"
 msgstr "Slug"
 
-#. Translators: used in packages/smarter-extension-console/src/components/ExtensionPage.tsx, packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
+#. Translators: used in packages/smarter-extension-console/src/components/ExtensionPage.tsx
 msgid "Unknown"
 msgstr "Inconnu"
 
@@ -3437,7 +3517,7 @@ msgstr "Enregistrer la disponibilité"
 msgid "sha256"
 msgstr "sha256"
 
-#. Translators: used in packages/smarter-extension-console/src/components/ExtensionPage.tsx
+#. Translators: used in packages/smarter-extension-console/src/components/ExtensionPage.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
 msgid "Running"
 msgstr "En cours d'exécution"
 
@@ -6234,7 +6314,7 @@ msgstr ""
 msgid "Provisioning"
 msgstr "Provisionnement"
 
-#. Translators: used in packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-vectorstore-list/src/lib/format.tsx
+#. Translators: used in packages/smarter-llmhost-list/src/components/DetailView/Component.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx, packages/smarter-vectorstore-list/src/lib/format.tsx
 msgid "Pending"
 msgstr "En attente"
 
@@ -6869,78 +6949,6 @@ msgstr "Échec de la suppression du LLMTool (%(status)s) : %(error)s"
 msgid "Successfully deleted LLMTool"
 msgstr "LLMTool supprimé"
 
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Manifest is not a valid object"
-msgstr "Le manifeste n'est pas un objet valide"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Missing metadata.name"
-msgstr "metadata.name manquant"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Missing apiVersion"
-msgstr "apiVersion manquant"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Invalid apiVersion"
-msgstr "apiVersion non valide"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Missing kind"
-msgstr "kind manquant"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Manifest apply failed (%(status)s)"
-msgstr "Échec de l'application du manifeste (%(status)s)"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Manifest Applied"
-msgstr "Manifeste appliqué"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Manifest Apply Failed"
-msgstr "Échec de l'application du manifeste"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Unknown error"
-msgstr "Erreur inconnue"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Apply Smarter YAML Manifest"
-msgstr "Appliquer un manifeste YAML Smarter"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Manifest file"
-msgstr "Fichier du manifeste"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Uploading..."
-msgstr "Téléversement..."
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx, packages/smarter-prompt-passthrough/src/components/Toolbar/Component.tsx
-msgid "File Open"
-msgstr "Ouvrir un fichier"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/DropZone/Component.tsx
-msgid "Drop Zone"
-msgstr "Zone de dépôt"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
-msgid "No description provided"
-msgstr "Aucune description"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
-msgid "Name:"
-msgstr "Nom :"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
-msgid "Version:"
-msgstr "Version :"
-
-#. Translators: used in packages/smarter-manifest-dropzone/src/components/Modal/Component.tsx
-msgid "Description:"
-msgstr "Description :"
-
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "Clone %(kind)s"
 msgstr "Cloner %(kind)s"
@@ -6975,12 +6983,24 @@ msgid "Delete: Delete this %(kind)s"
 msgstr "Supprimer : supprimer ce %(kind)s"
 
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
+msgid "Apply Failed"
+msgstr "Échec de l'application"
+
+#. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "Save Failed"
 msgstr "Échec de l'enregistrement"
 
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
+msgid "%(kind)s %(name)s applied"
+msgstr "%(kind)s %(name)s appliqué"
+
+#. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "%(kind)s %(name)s saved"
 msgstr "%(kind)s %(name)s enregistré"
+
+#. Translators: used in packages/smarter-manifest-editor/src/App.tsx
+msgid "Applied"
+msgstr "Appliqué"
 
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "Saved"
@@ -7011,6 +7031,10 @@ msgid "Delete Failed"
 msgstr "Échec de la suppression"
 
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
+msgid "The manifest is empty."
+msgstr "Le manifeste est vide."
+
+#. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "Delete %(kind)s"
 msgstr "Supprimer %(kind)s"
 
@@ -7021,6 +7045,23 @@ msgstr "Voulez-vous vraiment supprimer %(kind)s %(name)s ?"
 #. Translators: used in packages/smarter-manifest-editor/src/App.tsx
 msgid "Your unsaved changes will be lost."
 msgstr "Vos modifications non enregistrées seront perdues."
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/FieldHelp/Component.tsx
+msgid "Move the cursor to a field, or hover over it, to see what it is."
+msgstr ""
+"Placez le curseur sur un champ, ou survolez-le, pour voir ce qu'il est."
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/FieldHelp/Component.tsx
+msgid "Field help"
+msgstr "Aide du champ"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/FieldHelp/Component.tsx
+msgid "required"
+msgstr "obligatoire"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/FieldHelp/Component.tsx
+msgid "One of: %(values)s"
+msgstr "L'une des valeurs : %(values)s"
 
 #. Translators: used in packages/smarter-manifest-editor/src/components/ManifestEditor/Component.tsx
 msgid "Smarter manifest"
@@ -7047,12 +7088,8 @@ msgid "Copied to clipboard"
 msgstr "Copié dans le presse-papiers"
 
 #. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
-msgid "Manifest editor"
-msgstr "Éditeur de manifestes"
-
-#. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
-msgid "Save"
-msgstr "Enregistrer"
+msgid "Apply: Paste, type or open a manifest first"
+msgstr "Appliquer : collez, saisissez ou ouvrez d'abord un manifeste"
 
 #. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
 msgid "Save: There are no changes to save"
@@ -7066,8 +7103,28 @@ msgstr[1] ""
 "Enregistrer : corrigez d'abord les %(problemCount)s problèmes de ce manifeste"
 
 #. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
+msgid ""
+"Apply: Create the resource that this manifest describes, or update it if it "
+"exists"
+msgstr ""
+"Appliquer : crée la ressource que décrit ce manifeste, ou la met à jour si "
+"elle existe"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
 msgid "Save: Apply your changes to this manifest"
 msgstr "Enregistrer : appliquer vos modifications à ce manifeste"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
+msgid "Manifest editor"
+msgstr "Éditeur de manifestes"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
+msgid "Save"
+msgstr "Enregistrer"
+
+#. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
+msgid "Apply"
+msgstr "Appliquer"
 
 #. Translators: used in packages/smarter-manifest-editor/src/components/Toolbar/Component.tsx
 msgid "History"
@@ -7132,6 +7189,33 @@ msgstr ""
 #. Translators: used in packages/smarter-manifest-editor/src/lib/useLockedFields.tsx
 msgid "%(field)s is locked. %(reason)s"
 msgstr "%(field)s est verrouillé. %(reason)s"
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid ""
+"A manifest is a YAML mapping that begins with apiVersion: smarter.sh/v1."
+msgstr ""
+"Un manifeste est un mappage YAML qui commence par apiVersion: smarter.sh/v1."
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid "Required. Use smarter.sh/v1."
+msgstr "Obligatoire. Utilisez smarter.sh/v1."
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid "Must be smarter.sh/v1."
+msgstr "Doit être smarter.sh/v1."
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid "Required. The kind of resource, e.g. Secret or LLMClient."
+msgstr "Obligatoire. Le type de ressource, p. ex. Secret ou LLMClient."
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid "%(kind)s is not a kind of Smarter resource. The kinds are: %(kinds)s."
+msgstr ""
+"%(kind)s n'est pas un type de ressource Smarter. Les types sont : %(kinds)s."
+
+#. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
+msgid "Required. The resource's name."
+msgstr "Obligatoire. Le nom de la ressource."
 
 #. Translators: used in packages/smarter-manifest-editor/src/lib/validation.tsx
 msgid "Invalid value"
@@ -7492,7 +7576,7 @@ msgstr ""
 msgid "Order"
 msgstr "Ordre"
 
-#. Translators: used in packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
+#. Translators: used in packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx, packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
 msgid "Role"
 msgstr "Rôle"
 
@@ -7537,6 +7621,81 @@ msgstr ""
 #. Translators: used in packages/smarter-orchestrator-list/src/components/DetailView/Component.tsx
 msgid "Whether the orchestrator is ready to serve requests."
 msgstr "Indique si l'orchestrateur est prêt à traiter les requêtes."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "The runs could not be loaded (%(status)s)."
+msgstr "Les exécutions n'ont pas pu être chargées (%(status)s)."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "The run could not start (%(status)s)."
+msgstr "L'exécution n'a pas pu démarrer (%(status)s)."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Succeeded"
+msgstr "Réussie"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Cancelled"
+msgstr "Annulée"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Skipped"
+msgstr "Ignorée"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Stopped at its maximum iterations"
+msgstr "Arrêtée à son nombre maximum d'itérations"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Run"
+msgstr "Exécution"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Step"
+msgstr "Étape"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "This run hasn't ended yet. Its steps appear as they end."
+msgstr ""
+"Cette exécution n'est pas encore terminée. Ses étapes apparaissent à mesure "
+"qu'elles se terminent."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Runs"
+msgstr "Exécutions"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Objective"
+msgstr "Objectif"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "e.g. Prepare the board pack for Q4 2025."
+msgstr ""
+"p. ex. Préparez le dossier du conseil pour le quatrième trimestre 2025."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Starting..."
+msgstr "Démarrage..."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Start a run"
+msgstr "Démarrer une exécution"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "An inactive orchestrator can't run."
+msgstr "Un orchestrateur inactif ne peut pas s'exécuter."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "You haven't run it yet."
+msgstr "Vous ne l'avez pas encore exécuté."
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Started"
+msgstr "Démarrée"
+
+#. Translators: used in packages/smarter-orchestrator-list/src/components/RunsSection/Component.tsx
+msgid "Steps"
+msgstr "Étapes"
 
 #. Translators: used in packages/smarter-orchestrator-list/src/components/StatusBar/Component.tsx
 msgid "Ready: Orchestrator is ready to serve requests"
@@ -10685,6 +10844,42 @@ msgstr "Nouveautés"
 msgid "Recently added Smarter features"
 msgstr "Fonctionnalités Smarter ajoutées récemment"
 
+#~ msgid "Manifest is not a valid object"
+#~ msgstr "Le manifeste n'est pas un objet valide"
+
+#~ msgid "Missing metadata.name"
+#~ msgstr "metadata.name manquant"
+
+#~ msgid "Missing apiVersion"
+#~ msgstr "apiVersion manquant"
+
+#~ msgid "Invalid apiVersion"
+#~ msgstr "apiVersion non valide"
+
+#~ msgid "Missing kind"
+#~ msgstr "kind manquant"
+
+#~ msgid "Manifest apply failed (%(status)s)"
+#~ msgstr "Échec de l'application du manifeste (%(status)s)"
+
+#~ msgid "Unknown error"
+#~ msgstr "Erreur inconnue"
+
+#~ msgid "Uploading..."
+#~ msgstr "Téléversement..."
+
+#~ msgid "No description provided"
+#~ msgstr "Aucune description"
+
+#~ msgid "Name:"
+#~ msgstr "Nom :"
+
+#~ msgid "Version:"
+#~ msgstr "Version :"
+
+#~ msgid "Description:"
+#~ msgstr "Description :"
+
 #~ msgid "Chat: Open the authtoken workbench"
 #~ msgstr "Chat : ouvrir l'atelier de l'AuthToken"
 
@@ -11143,9 +11338,6 @@ msgstr "Fonctionnalités Smarter ajoutées récemment"
 
 #~ msgid "Loading logs"
 #~ msgstr "Chargement des journaux"
-
-#~ msgid "Loading logs…"
-#~ msgstr "Chargement des journaux…"
 
 #~ msgid "Log stream disconnected. Reconnecting..."
 #~ msgstr "Flux des journaux déconnecté. Reconnexion..."

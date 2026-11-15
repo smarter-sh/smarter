@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-08 14:58+0000\n"
+"POT-Creation-Date: 2026-11-15 00:34+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -227,43 +227,35 @@ msgstr ""
 "navegador."
 
 #: smarter/templates/account/authentication/email/account-activation.html
-msgid "Thank you for using Smarter!"
-msgstr "Obrigado por usar o Smarter!"
-
-#: smarter/templates/account/authentication/email/account-activation.html
 msgid "Activate Account"
 msgstr "Ativar conta"
 
 #: smarter/templates/account/authentication/email/account-activation.html
-msgid "If you require assistance"
-msgstr "Se precisar de ajuda"
-
-#: smarter/templates/account/authentication/email/account-activation.html
 #: smarter/templates/account/authentication/email/password-reset.html
 #, python-format
-msgid "Call our customer care number: %(phone)s"
-msgstr "Ligue para a nossa central de atendimento: %(phone)s"
+msgid ""
+"Need help? Email the platform's administrator at <a href=\"mailto:"
+"%(support_email)s\" style=\"color:#7E8299; font-"
+"weight:600\">%(support_email)s</a>."
+msgstr ""
+"Precisa de ajuda? Escreva para o administrador da plataforma em <a "
+"href=\"mailto:%(support_email)s\" style=\"color:#7E8299; font-"
+"weight:600\">%(support_email)s</a>."
 
 #: smarter/templates/account/authentication/email/account-activation.html
 #: smarter/templates/account/authentication/email/password-reset.html
+#: smarter/templates/account/email/data-export.html
+#: smarter/templates/account/email/slack-invitation.html
+#: smarter/templates/account/email/welcome.html
 #, python-format
-msgid "Email: %(email)s"
-msgstr "E-mail: %(email)s"
-
-#: smarter/templates/account/authentication/email/account-activation.html
-#: smarter/templates/account/authentication/email/password-reset.html
-msgid "Contact:"
-msgstr "Contato:"
-
-#: smarter/templates/account/authentication/email/account-activation.html
-#: smarter/templates/account/authentication/email/password-reset.html
-#, python-format
-msgid "Office Hours: %(hours)s"
-msgstr "Horário de atendimento: %(hours)s"
-
-#: smarter/templates/account/authentication/email/password-reset.html
-msgid "Smarter Logo"
-msgstr "Logotipo do Smarter"
+msgid ""
+"%(product_name)s is free, open source software, licensed under the <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
+msgstr ""
+"O %(product_name)s é software livre e de código aberto, licenciado sob a <a "
+"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
+"target=\"_blank\">GNU AGPL v3</a>."
 
 #: smarter/templates/account/authentication/email/password-reset.html
 msgid "Reset Your Password"
@@ -280,21 +272,12 @@ msgstr ""
 "sua senha usando o link abaixo."
 
 #: smarter/templates/account/authentication/email/password-reset.html
-msgid "This link will expire in 24 hours, so be sure to use it right away."
-msgstr "Este link expira em 24 horas, então use-o imediatamente."
-
-#: smarter/templates/account/authentication/email/password-reset.html
-#, python-format
-msgid "Thank you for being part of %(product_name)s!"
-msgstr "Obrigado por fazer parte do %(product_name)s!"
-
-#: smarter/templates/account/authentication/email/password-reset.html
 msgid "Reset Password"
 msgstr "Redefinir senha"
 
 #: smarter/templates/account/authentication/email/password-reset.html
-msgid "Or, talk to a human!"
-msgstr "Ou fale com uma pessoa!"
+msgid "This link will expire in 24 hours, so be sure to use it right away."
+msgstr "Este link expira em 24 horas, então use-o imediatamente."
 
 #: smarter/templates/account/email/data-export.html
 msgid "Download My Data"
@@ -392,19 +375,6 @@ msgstr ""
 "senha e avise o administrador da plataforma em <a href=\"mailto:"
 "%(support_email)s\" style=\"color:#7E8299; font-"
 "weight:600\">%(support_email)s</a>."
-
-#: smarter/templates/account/email/data-export.html
-#: smarter/templates/account/email/slack-invitation.html
-#: smarter/templates/account/email/welcome.html
-#, python-format
-msgid ""
-"%(product_name)s is free, open source software, licensed under the <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
-msgstr ""
-"O %(product_name)s é software livre e de código aberto, licenciado sob a <a "
-"href=\"https://www.gnu.org/licenses/agpl-3.0.html\" rel=\"noopener\" "
-"target=\"_blank\">GNU AGPL v3</a>."
 
 #: smarter/templates/account/email/slack-invitation.html
 msgid "The Smarter Project on Slack"
@@ -854,10 +824,6 @@ msgstr ""
 "para desenvolvedores."
 
 #: smarter/templates/account/email/welcome.html
-msgid "Sorry, your browser doesn't support embedded videos."
-msgstr "Desculpe, seu navegador não suporta vídeos incorporados."
-
-#: smarter/templates/account/email/welcome.html
 msgid "Getting Started"
 msgstr "Primeiros passos"
 
@@ -973,6 +939,40 @@ msgstr "Política de privacidade"
 #: smarter/templates/common/cookie-notice.html
 msgid "Close"
 msgstr "Fechar"
+
+#~ msgid "Thank you for using Smarter!"
+#~ msgstr "Obrigado por usar o Smarter!"
+
+#~ msgid "If you require assistance"
+#~ msgstr "Se precisar de ajuda"
+
+#, python-format
+#~ msgid "Call our customer care number: %(phone)s"
+#~ msgstr "Ligue para a nossa central de atendimento: %(phone)s"
+
+#, python-format
+#~ msgid "Email: %(email)s"
+#~ msgstr "E-mail: %(email)s"
+
+#~ msgid "Contact:"
+#~ msgstr "Contato:"
+
+#, python-format
+#~ msgid "Office Hours: %(hours)s"
+#~ msgstr "Horário de atendimento: %(hours)s"
+
+#~ msgid "Smarter Logo"
+#~ msgstr "Logotipo do Smarter"
+
+#, python-format
+#~ msgid "Thank you for being part of %(product_name)s!"
+#~ msgstr "Obrigado por fazer parte do %(product_name)s!"
+
+#~ msgid "Or, talk to a human!"
+#~ msgstr "Ou fale com uma pessoa!"
+
+#~ msgid "Sorry, your browser doesn't support embedded videos."
+#~ msgstr "Desculpe, seu navegador não suporta vídeos incorporados."
 
 #~ msgid "The Smarter Project"
 #~ msgstr "The Smarter Project"
