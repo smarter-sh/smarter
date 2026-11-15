@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.2...v0.46.3-alpha.1) (2026-11-15)
+
+### Bug Fixes
+
+* **logging:** mask the session_key in the uvicorn access log ([409b100](https://github.com/smarter-sh/smarter/commit/409b100499bcaa2db7b07a931ee4b9cf7e657ce1)), closes [#1000](https://github.com/smarter-sh/smarter/issues/1000)
+
 ## [0.46.2](https://github.com/smarter-sh/smarter/compare/v0.46.1...v0.46.2) (2026-11-15)
 
 ### Bug Fixes
