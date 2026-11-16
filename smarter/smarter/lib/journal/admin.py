@@ -21,13 +21,16 @@ deployed LLMClient:
 
 - **Prompt**: the last ``user`` message in the request body's ``messages``, validated as the OpenAI
   SDK's :class:`~openai.types.chat.ChatCompletionMessageParam`.
-- **Response text**: the first choice's message of the response, validated as the OpenAI SDK's
-  :class:`~openai.types.chat.ChatCompletion`.
+- **Response text**: the first choice's message of the response's chat completion, validated as the
+  OpenAI SDK's :class:`~openai.types.chat.ChatCompletion`. A passthrough prompt journals the completion
+  itself, and a prompt to an LLMClient journals it inside its chat contract's ``data``
+  (see :func:`completion_document`).
 
 Both are empty for any other entry, and for the entries that were journaled before the request's
 body was.
 """
 
+import json
 from collections.abc import Iterable
 from typing import Union
 
@@ -43,6 +46,7 @@ from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 
 
@@ -111,16 +115,51 @@ def prompt_text(request: JsonValue) -> str:
     return ""
 
 
+def completion_document(response: JsonValue) -> JsonValue:
+    """
+    Return the chat completion in a journaled response document.
+
+    Smarter journals a chat completion in one of three envelopes:
+
+    - a passthrough prompt, ``/api/v1/prompts/passthrough/<provider>/``: the completion itself, with
+      Smarter's ``api`` and ``metadata`` beside its fields.
+    - a prompt to an LLMClient, chat contract version 2: ``{"data": {"completion": {...}, ...}}``.
+    - a prompt to an LLMClient, chat contract version 1: ``{"data": {"statusCode": ..., "body": ...}}``,
+      whose body is the completion, as a dict or a JSON string, or, if the LLM provider failed,
+      ``{"error": ..., "response": <the completion>}``.
+
+    :param response: The entry's response document.
+    :returns: The completion, or the response itself if it is in none of the LLMClient envelopes.
+    """
+    if not isinstance(response, dict):
+        return response
+    data = response.get(SmarterJournalApiResponseKeys.DATA)
+    if not isinstance(data, dict):
+        return response
+    if "completion" in data:
+        return data["completion"]
+    body = data.get("body")
+    if isinstance(body, str):
+        try:
+            body = json.loads(body)
+        except ValueError:
+            return None
+    if isinstance(body, dict) and "error" in body:
+        return body.get("response")
+    return body
+
+
 def response_text(response: JsonValue) -> str:
     """
     Return the reply of a journaled chat completion: its first choice's message.
 
-    :param response: The entry's response document.
+    :param response: The entry's response document, in any of the envelopes that
+        :func:`completion_document` reads.
     :returns: The reply, or an empty string if the response is not a chat completion, or its message
         has no content, e.g. only tool calls.
     """
     try:
-        completion = ChatCompletion.model_validate(response)
+        completion = ChatCompletion.model_validate(completion_document(response))
     except ValidationError:
         return ""
     if not completion.choices:
