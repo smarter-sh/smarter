@@ -125,7 +125,7 @@ def write_journal_entry(record: SAMJournalEntryRecord) -> Optional[SAMJournal]:
     max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
     queue=smarter_settings.llmclient_tasks_celery_task_queue,
 )
-def create_journal_entry(self, record: dict) -> None:
+def create_journal_entry(self, record: dict[str, JsonValue]) -> None:
     """
     Celery task: save a journal entry.
 
@@ -185,9 +185,8 @@ def queue_journal_entry(record: SAMJournalEntryRecord, sources: Sequence[SAMJour
     queued = record.model_copy(update={"response": response, "sources": references})
     payload = queued.model_dump(mode="json")
     try:
-        create_journal_entry.delay(payload)  # type: ignore[attr-defined]
-    # pylint: disable=broad-exception-caught
-    except Exception as e:
+        create_journal_entry.delay(payload)
+    except Exception as e:  # pylint: disable=broad-exception-caught
         error_logger.warning(
             "%s could not queue journal entry %s, and is saving it now: %s",
             prefix,

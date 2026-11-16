@@ -4,9 +4,10 @@ from django.dispatch import Signal
 
 journal_entry_created = Signal()
 """
-Signal sent when a journal entry is saved, by the Celery worker that saves it, or by the response.
+Signal sent when a journal entry is saved.
 
-itself when the entry could not be queued.
+It is sent by the Celery worker that saves the entry, or by the journaled response itself, when the
+entry could not be queued.
 
 **Arguments:**
 
@@ -26,7 +27,7 @@ response is returned without a key, or by the Celery task, when its last try fai
 
 **Arguments:**
 
-- ``user`` (``User`` or ``int``): The user who made the request, the user's id from the task, or None.
+- ``user`` (``int``): The id of the user who made the request, or None for an anonymous request.
 - ``thing`` (``str``): The journal's thing, e.g. Guardrail.
 - ``command`` (``str``): The journal's command, e.g. apply.
 - ``status`` (``int``): The response's http status.
@@ -52,7 +53,7 @@ journal_entry_accessed = Signal()
 """
 Signal sent when a journal entry is read through the journal api.
 
-Journal entries hold credentials and user content, so every read is signaled.
+Journal entries hold user content, e.g. prompts, manifests and LLM responses, so every read is signaled.
 
 **Arguments:**
 

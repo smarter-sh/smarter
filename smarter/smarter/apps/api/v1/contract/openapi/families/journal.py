@@ -1,4 +1,4 @@
-"""The Smarter Journal's REST reads, under ``/api/v1/journal/``: a record of every request to the cli api."""
+"""The Smarter Journal's REST reads, under ``/api/v1/journal/``: a record of every journaled request to the Smarter api."""
 
 from smarter.apps.api.v1.contract.models import (
     OpenApiParameter,
@@ -15,7 +15,7 @@ JOURNAL = ApiFamily(
     name=namespace,
     resource=f"{namespace} entry",
     urlconf="smarter.lib.journal.api.v1.urls",
-    description="The Smarter Journal: a record of every request to the cli api. For superusers.",
+    description="The Smarter Journal: a record of every journaled request to the Smarter api. For superusers.",
     tag_name=namespace,
 )
 """The Smarter Journal's family, whose tag, and so its routes, are its name, in the singular."""
@@ -67,7 +67,8 @@ def journal_paths() -> dict[str, OpenApiPathItem]:
                 family.operation_id("retrieve"),
                 family.a_capitalized,
                 f"{family.a_capitalized}, by its key, with its request and response documents. The request "
-                "document holds the caller's headers, including its api key.",
+                "document holds the request's url, an allowlist of its headers and its body, with its credentials "
+                "redacted: never the caller's cookies or api key.",
                 family.tag,
                 SAMJournalApiEntry.__name__,
                 many=False,

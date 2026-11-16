@@ -16,10 +16,12 @@ from smarter.lib.journal.storage import (
     pack,
     unpack,
 )
+from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_list, json_object
 
 
-def conversation(turns: int) -> dict:
+def conversation(turns: int) -> SmarterDictType:
     """The response of an LLMClient's prompt after a number of turns: every message so far, and the tools."""
     messages = [{"role": "system", "content": "You are a helpful assistant. " * 40}]
     for turn in range(turns):
@@ -64,8 +66,10 @@ class TestJournalStorage(SmarterTestBase):
         """Test that a decoded document has its keys in their original order."""
         document = {"z": 1, "a": "a" * 2000, "m": [{"y": 1, "b": 2}] * 40}
         decoded, _, _ = self.round_trip(document)
-        self.assertEqual(list(decoded), ["z", "a", "m"])  # type: ignore[arg-type]
-        self.assertEqual(list(decoded["m"][0]), ["y", "b"])  # type: ignore[index,call-overload]
+        decoded_object = json_object(decoded, "decoded")
+        self.assertEqual(list(decoded_object), ["z", "a", "m"])
+        first_item = json_object(json_list(decoded_object["m"], "m")[0], "m[0]")
+        self.assertEqual(list(first_item), ["y", "b"])
 
     def test_small_document_has_no_blobs(self):
         """Test that a small document is stored inline, in its skeleton."""
@@ -78,10 +82,13 @@ class TestJournalStorage(SmarterTestBase):
         """Test that a large string or dict, and a long list, are references in the skeleton."""
         document = {"text": "t" * BLOB_MIN_BYTES, "list": list(range(200)), "small": "s"}
         _, skeleton, _ = self.round_trip(document)
-        self.assertEqual(list(skeleton["text"]), [REF_KEY])  # type: ignore[index,call-overload]
-        self.assertEqual(skeleton["list"][LENGTH_KEY], 200)  # type: ignore[index,call-overload]
-        self.assertIn(LIST_KEY, skeleton["list"])  # type: ignore[index,operator]
-        self.assertEqual(skeleton["small"], "s")  # type: ignore[index,call-overload]
+        skeleton_object = json_object(skeleton, "skeleton")
+        text = json_object(skeleton_object["text"], "text")
+        chain = json_object(skeleton_object["list"], "list")
+        self.assertEqual(list(text), [REF_KEY])
+        self.assertEqual(chain[LENGTH_KEY], 200)
+        self.assertIn(LIST_KEY, chain)
+        self.assertEqual(skeleton_object["small"], "s")
 
     def test_reserved_keys_are_escaped(self):
         """Test that a document's own keys that look like references are escaped, and decoded back."""
@@ -214,3 +221,11 @@ class TestJournalStorage(SmarterTestBase):
                 pending.extend(blob_references(value))
         self.assertEqual({digest for digest, _ in found}, set(encoder.blobs))
         self.assertEqual(node_references("not a node"), [])
+
+    def test_blob_references_of_lists_and_look_alikes(self):
+        """Test that a reference inside a list is found, and that a dict with a reference key and others is not one."""
+        digest = "a" * 64
+        reference: JsonValue = {REF_KEY: digest}
+        look_alike: JsonValue = {REF_KEY: "b" * 64, "other": 1}
+        skeleton: JsonValue = [[reference], look_alike]
+        self.assertEqual(blob_references(skeleton), [(digest, False)])

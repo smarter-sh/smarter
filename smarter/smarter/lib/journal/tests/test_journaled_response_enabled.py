@@ -1,6 +1,7 @@
 """Test the journaled json responses of :mod:`smarter.lib.journal.http` with the journal switch on."""
 
 from http import HTTPStatus
+from typing import Optional
 from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser
@@ -9,6 +10,7 @@ from django.test import RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
+from smarter.lib.django.http.serializers import HttpAuthenticatedRequestSerializer
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
@@ -20,6 +22,7 @@ from smarter.lib.journal.http import (
 )
 from smarter.lib.journal.models import SAMJournal
 from smarter.lib.journal.tasks import write_journal_entry
+from smarter.lib.unittest.narrowing import json_object
 
 
 class TestJournaledResponses(TestAccountMixin):
@@ -149,22 +152,62 @@ class TestJournaledResponses(TestAccountMixin):
         self.assertEqual(reread.thing, "LLMClient")
 
     def test_error_response(self):
-        """Test the error response's description: from the exception's message, a string, or as given."""
-        for error, description in (
-            (SmarterValueError("a message"), None),
-            ("a string error", None),
-            (ValueError("x"), "a description"),
-            (None, None),
-        ):
+        """Test the error response's description: from the exception's message, or as given."""
+        cases: tuple[tuple[Optional[Exception], Optional[str], Optional[str]], ...] = (
+            (SmarterValueError("a message"), None, "a message"),
+            (ValueError("x"), "a description", "a description"),
+            (ValueError("x"), None, None),
+            (None, None, None),
+        )
+        for error, description, expected in cases:
             with self.subTest(error=error):
                 response = SmarterJournaledJsonErrorResponse(
                     request=self.request(self.admin_user),
-                    e=error,  # type: ignore[arg-type]
+                    e=error,
                     thing="Guardrail",
                     command=SmarterJournalCliCommands.APPLY,
                     description=description,
                     status=HTTPStatus.BAD_REQUEST,
                 )
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-                self.assertIn("error", json.loads(response.content))
+                body = json_object(json.loads(response.content), "body")
+                error_body = json_object(body["error"], "error")
+                self.assertEqual(error_body["description"], expected)
                 self.assertEqual(self.journal(response).status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_error_response_cause_and_default_status(self):
+        """Test that an error's cause is in the response, and that a status of 0 is a 500."""
+        error = ValueError("failed")
+        error.__cause__ = KeyError("missing")
+        response = SmarterJournaledJsonErrorResponse(
+            request=self.request(self.admin_user),
+            e=error,
+            command=SmarterJournalCliCommands.APPLY,
+            status=0,
+        )
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        body = json_object(json.loads(response.content), "body")
+        error_body = json_object(body["error"], "error")
+        self.assertEqual(error_body["cause"], "KeyError: 'missing'")
+        self.journal(response)
+
+    def test_request_that_cannot_be_serialized(self):
+        """Test that a request that its serializer can't read is journaled with an empty request document."""
+        with patch.object(HttpAuthenticatedRequestSerializer, "to_representation", side_effect=AttributeError("GET")):
+            response = SmarterJournaledJsonResponse(
+                request=self.request(self.admin_user),
+                data={"data": 1},
+                command=SmarterJournalCliCommands.GET,
+            )
+        journal = self.journal(response)
+        self.assertEqual(journal.request, {})
+        self.assertEqual(journal.user, self.admin_user)
+
+    def test_request_without_a_user(self):
+        """Test that a request that no authentication middleware saw is journaled as anonymous."""
+        request = self.factory.post("/api/v1/cli/apply/", HTTP_HOST="localhost:9357")
+        response = SmarterJournaledJsonResponse(
+            request=request, data={"data": 1}, command=SmarterJournalCliCommands.GET
+        )
+        journal = self.journal(response)
+        self.assertIsNone(journal.user)

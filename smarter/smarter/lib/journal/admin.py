@@ -1,6 +1,43 @@
-"""Django admin for the Smarter Journal: a staff-only, read-mostly list of journal entries."""
+"""
+Django admin for the Smarter Journal, Smarter's audit log of its api.
+
+Every request that Smarter answers with a
+:class:`~smarter.lib.journal.http.SmarterJournaledJsonResponse` is journaled as a
+:class:`~smarter.lib.journal.models.SAMJournal` entry: who made the request, the thing and command
+it was for (e.g. ``Prompt`` and ``prompt``, or ``Guardrail`` and ``apply``), its status code, and two
+documents. The request document is the http request as
+:class:`~smarter.lib.django.http.serializers.HttpAuthenticatedRequestSerializer` serializes it: its
+url, method, an allowlist of its headers, and its ``body``, parsed and with its credentials redacted.
+The response document is the JSON body that Smarter returned.
+
+This admin is for staff only (:class:`~smarter.apps.dashboard.admin.SmarterStaffOnlyModelAdmin`),
+and is read-mostly: the documents are read-only. Its list shows each entry's who, what and when,
+without reading the documents, which are stored compressed (see :mod:`smarter.lib.journal.storage`)
+and read only when one entry is opened.
+
+An entry's page also shows what was asked and what was answered, for the entries of a chat
+completion, e.g. a request to ``/api/v1/prompts/passthrough/<provider>/``, or a prompt sent to a
+deployed LLMClient:
+
+- **Prompt**: the last ``user`` message in the request body's ``messages``, validated as the OpenAI
+  SDK's :class:`~openai.types.chat.ChatCompletionMessageParam`.
+- **Response text**: the first choice's message of the response, validated as the OpenAI SDK's
+  :class:`~openai.types.chat.ChatCompletion`.
+
+Both are empty for any other entry, and for the entries that were journaled before the request's
+body was.
+"""
+
+from collections.abc import Iterable
+from typing import Union
 
 from django.contrib import admin
+from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionContentPartParam,
+    ChatCompletionMessageParam,
+)
+from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
@@ -9,12 +46,102 @@ from smarter.apps.dashboard.admin import (
 from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 
 
-# Register your models here.
-class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
-    """SAMJournal model admin."""
+class ChatCompletionRequestBody(BaseModel):
+    """
+    The body of an OpenAI chat completion request, with the one field that the admin reads.
 
-    readonly_fields = ("created_at", "request", "response")
-    list_display = ("created_at", "user", "thing_display", "command_display", "status_code")
+    The OpenAI SDK types a request's parameters as TypedDicts, not Pydantic models, so each message
+    is validated as the SDK's :class:`~openai.types.chat.ChatCompletionMessageParam`. A message's
+    list of content parts is validated lazily, as it is read. Extra fields, e.g. ``model`` and the
+    providers' own, are allowed.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    messages: list[ChatCompletionMessageParam]
+
+
+class ChatCompletionRequestDocument(BaseModel):
+    """
+    A journal entry's request document whose ``body`` is a chat completion request.
+
+    The document's other fields, the url, method and headers, are allowed, and not read.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    body: ChatCompletionRequestBody
+
+
+def user_message_text(content: Union[str, Iterable[ChatCompletionContentPartParam]]) -> str:
+    """
+    Return the text of a ``user`` message's ``content``.
+
+    :param content: A string, or the message's content parts, of which only ``text`` parts have text.
+    :returns: The text, with the text parts joined by newlines.
+    :raises ValidationError: If a content part isn't one of the SDK's.
+    """
+    if isinstance(content, str):
+        return content
+    texts = []
+    for part in content:
+        if part["type"] == "text":
+            texts.append(part["text"])
+    text = "\n".join(texts)
+    return text
+
+
+def prompt_text(request: JsonValue) -> str:
+    """
+    Return the prompt of a journaled chat completion request: the last ``user`` message in its body.
+
+    :param request: The entry's request document, whose ``body`` is the OpenAI chat completion request.
+    :returns: The prompt, or an empty string if the body holds no valid chat messages, or no ``user``
+        message.
+    """
+    try:
+        document = ChatCompletionRequestDocument.model_validate(request)
+        messages = document.body.messages
+        for message in reversed(messages):
+            if message["role"] == "user":
+                text = user_message_text(message["content"])
+                return text
+    except ValidationError:
+        return ""
+    return ""
+
+
+def response_text(response: JsonValue) -> str:
+    """
+    Return the reply of a journaled chat completion: its first choice's message.
+
+    :param response: The entry's response document.
+    :returns: The reply, or an empty string if the response is not a chat completion, or its message
+        has no content, e.g. only tool calls.
+    """
+    try:
+        completion = ChatCompletion.model_validate(response)
+    except ValidationError:
+        return ""
+    if not completion.choices:
+        return ""
+    content = completion.choices[0].message.content
+    if content is None:
+        return ""
+    return content
+
+
+class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
+    """
+    The admin of :class:`~smarter.lib.journal.models.SAMJournal`.
+
+    The list shows each entry's who, what and when. ``thing`` and ``command`` are choice fields, which
+    the admin shows by their labels, and sorts by. An entry's page adds its prompt and the LLM's reply,
+    read from its documents.
+    """
+
+    readonly_fields = ("created_at", "prompt", "reply", "request", "response")
+    list_display = ("created_at", "user", "thing", "command", "status_code")
     raw_id_fields = ("user",)
     ordering = ("-created_at",)
 
@@ -28,25 +155,25 @@ class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
         queryset = super().get_queryset(request)
         return queryset.defer(*DOCUMENT_FIELDS)
 
-    @admin.display(description="Thing", ordering="thing")
-    def thing_display(self, obj: SAMJournal) -> str:
+    @admin.display(description="Prompt")
+    def prompt(self, obj: SAMJournal) -> str:
         """
-        Return the entry's thing, as its display label.
+        Return the entry's prompt, e.g. ``What's the weather in San Francisco?``.
 
         :param obj: The journal entry.
-        :returns: The thing's label, e.g. ``Guardrail``.
+        :returns: The prompt, or an empty string if the entry is not a prompt.
         """
-        return obj.get_thing_display()
+        return prompt_text(obj.request)
 
-    @admin.display(description="Command", ordering="command")
-    def command_display(self, obj: SAMJournal) -> str:
+    @admin.display(description="Response text")
+    def reply(self, obj: SAMJournal) -> str:
         """
-        Return the entry's command, as its display label.
+        Return the LLM's reply to the entry's prompt, e.g. ``It's 63F right now``.
 
         :param obj: The journal entry.
-        :returns: The command's label, e.g. ``apply``.
+        :returns: The reply, or an empty string if the response is not a chat completion.
         """
-        return obj.get_command_display()
+        return response_text(obj.response)
 
 
 smarter_restricted_admin_site.register(SAMJournal, SAMJournalAdmin)

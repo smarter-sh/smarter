@@ -1,5 +1,8 @@
 """Test the journal's Celery tasks: :mod:`smarter.lib.journal.tasks`."""
 
+# a bound Celery task is called without its self, which Celery passes: pylint can't tell.
+# pylint: disable=no-value-for-parameter
+
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from unittest.mock import patch
