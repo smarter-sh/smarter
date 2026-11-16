@@ -9,13 +9,163 @@ This module defines custom serializers for:
 These serializers enable structured, validated, and documented representations of HTTP request and user data for API endpoints and internal processing.
 """
 
+import re
 from typing import Optional
 
+import yaml
 from django.http import HttpRequest
+from django.http.request import RawPostDataException
+from pydantic import JsonValue, TypeAdapter, ValidationError
 from rest_framework import serializers
 
 from smarter.apps.account.models import User
 from smarter.common.const import SmarterHttpMethods
+
+MAX_SERIALIZED_BODY_SIZE = 1024 * 1024
+"""The largest request body, in bytes, that a serialized request keeps.
+
+A larger one is replaced by its size.
+"""
+
+REDACTED_VALUE = "********"
+"""What a credential in a serialized request body is replaced with."""
+
+SENSITIVE_BODY_KEYS = frozenset(
+    {
+        "access_key",
+        "api_key",
+        "apikey",
+        "authorization",
+        "client_secret",
+        "credentials",
+        "csrfmiddlewaretoken",
+        "passwd",
+        "password",
+        "private_key",
+        "secret",
+        "secret_key",
+        "session_key",
+        "sessionid",
+        "token",
+    }
+)
+"""
+The keys, in snake_case, whose values a serialized request body never keeps.
+
+A key is also sensitive when it ends in ``_`` and one of these, e.g. ``proxyPassword`` or
+``aws_secret_access_key``. Keys are matched whole, not as substrings, so that usage counters
+such as ``max_tokens`` are kept.
+"""
+
+_CAMEL_CASE_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
+
+JSON_VALUE: TypeAdapter[JsonValue] = TypeAdapter(JsonValue)
+"""Validates a parsed request body as JSON."""
+
+
+def is_sensitive_body_key(key: str) -> bool:
+    """
+    Return whether a request body's key names a credential.
+
+    :param key: The key, in snake_case, camelCase or kebab-case.
+    :returns: True if the key, or its last ``_``-separated suffix, is in :data:`SENSITIVE_BODY_KEYS`.
+    """
+    normalized = _CAMEL_CASE_BOUNDARY.sub("_", key).lower().replace("-", "_")
+    if normalized in SENSITIVE_BODY_KEYS:
+        return True
+    return any(normalized.endswith("_" + sensitive) for sensitive in SENSITIVE_BODY_KEYS)
+
+
+def redact_body(value: JsonValue) -> JsonValue:
+    """
+    Return a copy of a parsed request body, with its credentials replaced by :data:`REDACTED_VALUE`.
+
+    A value is replaced when its key is sensitive (see :func:`is_sensitive_body_key`), and a Secret
+    manifest's ``spec.config.value`` is always replaced.
+
+    :param value: The parsed body, or a part of it.
+    :returns: The redacted copy.
+    """
+    if isinstance(value, list):
+        return [redact_body(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    redacted: dict[str, JsonValue] = {}
+    for key, item in value.items():
+        if item is not None and is_sensitive_body_key(key):
+            redacted[key] = REDACTED_VALUE
+        else:
+            redacted[key] = redact_body(item)
+    if redacted.get("kind") == "Secret":
+        spec = redacted.get("spec")
+        config = spec.get("config") if isinstance(spec, dict) else None
+        if isinstance(config, dict) and "value" in config:
+            config["value"] = REDACTED_VALUE
+    return redacted
+
+
+def read_body(request: HttpRequest) -> bytes:
+    """
+    Return a request's raw body.
+
+    :param request: The request.
+    :returns: The body, or empty bytes if it has none, or it was read as a stream, e.g. a file upload.
+    """
+    try:
+        body = getattr(request, "body", None)
+    except RawPostDataException:
+        return b""
+    if isinstance(body, (bytes, bytearray)):
+        return bytes(body)
+    return b""
+
+
+def parse_body_text(text: str) -> JsonValue:
+    """
+    Parse a request body's text as JSON, or else as YAML, e.g. a manifest.
+
+    :param text: The body's text.
+    :returns: The parsed value, or the text itself if it is neither, or is YAML that isn't JSON,
+        e.g. with a date or an integer key.
+    """
+    try:
+        return JSON_VALUE.validate_json(text)
+    except ValidationError:
+        pass
+    try:
+        return JSON_VALUE.validate_python(yaml.safe_load(text))
+    except (yaml.YAMLError, ValidationError):
+        return text
+
+
+def serialize_body(request: HttpRequest) -> JsonValue:
+    """
+    Return a request's body, parsed and redacted, for the journal.
+
+    A JSON or YAML body is returned parsed, other text as it is, and a binary or larger than
+    :data:`MAX_SERIALIZED_BODY_SIZE` body only as its size. Credentials are replaced by
+    :func:`redact_body`; text that can't be parsed can't be redacted, and is kept only if it
+    has no sensitive key in it.
+
+    :param request: The request.
+    :returns: The body, None if there is none or it can't be read, or ``{"size": n}``.
+    """
+    body = read_body(request)
+    if not body:
+        return None
+    if len(body) > MAX_SERIALIZED_BODY_SIZE:
+        return {"size": len(body)}
+    try:
+        text = body.decode("utf-8")
+    except UnicodeDecodeError:
+        return {"size": len(body)}
+    parsed = parse_body_text(text)
+    if isinstance(parsed, (dict, list)):
+        return redact_body(parsed)
+    if any(is_sensitive_body_key(word) for word in re.findall(r"[A-Za-z0-9_-]+", text)):
+        return {"size": len(body)}
+    return text
+
 
 SAFE_META_KEYS = frozenset(
     {
@@ -96,6 +246,7 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
     :param dict GET: Query parameters from the request URL.
     :param dict POST: Data submitted in the body of a POST request.
     :param dict META: The request's headers and metadata, limited to :data:`SAFE_META_KEYS`.
+    :param body: The request's body, parsed and with its credentials redacted (see :func:`serialize_body`).
     :param str path: The path portion of the request URL.
     :param str encoding: The encoding used for the request body.
     :param str content_type: The MIME type of the request body.
@@ -147,6 +298,7 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
     GET = serializers.DictField(child=serializers.CharField())
     POST = serializers.DictField(child=serializers.CharField())
     META = serializers.SerializerMethodField()
+    body = serializers.SerializerMethodField()
     path = serializers.CharField()
     encoding = serializers.CharField()
     content_type = serializers.CharField()
@@ -208,6 +360,15 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
             if key in meta:
                 safe_meta[key] = str(meta[key])
         return safe_meta
+
+    def get_body(self, obj: HttpRequest) -> JsonValue:
+        """
+        Return the request's body, parsed and with its credentials redacted.
+
+        :param obj: The request.
+        :returns: See :func:`serialize_body`.
+        """
+        return serialize_body(obj)
 
     def create(self, validated_data) -> HttpRequest:
         """

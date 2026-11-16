@@ -16,6 +16,7 @@ from smarter.lib.journal.sources import (
     value_digest,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
 
 THREAD: JsonValue = [{"role": "user", "content": "hello"}, {"role": "assistant", "content": "hi"}]
 ROWS: dict[int, JsonValue] = {1: THREAD}
@@ -97,9 +98,10 @@ class TestJournalSources(SmarterTestBase):
             with self.subTest(name=name):
                 detached, references = detach_sources(document, sources)
                 attached = attach_sources(detached, references)
-                marker = get_at_path(attached, ("data", "thread"))
-                self.assertEqual(list(marker), [UNRESOLVED_KEY])  # type: ignore[arg-type]
-                self.assertEqual(marker[UNRESOLVED_KEY]["digest"], references[0].digest)  # type: ignore[index,call-overload]
+                marker = json_object(get_at_path(attached, ("data", "thread")), "marker")
+                self.assertEqual(list(marker), [UNRESOLVED_KEY])
+                unresolved = json_object(marker[UNRESOLVED_KEY], UNRESOLVED_KEY)
+                self.assertEqual(unresolved["digest"], references[0].digest)
 
     def test_error_messages(self):
         """Test the sources' error message prefixes."""

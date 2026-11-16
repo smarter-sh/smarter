@@ -2,8 +2,8 @@
 """
 Django signal receivers for the Smarter Journal.
 
-They only log. A journal entry's request and response documents hold credentials and user content,
-so the receivers log an entry's key, thing, command and status code, never its documents.
+They only log. A journal entry's request and response documents hold user content, e.g. prompts,
+manifests and LLM responses, so the receivers log an entry's key, thing, command and status code, never its documents.
 """
 
 from django.db.models.signals import post_delete, post_save
@@ -83,6 +83,8 @@ def journal_entry_created_receiver(sender, journal: SAMJournal, **kwargs):
     )
 
 
+# the arguments that journal_entry_failed sends.
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 @receiver(journal_entry_failed)
 def journal_entry_failed_receiver(sender, user, thing, command, status, request, response, error, **kwargs):
     """
@@ -90,7 +92,7 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
 
     It logs at error level, whatever the waffle switches, because a missing journal entry is a gap in an
     audit record. Operators monitor the logs for ``could not create journal entry``. The request and
-    response documents are not logged, because they hold credentials and user content.
+    response documents are not logged, because they hold user content.
 
     :param sender: The class that sent the signal.
     :param user: The user the entry was for, or None.

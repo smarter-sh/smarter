@@ -1,4 +1,3 @@
-# pylint: disable=W0613
 """
 Journaled JSON responses of the Smarter api, and its common error response.
 
@@ -14,9 +13,9 @@ from http import HTTPStatus
 from json import JSONEncoder
 from typing import Any, Optional, Union
 
-from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
+from pydantic import JsonValue
 
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
@@ -45,6 +44,51 @@ from .tasks import SAMJournalEntryRecord, queue_journal_entry
 logger = logging.getLogger(__name__)
 logger_prefix = logging.SmarterFormattedText.text(__name__)
 
+JSON_RESPONSE_KWARGS = frozenset({"content_type", "status", "headers", "reason"})
+"""The keyword arguments of a journaled response that are passed on to :class:`django.http.JsonResponse`."""
+
+
+def journal_user_id(request: HttpRequest) -> Optional[int]:
+    """
+    Return the id of the request's user, for ``SAMJournal.user``.
+
+    :param request: The request.
+    :returns: The user's id, or None for an anonymous request, or a request without a user, e.g. an
+        ``ASGIRequest`` that no authentication middleware saw.
+    """
+    # an authenticated request has a user, who isn't anonymous.
+    if not is_authenticated_request(request):
+        return None
+    user_id: Optional[int] = request.user.pk
+    return user_id
+
+
+def journal_field(value: Optional[Union[SmarterJournalThings, SmarterJournalCliCommands, str]]) -> str:
+    """
+    Return the value of ``SAMJournal.thing`` or ``SAMJournal.command``.
+
+    :param value: The thing or command that the view passed.
+    :returns: The value as a string, as Django would save it, or blank if the view passed none: the
+        columns are blank, not NULL.
+    """
+    if value is None:
+        return ""
+    return str(value)
+
+
+def json_response_kwargs(kwargs: SmarterDictType) -> SmarterDictType:
+    """
+    Return the keyword arguments that :class:`django.http.JsonResponse` accepts.
+
+    :param kwargs: The keyword arguments of a journaled response.
+    :returns: Those named in :data:`JSON_RESPONSE_KWARGS`. The rest are ignored.
+    """
+    response_kwargs: SmarterDictType = {}
+    for key, value in kwargs.items():
+        if key in JSON_RESPONSE_KWARGS:
+            response_kwargs[key] = value
+    return response_kwargs
+
 
 class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
@@ -64,17 +108,20 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
 
     **Example:**
 
-    A typical response data structure produced by this class::
+    The response of a ``describe`` of a Guardrail, beside the view's own ``data``::
 
         {
-            "api": "v1",
-            "thing": "account",
+            "data": {...},
+            "api": "smarter.sh/v1",
             "metadata": {
-                "command": "create"
+                "command": "describe",
+                "thing": "Guardrail",
+                "key": "4f1c...e9a2"
             }
         }
 
-    When journaling is active, the metadata may also include a unique journal key for the entry.
+    The metadata's ``key`` is the journal entry's key: it is absent while the journal is disabled, and
+    when the entry could be neither queued nor saved.
 
     **See also:**
 
@@ -103,7 +150,8 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         to :class:`django.http.JsonResponse`. The rest are ignored.
     """
 
-    # pylint: disable=too-many-arguments
+    # the arguments of JsonResponse, and the journal's.
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def __init__(
         self,
         request: HttpRequest,
@@ -124,124 +172,107 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         if isinstance(data, dict):
             data.update(envelope.dump())
 
-        init_prefix = f"{logger_prefix}.{self.formatted_class_name}.__init__()"
-
-        def anonymous_serialized_request(request: HttpRequest) -> SmarterDictType:
-            """Handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`."""
-            try:
-                return HttpAnonymousRequestSerializer(request).data
-            except AttributeError:
-                url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-                logger.error(
-                    "%s HttpAnonymousRequestSerializer could not serialize request data for %s",
-                    init_prefix,
-                    url,
-                )
-                return {}
-
-        def authenticated_serialized_request(request: HttpRequest) -> SmarterDictType:
-            """Handles the same but for authenticated requests."""
-            try:
-                return HttpAuthenticatedRequestSerializer(request).data
-            except AttributeError:
-                url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-                logger.error(
-                    "%s HttpAuthenticatedRequestSerializer could not serialize request data for %s",
-                    init_prefix,
-                    url,
-                )
-                return {}
-
         if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_JOURNAL):
-            # ASGIRequest can be finicky depending on the kind of response we're dealing with.
-            # in general, we only want the user object if it's authenticated, which happens
-            # when the user is logged in to the web console, and also when the request is made
-            # via api, with a valid api key.
-            #
-            # Original exception text was:
-            # 'ASGIRequest' object has no attribute 'user'.
-            # AttributeError: 'PreparedRequest' object has no attribute 'user'
-            try:
-                if is_authenticated_request(request):
-                    user = request.user
-                    request_data = authenticated_serialized_request(request)
-                else:
-                    user = None
-                    request_data = anonymous_serialized_request(request)
-            except AttributeError:
-                user = None
-                request_data = anonymous_serialized_request(request)
-            # pylint: disable=broad-except
-            except Exception:
-                logger.warning(
-                    "%s Could not determine user from request, and, AttributeError was not raised.",
-                    init_prefix,
+            key = self.journal(request, data, thing, command, status, journal_sources)
+            if key is not None and isinstance(data, dict):
+                # add the journal's key to the metadata, which keeps its command and thing.
+                envelope.metadata = SAMJournalApiMetadata(
+                    command=envelope.metadata.command,
+                    thing=envelope.metadata.thing,
+                    key=key,
                 )
-                user = None
-                request_data = anonymous_serialized_request(request)
+                data.update(envelope.dump())
 
-            serializable_data = None
-            try:
-                serializable_data = json.to_jsonable(data)
-                # SAMJournal.user is a User, or None for an anonymous request.
-                journal_user_id = None
-                if user and not isinstance(user, AnonymousUser) and getattr(user, "is_authenticated", False):
-                    journal_user_id = user.pk
-                # SAMJournal.thing and .command are blank, not NULL, when the response has none.
-                # Django saves a value that isn't a str as str(value): so does this.
-                journal_thing = ""
-                if thing is not None:
-                    journal_thing = str(thing)
-                journal_command = ""
-                if command is not None:
-                    journal_command = str(command)
-                # the key is chosen now, so that the response can return it, and the entry is
-                # saved by a Celery worker, off this request's thread.
-                record = SAMJournalEntryRecord(
-                    key=hash_factory(length=64),
-                    created_at=timezone.now(),
-                    user_id=journal_user_id,
-                    thing=journal_thing,
-                    command=journal_command,
-                    status_code=status,
-                    request=json.to_jsonable(request_data),
-                    response=serializable_data,
-                )
-                queue_journal_entry(record, journal_sources)
-                if isinstance(data, dict):
-                    # add the journal's key to the metadata, which keeps its command and thing.
-                    envelope.metadata = SAMJournalApiMetadata(
-                        command=envelope.metadata.command, thing=envelope.metadata.thing, key=record.key
-                    )
-                    data.update(envelope.dump())
-            # pylint: disable=broad-except
-            except Exception as e:
-                # logged by smarter.lib.journal.receivers.journal_entry_failed_receiver().
-                journal_entry_failed.send(
-                    sender=self.__class__,
-                    user=user,
-                    thing=str(thing),
-                    command=str(command),
-                    status=status,
-                    request=request,
-                    response=serializable_data,
-                    error=e,
-                )
-
-        # Only pass allowed kwargs to JsonResponse
-        allowed_kwargs = {}
-        allowed_keys = {"content_type", "status", "headers", "reason"}
-        for k in list(kwargs.keys()):
-            if k in allowed_keys:
-                allowed_kwargs[k] = kwargs.pop(k)
+        response_kwargs = json_response_kwargs(kwargs)
+        is_safe = safe and isinstance(data, dict)
         super().__init__(
             data=data,
             encoder=encoder,
-            safe=safe and isinstance(data, dict),
+            safe=is_safe,
             json_dumps_params=json_dumps_params,
             status=status,
-            **allowed_kwargs,
+            **response_kwargs,
         )
+
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def journal(
+        self,
+        request: HttpRequest,
+        data: Union[SmarterDictType, list[Any]],
+        thing: Optional[Union[SmarterJournalThings, str]],
+        command: Optional[SmarterJournalCliCommands],
+        status: int,
+        journal_sources: Sequence[SAMJournalSource],
+    ) -> Optional[str]:
+        """
+        Queue the response's journal entry, to be saved by a Celery worker.
+
+        The entry's key is chosen now, so that the response can return it. If the entry can be neither
+        queued nor saved, ``journal_entry_failed`` is sent, whose receiver logs the gap in the journal,
+        and the response is returned without a key.
+
+        :param request: The request.
+        :param data: The response's data, with its envelope.
+        :param thing: The resource or entity being operated on.
+        :param command: The command executed on the resource.
+        :param status: The http status code.
+        :param journal_sources: The parts of ``data`` that the worker reads from the database.
+        :returns: The entry's key, or None if it could not be queued.
+        """
+        user_id = journal_user_id(request)
+        is_authenticated = user_id is not None
+        request_data = self.serialized_request(request, is_authenticated)
+        response_data: JsonValue = None
+        # pylint: disable=broad-exception-caught
+        try:
+            response_data = json.to_jsonable(data)
+            record = SAMJournalEntryRecord(
+                key=hash_factory(length=64),
+                created_at=timezone.now(),
+                user_id=user_id,
+                thing=journal_field(thing),
+                command=journal_field(command),
+                status_code=status,
+                request=json.to_jsonable(request_data),
+                response=response_data,
+            )
+            queue_journal_entry(record, journal_sources)
+        except Exception as e:
+            # logged by smarter.lib.journal.receivers.journal_entry_failed_receiver().
+            journal_entry_failed.send(
+                sender=self.__class__,
+                user=user_id,
+                thing=str(thing),
+                command=str(command),
+                status=status,
+                request=request,
+                response=response_data,
+                error=e,
+            )
+            return None
+        return record.key
+
+    def serialized_request(self, request: HttpRequest, is_authenticated: bool) -> SmarterDictType:
+        """
+        Return the request, serialized for the journal.
+
+        :param request: The request.
+        :param is_authenticated: Whether the request's user is authenticated, whose username is then
+            serialized too.
+        :returns: The serialized request, or an empty dict if it could not be serialized, e.g. an
+            ``ASGIRequest`` without ``GET``.
+        """
+        prefix = f"{logger_prefix}.{self.formatted_class_name}.serialized_request()"
+        serializer_class: type[HttpAnonymousRequestSerializer] = HttpAnonymousRequestSerializer
+        if is_authenticated:
+            serializer_class = HttpAuthenticatedRequestSerializer
+        try:
+            serialized: SmarterDictType = serializer_class(request).data
+        except AttributeError:
+            url = self.smarter_build_absolute_uri(request) or "Unknown URL"
+            logger.error("%s %s could not serialize the request for %s", prefix, serializer_class.__name__, url)
+            return {}
+        return serialized
 
 
 class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
@@ -273,22 +304,28 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         the stack trace of a server error is still logged, but is never sent to the client.
     :param kwargs: Additional keyword arguments passed to the parent class.
 
-    **Example error response JSON**::
+    **Example error response JSON**, a :class:`~smarter.lib.journal.contract.models.SAMJournalApiErrorResponse`
+    beside the envelope::
 
         {
             "error": {
-                "error_class": "ValueError",
-                "stack_trace": "...",
-                "description": "Invalid input",
-                "status": 400,
-                "args": "...",
-                "cause": "...",
-                "context": "thing=account, command=create"
-            }
+                "errorClass": "SAMBrokerErrorNotFound",
+                "stacktrace": "...",
+                "description": "Guardrail example not found",
+                "status": 404,
+                "args": "url=https://...",
+                "cause": "Python Exception",
+                "context": "thing=Guardrail, command=describe",
+                "thing": "Guardrail",
+                "command": "describe"
+            },
+            "api": "smarter.sh/v1",
+            "metadata": {"command": "describe", "thing": "Guardrail", "key": "4f1c...e9a2"}
         }
     """
 
-    # pylint: disable=too-many-arguments,too-many-locals
+    # the arguments of SmarterJournaledJsonResponse, and the error's.
+    # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     def __init__(
         self,
         request: HttpRequest,
@@ -305,20 +342,18 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         **kwargs,
     ):
         error_class = "Unknown Exception"
-        if e:
+        if e is not None:
             error_class = e.__class__.__name__
         if description is None:
-            if isinstance(e, Exception) and hasattr(e, "message"):
-                description = e.message  # type: ignore[union-attr]
-            elif isinstance(e, str):
-                description = e
+            # SmarterException and its subclasses have a message.
+            description = getattr(e, "message", None)
 
         url = self.smarter_build_absolute_uri(request) or "Unknown URL"
         if not status:
-            status = HTTPStatus.INTERNAL_SERVER_ERROR
+            status = HTTPStatus.INTERNAL_SERVER_ERROR.value
         args = "url=" + url
         cause = "Python Exception"
-        if isinstance(e, BaseException) and e.__cause__ is not None:
+        if e is not None and e.__cause__ is not None:
             cause = f"{type(e.__cause__).__name__}: {e.__cause__}"
         context = "thing=" + str(thing) + ", command=" + str(command)
         error_description = None
@@ -356,7 +391,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             command=command,
             data=data,
             encoder=encoder,
-            description=description,
             safe=safe,
             json_dumps_params=json_dumps_params,
             status=status,
