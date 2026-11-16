@@ -1,24 +1,23 @@
 """Serializers for the Smarter Journal api."""
 
-from typing import TYPE_CHECKING
+from typing import Union
 
 from rest_framework import serializers
 
+from smarter.apps.account.models import User
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 from .models import SAMJournal
-
-if TYPE_CHECKING:
-    from django.contrib.auth.models import User
 
 
 class SAMJournalSerializer(SmarterCamelCaseSerializer):
     """
     Serializer for the :class:`smarter.lib.journal.models.SAMJournal` model: a complete journal entry.
 
-    The entry's ``request`` and ``response`` documents are included. The request document holds the
-    caller's headers and cookies, including its api key, so this serializer is only used for one entry
-    at a time, by superusers. See :class:`SAMJournalMiniSerializer` for lists.
+    The entry's ``request`` and ``response`` documents are included. They hold user content, e.g. prompts
+    and manifests, so this serializer is only used for one entry at a time, by superusers. The request
+    document never holds the caller's cookies or api key: see
+    :class:`~smarter.lib.django.http.serializers.HttpAnonymousRequestSerializer`. See :class:`SAMJournalMiniSerializer` for lists.
 
     **Fields:**
 
@@ -41,7 +40,10 @@ class SAMJournalSerializer(SmarterCamelCaseSerializer):
         data = SAMJournalSerializer(journal).data
     """
 
-    user: "serializers.SlugRelatedField[User]" = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    # what SlugRelatedField() returns: DRF's RelatedField.__new__ makes a ManyRelatedField when many=True.
+    user: "Union[serializers.RelatedField[User, str, str], serializers.ManyRelatedField]" = (
+        serializers.SlugRelatedField(read_only=True, slug_field="username")
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -54,7 +56,7 @@ class SAMJournalMiniSerializer(SmarterCamelCaseSerializer):
     """
     Minimal serializer for the :class:`smarter.lib.journal.models.SAMJournal` model, without the entry's request and response documents.
 
-    It is used to list journal entries, which can be large, and whose documents hold credentials.
+    It is used to list journal entries, whose documents can be large, and hold user content.
 
     **Fields:**
 
@@ -71,7 +73,10 @@ class SAMJournalMiniSerializer(SmarterCamelCaseSerializer):
         data = SAMJournalMiniSerializer(journals, many=True).data
     """
 
-    user: "serializers.SlugRelatedField[User]" = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    # what SlugRelatedField() returns: DRF's RelatedField.__new__ makes a ManyRelatedField when many=True.
+    user: "Union[serializers.RelatedField[User, str, str], serializers.ManyRelatedField]" = (
+        serializers.SlugRelatedField(read_only=True, slug_field="username")
+    )
 
     # pylint: disable=missing-class-docstring
     class Meta:

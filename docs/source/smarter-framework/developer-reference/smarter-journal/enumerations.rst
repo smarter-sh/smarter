@@ -5,4 +5,4 @@ Journal Enumerations
    :members:
    :undoc-members:
    :show-inheritance:
-   :exclude-members: SmarterJournalEnumException, SmarterJournalApiResponseKeys, SmarterJournalApiResponseErrorKeys, SCLIResponseMetadata
+   :exclude-members: SmarterJournalApiResponseKeys, SmarterJournalApiResponseErrorKeys, SCLIResponseMetadata

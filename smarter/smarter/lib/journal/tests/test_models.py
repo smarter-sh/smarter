@@ -12,6 +12,7 @@ from smarter.common.utils import hash_factory
 from smarter.lib.journal.models import BLOB_TOUCH_INTERVAL, SAMJournal, SAMJournalBlob
 from smarter.lib.journal.storage import JournalDocumentEncoder, JournalStorageError
 from smarter.lib.journal.tasks import prune_journal_blobs
+from smarter.lib.typing import SmarterDictType
 
 
 class TestSAMJournal(TestAccountMixin):
@@ -106,7 +107,7 @@ class TestSAMJournal(TestAccountMixin):
 class TestSAMJournalBlobPrune(TestAccountMixin):
     """Test that prune() deletes only the old blobs that no entry references, and never one that is being reused."""
 
-    def document(self) -> dict:
+    def document(self) -> SmarterDictType:
         """A document of blobs, a chain whose items reference blobs, and an escaped dict, that no other test has."""
         unique = hash_factory(length=64)
         return {
@@ -216,6 +217,21 @@ class TestSAMJournalBlobPrune(TestAccountMixin):
         self.assertTrue(set(digests) & reachable)
         logger.error.assert_called()
         entry.delete()
+
+    def test_mark_visits_each_blob_once(self):
+        """Test that a blob that two entries reference is marked once, and that its digest is reachable."""
+        document = self.document()
+        digests = self.digests(document)
+        entry = self.entry(document)
+        self.addCleanup(entry.delete)
+        reference = (digests[0], False)
+        visited: set[tuple[str, bool]] = set()
+        reachable: set[str] = set()
+        with patch("smarter.lib.journal.models.logger") as logger:
+            SAMJournalBlob.objects.mark([reference, reference], visited, reachable)
+        self.assertIn(reference, visited)
+        self.assertIn(digests[0], reachable)
+        logger.error.assert_not_called()
 
     def test_grace_must_exceed_touch_interval(self):
         """Test that a grace that a reused blob might not be touched within is refused."""
