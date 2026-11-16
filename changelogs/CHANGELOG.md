@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.5](https://github.com/smarter-sh/smarter/compare/v0.46.4...v0.46.5) (2026-11-16)
+
+### Bug Fixes
+
+* **journal:** show the reply of LLMClient prompts in the admin ([d54d7b3](https://github.com/smarter-sh/smarter/commit/d54d7b3a3638aa8b02b7ac95b84040cc6ede1328))
+
+## [0.46.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.4...v0.46.5-alpha.1) (2026-11-16)
+
+### Bug Fixes
+
+* **journal:** show the reply of LLMClient prompts in the admin ([d54d7b3](https://github.com/smarter-sh/smarter/commit/d54d7b3a3638aa8b02b7ac95b84040cc6ede1328))
+
 ## [0.46.4](https://github.com/smarter-sh/smarter/compare/v0.46.3...v0.46.4) (2026-11-16)
 
 ### Bug Fixes
