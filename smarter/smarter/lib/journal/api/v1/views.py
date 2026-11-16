@@ -2,7 +2,7 @@
 Smarter Journal api views.
 
 They are mounted at ``/api/v1/journal/``, and only superusers may call them: a journal entry's
-request document holds the caller's headers and cookies, including its api key. Each read is
+documents hold every user's content, e.g. prompts and manifests. Each read is
 signaled, with :data:`smarter.lib.journal.signals.journal_entry_accessed` or
 :data:`smarter.lib.journal.signals.journal_entries_listed`.
 """
@@ -14,7 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.lib import logging
-from smarter.lib.django.pagination import paginate_listview
+from smarter.lib.django.pagination import ListViewPagination, paginate_listview
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
@@ -70,6 +70,8 @@ class SAMJournalView(SmarterAdminAPIView):
         """Return every journal entry with its user, newest first."""
         return journal_entries()
 
+    # *args and **kwargs are a view's, which post() passes on.
+    # pylint: disable=unused-argument
     def get(self, request: Request, key: str, *args, **kwargs):
         """
         Return the journal entry, and send the ``journal_entry_accessed`` signal.
@@ -131,9 +133,10 @@ class SAMJournalListView(SmarterAdminListAPIView):
         )
         journal_entries_listed.send(sender=self.__class__, user=request.user, count=pagination["count"])
         logger.debug("%s.list() - user: %s, pagination: %s", self.formatted_class_name, request.user, pagination)
+        summaries = [SAMJournalApiEntrySummary.from_model(journal) for journal in page]
         response = SAMJournalApiPage(
-            objects=[SAMJournalApiEntrySummary.from_model(journal) for journal in page],
-            pagination=pagination,  # type: ignore[arg-type]
+            objects=summaries,
+            pagination=ListViewPagination.model_validate(pagination),
         )
         return JsonResponse(response.model_dump(mode="json"))
 

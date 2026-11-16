@@ -114,19 +114,29 @@ Each entry is one row of the
        full list is :class:`~smarter.lib.journal.enum.SmarterJournalCliCommands`.
    * - ``request``
      - The HTTP request as a JSON document: the URL, method, path, query
-       parameters (``GET``), form data (``POST``), cookies, request headers and
-       server metadata (``META``), encoding and content type. Authenticated
-       requests also record the username.
+       parameters (``GET``), form data (``POST``), an allowlist of its headers
+       and server metadata (``META``), its ``body``, encoding and content type.
+       Authenticated requests also record the username.
    * - ``response``
      - The complete JSON body that was sent to the client.
    * - ``status_code``
      - The HTTP status code of the response.
 
-The ``request`` document holds what Django parsed from the request. A request
-body that Django does not parse into ``POST``, such as the YAML manifest that
-``apply`` sends or a JSON prompt, is not copied into it. What the request asked
-for is recorded through ``thing``, ``command`` and the response, which echoes
-the resource or the completion.
+The ``request`` document records what the request asked for, but never how it
+was authenticated. ``META`` keeps only an allowlist of headers, such as the
+host, user agent, referer and forwarded address, so the ``Authorization``
+header, which carries an API key, and the session and CSRF cookies are never
+stored. The ``body`` is the request's body, parsed: the JSON of a prompt,
+including its ``messages``, or the YAML manifest that ``apply`` sends. Every
+value whose key names a credential, such as ``password``, ``apiKey`` or
+``session_key``, is replaced with ``********``, and so is a ``Secret``
+manifest's ``spec.config.value``. A binary body, or one larger than 1 MB, is
+recorded as its size only. See
+:class:`~smarter.lib.django.http.serializers.HttpAnonymousRequestSerializer`.
+
+In the Django admin console, a journal entry's page shows the prompt and the
+LLM's reply of a chat completion, the last ``user`` message of the request's
+``body`` and the first choice of the response, above the two documents.
 
 Responses
 ---------
@@ -276,13 +286,13 @@ Security Considerations
 
 The journal is a complete record, and it should be protected like one.
 
-- **It contains credentials.** The ``request`` document copies the request's
-  headers and cookies as Django received them. That includes the
-  ``Authorization`` header, which carries the caller's API key, and the web
-  console's session and CSRF cookies. This is why the journal API is limited
-  to superusers, and why its list never includes the documents. Restrict who
-  can read the journal and its archives, encrypt them at rest, and treat a leak of the journal as a
-  leak of every API key in it.
+- **It holds no credentials it can recognize.** The ``request`` document never
+  holds the ``Authorization`` header or the session and CSRF cookies, and the
+  body's credentials are masked by their key names. A credential under a key
+  that doesn't name one, or inside free text such as a prompt, is stored as it
+  was sent. Restrict who can read the journal and its archives, and encrypt
+  them at rest. This is why the journal API is limited to superusers, and why
+  its list never includes the documents.
 - **It contains user content.** Prompt responses and completions can hold
   personal or confidential information. Your privacy obligations, such as
   data-subject access and deletion requests, apply to the journal and its

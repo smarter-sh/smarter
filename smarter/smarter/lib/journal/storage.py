@@ -269,7 +269,7 @@ class JournalDocumentEncoder:
             return self._encode_list(value)
         return value
 
-    def _encode_dict(self, value: dict) -> JsonValue:
+    def _encode_dict(self, value: dict[str, JsonValue]) -> JsonValue:
         """Return a dict whose values are encoded, escaped if it has a reserved key."""
         encoded: dict[str, JsonValue] = {}
         has_reserved_key = False
@@ -281,9 +281,9 @@ class JournalDocumentEncoder:
             return {ESCAPE_KEY: encoded}
         return encoded
 
-    def _encode_list(self, value: list) -> JsonValue:
+    def _encode_list(self, value: list[JsonValue]) -> JsonValue:
         """Return a list encoded: inline if it is short, or as a chain of nodes."""
-        items = []
+        items: list[JsonValue] = []
         for item in value:
             encoded_item = self._encode_item(item)
             items.append(encoded_item)
@@ -348,7 +348,9 @@ class JournalDocumentDecoder:
             return value
         if is_reference(value, ESCAPE_KEY, 1):
             escaped = value[ESCAPE_KEY]
-            return self._decode_dict(escaped)  # type: ignore[arg-type]
+            if not isinstance(escaped, dict):
+                raise JournalStorageError("The journal document has an escaped value that is not a dict.")
+            return self._decode_dict(escaped)
         if is_reference(value, REF_KEY, 1):
             blob = self.load(str(value[REF_KEY]))
             return self._decode_value(blob)
@@ -356,9 +358,9 @@ class JournalDocumentDecoder:
             return self._decode_list(str(value[LIST_KEY]))
         return self._decode_dict(value)
 
-    def _decode_dict(self, value: dict) -> JsonValue:
+    def _decode_dict(self, value: dict[str, JsonValue]) -> JsonValue:
         """Return a dict whose values are decoded."""
-        decoded = {}
+        decoded: dict[str, JsonValue] = {}
         for key, item in value.items():
             decoded[key] = self._decode_value(item)
         return decoded

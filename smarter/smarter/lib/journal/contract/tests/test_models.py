@@ -34,6 +34,7 @@ from smarter.lib.journal.serializers import (
     SAMJournalMiniSerializer,
     SAMJournalSerializer,
 )
+from smarter.lib.journal.tests.choices import field_choices
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.narrowing import json_object
 
@@ -60,16 +61,12 @@ class TestChoices(SmarterTestBase):
     """Test that the Literals of a journal entry are the choices of the SAMJournal model."""
 
     def test_thing(self):
-        field_choices = SAMJournal._meta.get_field("thing").choices
-        assert field_choices is not None
-        choices = {value for value, _ in field_choices}
+        choices = set(field_choices("thing"))
         self.assertEqual(set(get_args(SAMJournalApiThing)), choices)
         self.assertEqual(choices, {value for value, _ in SmarterJournalThings.choices()})
 
     def test_command(self):
-        field_choices = SAMJournal._meta.get_field("command").choices
-        assert field_choices is not None
-        choices = {value for value, _ in field_choices}
+        choices = set(field_choices("command"))
         self.assertEqual(set(get_args(SAMJournalApiCommand)), choices)
         self.assertEqual(choices, {value for value, _ in SmarterJournalCliCommands.choices()})
 
@@ -167,7 +164,8 @@ class TestOrmModel(SmarterTestBase):
         self.assertEqual(model.response, {"data": [1, "two", None]})
         self.assertEqual(model.status_code, 200)
         # the documents are stored in DOCUMENT_FIELDS, and read and written as request and response.
-        columns = {field.attname.removesuffix("_id") for field in SAMJournal._meta.concrete_fields}
+        concrete_fields = SAMJournal._meta.concrete_fields  # pylint: disable=protected-access
+        columns = {field.attname.removesuffix("_id") for field in concrete_fields}
         row_fields = (columns - set(DOCUMENT_FIELDS)) | {"request", "response"}
         self.assertEqual(set(SAMJournalApiOrmModel.model_fields), row_fields)
 
