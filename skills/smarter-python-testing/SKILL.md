@@ -47,6 +47,45 @@ docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.
   docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter --noinput > /tmp/test.log 2>&1; grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' /tmp/test.log"
   ```
 
+## Decide what to test from the user's path, not from your code
+
+Coverage measures which lines ran, not whether the data they ran on looks like
+production. When you write both the code and its fixtures, both come from the
+same assumption about the input, and the tests can only confirm that
+assumption. A suite can cover 99% of a feature and prove nothing about it.
+
+Before you write the tests for any change:
+
+1. **Name the user's path.** Write down the first thing a user will do with
+   the change: apply a manifest with the cli, send a prompt from the console,
+   open a page in the admin, wait for a scheduled task to run. The first test
+   exercises that path, through the view, broker, command or task the user
+   reaches, not the helper you wrote.
+2. **List every producer of the data your code reads.** Grep for every caller,
+   view, serializer, task or manifest that creates it. Different producers
+   often make different shapes (an envelope, a legacy version, a JSON string
+   instead of a dict, an error variant). Each shape gets a test. If you can't
+   list them, you don't understand the change yet.
+3. **Build fixtures with the code that produces the data, or from a real
+   one.** Call the builder, serializer, `model_dump()`, broker or test client
+   POST that makes it in production, load an example manifest, or save a
+   document from a real run into `tests/data/`. A dict you typed yourself tests
+   only your own idea of the data.
+4. **Check every fallback assertion against the producers.** A test that
+   expects `""`, `None`, `[]` or an error for some input claims that input is
+   invalid. Make sure it isn't one that a real producer sends.
+5. **Run the user's path once, end to end, before you say "done".** Send the
+   request to the local dev server, or drive the view with Django's test
+   client, and look at what the user will see. Green tests don't replace this.
+   If you can't run it, say so, and don't claim the change works.
+
+Example: the journal admin's "Response text" shipped with 99% coverage and
+showed nothing for the first prompt a user sent from the console. Its fixture
+was a hand-written bare `ChatCompletion`, the passthrough api's shape. LLMClient
+prompts journal `{"data": {"completion": ...}}`, and one test even asserted
+that a `{"data": ...}` document returns "". Rules 2, 3 and 4 would each have
+caught it, and rule 5 would have caught it in a minute.
+
 ## Layout and conventions
 
 - One test module per source module (`test_custom_domain_broker.py` for

@@ -1,11 +1,15 @@
 """Test the Smarter Journal's Django admin."""
 
+import json
 from unittest.mock import MagicMock
 
 from django.test import RequestFactory
+from openai.types.chat import ChatCompletion
 from pydantic import JsonValue
 
+from smarter.apps.prompt.contract.builders import prompt_result_v2
 from smarter.lib.journal.admin import SAMJournalAdmin, prompt_text, response_text
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -56,6 +60,47 @@ class TestSAMJournalAdmin(SmarterTestBase):
 
     def test_response_is_the_first_choice(self):
         self.assertEqual(response_text(self.response), "It's 63F right now.")
+
+    def lambda_result(self, body: JsonValue) -> dict[str, JsonValue]:
+        """A prompt handler's Lambda style result, as an LLMClient's handler returns it."""
+        assert isinstance(self.response, dict)
+        completion = {key: value for key, value in self.response.items() if key not in ("api", "metadata")}
+        completion["smarter"] = {"messages": [{"role": "user", "content": "What's the weather?"}], "tools": []}
+        return {"statusCode": 200, "body": body if body is not None else completion}
+
+    def test_response_of_an_llmclient_prompt(self):
+        """
+        Test the reply of a prompt to an LLMClient, chat contract version 2, which the web console sends.
+
+        The response document is built as the LLMClient's prompt view builds it, with prompt_result_v2(),
+        not written by hand.
+        """
+        data, _, _ = prompt_result_v2(self.lambda_result(None))
+        response: JsonValue = {
+            SmarterJournalApiResponseKeys.DATA: data,
+            "api": "smarter.sh/v1",
+            "metadata": {"command": "prompt", "thing": "LLMClient"},
+        }
+        self.assertEqual(response_text(response), "It's 63F right now.")
+
+    def test_response_of_an_llmclient_prompt_v1(self):
+        """Test the reply of a prompt to an LLMClient, chat contract version 1, whose body may be JSON text."""
+        completion = self.lambda_result(None)["body"]
+        bodies: tuple[JsonValue, ...] = (
+            completion,
+            json.dumps(completion),
+            {"error": {"status": 500}, "response": completion},
+        )
+        for body in bodies:
+            response: JsonValue = {SmarterJournalApiResponseKeys.DATA: {"statusCode": 200, "body": body}}
+            self.assertEqual(response_text(response), "It's 63F right now.", body)
+        response = {SmarterJournalApiResponseKeys.DATA: {"statusCode": 200, "body": "not json"}}
+        self.assertEqual(response_text(response), "")
+
+    def test_response_of_a_passthrough_prompt(self):
+        """Test the reply of a passthrough prompt, which journals ChatCompletion.model_dump() itself."""
+        completion = ChatCompletion.model_validate(self.response)
+        self.assertEqual(response_text(completion.model_dump()), "It's 63F right now.")
 
     def test_response_without_choices(self):
         response = dict(self.response) if isinstance(self.response, dict) else {}
