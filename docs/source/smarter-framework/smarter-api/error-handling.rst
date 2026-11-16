@@ -49,7 +49,6 @@ which properly formats the error details for CLI client consumption.
                 SmarterPluginError,
                 SmarterConfigurationError,
                 SmarterInfrastructureError,
-                SmarterJournalEnumException,
                 SmarterException,
             ):
                 status = HTTPStatus.INTERNAL_SERVER_ERROR.value

@@ -15,23 +15,10 @@ from smarter_types import (
     SmarterJournalThings,
 )
 
-from smarter.common.exceptions import SmarterException
-
-
-class SmarterJournalEnumException(SmarterException):
-    """Base exception for Smarter API Manifest enumerations."""
-
-    @property
-    def get_formatted_err_message(self):
-        """The error message prefix of these errors."""
-        return "Smarter API Manifest Enumeration Error"
-
-
 __all__ = [
     "SCLIResponseMetadata",
     "SmarterJournalApiResponseErrorKeys",
     "SmarterJournalApiResponseKeys",
     "SmarterJournalCliCommands",
-    "SmarterJournalEnumException",
     "SmarterJournalThings",
 ]

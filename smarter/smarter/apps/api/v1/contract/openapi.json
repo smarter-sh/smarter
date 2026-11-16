@@ -13981,7 +13981,7 @@
       },
       "SAMJournalApiEntry": {
         "additionalProperties": false,
-        "description": "A journal entry, as the journal's REST api returns it by its key: with its request and response documents.\n\nIt is the output of :class:`smarter.lib.journal.serializers.SAMJournalSerializer`, in camelCase.\nThe request document holds the caller's headers and cookies, including its api key.",
+        "description": "A journal entry, as the journal's REST api returns it by its key: with its request and response documents.\n\nIt is the output of :class:`smarter.lib.journal.serializers.SAMJournalSerializer`, in camelCase.\nThe request document holds the request's url, an allowlist of its headers, and its body, with its\ncredentials redacted: never the caller's cookies or api key. See\n:class:`~smarter.lib.django.http.serializers.HttpAnonymousRequestSerializer`.",
         "properties": {
           "command": {
             "description": "SAMJournal.command.",
@@ -25353,7 +25353,7 @@
     },
     "/journal/{key}/": {
       "get": {
-        "description": "A journal entry, by its key, with its request and response documents. The request document holds the caller's headers, including its api key. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
+        "description": "A journal entry, by its key, with its request and response documents. The request document holds the request's url, an allowlist of its headers and its body, with its credentials redacted: never the caller's cookies or api key. Requires an api key of a superuser: the REST api's views refuse other users with a 403. Other users read their resources with the cli api's get and describe.",
         "operationId": "journal_retrieve",
         "parameters": [
           {
@@ -28489,7 +28489,7 @@
       "name": "history"
     },
     {
-      "description": "The Smarter Journal: a record of every request to the cli api. For superusers.",
+      "description": "The Smarter Journal: a record of every journaled request to the Smarter api. For superusers.",
       "name": "journal"
     },
     {

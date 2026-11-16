@@ -250,7 +250,13 @@ class SAMJournalBlob(models.Model):
     objects = SAMJournalBlobManager()
 
     def __str__(self) -> str:
-        return self.digest
+        """
+        Return the blob's digest.
+
+        :returns: The digest, 64 hexadecimal characters.
+        """
+        digest = str(self.digest)
+        return digest
 
 
 class SAMJournal(models.Model):
@@ -290,6 +296,8 @@ class SAMJournal(models.Model):
     key = models.CharField(primary_key=True, default=None, editable=False, max_length=64, unique=True)
     created_at = models.DateTimeField(default=timezone.now, null=True, db_index=True, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+    #: The id of :attr:`user`, which Django adds: None for an anonymous request.
+    user_id: Optional[int]
     thing = models.CharField(
         max_length=24, choices=SmarterJournalThings.choices(), default=SmarterJournalThings.PROMPT.value, blank=True
     )
@@ -308,6 +316,10 @@ class SAMJournal(models.Model):
     status_code = models.PositiveSmallIntegerField(default=200)
 
     objects = SAMJournalManager()
+
+    #: The documents that were given to, or read from, this instance, by name: see :meth:`documents`.
+    #: Declared here, not in ``__init__``, which a Django model doesn't override. Not a field.
+    _journal_documents: Optional[dict[str, JsonValue]] = None
 
     @property
     def request(self) -> JsonValue:
@@ -333,7 +345,7 @@ class SAMJournal(models.Model):
 
         :returns: The documents, a dict of this instance.
         """
-        documents: Optional[dict[str, JsonValue]] = getattr(self, "_journal_documents", None)
+        documents = self._journal_documents
         if documents is None:
             documents = {}
             self._journal_documents = documents

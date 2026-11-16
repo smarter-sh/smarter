@@ -227,16 +227,20 @@ class SAMJournalApiOrmModel(BaseModel):
         :param journal: The journal entry.
         :returns: Its model.
         """
-        return cls(
-            key=journal.key,
-            created_at=journal.created_at,
-            user=journal.user_id,  # type: ignore[attr-defined]
-            thing=journal.thing,  # type: ignore[arg-type]
-            command=journal.command,  # type: ignore[arg-type]
-            request=journal.request,
-            response=journal.response,
-            status_code=journal.status_code,
-        )
+        # model_validate(), not cls(...): a row's thing and command are strs, which Pydantic validates
+        # against the Literals of their choices.
+        fields: SmarterDictType = {
+            "key": journal.key,
+            "created_at": journal.created_at,
+            "user": journal.user_id,
+            "thing": journal.thing,
+            "command": journal.command,
+            "request": journal.request,
+            "response": journal.response,
+            "status_code": journal.status_code,
+        }
+        model = cls.model_validate(fields)
+        return model
 
 
 # ------------------------------------------------------------------------------
@@ -276,8 +280,9 @@ class SAMJournalApiEntrySummary(BaseModel):
         :returns: The fields, by name.
         """
         username = None
-        if journal.user:
-            username = journal.user.username  # type: ignore[union-attr]
+        user = journal.user
+        if user is not None:
+            username = user.username
         return {
             "key": journal.key,
             "created_at": journal.created_at,
@@ -303,7 +308,9 @@ class SAMJournalApiEntry(SAMJournalApiEntrySummary):
     A journal entry, as the journal's REST api returns it by its key: with its request and response documents.
 
     It is the output of :class:`smarter.lib.journal.serializers.SAMJournalSerializer`, in camelCase.
-    The request document holds the caller's headers and cookies, including its api key.
+    The request document holds the request's url, an allowlist of its headers, and its body, with its
+    credentials redacted: never the caller's cookies or api key. See
+    :class:`~smarter.lib.django.http.serializers.HttpAnonymousRequestSerializer`.
     """
 
     request: SAMJournalApiJson = Field(..., description="SAMJournal.request: the serialized http request.")

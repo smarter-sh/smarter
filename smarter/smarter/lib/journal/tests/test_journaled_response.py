@@ -4,11 +4,13 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from smarter.lib import json
+from smarter.lib.journal.contract.const import JOURNAL_KEY_PATTERN
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
-
-from ..contract.const import JOURNAL_KEY_PATTERN
-from ..http import SmarterJournaledJsonErrorResponse, SmarterJournaledJsonResponse
 
 
 class TestSmarterJournaledJsonResponse(SmarterTestBase):

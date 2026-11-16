@@ -1,7 +1,7 @@
 """Test :class:`smarter.lib.journal.enum.SmarterJournalCliCommands`, for the 'validate' command."""
 
 from smarter.lib.journal.enum import SmarterJournalCliCommands
-from smarter.lib.journal.models import SAMJournal
+from smarter.lib.journal.tests.choices import field_choices
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -29,7 +29,5 @@ class TestSmarterJournalCliCommandsValidate(SmarterTestBase):
 
     def test_journal_model_choices(self):
         """Test that SAMJournal.command accepts 'validate', i.e. migration 0006 matches the enum."""
-        field_choices = SAMJournal._meta.get_field("command").choices
-        assert field_choices is not None
-        choices = [value for value, _ in field_choices]
+        choices = field_choices("command")
         self.assertIn("validate", choices)
