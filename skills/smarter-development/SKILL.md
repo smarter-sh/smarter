@@ -359,7 +359,12 @@ reference implementations.
 - The code follows an existing pattern.
 - The Python has about one operation per line (see [One operation per line](#one-operation-per-line)).
 - The tests cover it, and you ran them in the container. Report failures
-  honestly, including pre-existing ones.
+  honestly, including pre-existing ones. Their fixtures come from the code
+  that produces the data, not from dicts you typed (see `smarter-python-testing`,
+  "Decide what to test from the user's path").
+- You ran the user's path once, end to end, against the local dev server, and
+  saw the result the user will see. Green tests and coverage don't count as
+  this. If you couldn't, your summary says so.
 - The pre-commit hooks pass on the changed files.
 - No new or changed log call (Python or JavaScript) writes a secret,
   credential or PII.
