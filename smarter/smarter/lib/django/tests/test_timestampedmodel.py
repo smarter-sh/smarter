@@ -94,6 +94,23 @@ class TestTimestampedModel(TestAccountMixin):
         retrieved_account = Account.get_object_by_locator(record_locator)
         self.assertEqual(self.account, retrieved_account)
 
+    def test_missing_object_logs_a_warning_not_an_error(self):
+        """
+        A locator whose row doesn't exist is the client's error: a WARNING, not an ERROR.
+
+        Regression test for https://github.com/smarter-sh/smarter/issues/1014:
+        ``get_cached_object()`` raises the model's ``DoesNotExist``, which was logged as an
+        unexpected error, with a traceback.
+        """
+        locator = Account(id=999999999).record_locator
+        missing = Account.DoesNotExist("missing")
+        with patch.object(Account, "get_cached_object", side_effect=missing):
+            with patch("smarter.lib.django.models.timestamped_model.logger") as mock_logger:
+                self.assertIsNone(Account.get_object_by_locator(locator))
+        mock_logger.exception.assert_not_called()
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+
     def test_elapsed_updated(self):
         """Test elapsed_updated returns the correct time difference in seconds."""
 
@@ -192,6 +209,8 @@ class TestTimestampedModel(TestAccountMixin):
 
     def test_to_json_error(self):
         """Test that a serialization failure is reported as a SmarterValueError."""
+        with patch("smarter.lib.django.models.timestamped_model.patch_logger_placeholder", create=True):
+            pass
         with patch("smarter.lib.django.models.timestamped_model.model_to_dict", side_effect=RuntimeError("broken")):
             with self.assertRaises(SmarterValueError):
                 self.account.to_json()
