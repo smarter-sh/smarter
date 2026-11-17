@@ -67,19 +67,30 @@ class TestPluginReceivers(PluginAppTestBase):
             patcher.start()
             self.addCleanup(patcher.stop)
         self.messages: list[str] = []
+        self.info_messages: list[str] = []
         # messages are formatted when they are logged, while the models they
         # describe still exist.
         self.logger.debug.side_effect = self.log
-        self.logger.info.side_effect = self.log
+        self.logger.info.side_effect = self.log_info
         self.logger.warning.side_effect = self.log
 
     def log(self, msg, *args, **kwargs):  # pylint: disable=W0613
         """Record a formatted log message."""
         self.messages.append(msg % args if args else msg)
 
+    def log_info(self, msg, *args, **kwargs):  # pylint: disable=W0613
+        """Record a formatted log message that was logged at INFO."""
+        message = msg % args if args else msg
+        self.info_messages.append(message)
+        self.messages.append(message)
+
     def logged(self) -> str:
         """Return everything the receivers logged, as one string."""
         return "\n".join(self.messages)
+
+    def logged_at_info(self) -> str:
+        """Return everything the receivers logged at INFO, as one string."""
+        return "\n".join(self.info_messages)
 
     # -------------------------------------------------------------------------
     # plugin lifecycle signals
@@ -124,24 +135,28 @@ class TestPluginReceivers(PluginAppTestBase):
         self.assertIn("couponCodes", self.logged())
 
     def test_plugin_responded(self):
-        """Test that the plugin_responded receiver logs the plugin's response."""
-        plugin_responded.send(
-            sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response={"name": "Willy"}
-        )
+        """Test that the plugin_responded receiver logs the response's length at INFO, and the response at DEBUG only."""
+        response = {"name": "Willy"}
+        plugin_responded.send(sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response)
+        self.assertIn(f"characters: {receivers.response_characters(response)}", self.logged_at_info())
+        self.assertNotIn("Willy", self.logged_at_info())
         self.assertIn("Willy", self.logged())
 
     def test_plugin_responded_json_string(self):
-        """Test that the plugin_responded receiver decodes a JSON string response."""
-        plugin_responded.send(
-            sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response='{"name": "Wonka"}'
-        )
+        """Test that the plugin_responded receiver decodes a JSON string response, and logs it at DEBUG only."""
+        response = '{"name": "Wonka"}'
+        plugin_responded.send(sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response)
+        self.assertIn(f"characters: {len(response)}", self.logged_at_info())
+        self.assertNotIn("Wonka", self.logged_at_info())
         self.assertIn("Wonka", self.logged())
 
     def test_plugin_responded_plain_string(self):
-        """Test that the plugin_responded receiver logs a response that is not JSON as is."""
+        """Test that the plugin_responded receiver logs a response that is not JSON as is, at DEBUG only."""
         plugin_responded.send(
             sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response="not json"
         )
+        self.assertIn("characters: 8", self.logged_at_info())
+        self.assertNotIn("not json", self.logged_at_info())
         self.assertIn("not json", self.logged())
 
     def test_plugin_ready(self):
