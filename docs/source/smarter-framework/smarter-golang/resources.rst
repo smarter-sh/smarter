@@ -37,7 +37,12 @@ are for superusers only.
    * - ``client.LLMHosts``
      - LLMHosts: ``Status``, ``Logs``, ``Plan``, ``Deploy``, ``Undeploy``, ``Report``, ``Discover``
        and ``DiscoverManifest``.
-   * - ``client.Secrets``, ``client.Plugins``, ``client.Orchestrators``, ``client.Vectorsearches``
+   * - ``client.Orchestrators``
+     - :doc:`Orchestrators <../../smarter-resources/smarter-orchestrator>`, multi-agent workflows
+       over LLMClients: ``Run`` starts a run toward an objective, which the platform executes in
+       the background, ``RunStatus`` reads it until it is ``Done()``, and ``Runs`` lists the
+       newest. ``Run`` is never retried: a retry would start a second run.
+   * - ``client.Secrets``, ``client.Plugins``, ``client.Vectorsearches``
      - Read them, and manage them with manifests. A plugin's manifest kind is its class, e.g.
        ``SqlPlugin``, which ``client.Plugins`` looks up for you. ``Plugins.RetrieveManifest`` reads a
        plugin's manifest by its id. ``Vectorsearches.Run`` runs a
