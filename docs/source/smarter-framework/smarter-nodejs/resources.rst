@@ -37,7 +37,12 @@ are for superusers only.
    * - ``client.llmHosts``
      - LLMHosts: ``status()``, ``logs()``, ``plan()``, ``deploy()``, ``undeploy()``, ``report()``,
        ``discover()`` and ``discoverManifest()``.
-   * - ``client.secrets``, ``client.plugins``, ``client.orchestrators``, ``client.vectorsearches``
+   * - ``client.orchestrators``
+     - :doc:`Orchestrators <../../smarter-resources/smarter-orchestrator>`, multi-agent workflows
+       over LLMClients: ``run()`` starts a run toward an objective, which the platform executes in
+       the background, ``runStatus()`` reads it until ``isRunDone(run)``, and ``runs()`` lists the
+       newest.
+   * - ``client.secrets``, ``client.plugins``, ``client.vectorsearches``
      - Read them, and manage them with manifests. A plugin's manifest kind is its class, e.g.
        ``SqlPlugin``, which ``client.plugins`` looks up for you. ``plugins.retrieveManifest(id)``
        reads a plugin's manifest by its id. ``vectorsearches.run()`` runs a

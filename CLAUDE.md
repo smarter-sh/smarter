@@ -10,6 +10,13 @@ single-page React app that Django serves. The console's source is its own
 repository, smarter-sh/smarter-console (a checkout sits next to this one); this
 repository installs a pinned release of its build.
 
+The project has two goals of equal weight: letting non-programmers build
+governed production AI applications without code, and being a complete
+platform for **teaching AI** (corporate training, universities such as UBC,
+bootcamps, 23 ready-to-teach courses). Whenever you describe Smarter, lead with
+both goals, never the stack alone, and never leave out education. See "What the
+project is for" in `smarter-development`.
+
 Detailed know-how lives in the Agent Skills under `skills/` (symlinked to
 `.claude/skills`). **Load `smarter-development` first for any change.** Its
 table says which narrower `smarter-*` skill covers each kind of work. This file

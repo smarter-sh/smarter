@@ -94,6 +94,24 @@ class TestTimestampedModel(TestAccountMixin):
         retrieved_account = Account.get_object_by_locator(record_locator)
         self.assertEqual(self.account, retrieved_account)
 
+    def test_missing_object_logs_a_warning_not_an_error(self):
+        """
+        A locator whose row doesn't exist is the client's error: a WARNING, not an ERROR.
+
+        Regression test for https://github.com/smarter-sh/smarter/issues/1014:
+        ``get_cached_object()`` raises the model's ``DoesNotExist``, which was logged as an
+        unexpected error, with a traceback. The lookup is real, not patched, so that the test
+        fails if ``get_cached_object()`` ever stops raising.
+        """
+        missing_id = 999999999
+        self.assertFalse(Account.objects.filter(pk=missing_id).exists())
+        locator = Account(id=missing_id).record_locator
+        with patch("smarter.lib.django.models.timestamped_model.logger") as mock_logger:
+            self.assertIsNone(Account.get_object_by_locator(locator))
+        mock_logger.exception.assert_not_called()
+        mock_logger.error.assert_not_called()
+        mock_logger.warning.assert_called_once()
+
     def test_elapsed_updated(self):
         """Test elapsed_updated returns the correct time difference in seconds."""
 

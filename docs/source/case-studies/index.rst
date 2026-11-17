@@ -46,8 +46,21 @@ are about the Smarter Project itself.
        with no artists and no one to decide which days are special.
      - Workflow automation, AI with Python and Django, guardrails, LLM-as-judge, untrusted output
 
-Using the cases
----------------
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   shadow-ai
+   ask-stanley
+   organizing-for-ai
+   confidential-by-construction
+   the-board-pack
+   the-smarter-doodle
+
+.. The two parts below are rubrics, not sections, so that the sidebar's submenu under Case Studies lists only the
+   six cases.
+
+.. rubric:: Using the cases
 
 Each case is self-contained, and follows the same structure, so that a reader who knows one can find their way in
 any other:
@@ -66,8 +79,7 @@ Stackademy is already loaded.
 
 .. _case-studies-stackademy:
 
-Stackademy
-----------
+.. rubric:: Stackademy
 
 Five of the cases follow one organization, Stackademy, as it puts AI assistants to work across its departments: how
 it organized its teams in Smarter (:doc:`organizing-for-ai`), how it kept each department's records confidential
@@ -105,14 +117,3 @@ department. Each department has an assistant over its own records: **Harper** fo
 are fictional, and sign in with a published demonstration password; the
 :doc:`Stackademy page </smarter-framework/smarter-manifests/stackademy>` describes the repository and its
 original course catalogue assistants.
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   organizing-for-ai
-   confidential-by-construction
-   the-board-pack
-   ask-stanley
-   shadow-ai
-   the-smarter-doodle
