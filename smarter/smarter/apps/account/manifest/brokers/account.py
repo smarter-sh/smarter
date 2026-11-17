@@ -486,6 +486,16 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             self._orm_instance = self.orm_meta_instance  # type: ignore
             return self._orm_instance
 
+        # DEBUG: commands such as example-manifest and json-schema need no name. The
+        # commands that do need one fail with their own error.
+        if not self.name:
+            logger.debug(
+                "%s.orm_instance() - no name, so there is no %s instance to retrieve",
+                self.formatted_class_name,
+                Account.__name__,
+            )
+            return None
+
         try:
             logger.debug(
                 "%s.orm_instance() - attempting to retrieve %s instance for user=%s, name=%s",
@@ -511,7 +521,9 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 )
             return self._orm_instance
         except Account.DoesNotExist:
-            logger.warning(
+            # DEBUG: the caller decides whether a missing Account is an error, e.g. describe
+            # answers 404.
+            logger.debug(
                 "%s.orm_instance() - %s instance does not exist for account=%s, name=%s",
                 self.formatted_class_name,
                 Account.__name__,

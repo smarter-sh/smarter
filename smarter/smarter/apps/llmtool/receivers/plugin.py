@@ -29,6 +29,7 @@ from ..signals.plugin import (
     search_term_matched,
 )
 from ..tasks import create_plugin_selector_history
+from .utils import response_characters
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
@@ -144,7 +145,8 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     """
     Handle plugin responded signal.
 
-    Logs it at INFO.
+    Logs the plugin's name, the inquiry type and the result's length at INFO, and the whole
+    result at DEBUG only: a tool's result can hold customer data, or a credential in a url.
 
     :param sender: The class that sent the signal.
     :param plugin: The plugin.
@@ -154,17 +156,26 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
     # plugins send their response as ``response``.
     inquiry_return: Optional[Union[SmarterDictType, list, str]] = kwargs.get("response", kwargs.get("inquiry_return"))
+    characters = response_characters(inquiry_return)
+
+    logger.info(
+        "%s.plugin_responded() %s inquiry_type: %s characters: %s",
+        logger_prefix,
+        plugin.name,
+        inquiry_type,
+        characters,
+    )
 
     try:
         inquiry_return = json.loads(inquiry_return) if isinstance(inquiry_return, str) else inquiry_return
     except (TypeError, json.JSONDecodeError):
         pass
 
-    logger.info(
-        "%s.plugin_responded() %s inquiry_type: %s inquiry_return: %s",
+    # DEBUG: the result can hold customer data, or a credential in a url.
+    logger.debug(
+        "%s.plugin_responded() %s inquiry_return: %s",
         logger_prefix,
         plugin.name,
-        inquiry_type,
         SmarterFormattedText.json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
     )
 
