@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.6](https://github.com/smarter-sh/smarter/compare/v0.46.5...v0.46.6) (2026-11-17)
+
+### Bug Fixes
+
+* **account:** log a missing broker instance at DEBUG, not WARNING ([f6e25ba](https://github.com/smarter-sh/smarter/commit/f6e25ba46096fda51f6899a553d06ff65d8c94b4)), closes [#1017](https://github.com/smarter-sh/smarter/issues/1017) [#1017](https://github.com/smarter-sh/smarter/issues/1017) [#1016](https://github.com/smarter-sh/smarter/issues/1016) [#985](https://github.com/smarter-sh/smarter/issues/985)
+* **django:** log a missing row in get_object_by_locator() as a WARNING ([f5650ac](https://github.com/smarter-sh/smarter/commit/f5650acb6341a2b540f620ffccfc86b39439a487)), closes [#1014](https://github.com/smarter-sh/smarter/issues/1014)
+* **llmtool:** log a plugin's tool result at DEBUG, and only its length at INFO ([8581a1c](https://github.com/smarter-sh/smarter/commit/8581a1c95d31b8676912a3e45ce967c5923260fd)), closes [#1013](https://github.com/smarter-sh/smarter/issues/1013)
+
+## [0.46.6-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.6-alpha.1...v0.46.6-alpha.2) (2026-11-17)
+
+### Bug Fixes
+
+* **account:** log a missing broker instance at DEBUG, not WARNING ([f6e25ba](https://github.com/smarter-sh/smarter/commit/f6e25ba46096fda51f6899a553d06ff65d8c94b4)), closes [#1017](https://github.com/smarter-sh/smarter/issues/1017) [#1017](https://github.com/smarter-sh/smarter/issues/1017) [#1016](https://github.com/smarter-sh/smarter/issues/1016) [#985](https://github.com/smarter-sh/smarter/issues/985)
+
+## [0.46.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.5...v0.46.6-alpha.1) (2026-11-17)
+
+### Bug Fixes
+
+* **django:** log a missing row in get_object_by_locator() as a WARNING ([f5650ac](https://github.com/smarter-sh/smarter/commit/f5650acb6341a2b540f620ffccfc86b39439a487)), closes [#1014](https://github.com/smarter-sh/smarter/issues/1014)
+* **llmtool:** log a plugin's tool result at DEBUG, and only its length at INFO ([8581a1c](https://github.com/smarter-sh/smarter/commit/8581a1c95d31b8676912a3e45ce967c5923260fd)), closes [#1013](https://github.com/smarter-sh/smarter/issues/1013)
+
 ## [0.46.5](https://github.com/smarter-sh/smarter/compare/v0.46.4...v0.46.5) (2026-11-16)
 
 ### Bug Fixes
