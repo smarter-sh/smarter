@@ -8,7 +8,7 @@ from functools import cached_property
 from typing import ClassVar, Optional
 
 from cache_results import cache_results
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
@@ -433,7 +433,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
         :param locator: The record locator string to decode and search for.
         :returns: The model instance if found, otherwise None. A failure to decode or find the
-            object is logged, and returns None.
+            object is logged, and returns None. A locator comes from the client, so a locator
+            that doesn't decode, or whose row doesn't exist, is a WARNING, not an ERROR.
         """
         logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.get_object_by_locator()"
         verbose_logger.debug(
@@ -477,6 +478,16 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                     locator,
                 )
             return obj  # type: ignore[return-value]
+        except ObjectDoesNotExist:
+            # get_cached_object() raises the model's DoesNotExist. The locator comes from the
+            # client, so a row that doesn't exist is the client's error, e.g. a 404.
+            logger.warning(
+                "%s No %s found for locator '%s'.",
+                logger_prefix,
+                cls.__name__,
+                locator,
+            )
+            return None
         # pylint: disable=broad-except
         except Exception as e:
             logger.exception(
