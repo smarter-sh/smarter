@@ -135,9 +135,11 @@ class TestPluginReceivers(PluginAppTestBase):
         self.assertIn("couponCodes", self.logged())
 
     def test_plugin_responded(self):
-        """Test that the plugin_responded receiver logs the response's length at INFO, and the response at DEBUG only."""
+        """Test that plugin_responded logs the response's length at INFO, and the response at DEBUG only."""
         response = {"name": "Willy"}
-        plugin_responded.send(sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response)
+        plugin_responded.send(
+            sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response
+        )
         self.assertIn(f"characters: {receivers.response_characters(response)}", self.logged_at_info())
         self.assertNotIn("Willy", self.logged_at_info())
         self.assertIn("Willy", self.logged())
@@ -145,7 +147,9 @@ class TestPluginReceivers(PluginAppTestBase):
     def test_plugin_responded_json_string(self):
         """Test that the plugin_responded receiver decodes a JSON string response, and logs it at DEBUG only."""
         response = '{"name": "Wonka"}'
-        plugin_responded.send(sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response)
+        plugin_responded.send(
+            sender=self.__class__, plugin=self.static_plugin, inquiry_type="contact", response=response
+        )
         self.assertIn(f"characters: {len(response)}", self.logged_at_info())
         self.assertNotIn("Wonka", self.logged_at_info())
         self.assertIn("Wonka", self.logged())
