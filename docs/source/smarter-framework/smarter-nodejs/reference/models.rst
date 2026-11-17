@@ -117,6 +117,15 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :throws SmarterValueError: If it is not a manifest.
       :rtype: Manifest
 
+.. js:function:: isRunDone(run)
+
+   Whether a run has ended, and its status will not change again.
+
+   :param run: The run.
+   :type run: Pick<OrchestrationRun, "status">
+   :returns: True once its status is ``succeeded``, ``failed``, ``cancelled`` or ``max_iterations_exceeded``.
+   :rtype: boolean
+
 .. js:function:: manifestNames(list)
 
    The names of the resources of a ``get`` result: each row's ``name``, or its ``username`` for the User kind.
@@ -1908,6 +1917,142 @@ The Zod schemas, and types, of the REST api's responses, and the ``Manifest`` cl
       :type: string
 
    .. js:attribute:: tool
+
+      :type: string
+
+.. js:data:: ORCHESTRATION_RUN_FINAL_STATUSES
+
+   The statuses of a run that has ended.
+
+   :type: readonly string[]
+
+.. js:class:: OrchestrationRun
+
+   A run of an Orchestrator: an attempt at an objective, its status, its steps and its result.
+
+   A run starts ``pending``, and the platform executes it in the background, one step at a time. Poll it
+   until ``isRunDone`` is true: its status is ``succeeded``, ``failed``, ``cancelled`` or
+   ``max_iterations_exceeded``.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: completedAt
+
+      When it ended, in ISO 8601.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: createdAt
+
+      When the run was requested, in ISO 8601.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: errorMessage
+
+      Why the run failed, or stopped, if it did.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: id
+
+      :type: number
+
+   .. js:attribute:: iterationCount
+
+      How many steps the run has taken.
+
+      :type: number
+
+   .. js:attribute:: objective
+
+      What the run is to achieve.
+
+      :type: string
+
+   .. js:attribute:: orchestrator
+
+      The Orchestrator's id.
+
+      :type: number
+
+   .. js:attribute:: result
+
+      The run's result: its last step's text, once it succeeded.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: startedAt
+
+      When its execution began, in ISO 8601.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: startedBy
+
+      Who started the run.
+
+      :type: object | null | undefined
+
+   .. js:attribute:: status
+
+      pending, running, succeeded, failed, cancelled or max_iterations_exceeded.
+
+      :type: string
+
+   .. js:attribute:: steps
+
+      Its steps, in order.
+
+      :type: object[]
+
+.. js:class:: OrchestrationStep
+
+   One step of a run of an Orchestrator: one call of a harness LLMClient, as its owner.
+
+   Its messages, tokens and charges are those of its prompt session, which the LLMClient's owner may read.
+
+   A Zod schema, and the type of the same name that it validates.
+
+   .. js:attribute:: accountNumber
+
+      The account that the LLMClient belongs to.
+
+      :type: string
+
+   .. js:attribute:: createdAt
+
+      When the step ended, in ISO 8601.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: errorMessage
+
+      Why the step failed, if it did.
+
+      :type: string | null | undefined
+
+   .. js:attribute:: llmclient
+
+      The harness LLMClient's name.
+
+      :type: string
+
+   .. js:attribute:: role
+
+      The harness's role: planner, executor, critic, router, summarizer or tool_caller.
+
+      :type: string
+
+   .. js:attribute:: sequence
+
+      The step's position in the run, from 1.
+
+      :type: number
+
+   .. js:attribute:: status
+
+      succeeded, failed or skipped.
 
       :type: string
 

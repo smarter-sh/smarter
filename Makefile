@@ -34,12 +34,15 @@ include .env
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
 
-# Default target executed when no arguments are given to make.
+# A bare `make` prints the menu of commands. Each target's description is the `## `
+# comment after the colon on the target's own line, e.g. `build: ## Build Docker containers`.
+.DEFAULT_GOAL := help
+
 all: help
 
 # initialize local development environment.
 # takes between 5 and 20 minutes to complete
-init:
+init: ## Initialize local and Docker environments
 	@echo "==============================================================================="
 	@echo "Initializing local development environment. This will verify and set up your"
 	@echo "Python virtual environment, install all 3rd-party package requirements,"
@@ -77,15 +80,15 @@ init:
 	@echo "a restart."
 	@echo "==============================================================================="
 
-activate:
+activate: ## Activate Python virtual environment
 	./scripts/activate.sh
 
-collectstatic:
+collectstatic: ## Collect static files, including the web console's, into smarter/staticfiles/
 	python smarter/manage.py collectstatic --noinput
 
 # complete Docker build. Performs all 13 steps of the build process regardless of current state.
 # takes around 4 minutes to complete
-build:
+build: ## Build Docker containers
 	@echo "==============================================================================="
 	@echo "Building Docker containers ..."
 	@echo "==============================================================================="
@@ -93,22 +96,22 @@ build:
 
 # run the web application from Docker
 # takes around 30 seconds to complete
-run:
+run: ## Run web application from Docker
 	@echo "==============================================================================="
 	@echo "Running Docker containers ..."
 	@echo "==============================================================================="
 	make docker-run
 
-test:
+test: ## Run Python-Django unit tests in Docker
 	make docker-test
 
-clean:
+clean: ## Delete all local artifacts, virtual environment, node_modules, and Docker containers
 	make python-clean
 	make docker-prune
 
 # destroy all Docker build and local artifacts
 # takes around 1 minute to complete
-tear-down:
+tear-down: ## Destroy all Docker build and local artifacts
 	make python-clean
 	make docker-prune
 
@@ -116,10 +119,10 @@ tear-down:
 # Code management
 # ---------------------------------------------------------
 
-lint:
+lint: ## Run all code linters and formatters
 	make python-lint
 
-analyze:
+analyze: ## Generate code analysis report using cloc
 	@echo "==============================================================================="
 	@echo "Generating code analysis report using cloc ..."
 	@echo "==============================================================================="
@@ -127,7 +130,7 @@ analyze:
 
 # docker exec smarter-api bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
 # Celery Beat is stopped while the tests run, as in docker-test.
-coverage:
+coverage: ## Generate Docker-based code coverage report
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
 	@echo "==============================================================================="
@@ -137,26 +140,26 @@ coverage:
 	exit $$status
 
 
-change-log:
+change-log: ## Update changelogs/CHANGELOG.md file
 	@echo "==============================================================================="
 	@echo "Generating changelog..."
 	@echo "==============================================================================="
 	npx conventional-changelog -p angular -i changelogs/CHANGELOG.md -s
 
-pre-commit-init:
+pre-commit-init: ## Install and configure pre-commit
 	@echo "==============================================================================="
 	@echo "Installing and configuring pre-commit ..."
 	@echo "==============================================================================="
 	pre-commit install
 	pre-commit autoupdate
 
-pre-commit-run:
+pre-commit-run: ## Run all pre-commit hooks on all files
 	@echo "==============================================================================="
 	@echo "Running pre-commit hooks on all files ..."
 	@echo "==============================================================================="
 	pre-commit run --all-files
 
-release:
+release: ## Force a new Github release
 	@echo "==============================================================================="
 	@echo "Forcing a new semantic release on GitHub by creating an empty commit and pushing to the repository ..."
 	@echo "==============================================================================="
@@ -166,7 +169,7 @@ release:
 # ---------------------------------------------------------
 # Docker
 # ---------------------------------------------------------
-docker-check:
+docker-check: ## Verify Docker is installed and running
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Verifying that Docker is installed and running ..."
@@ -174,7 +177,7 @@ docker-check:
 	@echo ""
 	@docker ps >/dev/null 2>&1 || { echo >&2 "This project requires Docker but it's not running.  Aborting."; exit 1; }
 
-docker-init:
+docker-init: ## Initialize MariaDB and create the smarter database
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Initializing Docker environment, including MariaDB database and Smarter application setup. This may take a few minutes..."
@@ -193,12 +196,12 @@ docker-init:
 	docker ps
 
 
-docker-shell:
+docker-shell: ## Open a shell in the smarter-api Docker container
 	make docker-check && \
 
 # An abbreviated build to improve developer workflow efficiency by skipping
 # static asset collection (including by not building the React frontend components)
-docker-build:
+docker-build: ## Build all Docker containers using docker-compose
 	make docker-check && \
 	docker-compose build \
 	  --build-arg DOCKER_COLLECT_STATIC_FILES=false && \
@@ -206,13 +209,13 @@ docker-build:
 
 # A full build, which collects the static files, including the web console's.
 # Install the web console first, with make console.
-docker-build-for-react:
+docker-build-for-react: ## Build all Docker containers, collecting static files (run make console first)
 	make docker-check && \
 	docker-compose build  --progress=plain \
 	  --build-arg DOCKER_COLLECT_STATIC_FILES=true
 	docker image prune -f
 
-docker-run:
+docker-run: ## Start all Docker containers using docker-compose
 	make docker-check && \
 	docker compose up
 
@@ -230,7 +233,7 @@ docker-run:
 # their rows, so a scheduled task, e.g. reconcile_vectorstores, would change a running
 # test's data, and fail it at random. In the local containers it would also send a test's
 # resources to the real Kubernetes cluster. The workers keep running, for .delay().
-docker-test:
+docker-test: ## Run Python-Django unit tests in Docker
 	make docker-check
 	docker stop smarter-beat > /dev/null || true
 	docker exec smarter-api bash -c "python manage.py test smarter"; status=$$?; \
@@ -243,10 +246,10 @@ docker-test:
 # Each stack needs about 4 GB of Docker's memory. Logs go to .test-shards/. Needs the smarter
 # image (make build) and smarter-mariadb running. See scripts/run_test_shards.py.
 SHARDS ?= 8
-docker-test-sharded:
+docker-test-sharded: ## Run them in SHARDS (default 8) Docker stacks at once
 	python3 -I scripts/run_test_shards.py --shards $(SHARDS)
 
-docker-prune:
+docker-prune: ## Remove unused Docker objects and clean up Docker artifacts
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Pruning Docker images, containers, volumes, and networks. "
@@ -266,7 +269,7 @@ docker-prune:
 # -------------------------------------------------------------------------
 # Helm
 # -------------------------------------------------------------------------
-helm-update:
+helm-update: ## Update Helm chart dependencies
 	@echo "==============================================================================="
 	@echo "Updating Helm chart dependencies for smarter/charts/smarter ..."
 	@echo "==============================================================================="
@@ -276,25 +279,25 @@ helm-update:
 # ---------------------------------------------------------
 # Keen
 # ---------------------------------------------------------
-keen-init:
+keen-init: ## Install gulp, yarn and dependencies for Keen
 	cd keen_v3.0.6/tools && npm install --global yarn && \
 	npm install gulp@^4.0.2 && \
 	npm install gulp-cli && \
 	gulp --version
 
-keen-build:
+keen-build: ## Build Keen app using gulp
 	cd keen_v3.0.6/tools && \
 	yarn && \
 	gulp --demo1
 
-keen-server:
+keen-server: ## Start local Keen web server using gulp
 	cd keen_v3.0.6/tools && \
 	gulp localhost
 
 # ---------------------------------------------------------
 # Python
 # ---------------------------------------------------------
-check-python:
+check-python: ## Verify Python 3.14 is installed
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Verifying that Python $(PYTHON) is installed ..."
@@ -307,7 +310,7 @@ check-python:
 	exit 1; \
 }
 
-python-init:
+python-init: ## Create a Python virtual environment and install dependencies
 	@echo "==============================================================================="
 	@echo "Initializing Python virtual environment and installing dependencies. This may take a few minutes..."
 	@echo "==============================================================================="
@@ -322,7 +325,7 @@ python-init:
 	$(PIP) install setuptools wheel pip-tools && \
 	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
-python-lint:
+python-lint: ## Run Python linting using pre-commit and pylint
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Running Python linting using pre-commit ..."
@@ -332,7 +335,7 @@ python-lint:
 	make pre-commit-run
 	pylint smarter/smarter
 
-python-clean:
+python-clean: ## Destroy the Python virtual environment and remove __pycache__ directories
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Cleaning Python virtual environment and __pycache__ directories ..."
@@ -343,7 +346,7 @@ python-clean:
 
 # FIX NOTE: mcdaniel. the pip version pin temporarily resolves a pip-compile issue.
 #           AttributeError: 'PackageFinder' object has no attribute 'allow_all_prereleases'
-python-requirements:
+python-requirements: ## Compile and update Python dependency files
 	@echo "==============================================================================="
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
@@ -359,12 +362,12 @@ python-requirements:
 # ---------------------------------------------------------
 # The web console, smarter-sh/smarter-console: its release that smarter-console-version.txt pins, into
 # smarter/smarter/static/react/, where collectstatic and the Docker build pick it up. See scripts/fetch_console.py.
-console:
+console: ## Install the pinned release of the web console into the static folder
 	python3 -I scripts/fetch_console.py
 
 # A local build of the web console instead, to try a console change here before it is released:
 # make build in a smarter-console checkout, then make console-local CONSOLE_DIST=../smarter-console/dist
-console-local:
+console-local: ## Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist
 	python3 -I scripts/fetch_console.py --from-dir $(or $(CONSOLE_DIST),../smarter-console/dist)
 
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
@@ -373,7 +376,7 @@ console-local:
 # its TypeScript types from it, with its make contracts.
 CHAT_CONTRACT_SCHEMA := smarter/apps/prompt/contract/chat-contract.schema.json
 CHAT_CONTRACT_EXAMPLE := smarter/apps/prompt/contract/chat-contract.example.json
-chat-contract:
+chat-contract: ## Regenerate the Smarter Chat api contract schema and example
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(CHAT_CONTRACT_SCHEMA) smarter/$(CHAT_CONTRACT_SCHEMA)
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chat_contract_example"
@@ -386,7 +389,7 @@ chat-contract:
 # already in the .po files are kept. Run make build first, so that the container has the current templates and code.
 I18N_LOCALE_DIR := smarter/locale
 CONSOLE_MESSAGES := smarter/console/i18n/messages.js
-i18n-messages:
+i18n-messages: ## Regenerate and compile the web console translations (.po), optionally LANGUAGE=<code>
 	@test -f $(CONSOLE_MESSAGES) || { echo >&2 "$(CONSOLE_MESSAGES) is missing: run make console."; exit 1; }
 	docker exec smarter-api mkdir -p /home/smarter_user/smarter/console/i18n
 	docker cp $(CONSOLE_MESSAGES) smarter-api:/home/smarter_user/$(CONSOLE_MESSAGES)
@@ -397,21 +400,21 @@ i18n-messages:
 # Regenerate the web console's Extensions api contract from its Pydantic models, in the smarter-api
 # container. smarter-console copies it into @smarter/extension-console with its make contracts.
 EXTENSION_CONTRACT_SCHEMA := smarter/apps/llmtool/extension/extension-console.schema.json
-extension-contract:
+extension-contract: ## Regenerate the web console Extensions api contract schema
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_console_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(EXTENSION_CONTRACT_SCHEMA) smarter/$(EXTENSION_CONTRACT_SCHEMA)
 
 # Regenerate the LLMTool list's Extensions tab api contract from its Pydantic models, in the
 # smarter-api container. smarter-console copies it into @smarter/llmtool-list with its make contracts.
 LLMTOOL_LIST_CONTRACT_SCHEMA := smarter/apps/llmtool/views/listview/extension-list.schema.json
-llmtool-list-contract:
+llmtool-list-contract: ## Regenerate the LLMTool list Extensions tab contract schema
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_extension_list_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA) smarter/$(LLMTOOL_LIST_CONTRACT_SCHEMA)
 
 # Regenerate the LLMClient deployment page's contract from its Pydantic models, in the smarter-api
 # container. smarter-console copies it into @smarter/llmclient-deployment with its make contracts.
 LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA := smarter/apps/llmclient/views/llmclient-deployment.schema.json
-llmclient-deployment-contract:
+llmclient-deployment-contract: ## Regenerate the LLMClient deployment page contract schema
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_deployment_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_DEPLOYMENT_CONTRACT_SCHEMA)
 
@@ -419,14 +422,14 @@ llmclient-deployment-contract:
 # Pydantic models, in the smarter-api container. smarter-console copies it into @smarter/llmclient-architecture
 # with its make contracts.
 LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA := smarter/apps/prompt/views/detailviews/llmclient-architecture.schema.json
-llmclient-architecture-contract:
+llmclient-architecture-contract: ## Regenerate the workbench Architecture tab contract schema
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_llmclient_architecture_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA) smarter/$(LLMCLIENT_ARCHITECTURE_CONTRACT_SCHEMA)
 
 # Regenerate the web console session's contract, GET /api/web/session/, from its Pydantic models, in the
 # smarter-api container. smarter-console copies it into @smarter/console with its make contracts.
 CONSOLE_SESSION_CONTRACT_SCHEMA := smarter/apps/api/web/session/console-session.schema.json
-console-session-contract:
+console-session-contract: ## Regenerate the web console session contract schema
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_console_session_schema"
 	docker cp smarter-api:/home/smarter_user/smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA) smarter/$(CONSOLE_SESSION_CONTRACT_SCHEMA)
 
@@ -435,7 +438,7 @@ console-session-contract:
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
 # journal contract or the cli api, and commit the files.
 API_CONTRACT_DIR := smarter/apps/api/v1/contract
-api-contract:
+api-contract: ## Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
 	docker cp smarter-api:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json
 	rm -f smarter/$(API_CONTRACT_DIR)/sam/*.schema.json
@@ -450,7 +453,7 @@ api-contract:
 # our local build target for Sphinx documentation is intended to try to match
 # what ReadTheDocs does as closely as possible.
 # -------------------------------------------------------------------------
-sphinx-init:
+sphinx-init: ## Initialize Sphinx documentation environment
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Initializing Sphinx documentation environment."
@@ -462,7 +465,7 @@ sphinx-init:
 	make build			    # build the Smarter Docker container
 	make pre-commit-init	# install and configure pre-commit
 
-sphinx-docs:
+sphinx-docs: ## Build Sphinx documentation
 	@echo ""
 	@echo "==============================================================================="
 	@echo "Building Sphinx documentation using local Python environment."
@@ -470,13 +473,13 @@ sphinx-docs:
 	@echo "==============================================================================="
 	cd docs && make SPHINXOPTS="-j auto -W -T -D language=en" html
 
-sphinx-linkcheck:
+sphinx-linkcheck: ## Check documentation links
 	cd docs && make linkcheck
 
 # the bucket and distribution come from the Terraform stack's outputs (make terraform-apply), as
 # in smarter-python, smarter-types and cache-results. CloudFront reads the bucket through its OAC,
 # so the objects need no public ACL. publish.yml runs the same two commands.
-sphinx-publish:
+sphinx-publish: ## Publish documentation to AWS S3 and invalidate CloudFront cache
 	BUCKET=$$($(TF) output -raw bucket_name) && \
 	DISTRIBUTION=$$($(TF) output -raw distribution_id) && \
 	aws s3 sync docs/build/html "s3://$$BUCKET/" --delete --exclude ".doctrees/*" --exclude ".buildinfo" --exclude ".buildinfo.bak" && \
@@ -486,72 +489,16 @@ sphinx-publish:
 # profile; the account id is only needed for the state bucket's name, never written here.
 TF := terraform -chdir=terraform/docs
 
-terraform-init:
+terraform-init: ## Initialize the docs.smarter.sh stack (terraform/docs) and its state
 	$(TF) init -backend-config="bucket=$$(aws sts get-caller-identity --query Account --output text)-terraform-tfstate-smarter"
 
-terraform-plan:
+terraform-plan: ## Plan changes to docs.smarter.sh AWS resources, into terraform/docs/tfplan
 	$(TF) plan -out=tfplan
 
-terraform-apply:
+terraform-apply: ## Apply terraform/docs/tfplan
 	$(TF) apply tfplan
 	rm -f terraform/docs/tfplan
 
-######################
-# HELP
-######################
-
-help:
-	@echo '===================================================================='
-	@echo 'init                   - Initialize local and Docker environments'
-	@echo 'activate               - Activate Python virtual environment'
-	@echo 'build                  - Build Docker containers'
-	@echo 'run                    - Run web application from Docker'
-	@echo 'test                   - Run Python-Django unit tests in Docker'
-	@echo 'clean                  - Delete all local artifacts, virtual environment, node_modules, and Docker containers'
-	@echo 'tear-down              - Destroy all Docker build and local artifacts'
-	@echo '<************************** Code Management **************************>'
-	@echo 'lint                   - Run all code linters and formatters'
-	@echo 'analyze                - Generate code analysis report using cloc'
-	@echo 'coverage               - Generate Docker-based code coverage report'
-	@echo 'pre-commit-init        - Install and configure pre-commit'
-	@echo 'pre-commit-run         - Run all pre-commit hooks on all files'
-	@echo 'release                - Force a new Github release'
-	@echo 'change-log             - Update changelogs/CHANGELOG.md file'
-	@echo '<************************** Docker **************************>'
-	@echo 'docker-check           - Verify Docker is installed and running'
-	@echo 'docker-init            - Initialize MariaDB and create the smarter database'
-	@echo 'docker-shell           - Open a shell in the smarter-api Docker container'
-	@echo 'docker-build           - Build all Docker containers using docker-compose'
-	@echo 'docker-run             - Start all Docker containers using docker-compose'
-	@echo 'docker-test            - Run Python-Django unit tests in Docker'
-	@echo 'docker-test-sharded    - Run them in SHARDS (default 8) Docker stacks at once'
-	@echo 'docker-prune           - Remove unused Docker objects and clean up Docker artifacts'
-	@echo '<************************** Python **************************>'
-	@echo 'check-python           - Verify Python 3.14 is installed'
-	@echo 'python-init            - Create a Python virtual environment and install dependencies'
-	@echo 'python-lint            - Run Python linting using pre-commit and pylint'
-	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
-	@echo 'python-requirements    - Compile and update Python dependency files'
-	@echo '<************************** React **************************>'
-	@echo 'console                - Install the pinned release of the web console into the static folder'
-	@echo 'console-local          - Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist'
-	@echo 'api-contract           - Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document'
-	@echo 'chat-contract          - Regenerate the Smarter Chat api contract schema, and copy it into Smarter Chat'
-	@echo 'i18n-messages          - Regenerate and compile the web console translations (.po), optionally LANGUAGE=<code>'
-	@echo 'llmclient-architecture-contract - Regenerate the workbench Architecture tab contract schema, and its React types'
-	@echo 'llmtool-list-contract  - Regenerate the LLMTool list Extensions tab contract schema, and its React types'
-	@echo '<************************** Keen **************************>'
-	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
-	@echo 'keen-build             - Build Keen app using gulp'
-	@echo 'keen-server            - Start local Keen web server using gulp'
-	@echo '<************************** Helm **************************>'
-	@echo 'helm-update            - Update Helm chart dependencies'
-	@echo '<************************** Sphinx Documentation **************************>'
-	@echo 'sphinx-init            - Initialize Sphinx documentation environment'
-	@echo 'sphinx-docs            - Build Sphinx documentation'
-	@echo 'sphinx-linkcheck       - Check documentation links'
-	@echo 'sphinx-publish         - Publish documentation to AWS S3 and invalidate CloudFront cache'
-	@echo 'terraform-init         - Initialize the docs.smarter.sh stack (terraform/docs) and its state'
-	@echo 'terraform-plan         - Plan changes to docs.smarter.sh AWS resources, into terraform/docs/tfplan'
-	@echo 'terraform-apply        - Apply terraform/docs/tfplan'
-	@echo '===================================================================='
+help: ## Show this menu of commands
+	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-32s\033[0m %s\n", $$1, $$2}'

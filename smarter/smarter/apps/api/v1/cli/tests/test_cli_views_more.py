@@ -58,12 +58,16 @@ class TestSchemaAndExampleManifestViews(ApiV1CliTestBase):
 
     def test_example_manifest_writes_no_warning(self):
         """
-        An anonymous example-manifest request needs no ready broker, so it writes no WARNING or ERROR.
+        An anonymous example-manifest or json-schema request needs no ready broker, so it writes no WARNING or ERROR.
 
         The plugin kinds and Secret used to log that their broker had no loader, plugin or user
-        profile. See https://github.com/smarter-sh/smarter/issues/985.
+        profile. See https://github.com/smarter-sh/smarter/issues/985. Account and User used to
+        log that their instance did not exist, for name=None. See
+        https://github.com/smarter-sh/smarter/issues/1015.
         """
         kinds = (
+            "Account",
+            "User",
             "ApiPlugin",
             "Plugin",
             "ImageSearchPlugin",
@@ -74,13 +78,15 @@ class TestSchemaAndExampleManifestViews(ApiV1CliTestBase):
             "Budget",
         )
         client = Client()
-        # one anonymous request per kind would otherwise reach the anonymous rate limit.
+        views = (ApiV1CliReverseViews.example_manifest, ApiV1CliReverseViews.json_schema)
+        # two anonymous requests per kind would otherwise reach the anonymous rate limit.
         with patch("smarter.lib.drf.throttling.SmarterAnonRateThrottle.allow_request", return_value=True):
             for kind in kinds:
-                with self.subTest(kind=kind):
-                    with self.assertNoLogs("smarter.apps", level="WARNING"):
-                        response = client.post(self.url(ApiV1CliReverseViews.example_manifest, kind))
-                    self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+                for view in views:
+                    with self.subTest(kind=kind, view=view):
+                        with self.assertNoLogs("smarter.apps", level="WARNING"):
+                            response = client.post(self.url(view, kind))
+                        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
 
     def test_unsupported_kind(self):
         """Test that an unsupported kind in the url is a 400 that names it, and parses the url only once (#954)."""

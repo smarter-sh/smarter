@@ -43,17 +43,25 @@ to build well, under the company's rules. By the end of 2025, Stackademy paid an
 than the month before, $51,264 for the year against a budget of $40,400, and IT, which paid the bill, could not say
 what it paid for.
 
-The questions that mattered were basic, and no one could answer them. How many AI projects are there? What does each
+The questions that mattered were basic, but no one could answer them. How many AI projects are there? What does each
 one do, and for whom? Which providers do they call, with whose keys? And the one that kept the Chief Financial
 Officer awake: **is our private data, salaries, students' records, the general ledger, being sent to those
 providers?**
 
-Stackademy answered them in two phases. In the first, it installed Smarter and gave each project a **Proxy**: a URL on
+Stackademy got to the answers in two phases. In the first, it installed Smarter and gave each project a **Proxy**: a URL on
 Smarter that behaves exactly like the AI provider's API, so that the project's only change was two lines, its base URL
-and its API key. The provider keys moved into Smarter, as Secrets, and each project got a Smarter API key of its own.
-From then on, every call that any project made went through Smarter, which attributes its tokens to the project and
-the person, stops it at the project's budget, and refuses anything but the endpoints the project needs. Nothing
-stopped working. A seventh project, which no one had listed, revealed itself the day the old keys were revoked.
+and its API key. Nothing stopped working, and from its first call through Smarter every project came under governance
+that it had never had:
+
+- **Budgets.** Each Proxy joined its department's monthly Budget, which refuses the project's calls, with a 402, once
+  the money is spent.
+- **C provider keys.** The AI providers' master API keys moved into Smarter, as Secrets, and left every
+  project's code and configuration. Each project got a Smarter API key of its own instead, which reaches the provider
+  only through the project's Proxy, and only on the endpoints the project needs.
+- **An audit trail.** Smarter records every call: who made it, through which project, with which model and how many
+  tokens, and charges its cost to the project and the person.
+- **Usage reports.** Each project's tokens, and their cost, are on the console's **Budgets** page and its dashboard's
+  **Budget vs Actual** chart, by project, by person and by department, so IT can answer for the bill line by line.
 
 The first phase also showed which projects were dangerous: five of them sent prompts of thousands, or tens of
 thousands, of tokens, because they pasted whole tables or document sets into every prompt and let the model find the
@@ -66,74 +74,14 @@ database; the model sees a few rows; and each prompt costs a fraction of what it
 Background
 ----------
 
-Stackademy is an online code academy, with 48 courses in programming, cloud and AI, about $4.4 million of revenue in
-its fiscal year 2025, and 40 employees in seven departments. Its IT department is its Head of IT, Tomas Hartigan, and
-two engineers. The rest of its people are accountants, recruiters, instructional designers and advisors, a few of whom
-write Python.
+Stackademy is an online code academy of 40 employees in seven departments. Its IT department is a Head of IT and two
+engineers; the rest of its people are accountants, recruiters, instructional designers and advisors, a couple of whom
+write Python. Its records, from payroll and students' records to the general ledger, are in one MariaDB database.
 
-Stackademy's own books record what AI cost it. Its general ledger has an expense account for it, **5300 AI Services**,
-and one vendor, Cortex AI Services, invoices it every month, charged to IT:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 30 30
-
-   * - 2025, account 5300 AI Services
-     - Actual
-     - Budget
-   * - January
-     - $2,688.00
-     -
-   * - June
-     - $4,128.00
-     -
-   * - December
-     - $5,856.00
-     -
-   * - **The year**
-     - **$51,263.98**
-     - **$40,400.00**
-
-The invoice grew by $288 every month, and more than doubled over the year. The budget, set at the
-start of the year, didn't foresee it. And the invoice is one line a month: it says how much, not who, what, or why.
-Beside it, the ``expense_reports`` table holds 20 reports in the category *Software*, $2,988.92 from 17 employees,
-which don't say what was bought.
-
-The people
-~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-   :widths: 22 26 22 30
-
-   * - Person
-     - Title
-     - Department
-     - Their part in this case
-   * - Odette Hartigan
-     - Chief Financial Officer
-     - Finance and Accounting
-     - Wants to know what the AI invoice pays for, and to cap it
-   * - Tomas Hartigan
-     - Head of IT
-     - Information Technology
-     - Pays the invoice; owns the provider keys, Smarter and the migration
-   * - Kofi Sandoval
-     - Staff Accountant
-     - Finance and Accounting
-     - Wrote the month-end commentary notebook
-   * - Avery Ivanova
-     - HR Director
-     - Human Resources
-     - Owns the résumé screener, which a contractor wrote
-   * - Dmitri Dumont
-     - Admissions Director
-     - Admissions and Sales
-     - Owns the website's course chatbot and the enrollment follow-up emails
-   * - Odette Eriksen
-     - Head of Course Content
-     - Course Content
-     - Owns the lesson reviewer
+The general ledger is where the problem showed. One vendor, Cortex AI Services, invoices Stackademy every month,
+charged to IT under account 5300 AI Services. In 2025 the invoice grew by $288 every month, from $2,688 in January to
+$5,856 in December, and the year came to $51,264 against a budget of $40,400, 27% over. Each invoice is one line: it
+says how much, not who, what, or why.
 
 The Stackademy people, accounts and database in this case are the real resources of
 `smarter-sh/stackademy <https://github.com/smarter-sh/stackademy>`__, and the figures above are what its database
@@ -154,10 +102,11 @@ business in four ways:
 - **Visibility.** No one can say what AI is in use, what it costs, or what it returns. Stackademy's leadership saw
   one invoice line a month.
 - **Data.** What a project sends to an AI provider is decided by whoever wrote it, and reviewed by no one.
-- **Reuse.** What one person builds alone can't be shared, reused or scaled. Kofi's notebook runs on Kofi's laptop,
-  with Kofi's key; no one else in Accounting can run it.
-- **Continuity.** When the person who built it leaves, the solution leaves with them, or, worse, keeps running with
-  no one who knows it is there.
+- **Reuse.** What one person builds alone can't be shared, reused or scaled. The month-end notebook runs on the laptop of the
+  accountant who wrote it, with their key; no one else in Accounting can run it.
+- **Continuity.** What it does, and how to fix it when it breaks, lives in one person's head, or, when an AI agent
+  wrote it, in no one's. When that person leaves, the solution leaves with them, or, worse, keeps running with no one
+  who knows it is there.
 
 The requirements
 ~~~~~~~~~~~~~~~~
@@ -168,7 +117,7 @@ Stackademy's leadership set five requirements:
    at what cost.
 2. **No outage.** The projects are in daily use. Admissions' emails go out every night; Accounting's commentary is due
    at every month-end. None may stop while it is brought under control.
-3. **One place for keys.** No AI provider key in a script, a notebook, a CI variable or a laptop. A key must be
+3. **Consolidate the API keys.** No AI provider key in a script, a notebook, a CI variable or a laptop. A key must be
    revocable, per project, without breaking the others.
 4. **Bounded and attributed spending.** Each project's tokens counted, charged to its department, and stopped at a
    limit.
@@ -231,6 +180,16 @@ to its Proxy, the old provider keys were revoked, and anything still using them 
 The solution
 ------------
 
+General Amnesty Granted
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Stackademy's strategy was to embrace what was already in place, not to fight it or ban it. Leadership declared a
+general amnesty: anyone who had built an AI project could declare it, and no one would be in trouble for having built
+it. Every declared project would keep running, and its builder would keep it, as its owner. The one condition was that
+the project now ran through Smarter. A ban would have stopped work that people relied on and sent the rest of it
+underground; the amnesty brought the projects into the open, with their builders' help, because coming forward cost
+them nothing.
+
 Phase 1: a Proxy for every project
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -240,7 +199,7 @@ streams. Two things differ. The project's base URL is the Proxy's, and its API k
 provider's. Smarter checks the Smarter key, adds the provider's key from a Secret, forwards the request, and returns
 the provider's response as it is.
 
-For Kofi Sandoval's month-end notebook, the whole change was this:
+For the month-end notebook of Kofi Sandoval, the staff accountant who wrote it, the whole change was this:
 
 .. code-block:: python
 

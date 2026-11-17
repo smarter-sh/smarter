@@ -1008,6 +1008,20 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    Orchestrators: ``/api/v1/orchestrators/``, and the manifest api's ``Orchestrator`` kind.
 
+   ``Orchestrators.run`` starts a run of an Orchestrator toward an objective, which the platform
+   executes in the background. Poll it with ``Orchestrators.runStatus`` until ``isRunDone``.
+
+   **Example**
+
+   .. code-block:: typescript
+
+      let run = await client.orchestrators.run(12, "Prepare the board pack for Q4 2025");
+      while (!isRunDone(run)) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        run = await client.orchestrators.runStatus(12, run.id);
+      }
+      console.log(run.status, run.result);
+
    Extends ``SmarterKindResource``, and has its methods.
 
    :param client: The client whose requests the operations send.
@@ -1030,6 +1044,54 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
       The REST list endpoint, relative to the api's base url, e.g. ``guardrails/``.
 
       :type: "orchestrators/"
+
+   .. js:method:: run(id, objective, options?)
+
+      Start a run of an Orchestrator toward an objective.
+
+      The platform answers at once with the run, ``pending``, then executes it one step at a time. Each step
+      calls a harness LLMClient as its owner, and is charged to it. The request is never retried, whatever
+      the client's ``maxRetries``: a retry would start a second run.
+
+      :param id: The Orchestrator's id or hashed id.
+      :type id: SmarterId
+      :param objective: What the run is to achieve, e.g. ``Prepare the board pack for Q4 2025``. Every step receives it.
+      :type objective: string
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The new run.
+      :throws BadRequestError: If the objective is empty, or the Orchestrator's strategy can't run yet.
+      :throws PermissionDeniedError: If the user may not use every LLMClient of the Orchestrator.
+      :throws NotFoundError: If the user may not read the Orchestrator.
+      :rtype: Promise<object>
+
+   .. js:method:: runs(id, options?)
+
+      The newest runs of an Orchestrator that the user started, up to 20, each with its steps.
+
+      A superuser gets every user's.
+
+      :param id: The Orchestrator's id or hashed id.
+      :type id: SmarterId
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The runs, newest first.
+      :throws NotFoundError: If the user may not read the Orchestrator.
+      :rtype: Promise<object[]>
+
+   .. js:method:: runStatus(id, runId, options?)
+
+      A run of an Orchestrator, with its steps and, once it succeeded, its result.
+
+      :param id: The Orchestrator's id or hashed id.
+      :type id: SmarterId
+      :param runId: The run's id.
+      :type runId: number
+      :param options: Per-request options.
+      :type options: RequestOptions | undefined
+      :returns: The run.
+      :throws NotFoundError: If there is no such run, or the user neither started it nor is a superuser.
+      :rtype: Promise<object>
 
 .. js:class:: Plugins(client)
 
