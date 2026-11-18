@@ -192,11 +192,11 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         """
         Returns the API plugin manifest as a validated Pydantic model instance.
 
-        This property constructs and caches a `SAMApiPlugin` object using data from the manifest loader,
+        This property constructs and caches a `SAMApiPlugin` object using data from the client's manifest data,
         including API version, kind, metadata, specification, and status. Child models (such as metadata,
         spec, and status) are automatically initialized by Pydantic.
 
-        If the manifest loader's kind matches the expected plugin kind, the manifest is created and cached
+        If there is manifest data, the manifest is created from it and cached
         for future access. If the manifest has already been initialized, the cached instance is returned.
 
         :return: The initialized API plugin manifest as a Pydantic model, or ``None`` if not available.
@@ -227,13 +227,13 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                     thing=self.kind,
                 )
             return self._manifest
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            sections = self.loader.manifest_sections
-            sections[SAMKeys.STATUS.value] = self.loader.manifest_status or None
+        if self.manifest_data is not None:
+            sections = self.manifest_sections
+            sections[SAMKeys.STATUS.value] = self.manifest_status or None
             self._manifest = SAMApiPlugin.model_validate(sections)
-        # 2.) next, (and only if a loader is not available) try to initialize
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing Account model if available
         elif self._plugin_meta:
             metadata = self.plugin_metadata_orm2pydantic()

@@ -18,7 +18,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 
 logger = logging.getLogger(__name__)
 
@@ -288,18 +288,19 @@ def apply_manifest_v2(
     # ----------------------------------------------------------------------
     # PLAN B
     # ----------------------------------------------------------------------
-    loader = SAMLoader(manifest=data)
+    parsed_manifest = parse_manifest(data)
     factory = RequestFactory()
-    fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
+    fake_request = factory.post("/fake-url/", data=parsed_manifest, content_type="application/json")
     fake_request.user = user_profile.user
 
-    if not isinstance(loader.kind, str):
+    kind = parsed_manifest.get("kind")
+    if not isinstance(kind, str):
         return False
-    BrokerClass = Brokers.get_broker(loader.kind)
+    BrokerClass = Brokers.get_broker(kind)
     if BrokerClass is None or not issubclass(BrokerClass, AbstractBroker):
         return False
 
-    broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
+    broker = BrokerClass(request=fake_request, manifest=parsed_manifest, user_profile=user_profile)
     response_content = broker.apply(request=fake_request)
     if response_content is None:
         logger.error("%s broker.apply() returned None", logger_prefix)

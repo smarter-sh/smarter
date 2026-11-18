@@ -292,17 +292,17 @@ class SAMMCPClientBroker(AbstractBroker[MCPClient, MCPClient]):
     @property
     def manifest(self) -> Optional[SAMMCPClient]:
         """
-        The MCPClient manifest, as a Pydantic model, from the manifest loader.
+        The MCPClient manifest, as a Pydantic model, from the client's manifest data.
 
-        :returns: The manifest, or ``None`` if the broker has no loader for an MCPClient manifest.
+        :returns: The manifest, or ``None`` if the broker has no MCPClient manifest data or record.
         :rtype: Optional[SAMMCPClient]
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMMCPClient):
                 raise SAMMCPClientBrokerError("Cached manifest is not a SAMMCPClient instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMMCPClient.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMMCPClient.model_validate(self.manifest_sections)
         return self._manifest
 
     ###########################################################################

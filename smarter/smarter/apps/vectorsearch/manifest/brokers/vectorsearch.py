@@ -139,7 +139,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
 
         This property determines whether the broker has been properly initialized
         and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
+        it has a valid manifest loaded, either from raw data, a manifest dict, or
         existing Django ORM models.
 
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
@@ -445,7 +445,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
         """
         Returns the Smarter API Vectorsearch manifest as a Pydantic model.
 
-        The manifest is initialized using data provided by the manifest loader, or, failing that,
+        The manifest is initialized using the client's manifest data, or, failing that,
         reconstructed from an existing Vectorsearch ORM record via `django_orm_to_manifest_dict()`.
         If the manifest has already been initialized and cached, this method returns the cached
         instance.
@@ -458,20 +458,20 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             if not isinstance(self._manifest, SAMVectorsearch):
                 raise SAMVectorsearchBrokerError("Cached manifest is not a SAMVectorsearch instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from SAMLoader with name %s",
+                "%s.manifest() initializing %s from manifest data with name %s",
                 self.formatted_class_name,
                 self.kind,
-                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
-            self._manifest = SAMVectorsearch.model_validate(self.loader.manifest_sections)
+            self._manifest = SAMVectorsearch.model_validate(self.manifest_sections)
             return self._manifest
         if self._vectorsearch:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from loader for existing Vectorsearch %s with name %s",
+                    "%s.manifest() initialized from manifest data for existing Vectorsearch %s with name %s",
                     self.formatted_class_name,
                     self._vectorsearch,
                     self._vectorsearch.name,

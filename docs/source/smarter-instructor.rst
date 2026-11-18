@@ -21,6 +21,11 @@ Smarter is a good fit for teaching for three reasons:
   page of this documentation is public, so students can study how the whole system fits together,
   not just the part they are working on.
 
+To introduce Smarter to a class, or to the colleagues who approve a new course, show
+`The Smarter Project in five minutes <https://youtu.be/u82i4m7a6VQ>`__. It has no screen shares
+and no technical jargon: it explains the problems Smarter solves, from connecting AI to an
+organization's systems to governing it and sharing AI resources within a workgroup.
+
 
 Open Source, Free, and Community Supported
 -------------------------------------------

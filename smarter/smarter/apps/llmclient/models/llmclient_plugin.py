@@ -15,7 +15,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType
 
 from .llmclient import LLMClient
@@ -152,7 +152,7 @@ class LLMClientPlugin(TimestampedModel):
         See Also:
 
         - :py:class:`smarter.apps.llmtool.manifest.controller.PluginController`
-        - :py:class:`smarter.lib.manifest.loader.SAMLoader`
+        - :py:func:`smarter.lib.manifest.parsing.parse_manifest`
         """
         if not llmclient:
             return None
@@ -160,10 +160,10 @@ class LLMClientPlugin(TimestampedModel):
         if admin_user is None:
             raise SmarterValueError("LLMClientPlugin.plugin() failed to find admin user for llmclient account")
         user_profile = UserProfile.get_cached_object(invalidate=False, user=admin_user)
-        loader = SAMLoader(manifest=data)
+        manifest = parse_manifest(data)
         # PluginController converts the manifest dict to the model of its kind, e.g. SAMStaticPlugin,
         # which the plugin classes require, rather than the SAMPluginCommon base model.
-        plugin_controller = PluginController(user_profile=user_profile, manifest=loader.json_data)
+        plugin_controller = PluginController(user_profile=user_profile, manifest=manifest)
         plugin = plugin_controller.plugin
         if not plugin or plugin.plugin_meta is None:
             raise SmarterValueError("LLMClientPlugin.load() failed to load plugin from data file")

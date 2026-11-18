@@ -41,7 +41,7 @@ class TestApiConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
     def test_manifest_from_a_connection_needs_metadata(self):
         broker = self.broker
         broker._manifest = None
-        self.patch_property("loader", None)
+        self.patch_property("manifest_data", None)
         self.patch_property("connection", MagicMock())
         with patch.object(SAMApiConnectionBroker, "sam_connection_metadata", return_value=None):
             with self.assertRaises(SAMBrokerErrorNotReady):

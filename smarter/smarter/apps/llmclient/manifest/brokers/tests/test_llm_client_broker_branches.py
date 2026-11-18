@@ -177,7 +177,7 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
         broker = self.broker
         broker._manifest = None
         broker._llmclient = MagicMock(spec=LLMClient)
-        self.patch_property("loader", None)
+        self.patch_property("manifest_data", None)
         manifest = MagicMock()
         with patch.object(SAMLLMClientBroker, "django_orm_to_manifest_dict", return_value=manifest):
             self.assertIs(broker.manifest, manifest)

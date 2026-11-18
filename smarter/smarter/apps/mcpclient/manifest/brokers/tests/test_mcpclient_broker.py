@@ -29,7 +29,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 logger = logging.getLogger(__name__)
@@ -87,8 +87,8 @@ class TestSmarterMCPClientBroker(TestSAMBrokerBaseClass):
     def broker_for(self, filename: str) -> SAMMCPClientBroker:
         """Return a broker for a manifest in ./data."""
         with open(self.get_data_full_filepath(filename), encoding="utf-8") as f:
-            loader = SAMLoader(manifest=f.read())
-        return SAMMCPClientBroker(request=self.request, loader=loader)
+            manifest_data = parse_manifest(f.read())
+        return SAMMCPClientBroker(request=self.request, manifest=manifest_data)
 
     def test_setup(self):
         """Test that the test setup is correct."""

@@ -31,7 +31,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
@@ -92,7 +92,7 @@ class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
         if not manifest:
             with open(self.manifest_filespec, encoding="utf-8") as f:
                 manifest = f.read()
-        return SAMLLMHostComputeBroker(request=self.request, loader=SAMLoader(manifest=manifest))
+        return SAMLLMHostComputeBroker(request=self.request, manifest=parse_manifest(manifest))
 
     def compute(self) -> LLMHostCompute:
         return LLMHostCompute.objects.get(user_profile=self.user_profile, name=COMPUTE_NAME)
@@ -102,7 +102,7 @@ class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
         return json.loads(response.content)["data"]
 
     def changed_manifest(self, **spec_changes) -> str:
-        """The test manifest, with parts of its spec replaced, as json, which the loader reads."""
+        """The test manifest, with parts of its spec replaced, as json, which the broker reads."""
         manifest = get_test_data(self.manifest_filespec)
         for block, value in spec_changes.items():
             manifest["spec"][block] = value

@@ -21,7 +21,7 @@ from smarter.lib.manifest.enum import (
     SAMMetadataKeys,
     SCLIResponseGet,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import SmarterDictType
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -34,7 +34,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     _here: str
     _request: HttpRequest
-    _loader: SAMLoader
+    _manifest_data: SmarterDictType
     _broker: AbstractBroker
     _broker_class: Type[AbstractBroker]
     _manifest_filespec: str
@@ -83,7 +83,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._here = None  # type: ignore
         self._broker = None  # type: ignore
         self._request = None  # type: ignore
-        self._loader = None  # type: ignore
+        self._manifest_data = None  # type: ignore
         self._manifest_filespec = None  # type: ignore
         title = f" {logger_prefix}.{self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
@@ -96,7 +96,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._here = None  # type: ignore
         self._broker = None  # type: ignore
         self._request = None  # type: ignore
-        self._loader = None  # type: ignore
+        self._manifest_data = None  # type: ignore
         self._manifest_filespec = None  # type: ignore
         super().tearDown()
 
@@ -131,22 +131,19 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         return self._broker_class
 
     @property
-    def loader(self) -> SAMLoader:
-        """Return the SAMLoader for this test."""
-        if self._loader:
-            return self._loader
+    def manifest_data(self) -> SmarterDictType:
+        """Return this test's manifest, read from :attr:`manifest_filespec` once, as a dict."""
+        if self._manifest_data:
+            return self._manifest_data
 
-        self._loader = SAMLoader(file_path=self.manifest_filespec)
-        if not self._loader.ready:
-            raise RuntimeError("Loader is not ready in TestSmarterUserBroker setUpClass")
-
-        self.assertIsInstance(self._loader, SAMLoader)
-        json.loads(json.dumps(self._loader.json_data))  # should not raise an exception
-        yaml.safe_load(yaml.dump(self._loader.yaml_data))  # should not raise an exception
+        self._manifest_data = read_manifest_file(self.manifest_filespec)
+        json.loads(json.dumps(self._manifest_data))  # should not raise an exception
         logger.debug(
-            "%s.loader Loaded SAM manifest for testing from %s", self.formatted_class_name, self.manifest_filespec
+            "%s.manifest_data Loaded SAM manifest for testing from %s",
+            self.formatted_class_name,
+            self.manifest_filespec,
         )
-        return self._loader
+        return self._manifest_data
 
     @property
     def request(self) -> HttpRequest:
@@ -173,7 +170,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         # self.assertTrue(self._request.user.is_authenticated)
 
         # add a SAM manifest to the body
-        yaml_data = self.loader.yaml_data
+        yaml_data = yaml.safe_dump(self.manifest_data)
         body: Optional[bytes] = None
         if isinstance(yaml_data, str):
             body = yaml_data.encode("utf-8")
@@ -190,11 +187,11 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
     @property
     def broker(self) -> AbstractBroker:
-        """Return the SAMBroker for this test based on a default initialization scenario using a request object containing a valid SAM manifest in the body and a loader initialized with the same manifest."""
+        """Return the SAMBroker for this test based on a default initialization scenario using a request object containing a valid SAM manifest in the body and the same manifest, as a dict."""
         if not self._broker:
             self._broker = self.SAMBrokerClass(
                 request=self.request,
-                loader=self.loader,
+                manifest=self.manifest_data,
             )
         return self._broker
 
@@ -207,8 +204,8 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             raise RuntimeError("Here not initialized in ready() check.")
         if self._manifest_filespec is None:
             raise RuntimeError("Manifest filespec not initialized in ready() check.")
-        if self.loader is None:
-            raise RuntimeError("Loader not initialized in ready() check.")
+        if self.manifest_data is None:
+            raise RuntimeError("Manifest data not initialized in ready() check.")
         if self.request is None:
             raise RuntimeError("Request not initialized in ready() check.")
         if hasattr(self.request, "user") and self.request.user is None:

@@ -214,9 +214,13 @@ def subscription_active(user: User) -> Optional[bool]:
     if MULTITENANT_BACKEND not in settings.AUTHENTICATION_BACKENDS:
         return None
     # pylint: disable=import-outside-toplevel
-    from smarter.lib.social_core.backends.multitenant import verify_payment_status
+    from smarter.lib.social_core.backends.multitenant import (
+        email_or_none,
+        verify_payment_status,
+    )
 
-    return verify_payment_status(user.get_username())
+    email = email_or_none(user.email)
+    return verify_payment_status(user.get_username(), email)
 
 
 def failed_sign_ins(snapshot: SupportSnapshot) -> None:
