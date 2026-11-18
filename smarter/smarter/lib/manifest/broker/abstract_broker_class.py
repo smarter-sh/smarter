@@ -1195,7 +1195,10 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                     self.ready,
                 )
             if not self._loader.ready:
-                raise SmarterValueError("cannot set manifest from dict: SAMLoader could not load manifest")
+                raise SmarterValueError(
+                    f"The {self.kind} manifest is not valid: it must have an apiVersion, kind, "
+                    "metadata and a non-empty spec."
+                )
             if self._loader.kind != self.kind:
                 raise SmarterValueError(
                     f"cannot set manifest from dict: manifest kind '{self._loader.kind}' does not match broker kind '{self.kind}'"

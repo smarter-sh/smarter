@@ -389,6 +389,7 @@ The modules and classes below establish the foundation of Smarter's SAM data mod
    smarter-manifests/stackademy
    smarter-manifests/enum
    smarter-manifests/pydantic-models
+   smarter-manifests/parsing
    smarter-manifests/sam-loader
    smarter-manifests/manifest-templates
    smarter-manifests/controller
