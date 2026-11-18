@@ -501,20 +501,20 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             if not isinstance(self._manifest, SAMOrchestrator):
                 raise SAMOrchestratorBrokerError("Cached manifest is not a SAMOrchestrator instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from SAMLoader with name %s",
+                "%s.manifest() initializing %s from manifest data with name %s",
                 self.formatted_class_name,
                 self.kind,
-                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
-            self._manifest = SAMOrchestrator.model_validate(self.loader.manifest_sections)
+            self._manifest = SAMOrchestrator.model_validate(self.manifest_sections)
             return self._manifest
         if self._orchestrator:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from loader for existing Orchestrator %s with name %s",
+                    "%s.manifest() initialized from manifest data for existing Orchestrator %s with name %s",
                     self.formatted_class_name,
                     self._orchestrator,
                     self._orchestrator.name,

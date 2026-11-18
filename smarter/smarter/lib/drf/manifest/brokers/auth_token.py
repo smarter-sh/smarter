@@ -294,9 +294,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
     @property
     def manifest(self) -> Optional[SAMSmarterAuthToken]:
         """
-        The SAMSmarterAuthToken manifest, a Pydantic model, built from the loader or the SmarterAuthToken.
+        The SAMSmarterAuthToken manifest, a Pydantic model, built from the manifest data or the SmarterAuthToken.
 
-        The Pydantic model is initialized with the data from the manifest loader, which is
+        The Pydantic model is initialized with the data from the client's manifest data, which is
         generally passed to the model constructor as ``**data``. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
         are automatically cascade-initialized by the Pydantic model, implicitly
@@ -310,26 +310,25 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
                 )
             return self._manifest
         logger.debug(
-            "%s.manifest() - Attempting to initialize from loader %s or smarter_auth_token %s",
+            "%s.manifest() - Attempting to initialize from manifest data (%s) or smarter_auth_token %s",
             self.formatted_class_name,
-            self.loader,
+            "present" if self.manifest_data is not None else "absent",
             self._smarter_auth_token,
         )
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if self.manifest_data is not None:
             try:
                 logger.debug(
-                    "%s.manifest() initializing SAMSmarterAuthToken() using data from self.loader %s",
+                    "%s.manifest() initializing SAMSmarterAuthToken() from the manifest data",
                     self.formatted_class_name,
-                    self.loader,
                 )
-                self._manifest = SAMSmarterAuthToken.model_validate(self.loader.manifest_sections)
+                self._manifest = SAMSmarterAuthToken.model_validate(self.manifest_sections)
                 logger.debug(
-                    "%s.manifest() initialized with SAMSmarterAuthToken() using data from self.loader",
+                    "%s.manifest() initialized with SAMSmarterAuthToken() from the manifest data",
                     self.formatted_class_name,
                 )
             except PydanticValidationError as e:
                 logger.error(
-                    "%s.manifest() could not be initialized with SAMSmarterAuthToken() using data from self.loader: %s",
+                    "%s.manifest() could not be initialized with SAMSmarterAuthToken() from the manifest data: %s",
                     self.formatted_class_name,
                     str(e),
                 )
@@ -372,10 +371,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
             # expected for commands that need no manifest, e.g. json-schema and example-manifest. A
             # command that does need one reports its absence to the client. See issue #1020.
             logger.debug(
-                "%s.manifest() %s could not be initialized. self.loader is %s.",
+                "%s.manifest() %s could not be initialized: there is no manifest data or SmarterAuthToken.",
                 self.formatted_class_name,
                 self.kind,
-                "initialized" if self.loader is not None else "not initialized",
             )
         return self._manifest
 

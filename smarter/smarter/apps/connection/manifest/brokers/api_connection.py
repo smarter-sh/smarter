@@ -65,8 +65,8 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
 
     This class is responsible for loading, validating, and parsing Smarter API YAML ApiConnection manifests, and initializing the corresponding Pydantic model. It provides generic services for ApiConnection objects, including instantiation, creation, update, and deletion.
 
-    :param loader: Manifest loader providing manifest data.
-    :type loader: Optional[ManifestLoader]
+    :param manifest: The manifest, as a Pydantic model or a dict.
+    :type manifest: Optional[Union[SAMApiConnection, dict]]
     :param account: The account context for the connection.
     :type account: Account
     :param user_profile: The user profile associated with the connection.
@@ -81,7 +81,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
 
     **Example usage**::
 
-        broker = SAMApiConnectionBroker(loader=my_loader, account=my_account, user_profile=my_profile)
+        broker = SAMApiConnectionBroker(manifest=manifest_data, account=my_account, user_profile=my_profile)
         manifest = broker.manifest
         orm_data = broker.manifest_to_django_orm()
     """
@@ -233,15 +233,15 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         Returns the manifest as a Pydantic model representing the Smarter API ApiConnection manifest.
 
         This property initializes and returns a ``SAMApiConnection`` Pydantic model using data
-        loaded from the manifest loader. The manifest loader provides the manifest's API version,
-        kind, metadata, spec, and status, which are passed to the model constructor.
+        from the client's manifest data: its API version, kind, metadata, spec, and status,
+        which are passed to the model constructor.
 
         The top-level manifest model must be explicitly initialized, while child models
         (such as metadata, spec, and status) are automatically cascade-initialized by Pydantic,
         passing the relevant data to each child's constructor.
 
-        If the loader's manifest kind does not match the expected kind, a warning is logged
-        and the manifest is not initialized.
+        Without manifest data or a connection, a message is logged at DEBUG and the manifest
+        is not initialized.
 
         :return: The manifest as a ``SAMApiConnection`` Pydantic model, or ``None`` if not initialized.
         :rtype: Optional[SAMApiConnection]
@@ -254,14 +254,14 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                 )
             return self._manifest
 
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            sections = self.loader.manifest_sections
-            sections[SAMKeys.STATUS.value] = self.loader.manifest_status or None
+        if self.manifest_data is not None:
+            sections = self.manifest_sections
+            sections[SAMKeys.STATUS.value] = self.manifest_status or None
             self._manifest = SAMApiConnection.model_validate(sections)
-            logger.debug("%s.manifest() initialized manifest from loader", self.formatted_class_name)
-        # 2.) next, (and only if a loader is not available) try to initialize
+            logger.debug("%s.manifest() initialized manifest from manifest data", self.formatted_class_name)
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing ApiConnection model if available
         elif self.connection:
             metadata = self.sam_connection_metadata()
@@ -307,10 +307,9 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             return self._manifest
         else:
             logger.debug(
-                "%s.manifest() could not initialize manifest. Expected %s but got %s",
+                "%s.manifest() could not initialize the %s manifest: there is no manifest data or connection.",
                 self.formatted_class_name,
                 self.kind,
-                self.loader.manifest_kind if self.loader else None,
             )
         if not self._manifest:
             logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
@@ -812,13 +811,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
         logger.debug(
-            "%s.apply() called for %s %s args: %s kwargs: %s. Loader: %s, Manifest: %s",
+            "%s.apply() called for %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             args,
             kwargs,
-            self.loader.manifest_metadata.get("name") if self.loader and self.loader.manifest_metadata else None,
+            self.manifest_metadata.get("name") if self.manifest_metadata else None,
             self.manifest.metadata.name if self.manifest and self.manifest.metadata else None,
         )
         updated = False

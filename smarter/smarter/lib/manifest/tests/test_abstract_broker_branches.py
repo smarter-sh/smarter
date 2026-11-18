@@ -28,7 +28,6 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.broker.abstract_broker_class import BrokerNotImplemented
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
@@ -153,10 +152,14 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
     # -------------------------------------------------------------------------
     # initialization and setters
     # -------------------------------------------------------------------------
-    def test_loader_and_file_path(self):
-        """The loader wins when both a loader and a file_path are given."""
-        broker = SAMGuardrailBroker(request=self.request, loader=self.loader, file_path=self.manifest_filespec)
-        self.assertIs(broker.loader, self.loader)
+    def test_manifest_and_file_path(self):
+        """A manifest wins when both a manifest and a file_path are given: the file is not read."""
+        apps = os.path.join(GUARDRAIL_DATA, "..", "..", "..", "..", "..")
+        user_manifest = os.path.join(apps, "account", "manifest", "brokers", "tests", "data", "user.yaml")
+        self.assertTrue(os.path.exists(user_manifest), user_manifest)
+        # a User manifest would be rejected by a Guardrail broker, if it were read.
+        broker = SAMGuardrailBroker(request=self.request, manifest=self.manifest_data, file_path=user_manifest)
+        self.assertEqual(broker.manifest_data, self.manifest_data)
 
     def test_request_less_broker(self):
         broker = self.broker
@@ -180,11 +183,11 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         self.assertEqual(NAME_GETTER(broker), manifest.metadata.name)
 
     def test_a_missing_name_is_not_a_warning(self):
-        """A broker with no manifest, loader or name parameter, e.g. for json-schema, logs no warning (issue #952)."""
+        """A broker with no manifest, manifest data or name parameter, e.g. for json-schema, logs no warning (issue #952)."""
         broker = self.broker
         broker._name = None
         broker._manifest = None
-        broker._loader = None
+        broker._manifest_data = None
         with (
             patch.object(SAMGuardrailBroker, "params", new_callable=PropertyMock, return_value=None),
             self.assertNoLogs("smarter.lib.manifest.broker.abstract_broker_class", level="WARNING"),
@@ -193,11 +196,11 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
             self.assertIsNone(NAME_GETTER(broker))
 
     def test_a_broker_that_is_not_ready_is_not_a_warning(self):
-        """A broker with no name, manifest, loader or ORM instance, e.g. for a list, logs no warning (issue #974)."""
+        """A broker with no name, manifest, manifest data or ORM instance, e.g. for a list, logs no warning (issue #974)."""
         broker = self.broker
         broker._name = None
         broker._manifest = None
-        broker._loader = None
+        broker._manifest_data = None
         broker._orm_instance = None
         broker._orm_meta_instance = None
         broker._is_ready_abstract_broker = False
@@ -218,13 +221,6 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         self.assertNotIn("name", broker.__dict__)
         with self.assertRaises(SmarterValueError):
             broker.api_version = 42  # type: ignore[assignment]  # deliberately not a str
-
-    def test_loader_not_ready(self):
-        broker = self.broker
-        loader = MagicMock(spec=SAMLoader)
-        loader.ready = False
-        broker._loader = loader
-        self.assertIsNone(broker.loader)
 
     def test_raise_for_unknown_keys_ignores_non_dicts(self):
         self.broker.raise_for_unknown_keys("not a dict")
@@ -248,7 +244,7 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         }
         for label, value in cases.items():
             with self.subTest(label):
-                broker = SAMGuardrailBroker(request=self.request, loader=self.loader)
+                broker = SAMGuardrailBroker(request=self.request, manifest=self.manifest_data)
                 with self.assertRaises((SmarterValueError, SAMBrokerError, Exception)):
                     broker.manifest_setter(value)
 

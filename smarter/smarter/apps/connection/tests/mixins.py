@@ -18,7 +18,7 @@ from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType
 
 from .factories import secret_factory
@@ -68,7 +68,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     tearDownClass methods.
     """
 
-    connection_loader: Optional[SAMLoader]
+    connection_manifest_data: Optional[SmarterDictType]
     connection_manifest_path: Optional[str] = None
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMApiConnection]
@@ -89,8 +89,8 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
-        connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
+        connection_manifest_data = parse_manifest(json.dumps(connection_manifest))
+        connection_model = SAMApiConnection(**connection_manifest_data)
         if not isinstance(connection_model, SAMApiConnection):
             raise ValueError("Connection model is not an instance of SAMApiConnection")
         if connection_model.spec is None:
@@ -122,7 +122,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
 
         # 2.) initialize all of our class variables
         # ---------------------------------------------------------------------
-        cls.connection_loader = connection_loader
+        cls.connection_manifest_data = connection_manifest_data
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
@@ -132,7 +132,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
 
         logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
         logger.debug("connection_manifest initialized: %s", str(connection_manifest))
-        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection manifest %s initialized", connection_manifest_data["metadata"]["name"])
         logger.debug("connection_model initialized: %s", str(connection_model))
         logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
@@ -143,7 +143,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
-        cls.connection_loader = None
+        cls.connection_manifest_data = None
         cls.connection_model = None
         try:
             if isinstance(cls.connection_django_model, ApiConnection):
@@ -163,7 +163,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     tearDownClass methods.
     """
 
-    connection_loader: Optional[SAMLoader]
+    connection_manifest_data: Optional[SmarterDictType]
     connection_manifest_path: Optional[str] = None
     connection_manifest: Optional[SmarterDictType] = None
     connection_model: Optional[SAMSqlConnection]
@@ -184,8 +184,8 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         if not isinstance(connection_manifest, dict):
             raise ValueError(f"Connection manifest not found at {connection_manifest_path}")
-        connection_loader = SAMLoader(manifest=json.dumps(connection_manifest))
-        connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
+        connection_manifest_data = parse_manifest(json.dumps(connection_manifest))
+        connection_model = SAMSqlConnection(**connection_manifest_data)
 
         # 2.) transform the manifest for a django model
         # ---------------------------------------------------------------------
@@ -210,7 +210,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
 
         # 2.) initialize all of our class variables
         # ---------------------------------------------------------------------
-        cls.connection_loader = connection_loader
+        cls.connection_manifest_data = connection_manifest_data
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
@@ -221,7 +221,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
 
         logger.debug("connection_manifest_path initialized: %s", str(connection_manifest_path))
         logger.debug("connection_manifest initialized: %s", str(connection_manifest))
-        logger.debug("connection_loader initialized: %s", str(connection_loader))
+        logger.debug("connection manifest %s initialized", connection_manifest_data["metadata"]["name"])
         logger.debug("connection_model initialized: %s", str(connection_model))
         logger.debug("connection_django_model initialized: %s", str(cls.connection_django_model))
 
@@ -232,7 +232,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
 
         cls.connection_manifest_path = None
         cls.connection_manifest = None
-        cls.connection_loader = None
+        cls.connection_manifest_data = None
         cls.connection_model = None
         try:
             if isinstance(cls.connection_django_model, SqlConnection):
@@ -246,6 +246,6 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     def test_00_sql_connection_mixin(self):
         """Test the SqlConnection itself, lest we get ahead of ourselves."""
         self.assertIsInstance(self.connection_django_model, SqlConnection)
-        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_manifest_data, dict)
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)

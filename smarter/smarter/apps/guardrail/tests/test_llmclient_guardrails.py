@@ -23,7 +23,7 @@ from smarter.apps.llmclient.models import (
 )
 from smarter.lib import json
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes import GuardrailTestBase, get_test_data
@@ -65,7 +65,7 @@ class TestLLMClientGuardrails(TestSAMBrokerBaseClass, GuardrailTestBase):
         data = copy.deepcopy(get_test_data("llmclient.yaml"))
         if guardrails is not None:
             data["spec"]["guardrails"] = guardrails
-        broker = SAMLLMClientBroker(request=self.request, loader=SAMLoader(manifest=yaml.safe_dump(data)))
+        broker = SAMLLMClientBroker(request=self.request, manifest=parse_manifest(yaml.safe_dump(data)))
         broker.apply(self.request, **self.kwargs)
         return broker
 
@@ -150,7 +150,9 @@ class TestLLMClientGuardrails(TestSAMBrokerBaseClass, GuardrailTestBase):
     def test_describe(self):
         """Test that describe() renders spec.guardrails."""
         self.apply()
-        response = SAMLLMClientBroker(request=self.request, loader=self.loader).describe(self.request, **self.kwargs)
+        response = SAMLLMClientBroker(request=self.request, manifest=self.manifest_data).describe(
+            self.request, **self.kwargs
+        )
         self.assertEqual(json.loads(response.content)["data"]["spec"]["guardrails"], ["test_guardrail"])
 
     def test_delete_guardrail_detaches(self):

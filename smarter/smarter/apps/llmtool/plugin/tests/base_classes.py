@@ -75,7 +75,7 @@ from smarter.apps.llmtool.plugin.websearch import WebsearchPlugin
 from smarter.apps.secret.models import Secret
 from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
@@ -475,8 +475,8 @@ class PluginTestBase(TestAccountMixin):
         ApiConnectionTestMixin, but with secret names that do not collide with
         those of the SqlConnection.
         """
-        loader = SAMLoader(manifest=json.dumps(get_test_data("api-connection.yaml")))
-        model = SAMApiConnection(**loader.pydantic_model_dump())
+        manifest_data = parse_manifest(json.dumps(get_test_data("api-connection.yaml")))
+        model = SAMApiConnection(**manifest_data)
         dump = model.spec.connection.model_dump()
         dump["user_profile"] = cls.user_profile
         dump["description"] = model.metadata.description
@@ -508,8 +508,8 @@ class PluginTestBase(TestAccountMixin):
         SqlConnectionTestMixin, but with a secret name that does not collide
         with those of the ApiConnection.
         """
-        loader = SAMLoader(manifest=json.dumps(get_test_data("sql-connection.yaml")))
-        model = SAMSqlConnection(**loader.pydantic_model_dump())
+        manifest_data = parse_manifest(json.dumps(get_test_data("sql-connection.yaml")))
+        model = SAMSqlConnection(**manifest_data)
         dump = model.spec.connection.model_dump()
         dump["user_profile"] = cls.user_profile
         dump["description"] = model.metadata.description

@@ -10,7 +10,6 @@ from http import HTTPStatus
 import yaml
 from django.core.handlers.asgi import ASGIRequest
 
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -82,13 +81,7 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         account = kwargs.pop("account", None)
         user_profile = kwargs.pop("user_profile", None)
         if self.broker is None:
-            if self.loader is None or not self.loader.ready:
-                # the broker could not be instantiated because the manifest itself is
-                # not valid, which is the client's error, a 400, rather than a 500.
-                raise SmarterValueError(
-                    f"The {self.manifest_kind} manifest is not valid: it must have an apiVersion, kind, "
-                    "metadata and a non-empty spec."
-                )
+            # an invalid manifest is not why: the broker raises a client error, a 400, for one.
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
         response = self.broker.apply(
             request, user=user, account=account, user_profile=user_profile, args=args, kwargs=kwargs

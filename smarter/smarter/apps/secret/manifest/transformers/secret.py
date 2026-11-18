@@ -33,13 +33,12 @@ from smarter.apps.secret.signals import (
 from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterException
 from smarter.common.mixins import SmarterHelperMixin
-from smarter.lib import json, logging
+from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.typing import SmarterDictType
 
 
@@ -181,18 +180,11 @@ class SecretTransformer(SmarterHelperMixin):
                 self.formatted_class_name,
                 sorted(data),
             )
-            # we received a yaml or json string representation of a manifest.
+            # we received a manifest, parsed into a dict.
             self.api_version = data.get(SAMKeys.APIVERSION.value, self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:
                 raise SAMValidationError(f"Expected kind of {self.kind}, but got {data.get(SAMKeys.KIND.value)}.")
-            loader = SAMLoader(
-                api_version=self.api_version,
-                kind=self.kind,
-                manifest=json.dumps(data),
-            )
-            if not loader.ready:
-                raise SAMValidationError("SAMLoader is not ready.")
-            self._manifest = SAMSecret(**loader.pydantic_model_dump())
+            self._manifest = SAMSecret.model_validate(data)
             self.create()
 
         if self.ready:

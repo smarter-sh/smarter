@@ -34,7 +34,7 @@ class TestSAMPromptBrokerDirect(TestSAMBrokerBaseClass):
         self._here = HERE
         self._broker_class = SAMPromptBroker
         self._manifest_filespec = os.path.join(HERE, "data", "prompt.yaml")
-        self.session_key = self.loader.manifest_spec["sessionKey"]  # type: ignore[index]
+        self.session_key = self.manifest_data["spec"]["sessionKey"]  # type: ignore[index]
         self.addCleanup(Prompt.objects.filter(session_key=self.session_key).delete)
 
     @property
@@ -98,7 +98,7 @@ class TestSAMPromptBrokerDirect(TestSAMBrokerBaseClass):
             self.broker.describe(self.request)
 
         self.create_prompt()
-        broker = SAMPromptBroker(request=self.request, loader=self.loader)
+        broker = SAMPromptBroker(request=self.request, manifest=self.manifest_data)
         response = broker.describe(self.request)
         data = json.loads(response.content.decode())["data"]
         self.assertEqual(data["spec"]["sessionKey"], self.session_key)

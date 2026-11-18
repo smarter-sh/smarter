@@ -14,7 +14,8 @@ from waffle import get_waffle_switch_model
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.parsing import parse_manifest
 
 from .exceptions import SmarterExtensionInstallError
 from .manifest import ExtensionManifest
@@ -49,19 +50,25 @@ def apply_extension_manifest(
     from smarter.apps.llmtool.models import ExtensionResource
 
     try:
-        loader = SAMLoader(manifest=manifest)
-        kind, name = loader.kind, loader.name
-    # SAMLoader raises a variety of exceptions for invalid manifests.
-    # pylint: disable=broad-exception-caught
-    except Exception as e:
+        data = parse_manifest(manifest)
+    except SAMValidationError as e:
         raise SmarterExtensionInstallError(f"{extension.slug}: a manifest is not valid: {e}") from e
+    kind = data.get("kind")
+    if not isinstance(kind, str):
+        raise SmarterExtensionInstallError(f"{extension.slug}: a manifest is not valid: it has no kind")
+    metadata = data.get("metadata")
+    if not isinstance(metadata, dict):
+        raise SmarterExtensionInstallError(f"{extension.slug}: a manifest is not valid: it has no metadata")
+    name = metadata.get("name")
+    if not isinstance(name, str):
+        raise SmarterExtensionInstallError(f"{extension.slug}: a manifest is not valid: it has no metadata.name")
     broker_class = Brokers.get_broker(kind)
     if broker_class is None:
         raise SmarterExtensionInstallError(f"{extension.slug}: there is no SAM kind {kind}")
-    request = RequestFactory().post(FAKE_REQUEST_PATH, data=loader.manifest, content_type="application/json")
+    request = RequestFactory().post(FAKE_REQUEST_PATH, data=data, content_type="application/json")
     request.user = user_profile.user
     try:
-        broker = broker_class(request=request, loader=loader, user_profile=user_profile)
+        broker = broker_class(request=request, manifest=data, user_profile=user_profile)
         response = broker.apply(request=request)
     # brokers raise many kinds of exceptions, all of which mean the manifest was not applied.
     # pylint: disable=broad-exception-caught

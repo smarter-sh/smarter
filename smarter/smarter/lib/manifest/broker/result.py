@@ -6,7 +6,7 @@ changed, identified by its api version, kind and name. The journaled response ad
 ``message``, e.g. "Guardrail profanity_output applied successfully". To read the resource
 itself, describe it.
 
-The broker's own state, e.g. its request, authentication, loader and cache key, is never
+The broker's own state, e.g. its request, authentication, manifest data and cache key, is never
 returned to the client: see :meth:`~smarter.lib.manifest.broker.AbstractBroker.to_json`, which is for logging.
 """
 

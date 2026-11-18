@@ -9,10 +9,10 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.llmtool.manifest.controller import PLUGIN_MAP, SAM_MAP
 from smarter.apps.llmtool.models import PluginMeta
-from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.parsing import read_manifest_file
 
 
 # pylint: disable=E1101
@@ -72,18 +72,16 @@ class Command(SmarterCommand):
             raise
 
         try:
-            loader = SAMLoader(
-                api_version=SmarterApiVersions.V1,
-                file_path=file_path,
-            )
-        except SAMLoaderError as e:
+            data = read_manifest_file(str(file_path))
+        except SAMValidationError as e:
             self.handle_completed_failure(e, f"manage.py update_plugin: {file_path} is not a valid manifest.")
             raise
-        if not loader.ready or loader.manifest_kind not in SAM_MAP:
+        kind = data.get("kind")
+        if kind not in SAM_MAP:
             err = SmarterValueError(f"{file_path} is not a plugin manifest.")
-            self.handle_completed_failure(err, "manage.py update_plugin: SAMLoader is not ready.")
+            self.handle_completed_failure(err, f"manage.py update_plugin: {file_path} is not a plugin manifest.")
             raise err
-        manifest = SAM_MAP[loader.manifest_kind](**loader.pydantic_model_dump())
+        manifest = SAM_MAP[kind].model_validate(data)
         if not PluginMeta.objects.filter(name=manifest.metadata.name, user_profile=user_profile).exists():
             err = SmarterValueError(f"Plugin {manifest.metadata.name} does not exist for {user_profile}.")
             self.handle_completed_failure(err, f"manage.py update_plugin: {err}")
@@ -91,7 +89,7 @@ class Command(SmarterCommand):
 
         # a PluginController prefers the stored PluginMeta to the manifest, so
         # the plugin is instantiated from the manifest, which updates it.
-        plugin = PLUGIN_MAP[loader.manifest_kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
+        plugin = PLUGIN_MAP[kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
 
         if plugin and plugin.ready:
             print(plugin.to_json())
