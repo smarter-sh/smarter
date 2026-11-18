@@ -1,6 +1,13 @@
-"""Smarter API Manifest Loader base class."""
+"""
+Smarter API Manifest Loader base class.
+
+.. deprecated::
+    SAMLoader is deprecated. Use :mod:`smarter.lib.manifest.parsing` to parse a manifest, and the
+    kind's Pydantic model to validate it.
+"""
 
 import copy
+import warnings
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -277,7 +284,18 @@ class SAMLoader(SmarterHelperMixin):
            top-level keys.
 
         Child classes may override the specification and validation logic to support custom manifest structures.
+
+        .. deprecated::
+            Use :func:`~smarter.lib.manifest.parsing.parse_manifest` or
+            :func:`~smarter.lib.manifest.parsing.read_manifest_file`, and pass the dict to a broker as
+            ``manifest``. SAMLoader will be removed.
         """
+        warnings.warn(
+            "SAMLoader is deprecated and will be removed in a future release. "
+            "Use smarter.lib.manifest.parsing.parse_manifest() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._api_version = api_version
         self._kind = kind
         self._manifest = manifest

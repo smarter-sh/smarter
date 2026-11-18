@@ -159,12 +159,12 @@
   path: spec
   delete: true
   status: 400
-  expect: ["Missing required key: spec"]
+  expect: ["manifest is not valid: it has no spec"]
 - name: missing_metadata
   path: metadata
   delete: true
   status: 400
-  expect: ["Missing required key: metadata"]
+  expect: ["manifest is not valid: it has no metadata"]
 - name: unknown_kind
   path: kind
   value: LLMClientz

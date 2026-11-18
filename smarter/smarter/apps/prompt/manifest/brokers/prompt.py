@@ -224,7 +224,7 @@ class SAMPromptBroker(AbstractBroker[Prompt, Prompt]):
         """
         SAMPrompt() is a Pydantic model that is used to represent the Smarter API SAMPrompt manifest.
 
-        The Pydantic model is initialized with the data from the manifest loader, which is generally passed to the
+        The Pydantic model is initialized with the data from the client's manifest data, which is generally passed to the
         model constructor as **data. However, this top-level manifest model has to be explicitly initialized,
         whereas its child models are automatically cascade-initialized by the Pydantic model, implicitly passing
         **data to each child's constructor.
@@ -236,9 +236,9 @@ class SAMPromptBroker(AbstractBroker[Prompt, Prompt]):
                     thing=self.kind,
                 )
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            sections = self.loader.manifest_sections
-            sections[SAMKeys.STATUS.value] = self.loader.manifest_status
+        if self.manifest_data is not None:
+            sections = self.manifest_sections
+            sections[SAMKeys.STATUS.value] = self.manifest_status
             self._manifest = SAMPrompt.model_validate(sections)
         return self._manifest
 

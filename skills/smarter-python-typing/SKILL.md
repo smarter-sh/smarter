@@ -150,8 +150,8 @@ status = SAMGuardrailStatus(
 
 Don't use it where None is a case the code handles.
 
-A broker builds its SAM model from the manifest loader with
-`SAMGuardrail.model_validate(self.loader.manifest_sections)`, which lets Pydantic reject a
+A broker builds its SAM model from the client's manifest data with
+`SAMGuardrail.model_validate(self.manifest_sections)`, which lets Pydantic reject a
 missing `apiVersion`, `metadata` or `spec`. A broker's model types are its `AbstractBroker`
 type arguments, e.g. `AbstractBroker[Guardrail, Guardrail]`.
 

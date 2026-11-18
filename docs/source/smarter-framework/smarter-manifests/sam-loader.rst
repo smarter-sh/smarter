@@ -1,6 +1,11 @@
 SAMLoader Class
 ====================
 
+.. deprecated::
+   SAMLoader is deprecated and will be removed. Parse a manifest with
+   :doc:`parse_manifest() or read_manifest_file() <parsing>`, validate it with the kind's
+   Pydantic model, and pass the dict to a broker as ``manifest``.
+
 SAMLoader is a lightweight utility class for loading and parsing Smarter API Manifest (SAM) files into Pydantic models.
 It provides a simple interface for reading manifest files, validating their contents, and converting them
 into lightweight structured data models that can be used for initializing SAM Pydantic models.

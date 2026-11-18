@@ -221,7 +221,7 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         with self.assertRaises(SAMConnectionBrokerError):
             _ = broker.manifest
         broker._manifest = None
-        self.patch_property("loader", None)
+        self.patch_property("manifest_data", None)
         self.patch_property("connection", None)
         self.assertIsNone(broker.manifest)
 

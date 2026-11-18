@@ -376,7 +376,7 @@ class PluginBrokerEdgeCasesMixin:
         plugin_meta = broker.plugin_meta
         self.assertIsNotNone(plugin_meta)  # type: ignore[attr-defined]
 
-        self._patch_broker_property("loader", None)
+        self._patch_broker_property("manifest_data", None)
         broker._manifest = None
         broker._plugin_meta = plugin_meta
         manifest = broker.manifest
@@ -388,7 +388,7 @@ class PluginBrokerEdgeCasesMixin:
         if not self.orm_spec_method:
             return
         broker = self.broker  # type: ignore[attr-defined]
-        self._patch_broker_property("loader", None)
+        self._patch_broker_property("manifest_data", None)
         broker._manifest = None
         broker._plugin_meta = None
         with self.assertNoLogs("smarter.apps.llmtool", level="WARNING"):  # type: ignore[attr-defined]

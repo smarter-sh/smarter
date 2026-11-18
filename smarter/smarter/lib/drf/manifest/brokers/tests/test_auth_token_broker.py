@@ -33,6 +33,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
@@ -533,15 +534,17 @@ class TestSmarterAuthTokenBrokerBranches(TestSmarterAuthTokenBrokerBase):
         with self.assertRaises(SAMBrokerErrorNotFound):
             self.broker.django_orm_to_manifest_dict()
 
-    def test_invalid_manifest_from_the_loader(self):
-        """A loader manifest that fails Pydantic validation leaves no manifest."""
+    def test_invalid_manifest_from_the_manifest_data(self):
+        """Manifest data that fails Pydantic validation leaves no manifest."""
         broker = self.broker
         broker._manifest = None
-        with patch.object(SAMLoader, "manifest_spec", new_callable=PropertyMock, return_value={"config": 42}):
-            try:
-                manifest = broker.manifest
-            except SAMSmarterAuthTokenBrokerError:
-                manifest = None
+        invalid: SmarterDictType = read_manifest_file(self.manifest_filespec)
+        invalid["spec"] = {"config": 42}
+        broker.manifest_data_setter(invalid)
+        try:
+            manifest = broker.manifest
+        except SAMSmarterAuthTokenBrokerError:
+            manifest = None
         self.assertIsNone(manifest)
 
     def test_get_with_an_unserializable_token(self):

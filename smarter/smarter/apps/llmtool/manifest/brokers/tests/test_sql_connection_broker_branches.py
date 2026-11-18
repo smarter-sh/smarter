@@ -44,7 +44,7 @@ class TestSqlConnectionBrokerBranches(TestSmarterConnectionBrokerBase):
 
     def test_manifest_from_a_connection_needs_metadata_and_status(self):
         broker = self.broker
-        self.patch_property("loader", None)
+        self.patch_property("manifest_data", None)
         self.patch_property("connection", MagicMock())
         for metadata, status in ((None, MagicMock()), (MagicMock(), None)):
             with self.subTest(metadata=metadata, status=status):

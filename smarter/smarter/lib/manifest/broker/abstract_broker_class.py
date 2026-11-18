@@ -77,6 +77,7 @@ from smarter.lib.manifest.models import (
     SAMDependencyTreeNode,
     client_manifest_validation,
 )
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.record_locator import console_url
 from smarter.lib.typing import SmarterDictType
 
@@ -248,7 +249,7 @@ def first_arg_of_type(args: Iterable[object], types: Union[type, Tuple[type, ...
     """
     Return the first positional argument that is an instance of a type, or None.
 
-    A broker can be passed its request, user, account, user profile, manifest and loader
+    A broker can be passed its request, user, account, user profile and manifest
     positionally, in any order, so :class:`AbstractBroker` finds each by its type.
 
     :param args: The positional arguments.
@@ -291,7 +292,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
     """
 
     _api_version: str = SmarterApiVersions.V1
-    _loader: Optional[SAMLoader] = None
+    _manifest_data: Optional[SmarterDictType] = None
+    """The client's manifest, parsed into a dict, before its Pydantic model validates it."""
     _manifest: Optional[Union[AbstractSAMBase, SmarterDictType]] = None
     _pydantic_model: Type[AbstractSAMBase] = AbstractSAMBase
     _name: Optional[str] = None
@@ -337,34 +339,34 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         **kwargs,
     ):
         """
-        Initialize the broker from a manifest, a loader, a manifest file, or the Django ORM.
+        Initialize the broker from a manifest, a manifest file, or the Django ORM.
 
-        A manifest takes precedence over a loader, and a loader over a file path. With none of
-        them, the broker is initialized from the ORM instance named ``name`` and owned by the
-        user profile, if there is one.
+        A manifest takes precedence over a file path. With neither, the broker is initialized
+        from the ORM instance named ``name`` and owned by the user profile, if there is one.
 
         :param request: The request, or None. It may also be passed positionally in ``args``.
-        :param args: Positional arguments, among which the request, user, account, user profile,
-            manifest and loader are found by their types.
+        :param args: Positional arguments, among which the request, user, account, user profile
+            and manifest are found by their types.
         :param name: The resource's name.
         :param kind: The resource's SAM kind, e.g. ``Guardrail``.
-        :param loader: A loader that has read the manifest.
+        :param loader: Deprecated: a :class:`~smarter.lib.manifest.loader.SAMLoader`, whose manifest
+            is used as if it had been passed as ``manifest``. Pass the manifest instead.
         :param api_version: The manifest's api version.
-        :param manifest: The manifest, as a Pydantic model or a dict.
-        :param file_path: The path of a manifest file, read when no loader is passed.
-        :param url: Accepted, for the same parameters as :class:`~smarter.lib.manifest.loader.SAMLoader`, but not used.
+        :param manifest: The manifest, as a Pydantic model or as a dict, e.g. from
+            :func:`~smarter.lib.manifest.parsing.parse_manifest`.
+        :param file_path: The path of a manifest file, read when no manifest is passed.
+        :param url: Accepted, for compatibility, but not used.
         :param kwargs: ``user``, ``account`` and ``user_profile``, and the rest, which are passed on to
             :class:`~smarter.lib.django.request.SmarterRequestMixin`.
         :raises SmarterValueError: If the kind, name or manifest is invalid.
-        :raises SAMBrokerError: If the loader's kind is not the broker's kind.
+        :raises SAMBrokerError: If the manifest's kind is not the broker's kind.
         """
         # ----------------------------------------------------------------------
         # Attempt to preset the API version, name, and kind.
         #
-        # we need this in cases where neither a manifest nor loader is provided.
-        # if we have a user_profile and name then we'll be able to attempt
-        # to initialize the loader from the ORM, which will in turn allow us to
-        # load the manifest.
+        # we need this in cases where no manifest is provided. if we have a
+        # user_profile and name then we'll be able to build the manifest from
+        # the ORM.
         # ----------------------------------------------------------------------
         self.api_version = api_version or SmarterApiVersions.V1
         if name:
@@ -395,43 +397,37 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         )
 
         # ----------------------------------------------------------------------
-        # Manifest and SAMLoader resolution logic. Prioritize the manifest
-        # if provided, otherwise attempt to initialize the SAMLoader from
-        # the params, which in turn will lazily load the manifest if/when needed.
+        # Manifest resolution. A manifest takes precedence over a manifest
+        # file. A manifest dict is kept as the client's manifest data, which
+        # each broker's manifest property validates with its Pydantic model.
         # ----------------------------------------------------------------------
         if not manifest:
             manifest = first_arg_of_type(args, AbstractSAMBase)
         if manifest:
             self.manifest_setter(manifest)
 
+        # deprecated: a SAMLoader is read for its manifest dict, until SAMLoader is removed.
         if not loader:
             loader = first_arg_of_type(args, SAMLoader)
         if loader:
-            self.loader = loader
-        else:
-            if isinstance(file_path, str):
-                if self._loader:
-                    logger.warning(
-                        "%s.__init__() - Both loader and file_path provided. file_path will override loader.",
-                        self.abstract_broker_logger_prefix,
-                    )
-                self.loader = SAMLoader(file_path=file_path)
-                if self._loader and self._loader.ready:
-                    self.kind_setter(self._loader.manifest_kind)
-                    loader_metadata = self._loader.manifest_metadata or {}
-                    self.name_cached_property_setter(loader_metadata.get("name"))
+            self.manifest_data_setter(loader.json_data)
+        elif isinstance(file_path, str):
+            file_data = read_manifest_file(file_path)
+            self.manifest_data_setter(file_data)
+            file_metadata = self.manifest_metadata
+            if file_metadata:
+                self.name_cached_property_setter(file_metadata.get(SAMMetadataKeys.NAME.value))
 
         # ----------------------------------------------------------------------
         # Fallback logic to initialize from the ORM, if we have a name and
-        # user_profile, and we don't already have a manifest or loader.
+        # user_profile, and we don't already have a manifest.
         # ----------------------------------------------------------------------
-        if not self._manifest and not self._loader:
+        if not self._manifest and self._manifest_data is None:
             self.orm_meta_instance_setter()
 
-        # evaluated in order, and only as far as needed, because SAMLoader.ready may parse the manifest.
         if self._manifest:
             self._validated = True
-        elif self._loader and self._loader.ready:
+        elif self.manifest_data is not None:
             self._validated = True
         else:
             self._validated = bool(self._orm_instance)
@@ -541,7 +537,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         - The request is for an example manifest.
         - The request is for a JSON schema.
         - A manifest is loaded.
-        - A ready SAMLoader is present.
+        - The client's manifest data has an apiVersion, kind, metadata and spec.
         - An ORM meta instance was found.
 
         Every reason why a broker is not ready is logged at DEBUG. A broker that is not ready is
@@ -567,8 +563,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         if bool(self._manifest):
             # 3.) if we have a manifest.
             self._is_ready_abstract_broker = True
-        if self.loader is not None and self.loader.ready:
-            # 4.) we have a loader and it's in a ready state.
+        if self.manifest_data is not None:
+            # 4.) we have the client's manifest data, with all of its sections.
             self._is_ready_abstract_broker = True
         if bool(self.orm_meta_instance):
             # 5.) we have an ORM meta instance.
@@ -595,9 +591,9 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
                 self.abstract_broker_logger_prefix,
             )
-        if self.loader is None or not self.loader.ready:
+        if self.manifest_data is None:
             logger.debug(
-                "%s.is_ready_abstract_broker() returning false because loader is not ready.",
+                "%s.is_ready_abstract_broker() returning false because there is no manifest data.",
                 self.abstract_broker_logger_prefix,
             )
 
@@ -713,7 +709,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
     @property
     def is_valid(self) -> bool:
         """
-        True if the broker has a manifest, a ready loader, or an ORM instance.
+        True if the broker has a manifest, complete manifest data, or an ORM instance.
 
         :returns: Whether the broker was initialized from any of them.
         """
@@ -770,7 +766,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         The name of the resource that this broker manages, its manifest's ``metadata.name``.
 
         The name is looked up once, and kept: from the manifest, if it is a Pydantic model, else
-        from the loader's manifest metadata, else from the request's ``name`` query parameter. A
+        from the manifest data's metadata, else from the request's ``name`` query parameter. A
         name that cannot be found is logged at debug level, since some commands, e.g.
         ``json-schema``, need no name, and those that do fail with their own error.
 
@@ -788,12 +784,12 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
             self._name = self._manifest.metadata.name
             return self._name
-        if self._loader:
-            loader_metadata = self._loader.manifest_metadata or {}
-            self._name = loader_metadata.get("name")
+        if self._manifest_data is not None:
+            metadata = self.manifest_metadata or {}
+            self._name = metadata.get(SAMMetadataKeys.NAME.value)
             if self._name:
                 return self._name
-            logger.warning("%s.name() loader metadata does not contain a name", self.abstract_broker_logger_prefix)
+            logger.warning("%s.name() manifest metadata does not contain a name", self.abstract_broker_logger_prefix)
         params = self.params
         if isinstance(params, QueryDict):
             name_param = params.get("name", None)
@@ -893,40 +889,110 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         self._api_version = value
 
     @property
-    def loader(self) -> Optional[SAMLoader]:
+    def manifest_data(self) -> Optional[SmarterDictType]:
         """
-        The SAMLoader instance for this broker.
+        The client's manifest, as a dict, if it has every section that a manifest requires.
 
-        :return: The SAMLoader instance for this broker.
+        A broker's :attr:`manifest` validates this dict with the kind's Pydantic model. Manifest
+        data that lacks an ``apiVersion``, a ``kind``, ``metadata`` or a ``spec``, or has an empty
+        one, is not a manifest yet, so it is None here, and the broker is not ready.
+
+        :returns: The manifest data, or None if there is none, or it is incomplete.
         """
-        if isinstance(self._loader, SAMLoader) and self._loader.ready:
-            return self._loader
-        if self._loader:
-            logger.warning(
-                "%s.loader() getter - loader is set but is not in a ready state.",
+        data = self._manifest_data
+        if data is None:
+            return None
+        missing = self.missing_manifest_sections
+        if missing:
+            logger.debug(
+                "%s.manifest_data - the manifest data has no %s.",
                 self.abstract_broker_logger_prefix,
+                ", ".join(missing),
             )
+            return None
+        return data
 
-        return None
-
-    @loader.setter
-    def loader(self, value: Optional[SAMLoader]) -> None:
+    @property
+    def missing_manifest_sections(self) -> list[str]:
         """
-        Set the SAMLoader instance for this broker.
+        The sections that the client's manifest data lacks, or has empty, of apiVersion, kind, metadata and spec.
 
-        :param value: The SAMLoader instance to set.
+        :returns: The missing sections' keys, e.g. ``["spec"]``, or an empty list if there is no
+            manifest data, or it has every section.
         """
-        if not value:
-            self._loader = None
+        missing: list[str] = []
+        data = self._manifest_data
+        if data is None:
+            return missing
+        for key in (SAMKeys.APIVERSION, SAMKeys.KIND, SAMKeys.METADATA, SAMKeys.SPEC):
+            if not data.get(key.value):
+                missing.append(key.value)
+        return missing
+
+    def manifest_data_setter(self, value: Optional[SmarterDictType]) -> None:
+        """
+        Set the client's manifest, as a dict.
+
+        :param value: The manifest, as a dict, e.g. from
+            :func:`~smarter.lib.manifest.parsing.parse_manifest`, or None to unset it.
+        :raises SmarterValueError: If the value is not a dict.
+        :raises SAMBrokerError: If the manifest's kind is not the broker's kind.
+        :raises SAMValidationError: If the manifest has keys that its Pydantic model does not define.
+        """
+        if value is None:
+            self._manifest_data = None
             return
-        if not isinstance(value, SAMLoader):
-            raise SmarterValueError("loader must be a SAMLoader instance")
-        if value.manifest_kind != self.kind:
-            raise SAMBrokerError(
-                f"loader manifest kind '{value.manifest_kind}' does not match broker kind '{self.kind}'"
-            )
-        self.raise_for_unknown_keys(value.json_data)
-        self._loader = value
+        if not isinstance(value, dict):
+            raise SmarterValueError(f"manifest data must be a dict, not a {type(value).__name__}")
+        manifest_kind = value.get(SAMKeys.KIND.value)
+        if manifest_kind != self.kind:
+            raise SAMBrokerError(f"manifest kind '{manifest_kind}' does not match broker kind '{self.kind}'")
+        self.raise_for_unknown_keys(value)
+        self._manifest_data = value
+
+    @property
+    def manifest_metadata(self) -> Optional[SmarterDictType]:
+        """
+        The ``metadata`` of the client's manifest data.
+
+        :returns: The metadata, or None if there is no manifest data, or it has no metadata.
+        """
+        if self._manifest_data is None:
+            return None
+        metadata = self._manifest_data.get(SAMKeys.METADATA.value)
+        if not isinstance(metadata, dict):
+            return None
+        return metadata
+
+    @property
+    def manifest_status(self) -> Optional[SmarterDictType]:
+        """
+        The ``status`` of the client's manifest data.
+
+        :returns: The status, or None if there is no manifest data, or it has no status.
+        """
+        if self._manifest_data is None:
+            return None
+        status = self._manifest_data.get(SAMKeys.STATUS.value)
+        return status
+
+    @property
+    def manifest_sections(self) -> SmarterDictType:
+        """
+        The apiVersion, kind, metadata and spec of the client's manifest data, to validate a SAM model with.
+
+        A broker builds its manifest with, e.g., ``SAMGuardrail.model_validate(self.manifest_sections)``.
+        The client's ``status`` is left out, because it is read-only. A section that the manifest data
+        doesn't have is None, which the model's validation rejects. Each call returns a new dict, which
+        a broker may add the status to.
+
+        :returns: A dict with the keys ``apiVersion``, ``kind``, ``metadata`` and ``spec``.
+        """
+        data = self._manifest_data or {}
+        sections: SmarterDictType = {}
+        for key in (SAMKeys.APIVERSION, SAMKeys.KIND, SAMKeys.METADATA, SAMKeys.SPEC):
+            sections[key.value] = data.get(key.value)
+        return sections
 
     def raise_for_unknown_keys(self, manifest: object) -> None:
         """
@@ -1160,9 +1226,8 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         """
         The Pydantic model representing the manifest.
 
-        If the manifest
-        has not been initialized yet, this property will attempt to
-        initialize it using the SAMLoader.
+        If the manifest has not been initialized yet, this property builds it from
+        :attr:`manifest_sections`, the client's manifest data, or else from the ORM.
 
         :return: The Pydantic model representing the manifest.
         """
@@ -1182,33 +1247,23 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             self._api_version = self._manifest.apiVersion
             self.name_cached_property_setter(self._manifest.metadata.name)
             self.kind_setter(self._manifest.kind)
-            self.loader = SAMLoader(manifest=self._manifest.model_dump())
         elif isinstance(value, dict):
-            self.loader = SAMLoader(manifest=value)
-            if not isinstance(self._loader, SAMLoader):
-                raise SmarterValueError("loader must be a SAMLoader instance after setting manifest from dict")
-            if not (self._loader.ready and self.manifest):
+            self.manifest_data_setter(value)
+            if self.manifest_data is None:
+                missing = ", ".join(self.missing_manifest_sections)
+                raise SmarterValueError(f"The {self.kind} manifest is not valid: it has no {missing}.")
+            # build the Pydantic model now, so that an invalid manifest fails here, as the client's error.
+            if not self.manifest:
                 logger.warning(
-                    "%s.manifest_setter() - manifest is not ready after lazy load attempt from SAMLoader. Loader ready: %s, manifest initialized: %s",
+                    "%s.manifest_setter() - the %s manifest could not be built from the manifest data.",
                     self.abstract_broker_logger_prefix,
-                    self._loader.ready,
-                    self.ready,
+                    self.kind,
                 )
-            if not self._loader.ready:
+            manifest_api_version = value.get(SAMKeys.APIVERSION.value)
+            if self.api_version != manifest_api_version:
                 raise SmarterValueError(
-                    f"The {self.kind} manifest is not valid: it must have an apiVersion, kind, "
-                    "metadata and a non-empty spec."
+                    f"cannot set manifest from dict: manifest apiVersion '{manifest_api_version}' does not match broker apiVersion '{self.api_version}'"
                 )
-            if self._loader.kind != self.kind:
-                raise SmarterValueError(
-                    f"cannot set manifest from dict: manifest kind '{self._loader.kind}' does not match broker kind '{self.kind}'"
-                )
-            if self.api_version != self._loader.api_version:
-                raise SmarterValueError(
-                    f"cannot set manifest from dict: manifest apiVersion '{self._loader.api_version}' does not match broker apiVersion '{self.api_version}'"
-                )
-            if not isinstance(self._loader.json_data, dict):
-                raise SmarterValueError("cannot set manifest from dict: loader json_data is not a dict")
 
         if self._manifest:
             self._validated = True
@@ -1226,17 +1281,18 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         """
         The broker's name, as far as it is known without building its manifest.
 
-        Readiness messages are logged while a broker initializes, after its loader has read the
-        manifest's name but before :attr:`name` is set. This keeps them from reporting no name.
+        Readiness messages are logged while a broker initializes, after it has the manifest data's
+        name but before :attr:`name` is set. This keeps them from reporting no name.
 
-        :returns: The name, from the broker, its manifest or its loader, or None.
+        :returns: The name, from the broker, its manifest or its manifest data, or None.
         """
         if self._name:
             return self._name
         if isinstance(self._manifest, AbstractSAMBase) and self._manifest.metadata and self._manifest.metadata.name:
             return self._manifest.metadata.name
-        if self._loader and self._loader.manifest_metadata:
-            return self._loader.manifest_metadata.get(SAMMetadataKeys.NAME.value)
+        metadata = self.manifest_metadata
+        if metadata:
+            return metadata.get(SAMMetadataKeys.NAME.value)
         return None
 
     def send_broker_ready(self, signal: Signal) -> None:
@@ -2440,9 +2496,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         manifest = self.manifest
         if isinstance(manifest, AbstractSAMBase):
             manifest = manifest.model_dump()
-        loader_json = None
-        if self.loader:
-            loader_json = self.loader.to_json()
         orm_model_class_name = None
         if self.ORMModelClass:
             orm_model_class_name = self.ORMModelClass.__name__
@@ -2455,7 +2508,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             "kind": kind,
             "name": name,
             "manifest": manifest,
-            "loader": loader_json,
             "orm_model_class": orm_model_class_name,
             "serializer_class": serializer_class_name,
             "orm_instance": orm_instance_obj,
@@ -2480,7 +2532,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             "ready": self.ready,
             "name": self.known_name,
             "manifest": bool(self._manifest),
-            "loader": bool(self._loader),
+            "manifest_data": self._manifest_data is not None,
             "orm_instance": bool(self.orm_instance),
             "request": self.url,
             "user_profile": self.user_profile,

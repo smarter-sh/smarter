@@ -616,7 +616,7 @@ class TestSmarterUserBrokerBranches(TestSAMBrokerBaseClass):
     def test_manifest_from_a_user_needs_a_profile(self):
         broker = self.broker
         broker._manifest = None
-        self.patch_property("loader", None)
+        self.patch_property("manifest_data", None)
         self.patch_property("brokered_user", MagicMock())
         self.patch_property("brokered_user_profile", None)
         with self.assertRaises(SAMUserBrokerError):

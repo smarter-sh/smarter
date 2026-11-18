@@ -370,7 +370,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         """Without a loader or an existing connection there's no manifest."""
         broker = self.broker
         broker._manifest = None  # pylint: disable=protected-access
-        with patch.object(SAMSqlConnectionBroker, "loader", new_callable=PropertyMock, return_value=None):
+        with patch.object(SAMSqlConnectionBroker, "manifest_data", new_callable=PropertyMock, return_value=None):
             with patch.object(SAMSqlConnectionBroker, "connection", new_callable=PropertyMock, return_value=None):
                 self.assertIsNone(broker.manifest)
 

@@ -113,7 +113,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
 
     .. warning::
 
-       If the manifest loader or manifest metadata is missing, the manifest may not be initialized and `None` may be returned.
+       If the manifest data or its metadata is missing, the manifest may not be initialized and `None` may be returned.
 
     .. seealso::
 
@@ -533,11 +533,11 @@ class SAMUserBroker(AbstractBroker[User, User]):
 
         .. note::
 
-           The top-level manifest model (`SAMUser`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+           The top-level manifest model (`SAMUser`) must be explicitly initialized with manifest data, typically using ``**data`` from the client's manifest data.
 
         .. warning::
 
-           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
+           If the manifest data or its metadata is missing, the manifest will not be initialized and None may be returned.
 
         **Example usage**::
 
@@ -558,11 +558,11 @@ class SAMUserBroker(AbstractBroker[User, User]):
         if not self.account and not self.brokered_user:
             logger.warning("%s.manifest called with no account", self.formatted_class_name)
             return None
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMUser.model_validate(self.loader.manifest_sections)
-        # 2.) next, (and only if a loader is not available) try to initialize
+        if self.manifest_data is not None:
+            self._manifest = SAMUser.model_validate(self.manifest_sections)
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing Account model if available
         elif self.brokered_user:
             if not isinstance(self.brokered_user_profile, UserProfile):
