@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.6...v0.46.7-alpha.1) (2026-11-18)
+
+### Bug Fixes
+
+* **account:** authenticate to account manager and remove mailchimp ([36cbf82](https://github.com/smarter-sh/smarter/commit/36cbf8210f7dd09c68124e3f29d008031046711e))
+* **account:** set the root account's share scope through its relation ([32e0015](https://github.com/smarter-sh/smarter/commit/32e0015fa89c108819102de10f05497fff533894))
+
 ## [0.46.6](https://github.com/smarter-sh/smarter/compare/v0.46.5...v0.46.6) (2026-11-17)
 
 ### Bug Fixes
