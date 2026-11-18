@@ -105,7 +105,7 @@ class TestAccountMixin(SmarterTestBase):
         self.non_admin_user_profile = self.__class__.non_admin_user_profile
         self._manifest = None
         self._manifest_path = None
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         title = f" {logger_prefix}.{self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
@@ -118,7 +118,7 @@ class TestAccountMixin(SmarterTestBase):
         logger.debug(msg)
         self._manifest = None
         self._manifest_path = None
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         super().tearDown()
 

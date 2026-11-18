@@ -36,7 +36,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
@@ -103,7 +103,7 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
     def fresh_broker(self) -> SAMLLMHostBroker:
         """A new broker for the test manifest, without cached state."""
         with open(self.manifest_filespec, encoding="utf-8") as f:
-            return SAMLLMHostBroker(request=self.request, loader=SAMLoader(manifest=f.read()))
+            return SAMLLMHostBroker(request=self.request, manifest=parse_manifest(f.read()))
 
     def llmhost(self) -> LLMHost:
         return LLMHost.objects.get(user_profile=self.user_profile, name=LLMHOST_NAME)

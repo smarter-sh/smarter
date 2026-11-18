@@ -120,8 +120,6 @@
         "GEMINI_API_KEY": { "type": "string" },
         "GOOGLE_MAPS_API_KEY": { "type": "string" },
         "LLAMA_API_KEY": { "type": "string" },
-        "MAILCHIMP_API_KEY": { "type": "string" },
-        "MAILCHIMP_LIST_ID": { "type": "string" },
         "MYSQL_HOST": { "type": "string" },
         "MYSQL_PORT": { "type": "string" },
         "MYSQL_DATABASE": { "type": "string" },

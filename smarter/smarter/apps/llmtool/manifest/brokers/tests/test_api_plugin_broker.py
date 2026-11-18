@@ -3,6 +3,7 @@
 
 import os
 
+import yaml
 from pydantic_core import ValidationError
 
 from smarter.apps.api.utils import apply_manifest
@@ -17,7 +18,7 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import required
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
@@ -42,10 +43,10 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
     def setUpClass(cls):
         """Create the ApiConnection that the ApiPlugin manifest refers to."""
         super().setUpClass()
-        loader = SAMLoader(file_path=MANIFEST_PATH_API_CONNECTION)
-        if not apply_manifest(username=cls.admin_user.username, manifest=loader.yaml_data, verbose=True):
+        manifest_data = read_manifest_file(MANIFEST_PATH_API_CONNECTION)
+        if not apply_manifest(username=cls.admin_user.username, manifest=yaml.safe_dump(manifest_data), verbose=True):
             raise SmarterValueError("Failed to apply the test ApiConnection manifest.")
-        manifest_metadata = required(loader.manifest_metadata, "loader.manifest_metadata")
+        manifest_metadata = required(manifest_data["metadata"], "manifest_data.metadata")
         cls.api_connection = ApiConnection.objects.get(
             user_profile=cls.user_profile, name=manifest_metadata.get("name")
         )
@@ -160,7 +161,7 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
     def test_delete(self):
         """Test that delete() removes the plugin."""
         self.apply_manifest()
-        broker = self.SAMBrokerClass(self.request, self.loader)
+        broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name="api_test").exists())

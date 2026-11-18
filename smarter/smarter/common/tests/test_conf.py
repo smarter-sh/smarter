@@ -223,12 +223,6 @@ class TestSettings(SmarterTestBase):
     def test_logo(self):
         self.assertIsNotNone(smarter_settings.logo)
 
-    def test_mailchimp_api_key(self):
-        self.assertIsNotNone(smarter_settings.mailchimp_api_key)
-
-    def test_mailchimp_list_id(self):
-        self.assertIsNotNone(smarter_settings.mailchimp_list_id)
-
     def test_marketing_site_url(self):
         self.assertIsNotNone(smarter_settings.marketing_site_url)
 
@@ -273,6 +267,12 @@ class TestSettings(SmarterTestBase):
     def test_smtp_host(self):
         """SMTP is optional: the host is None when neither SMTP_HOST nor AWS_REGION is set."""
         self.assertTrue(smarter_settings.smtp_host is None or isinstance(smarter_settings.smtp_host, str))
+
+    def test_account_manager_api_key(self):
+        self.assertTrue(
+            smarter_settings.account_manager_api_key is None
+            or isinstance(smarter_settings.account_manager_api_key, SecretStr)
+        )
 
     def test_slack_bot_token(self):
         self.assertTrue(

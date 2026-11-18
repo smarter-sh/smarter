@@ -32,6 +32,10 @@ smarter apply -f my-ai-application.yaml
 ![Smarter Manifest](https://cdn.smarter.sh/docs/smarter-framework/smarter-manifest.png)
 ![Smarter Web Console](https://cdn.smarter.sh/github.com/smarter-sh/react/dashboard-screenshot.png)
 
+New to Smarter? Watch this five-minute video.
+
+[![Watch: The Smarter Project in five minutes](https://i.ytimg.com/vi/u82i4m7a6VQ/hqdefault.jpg)](https://youtu.be/u82i4m7a6VQ)
+
 ## Why Smarter?
 
 - **No code. Just a manifest.** A [Smarter Manifest (SAM)](https://docs.smarter.sh/smarter-framework/smarter-manifests.html)

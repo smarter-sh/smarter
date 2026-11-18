@@ -31,7 +31,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
@@ -43,7 +42,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     Test the Smarter SAMAccountBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     def setUp(self):
@@ -65,9 +64,9 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         if not super().ready:
             return False
 
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
 
         return True
@@ -97,13 +96,13 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         """Verify that setup initialized the broker correctly."""
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMAccountBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMAccountBroker)
         logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
 
@@ -145,25 +144,25 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
     def test_sam_broker_initialization(self):
         """Test that the SAMAccountBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        manifest_metadata = self.loader.manifest_metadata
+        manifest_metadata = self.manifest_data["metadata"]
         assert manifest_metadata is not None
         metadata = {**manifest_metadata}
-        manifest_spec = self.loader.manifest_spec
+        manifest_spec = self.manifest_data["spec"]
         assert manifest_spec is not None
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         spec = {
             "config": SAMAccountSpecConfig(**manifest_spec["config"]),
         }
         SAMAccount(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMAccountMetadata(**metadata),
             spec=SAMAccountSpec(**spec),
         )
 
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
-        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMAccountBroker)
         self.assertEqual(broker.kind, "Account")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -171,7 +170,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
 
     def test_initialization_from_class(self):
         """Test initialization of SAMAccountBroker from class."""
-        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMAccountBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMAccountBroker)
         self.assertTrue(broker.ready)
 

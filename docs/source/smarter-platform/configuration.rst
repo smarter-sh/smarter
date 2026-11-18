@@ -128,10 +128,6 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - Base64-encoded Google service account credentials
    * - LLAMA_API_KEY
      - API key for Llama AI integrations
-   * - MAILCHIMP_API_KEY
-     - (optional) API key for Mailchimp email services
-   * - MAILCHIMP_LIST_ID
-     - (optional) Mailchimp audience/list ID
    * - OPENAI_API_KEY
      - API key for OpenAI integrations
    * - PAT

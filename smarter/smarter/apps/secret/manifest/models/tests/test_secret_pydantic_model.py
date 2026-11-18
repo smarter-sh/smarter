@@ -7,7 +7,7 @@ from pydantic_core import ValidationError
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -22,9 +22,9 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         """Test the manifest initialization with a good manifest file."""
 
         filespec = self.get_data_full_filepath("secret-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        self.assertTrue(loader.ready, msg="loader is not ready")
-        sam_secret = SAMSecret(**loader.pydantic_model_dump())
+        manifest_data = read_manifest_file(filespec)
+        self.assertTrue(manifest_data, msg="the manifest is empty")
+        sam_secret = SAMSecret(**manifest_data)
 
         # dump the pydantic model to a dictionary
         # round_trip_dict = sam_secret.model_dump()
@@ -40,11 +40,11 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         """
 
         filespec = self.get_data_full_filepath("secret-bad.yaml")
-        loader = SAMLoader(file_path=filespec)
-        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest_data = read_manifest_file(filespec)
+        self.assertTrue(manifest_data, msg="the manifest is empty")
 
         with self.assertRaises(ValidationError) as context:
-            SAMSecret(**loader.pydantic_model_dump())
+            SAMSecret(**manifest_data)
 
         self.assertIn("1 validation error for SAMSecret", str(context.exception))
         self.assertIn("spec.config.value", str(context.exception))
@@ -58,10 +58,10 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         """
 
         filespec = self.get_data_full_filepath("secret-bad2.yaml")
-        # the loader only checks the top-level keys. The Pydantic model validates metadata.
-        loader = SAMLoader(file_path=filespec)
+        # parsing checks nothing. The Pydantic model validates the metadata.
+        manifest_data = read_manifest_file(filespec)
         with self.assertRaises(ValidationError) as context:
-            SAMSecret(**loader.pydantic_model_dump())
+            SAMSecret(**manifest_data)
 
         self.assertIn("metadata.description", str(context.exception))
 
@@ -69,11 +69,11 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
         """Test the manifest initialization with a manifest file that has an invalid expiration_date."""
 
         filespec = self.get_data_full_filepath("secret-bad3.yaml")
-        loader = SAMLoader(file_path=filespec)
-        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest_data = read_manifest_file(filespec)
+        self.assertTrue(manifest_data, msg="the manifest is empty")
 
         with self.assertRaises(ValidationError) as context:
-            SAMSecret(**loader.pydantic_model_dump())
+            SAMSecret(**manifest_data)
 
         # Assert that the exception message contains the expected details
         self.assertIn("1 validation error for SAMSecret", str(context.exception))

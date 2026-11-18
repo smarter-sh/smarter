@@ -80,12 +80,6 @@ inputs:
   llama-api-key:
     description: "The MetaAI Llama API key"
     required: true
-  mailchimp-api-key:
-    description: "The Mailchimp API key"
-    required: true
-  mailchimp-list-id:
-    description: "The Mailchimp list ID"
-    required: true
   mistral-api-key:
     description: "The Mistral API key"
     required: false
@@ -497,8 +491,6 @@ runs:
             "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
             "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
             "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
-            "SMARTER_MAILCHIMP_API_KEY": ${{ inputs.mailchimp-api-key && format('"{0}"', inputs.mailchimp-api-key) || 'null' }},
-            "SMARTER_MAILCHIMP_LIST_ID": ${{ inputs.mailchimp-list-id && format('"{0}"', inputs.mailchimp-list-id) || 'null' }},
             "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
             "SMARTER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
             "SMARTER_MYSQL_BACKUP_PASSWORD": ${{ inputs.smarter-mariadb-backup-password && format('"{0}"', inputs.smarter-mariadb-backup-password) || 'null' }},

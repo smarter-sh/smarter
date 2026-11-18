@@ -42,7 +42,6 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
-    SAMBrokerErrorNotReady,
     SAMDependency,
     SAMDependents,
     memoized_dependencies,
@@ -85,39 +84,34 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
     kind, and ``describe`` of a plugin with another kind's broker fails.
     """
 
-    def init_manifest_from_loader(self, manifest_class: Type[AbstractSAMBase]) -> None:
+    def init_manifest_from_data(self, manifest_class: Type[AbstractSAMBase]) -> None:
         """
-        Build the broker's manifest from its loader, when the broker isn't ready yet.
+        Build the broker's manifest from the client's manifest data, when the broker isn't ready yet.
 
-        A broker with no loader, manifest or plugin is normal for a command that needs no
+        A broker with no manifest data, manifest or plugin is normal for a command that needs no
         resource, e.g. ``example-manifest``, ``json-schema`` or ``get`` of a list, so that case is
         logged at DEBUG. A command that does need a ready broker still fails later with
-        ``SAMBrokerErrorNotReady``.
+        ``SAMBrokerErrorNotReady``. The manifest data's kind was checked when it was set.
 
         :param manifest_class: The Pydantic manifest model of this broker's kind, e.g. ``SAMStaticPlugin``.
-        :raises SAMBrokerErrorNotReady: If the loader's manifest is of another kind.
         """
         if self.ready:
             return
-        has_source = bool(self.loader) or bool(self.manifest) or bool(self.plugin)
+        has_data = self.manifest_data is not None
+        has_source = has_data or bool(self.manifest) or bool(self.plugin)
         if not has_source:
             logger.debug(
-                "%s.init_manifest_from_loader() No loader nor existing Plugin provided for %s broker.",
+                "%s.init_manifest_from_data() No manifest data nor existing Plugin provided for %s broker.",
                 self.formatted_class_name,
                 self.kind,
             )
             return
-        if self.loader and self.loader.manifest_kind != self.kind:
-            raise SAMBrokerErrorNotReady(
-                f"Loader manifest kind {self.loader.manifest_kind} does not match broker kind {self.kind}",
-                thing=self.kind,
-            )
-        if not self.loader:
+        if not has_data:
             return
-        manifest = manifest_class.model_validate(self.loader.manifest_sections)
+        manifest = manifest_class.model_validate(self.manifest_sections)
         self._manifest = manifest
         logger.debug(
-            "%s.init_manifest_from_loader() initialized manifest from loader for %s %s",
+            "%s.init_manifest_from_data() initialized manifest from manifest data for %s %s",
             self.formatted_class_name,
             self.kind,
             manifest.metadata.name,
@@ -346,7 +340,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
         This property determines whether the broker has been properly initialized
         and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
+        it has a valid manifest loaded, either from raw data, a manifest dict, or
         existing Django ORM models.
 
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
@@ -426,9 +420,9 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 thing=self.thing,
                 command=SmarterJournalCliCommands.PROMPT,
             )
-        # pass the loader's raw dict straight to the controller. Don't store it in
+        # pass the client's manifest dict straight to the controller. Don't store it in
         # self._manifest, which subclasses expect to hold a Pydantic model.
-        manifest = self._manifest or (self.loader.json_data if self.loader else None)
+        manifest = self._manifest or self.manifest_data
 
         controller = PluginController(
             request=self.smarter_request,

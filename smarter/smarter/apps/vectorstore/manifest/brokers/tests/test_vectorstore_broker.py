@@ -26,7 +26,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
@@ -54,10 +54,10 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
             return f.read().format(name=self.vs_name, provider=self.provider.name, model=model, storage=storage)
 
     @property
-    def loader(self) -> SAMLoader:
-        if not self._loader:
-            self._loader = SAMLoader(manifest=self.manifest_text())
-        return self._loader
+    def manifest_data(self) -> SmarterDictType:
+        if not self._manifest_data:
+            self._manifest_data = parse_manifest(self.manifest_text())
+        return self._manifest_data
 
     @property
     def kwargs(self) -> SmarterDictType:
@@ -67,7 +67,7 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         request = HttpRequest()
         request.headers = {"Authorization": f"Token {token_key or self.token_key}"}  # type: ignore
         request._body = text.encode("utf-8")  # pylint: disable=protected-access
-        return SAMVectorstoreBroker(request=request, loader=SAMLoader(manifest=text))
+        return SAMVectorstoreBroker(request=request, manifest=parse_manifest(text))
 
     def apply(self, **kwargs) -> VectorstoreMeta:
         broker = self.broker_for(self.manifest_text(**kwargs))

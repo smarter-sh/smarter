@@ -59,7 +59,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerReadOnlyError,
 )
 from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
@@ -113,7 +112,6 @@ CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
     PydanticValidationError,
     DjangoValidationError,
     yaml.YAMLError,
-    SAMLoaderError,
     SAMValidationError,
     SAMBadRequestError,
     SmarterValueError,
@@ -250,7 +248,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     This class provides common functionality for all `/api/v1/cli` endpoints, including:
 
     - Authentication using either Knox TokenAuthentication or Django SessionAuthentication.
-    - Initialization of the :class:`SAMLoader` and :class:`AbstractBroker` instances.
+    - Initialization of the :class:`AbstractBroker` instance from the request's manifest.
     - Resolution of the manifest kind and broker for the YAML manifest document.
     - Setting the user profile for the request.
 
@@ -296,13 +294,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     _BrokerClass: Optional[Type[AbstractBroker]] = None
     _broker: Optional[AbstractBroker] = None
-    _loader: Optional[SAMLoader] = None
     _manifest_data: Optional[Union[SmarterDictType, str]] = None
     """The manifest's data, or the raw JSON body until :attr:`manifest_data` parses it."""
     _manifest_kind: Optional[str] = None
     _manifest_kind_url_parsed: bool = False
     _manifest_name: Optional[str] = None
-    _manifest_load_failed: bool = False
     _prompt: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
@@ -346,39 +342,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         parent_class = super().formatted_class_name
         this_class = f".{CliBaseApiView.__name__}[][{id(self)}]"
         return f"{parent_class}{self.formatted_text(this_class)}"
-
-    @property
-    def loader(self) -> Optional[SAMLoader]:
-        """
-        Get the SAMLoader instance.
-
-        a SAMLoader instance is used to load
-        raw manifest text into a Pydantic model. It performs cursory validations
-        such as validating the file format, and identifying required dict key values
-        such as the api version, the manifest kind and its name.
-
-        The loader is instantiated lazily, so it will only be created
-        when it is first accessed.
-
-        :return: SAMLoader instance or None
-        :rtype: Optional[SAMLoader]
-        """
-        if not self._loader and self.manifest_data and not self._manifest_load_failed:
-            try:
-                self._loader = SAMLoader(
-                    api_version=SMARTER_API_VERSION,
-                    kind=self.manifest_kind,
-                    manifest=json.dumps(self.manifest_data),
-                )
-                logger.debug("%s.loader() - loaded manifest kind: %s", self.logger_prefix, self.manifest_kind)
-                if not self._loader or not self._loader.ready:
-                    raise APIV1CLIViewError("SAMLoader is not ready.")
-            except APIV1CLIViewError:
-                # not all endpoints require a manifest, so we
-                # should fail quietly if the manifest is not provided.
-                self._manifest_load_failed = True
-
-        return self._loader
 
     @property
     def BrokerClass(self) -> Type[AbstractBroker]:
@@ -430,8 +393,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     api_version=SMARTER_API_VERSION,
                     name=self.manifest_name,
                     kind=self.manifest_kind,
-                    loader=self.loader,
-                    manifest=self.loader.json_data if self.loader else None,
+                    manifest=self.manifest_data,
                 )
                 if self._broker:
                     logger.debug(
@@ -516,10 +478,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: Optional[str]
         """
         if not self._manifest_name and self.manifest_data:
-            self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
-        if not self._manifest_kind and self.loader:
-            loader_metadata = self.loader.manifest_metadata or {}
-            self._manifest_kind = loader_metadata.get("name")
+            metadata = self.manifest_data.get("metadata")
+            if isinstance(metadata, dict):
+                self._manifest_name = metadata.get("name")
         return self._manifest_name
 
     @property
@@ -536,8 +497,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
-        if not self._manifest_kind and self.loader:
-            self._manifest_kind = str(self.loader.manifest_kind) if self.loader else None
 
         # if we still don't have a manifest kind, then we should
         # analyze the url path to determine the manifest kind.

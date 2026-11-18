@@ -45,10 +45,6 @@ inputs:
     description: "Google Maps API key"
     required: true
     type: string
-  mailchimp-api-key:
-    description: "Mailchimp API key"
-    required: true
-    type: string
 
 runs:
   using: "composite"
@@ -181,10 +177,6 @@ runs:
         echo "GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .
         echo "LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .
         echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
-
-        # Mailchimp
-        # -----------------------
-        echo "MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }}" >> .env
 
     #--------------------------------------------------------------------------
     # Test

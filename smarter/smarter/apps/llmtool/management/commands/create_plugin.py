@@ -9,10 +9,10 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.llmtool.manifest.controller import SAM_MAP, PluginController
 from smarter.apps.llmtool.plugin.base import PluginBase
-from smarter.common.api import SmarterApiVersions
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.management.base import SmarterCommand
-from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.parsing import read_manifest_file
 
 
 # pylint: disable=E1101
@@ -65,21 +65,19 @@ class Command(SmarterCommand):
             self.handle_completed_failure(e, f"UserProfile for {user} and {account} does not exist.")
 
         try:
-            loader = SAMLoader(
-                api_version=SmarterApiVersions.V1,
-                file_path=file_path,
-            )
-        except SAMLoaderError as e:
+            data = read_manifest_file(str(file_path))
+        except SAMValidationError as e:
             self.handle_completed_failure(e, f"manage.py create_plugin. {file_path} is not a valid manifest.")
             raise
 
-        if not loader.ready or loader.manifest_kind not in SAM_MAP:
+        kind = data.get("kind")
+        if kind not in SAM_MAP:
             err = SmarterValueError(f"{file_path} is not a plugin manifest.")
-            self.handle_completed_failure(err, "manage.py create_plugin. SAMLoader is not ready.")
+            self.handle_completed_failure(err, f"manage.py create_plugin. {file_path} is not a plugin manifest.")
             raise err
 
-        plugin_class = SAM_MAP[loader.manifest_kind]
-        manifest = plugin_class(**loader.pydantic_model_dump())
+        plugin_class = SAM_MAP[kind]
+        manifest = plugin_class.model_validate(data)
         self.stdout.write(f"Creating {plugin_class.__name__} {manifest.metadata.name} for account {account}...")
         controller = PluginController(user_profile=user_profile, manifest=manifest)  # type: ignore
         plugin = controller.obj

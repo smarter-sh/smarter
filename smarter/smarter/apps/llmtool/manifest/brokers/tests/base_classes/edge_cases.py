@@ -321,7 +321,7 @@ class PluginBrokerEdgeCasesMixin:
         self.assertIsNone(broker._plugin)  # type: ignore[attr-defined]
         self.assertIsNone(broker._plugin_data)  # type: ignore[attr-defined]
 
-    def test_init_without_a_loader_manifest_or_plugin(self):
+    def test_init_without_manifest_data_a_manifest_or_plugin(self):
         """A broker with nothing to initialize from isn't ready."""
         if not self.spec_kind:
             return
@@ -366,29 +366,30 @@ class PluginBrokerEdgeCasesMixin:
             _ = broker.manifest
 
     def test_manifest_from_the_orm(self):
-        """Without a loader, the manifest is built from the applied plugin's ORM records."""
+        """Without manifest data, the manifest is built from the applied plugin's ORM records."""
         if not self.orm_spec_method:
             return
         broker = self.broker  # type: ignore[attr-defined]
         response = broker.apply(self.request, **self.kwargs)  # type: ignore[attr-defined]
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))  # type: ignore[attr-defined]
         name = broker.manifest.metadata.name
+        model_class = type(broker.manifest)
         plugin_meta = broker.plugin_meta
         self.assertIsNotNone(plugin_meta)  # type: ignore[attr-defined]
 
-        self._patch_broker_property("loader", None)
+        self._patch_broker_property("manifest_data", None)
         broker._manifest = None
         broker._plugin_meta = plugin_meta
         manifest = broker.manifest
-        self.assertIsInstance(manifest, self.SAMBrokerClass(self.request, self.loader).SAMModelClass)  # type: ignore[attr-defined]
+        self.assertIsInstance(manifest, model_class)  # type: ignore[attr-defined]
         self.assertEqual(manifest.metadata.name, name)  # type: ignore[attr-defined]
 
-    def test_manifest_without_a_loader_or_plugin_meta(self):
-        """Without a loader or a PluginMeta, there's no manifest."""
+    def test_manifest_without_manifest_data_or_plugin_meta(self):
+        """Without manifest data or a PluginMeta, there's no manifest."""
         if not self.orm_spec_method:
             return
         broker = self.broker  # type: ignore[attr-defined]
-        self._patch_broker_property("loader", None)
+        self._patch_broker_property("manifest_data", None)
         broker._manifest = None
         broker._plugin_meta = None
         with self.assertNoLogs("smarter.apps.llmtool", level="WARNING"):  # type: ignore[attr-defined]

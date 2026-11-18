@@ -29,7 +29,7 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.unittest.narrowing import json_object
 
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
@@ -44,7 +44,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     Test the Smarter SAMSqlPluginBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     plugin_class = SqlPlugin
@@ -76,9 +76,9 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     def ready(self) -> bool:
         if not super().ready:
             return False
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
         return True
 
@@ -96,17 +96,17 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
 
         1. ready property is True.
         2. non_admin_user_profile is initialized.
-        3. loader is an instance of SAMLoader with valid json_data and yaml_data.
+        3. manifest_data is an instance of SmarterDictType with valid json_data and yaml_data.
         4. request is an instance of HttpRequest.
         5. broker is an instance of SAMSqlPluginBroker.
         """
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSqlPluginBroker)
         logger.debug(
             "%s.test_setup() SAMSqlPluginBroker initialized successfully for testing.", self.formatted_class_name
@@ -139,28 +139,28 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
 
     def test_sam_broker_initialization(self):
         """Test that the SAMSqlPlugin model can be initialized from the manifest data."""
-        manifest_metadata = self.loader.manifest_metadata
-        manifest_spec = self.loader.manifest_spec
+        manifest_metadata = self.manifest_data["metadata"]
+        manifest_spec = self.manifest_data["spec"]
         assert manifest_metadata is not None
         assert manifest_spec is not None
         metadata = {**manifest_metadata}
         logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         SAMSqlPlugin(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMPluginCommonMetadata(**metadata),
             spec=SAMSqlPluginSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
         """
-        Test that the SAMSqlPluginBroker can be initialized from the request and loader.
+        Test that the SAMSqlPluginBroker can be initialized from the request and its manifest data.
 
         1. broker is an instance of SAMSqlPluginBroker.
         2. broker.kind is "SqlPlugin".
         3. broker.ORMModelClass is SAMSqlPlugin.
         """
-        broker: SAMSqlPluginBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSqlPluginBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSqlPluginBroker)
         self.assertEqual(broker.kind, "SqlPlugin")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -168,7 +168,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
 
     def test_initialization_from_class(self):
         """Test that the SAMSqlPluginBroker can be initialized from SAMBrokerClass."""
-        broker: SAMSqlPluginBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSqlPluginBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSqlPluginBroker)
         self.assertTrue(broker.ready)
 
@@ -315,11 +315,11 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         response = self.broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
 
-        manifest = json.loads(json.dumps(self.loader.json_data))
+        manifest = json.loads(json.dumps(self.manifest_data))
         manifest["spec"]["prompt"]["model"] = "gpt-4.1-mini"
         manifest["spec"]["prompt"]["temperature"] = 0.25
         manifest["spec"]["selector"] = {"directive": "search_terms", "searchTerms": ["courses"]}
-        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
+        broker = self.SAMBrokerClass(request=self.request, manifest=parse_manifest(json.dumps(manifest)))
         response = broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
 
@@ -341,9 +341,9 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         plugin_updated.connect(handler, weak=False)
         self.addCleanup(plugin_updated.disconnect, handler)
         # an unchanged manifest updates nothing, so the description is changed.
-        manifest = json_object(copy.deepcopy(self.loader.json_data))
+        manifest = json_object(copy.deepcopy(self.manifest_data))
         manifest["metadata"]["description"] = "An updated description."
-        broker = self.SAMBrokerClass(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
+        broker = self.SAMBrokerClass(request=self.request, manifest=parse_manifest(json.dumps(manifest)))
         response = broker.apply(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertEqual(len(updates), 1)
@@ -509,7 +509,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         manifest = self.broker.manifest
         assert manifest is not None
         name = manifest.metadata.name
-        broker = self.SAMBrokerClass(self.request, self.loader)
+        broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())

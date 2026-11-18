@@ -14,7 +14,7 @@ from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
@@ -130,11 +130,11 @@ class TestApiCliV1SmarterAuthToken(ApiV1CliTestBase):
         """Test apply command."""
 
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path="smarter/lib/drf/tests/data/auth-token.yaml")
-        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest_data = read_manifest_file("smarter/lib/drf/tests/data/auth-token.yaml")
+        self.assertTrue(manifest_data, msg="the manifest is empty")
 
         # use the manifest to creata a new sqlconnection Pydantic model
-        manifest = SAMSmarterAuthToken(**loader.pydantic_model_dump())
+        manifest = SAMSmarterAuthToken(**manifest_data)
 
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())

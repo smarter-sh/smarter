@@ -192,7 +192,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
 
         This property determines whether the broker has been properly initialized
         and is ready to perform its functions. A broker is considered ready if
-        it has a valid manifest loaded, either from raw data, a loader, or
+        it has a valid manifest loaded, either from raw data, a manifest dict, or
         existing Django ORM models.
 
         :returns: ``True`` if the broker is ready, ``False`` otherwise.
@@ -624,7 +624,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         all configuration, metadata, and specification details required to describe and deploy
         an llmclient within the Smarter platform.
 
-        The manifest is initialized using data provided by the manifest loader. The loader
+        The manifest is initialized from the client's manifest data, which
         supplies the manifest's API version, kind, metadata, and specification, which are
         passed to the respective fields of the ``SAMLLMClient`` model. The metadata and spec
         fields are themselves Pydantic models (``SAMLLMClientMetadata`` and ``SAMLLMClientSpec``),
@@ -636,8 +636,8 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         structured according to the schema defined by the ``SAMLLMClient`` model.
 
         If the manifest has already been initialized and cached, this method returns the
-        cached instance. If the loader is present and its manifest kind matches the expected
-        kind, a new manifest instance is created and cached before returning.
+        cached instance. If there is manifest data, whose kind was checked when it was set,
+        a new manifest instance is created and cached before returning.
 
         :returns: An instance of ``SAMLLMClient`` representing the llmclient manifest, or ``None``
                 if the manifest cannot be initialized.
@@ -647,23 +647,23 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             if not isinstance(self._manifest, SAMLLMClient):
                 raise SAMLLMClientBrokerError("Cached manifest is not a SAMLLMClient instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
+        if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from SAMLoader with name %s",
+                "%s.manifest() initializing %s from manifest data with name %s",
                 self.formatted_class_name,
                 self.kind,
-                (self.loader.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
+                (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
             # validated as a client's manifest, so that, e.g., the styles' image urls are checked to
             # be available. See smarter.lib.manifest.models.client_manifest_validation.
             with client_manifest_validation():
-                self._manifest = SAMLLMClient.model_validate(self.loader.manifest_sections)
+                self._manifest = SAMLLMClient.model_validate(self.manifest_sections)
             return self._manifest
         if self._llmclient:
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from loader for existing LLMClient %s with name %s",
+                    "%s.manifest() initialized from manifest data for existing LLMClient %s with name %s",
                     self.formatted_class_name,
                     self._llmclient,
                     self._llmclient.name,
