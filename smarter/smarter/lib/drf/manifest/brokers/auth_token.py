@@ -369,7 +369,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker[SmarterAuthToken, SmarterAuthToke
             )
             return self._manifest
         else:
-            logger.warning(
+            # expected for commands that need no manifest, e.g. json-schema and example-manifest. A
+            # command that does need one reports its absence to the client. See issue #1020.
+            logger.debug(
                 "%s.manifest() %s could not be initialized. self.loader is %s.",
                 self.formatted_class_name,
                 self.kind,
