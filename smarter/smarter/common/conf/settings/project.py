@@ -123,8 +123,6 @@ class ProjectSettings(BaseModel):
                 'SOCIAL_AUTH_GITHUB_SECRET',
                 'SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY',
                 'SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET',
-                'MAILCHIMP_API_KEY',
-                'MAILCHIMP_LIST_ID',
                 'PINECONE_API_KEY',
                 'PINECONE_ENVIRONMENT',
                 'ROOT_DOMAIN',

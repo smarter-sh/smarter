@@ -333,6 +333,18 @@ class TestSettingsMethods(SmarterTestBase):
                     assert token is not None
                     self.assertEqual(token.get_secret_value(), expected)
 
+    def test_account_manager_api_key(self):
+        """Test that Account Manager's key is None when missing, or a placeholder, and must be a SecretStr."""
+        module = "smarter.common.conf.settings.integrations"
+        for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-PLEASE")):
+            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
+                defaults.ACCOUNT_MANAGER_API_KEY = None
+                self.assertIsNone(call(Settings.validate_account_manager_api_key, value, {}))
+        key = SecretStr("a-platform-key")
+        self.assertIs(call(Settings.validate_account_manager_api_key, key, {}), key)
+        with self.assertRaises(SmarterConfigurationError):
+            call(Settings.validate_account_manager_api_key, "a-platform-key", {})
+
     def test_slack_bot_token(self):
         """Test that the Slack bot token is None when missing, or a placeholder, and must be a SecretStr."""
         module = "smarter.common.conf.settings.integrations"

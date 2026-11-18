@@ -121,7 +121,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
        - :class:`SAMSecret`
        - :class:`SAMSecretMetadata`
        - :class:`SAMSecretSpec`
-       - :meth:`SAMLoader`
+       - :func:`~smarter.lib.manifest.parsing.parse_manifest`
     """
 
     # override the base abstract manifest model with the Secret model
@@ -424,7 +424,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         """
         Return the Pydantic model representing the Smarter API Secret manifest.
 
-        The `SAMSecret` Pydantic model is initialized with manifest data, typically loaded via the manifest loader and passed as keyword arguments.
+        The `SAMSecret` Pydantic model is initialized with manifest data, typically the client's manifest data, parsed into a dict.
         While the top-level manifest model must be explicitly initialized, its child models are automatically cascade-initialized by Pydantic,
         with their respective data passed implicitly.
 
@@ -447,7 +447,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
             :class:`SAMSecret`
             :class:`SAMSecretMetadata`
             :class:`SAMSecretSpec`
-            :meth:`SAMLoader`
+            :func:`~smarter.lib.manifest.parsing.parse_manifest`
         """
         if self._manifest:
             if not isinstance(self._manifest, SAMSecret):
@@ -463,14 +463,16 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         if not self.user_profile:
             logger.warning("%s.manifest() called with no user_profile", self.formatted_class_name)
             return None
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_metadata and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSecret.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMSecret.model_validate(self.manifest_sections)
             logger.debug(
-                "%s.manifest() initialized %s from SAMLoader", self.formatted_class_name, type(self._manifest).__name__
+                "%s.manifest() initialized %s from manifest data",
+                self.formatted_class_name,
+                type(self._manifest).__name__,
             )
-        # 2.) next, (and only if a loader is not available) try to initialize
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing Account model if available
         elif self._secret_transformer and self.secret:
             self._manifest = SAMSecret(

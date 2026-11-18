@@ -174,7 +174,7 @@ class TestApplyResult(ApiV1CliTestBase):
         response, status = self.get_response(path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK, response)
         self.assertEqual(response["data"], {"apiVersion": "smarter.sh/v1", "kind": "Secret", "name": name})
-        for leaked in ("api_token", "auth_header", "cache_key", "loader", "ip_address", "orm_instance"):
+        for leaked in ("api_token", "auth_header", "cache_key", "manifest_data", "ip_address", "orm_instance"):
             self.assertNotIn(leaked, str(response))
 
 

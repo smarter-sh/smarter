@@ -266,13 +266,13 @@ class SAMLLMHostBroker(AbstractBroker[LLMHost, LLMHost]):
 
     @property
     def manifest(self) -> Optional[SAMLLMHost]:
-        """The LLMHost manifest, as a Pydantic model, from the manifest loader."""
+        """The LLMHost manifest, as a Pydantic model, from the client's manifest data."""
         if self._manifest:
             if not isinstance(self._manifest, SAMLLMHost):
                 raise SAMLLMHostBrokerError("Cached manifest is not a SAMLLMHost instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMLLMHost.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMLLMHost.model_validate(self.manifest_sections)
         return self._manifest
 
     ###########################################################################

@@ -14,7 +14,48 @@ from smarter.common.exceptions import SmarterConfigurationError
 
 
 class IntegrationSettings(BaseModel):
-    """The credentials of third-party services: GitHub, Slack, Stripe and social login."""
+    """The credentials of third-party services: Account Manager, GitHub, Slack, Stripe and social login."""
+
+    account_manager_api_key: Optional[SecretStr] = Field(
+        settings_defaults.ACCOUNT_MANAGER_API_KEY,
+        description="The platform's key for Account Manager's subscription status api, which multitenant authentication sends as 'Authorization: Platform <key>'. Masked by pydantic SecretStr.",
+        examples=["the key that Account Manager's create_platform_api_key command printed"],
+        title="Account Manager API Key",
+    )
+    """
+    The platform's key for Account Manager's subscription status api.
+
+    A multitenant platform asks Account Manager, when a user signs in, whether the user has an
+    active subscription (see :py:mod:`smarter.lib.social_core.backends.multitenant`). The key
+    identifies the platform to Account Manager, which issues one per platform with its
+    ``create_platform_api_key`` management command. It is sent only to Account Manager, as
+    ``Authorization: Platform <key>``.
+
+    Without a key, the platform asks without one, which Account Manager answers until its
+    ``require_platform_key`` waffle switch is on.
+
+    :type: Optional[SecretStr]
+    :default: Value from ``settings_defaults.ACCOUNT_MANAGER_API_KEY``, None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("account_manager_api_key")
+    def validate_account_manager_api_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `account_manager_api_key` field.
+
+        Args:
+            v (Optional[SecretStr]): The key to validate.
+        Returns:
+            Optional[SecretStr]: The validated key, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = settings_defaults.ACCOUNT_MANAGER_API_KEY
+        if is_missing_value(v):
+            return None
+
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"account_manager_api_key of type {type(v)} is not a SecretStr")
+        return v
 
     github_token: Optional[SecretStr] = Field(
         settings_defaults.GITHUB_TOKEN,

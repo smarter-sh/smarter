@@ -16,7 +16,7 @@ import sys
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m|\[[0-9;]*m")
 HEADER = re.compile(r"^\[(?P<ts>[\d\- :+]+)\] - (?P<level>[A-Z]+) - (?P<proc>\S+) - (?P<msg>.*)$")
-PREFIX = re.compile(r"^(smarter\.[\w.]+|[A-Z]\w+\[\d+\]|SAMLoader\[\d+\]|-{10,}|\s*$)")
+PREFIX = re.compile(r"^(smarter\.[\w.]+|[A-Z]\w+\[\d+\]|-{10,}|\s*$)")
 FAILURE = re.compile(
     r"Traceback|Exception|\bError\b|\bfailed\b|Failed|suspended|Response [45]\d\d|HTTP/1\.1 [45]\d\d", re.IGNORECASE
 )

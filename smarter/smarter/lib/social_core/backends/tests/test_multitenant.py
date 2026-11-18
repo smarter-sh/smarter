@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from django.test import RequestFactory
+from pydantic import SecretStr
 from requests.exceptions import (
     HTTPError,
     RequestException,
@@ -22,17 +23,19 @@ from smarter.lib.social_core.backends.multitenant import (
     DjangoModelBackendMultitenant,
     GithubOAuth2Multitenant,
     GoogleOAuth2Multitenant,
+    email_or_none,
     subscription_status_code,
+    subscription_status_headers,
     verify_payment_status,
 )
 
 MODULE = "smarter.lib.social_core.backends.multitenant"
 
 
-def verify(username: str) -> bool:
+def verify(username: str, email=None) -> bool:
     """Call verify_payment_status() with the subscription status api's answer for the user uncached."""
-    subscription_status_code.invalidate(username)
-    return verify_payment_status(username)
+    subscription_status_code.invalidate(username, email)  # type: ignore[attr-defined]
+    return verify_payment_status(username, email)
 
 
 class TestVerifyPaymentStatus(TestAccountMixin):
@@ -63,6 +66,21 @@ class TestVerifyPaymentStatus(TestAccountMixin):
                 self.assertEqual(verify(self.non_admin_user.username), expected)
             self.assertEqual(get.call_args.kwargs["headers"]["X-Client-Username"], self.non_admin_user.username)
 
+    def test_the_email_is_sent_and_is_part_of_the_cache_key(self):
+        """The same username with another email address is asked about separately."""
+        username = self.non_admin_user.username
+        email = "someone@example.com"
+        subscription_status_code.invalidate(username, email)  # type: ignore[attr-defined]
+        subscription_status_code.invalidate(username, "someone.else@example.com")  # type: ignore[attr-defined]
+        with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.OK)) as get:
+            self.assertTrue(verify_payment_status(username, email))
+            self.assertTrue(verify_payment_status(username, email))
+            self.assertTrue(verify_payment_status(username, "someone.else@example.com"))
+        self.assertEqual(get.call_count, 2)
+        self.assertEqual(get.call_args_list[0].kwargs["headers"]["X-Client-Email"], email)
+        subscription_status_code.invalidate(username, email)  # type: ignore[attr-defined]
+        subscription_status_code.invalidate(username, "someone.else@example.com")  # type: ignore[attr-defined]
+
     def test_server_errors_fail_open(self):
         """A 5xx of the status api is a failure, not an inactive subscription."""
         with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.BAD_GATEWAY)):
@@ -71,29 +89,59 @@ class TestVerifyPaymentStatus(TestAccountMixin):
     def test_a_failure_is_not_cached(self):
         """After a failure, the next sign-in asks the status api again."""
         username = self.non_admin_user.username
-        subscription_status_code.invalidate(username)
+        subscription_status_code.invalidate(username)  # type: ignore[attr-defined]
         with patch(f"{MODULE}.requests.get", side_effect=Timeout()):
             self.assertTrue(verify_payment_status(username))
         with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.PAYMENT_REQUIRED)) as get:
             self.assertFalse(verify_payment_status(username))
             self.assertFalse(verify_payment_status(username))
         get.assert_called_once()
-        subscription_status_code.invalidate(username)
+        subscription_status_code.invalidate(username)  # type: ignore[attr-defined]
 
     def test_the_switch_is_never_cached(self):
         """Turning multitenant authentication off applies at once, whatever the status api answered before."""
         username = self.non_admin_user.username
-        subscription_status_code.invalidate(username)
+        subscription_status_code.invalidate(username)  # type: ignore[attr-defined]
         with patch(f"{MODULE}.requests.get", return_value=MagicMock(status_code=HTTPStatus.PAYMENT_REQUIRED)):
             self.assertFalse(verify_payment_status(username))
         with patch(f"{MODULE}.switch_is_active", return_value=False):
             self.assertTrue(verify_payment_status(username))
-        subscription_status_code.invalidate(username)
+        subscription_status_code.invalidate(username)  # type: ignore[attr-defined]
 
     def test_errors_fail_open(self):
         for error in (Timeout(), HTTPError(), ConnectionError(), TooManyRedirects(), RequestException(), ValueError()):
             with self.subTest(error=type(error).__name__), patch(f"{MODULE}.requests.get", side_effect=error):
                 self.assertTrue(verify(self.non_admin_user.username))
+
+
+class TestSubscriptionStatusHeaders(TestAccountMixin):
+    """Test the headers of the subscription status request: the platform key, and who the user is."""
+
+    def test_with_a_platform_key(self):
+        """The key goes in the Authorization header, with the Platform scheme."""
+        with patch(f"{MODULE}.smarter_settings") as settings:
+            settings.account_manager_api_key = SecretStr("the-platform-key")
+            settings.environment_platform_domain = "alpha.platform.example.com"
+            headers = subscription_status_headers("someone", "someone@example.com")
+        self.assertEqual(headers["Authorization"], "Platform the-platform-key")
+        self.assertEqual(headers["X-Client-Username"], "someone")
+        self.assertEqual(headers["X-Client-Email"], "someone@example.com")
+        self.assertEqual(headers["X-Client-Domain"], "alpha.platform.example.com")
+
+    def test_without_a_platform_key_or_email(self):
+        """Without a key or an email address, those headers are left out."""
+        with patch(f"{MODULE}.smarter_settings") as settings:
+            settings.account_manager_api_key = None
+            headers = subscription_status_headers("someone", None)
+        self.assertNotIn("Authorization", headers)
+        self.assertNotIn("X-Client-Email", headers)
+
+    def test_email_or_none(self):
+        """An email address is stripped; a blank one, or none, is None."""
+        self.assertEqual(email_or_none(" someone@example.com "), "someone@example.com")
+        for value in (None, "", "   ", 42):
+            with self.subTest(value=value):
+                self.assertIsNone(email_or_none(value))
 
 
 class TestMultitenantBackends(TestAccountMixin):
@@ -114,8 +162,9 @@ class TestMultitenantBackends(TestAccountMixin):
             with self.subTest(backend=backend_class.__name__):
                 backend = self.backend(backend_class)
                 with patch(parent, return_value=details):
-                    with patch(f"{MODULE}.verify_payment_status", return_value=True):
+                    with patch(f"{MODULE}.verify_payment_status", return_value=True) as verify_status:
                         self.assertEqual(backend.get_user_details({}), details)
+                    verify_status.assert_called_once_with("someone", "someone@example.com")
                     with (
                         patch(f"{MODULE}.verify_payment_status", return_value=False),
                         patch(f"{MODULE}.messages"),
@@ -146,8 +195,8 @@ class TestMultitenantBackends(TestAccountMixin):
         with patch("django.contrib.auth.backends.ModelBackend.authenticate", return_value=self.non_admin_user):
             with patch(f"{MODULE}.verify_payment_status", return_value=True) as verify_status:
                 self.assertEqual(backend.authenticate(request, username="u", password="p"), self.non_admin_user)
-            # the authenticated user's username, a string, whatever the caller passed as username.
-            verify_status.assert_called_once_with(self.non_admin_user.get_username())
+            # the authenticated user's username and email, whatever the caller passed as username.
+            verify_status.assert_called_once_with(self.non_admin_user.get_username(), self.non_admin_user.email)
             with (
                 patch(f"{MODULE}.verify_payment_status", return_value=False),
                 patch(f"{MODULE}.messages") as messages,

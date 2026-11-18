@@ -388,7 +388,9 @@ class Account(MetaDataModel):
 
         if self.is_root and self.share_scope_id is None:  # type: ignore[attr-defined]
             # the root shares with every account. It can only name itself once it has a pk.
-            self.share_scope_id = self.pk  # type: ignore[attr-defined]
+            # Assigned through the relation, which sets share_scope_id: pylint can't see the
+            # attribute Django derives from the ForeignKey, and reports E0203 for an assignment to it.
+            self.share_scope = self
             Account.objects.filter(pk=self.pk).update(share_scope_id=self.pk)
 
         if self.hierarchy_changed(orig):

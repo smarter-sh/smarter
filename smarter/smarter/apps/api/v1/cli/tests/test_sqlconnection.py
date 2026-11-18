@@ -22,7 +22,7 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
@@ -162,11 +162,11 @@ class TestApiCliV1SqlConnection(ApiV1CliTestBase):
         )
 
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path="smarter/apps/connection/tests/mock_data/sql-connection.yaml")
-        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest_data = read_manifest_file("smarter/apps/connection/tests/mock_data/sql-connection.yaml")
+        self.assertTrue(manifest_data, msg="the manifest is empty")
 
         # use the manifest to creata a new sqlconnection Pydantic model
-        manifest = SAMSqlConnection(**loader.pydantic_model_dump())
+        manifest = SAMSqlConnection(**manifest_data)
 
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())

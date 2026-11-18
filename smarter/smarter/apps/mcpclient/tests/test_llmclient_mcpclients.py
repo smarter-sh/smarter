@@ -18,7 +18,7 @@ from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmclient.models import LLMClient, LLMClientMCPClients
 from smarter.lib import json
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes import MCPCLIENT_NAME, MCPClientTestBase, get_test_data
@@ -49,7 +49,7 @@ class TestLLMClientMCPClients(TestSAMBrokerBaseClass, MCPClientTestBase):
         data = copy.deepcopy(get_test_data("llmclient.yaml"))
         if mcpclients is not None:
             data["spec"]["mcpClients"] = mcpclients
-        broker = SAMLLMClientBroker(request=self.request, loader=SAMLoader(manifest=yaml.safe_dump(data)))
+        broker = SAMLLMClientBroker(request=self.request, manifest=parse_manifest(yaml.safe_dump(data)))
         with mock.patch("smarter.apps.llmclient.receivers.deploy_default_api", create=True):
             broker.apply(self.request, **self.kwargs)
         return broker
@@ -92,7 +92,7 @@ class TestLLMClientMCPClients(TestSAMBrokerBaseClass, MCPClientTestBase):
     def test_describe(self):
         """Test that describe() renders spec.mcpClients."""
         self.apply()
-        broker = SAMLLMClientBroker(request=self.request, loader=self.loader)
+        broker = SAMLLMClientBroker(request=self.request, manifest=self.manifest_data)
         response = broker.describe(self.request, **self.kwargs)
         data = json.loads(response.content)["data"]
         self.assertEqual(data["spec"]["mcpClients"], [MCPCLIENT_NAME])

@@ -85,8 +85,8 @@ The Request Path
      - A map from each kind, such as ``Guardrail``, to its broker class.
      - `api/v1/cli/brokers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__
    * - Loading the manifest
-     - YAML or JSON is parsed and checked for required keys before Pydantic validates it.
-     - `lib/manifest/loader.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/loader.py>`__
+     - YAML or JSON is parsed into a dict, which the kind's Pydantic model validates.
+     - `lib/manifest/parsing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/parsing.py>`__
    * - The response, and its record
      - Every response, success or error, is written to the journal.
      - `lib/journal/http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/http.py>`__,

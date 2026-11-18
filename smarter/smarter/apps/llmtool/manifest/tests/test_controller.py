@@ -13,10 +13,10 @@ class TestPluginController(TestPluginClassBase):
     def test_controller_static_plugin(self):
         """Test valid file path and that we can instantiate without errors."""
         self.load_manifest(filename="static-plugin.yaml")
-        if not self.loader:
-            self.fail("Loader is None")
+        if not self.manifest_data:
+            self.fail("The manifest data is empty")
 
-        model = SAMStaticPlugin(**self.loader.pydantic_model_dump())
+        model = SAMStaticPlugin(**self.manifest_data)
         self.assertIsInstance(model, SAMStaticPlugin)
 
         controller = PluginController(user_profile=self.user_profile, manifest=model)
@@ -25,10 +25,10 @@ class TestPluginController(TestPluginClassBase):
     def test_controller_api_plugin(self):
         """Test valid file path and that we can instantiate without errors."""
         self.load_manifest(filename="api-plugin.yaml")
-        if not self.loader:
-            self.fail("Loader is None")
+        if not self.manifest_data:
+            self.fail("The manifest data is empty")
 
-        model = SAMApiPlugin(**self.loader.pydantic_model_dump())
+        model = SAMApiPlugin(**self.manifest_data)
         self.assertIsInstance(model, SAMApiPlugin)
 
         controller = PluginController(user_profile=self.user_profile, manifest=model)
@@ -37,10 +37,10 @@ class TestPluginController(TestPluginClassBase):
     def test_controller_sql_plugin(self):
         """Test valid file path and that we can instantiate without errors."""
         self.load_manifest(filename="sql-plugin.yaml")
-        if not self.loader:
-            self.fail("Loader is None")
+        if not self.manifest_data:
+            self.fail("The manifest data is empty")
 
-        model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
+        model = SAMSqlPlugin(**self.manifest_data)
         self.assertIsInstance(model, SAMSqlPlugin)
 
         controller = PluginController(user_profile=self.user_profile, manifest=model)

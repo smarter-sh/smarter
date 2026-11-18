@@ -13,7 +13,7 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType, required
 
 from ..base import LLMClientApiBaseViewSet
@@ -32,7 +32,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
     """Test SAM LLMClient Broker."""
 
     manifest: SmarterDictType
-    loader: SAMLoader
+    manifest_data: SmarterDictType
     request: HttpRequest
     client: APIClient
     kwargs: SmarterDictType
@@ -64,7 +64,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         super().setUpClass()
         config_path = os.path.join(HERE, "data/llm_client.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.loader = SAMLoader(manifest=cls.manifest)
+        cls.manifest_data = parse_manifest(cls.manifest)
 
         cls.request = cls.create_generic_request("/anywhere/")
 
@@ -77,7 +77,7 @@ class TestLLMClientApiBaseViewSet(TestAccountMixin):
         cls.broker = SAMLLMClientBroker(
             request=cls.request,
             account=cls.account,
-            loader=cls.loader,
+            manifest=cls.manifest_data,
         )
 
         # the plugins that the LLMClient's manifest lists, created for the test's own user profile. Not with

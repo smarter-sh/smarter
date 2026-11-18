@@ -67,7 +67,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
 
     **Parameters:**
 
-      - `loader`: Manifest loader instance (must match expected manifest kind).
+      - `manifest`: The manifest, as a Pydantic model or a dict (must match the expected manifest kind).
       - `plugin_meta`: Django ORM model for plugin metadata.
       - `plugin_data`: Django ORM model for websearch plugin data.
       - `user_profile`: User profile associated with the plugin.
@@ -122,22 +122,22 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         This constructor initializes the broker by calling the parent class's
         constructor, which will attempt to bootstrap the class instance
         with any combination of raw manifest data (in JSON or YAML format),
-        a manifest loader, or existing Django ORM models. If a manifest
-        loader is provided and its kind matches the expected kind for this broker,
-        the manifest is initialized using the loader's data.
+        a manifest dict, or existing Django ORM models. If a manifest
+        is provided and its kind matches the expected kind for this broker,
+        the manifest is initialized from it.
 
         This class can bootstrap itself in any of the following ways:
 
         - request.body (yaml or json string)
         - name + account (determined via authentication of the request object)
-        - SAMLoader instance
+        - manifest dict
         - manifest instance
         - filepath to a manifest file
 
         If raw manifest data is provided, whether as a string or a dictionary,
-        or a SAMLoader instance, the base class constructor will only goes as
-        far as initializing the loader. The actual manifest model initialization
-        is deferred to this constructor, which checks the loader's kind.
+        the base class constructor only goes as
+        far as keeping it as manifest data. The actual manifest model initialization
+        is deferred to this constructor.
 
         :param args: Positional arguments passed to the parent constructor.
         :param kwargs: Keyword arguments passed to the parent constructor.
@@ -146,12 +146,12 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
 
         .. code-block:: python
 
-            broker = SAMWebsearchPluginBroker(loader=loader, plugin_meta=plugin_meta)
+            broker = SAMWebsearchPluginBroker(manifest=data, plugin_meta=plugin_meta)
         .. seealso::
             - `SAMPluginBaseBroker.__init__`
         """
         super().__init__(*args, **kwargs)
-        self.init_manifest_from_loader(SAMWebsearchPlugin)
+        self.init_manifest_from_data(SAMWebsearchPlugin)
         logger.debug(
             "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
         )
@@ -281,10 +281,10 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         This can be initialized any of three ways:
         1. If already from the constructor, return the cached manifest.
         2. If the plugin metadata exists, build the manifest from the Django ORM models.
-        3. If a manifest loader is provided, build the manifest from the loader data.
+        3. If manifest data is provided, build the manifest from it.
 
         This property initializes and returns a `SAMWebsearchPlugin` object, representing the full manifest for a websearch plugin.
-        The manifest is built using data from the manifest loader, including API version, kind, metadata, and specification.
+        The manifest is built using data from the client's manifest data, including API version, kind, metadata, and specification.
         Child models (such as metadata and spec) are automatically initialized by Pydantic using the provided data.
 
         :return: The initialized websearch plugin manifest as a Pydantic model, or None if not available.
@@ -313,16 +313,16 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 )
             return self._manifest
 
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMWebsearchPlugin.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMWebsearchPlugin.model_validate(self.manifest_sections)
             logger.debug(
-                "%s.manifest initialized from loader for %s %s", self.formatted_class_name, self.kind, self.name
+                "%s.manifest initialized from manifest data for %s %s", self.formatted_class_name, self.kind, self.name
             )
             return self._manifest
 
-        # 2.) next, (and only if a loader is not available) try to initialize
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing ORM model if available
         elif self.plugin_meta:
             logger.debug(

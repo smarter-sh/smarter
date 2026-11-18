@@ -62,7 +62,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.openai.enum import OpenAIToolCall, OpenAIToolTypes
 from smarter.lib.typing import SmarterDictType
 
@@ -289,18 +289,11 @@ class PluginBase(ABC, AccountMixin):
             self.create()
         elif data is not None:
             # we received a yaml or json string representation of a manifest.
-            data = self.data_to_dict(data)
+            data = parse_manifest(data)
             self.api_version = data.get("apiVersion", self.api_version)
             if data.get(SAMKeys.KIND.value) != self.kind:
                 raise SAMValidationError(f"Expected kind of {self.kind}, but got {data.get('kind')}.")
-            loader = SAMLoader(
-                api_version=data[SAMKeys.APIVERSION.value],
-                kind=self.kind,
-                manifest=json.dumps(data) if isinstance(data, dict) else data,
-            )
-            if not loader.ready:
-                raise SAMValidationError("Loader is not ready. SAMLoader is not ready.")
-            self._manifest = self.SAMPluginType(**loader.pydantic_model_dump())
+            self._manifest = self.SAMPluginType.model_validate(data)
             self.create()
 
         if self.ready:

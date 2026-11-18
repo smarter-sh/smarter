@@ -56,10 +56,10 @@ The Foundation
        `apps/secret/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/secret/models.py>`__,
        `common/conf/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf>`__
    * - 5. One way to do each thing
-     - The manifest loader and the abstract broker that every resource kind extends, with
+     - The manifest parser and the abstract broker that every resource kind extends, with
        ``kubectl``-style verbs, so that a new kind is the difference from the last one.
        :doc:`ADR 005 </adr/005-manifests>`, :doc:`ADR 024 </adr/024-broker-model>`.
-     - `lib/manifest/loader.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/loader.py>`__,
+     - `lib/manifest/parsing.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/parsing.py>`__,
        `lib/manifest/broker/abstract_broker_class.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/manifest/broker/abstract_broker_class.py>`__,
        `apps/guardrail/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/guardrail>`__
    * - 6. Types and contracts

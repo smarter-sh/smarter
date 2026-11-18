@@ -126,7 +126,9 @@ class TestDoodleWeekPreview(DoodleTestMixin, TestAccountMixin):
         # the preview starts yesterday in UTC, so its days are the dev platform's too: a far day is ours.
         self.day = timezone.now().date() + datetime.timedelta(days=4000)
         self.addCleanup(self.delete_doodles, self.day)
-        self.doodle = required(plan_doodle(self.day, DoodleRegion.OCEANIA), "doodle")
+        # no theme is due, so that the doodle is the default one whatever the date: a day 4000 days
+        # ahead is sometimes a holiday, e.g. Halloween, whose theme would replace the default.
+        self.doodle = required(plan_doodle(self.day, DoodleRegion.OCEANIA, due=[]), "doodle")
         Doodle.objects.filter(pk=self.doodle.pk).update(status=DoodleStatus.PROPOSED, source=DoodleSource.LLM)
 
     def test_the_url(self):

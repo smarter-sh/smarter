@@ -3,21 +3,27 @@ Custom authentication backends for hosted Smarter platforms.
 
 Includes payment and account status verification.
 
-To verify subscription status, use the following API call:
+To verify subscription status, the platform calls the Account Manager:
 
 .. code-block:: bash
 
-    curl -X 'GET' \
-      'https://api.am.smarter.sh/accounts/subscription-status/' \
-      -H 'accept: application/json' \
+    curl 'https://api.am.smarter.sh/accounts/subscription-status/' \
+      -H 'Authorization: Platform <the platform key>' \
       -H 'X-Client-Domain: platform.smarter.sh' \
-      -H 'X-Client-Username: <username>'
+      -H 'X-Client-Username: <username>' \
+      -H 'X-Client-Email: <email>'
+
+The platform key, ``smarter_settings.account_manager_api_key``, identifies the platform to the
+Account Manager, which issues one per platform. The username and email address together identify
+the user, so that another person with the same username can't be mistaken for them. Without a
+key, the platform asks without one, which the Account Manager answers only until it requires keys.
 
 It returns HTTP 200 if the subscription is active, and a 4xx status otherwise. Only that
 answer is cached (:func:`subscription_status_code`); a failure is never cached.
 """
 
 from http import HTTPStatus
+from typing import Optional
 
 import requests
 from cache_results import cache_results
@@ -51,12 +57,55 @@ see https://github.com/smarter-sh/account-manager
 """
 
 
+ACCOUNT_MANAGER_AUTH_SCHEME = "Platform"
+"""The ``Authorization`` header's scheme for the platform key."""
+
+
+def subscription_status_headers(username: str, email: Optional[str]) -> dict[str, str]:
+    """
+    Return the headers of a subscription status request: who asks, and about whom.
+
+    The platform key is read here, from the settings, and never passed as an argument: arguments
+    of the cached :func:`subscription_status_code` are its cache key, and are logged.
+
+    :param username: The user's username.
+    :param email: The user's email address, or None.
+    :returns: The headers.
+    """
+    headers = {
+        "accept": "application/json",
+        "X-Client-Domain": smarter_settings.environment_platform_domain,
+        "X-Client-Username": username,
+    }
+    if email is not None:
+        headers["X-Client-Email"] = email
+    api_key = smarter_settings.account_manager_api_key
+    if api_key is not None:
+        headers["Authorization"] = f"{ACCOUNT_MANAGER_AUTH_SCHEME} {api_key.get_secret_value()}"
+    return headers
+
+
+def email_or_none(email: object) -> Optional[str]:
+    """
+    Return an email address, stripped, or None when there is none.
+
+    :param email: The email address from a user or a provider's user details: a string, or nothing.
+    :returns: The address, or None.
+    """
+    if not isinstance(email, str):
+        return None
+    stripped = email.strip()
+    if not stripped:
+        return None
+    return stripped
+
+
 class SubscriptionStatusUnavailable(Exception):
     """The Account Manager's subscription status endpoint answered with a server error."""
 
 
 @cache_results()
-def subscription_status_code(username: str) -> int:
+def subscription_status_code(username: str, email: Optional[str] = None) -> int:
     """
     Return the Account Manager's http status for a user's subscription: 200 if it is active.
 
@@ -65,16 +114,13 @@ def subscription_status_code(username: str) -> int:
     switch, run before it in :func:`verify_payment_status`, uncached, so that a change to them
     applies at once.
 
-    :param username: The user's username. It is the cache key, so it must be the string, not the User.
+    :param username: The user's username. It is part of the cache key, so it must be the string, not the User.
+    :param email: The user's email address, or None. Also part of the cache key.
     :returns: The http status code, 200 or a 4xx.
     :raises requests.RequestException: If the endpoint can't be reached.
     :raises SubscriptionStatusUnavailable: If the endpoint answers with a 5xx status.
     """
-    headers = {
-        "accept": "application/json",
-        "X-Client-Domain": smarter_settings.environment_platform_domain,
-        "X-Client-Username": username,
-    }
+    headers = subscription_status_headers(username, email)
     response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
     status_code = response.status_code
     logger.info(
@@ -88,7 +134,7 @@ def subscription_status_code(username: str) -> int:
     return status_code
 
 
-def verify_payment_status(username: str) -> bool:
+def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     """
     Verify the payment status of a user with the Account Manager's subscription status endpoint.
 
@@ -98,6 +144,8 @@ def verify_payment_status(username: str) -> bool:
     Only the endpoint's answer is cached, by :func:`subscription_status_code`.
 
     :param username: The user's username.
+    :param email: The user's email address, or None. The Account Manager requires it from a platform
+        with a key, and answers 400, an inactive subscription, without it.
     :returns: True if the subscription is active, or the status can't be checked.
     """
     # check to see if multitenant authentication is enabled
@@ -118,7 +166,7 @@ def verify_payment_status(username: str) -> bool:
         return True
 
     try:
-        status_code = subscription_status_code(username)
+        status_code = subscription_status_code(username, email)
     except Timeout as timeout_err:
         log_status_error("Timeout", username, timeout_err)
         return True
@@ -202,7 +250,8 @@ class PaymentVerifiedUserDetailsMixin:
                 logger_prefix,
             )
             return details
-        if verify_payment_status(username):
+        email = email_or_none(details.get("email"))
+        if verify_payment_status(username, email):
             return details
         if self.allow_unpaid_user(details):
             return details
@@ -257,9 +306,11 @@ class DjangoModelBackendMultitenant(ModelBackend):
         """
         user = super().authenticate(request, username, password, **kwargs)
         if user:
-            # the authenticated user's own username: the username argument is whatever the caller
-            # passed, which can be a User, and verify_payment_status() is cached by its argument.
-            if not verify_payment_status(user.get_username()):
+            # the authenticated user's own username and email: the username argument is whatever the
+            # caller passed, which can be a User, and subscription_status_code() is cached by its arguments.
+            # a custom user model may have no email field, so it is read with getattr().
+            email = email_or_none(getattr(user, "email", None))
+            if not verify_payment_status(user.get_username(), email):
                 if request is not None:
                     messages.error(request, _("Your subscription is not active. Please check your payment status."))
                 return redirect(INACTIVE_ACCOUNT_REDIRECT_URL)

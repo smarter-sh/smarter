@@ -9,7 +9,7 @@ from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.manifest.models.account.spec import SAMAccountSpecConfig
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib import json
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -97,9 +97,9 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
         """Test the manifest initialization with a good manifest file."""
 
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        self.assertTrue(loader.ready, msg="loader is not ready")
-        sam_account = SAMAccount(**loader.pydantic_model_dump())
+        manifest_data = read_manifest_file(filespec)
+        self.assertTrue(manifest_data, msg="the manifest is empty")
+        sam_account = SAMAccount(**manifest_data)
 
         # dump the pydantic model to a dictionary
         # round_trip_dict = sam_account.model_dump()
@@ -113,8 +113,8 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
     def test_account_model_invalid_field_type(self):
         """Test that invalid field types raise ValidationError."""
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        data = loader.pydantic_model_dump()
+        manifest_data = read_manifest_file(filespec)
+        data = manifest_data
         # Assume 'id' is a required string field, try passing an int
         if "id" in data:
             data["id"] = 12345
@@ -124,8 +124,8 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
     def test_account_model_extra_fields(self):
         """Test that extra fields are handled as expected (forbid/ignore/allow)."""
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        data = loader.pydantic_model_dump()
+        manifest_data = read_manifest_file(filespec)
+        data = manifest_data
         data["extra_field"] = "should not be here"
         try:
             SAMAccount(**data)
@@ -135,8 +135,8 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
     def test_account_model_child_validation(self):
         """Test that child/nested models are validated."""
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        data = loader.pydantic_model_dump()
+        manifest_data = read_manifest_file(filespec)
+        data = manifest_data
         # Try corrupting a nested/child field if present
         # Example: if 'profile' is a nested model with 'email' field
         if "profile" in data and isinstance(data["profile"], dict):
@@ -147,8 +147,8 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
     def test_account_model_serialization(self):
         """Test model serialization to dict and JSON."""
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        sam_account = SAMAccount(**loader.pydantic_model_dump())
+        manifest_data = read_manifest_file(filespec)
+        sam_account = SAMAccount(**manifest_data)
         model_dict = sam_account.model_dump()
         model_json = sam_account.model_dump_json()
         self.assertIsInstance(model_dict, dict)
@@ -157,8 +157,8 @@ class TestSmarterAccountPydanticModel(TestAccountMixin):
     def test_account_model_deserialization(self):
         """Test model can be reconstructed from dict/JSON."""
         filespec = self.get_data_full_filepath("account-good.yaml")
-        loader = SAMLoader(file_path=filespec)
-        sam_account = SAMAccount(**loader.pydantic_model_dump())
+        manifest_data = read_manifest_file(filespec)
+        sam_account = SAMAccount(**manifest_data)
         model_dict = sam_account.model_dump()
         model_json = sam_account.model_dump_json()
         # From dict

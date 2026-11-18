@@ -24,7 +24,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
     def broker_for(self, filename: str) -> SAMGuardrailBroker:
         """Return a broker for a manifest in ./data."""
         with open(self.get_data_full_filepath(filename), encoding="utf-8") as f:
-            return SAMGuardrailBroker(request=self.request, loader=SAMLoader(manifest=f.read()))
+            return SAMGuardrailBroker(request=self.request, manifest=parse_manifest(f.read()))
 
     def guardrail(self, name: str = GUARDRAIL_NAME) -> Guardrail:
         """Return the user's Guardrail."""
@@ -131,7 +131,7 @@ class TestSmarterGuardrailBroker(TestSAMBrokerBaseClass):
         # manifest models are frozen, so the change is made to the manifest's text.
         with open(self.get_data_full_filepath("guardrail.yaml"), encoding="utf-8") as f:
             manifest = f.read().replace("priority: 10", "priority: 99")
-        broker = SAMGuardrailBroker(request=self.request, loader=SAMLoader(manifest=manifest))
+        broker = SAMGuardrailBroker(request=self.request, manifest=parse_manifest(manifest))
         broker.apply(self.request, **self.kwargs)
         self.assertEqual(self.guardrail().priority, 99)
 

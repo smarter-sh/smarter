@@ -139,7 +139,7 @@ class TestSubscription(HelpdeskTestBase):
         with mock.patch("smarter.apps.mcpserver.services.helpdesk.users.settings") as settings:
             settings.AUTHENTICATION_BACKENDS = [MULTITENANT_BACKEND]
             self.assertFalse(subscription_active(self.admin_user))
-        self.verify_payment_status.assert_called_once_with(self.admin_user.get_username())
+        self.verify_payment_status.assert_called_once_with(self.admin_user.get_username(), self.admin_user.email)
 
     def test_no_subscriptions(self):
         with mock.patch("smarter.apps.mcpserver.services.helpdesk.users.settings") as settings:

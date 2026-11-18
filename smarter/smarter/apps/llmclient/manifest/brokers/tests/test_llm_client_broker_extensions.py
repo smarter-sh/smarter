@@ -6,7 +6,7 @@ from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmclient.models import LLMClient, LLMClientExtensions
 from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 
 NAME = "test_llmclient_broker_extensions"
 
@@ -30,10 +30,10 @@ class TestLLMClientBrokerExtensions(ExtensionTestMixin):
 
     def apply(self, extensions: list[str]):
         """Apply the manifest as the test user, and return the broker and its response."""
-        loader = SAMLoader(manifest=manifest(extensions))
-        request = RequestFactory().post("/api/v1/cli/apply/", data=loader.manifest, content_type="application/json")
+        manifest_data = parse_manifest(manifest(extensions))
+        request = RequestFactory().post("/api/v1/cli/apply/", data=manifest_data, content_type="application/json")
         request.user = self.admin_user
-        broker = SAMLLMClientBroker(request=request, loader=loader, user_profile=self.user_profile)
+        broker = SAMLLMClientBroker(request=request, manifest=manifest_data, user_profile=self.user_profile)
         return broker, broker.apply(request=request)
 
     def test_apply_links_and_unlinks(self):

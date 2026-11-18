@@ -1,4 +1,4 @@
-"""Test AbstractBroker's kind, loader, manifest and name setters, its params from a PreparedRequest, and file_path initialization."""
+"""Test AbstractBroker's kind, manifest data, manifest and name setters, its params from a PreparedRequest, and file_path initialization."""
 
 import os
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -10,8 +10,8 @@ from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.broker import SAMBrokerError
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import required
 
@@ -45,15 +45,59 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         with self.assertRaises(SmarterValueError):
             broker.kind_setter("NotAKind")
 
-    def test_loader_setter(self):
-        """The loader can be unset, must be a SAMLoader, and must be of the broker's kind."""
+    def test_manifest_data_setter(self):
+        """The manifest data can be unset, must be a dict, and must be of the broker's kind."""
         broker = self.broker
         with self.assertRaises(SmarterValueError):
-            broker.loader = "not a loader"  # type: ignore[assignment]
+            broker.manifest_data_setter("not a dict")  # type: ignore[arg-type]
         with self.assertRaises(SAMBrokerError):
-            broker.loader = SAMLoader(file_path=os.path.abspath(USER_MANIFEST))
-        broker.loader = None  # type: ignore[assignment]
-        self.assertIsNone(broker._loader)
+            broker.manifest_data_setter(read_manifest_file(os.path.abspath(USER_MANIFEST)))
+        broker.manifest_data_setter(None)
+        self.assertIsNone(broker._manifest_data)
+        self.assertIsNone(broker.manifest_metadata)
+        self.assertIsNone(broker.manifest_status)
+
+    def test_incomplete_manifest_data(self):
+        """Manifest data without a section, or with an empty one, is not a manifest yet."""
+        data = read_manifest_file(self.manifest_filespec)
+        for key in ("apiVersion", "metadata", "spec"):
+            with self.subTest(key=key):
+                broker = self.broker
+                incomplete = dict(data)
+                incomplete[key] = {}
+                broker.manifest_data_setter(incomplete)
+                self.assertIsNone(broker.manifest_data)
+                self.assertEqual(broker.missing_manifest_sections, [key])
+                sections = broker.manifest_sections
+                self.assertEqual(sections[key], {})
+
+    def test_manifest_sections_and_status(self):
+        """The sections leave out the read-only status, which is read on its own."""
+        broker = self.broker
+        data = dict(read_manifest_file(self.manifest_filespec))
+        data["status"] = {"created": "2026-01-01"}
+        broker.manifest_data_setter(data)
+        sections = broker.manifest_sections
+        self.assertEqual(set(sections), {"apiVersion", "kind", "metadata", "spec"})
+        self.assertEqual(broker.manifest_status, {"created": "2026-01-01"})
+        data["metadata"] = "not a dict"
+        self.assertIsNone(broker.manifest_metadata)
+
+    def test_manifest_setter_rejects_incomplete_and_mismatched_dicts(self):
+        """A manifest dict without a spec is not valid, nor is one of another api version."""
+        broker = self.broker
+        data = read_manifest_file(self.manifest_filespec)
+        without_spec = dict(data)
+        without_spec["spec"] = {}
+        with self.assertRaises(SmarterValueError) as context:
+            broker.manifest_setter(without_spec)
+        self.assertIn("it has no spec", str(context.exception))
+        broker = self.broker
+        broker._manifest = None
+        broker.api_version = "smarter.sh/v0"
+        with self.assertRaises(SmarterValueError) as context:
+            broker.manifest_setter(dict(data))
+        self.assertIn("does not match broker apiVersion", str(context.exception))
 
     def test_manifest_setter(self):
         """The manifest can be unset, or set from a dict."""
@@ -61,17 +105,17 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         broker.manifest_setter(None)
         self.assertIsNone(broker._manifest)
         broker.manifest_setter(get_readonly_yaml_file(self.manifest_filespec))
-        self.assertIsInstance(broker._loader, SAMLoader)
+        self.assertIsNotNone(broker._manifest_data)
         manifest = broker.manifest
         assert isinstance(manifest, AbstractSAMBase)
-        self.assertEqual(manifest.metadata.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(manifest.metadata.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
 
-    def test_name_from_the_loader(self):
-        """Without a cached name or manifest, the name comes from the loader."""
+    def test_name_from_the_manifest_data(self):
+        """Without a cached name or manifest, the name comes from the manifest data."""
         broker = self.broker
         broker._name = None
         broker._manifest = None
-        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(broker.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
 
     def test_name_from_the_manifest(self):
         """Without a cached name, the name comes from the manifest."""
@@ -98,9 +142,9 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
             self.assertEqual(len(params), 0)
 
     def test_file_path_initialization(self):
-        """A broker can be initialized from a manifest file, which overrides a loader."""
+        """A broker can be initialized from a manifest file."""
         broker = SAMGuardrailBroker(self.request, file_path=self.manifest_filespec)
-        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(broker.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
         self.assertEqual(broker.kind, "Guardrail")
 
     def test_send_broker_ready_sends_once(self):
@@ -113,7 +157,7 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         signal.send.assert_called_once_with(sender=broker.__class__, broker=broker)
 
     def test_known_name(self):
-        """The name comes from the broker, else its manifest, else its loader, without building the manifest."""
+        """The name comes from the broker, else its manifest, else its manifest data, without building the manifest."""
         broker = self.broker
         name = broker.known_name
         self.assertTrue(name)
