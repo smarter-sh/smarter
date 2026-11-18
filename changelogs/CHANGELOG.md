@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.7...v0.46.8-alpha.1) (2026-11-18)
+
+### Bug Fixes
+
+* **drf:** log an uninitialized SmarterAuthToken manifest at DEBUG, not WARNING ([b1a5d89](https://github.com/smarter-sh/smarter/commit/b1a5d897c6588228380068901cf6c6d13a7f8f11)), closes [#1015](https://github.com/smarter-sh/smarter/issues/1015) [#1020](https://github.com/smarter-sh/smarter/issues/1020)
+
 ## [0.46.7](https://github.com/smarter-sh/smarter/compare/v0.46.6...v0.46.7) (2026-11-18)
 
 ### Bug Fixes
