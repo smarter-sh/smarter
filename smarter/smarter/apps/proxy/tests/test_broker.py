@@ -18,7 +18,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
@@ -47,7 +47,7 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
 
     def fresh_broker(self, manifest: SmarterDictType) -> SAMProxyBroker:
         """A new broker for another manifest, without cached state."""
-        return SAMProxyBroker(request=self.request, loader=SAMLoader(manifest=json.dumps(manifest)))
+        return SAMProxyBroker(request=self.request, manifest=parse_manifest(json.dumps(manifest)))
 
     def changed_manifest(self, **spec_changes) -> SmarterDictType:
         """The test manifest, with parts of its spec replaced.
@@ -149,7 +149,7 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
     def test_describe(self):
         """Test that describe() returns a valid manifest, with the Secret's name, never its value."""
         self.broker.apply(self.request)
-        data = self.data(SAMProxyBroker(request=self.request, loader=self.loader).describe(self.request))
+        data = self.data(SAMProxyBroker(request=self.request, manifest=self.manifest_data).describe(self.request))
         model = SAMProxy(**data)
         self.assertEqual(model.metadata.name, PROXY_NAME)
         self.assertEqual(model.spec.provider, self.provider.name)
@@ -165,7 +165,7 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
     def test_describe_round_trip(self):
         """Test that a described manifest applies, unchanged."""
         self.broker.apply(self.request)
-        data = self.data(SAMProxyBroker(request=self.request, loader=self.loader).describe(self.request))
+        data = self.data(SAMProxyBroker(request=self.request, manifest=self.manifest_data).describe(self.request))
         data.pop("status")
         before = self.get_proxy()
         self.fresh_broker(data).apply(self.request)
@@ -199,13 +199,13 @@ class TestSAMProxyBroker(TestSAMBrokerBaseClass, ProxyTestBase):
 
     def test_delete(self):
         self.broker.apply(self.request)
-        response = SAMProxyBroker(request=self.request, loader=self.loader).delete(self.request)
+        response = SAMProxyBroker(request=self.request, manifest=self.manifest_data).delete(self.request)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertFalse(Proxy.objects.filter(user_profile=self.user_profile, name=PROXY_NAME).exists())
         # the Provider and Secret are not deleted.
         self.assertTrue(Secret.objects.filter(pk=self.secret.pk).exists())
         with self.assertRaises(SAMBrokerErrorNotFound):
-            SAMProxyBroker(request=self.request, loader=self.loader).delete(self.request)
+            SAMProxyBroker(request=self.request, manifest=self.manifest_data).delete(self.request)
 
     def test_not_implemented(self):
         for method in (self.broker.deploy, self.broker.undeploy, self.broker.logs, self.broker.prompt):

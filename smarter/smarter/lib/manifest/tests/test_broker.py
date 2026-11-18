@@ -2,7 +2,7 @@
 
 import os
 from typing import Optional
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import PropertyMock, patch
 
 import requests
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -473,11 +473,11 @@ class TestAbstractBrokerClass(TestAccountMixin):
         self.assertIsInstance(broker.created, bool)
 
     def test_name_from_the_url_params(self):
-        """Without a manifest, or a loader with a name, the name comes from the name url param."""
+        """Without a manifest, or manifest data with a name, the name comes from the name url param."""
         broker = self.make_broker("/?name=from_param")
         broker._name = None
         broker._manifest = None
-        broker._loader = MagicMock(manifest_metadata={})
+        broker._manifest_data = {"metadata": {}}
         self.assertEqual(broker.name, "from_param")
 
     def test_params_of_a_prepared_request(self):

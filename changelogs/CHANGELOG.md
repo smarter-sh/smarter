@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.7](https://github.com/smarter-sh/smarter/compare/v0.46.6...v0.46.7) (2026-11-18)
+
+### Bug Fixes
+
+* **account:** authenticate to account manager and remove mailchimp ([36cbf82](https://github.com/smarter-sh/smarter/commit/36cbf8210f7dd09c68124e3f29d008031046711e))
+* **account:** set the root account's share scope through its relation ([32e0015](https://github.com/smarter-sh/smarter/commit/32e0015fa89c108819102de10f05497fff533894))
+
+### Refactoring
+
+* **manifest:** give brokers manifest data instead of a SAMLoader ([5458727](https://github.com/smarter-sh/smarter/commit/5458727990c292ad000caae0eec26349c2844aa0))
+* **manifest:** parse manifests without SAMLoader outside brokers ([ea87bb9](https://github.com/smarter-sh/smarter/commit/ea87bb982469b60d77afc1ce1a51c68e6a6c8264))
+* **manifest:** remove SAMLoader ([61e152b](https://github.com/smarter-sh/smarter/commit/61e152b0e4ed368983cffecebc1e3e5a2e06e371))
+
+## [0.46.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.6...v0.46.7-alpha.1) (2026-11-18)
+
+### Bug Fixes
+
+* **account:** authenticate to account manager and remove mailchimp ([36cbf82](https://github.com/smarter-sh/smarter/commit/36cbf8210f7dd09c68124e3f29d008031046711e))
+* **account:** set the root account's share scope through its relation ([32e0015](https://github.com/smarter-sh/smarter/commit/32e0015fa89c108819102de10f05497fff533894))
+
 ## [0.46.6](https://github.com/smarter-sh/smarter/compare/v0.46.5...v0.46.6) (2026-11-17)
 
 ### Bug Fixes

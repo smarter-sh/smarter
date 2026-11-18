@@ -14,7 +14,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -193,20 +193,21 @@ class Command(SmarterCommand):
         # ----------------------------------------------------------------------
         # PLAN B
         # ----------------------------------------------------------------------
-        loader = SAMLoader(manifest=self.data)
+        manifest = parse_manifest(self.data)
         factory = RequestFactory()
-        fake_request = factory.post("/fake-url/", data=loader.manifest, content_type="application/json")
+        fake_request = factory.post("/fake-url/", data=manifest, content_type="application/json")
         fake_request.user = user_profile.user
 
-        if not isinstance(loader.kind, str):
+        kind = manifest.get("kind")
+        if not isinstance(kind, str):
             self.handle_completed_failure(msg="Unable to determine manifest kind.")
             return
-        BrokerClass = Brokers.get_broker(loader.kind)
+        BrokerClass = Brokers.get_broker(kind)
         if BrokerClass is None or not issubclass(BrokerClass, AbstractBroker):
-            self.handle_completed_failure(msg=f"No broker found for manifest kind: {loader.kind}")
+            self.handle_completed_failure(msg=f"No broker found for manifest kind: {kind}")
             return
 
-        broker = BrokerClass(request=fake_request, loader=loader, user_profile=user_profile)
+        broker = BrokerClass(request=fake_request, manifest=manifest, user_profile=user_profile)
         response = broker.apply(request=fake_request)
 
         if response and response.status_code == 200:

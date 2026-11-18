@@ -247,9 +247,8 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         Returns the manifest for the SQL connection as a `SAMSqlConnection` Pydantic model.
 
         This property loads and initializes the top-level manifest model for a SQL connection.
-        If the manifest has already been loaded, it is returned from cache. Otherwise, if the loader is available
-        and its manifest kind matches, a new `SAMSqlConnection` model is constructed using the manifest data
-        provided by the loader.
+        If the manifest has already been loaded, it is returned from cache. Otherwise, if there is manifest data,
+        a new `SAMSqlConnection` model is constructed from it.
 
         Child models within the manifest are automatically initialized by Pydantic when the top-level model is constructed.
 
@@ -291,11 +290,11 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             self.user_profile,
         )
 
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMSqlConnection.model_validate(self.loader.manifest_sections)
-        # 2.) next, (and only if a loader is not available) try to initialize
+        if self.manifest_data is not None:
+            self._manifest = SAMSqlConnection.model_validate(self.manifest_sections)
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing SqlConnection model if available
         elif self.connection:
             metadata = self.sam_connection_metadata()
@@ -961,14 +960,14 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 print(response.data)
         """
         logger.debug(
-            "%s.apply() called for %s %s %s args: %s kwargs: %s. Loader: %s, Manifest: %s",
+            "%s.apply() called for %s %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
             self.formatted_class_name,
             self.kind,
             self.name,
             self.user_profile,
             args,
             kwargs,
-            self._loader.manifest_metadata.get("name") if self._loader and self._loader.manifest_metadata else None,
+            self.manifest_metadata.get("name") if self.manifest_metadata else None,
             self.manifest.metadata.name if self.manifest else None,
         )
         command = SmarterJournalCliCommands(self.apply.__name__)

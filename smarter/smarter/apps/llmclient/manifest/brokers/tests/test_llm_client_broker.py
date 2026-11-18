@@ -24,7 +24,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import required
 
@@ -36,7 +36,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     Test the Smarter SAMLLMClientBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     token_record: SmarterAuthToken
@@ -60,9 +60,9 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         if not super().ready:
             return False
 
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
 
         return True
@@ -90,13 +90,13 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         """Verify that setup initialized the broker correctly."""
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMLLMClientBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMLLMClientBroker)
         logger.info(
             "%s.test_setup() SAMLLMClientBroker initialized successfully for testing.", self.formatted_class_name
@@ -145,14 +145,14 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     def test_sam_broker_initialization(self):
         """Test that the SAMLLMClientBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**required(self.loader.manifest_metadata, "manifest_metadata")}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        metadata = {**required(self.manifest_data["metadata"], "manifest_metadata")}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.manifest_data["spec"])
         SAMLLMClient(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMLLMClientMetadata(**metadata),
             spec=SAMLLMClientSpec(
-                config=SAMLLMClientSpecConfig(**required(self.loader.manifest_spec, "manifest_spec")["config"]),
+                config=SAMLLMClientSpecConfig(**required(self.manifest_data["spec"], "manifest_spec")["config"]),
                 plugins=[],
                 extensions=[],
                 apiKey=None,
@@ -161,7 +161,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
-        broker: SAMLLMClientBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMLLMClientBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMLLMClientBroker)
         self.assertEqual(broker.kind, "LLMClient")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -169,7 +169,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def test_initialization_from_class(self):
         """Test initialization of SAMLLMClientBroker from class."""
-        broker: SAMLLMClientBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMLLMClientBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMLLMClientBroker)
         self.assertTrue(broker.ready)
 
@@ -246,13 +246,13 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
 
     def broker_with_prompt(self, **prompt) -> SAMLLMClientBroker:
         """A broker of the test manifest, with spec.config.prompt changed."""
-        json_data = self.loader.json_data
+        json_data = self.manifest_data
         if json_data is None:
             self.fail("The test manifest did not parse.")
         manifest = copy.deepcopy(json_data)
         manifest["spec"]["config"]["prompt"].update(prompt)
-        loader = SAMLoader(manifest=manifest)
-        broker = SAMLLMClientBroker(self.request, loader)
+        manifest_data = parse_manifest(manifest)
+        broker = SAMLLMClientBroker(self.request, manifest=manifest_data)
         return broker
 
     def test_apply_saves_the_reasoning_effort(self):

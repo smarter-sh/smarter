@@ -25,7 +25,6 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 
@@ -37,7 +36,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
     Test the Smarter SAMSqlConnectionBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     def setUp(self):
@@ -50,9 +49,9 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
     def ready(self) -> bool:
         if not super().ready:
             return False
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
         return True
 
@@ -70,19 +69,19 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
         1. ready property is True.
         2. non_admin_user_profile is initialized.
-        3. loader is an instance of SAMLoader with valid json_data and yaml_data.
+        3. manifest_data is an instance of SmarterDictType with valid json_data and yaml_data.
         4. request is an instance of HttpRequest.
         5. broker is an instance of SAMSqlConnectionBroker.
         """
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSqlConnectionBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSqlConnectionBroker)
         logger.info(
             "%s.test_setup() SAMSqlConnectionBroker initialized successfully for testing.", self.formatted_class_name
@@ -111,28 +110,28 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_sam_broker_initialization(self):
         """Test that the SAMSqlConnection model can be initialized from the manifest data."""
-        manifest_metadata = self.loader.manifest_metadata
-        manifest_spec = self.loader.manifest_spec
+        manifest_metadata = self.manifest_data["metadata"]
+        manifest_spec = self.manifest_data["spec"]
         assert manifest_metadata is not None
         assert manifest_spec is not None
         metadata = {**manifest_metadata}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         SAMSqlConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMConnectionCommonMetadata(**metadata),
             spec=SAMSqlConnectionSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
         """
-        Test that the SAMSqlConnectionBroker can be initialized from the request and loader.
+        Test that the SAMSqlConnectionBroker can be initialized from the request and its manifest data.
 
         1. broker is an instance of SAMSqlConnectionBroker.
         2. broker.kind is "SqlConnection".
         3. broker.ORMModelClass is SAMSqlConnection.
         """
-        broker: SAMSqlConnectionBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSqlConnectionBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSqlConnectionBroker)
         self.assertEqual(broker.kind, "SqlConnection")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -140,7 +139,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
 
     def test_initialization_from_class(self):
         """Test that the SAMSqlConnectionBroker can be initialized from SAMBrokerClass."""
-        broker: SAMSqlConnectionBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSqlConnectionBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSqlConnectionBroker)
         self.assertTrue(broker.ready)
 

@@ -101,7 +101,7 @@ class SAMProviderBroker(AbstractBroker[Provider, Provider]):
 
     .. warning::
 
-       If the manifest loader or manifest metadata is missing, the manifest may not be initialized and `None` may be returned.
+       If the manifest data or its metadata is missing, the manifest may not be initialized and `None` may be returned.
 
     .. seealso::
 
@@ -354,11 +354,11 @@ class SAMProviderBroker(AbstractBroker[Provider, Provider]):
 
         .. note::
 
-           The top-level manifest model (`SAMProvider`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+           The top-level manifest model (`SAMProvider`) must be explicitly initialized with manifest data, typically using ``**data`` from the client's manifest data.
 
         .. warning::
 
-           If the manifest loader or manifest metadata is missing, the manifest will not be initialized and None may be returned.
+           If the manifest data or its metadata is missing, the manifest will not be initialized and None may be returned.
 
         **Example usage**::
 
@@ -374,8 +374,8 @@ class SAMProviderBroker(AbstractBroker[Provider, Provider]):
                     thing=self.kind,
                 )
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMProvider.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMProvider.model_validate(self.manifest_sections)
         return self._manifest
 
     ###########################################################################

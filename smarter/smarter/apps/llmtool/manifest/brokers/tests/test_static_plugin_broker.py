@@ -19,7 +19,6 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
@@ -32,7 +31,7 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
     Test the Smarter SAMStaticPluginBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     plugin_class = StaticPlugin
@@ -49,9 +48,9 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
     def ready(self) -> bool:
         if not super().ready:
             return False
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
         return True
 
@@ -69,19 +68,19 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
 
         1. ready property is True.
         2. non_admin_user_profile is initialized.
-        3. loader is an instance of SAMLoader with valid json_data and yaml_data.
+        3. manifest_data is an instance of SmarterDictType with valid json_data and yaml_data.
         4. request is an instance of HttpRequest.
         5. broker is an instance of SAMStaticPluginBroker.
         """
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMStaticPluginBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMStaticPluginBroker)
         logger.info(
             "%s.test_setup() SAMStaticPluginBroker initialized successfully for testing.", self.formatted_class_name
@@ -114,28 +113,28 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
 
     def test_sam_broker_initialization(self):
         """Test that the SAMStaticPlugin model can be initialized from the manifest data."""
-        manifest_metadata = self.loader.manifest_metadata
-        manifest_spec = self.loader.manifest_spec
+        manifest_metadata = self.manifest_data["metadata"]
+        manifest_spec = self.manifest_data["spec"]
         assert manifest_metadata is not None
         assert manifest_spec is not None
         metadata = {**manifest_metadata}
         logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
         SAMStaticPlugin(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMPluginCommonMetadata(**metadata),
             spec=SAMPluginStaticSpec(**manifest_spec),
         )
 
     def test_broker_initialization(self):
         """
-        Test that the SAMStaticPluginBroker can be initialized from the request and loader.
+        Test that the SAMStaticPluginBroker can be initialized from the request and its manifest data.
 
         1. broker is an instance of SAMStaticPluginBroker.
         2. broker.kind is "Plugin".
         3. broker.ORMModelClass is SAMStaticPlugin.
         """
-        broker: SAMStaticPluginBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMStaticPluginBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMStaticPluginBroker)
         self.assertEqual(broker.kind, "Plugin")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -143,7 +142,7 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
 
     def test_initialization_from_class(self):
         """Test that the SAMStaticPluginBroker can be initialized from SAMBrokerClass."""
-        broker: SAMStaticPluginBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMStaticPluginBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMStaticPluginBroker)
         self.assertTrue(broker.ready)
 
@@ -322,7 +321,7 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
         manifest = self.broker.manifest
         assert manifest is not None
         name = manifest.metadata.name
-        broker = self.SAMBrokerClass(self.request, self.loader)
+        broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())

@@ -297,13 +297,13 @@ class SAMProxyBroker(AbstractBroker[Proxy, Proxy]):
 
     @property
     def manifest(self) -> Optional[SAMProxy]:
-        """The Proxy manifest, as a Pydantic model, from the manifest loader."""
+        """The Proxy manifest, as a Pydantic model, from the client's manifest data."""
         if self._manifest:
             if not isinstance(self._manifest, SAMProxy):
                 raise SAMProxyBrokerError("Cached manifest is not a SAMProxy instance", thing=self.kind)
             return self._manifest
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMProxy.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMProxy.model_validate(self.manifest_sections)
         return self._manifest
 
     ###########################################################################

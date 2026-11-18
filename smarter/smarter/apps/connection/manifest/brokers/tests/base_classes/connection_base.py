@@ -4,12 +4,14 @@
 import os
 from typing import Optional
 
+import yaml
+
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import required
 
@@ -60,9 +62,11 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
         """
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_smarter_connection_broker_base_logger_prefix)
-        test_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD)
-        test_secret_metadata = required(test_secret_loader.manifest_metadata, "test_secret_loader.manifest_metadata")
-        if not apply_manifest(username=cls.admin_user.username, manifest=test_secret_loader.yaml_data, verbose=True):
+        test_secret_manifest_data = read_manifest_file(MANIFEST_PATH_SECRET_SMARTER_TEST_DB_PASSWORD)
+        test_secret_metadata = required(test_secret_manifest_data["metadata"], "test_secret_manifest_data.metadata")
+        if not apply_manifest(
+            username=cls.admin_user.username, manifest=yaml.safe_dump(test_secret_manifest_data), verbose=True
+        ):
             raise SmarterValueError(f"Failed to apply Secret manifest {test_secret_metadata.get('name')}.")
 
         # this should match spec.connection.password in ../data/sql-connection.yaml
@@ -85,12 +89,12 @@ class TestSmarterConnectionBrokerBase(TestSAMBrokerBaseClass):
             cls.user_profile,
         )
 
-        test_proxy_secret_loader = SAMLoader(file_path=MANIFEST_PATH_SECRET_PROXY_PASSWORD)
+        test_proxy_secret_manifest_data = read_manifest_file(MANIFEST_PATH_SECRET_PROXY_PASSWORD)
         test_proxy_secret_metadata = required(
-            test_proxy_secret_loader.manifest_metadata, "test_proxy_secret_loader.manifest_metadata"
+            test_proxy_secret_manifest_data["metadata"], "test_proxy_secret_manifest_data.metadata"
         )
         if not apply_manifest(
-            username=cls.admin_user.username, manifest=test_proxy_secret_loader.yaml_data, verbose=True
+            username=cls.admin_user.username, manifest=yaml.safe_dump(test_proxy_secret_manifest_data), verbose=True
         ):
             raise SmarterValueError(f"Failed to apply Secret manifest {test_proxy_secret_metadata.get('name')}.")
 

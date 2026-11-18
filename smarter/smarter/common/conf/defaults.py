@@ -116,6 +116,10 @@ class SettingsDefaults:
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
     ALLOWED_HOSTS: List[str] = get_env("ALLOWED_HOSTS", ["localhost", "testserver"])
 
+    # Account Manager's platform key, for its subscription status api. Optional: without it, a
+    # multitenant platform asks without a key, which Account Manager answers only until it requires keys.
+    ACCOUNT_MANAGER_API_KEY: Optional[SecretStr] = optional_secret_env("ACCOUNT_MANAGER_API_KEY")
+
     # the platform's superuser, which manage.py initialize_platform creates.
     ADMIN_USERNAME: str = get_env("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD: Optional[SecretStr] = optional_secret_env("ADMIN_PASSWORD")
@@ -260,8 +264,6 @@ class SettingsDefaults:
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
     LOGO: AnyUrl = AnyUrl(get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png")))
-    MAILCHIMP_API_KEY: SecretStr = SecretStr(get_env("MAILCHIMP_API_KEY", is_secret=True))
-    MAILCHIMP_LIST_ID = get_env("MAILCHIMP_LIST_ID")
 
     MARKETING_SITE_URL: HttpUrl = HttpUrl(get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}"))
 

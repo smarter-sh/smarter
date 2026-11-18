@@ -1,5 +1,5 @@
 """
-Test ApiConnection Django ORM and Manifest Loader.
+Test ApiConnection Django ORM and manifests.
 
 mcdaniel jan-2026: TestApiConnectionLegacy should be refactored. it contains a mix
 of Pydantic model tests combined with Django ORM model tests,
@@ -35,7 +35,7 @@ from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
@@ -70,10 +70,10 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
     def setUpClass(cls):
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_sam_api_connection_logger_prefix)
-        # this class reads one fixed manifest, in place of the base class's loader property.
-        loader_patcher = patch.object(cls, "loader", SAMLoader(file_path=MANIFEST_PATH_API_CONNECTION))
-        loader_patcher.start()
-        cls.addClassCleanup(loader_patcher.stop)
+        # this class reads one fixed manifest, in place of the base class's manifest_data property.
+        manifest_data_patcher = patch.object(cls, "manifest_data", read_manifest_file(MANIFEST_PATH_API_CONNECTION))
+        manifest_data_patcher.start()
+        cls.addClassCleanup(manifest_data_patcher.stop)
 
     @classmethod
     def tearDownClass(cls):
@@ -85,12 +85,12 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         self._manifest_filespec = MANIFEST_PATH_API_CONNECTION
 
     def manifest_metadata(self) -> SmarterDictType:
-        """Return the loader's manifest metadata, which this class's manifest has."""
-        return required(self.loader.manifest_metadata, "loader.manifest_metadata")
+        """Return the manifest's metadata, which this class's manifest has."""
+        return required(self.manifest_data["metadata"], "manifest_data.metadata")
 
     def manifest_spec(self) -> SmarterDictType:
-        """Return the loader's manifest spec, which this class's manifest has."""
-        return required(self.loader.manifest_spec, "loader.manifest_spec")
+        """Return the manifest's spec, which this class's manifest has."""
+        return required(self.manifest_data["spec"], "manifest_data.spec")
 
     def test_missing_required_fields(self):
         """Test that missing required fields raises ValidationError."""
@@ -103,25 +103,25 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             SAMApiConnection(
                 apiVersion=123,  # type: ignore
                 kind=456,  # type: ignore
-                metadata=self.loader.manifest_metadata,  # type: ignore
-                spec=self.loader.manifest_spec,  # type: ignore
+                metadata=self.manifest_data["metadata"],  # type: ignore
+                spec=self.manifest_data["spec"],  # type: ignore
             )
 
     def test_alternative_initialization(self):
         """Test that the SAMApiConnection model can be initialized using a single dict."""
         data = {
-            "apiVersion": self.loader.manifest_api_version,
-            "kind": self.loader.manifest_kind,
-            "metadata": self.loader.manifest_metadata,
-            "spec": self.loader.manifest_spec,
+            "apiVersion": self.manifest_data["apiVersion"],
+            "kind": self.manifest_data["kind"],
+            "metadata": self.manifest_data["metadata"],
+            "spec": self.manifest_data["spec"],
         }
         SAMApiConnection(**data)
 
     def test_immutability(self):
         """Test that the SAMApiConnection model is immutable after creation."""
         model = SAMApiConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**self.manifest_spec()),
         )
@@ -133,8 +133,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         """Test that invalid spec structure raises ValidationError."""
         with self.assertRaises(PydanticValidationError):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
                 spec={"not": "a valid spec"},  # type: ignore
             )
@@ -143,8 +143,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         """Test that invalid metadata structure raises ValidationError."""
         with self.assertRaises(PydanticValidationError):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata={"not": "a valid metadata"},  # type: ignore
                 spec=SAMApiConnectionSpec(**self.manifest_spec()),
             )
@@ -152,8 +152,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
     def test_repr_and_str(self):
         """Test that model __repr__ and __str__ do not raise and include class name."""
         model = SAMApiConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**self.manifest_spec()),
         )
@@ -170,8 +170,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
                 del manifest_spec["connection"]["baseUrl"]
         with self.assertRaises(PydanticValidationError):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
                 spec=SAMApiConnectionSpec(**manifest_spec),
             )
@@ -184,8 +184,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             manifest_spec["connection"]["timeout"] = "notanint"
         with self.assertRaises(PydanticValidationError):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
                 spec=SAMApiConnectionSpec(**manifest_spec),
             )
@@ -198,8 +198,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             manifest_spec["connection"]["proxyHost"] = None
             manifest_spec["connection"]["proxyPort"] = None
         model = SAMApiConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**manifest_spec),
         )
@@ -214,8 +214,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             manifest_spec["connection"]["authMethod"] = "notavalidmethod"
         with self.assertRaises(Exception):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
                 spec=SAMApiConnectionSpec(**manifest_spec),
             )
@@ -228,8 +228,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
             manifest_spec["connection"]["proxyPort"] = 70000  # invalid port
         with self.assertRaises(Exception):
             SAMApiConnection(
-                apiVersion=self.loader.manifest_api_version,
-                kind=self.loader.manifest_kind,
+                apiVersion=self.manifest_data["apiVersion"],
+                kind=self.manifest_data["kind"],
                 metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
                 spec=SAMApiConnectionSpec(**manifest_spec),
             )
@@ -237,8 +237,8 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
     def test_connection_repr_and_str(self):
         """Test that connection __repr__ and __str__ do not raise and include class name."""
         model = SAMApiConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**self.manifest_spec()),
         )
@@ -248,28 +248,28 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
     def test_model_initialization(self):
         """Test that the SAMApiConnection model can be initialized with valid data."""
         SAMApiConnection(
-            apiVersion=required(self.loader.manifest_api_version, "loader.manifest_api_version"),
-            kind=required(self.loader.manifest_kind, "loader.manifest_kind"),
+            apiVersion=required(self.manifest_data["apiVersion"], "manifest_data.apiVersion"),
+            kind=required(self.manifest_data["kind"], "manifest_data.kind"),
             metadata=SAMConnectionCommonMetadata(**self.manifest_metadata()),
             spec=SAMApiConnectionSpec(**self.manifest_spec()),
             status=(
-                SAMConnectionCommonStatus(**self.loader.manifest_status)
-                if self.loader and self.loader.manifest_status
+                SAMConnectionCommonStatus(**self.manifest_data["status"])
+                if self.manifest_data and self.manifest_data.get("status")
                 else None
             ),
         )
 
 
 class TestApiConnectionLegacy(TestConnectionBase):
-    """Test ApiConnection Django ORM and Manifest Loader."""
+    """Test ApiConnection Django ORM and manifests."""
 
     _model: Optional[SAMApiConnection] = None
 
     @property
     def model(self) -> SAMApiConnection:
-        # override to create a SAMApiConnection pydantic model from the loader
-        if not self._model and self.loader:
-            self._model = SAMApiConnection(**self.loader.pydantic_model_dump())
+        # override to create a SAMApiConnection pydantic model from the manifest data
+        if not self._model and self.manifest_data:
+            self._model = SAMApiConnection(**self.manifest_data)
             self.assertIsNotNone(self._model)
         if not isinstance(self._model, SAMApiConnection):
             raise TypeError(f"Expected SAMApiConnection, got {type(self._model)}")
@@ -305,7 +305,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_base_url = "not-a-valid-url"
         self.manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises((SAMValidationError, PydanticValidationError, DjangoValidationError)):
             print(self.model)
@@ -318,7 +318,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_timeout = -10
         self.manifest["spec"]["connection"]["timeout"] = invalid_timeout
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
@@ -335,7 +335,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_timeout = 30
         self.manifest["spec"]["connection"]["timeout"] = invalid_timeout
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -347,7 +347,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_auth_method = "nonsense"
         self.manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
@@ -365,7 +365,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_base_url = None
         self.manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
@@ -382,7 +382,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_port = "not-a-number"
         self.manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
@@ -399,7 +399,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_port = None
         self.manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -411,7 +411,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_password = None
         self.manifest["spec"]["connection"]["proxyUsername"] = invalid_proxy_password
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -423,7 +423,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_password = None
         self.manifest["spec"]["connection"]["proxyPassword"] = invalid_proxy_password
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -435,7 +435,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_base_url = "ftp://example.com"
         self.manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises((AssertionError, SAMValidationError, PydanticValidationError, DjangoValidationError)):
             print(self.model)
@@ -448,7 +448,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_timeout = 0
         self.manifest["spec"]["connection"]["timeout"] = invalid_timeout
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
@@ -465,7 +465,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_auth_method = ""
         self.manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
             print(self.model)
@@ -482,7 +482,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_protocol = "unsupported-protocol"
         self.manifest["spec"]["connection"]["proxyProtocol"] = invalid_proxy_protocol
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
@@ -500,7 +500,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_host = None
         self.manifest["spec"]["connection"]["proxyHost"] = invalid_proxy_host
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -512,7 +512,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_proxy_port = 70000  # Port numbers must be between 1 and 65535
         self.manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
@@ -529,7 +529,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_api_key = None
         self.manifest["spec"]["connection"]["apiKey"] = invalid_api_key
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 
@@ -541,7 +541,7 @@ class TestApiConnectionLegacy(TestConnectionBase):
 
         invalid_api_key = ""
         self.manifest["spec"]["connection"]["apiKey"] = invalid_api_key
-        self._loader = None
+        self._manifest_data = None
         self._model = None
         self.assertIsNotNone(self.model)
 

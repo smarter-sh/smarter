@@ -14,7 +14,7 @@ from smarter.apps.orchestrator.manifest.brokers.orchestrator import (
 from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType
 
 from ..base import OrchestratorApiBaseViewSet
@@ -30,7 +30,7 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
     """Test SAM Orchestrator Broker."""
 
     manifest: SmarterDictType
-    loader: SAMLoader
+    manifest_data: SmarterDictType
     request: HttpRequest
     client: APIClient
     kwargs: SmarterDictType
@@ -64,7 +64,7 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         super().setUpClass()
         config_path = os.path.join(HERE, "data/orchestrator.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.loader = SAMLoader(manifest=cls.manifest)
+        cls.manifest_data = parse_manifest(cls.manifest)
 
         cls.request = cls.create_chat_request("/anywhere/")
 
@@ -77,7 +77,7 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         cls.broker = SAMOrchestratorBroker(
             request=cls.request,
             account=cls.account,
-            loader=cls.loader,
+            manifest=cls.manifest_data,
         )
 
         # the LLMClient that the manifest's harness refers to by name

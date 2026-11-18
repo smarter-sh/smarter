@@ -91,11 +91,11 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
 
     .. note::
 
-        The manifest must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+        The manifest must be explicitly initialized with manifest data, typically using ``**data`` from the client's manifest data.
 
     .. warning::
 
-        If the manifest loader or manifest metadata is missing, or if the account is not set, the manifest will not be initialized and may return ``None`` or raise an exception.
+        If the manifest data or its metadata is missing, or if the account is not set, the manifest will not be initialized and may return ``None`` or raise an exception.
 
     **Example usage**::
 
@@ -227,7 +227,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
 
         .. note::
 
-            The top-level manifest model (`SAMAccount`) must be explicitly initialized with manifest data, typically using ``**data`` from the manifest loader.
+            The top-level manifest model (`SAMAccount`) must be explicitly initialized with manifest data, typically using ``**data`` from the client's manifest data.
 
         .. tip::
 
@@ -235,7 +235,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
 
         .. warning::
 
-            If the manifest loader or manifest metadata is missing, or if the account is not set, the manifest will not be initialized and None may be returned or an exception raised.
+            If the manifest data or its metadata is missing, or if the account is not set, the manifest will not be initialized and None may be returned or an exception raised.
 
         **Example usage**::
 
@@ -252,18 +252,18 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                     command=SmarterJournalCliCommands.APPLY,
                 )
             return self._manifest
-        # 1.) prioritize manifest loader data if available. if it was provided
+        # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
-        if self.loader and self.loader.manifest_kind == self.kind:
-            self._manifest = SAMAccount.model_validate(self.loader.manifest_sections)
+        if self.manifest_data is not None:
+            self._manifest = SAMAccount.model_validate(self.manifest_sections)
             logger.debug(
-                "%s.manifest() initialized %s from loader: %s",
+                "%s.manifest() initialized %s from manifest data: %s",
                 self.formatted_class_name,
                 type(self._manifest).__name__,
                 json.dumps(self._manifest.model_dump(), indent=4),
             )
             return self._manifest
-        # 2.) next, (and only if a loader is not available) try to initialize
+        # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing Account model if available
         elif self.brokered_account:
             account_number = str(self.brokered_account.account_number)
