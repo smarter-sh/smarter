@@ -16,7 +16,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 
 
 class BrokerBranchesTestMixin:
@@ -39,12 +39,12 @@ class BrokerBranchesTestMixin:
     manifest_path: str
 
     def setUp(self) -> None:
-        """Build a request by the admin user, a loader of ``manifest_path``, and the broker under test."""
+        """Build a request by the admin user, the manifest at ``manifest_path``, and the broker under test."""
         super().setUp()  # type: ignore[misc]
         self.request = self.create_generic_request("/anywhere/")  # type: ignore[attr-defined]
         self.request.user = self.admin_user  # type: ignore[attr-defined]
-        self.loader = SAMLoader(manifest=get_readonly_yaml_file(self.manifest_path))
-        self.broker = self.broker_class(request=self.request, account=self.account, loader=self.loader)  # type: ignore[attr-defined]
+        self.manifest_data = parse_manifest(get_readonly_yaml_file(self.manifest_path))
+        self.broker = self.broker_class(request=self.request, account=self.account, manifest=self.manifest_data)  # type: ignore[attr-defined]
 
     def patch_property(self, name: str, value: object) -> PropertyMock:
         """

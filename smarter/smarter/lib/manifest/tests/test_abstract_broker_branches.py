@@ -152,10 +152,14 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
     # -------------------------------------------------------------------------
     # initialization and setters
     # -------------------------------------------------------------------------
-    def test_loader_and_file_path(self):
-        """A deprecated loader wins when both a loader and a file_path are given: its manifest is used."""
-        broker = SAMGuardrailBroker(request=self.request, loader=self.loader, file_path=self.manifest_filespec)
-        self.assertEqual(broker.manifest_data, self.loader.json_data)
+    def test_manifest_and_file_path(self):
+        """A manifest wins when both a manifest and a file_path are given: the file is not read."""
+        apps = os.path.join(GUARDRAIL_DATA, "..", "..", "..", "..", "..")
+        user_manifest = os.path.join(apps, "account", "manifest", "brokers", "tests", "data", "user.yaml")
+        self.assertTrue(os.path.exists(user_manifest), user_manifest)
+        # a User manifest would be rejected by a Guardrail broker, if it were read.
+        broker = SAMGuardrailBroker(request=self.request, manifest=self.manifest_data, file_path=user_manifest)
+        self.assertEqual(broker.manifest_data, self.manifest_data)
 
     def test_request_less_broker(self):
         broker = self.broker
@@ -240,7 +244,7 @@ class TestAbstractBrokerBranches(TestSAMBrokerBaseClass):
         }
         for label, value in cases.items():
             with self.subTest(label):
-                broker = SAMGuardrailBroker(request=self.request, loader=self.loader)
+                broker = SAMGuardrailBroker(request=self.request, manifest=self.manifest_data)
                 with self.assertRaises((SmarterValueError, SAMBrokerError, Exception)):
                     broker.manifest_setter(value)
 

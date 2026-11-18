@@ -17,7 +17,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
@@ -29,7 +28,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
     Test the Smarter SAMUserBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     def setUp(self):
@@ -48,11 +47,9 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         if not super().ready:
             return False
 
-        self.assertIsInstance(
-            self.loader, SAMLoader
-        )  # SAM manifest loader utility for loading and validating raw YAML/JSON manifest files
-        self.assertIsInstance(self.loader.json_data, dict)  # YAML manifest filem, converted to json dict
-        self.assertIsInstance(self.loader.yaml_data, str)  # validated YAML string
+        self.assertIsInstance(self.manifest_data, dict)  # the test manifest, parsed from YAML into a dict
+        self.assertIsInstance(self.manifest_data, dict)  # YAML manifest filem, converted to json dict
+        self.assertIsInstance(self.manifest_data, dict)  # validated YAML string
         self.assertIsInstance(
             self.request, HttpRequest
         )  # authenticated Django HttpRequest object with valid yaml manifest in the body
@@ -85,23 +82,21 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
         self.assertTrue(self.ready)
 
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(
-            self.loader, SAMLoader
-        )  # SAM manifest loader utility for loading and validating raw YAML/JSON manifest files
-        self.assertIsInstance(self.loader.json_data, dict)  # YAML manifest filem, converted to json dict
-        self.assertIsInstance(self.loader.yaml_data, str)  # validated YAML string
+        self.assertIsInstance(self.manifest_data, dict)  # the test manifest, parsed from YAML into a dict
+        self.assertIsInstance(self.manifest_data, dict)  # YAML manifest filem, converted to json dict
+        self.assertIsInstance(self.manifest_data, dict)  # validated YAML string
         self.assertIsInstance(
             self.request, HttpRequest
         )  # authenticated Django HttpRequest object with valid yaml manifest in the body
 
         # THIS IS WHAT WE ARE TESTING IN THIS CLASS.
         # ----------------------------------------------------------
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMUserBroker)
 
         # THIS IS WHAT WE ARE TESTING IN THIS CLASS.
         # ----------------------------------------------------------
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMUserBroker)
 
         logger.info("%s.test_setup() SAMUserBroker initialized successfully for testing.", self.formatted_class_name)
@@ -112,7 +107,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
-        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMUserBroker)
         self.assertEqual(broker.kind, "User")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -120,7 +115,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_account_contact_property(self):
         """Test account_contact property returns correct AccountContact or None."""
-        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
 
         # Should be None if user is not authenticated or not set
         # pylint: disable=protected-access
@@ -142,7 +137,7 @@ class TestSmarterUserBroker(TestSAMBrokerBaseClass):
 
     def test_initialization_from_class(self):
         """Test initialization of SAMUserBroker from class."""
-        broker: SAMUserBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMUserBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMUserBroker)
         self.assertTrue(broker.ready)
 

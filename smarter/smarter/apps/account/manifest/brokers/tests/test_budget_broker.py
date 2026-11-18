@@ -27,7 +27,7 @@ from smarter.lib.manifest.broker import (
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
@@ -80,10 +80,10 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
         return text
 
     @property
-    def loader(self) -> SAMLoader:
-        if not self._loader:
-            self._loader = SAMLoader(manifest=self.manifest_text())
-        return self._loader
+    def manifest_data(self) -> SmarterDictType:
+        if not self._manifest_data:
+            self._manifest_data = parse_manifest(self.manifest_text())
+        return self._manifest_data
 
     def broker_for(self, text: str, token_key: str = "") -> SAMBudgetBroker:
         """A broker for a manifest, authenticated with a token: the superuser's by default."""
@@ -91,7 +91,7 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
         # a plain dict stands in for the request's read-only HttpHeaders.
         request.headers = {"Authorization": f"Token {token_key or self.token_key}"}  # type: ignore[assignment]
         request._body = text.encode("utf-8")  # pylint: disable=protected-access
-        return SAMBudgetBroker(request=request, loader=SAMLoader(manifest=text))
+        return SAMBudgetBroker(request=request, manifest=parse_manifest(text))
 
     @property
     def kwargs(self) -> SmarterDictType:

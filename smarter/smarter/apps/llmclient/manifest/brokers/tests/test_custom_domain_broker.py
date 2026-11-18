@@ -22,7 +22,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class TestSmarterCustomDomainBroker(TestSAMBrokerBaseClass):
         if not manifest:
             with open(self.get_data_full_filepath("custom_domain.yaml"), encoding="utf-8") as f:
                 manifest = f.read()
-        return SAMCustomDomainBroker(request=self.request, loader=SAMLoader(manifest=manifest))
+        return SAMCustomDomainBroker(request=self.request, manifest=parse_manifest(manifest))
 
     def custom_domain(self) -> LLMClientCustomDomain:
         return LLMClientCustomDomain.objects.get(user_profile=self.user_profile, name=CUSTOM_DOMAIN_NAME)

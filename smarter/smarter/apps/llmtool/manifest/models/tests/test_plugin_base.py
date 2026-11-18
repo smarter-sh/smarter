@@ -48,7 +48,6 @@ from smarter.common.utils import get_readonly_yaml_file, to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
@@ -364,9 +363,9 @@ class TestPluginBase(TestAccountMixin):
             self.plugin_class(data={})
 
         # every malformed manifest must be rejected. Depending on where it is caught, that
-        # is the loader, the plugin (which reports a loader that is not ready as a
-        # SAMValidationError), or Pydantic. deepcopy, so that each case removes one thing.
-        rejected = (SAMLoaderError, SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
+        # is the plugin (SAMValidationError, SmarterPluginError) or Pydantic. deepcopy, so
+        # that each case removes one thing.
+        rejected = (SAMValidationError, SmarterPluginError, TypeError, PydanticValidationError)
         removals = [
             (SAMKeys.METADATA.value,),
             (SAMKeys.SPEC.value, SAMPluginSpecKeys.SELECTOR.value),

@@ -3,13 +3,15 @@
 
 import os
 
+import yaml
+
 from smarter.apps.api.utils import apply_manifest
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.const import DATA_PATH as PLUGIN_DATA_PATH
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import required
 
 from .connection_base import TestSmarterConnectionBrokerBase
@@ -49,13 +51,15 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
         """
         super().setUpClass()
         logger.debug("%s.setUpClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
-        test_sql_connection_loader = SAMLoader(file_path=MANIFEST_PATH_SQL_CONNECTION)
-        apply_manifest(username=cls.admin_user.username, manifest=test_sql_connection_loader.yaml_data, verbose=True)
+        test_sql_connection_manifest_data = read_manifest_file(MANIFEST_PATH_SQL_CONNECTION)
+        apply_manifest(
+            username=cls.admin_user.username, manifest=yaml.safe_dump(test_sql_connection_manifest_data), verbose=True
+        )
 
         # this should match spec.connection in ../data/sql-plugin.yaml
         # assumed to be: test_sql_connection
         test_sql_connection_metadata = required(
-            test_sql_connection_loader.manifest_metadata, "test_sql_connection_loader.manifest_metadata"
+            test_sql_connection_manifest_data["metadata"], "test_sql_connection_manifest_data.metadata"
         )
         test_sql_connection_name = test_sql_connection_metadata.get("name")
         if not test_sql_connection_name:

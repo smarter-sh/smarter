@@ -110,7 +110,7 @@ def config(self) -> Optional[SmarterDictType]:
 - **A bare `dict` annotation is a `SmarterDictType`.** Our dicts have string
   keys, so `Optional[dict]`, `list[dict]` and `-> dict` are spelled
   `Optional[SmarterDictType]` and so on. Two exceptions: a dict whose keys
-  aren't strings says so (`dict[SAMKeys, Any]` in `lib/manifest/loader.py`),
+  aren't strings says so (e.g. `dict[SAMKeys, Any]`),
   and a Pydantic model field that holds user-supplied YAML stays a bare
   `dict`, because `dict[str, Any]` makes Pydantic reject a mapping with
   non-string keys, e.g. `200:`.

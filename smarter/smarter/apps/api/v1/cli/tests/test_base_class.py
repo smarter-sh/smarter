@@ -36,7 +36,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerInternalError,
 )
 from smarter.lib.manifest.enum import SAMKeys
-from smarter.lib.manifest.loader import SAMLoaderError
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -206,7 +206,7 @@ class TestCliExceptionClassification(SmarterTestBase):
         cases = [
             (pydantic_validation_error(defaultTemperature=2), HTTPStatus.BAD_REQUEST),
             (DjangoValidationError({"provider": ["not a valid provider"]}), HTTPStatus.BAD_REQUEST),
-            (SAMLoaderError("Missing required key: spec"), HTTPStatus.BAD_REQUEST),
+            (SAMValidationError("A manifest must be a YAML object"), HTTPStatus.BAD_REQUEST),
             (APIV1CLIViewBadRequestError("unknown kind"), HTTPStatus.BAD_REQUEST),
             # a broker's own error class, which is a subclass of SAMBrokerError
             (SAMTestBrokerError("invalid"), HTTPStatus.BAD_REQUEST),

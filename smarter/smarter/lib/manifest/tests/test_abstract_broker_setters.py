@@ -108,14 +108,14 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
         self.assertIsNotNone(broker._manifest_data)
         manifest = broker.manifest
         assert isinstance(manifest, AbstractSAMBase)
-        self.assertEqual(manifest.metadata.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(manifest.metadata.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
 
     def test_name_from_the_manifest_data(self):
         """Without a cached name or manifest, the name comes from the manifest data."""
         broker = self.broker
         broker._name = None
         broker._manifest = None
-        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(broker.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
 
     def test_name_from_the_manifest(self):
         """Without a cached name, the name comes from the manifest."""
@@ -144,7 +144,7 @@ class TestAbstractBrokerSetters(TestSAMBrokerBaseClass):
     def test_file_path_initialization(self):
         """A broker can be initialized from a manifest file."""
         broker = SAMGuardrailBroker(self.request, file_path=self.manifest_filespec)
-        self.assertEqual(broker.name, required(self.loader.manifest_metadata, "manifest_metadata")["name"])
+        self.assertEqual(broker.name, required(self.manifest_data["metadata"], "manifest_metadata")["name"])
         self.assertEqual(broker.kind, "Guardrail")
 
     def test_send_broker_ready_sends_once(self):

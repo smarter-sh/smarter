@@ -23,7 +23,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerError,
     SAMBrokerErrorNotImplemented,
 )
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.typing import required
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
@@ -58,7 +57,7 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
     def test_setup(self):
         """Test that the test setup is correct."""
         self.assertTrue(self.ready)
-        self.assertIsInstance(self.loader, SAMLoader)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
         self.assertIsInstance(self.broker, SAMApiConnectionBroker)
 
@@ -215,7 +214,7 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
         self.addCleanup(patcher.stop)
 
     def test_manifest_branches(self):
-        """Test a cached manifest of the wrong type, and no manifest without a loader or connection."""
+        """Test a cached manifest of the wrong type, and no manifest without manifest data or connection."""
         broker = self.broker
         broker._manifest = {"kind": "Wrong"}  # type: ignore[assignment]
         with self.assertRaises(SAMConnectionBrokerError):

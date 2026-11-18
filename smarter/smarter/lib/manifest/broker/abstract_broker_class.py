@@ -71,7 +71,6 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
-from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import (
     AbstractSAMBase,
     SAMDependencyTreeNode,
@@ -331,7 +330,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         *args,
         name: Optional[str] = None,
         kind: Optional[str] = None,
-        loader: Optional[SAMLoader] = None,
         api_version: str = SmarterApiVersions.V1,
         manifest: Optional[Union[SmarterDictType, AbstractSAMBase]] = None,
         file_path: Optional[str] = None,
@@ -349,8 +347,6 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             and manifest are found by their types.
         :param name: The resource's name.
         :param kind: The resource's SAM kind, e.g. ``Guardrail``.
-        :param loader: Deprecated: a :class:`~smarter.lib.manifest.loader.SAMLoader`, whose manifest
-            is used as if it had been passed as ``manifest``. Pass the manifest instead.
         :param api_version: The manifest's api version.
         :param manifest: The manifest, as a Pydantic model or as a dict, e.g. from
             :func:`~smarter.lib.manifest.parsing.parse_manifest`.
@@ -406,12 +402,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         if manifest:
             self.manifest_setter(manifest)
 
-        # deprecated: a SAMLoader is read for its manifest dict, until SAMLoader is removed.
-        if not loader:
-            loader = first_arg_of_type(args, SAMLoader)
-        if loader:
-            self.manifest_data_setter(loader.json_data)
-        elif isinstance(file_path, str):
+        if not manifest and isinstance(file_path, str):
             file_data = read_manifest_file(file_path)
             self.manifest_data_setter(file_data)
             file_metadata = self.manifest_metadata
@@ -2558,7 +2549,6 @@ class BrokerNotImplemented(AbstractBroker):
         account=None,
         name=None,
         kind=None,
-        loader=None,
         manifest=None,
         file_path=None,
         url=None,

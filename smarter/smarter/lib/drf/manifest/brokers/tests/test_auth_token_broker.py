@@ -32,8 +32,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import SAMMetadataKeys
-from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.manifest.parsing import read_manifest_file
+from smarter.lib.manifest.parsing import parse_manifest, read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
@@ -45,7 +44,7 @@ class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
     Test the Smarter SAMSmarterAuthTokenBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     def setUp(self):
@@ -67,9 +66,9 @@ class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):
         if not super().ready:
             return False
 
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
 
         return True
@@ -100,20 +99,20 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
     Test the Smarter SAMSmarterAuthTokenBroker.
 
     TestSAMBrokerBaseClass provides common setup for SAM broker tests,
-    including SAMLoader and HttpRequest properties.
+    including SmarterDictType and HttpRequest properties.
     """
 
     def test_setup(self):
         """Verify that setup initialized the broker correctly."""
         self.assertTrue(self.ready)
         self.assertIsNotNone(self.non_admin_user_profile, "Non-admin user profile not initialized in base class setup.")
-        self.assertIsInstance(self.loader, SAMLoader)
-        self.assertIsInstance(self.loader.json_data, dict)
-        self.assertIsInstance(self.loader.yaml_data, str)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
+        self.assertIsInstance(self.manifest_data, dict)
         self.assertIsInstance(self.request, HttpRequest)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
-        self._broker = self.SAMBrokerClass(self.request, self.loader)
+        self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
         logger.info(
             "%s.test_setup() SAMSmarterAuthTokenBroker initialized successfully for testing.", self.formatted_class_name
@@ -154,21 +153,21 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
     def test_sam_broker_initialization(self):
         """Test that the SAMSmarterAuthTokenBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
-        metadata = {**required(self.loader.manifest_metadata, "manifest_metadata")}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.loader.manifest_spec)
+        metadata = {**required(self.manifest_data["metadata"], "manifest_metadata")}
+        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.manifest_data["spec"])
         spec = {
-            "config": SAMSmarterAuthTokenSpecConfig(**required(self.loader.manifest_spec, "manifest_spec")["config"]),
+            "config": SAMSmarterAuthTokenSpecConfig(**required(self.manifest_data["spec"], "manifest_spec")["config"]),
         }
         SAMSmarterAuthToken(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
+            apiVersion=self.manifest_data["apiVersion"],
+            kind=self.manifest_data["kind"],
             metadata=SAMSmarterAuthTokenMetadata(**metadata),
             spec=SAMSmarterAuthTokenSpec(**spec),
         )
 
     def test_broker_initialization(self):
         """Test that the broker initializes with required properties."""
-        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
         self.assertEqual(broker.kind, "SmarterAuthToken")
         self.assertIsNotNone(broker.ORMModelClass)
@@ -176,7 +175,7 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
 
     def test_initialization_from_class(self):
         """Test initialization of SAMSmarterAuthTokenBroker from class."""
-        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, self.loader)
+        broker: SAMSmarterAuthTokenBroker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(broker, SAMSmarterAuthTokenBroker)
         self.assertTrue(broker.ready)
 
@@ -641,12 +640,12 @@ class TestSmarterAuthTokenBrokerAccountAdmin(TestSmarterAuthTokenBrokerBase):
         :param username: The api key's user.
         :returns: The broker.
         """
-        data = copy.deepcopy(required(self.loader.json_data, "the test manifest"))
+        data = copy.deepcopy(required(self.manifest_data, "the test manifest"))
         name = f"test_account_admin_token_{self.hash_suffix}"
         data["metadata"]["name"] = name
         data["spec"]["config"]["username"] = username
         self.addCleanup(SmarterAuthToken.objects.filter(name=name).delete)
-        broker = SAMSmarterAuthTokenBroker(request=self.request, loader=SAMLoader(manifest=json.dumps(data)))
+        broker = SAMSmarterAuthTokenBroker(request=self.request, manifest=parse_manifest(json.dumps(data)))
         for prop, value in (("user", self.non_admin_user), ("user_profile", self.member), ("account", self.account)):
             patcher = patch.object(SAMSmarterAuthTokenBroker, prop, new_callable=PropertyMock, return_value=value)
             patcher.start()

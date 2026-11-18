@@ -59,7 +59,6 @@ from smarter.lib.manifest.broker import (
     SAMBrokerReadOnlyError,
 )
 from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
-from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
@@ -113,7 +112,6 @@ CLIENT_ERRORS: tuple[Type[BaseException], ...] = (
     PydanticValidationError,
     DjangoValidationError,
     yaml.YAMLError,
-    SAMLoaderError,
     SAMValidationError,
     SAMBadRequestError,
     SmarterValueError,

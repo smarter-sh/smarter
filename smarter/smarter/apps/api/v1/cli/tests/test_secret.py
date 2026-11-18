@@ -25,7 +25,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import SmarterDictType
 
 from .base_class import ApiV1CliTestBase
@@ -133,11 +133,11 @@ class TestApiCliV1Secret(ApiV1CliTestBase):
     def test_02_apply(self):
         """Test that we get OK response when passing a valid manifest to apply()."""
         # load the manifest from the yaml file
-        loader = SAMLoader(file_path=os.path.join(HERE, "data", "good-secret.yaml"))
-        self.assertTrue(loader.ready, msg="loader is not ready")
+        manifest_data = read_manifest_file(os.path.join(HERE, "data", "good-secret.yaml"))
+        self.assertTrue(manifest_data, msg="the manifest is empty")
 
         # use the manifest to creata a new sqlconnection Pydantic model
-        manifest = SAMSecret(**loader.pydantic_model_dump())
+        manifest = SAMSecret(**manifest_data)
 
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())
