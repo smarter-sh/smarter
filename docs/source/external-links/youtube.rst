@@ -18,12 +18,24 @@ workgroup can use which AI resources.
 Up and Running in Less Than 10 Minutes
 --------------------------------------
 
-Clone the smarter-deploy repository, configure it, and run Smarter on your own computer with
-Docker. See the :doc:`/smarter-platform/installation/quick-start`.
+Clone the smarter-deploy repository, configure it, and run Smarter on your own computer from the
+pre-built images on Docker Hub. See the :doc:`/smarter-platform/installation/quick-start`.
 
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
+
+Developer Onboarding: the Development Environment
+-------------------------------------------------
+
+An eight-minute walkthrough of getting Smarter's development environment up and running from its
+source code, for anyone who wants to change that code. Up and Running in Less Than 10 Minutes, above,
+runs the pre-built images from Docker Hub instead. See the
+:doc:`/smarter-framework/guides/developer-setup`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/POjSx6mpTq8" title="Smarter developer onboarding: the development environment" frameborder="0" allowfullscreen></iframe>
 
 An Introduction to LLM Tool Calling
 -----------------------------------

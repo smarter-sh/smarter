@@ -190,7 +190,13 @@ From Source
 ``docker ps`` should list the ``smarter-api``, ``smarter-worker``, ``smarter-beat``,
 ``smarter-mariadb`` and ``smarter-redis`` containers. The
 :doc:`Developer Setup Guide <smarter-framework/guides/developer-setup>` explains each part of the
-environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems.
+environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems. This
+eight-minute developer onboarding video walks through the whole setup, and makes a good first
+assignment for a software development course.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/POjSx6mpTq8" title="Smarter developer onboarding: the development environment" frameborder="0" allowfullscreen></iframe>
 
 The Command-Line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
