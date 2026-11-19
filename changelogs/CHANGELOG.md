@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.8-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.8-alpha.1...v0.46.8-alpha.2) (2026-11-19)
+
+### Bug Fixes
+
+* **api:** answer client errors with 400 and unknown errors with 500 ([0d6ca4f](https://github.com/smarter-sh/smarter/commit/0d6ca4f535081687c109379e74b92acc3cef52ff))
+* **api:** keep plugin server errors at 500, manifest errors at 400 ([395423e](https://github.com/smarter-sh/smarter/commit/395423e479fe98d7148208b56fa77ca6bf79508d))
+* close cache getter type gaps and a provider serializer bug ([2e08cdd](https://github.com/smarter-sh/smarter/commit/2e08cdd36c3dfef5473bcc22c4299f1c2fe00b14))
+
 ## [0.46.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.7...v0.46.8-alpha.1) (2026-11-18)
 
 ### Bug Fixes
