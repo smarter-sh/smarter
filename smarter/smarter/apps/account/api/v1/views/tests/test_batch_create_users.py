@@ -3,12 +3,14 @@
 
 import os
 from http import HTTPStatus
+from unittest.mock import patch
 
 from django.test import Client
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.api.v1.views.batch_create_users import (
     BatchCreateUsersResponseModel,
+    BatchCreateUsersView,
     BatchModel,
 )
 from smarter.apps.account.const import namespace as account_namespace
@@ -105,6 +107,18 @@ class TestUrls(TestAccountMixin):
             self.assertEqual(created_user["status"], "failure")
             self.assertEqual(created_user["error"], "The user could not be created.")
             self.assertNotIn("password", created_user)
+
+    def test_unexpected_failure_gets_a_fixed_error(self):
+        """Test that a user whose creation fails unexpectedly gets the unknown error, and the batch still answers."""
+        with patch(f"{BatchCreateUsersView.__module__}.call_command", side_effect=RuntimeError("internal detail")):
+            response = self.client.post(self.url, data=json.dumps(self.batch_data), content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertNotIn("internal detail", response.content.decode())
+        created_users = response.json()["created_users"]
+        self.assertEqual(len(created_users), len(self.batch_model.users))
+        for created_user in created_users:
+            self.assertEqual(created_user["status"], "failure")
+            self.assertEqual(created_user["error"], "An unknown error occurred while creating the user.")
 
     def test_get_not_allowed(self):
         """Test GET method is not allowed."""

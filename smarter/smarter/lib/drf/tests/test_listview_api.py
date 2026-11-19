@@ -1,9 +1,11 @@
 """Test the auth token list view's web console api, :mod:`smarter.lib.drf.views.listview.api`."""
 
 import uuid
+from functools import partial
 from http import HTTPStatus
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.db import IntegrityError
 from django.test import Client, RequestFactory
 from django.urls import reverse
 
@@ -16,6 +18,7 @@ from smarter.lib.drf.views.listview.api import (
     AuthTokenListApiDeleteView,
     AuthTokenListApiRenameView,
 )
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 class TestAuthTokenListApi(TestAccountMixin):
@@ -178,6 +181,26 @@ class TestAuthTokenListApi(TestAccountMixin):
             with self.subTest(view=view_class.__name__):
                 response, _ = self.call(view_class, **kwargs)
                 self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_apis_report_errors(self):
+        """
+        Test how the clone, delete and rename apis report an error.
+
+        A validation error, or a name that the user already has, is a bad request. Any other error
+        is the server's fault: the catch-all answers 500, without the error's text.
+        """
+        duplicate = IntegrityError(1062, "Duplicate entry 'x' for key 'unique_name'")
+        for name, method, args in (
+            (WebNames.clone, "clone", [self.token_id, "test_listview_api_errors_clone"]),
+            (WebNames.delete, "delete", [self.token_id]),
+            (WebNames.rename, "rename", [self.token_id, "test_listview_api_errors_rename"]),
+        ):
+            url = reverse(f"{WebNames.namespace}:{name}", args=args)
+            send = partial(self.client.post, url)
+            with self.subTest(api=name):
+                assert_reports_errors(self, send, raising(SmarterAuthToken, method))
+                assert_reports_errors(self, send, raising(SmarterAuthToken, method), client_error=duplicate)
+        self.assertTrue(SmarterAuthToken.objects.filter(key_id=self.token_id, name=self.token.name).exists())
 
     def test_delete_url(self):
         """Test deleting a token by its url."""

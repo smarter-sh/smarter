@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
+from functools import partial
 from http import HTTPStatus
 
 from django.test import Client
@@ -13,6 +14,7 @@ from smarter.apps.api.v1.const import namespace as v1_namespace
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 # our stuff
 from .factories import factory_account_teardown, mortal_user_factory
@@ -106,6 +108,28 @@ class TestUrls(TestAccountMixin):
             self.assertTrue(AccountContact.objects.filter(pk=contact.pk).exists())
         finally:
             contact.delete()
+
+    def test_account_contact_delete_reports_errors(self):
+        """Test that a refused delete is a bad request, and any other failure an internal error; both contacts are kept."""
+        contact = AccountContact.objects.create(
+            account=self.account,
+            email=f"errors-{self.hash_suffix}@example.com",
+            first_name="Delete",
+            last_name="Errors",
+            welcomed=True,
+        )
+        self.addCleanup(AccountContact.objects.filter(pk=contact.pk).delete)
+        user_contact, _ = AccountContact.objects.get_or_create(
+            account=self.account, email=self.admin_user.email, defaults={"welcomed": True}
+        )
+        self.addCleanup(AccountContact.objects.filter(pk=user_contact.pk).delete)
+        reverse_name = ":".join([self.namespace, AccountAPINamespaces.account_contact_view])
+        url = reverse(reverse_name, args=[str(contact.id)])  # type: ignore
+
+        send = partial(self.client.delete, url)  # type: ignore[union-attr]
+        assert_reports_errors(self, send, raising(AccountContact, "delete"))
+        self.assertTrue(AccountContact.objects.filter(pk=contact.pk).exists())
+        self.assertTrue(AccountContact.objects.filter(pk=user_contact.pk).exists())
 
     def test_account_contact_requires_superuser(self):
         """Test that a user who isn't a superuser can neither read nor delete a contact."""

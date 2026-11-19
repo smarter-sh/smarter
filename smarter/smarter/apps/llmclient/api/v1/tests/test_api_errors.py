@@ -1,5 +1,6 @@
 """Test the error responses of the LLMClient /api/v1/llm-clients/ endpoints, :mod:`smarter.apps.llmclient.api.v1.views.views`."""
 
+from functools import partial
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -26,6 +27,7 @@ from smarter.apps.llmclient.models import (
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 class TestLLMClientApiErrors(ApiV1TestBase):
@@ -87,7 +89,7 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         self.assertStatus(response, HTTPStatus.OK)
 
     def test_plugin_patch_and_delete_failure(self):
-        """A plugin is updated by patch, and a failed delete is an internal error."""
+        """A plugin is updated by patch; a client's error is a bad request, and any other failure an internal error."""
         plugin_meta = PluginMeta.objects.create(
             name=f"test_llmclient_api_errors_{self.hash_suffix}", user_profile=self.user_profile, plugin_class="static"
         )
@@ -97,11 +99,15 @@ class TestLLMClientApiErrors(ApiV1TestBase):
 
         with patch.object(LLMClientPlugin, "load", return_value=llmclient_plugin):
             self.assertStatus(self.api_client.patch(url, data={"name": "x"}, format="json"), HTTPStatus.FOUND)
-        with patch.object(LLMClientPlugin, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        with self.subTest(method="patch"):
+            send_patch = partial(self.api_client.patch, url, data={"name": "x"}, format="json")
+            assert_reports_errors(self, send_patch, raising(LLMClientPlugin, "load"))
+        with self.subTest(method="delete"):
+            assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientPlugin, "delete"))
+        self.assertTrue(LLMClientPlugin.objects.filter(pk=llmclient_plugin.pk).exists())
 
     def test_api_key_delete_failure(self):
-        """A failed api key delete is an internal error."""
+        """A refused api key delete is a bad request, and any other failure an internal error."""
         token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
             user_profile=self.user_profile,
             name=f"test_llmclient_api_errors_{self.hash_suffix}",
@@ -113,17 +119,17 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         url = self.url(
             Names.llmclient_api_key_view_by_id, llmclient_id=self.llmclient.pk, apikey_id=llmclient_api_key.pk
         )
-        with patch.object(LLMClientAPIKey, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientAPIKey, "delete"))
+        self.assertTrue(LLMClientAPIKey.objects.filter(pk=llmclient_api_key.pk).exists())
 
     def test_extension_delete_failure(self):
-        """A failed extension delete is an internal error."""
+        """A refused extension delete is a bad request, and any other failure an internal error."""
         extension = Extension.objects.create(slug="test-api-errors", display_name="Test Api Errors")
         self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
         link = LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
         url = self.url(Names.llmclient_extension_view_by_id, llmclient_id=self.llmclient.pk, extension_id=link.pk)
-        with patch.object(LLMClientExtensions, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientExtensions, "delete"))
+        self.assertTrue(LLMClientExtensions.objects.filter(pk=link.pk).exists())
 
     def call_view(self, view_class, method: str, data=None, **kwargs):
         """Call a view directly, for the handlers that no url routes to with these arguments."""

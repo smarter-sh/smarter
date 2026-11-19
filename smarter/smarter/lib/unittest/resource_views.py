@@ -18,22 +18,21 @@ The resource that ``setUpClass()`` creates is owned by the account's admin user.
 changes a resource changes a throwaway copy, which is deleted afterwards.
 """
 
+from functools import partial
 from http import HTTPStatus
 from typing import Callable, Optional
-from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
 from smarter.lib import json
-from smarter.lib.django.http.client_errors import INTEGRITY_ERROR_MESSAGE
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest import ReverseNamesClass
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 def assert_console_page(testcase, url: str) -> None:
@@ -368,26 +367,17 @@ class ResourceViewsTestMixin:
         answers 500, with a fixed message, never the error's text.
         """
         resource = self.throwaway("errors")
+        duplicate = IntegrityError(1062, "Duplicate entry 'x' for key 'unique_name'")
         for name, method, kwargs in (
             ("clone", "clone", {"new_name": f"{resource.name}_copy"}),
             ("delete", "delete", {}),
             ("rename", "rename", {"new_name": f"{resource.name}_renamed"}),
         ):
             url = self.web_id_url(name, resource.pk, **kwargs)
-            with self.subTest(api=name, error="unexpected"):  # type: ignore[attr-defined]
-                with patch.object(self.model, method, side_effect=RuntimeError("internal detail")):
-                    data = self.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-                self.assertNotIn("internal detail", data["error"])  # type: ignore[attr-defined]
-                self.assertTrue(data["error"].startswith("An unknown error occurred while"))  # type: ignore[attr-defined]
-            with self.subTest(api=name, error="validation"):  # type: ignore[attr-defined]
-                with patch.object(self.model, method, side_effect=ValidationError("The name is not valid.")):
-                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
-                self.assertEqual(data["error"], "The name is not valid.")  # type: ignore[attr-defined]
-            with self.subTest(api=name, error="integrity"):  # type: ignore[attr-defined]
-                duplicate = IntegrityError(1062, "Duplicate entry 'x' for key 'unique_name'")
-                with patch.object(self.model, method, side_effect=duplicate):
-                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
-                self.assertEqual(data["error"], INTEGRITY_ERROR_MESSAGE)  # type: ignore[attr-defined]
+            send = partial(self.client.post, url)
+            with self.subTest(api=name):  # type: ignore[attr-defined]
+                assert_reports_errors(self, send, raising(self.model, method))  # type: ignore[arg-type]
+                assert_reports_errors(self, send, raising(self.model, method), client_error=duplicate)  # type: ignore[arg-type]
         self.assertTrue(self.model.objects.filter(pk=resource.pk, name=resource.name).exists())  # type: ignore[attr-defined]
 
     # -------------------------------------------------------------------------

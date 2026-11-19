@@ -17,6 +17,7 @@ The requests authenticate with a session of the account's admin, who is a superu
 """
 
 from collections.abc import Callable
+from functools import partial
 from http import HTTPStatus
 
 from django.db import models
@@ -25,6 +26,7 @@ from rest_framework.test import APIClient
 
 from smarter.lib import json
 from smarter.lib.unittest import ReverseNamesClass
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 class ResourceApiTestMixin:
@@ -137,6 +139,30 @@ class ResourceApiTestMixin:
         response = self.api_client.delete(self.detail_urls()["by hashed id"])
         self.assertEqual(response.status_code, HTTPStatus.FOUND, response.content[:500])  # type: ignore[attr-defined]
         self.assertFalse(self.model.objects.filter(pk=self.resource.pk).exists())  # type: ignore[attr-defined]
+
+    def test_errors(self):
+        """
+        Test how the post, patch and delete handlers report an error.
+
+        An error in the client's data, or a delete that the client can't make, is a bad request.
+        Any other error is the server's fault: the catch-all answers 500, without the error's text.
+        """
+        url = self.detail_urls()["by hashed id"]
+        data = {"description": "errors"}
+        cases = (
+            (
+                "post",
+                partial(self.api_client.post, url, data=data, format="json"),
+                raising(self.model.objects, "create"),  # type: ignore[attr-defined]
+            ),
+            ("patch", partial(self.api_client.patch, url, data=data, format="json"), raising(self.model, "save")),
+            ("delete", partial(self.api_client.delete, url), raising(self.model, "delete")),
+        )
+        for method, send, patch_error in cases:
+            with self.subTest(method=method):  # type: ignore[attr-defined]
+                assert_reports_errors(self, send, patch_error)  # type: ignore[arg-type]
+        resource = self.model.objects.get(pk=self.resource.pk)  # type: ignore[attr-defined]
+        self.assertEqual(resource.description, self.resource.description)  # type: ignore[attr-defined]
 
     def test_default_api_get_and_options(self):
         """

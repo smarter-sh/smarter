@@ -4,11 +4,10 @@ Test the connection app's views: :mod:`smarter.apps.connection.views.listview`, 
 The class fixture ``connection_django_model`` is owned by the account's admin user.
 """
 
+from functools import partial
 from http import HTTPStatus
-from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.exceptions import ValidationError
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
@@ -22,6 +21,7 @@ from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlCon
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 from smarter.lib.unittest.resource_views import (
     assert_console_page,
     assert_no_resource,
@@ -219,15 +219,8 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
             ),
         ):
             url = self.web_url(name, connection_id=connection.id, **kwargs)
-            with self.subTest(api=name, error="unexpected"):
-                with patch.object(model, method, side_effect=RuntimeError("internal detail")):
-                    data = self.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-                self.assertNotIn("internal detail", data["error"])
-                self.assertTrue(data["error"].startswith("An unknown error occurred while"))
-            with self.subTest(api=name, error="validation"):
-                with patch.object(model, method, side_effect=ValidationError("The name is not valid.")):
-                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
-                self.assertEqual(data["error"], "The name is not valid.")
+            with self.subTest(api=name):
+                assert_reports_errors(self, partial(self.client.post, url), raising(model, method))
         self.assertTrue(ApiConnection.objects.filter(pk=connection.pk, name=connection.name).exists())
 
 
