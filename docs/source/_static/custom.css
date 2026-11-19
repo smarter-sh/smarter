@@ -19,6 +19,20 @@ section#smarter-settings dl.class > dt#smarter\.common\.conf\.Settings.sig.sig-o
   overflow-wrap: break-word !important;
 }
 
+/*
+ * YouTube videos, embedded with a raw html iframe. An iframe is inline and has no margin of its
+ * own, so the heading that follows a video sat right under it, and read as the video's caption.
+ * Give each video the space that a paragraph has below it, and keep it 16:9 on narrow screens.
+ */
+.rst-content iframe[src*="youtube.com/embed"] {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 2em;
+}
+
 .img-bottom-margin {
   margin-bottom: 2em;
 }

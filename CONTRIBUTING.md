@@ -69,6 +69,10 @@ make build   # builds and configures all docker containers
 make run     # runs all docker containers and starts a local web server on port 8000
 ```
 
+[Smarter Developer Onboarding: the Development Environment](https://youtu.be/POjSx6mpTq8)
+is an eight-minute video of these steps, from cloning this repository to a
+running development environment.
+
 To preserve your own sanity, don't spend time formatting your Python,
 Terraform, JS or any other source code because pre-commit invokes automatic
 code formatting utilities such as black, flake8 and prettier, on all local

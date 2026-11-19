@@ -164,6 +164,8 @@ make run            # runs all docker containers and starts a
 
 See these onboarding videos:
 
+- [Smarter Developer Onboarding: the Development Environment](https://youtu.be/POjSx6mpTq8),
+  eight minutes from cloning this repository to a running development environment
 - [Smarter Developer Onboarding I](https://youtu.be/-hZEO9sMm1s)
 - [Smarter Developer Onboarding II](https://www.youtube.com/watch?v=G2RSCzxxupE)
 - [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
