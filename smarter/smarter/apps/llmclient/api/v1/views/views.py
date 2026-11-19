@@ -38,6 +38,7 @@ from smarter.apps.llmclient.serializers import (
     LLMClientSerializer,
 )
 from smarter.apps.llmclient.tasks.deploy_custom_api import deploy_custom_api
+from smarter.apps.llmtool.manifest.controller import SAMPluginControllerError
 from smarter.lib import json, logging
 from smarter.lib.django.http.client_errors import (
     CLIENT_ERROR_TYPES,
@@ -356,7 +357,7 @@ class LLMClientPluginView(ViewBase):
         try:
             data = request.data
             llmclient_plugin = LLMClientPlugin.load(llmclient, data)
-        except REQUEST_DATA_ERROR_TYPES as e:
+        except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
             message = client_error_message(e, "The request data is not valid.")
             return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except
@@ -384,7 +385,7 @@ class LLMClientPluginView(ViewBase):
             llmclient_plugin.load(llmclient, data)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=HTTPStatus.BAD_REQUEST)
-        except REQUEST_DATA_ERROR_TYPES as e:
+        except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
             message = client_error_message(e, "The request data is not valid.")
             return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except

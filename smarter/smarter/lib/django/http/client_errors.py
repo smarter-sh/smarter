@@ -22,18 +22,21 @@ from django.db.models import ProtectedError, RestrictedError
 from rest_framework.exceptions import ParseError, UnsupportedMediaType
 
 from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
+from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
 
-SMARTER_CLIENT_ERROR_TYPES = (SmarterValueError, SmarterBusinessRuleViolation)
-"""Smarter's exceptions whose message is written for the client: a value or a policy that the client can change."""
+SMARTER_CLIENT_ERROR_TYPES = (SmarterValueError, SmarterBusinessRuleViolation, SAMValidationError, SAMBadRequestError)
+"""
+Smarter's exceptions whose message is written for the client: a value, a policy or a manifest.
+
+that the client can change.
+"""
 
 CLIENT_ERROR_TYPES = (
     ValidationError,
     IntegrityError,
     ProtectedError,
     RestrictedError,
-    SmarterValueError,
-    SmarterBusinessRuleViolation,
-)
+) + SMARTER_CLIENT_ERROR_TYPES
 """
 The exceptions that a client's request can cause, and that the client can correct.
 
@@ -42,7 +45,7 @@ The exceptions that a client's request can cause, and that the client can correc
   rename whose name the user already has.
 - :class:`~django.db.models.ProtectedError` and :class:`~django.db.models.RestrictedError`:
   other resources still refer to the one being deleted.
-- :data:`SMARTER_CLIENT_ERROR_TYPES`: a value or a policy that the client can change.
+- :data:`SMARTER_CLIENT_ERROR_TYPES`: a value, a policy or a manifest that the client can change.
 """
 
 REQUEST_DATA_ERROR_TYPES = CLIENT_ERROR_TYPES + (ParseError, UnsupportedMediaType, TypeError, ValueError)
@@ -102,10 +105,11 @@ def client_error_message(e: Exception, fallback: str) -> str:
         messages = e.messages
         message = " ".join(messages)
         return message
-    if isinstance(e, IntegrityError):
-        return INTEGRITY_ERROR_MESSAGE
+    # ProtectedError and RestrictedError are IntegrityErrors, so they are checked first.
     if isinstance(e, (ProtectedError, RestrictedError)):
         return PROTECTED_ERROR_MESSAGE
+    if isinstance(e, IntegrityError):
+        return INTEGRITY_ERROR_MESSAGE
     if isinstance(e, SMARTER_CLIENT_ERROR_TYPES):
         return e.message
     return fallback

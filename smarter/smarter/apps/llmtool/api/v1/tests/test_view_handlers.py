@@ -148,14 +148,12 @@ class TestPluginViewHandlers(TestAccountMixin):
         self.assertStatus(views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.BAD_REQUEST)
 
     def test_update_plugin_invalid_manifest(self):
-        """A manifest that fails validation is an internal error."""
+        """A manifest that fails validation is the client's error, so it is a bad request."""
         plugin_meta = MagicMock()
         plugin_meta.name = "the_plugin"
         self.patch_plugin_meta(return_value=plugin_meta)
         body = {"kind": "Plugin", "metadata": {"name": "the_plugin"}}
-        self.assertStatus(
-            views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.INTERNAL_SERVER_ERROR
-        )
+        self.assertStatus(views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.BAD_REQUEST)
 
     # -------------------------------------------------------------------------
     # delete_plugin

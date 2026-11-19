@@ -24,9 +24,17 @@ class TestUserViewBranches(TestAccountMixin):
         return request
 
     def test_request_body_that_cannot_be_read(self):
+        """A body that isn't valid utf-8 is the client's error, and any other failure is the server's."""
+        undecodable = UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
+        with patch(f"{MODULE}.json.loads", side_effect=undecodable):
+            response = user_views.validate_request_body(self.request())
+        assert response is not None
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         with patch(f"{MODULE}.json.loads", side_effect=RuntimeError("unreadable")):
             response = user_views.validate_request_body(self.request())
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        assert response is not None
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertNotIn(b"unreadable", response.content)
 
     def test_get_user_without_a_resolved_user(self):
         with patch(f"{MODULE}.get_resolved_user", return_value=None):

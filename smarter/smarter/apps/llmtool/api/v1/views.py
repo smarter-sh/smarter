@@ -17,9 +17,10 @@ from smarter.apps.llmtool.manifest.controller import (
     PLUGIN_MAP,
     SAM_MAP,
     PluginController,
+    SAMPluginControllerError,
 )
-from smarter.apps.llmtool.models import PluginDataValueError, PluginMeta
-from smarter.apps.llmtool.plugin.base import PluginBase
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.plugin.base import PluginBase, SmarterPluginError
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
@@ -241,7 +242,7 @@ def get_plugin(request, plugin_id):
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
+            raise SmarterPluginError(
                 f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
             )
         plugin = plugin_controller.plugin
@@ -278,7 +279,7 @@ def create_plugin(request, data: Optional[SmarterDictType] = None):
     # reading the manifest, and building the plugin from it, both handle the client's data.
     try:
         if not data:
-            data = request.data
+            data = getattr(request, "data", None)
             if not isinstance(data, dict):
                 return JsonResponse(
                     {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
@@ -291,11 +292,13 @@ def create_plugin(request, data: Optional[SmarterDictType] = None):
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            # the message reaches the client, so it names the plugin, not the whole manifest.
-            raise PluginDataValueError("A plugin could not be created from the manifest.")
+            # the controller found no plugin for a valid manifest: a server error, which the
+            # catch-all logs and answers with a 500.
+            raise SmarterPluginError("A plugin could not be created from the manifest.")
         plugin = plugin_controller.plugin
-    # the manifest is the client's: pydantic's ValidationError is a ValueError.
-    except REQUEST_DATA_ERROR_TYPES as e:
+    # the manifest is the client's: pydantic's ValidationError is a ValueError, and
+    # SAMPluginControllerError refuses e.g. a kind that isn't a plugin's.
+    except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
         message = client_error_message(e, "The request data is not valid.")
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
@@ -370,9 +373,10 @@ def update_plugin(request: HttpRequest, plugin_id: Optional[int] = None):
         # the plugin is instantiated from the manifest, which updates it.
         plugin = PLUGIN_MAP[kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
         if not plugin or not plugin.ready:
-            raise PluginDataValueError(f"Plugin {manifest_name} is not ready after update.")
-    # the manifest is the client's: pydantic's ValidationError is a ValueError.
-    except REQUEST_DATA_ERROR_TYPES as e:
+            raise SmarterPluginError(f"Plugin {manifest_name} is not ready after update.")
+    # the manifest is the client's: pydantic's ValidationError is a ValueError, and
+    # SAMPluginControllerError refuses e.g. a kind that isn't a plugin's.
+    except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
         message = client_error_message(e, "The request data is not valid.")
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
@@ -404,7 +408,7 @@ def delete_plugin(request, plugin_id):
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
+            raise SmarterPluginError(
                 f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
             )
         plugin = plugin_controller.plugin

@@ -17,6 +17,7 @@ from smarter.lib.django.http.client_errors import (
     REQUEST_DATA_ERROR_TYPES,
     client_error_message,
 )
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 FALLBACK = "An error occurred while renaming the Secret."
@@ -60,6 +61,12 @@ class TestClientErrorMessage(SmarterTestBase):
             with self.subTest(error=error_class.__name__):
                 e = error_class("Cannot delete some instances of model 'Secret'", set())
                 self.assertEqual(client_error_message(e, FALLBACK), PROTECTED_ERROR_MESSAGE)
+
+    def test_manifest_error_gives_its_message(self):
+        """A SAMValidationError describes the client's manifest, so it is a client error, and its message is sent."""
+        e = SAMValidationError("metadata.name is required.")
+        self.assertIsInstance(e, CLIENT_ERROR_TYPES)
+        self.assertEqual(client_error_message(e, FALLBACK), "metadata.name is required.")
 
     def test_other_database_error_gives_the_fallback(self):
         """A database error that the client didn't cause, e.g. a lost connection, gives the fallback."""
