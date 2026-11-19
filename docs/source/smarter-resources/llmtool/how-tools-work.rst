@@ -11,6 +11,14 @@ we'll look at a real-world example for getting real-time weather forecasts. Weat
 LLM's definitely do not know anything about weather, beyond any historical weather data on which they
 might have been trained.
 
+This seven-minute video introduces tool calling: what it is, what it is for, and why a model needs
+a tool to answer questions about data that changes, such as the current weather forecast. It uses
+Smarter to show each tool call as it happens.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/sbp_n9ULr8g" title="An introduction to LLM tool calling" frameborder="0" allowfullscreen></iframe>
+
 For the same idea applied to an organization's own private data, see the `Stackademy case study
 <https://smarter.sh/case-studies/stackademy>`__ on smarter.sh. It follows one tool call from a
 student's question, through the model and a private course database, back to the answer, and lets
