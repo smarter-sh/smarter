@@ -5,6 +5,15 @@ Smarter follows opinionated code style policies for most of the
 technologies in this repo. With that in mind, following is how to
 correctly setup your local development environment.
 
+This eight-minute developer onboarding video walks through getting the development environment up
+and running from source code, on your own computer. To run Smarter without changing its code, the
+:doc:`Quick Start Guide </smarter-platform/installation/quick-start>` uses the pre-built images on
+Docker Hub instead.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/POjSx6mpTq8" title="Smarter developer onboarding: the development environment" frameborder="0" allowfullscreen></iframe>
+
 
 Prerequisites
 ---------------

@@ -26,6 +26,14 @@ To introduce Smarter to a class, or to the colleagues who approve a new course, 
 and no technical jargon: it explains the problems Smarter solves, from connecting AI to an
 organization's systems to governing it and sharing AI resources within a workgroup.
 
+This one-minute video shows Smarter in a classroom, used to teach advanced LLM prompting
+techniques. The course behind it is :doc:`Prompt Engineering
+<smarter-instructors/example-courses/micro-courses/prompt-engineering>`, in the Free Course Catalog.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/E5L-mMbJHcA" title="Teaching advanced LLM prompting with Smarter, in 60 seconds" frameborder="0" allowfullscreen></iframe>
+
 
 Open Source, Free, and Community Supported
 -------------------------------------------
@@ -159,7 +167,13 @@ Quick Start
 
 Open http://localhost:9357/login/ and log in as ``admin@smarter.sh`` with the password
 ``smarter``. Change the password straight away. The
-:doc:`Quick Start Guide <smarter-platform/installation/quick-start>` has screenshots of each step.
+:doc:`Quick Start Guide <smarter-platform/installation/quick-start>` has screenshots of each step,
+and this video follows them from start to finish. It also makes a good first assignment for
+students who will run Smarter on their own laptops.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
 
 From Source
 ~~~~~~~~~~~
@@ -176,7 +190,13 @@ From Source
 ``docker ps`` should list the ``smarter-api``, ``smarter-worker``, ``smarter-beat``,
 ``smarter-mariadb`` and ``smarter-redis`` containers. The
 :doc:`Developer Setup Guide <smarter-framework/guides/developer-setup>` explains each part of the
-environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems.
+environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems. This
+eight-minute developer onboarding video walks through the whole setup, and makes a good first
+assignment for a software development course.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/POjSx6mpTq8" title="Smarter developer onboarding: the development environment" frameborder="0" allowfullscreen></iframe>
 
 The Command-Line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
