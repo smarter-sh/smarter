@@ -26,7 +26,7 @@ Docker. See the :doc:`/smarter-platform/installation/quick-start`.
    <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
 
 An Introduction to LLM Tool Calling
-----------------------------------
+-----------------------------------
 
 What tool calling is, what it is for, and why a model needs a tool to answer questions about data
 that changes, such as the current weather forecast, with Smarter showing each tool call as it
