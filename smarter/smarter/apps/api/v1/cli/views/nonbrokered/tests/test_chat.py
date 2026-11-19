@@ -28,6 +28,7 @@ CREATE_PATCH = (
 # Celery tasks that write rows that refer to the prompt, or charge for it. Celery is not eager in tests, so
 # unpatched, they run in the live worker, which can write a row while the test deletes the prompt.
 PROMPT_TASK_PATCHES = (
+    "smarter.apps.llmclient.receivers.create_llmclient_request",
     "smarter.apps.prompt.receivers.create_prompt_history",
     "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_tool_call_history",
     "smarter.apps.provider.services.text_completion.lib.mixins.create_prompt_plugin_usage",

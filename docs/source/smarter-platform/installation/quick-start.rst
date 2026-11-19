@@ -1,7 +1,12 @@
 Quick Start Guide
 ===================================
 
-You'll be up and running on your desktop in about 10 minutes!
+You'll be up and running on your desktop in about 10 minutes! This video follows every step below,
+from cloning the smarter-deploy repository and configuring its .env file to logging in to Smarter.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
 
 1. Install Docker Desktop.
 -------------------------------

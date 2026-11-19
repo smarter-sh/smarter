@@ -82,7 +82,8 @@ New to Smarter? Watch this video.
    `Smarter CLI <https://smarter.sh/cli>`__.
 
    See the :doc:`Quick Start Guide <smarter-platform/installation/quick-start>` for step-by-step
-   instructions with screenshots.
+   instructions with screenshots, or watch `Up and Running in Less Than 10 Minutes
+   <https://youtu.be/El8L6zgGyRU>`__, which follows the same steps.
 
 .. _ai-training-courses:
 

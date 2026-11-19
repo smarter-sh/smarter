@@ -14,3 +14,57 @@ workgroup can use which AI resources.
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" frameborder="0" allowfullscreen></iframe>
+
+Up and Running in Less Than 10 Minutes
+--------------------------------------
+
+Clone the smarter-deploy repository, configure it, and run Smarter on your own computer from the
+pre-built images on Docker Hub. See the :doc:`/smarter-platform/installation/quick-start`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
+
+Developer Onboarding: the Development Environment
+-------------------------------------------------
+
+An eight-minute walkthrough of getting Smarter's development environment up and running from its
+source code, for anyone who wants to change that code. Up and Running in Less Than 10 Minutes, above,
+runs the pre-built images from Docker Hub instead. See the
+:doc:`/smarter-framework/guides/developer-setup`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/POjSx6mpTq8" title="Smarter developer onboarding: the development environment" frameborder="0" allowfullscreen></iframe>
+
+An Introduction to LLM Tool Calling
+-----------------------------------
+
+What tool calling is, what it is for, and why a model needs a tool to answer questions about data
+that changes, such as the current weather forecast, with Smarter showing each tool call as it
+happens. See :doc:`/smarter-resources/llmtool/how-tools-work`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/sbp_n9ULr8g" title="An introduction to LLM tool calling" frameborder="0" allowfullscreen></iframe>
+
+The SqlPlugin in 60 Seconds
+---------------------------
+
+An assistant answers from a database through a query declared in a manifest. The model chooses
+only the query's parameter values, never its SQL. See :doc:`/smarter-resources/llmtool/plugin/sql`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/CmIQVkFM7OI" title="The SqlPlugin in 60 seconds" frameborder="0" allowfullscreen></iframe>
+
+Teaching Advanced Prompting in 60 Seconds
+-----------------------------------------
+
+Smarter in a classroom, used to teach advanced LLM prompting techniques. See the
+:doc:`Smarter Instructor Guide </smarter-instructor>` and the :doc:`Prompt Engineering course
+</smarter-instructors/example-courses/micro-courses/prompt-engineering>`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/E5L-mMbJHcA" title="Teaching advanced LLM prompting with Smarter, in 60 seconds" frameborder="0" allowfullscreen></iframe>
