@@ -624,7 +624,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
-        def _get_object_by_pk(pk: int, class_name: str = cls.__name__) -> "MetaDataWithOwnershipModel":
+        def _get_object_by_pk(pk: Optional[int], class_name: str = cls.__name__) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by primary key with caching.
 
@@ -671,7 +671,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_user_profile(
-            name: str, user_profile_id: int, class_name: str = cls.__name__
+            name: Optional[str], user_profile_id: Optional[int], class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and user profile with caching.
@@ -722,7 +722,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_name_and_account(
-            name: str, account_id: int, class_name: str = cls.__name__
+            name: Optional[str], account_id: Optional[int], class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by name and account with caching.
@@ -773,7 +773,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
 
         @cache_results(cls.cache_expiration)
         def _get_object_by_session_key(
-            session_key: str, class_name: str = cls.__name__
+            session_key: Optional[str], class_name: str = cls.__name__
         ) -> "MetaDataWithOwnershipModel":
             """
             Internal method to retrieve a model instance by session key with caching.
@@ -824,6 +824,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     f"Multiple {class_name} objects found for session_key '{session_key}'. This should not happen as session keys should be unique to a user session."
                 ) from e
 
+        # an argument that wasn't given is None: its lookup never cached anything, so there is nothing to invalidate.
         if invalidate:
             _get_object_by_pk.invalidate(pk=pk, class_name=cls.__name__)
             _get_object_by_name_and_user_profile.invalidate(

@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test AccountView and AccountListView for API end points."""
 
+from functools import partial
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -17,6 +18,7 @@ from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
@@ -258,9 +260,12 @@ class TestAccountViewErrors(TestAccountMixin):
             response = self.client.patch(self.url, {"description": "x"}, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    def test_delete_unexpected_error_returns_500(self):
-        """DELETE returns 500 when deleting the account fails unexpectedly."""
-        with patch.object(Account, "delete", side_effect=RuntimeError("boom")):
-            response = self.client.delete(self.url)
-        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+    def test_post_reports_errors(self):
+        """POST answers a client's error with 400, and any other failure with 500, without its text."""
+        send = partial(self.client.post, self.url, {"description": "x"}, content_type="application/json")
+        assert_reports_errors(self, send, raising(Account.objects, "create"))
+
+    def test_delete_reports_errors(self):
+        """DELETE answers a refused delete with 400, and any other failure with 500; the account is kept."""
+        assert_reports_errors(self, partial(self.client.delete, self.url), raising(Account, "delete"))
         self.assertTrue(Account.objects.filter(pk=self.account.pk).exists())

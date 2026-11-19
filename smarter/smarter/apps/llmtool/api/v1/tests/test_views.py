@@ -91,8 +91,9 @@ class TestPluginApi(ApiV1TestBase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_create_invalid(self):
+        """A manifest that fails validation is the client's error, so it is a bad request."""
         response = self.client.post(self.url("plugins_list_view"), data={"kind": "Plugin"}, format="json")
-        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:300])
 
     def test_update(self):
         """Test that a plugin is updated with a PATCH, PUT or POST to its url."""

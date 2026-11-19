@@ -4,7 +4,6 @@
 from http import HTTPStatus
 from typing import Optional
 
-from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import (
     HttpRequest,
@@ -38,6 +37,11 @@ from smarter.apps.orchestrator.serializers import (
     OrchestratorSerializer,
 )
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    REQUEST_DATA_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -45,7 +49,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminListAPIView,
     SmarterAuthenticatedAPIView,
 )
-from smarter.lib.typing import SmarterDictType, required
+from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
 
@@ -151,8 +155,16 @@ class OrchestratorView(ViewBase):
             if not isinstance(data, dict):
                 raise TypeError(f"Expected a JSON dict in request body but received {type(data)}")
             orchestrator = Orchestrator.objects.create(**data)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while creating the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return HttpResponseRedirect(request.path_info + str(orchestrator.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, *args, orchestrator_id: Optional[int] = None, **kwargs):
@@ -167,12 +179,12 @@ class OrchestratorView(ViewBase):
             not a dict or the Orchestrator does not validate; ``500`` if saving fails.
         """
         orchestrator: Optional[Orchestrator] = None
-        data: Optional[SmarterDictType] = None
 
         orchestrator = self.orchestrator
         if not orchestrator:
             return HttpResponseNotFound("Orchestrator not found")
 
+        # parsing the body, and saving its values, both handle the client's data.
         try:
             request_data = request.data
             if not isinstance(request_data, dict):
@@ -182,20 +194,19 @@ class OrchestratorView(ViewBase):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-            data = request_data
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-        try:
-            for key, value in data.items():
+            for key, value in request_data.items():
                 if hasattr(orchestrator, key):
                     setattr(orchestrator, key, value)
             orchestrator.save()
-        except ValidationError as e:
-            return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-        except Exception as e:
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.patch() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while updating the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         return HttpResponseRedirect(request.path_info)
@@ -219,9 +230,16 @@ class OrchestratorView(ViewBase):
         try:
             if orchestrator:
                 orchestrator.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         plugins_path = request.path_info.rsplit("/", 2)[0]

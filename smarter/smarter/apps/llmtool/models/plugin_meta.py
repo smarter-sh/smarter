@@ -273,7 +273,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
         @cache_results(cls.cache_expiration)
         def _get_model_by_name_and_userprofile_and_plugin_class(
-            name: str, user_profile_id: int, plugin_class: str
+            name: Optional[str], user_profile_id: int, plugin_class: str
         ) -> Optional["PluginMeta"]:
             try:
                 logger.debug(
@@ -334,7 +334,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 "a pk, a UserProfile and a name, or an account and a name, are required to get a PluginMeta."
             )
 
-        if invalidate and user_profile and name:
+        if invalidate and user_profile and name and plugin_class:
             _get_model_by_name_and_userprofile_and_plugin_class.invalidate(name, user_profile.id, plugin_class)  # type: ignore[union-attr]
 
         if pk:

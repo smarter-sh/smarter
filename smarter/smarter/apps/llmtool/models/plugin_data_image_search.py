@@ -321,10 +321,14 @@ class PluginDataImageSearch(PluginDataBase):
         :raises PluginDataImageSearch.DoesNotExist: If the plugin has no image search data.
         """
 
+        # mypy types cls.objects inside a nested function as an unbound Self, so
+        # the getter reads through the concrete class, and the caller narrows.
+        model: type[PluginDataImageSearch] = cls
+
         @cache_results()
-        def data_by_plugin_id(plugin_id: int) -> Optional[Self]:
+        def data_by_plugin_id(plugin_id: int) -> Optional["PluginDataImageSearch"]:
             try:
-                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                return model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist as e:
                 raise cls.DoesNotExist(f"PluginDataImageSearch with plugin_id {plugin_id} does not exist.") from e
 
@@ -353,10 +357,14 @@ class PluginDataImageSearch(PluginDataBase):
         :raises PluginDataImageSearch.DoesNotExist: If the plugin has no image search data.
         """
 
+        # mypy types cls.objects inside a nested function as an unbound Self, so
+        # the getter reads through the concrete class, and the caller narrows.
+        model: type[PluginDataImageSearch] = cls
+
         @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional[Self]:
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataImageSearch"]:
             try:
-                return cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                return model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
             except cls.DoesNotExist as e:
                 raise cls.DoesNotExist(f"PluginDataImageSearch with plugin_id {plugin_id} does not exist.") from e
 
@@ -368,5 +376,6 @@ class PluginDataImageSearch(PluginDataBase):
             cached = super().get_cached_object(invalidate=invalidate, pk=pk, **kwargs)
             retval = cached if isinstance(cached, cls) else None
         if plugin:
-            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[reportAttributeAccessIssue]
+            found = _get_model_by_plugin_meta(plugin.id)
+            retval = found if isinstance(found, cls) else None
         return retval

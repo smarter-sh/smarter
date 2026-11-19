@@ -22,6 +22,10 @@ from smarter.apps.connection.serializers import (
     SqlConnectionSerializer,
 )
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -120,18 +124,26 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
                 invalidate_all_cached_connections_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = serializer_class(clone, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning ConnectionBase with id %s: %s",
                 self.formatted_class_name,
                 connection_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the ConnectionBase.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning ConnectionBase with id %s",
+                self.formatted_class_name,
+                connection_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the ConnectionBase: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while cloning the ConnectionBase."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -186,18 +198,26 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"ConnectionBase with id {connection_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting ConnectionBase with id %s: %s",
                 self.formatted_class_name,
                 connection_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the ConnectionBase.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting ConnectionBase with id %s",
+                self.formatted_class_name,
+                connection_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the ConnectionBase: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while deleting the ConnectionBase."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -257,16 +277,24 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_connections_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ConnectionSerializer(connection, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming ConnectionBase with id %s: %s",
                 self.formatted_class_name,
                 connection_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the ConnectionBase.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming ConnectionBase with id %s",
+                self.formatted_class_name,
+                connection_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the ConnectionBase: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while renaming the ConnectionBase."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

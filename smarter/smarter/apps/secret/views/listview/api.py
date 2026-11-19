@@ -15,6 +15,10 @@ from smarter.apps.secret.caching import (
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -92,17 +96,26 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = SecretSerializer(cloned_secret, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Secret with id %s: %s",
                 self.formatted_class_name,
                 secret_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Secret.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Secret with id %s",
+                self.formatted_class_name,
+                secret_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Secret: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Secret."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -143,17 +156,26 @@ class SecretListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             secret.delete()
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse({"message": f"Secret with id {secret_id} deleted successfully."}, status=HTTPStatus.OK)
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Secret with id %s: %s",
                 self.formatted_class_name,
                 secret_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Secret.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Secret with id %s",
+                self.formatted_class_name,
+                secret_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Secret: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Secret."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -203,15 +225,24 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_secrets_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = SecretSerializer(secret, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Secret with id %s: %s",
                 self.formatted_class_name,
                 secret_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Secret.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Secret with id %s",
+                self.formatted_class_name,
+                secret_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Secret: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Secret."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

@@ -275,15 +275,19 @@ class PluginDataSql(PluginDataBase):
             plugin,
         )
 
+        # mypy types cls.objects inside a nested function as an unbound Self, so
+        # the getter reads through the concrete class, and the caller narrows.
+        model: type[PluginDataSql] = cls
+
         @cache_results()
-        def _get_model_by_plugin_meta(plugin_id: int) -> Optional[Self]:
+        def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataSql"]:
             try:
                 logger.debug(
                     "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
                     logger_prefix,
                     plugin_id,
                 )
-                retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
+                retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
                     "%s._get_model_by_plugin_meta() fetched and cached PluginDataBase for plugin_id: %s",
                     logger_prefix,
@@ -307,7 +311,8 @@ class PluginDataSql(PluginDataBase):
             retval = cached if isinstance(cached, cls) else None
 
         if plugin:
-            retval = _get_model_by_plugin_meta(plugin.id)  # type: ignore[return-value]
+            found = _get_model_by_plugin_meta(plugin.id)
+            retval = found if isinstance(found, cls) else None
 
         return retval
 
@@ -324,10 +329,14 @@ class PluginDataSql(PluginDataBase):
         :rtype: Union[PluginDataSql, None]
         """
 
+        # mypy types cls.objects inside a nested function as an unbound Self, so
+        # the getter reads through the concrete class, and the caller narrows.
+        model: type[PluginDataSql] = cls
+
         @cache_results()
-        def data_by_plugin_id(plugin_id: int) -> Optional[Self]:
+        def data_by_plugin_id(plugin_id: int) -> Optional["PluginDataSql"]:
             try:
-                retval = cls.objects.select_related("plugin").get(plugin_id=plugin_id)
+                retval = model.objects.select_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
                     "%s.get_cached_data_by_plugin() fetched and cached PluginDataSql for plugin_id: %s",
                     cls.formatted_class_name,

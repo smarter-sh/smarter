@@ -15,6 +15,10 @@ from smarter.apps.guardrail.caching import (
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.serializers import GuardrailSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -109,17 +113,26 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_guardrails_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = GuardrailSerializer(cloned_guardrail, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Guardrail with id %s: %s",
                 self.formatted_class_name,
                 guardrail_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Guardrail.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Guardrail with id %s",
+                self.formatted_class_name,
+                guardrail_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Guardrail: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Guardrail."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -170,17 +183,26 @@ class GuardrailListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"Guardrail with id {guardrail_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Guardrail with id %s: %s",
                 self.formatted_class_name,
                 guardrail_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Guardrail.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Guardrail with id %s",
+                self.formatted_class_name,
+                guardrail_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Guardrail: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Guardrail."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -238,15 +260,24 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_guardrails_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = GuardrailSerializer(guardrail, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Guardrail with id %s: %s",
                 self.formatted_class_name,
                 guardrail_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Guardrail.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Guardrail with id %s",
+                self.formatted_class_name,
+                guardrail_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Guardrail: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Guardrail."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
