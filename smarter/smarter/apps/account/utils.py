@@ -581,10 +581,11 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             )
             return user_profile.user  # type: ignore[return-value]
 
+    account_number = str(account.account_number)
     if invalidate:
-        _admin_user_for_account_number.invalidate(account_number=account.account_number, class_name=User.__name__)
+        _admin_user_for_account_number.invalidate(account_number=account_number, class_name=User.__name__)
 
-    return _admin_user_for_account_number(account_number=account.account_number, class_name=User.__name__)
+    return _admin_user_for_account_number(account_number=account_number, class_name=User.__name__)
 
 
 @deprecated(

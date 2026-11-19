@@ -737,7 +737,7 @@ class UserProfile(MetaDataModel):
         # and a key must be built from plain values.
         @cache_results(cls.cache_expiration)
         def _get_object_by_user_and_account(
-            user_id: int, account_id: int, class_name: str = cls.__name__
+            user_id: Optional[int], account_id: Optional[int], class_name: str = cls.__name__
         ) -> "UserProfile":
             logger.debug(
                 "%s called with pk: %s, name: %s, user_id: %s, username: %s, account_id: %s, invalidate: %s",
@@ -776,7 +776,7 @@ class UserProfile(MetaDataModel):
                 raise UserProfile.DoesNotExist(f"No UserProfile found for user {user} and account {account}") from e
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_user(user_id: int, class_name: str = cls.__name__) -> "UserProfile":
+        def _get_object_by_user(user_id: Optional[int], class_name: str = cls.__name__) -> "UserProfile":
             try:
                 retval = (
                     UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user_id=user_id)
@@ -821,7 +821,9 @@ class UserProfile(MetaDataModel):
                 return retval
 
         @cache_results(cls.cache_expiration)
-        def _get_object_by_account(account_id: int, class_name: str = cls.__name__) -> Optional["UserProfile"]:
+        def _get_object_by_account(
+            account_id: Optional[int], class_name: str = cls.__name__
+        ) -> Optional["UserProfile"]:
             admin_user = None
             try:
                 # account is the instance whose id is account_id: the caller passes account.pk.
@@ -880,6 +882,7 @@ class UserProfile(MetaDataModel):
         user_id = user.pk if user else None
         account_id = account.pk if account else None
 
+        # an argument that wasn't given is None: its lookup never cached anything, so there is nothing to invalidate.
         if invalidate:
             _get_object_by_user_and_account.invalidate(
                 user_id=user_id, account_id=account_id, class_name=UserProfile.__name__
@@ -888,7 +891,9 @@ class UserProfile(MetaDataModel):
             _get_object_by_account.invalidate(account_id=account_id, class_name=UserProfile.__name__)
 
         if user or account:
-            retval: UserProfile
+            # None when only an account is given, and it has no admin profile. Callers test the
+            # result, although the signature says UserProfile.
+            retval: Optional[UserProfile]
             if user and account:
                 retval = _get_object_by_user_and_account(user_id, account_id, UserProfile.__name__)
             elif user:
@@ -898,7 +903,7 @@ class UserProfile(MetaDataModel):
                 )
             else:
                 retval = _get_object_by_account(account_id=account_id, class_name=UserProfile.__name__)
-            return retval
+            return retval  # type: ignore[return-value]
 
         return super().get_cached_object(*args, invalidate=invalidate, pk=pk, name=name, **kwargs)  # type: ignore[return-value]
 
