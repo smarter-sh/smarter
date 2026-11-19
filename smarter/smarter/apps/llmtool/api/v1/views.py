@@ -6,7 +6,6 @@ from typing import Optional
 from urllib.parse import urljoin
 
 import yaml
-from django.core.exceptions import ValidationError
 from django.core.handlers.asgi import ASGIRequest
 from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -18,14 +17,20 @@ from smarter.apps.llmtool.manifest.controller import (
     PLUGIN_MAP,
     SAM_MAP,
     PluginController,
+    SAMPluginControllerError,
 )
-from smarter.apps.llmtool.models import PluginDataValueError, PluginMeta
-from smarter.apps.llmtool.plugin.base import PluginBase
+from smarter.apps.llmtool.models import PluginMeta
+from smarter.apps.llmtool.plugin.base import PluginBase, SmarterPluginError
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    REQUEST_DATA_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.drf.views.token_authentication_helpers import (
@@ -35,6 +40,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getLogger(__name__)
+logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class PluginView(SmarterAuthenticatedAPIView):
@@ -236,16 +242,21 @@ def get_plugin(request, plugin_id):
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
+            raise SmarterPluginError(
                 f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
             )
         plugin = plugin_controller.plugin
     except PluginMeta.DoesNotExist:
         return JsonResponse({"detail": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
-    except ValidationError as e:
-        return JsonResponse({"detail": e.message}, status=HTTPStatus.BAD_REQUEST)
-    except Exception as e:
-        return JsonResponse({"detail": f"Internal error: {e}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    except CLIENT_ERROR_TYPES as e:
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse({"detail": message}, status=HTTPStatus.BAD_REQUEST)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.get_plugin() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"detail": "An unknown error occurred while loading the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     if plugin.ready:
         return JsonResponse(plugin.to_json(), status=HTTPStatus.OK)
@@ -265,34 +276,37 @@ def create_plugin(request, data: Optional[SmarterDictType] = None):
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
-    if not data:
-        try:
-            data = request.data
+    # reading the manifest, and building the plugin from it, both handle the client's data.
+    try:
+        if not data:
+            data = getattr(request, "data", None)
             if not isinstance(data, dict):
                 return JsonResponse(
                     {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
                     status=HTTPStatus.BAD_REQUEST,
                 )
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-    if "user_profile" not in data:
-        data["user_profile"] = user_profile
-
-    try:
+        if "user_profile" not in data:
+            data["user_profile"] = user_profile
         plugin_controller = PluginController(
             user_profile=user_profile,
             manifest=data,  # type: ignore[arg-type]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
-                f"PluginController could not be created for data: {data}, user_profile: {user_profile}"
-            )
+            # the controller found no plugin for a valid manifest: a server error, which the
+            # catch-all logs and answers with a 500.
+            raise SmarterPluginError("A plugin could not be created from the manifest.")
         plugin = plugin_controller.plugin
-    except ValidationError as e:
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    # the manifest is the client's: pydantic's ValidationError is a ValueError, and
+    # SAMPluginControllerError refuses e.g. a kind that isn't a plugin's.
+    except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.create_plugin() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while creating the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     base_url = f"{smarter_settings.api_schema}://{request.get_host()}/"
     plugins_api_url = urljoin(base_url, "/api/v1/plugins/")
@@ -317,55 +331,60 @@ def update_plugin(request: HttpRequest, plugin_id: Optional[int] = None):
     if not user_profile:
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.UNAUTHORIZED)
 
+    # everything from here on reads the client's manifest, or builds the plugin from it.
     try:
         # a DRF request has already parsed its body; a plain django request has not.
         data = getattr(request, "data", None)
         if data is None:
             data = PluginUploadView.parse_yaml_file(request.body.decode("utf-8"))
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-    if not isinstance(data, dict) or not data:
-        return JsonResponse(
-            {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    data = dict(data)
-
-    kind = data.get("kind")
-    if kind not in PLUGIN_MAP:
-        return JsonResponse(
-            {"error": f"Invalid manifest kind {kind}. Expected one of: {list(PLUGIN_MAP)}"},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    metadata = data.get("metadata") or {}
-    manifest_name = metadata.get("name")
-
-    if plugin_id is not None:
-        try:
-            plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)  # type: ignore[attr-defined]
-        except PluginMeta.DoesNotExist:
-            plugin_meta = None
-        if not plugin_meta:
-            return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
-        if manifest_name != plugin_meta.name:
+        if not isinstance(data, dict) or not data:
             return JsonResponse(
-                {"error": f"Manifest name {manifest_name} does not match plugin {plugin_id}: {plugin_meta.name}"},
+                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
                 status=HTTPStatus.BAD_REQUEST,
             )
-    elif not PluginMeta.objects.filter(name=manifest_name, user_profile=user_profile).exists():
-        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+        data = dict(data)
 
-    try:
+        kind = data.get("kind")
+        if kind not in PLUGIN_MAP:
+            return JsonResponse(
+                {"error": f"Invalid manifest kind {kind}. Expected one of: {list(PLUGIN_MAP)}"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        metadata = data.get("metadata") or {}
+        manifest_name = metadata.get("name")
+
+        if plugin_id is not None:
+            try:
+                plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)  # type: ignore[attr-defined]
+            except PluginMeta.DoesNotExist:
+                plugin_meta = None
+            if not plugin_meta:
+                return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+            if manifest_name != plugin_meta.name:
+                return JsonResponse(
+                    {"error": f"Manifest name {manifest_name} does not match plugin {plugin_id}: {plugin_meta.name}"},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+        elif not PluginMeta.objects.filter(name=manifest_name, user_profile=user_profile).exists():
+            return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+
         manifest = SAM_MAP[kind](**data)  # type: ignore[arg-type]
         # a PluginController prefers the stored PluginMeta to the manifest, so
         # the plugin is instantiated from the manifest, which updates it.
         plugin = PLUGIN_MAP[kind](manifest=manifest, user_profile=user_profile)  # type: ignore[call-arg]
         if not plugin or not plugin.ready:
-            raise PluginDataValueError(f"Plugin {manifest_name} is not ready after update.")
-    except ValidationError as e:
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            raise SmarterPluginError(f"Plugin {manifest_name} is not ready after update.")
+    # the manifest is the client's: pydantic's ValidationError is a ValueError, and
+    # SAMPluginControllerError refuses e.g. a kind that isn't a plugin's.
+    except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.update_plugin() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while updating the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     return HttpResponseRedirect(request.path_info)
 
@@ -389,19 +408,31 @@ def delete_plugin(request, plugin_id):
             plugin_meta=PluginMeta.get_cached_object(pk=plugin_id),  # type: ignore[attr-defined]
         )
         if not plugin_controller or not plugin_controller.plugin:
-            raise PluginDataValueError(
+            raise SmarterPluginError(
                 f"PluginController could not be created for plugin_id: {plugin_id}, user_profile: {user_profile}"
             )
         plugin = plugin_controller.plugin
     except PluginMeta.DoesNotExist:
         return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.delete_plugin() could not load the plugin", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while loading the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     try:
         plugin.delete()
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    except CLIENT_ERROR_TYPES as e:
+        logger.warning("%s.delete_plugin() refused: %s", logger_prefix, e)
+        message = client_error_message(e, "The resource could not be deleted.")
+        return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.delete_plugin() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while deleting the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     plugins_path = request.path_info.rsplit("/", 2)[0]
     return HttpResponseRedirect(plugins_path)

@@ -127,20 +127,26 @@ class ProviderModelSerializer(SmarterCamelCaseSerializer):
         name = self.request.GET.get("name")  # type: ignore
         model_name = self.request.GET.get("model_name")  # type: ignore
 
+        # get_model_for_provider() and get_models_for_provider() return each model's settings, not
+        # its row, so the rows are found by their provider's id and their name.
         if name and model_name:
             try:
                 provider_model = get_model_for_provider(provider_name=name, model_name=model_name)
             except SmarterException:
                 return ProviderModel.objects.none()
-            return ProviderModel.objects.filter(pk=provider_model.pk)
+            queryset = ProviderModel.objects.filter(
+                provider_id=provider_model["provider_id"], name=provider_model["model"]
+            )
+            return queryset
 
         if name:
             try:
                 provider_models = get_models_for_provider(provider_name=name)
             except SmarterException:
                 return ProviderModel.objects.none()
-            pks = [p.pk for p in provider_models]
-            queryset = ProviderModel.objects.filter(pk__in=pks)
+            provider_ids = {provider_model["provider_id"] for provider_model in provider_models}
+            model_names = [provider_model["model"] for provider_model in provider_models]
+            queryset = ProviderModel.objects.filter(provider_id__in=provider_ids, name__in=model_names)
             return queryset
 
         queryset = ProviderModel.objects.filter(is_active=True)
@@ -209,7 +215,10 @@ class ProviderModelVerificationSerializer(SmarterCamelCaseSerializer):
         except SmarterException:
             return ProviderModelVerification.objects.none()
 
-        queryset = ProviderModelVerification.objects.filter(provider_model=provider_model)
+        # the model's settings, not its row: its row is found by its provider's id and its name.
+        queryset = ProviderModelVerification.objects.filter(
+            provider_model__provider_id=provider_model["provider_id"], provider_model__name=provider_model["model"]
+        )
         verification_type = self.request.GET.get("verification_type")  # type: ignore
         if verification_type:
             queryset = queryset.filter(verification_type__iexact=verification_type)

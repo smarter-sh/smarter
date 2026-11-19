@@ -186,6 +186,9 @@ class TestProviderProperties(ProviderTestBase):
         self.assertIsNone(
             Provider.get_cached_provider_by_account_id_and_name(account_id=self.account.id, name="no_such_provider")
         )
+        # without an account id or a name, the lookup can only miss.
+        self.assertIsNone(Provider.get_cached_provider_by_account_id_and_name(name=self.provider.name))
+        self.assertIsNone(Provider.get_cached_provider_by_account_id_and_name(account_id=self.account.id, name=""))
         self.assertEqual(
             Provider.get_cached_provider_by_user_and_name(user=self.admin_user, name=self.provider.name), self.provider
         )

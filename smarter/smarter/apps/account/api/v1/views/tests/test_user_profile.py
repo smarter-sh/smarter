@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test UserProfileView for API end point."""
 
+from functools import partial
 from http import HTTPStatus
 
 from django.test import Client
@@ -8,11 +9,13 @@ from django.urls import reverse
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
@@ -118,6 +121,25 @@ class TestUserProfileViewDeleteInternalError(TestAccountMixin):
         self.non_admin_user_profile.delete()
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+
+class TestUserProfileViewDeleteErrors(TestAccountMixin):
+    """Test how the UserProfileView DELETE reports an error."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client()
+        self.client.force_login(self.admin_user)
+        self.addCleanup(self.client.logout)
+        reverse_name = ":".join(
+            [api_namespace, api_v1_namespace, account_namespace, AccountAPINamespaces.user_profile_view]
+        )
+        self.url = reverse(reverse_name, args=[self.non_admin_user_profile.id])  # type: ignore
+
+    def test_delete_reports_errors(self):
+        """A refused delete is a bad request, and any other failure an internal error; the profile is kept."""
+        assert_reports_errors(self, partial(self.client.delete, self.url), raising(UserProfile, "delete"))
+        self.assertTrue(UserProfile.objects.filter(pk=self.non_admin_user_profile.pk).exists())
 
 
 class TestUserProfileViewDeleteSuperuserSuccess(TestAccountMixin):

@@ -15,6 +15,10 @@ from smarter.apps.provider.caching import (
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.serializers import ProviderSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -110,17 +114,26 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_providers_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ProviderSerializer(cloned_provider, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Provider with id %s: %s",
                 self.formatted_class_name,
                 provider_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Provider.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Provider with id %s",
+                self.formatted_class_name,
+                provider_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Provider: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Provider."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -171,17 +184,26 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"Provider with id {provider_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Provider with id %s: %s",
                 self.formatted_class_name,
                 provider_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Provider.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Provider with id %s",
+                self.formatted_class_name,
+                provider_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Provider: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Provider."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -239,15 +261,24 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_providers_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ProviderSerializer(provider, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Provider with id %s: %s",
                 self.formatted_class_name,
                 provider_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Provider.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Provider with id %s",
+                self.formatted_class_name,
+                provider_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Provider: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Provider."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

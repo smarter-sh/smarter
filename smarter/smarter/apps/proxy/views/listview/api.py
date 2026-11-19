@@ -11,6 +11,10 @@ from smarter.apps.proxy.caching import (
 from smarter.apps.proxy.models import Proxy
 from smarter.apps.proxy.serializers import ProxySerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -95,17 +99,25 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_proxies_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ProxySerializer(cloned_proxy, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Proxy with id %s: %s",
                 self.formatted_class_name,
                 proxy_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Proxy.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Proxy with id %s",
+                self.formatted_class_name,
+                proxy_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Proxy: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Proxy."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
 
@@ -146,17 +158,26 @@ class ProxyListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             proxy.delete()
             invalidate_all_cached_proxies_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse({"message": f"Proxy with id {proxy_id} deleted successfully."}, status=HTTPStatus.OK)
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Proxy with id %s: %s",
                 self.formatted_class_name,
                 proxy_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Proxy.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Proxy with id %s",
+                self.formatted_class_name,
+                proxy_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Proxy: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Proxy."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -206,15 +227,24 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_proxies_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = ProxySerializer(proxy, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Proxy with id %s: %s",
                 self.formatted_class_name,
                 proxy_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Proxy.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Proxy with id %s",
+                self.formatted_class_name,
+                proxy_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Proxy: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Proxy."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

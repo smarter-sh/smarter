@@ -11,6 +11,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmtool.api.v1 import views
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib import json
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 MODULE = "smarter.apps.llmtool.api.v1.views"
 
@@ -148,14 +149,35 @@ class TestPluginViewHandlers(TestAccountMixin):
         self.assertStatus(views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.BAD_REQUEST)
 
     def test_update_plugin_invalid_manifest(self):
-        """A manifest that fails validation is an internal error."""
+        """A manifest that fails validation is the client's error, so it is a bad request."""
         plugin_meta = MagicMock()
         plugin_meta.name = "the_plugin"
         self.patch_plugin_meta(return_value=plugin_meta)
         body = {"kind": "Plugin", "metadata": {"name": "the_plugin"}}
-        self.assertStatus(
-            views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.INTERNAL_SERVER_ERROR
-        )
+        self.assertStatus(views.update_plugin(self.request("patch", body), plugin_id=1), HTTPStatus.BAD_REQUEST)
+
+    def test_update_plugin_errors(self):
+        """A client's error while building the plugin is a bad request; any other failure, or a plugin that isn't ready, an internal error."""
+        plugin_meta = MagicMock()
+        plugin_meta.name = "the_plugin"
+        self.patch_plugin_meta(return_value=plugin_meta)
+        self.patch("SAM_MAP", new={"Plugin": MagicMock()})
+        body = {"kind": "Plugin", "metadata": {"name": "the_plugin"}}
+
+        def send():
+            return views.update_plugin(self.request("patch", body), plugin_id=1)
+
+        def plugin_class_raising(error: Exception):
+            return patch.dict(f"{MODULE}.PLUGIN_MAP", {"Plugin": MagicMock(side_effect=error)})
+
+        assert_reports_errors(self, send, plugin_class_raising)
+
+        not_ready = MagicMock(return_value=MagicMock(ready=False))
+        with patch.dict(f"{MODULE}.PLUGIN_MAP", {"Plugin": not_ready}):
+            self.assertStatus(send(), HTTPStatus.INTERNAL_SERVER_ERROR)
+        ready = MagicMock(return_value=MagicMock(ready=True))
+        with patch.dict(f"{MODULE}.PLUGIN_MAP", {"Plugin": ready}):
+            self.assertStatus(send(), HTTPStatus.FOUND)
 
     # -------------------------------------------------------------------------
     # delete_plugin
@@ -182,6 +204,17 @@ class TestPluginViewHandlers(TestAccountMixin):
             with self.subTest(kwargs=kwargs):
                 self.controller(**kwargs)
                 self.assertStatus(views.delete_plugin(self.request("delete"), 1), status)
+
+    def test_delete_plugin_reports_errors(self):
+        """A client's error while deleting is a bad request, and any other failure an internal error."""
+        self.patch_plugin_meta(return_value=MagicMock())
+        plugin = MagicMock()
+        self.controller(plugin=plugin)
+
+        def send():
+            return views.delete_plugin(self.request("delete"), 1)
+
+        assert_reports_errors(self, send, raising(plugin, "delete"))
 
     def test_delete_plugin_without_a_user_profile(self):
         """Delete_plugin is unauthorized without a user profile."""

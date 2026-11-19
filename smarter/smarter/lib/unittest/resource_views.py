@@ -18,11 +18,12 @@ The resource that ``setUpClass()`` creates is owned by the account's admin user.
 changes a resource changes a throwaway copy, which is deleted afterwards.
 """
 
+from functools import partial
 from http import HTTPStatus
 from typing import Callable, Optional
-from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
@@ -31,6 +32,7 @@ from smarter.lib import json
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest import ReverseNamesClass
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 def assert_console_page(testcase, url: str) -> None:
@@ -356,17 +358,26 @@ class ResourceViewsTestMixin:
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
 
     def test_apis_report_errors(self):
-        """Test that an error while cloning, deleting or renaming a resource is a bad request."""
+        """
+        Test how the clone, delete and rename apis report an error.
+
+        An error that the client caused is a bad request. A validation error is written for the
+        client, so its message is sent; a database conflict's text names tables and keys, so it
+        is replaced by a fixed message. Any other error is the server's fault: the catch-all
+        answers 500, with a fixed message, never the error's text.
+        """
         resource = self.throwaway("errors")
+        duplicate = IntegrityError(1062, "Duplicate entry 'x' for key 'unique_name'")
         for name, method, kwargs in (
             ("clone", "clone", {"new_name": f"{resource.name}_copy"}),
             ("delete", "delete", {}),
             ("rename", "rename", {"new_name": f"{resource.name}_renamed"}),
         ):
+            url = self.web_id_url(name, resource.pk, **kwargs)
+            send = partial(self.client.post, url)
             with self.subTest(api=name):  # type: ignore[attr-defined]
-                with patch.object(self.model, method, side_effect=RuntimeError("test error")):
-                    data = self.post(self.web_id_url(name, resource.pk, **kwargs), status=HTTPStatus.BAD_REQUEST)
-                self.assertIn("test error", data["error"])  # type: ignore[attr-defined]
+                assert_reports_errors(self, send, raising(self.model, method))  # type: ignore[arg-type]
+                assert_reports_errors(self, send, raising(self.model, method), client_error=duplicate)  # type: ignore[arg-type]
         self.assertTrue(self.model.objects.filter(pk=resource.pk, name=resource.name).exists())  # type: ignore[attr-defined]
 
     # -------------------------------------------------------------------------
