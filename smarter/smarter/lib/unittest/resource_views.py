@@ -23,11 +23,14 @@ from typing import Callable, Optional
 from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
 from smarter.lib import json
+from smarter.lib.django.http.client_errors import INTEGRITY_ERROR_MESSAGE
 from smarter.lib.django.models import MetaDataModel
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest import ReverseNamesClass
@@ -356,17 +359,35 @@ class ResourceViewsTestMixin:
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST, response.content[:500])  # type: ignore[attr-defined]
 
     def test_apis_report_errors(self):
-        """Test that an error while cloning, deleting or renaming a resource is a bad request."""
+        """
+        Test how the clone, delete and rename apis report an error.
+
+        An error that the client caused is a bad request. A validation error is written for the
+        client, so its message is sent; a database conflict's text names tables and keys, so it
+        is replaced by a fixed message. Any other error is the server's fault: the catch-all
+        answers 500, with a fixed message, never the error's text.
+        """
         resource = self.throwaway("errors")
         for name, method, kwargs in (
             ("clone", "clone", {"new_name": f"{resource.name}_copy"}),
             ("delete", "delete", {}),
             ("rename", "rename", {"new_name": f"{resource.name}_renamed"}),
         ):
-            with self.subTest(api=name):  # type: ignore[attr-defined]
-                with patch.object(self.model, method, side_effect=RuntimeError("test error")):
-                    data = self.post(self.web_id_url(name, resource.pk, **kwargs), status=HTTPStatus.BAD_REQUEST)
-                self.assertIn("test error", data["error"])  # type: ignore[attr-defined]
+            url = self.web_id_url(name, resource.pk, **kwargs)
+            with self.subTest(api=name, error="unexpected"):  # type: ignore[attr-defined]
+                with patch.object(self.model, method, side_effect=RuntimeError("internal detail")):
+                    data = self.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                self.assertNotIn("internal detail", data["error"])  # type: ignore[attr-defined]
+                self.assertTrue(data["error"].startswith("An unknown error occurred while"))  # type: ignore[attr-defined]
+            with self.subTest(api=name, error="validation"):  # type: ignore[attr-defined]
+                with patch.object(self.model, method, side_effect=ValidationError("The name is not valid.")):
+                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
+                self.assertEqual(data["error"], "The name is not valid.")  # type: ignore[attr-defined]
+            with self.subTest(api=name, error="integrity"):  # type: ignore[attr-defined]
+                duplicate = IntegrityError(1062, "Duplicate entry 'x' for key 'unique_name'")
+                with patch.object(self.model, method, side_effect=duplicate):
+                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
+                self.assertEqual(data["error"], INTEGRITY_ERROR_MESSAGE)  # type: ignore[attr-defined]
         self.assertTrue(self.model.objects.filter(pk=resource.pk, name=resource.name).exists())  # type: ignore[attr-defined]
 
     # -------------------------------------------------------------------------

@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.exceptions import ValidationError
 from django.test import Client, RequestFactory
 from django.urls import resolve, reverse
 
@@ -200,7 +201,7 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
                 self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
 
     def test_apis_report_errors(self):
-        """Test that an error while cloning, deleting or renaming a connection is a bad request."""
+        """Test that an error while cloning, deleting or renaming a connection is a bad request, without its text."""
         connection = self.new_connection("test_connection_views_errors")
         for name, model, method, kwargs in (
             (
@@ -217,11 +218,16 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
                 {"new_name": "test_connection_views_y"},
             ),
         ):
-            with self.subTest(api=name), patch.object(model, method, side_effect=RuntimeError("test error")):
-                data = self.post(
-                    self.web_url(name, connection_id=connection.id, **kwargs), status=HTTPStatus.BAD_REQUEST
-                )
-                self.assertIn("test error", data["error"])
+            url = self.web_url(name, connection_id=connection.id, **kwargs)
+            with self.subTest(api=name, error="unexpected"):
+                with patch.object(model, method, side_effect=RuntimeError("internal detail")):
+                    data = self.post(url, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                self.assertNotIn("internal detail", data["error"])
+                self.assertTrue(data["error"].startswith("An unknown error occurred while"))
+            with self.subTest(api=name, error="validation"):
+                with patch.object(model, method, side_effect=ValidationError("The name is not valid.")):
+                    data = self.post(url, status=HTTPStatus.BAD_REQUEST)
+                self.assertEqual(data["error"], "The name is not valid.")
         self.assertTrue(ApiConnection.objects.filter(pk=connection.pk, name=connection.name).exists())
 
 

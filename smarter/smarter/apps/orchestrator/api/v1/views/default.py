@@ -1,7 +1,6 @@
 # pylint: disable=W0611
 """Smarter Orchestrator API view."""
 
-import traceback
 from http import HTTPStatus
 
 from django.http import JsonResponse
@@ -60,15 +59,11 @@ class DefaultOrchestratorApiView(OrchestratorApiBaseViewSet):
         try:
             retval = super().dispatch(request, *args, **kwargs)
         # pylint: disable=broad-except
-        except Exception as e:
-            err_traceback = traceback.format_exc()
-            logger.error("DefaultOrchestratorApiView.dispatch: %s, %s", e, err_traceback)
+        except Exception:
+            # the stack trace is logged, never sent to the client.
+            logger.error("%s.dispatch() failed", self.formatted_class_name, exc_info=True)
             retval = JsonResponse(
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
-                data={
-                    "error": "An error occurred while processing your request.",
-                    "details": str(e),
-                    "trace": err_traceback,
-                },
+                data={"error": "An unknown error occurred while processing your request."},
             )
         return retval

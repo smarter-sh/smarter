@@ -15,6 +15,10 @@ from smarter.apps.orchestrator.caching import (
 from smarter.apps.orchestrator.models import Orchestrator
 from smarter.apps.orchestrator.serializers import OrchestratorSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -111,17 +115,26 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_orchestrators_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = OrchestratorSerializer(cloned_orchestrator, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Orchestrator with id %s: %s",
                 self.formatted_class_name,
                 orchestrator_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Orchestrator.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Orchestrator with id %s",
+                self.formatted_class_name,
+                orchestrator_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Orchestrator: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -176,17 +189,26 @@ class OrchestratorListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"Orchestrator with id {orchestrator_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Orchestrator with id %s: %s",
                 self.formatted_class_name,
                 orchestrator_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Orchestrator.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Orchestrator with id %s",
+                self.formatted_class_name,
+                orchestrator_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Orchestrator: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -246,15 +268,24 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_orchestrators_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = OrchestratorSerializer(orchestrator, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Orchestrator with id %s: %s",
                 self.formatted_class_name,
                 orchestrator_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Orchestrator.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Orchestrator with id %s",
+                self.formatted_class_name,
+                orchestrator_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Orchestrator: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Orchestrator."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

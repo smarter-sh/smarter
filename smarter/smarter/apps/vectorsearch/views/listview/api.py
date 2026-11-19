@@ -15,6 +15,10 @@ from smarter.apps.vectorsearch.caching import (
 from smarter.apps.vectorsearch.models import Vectorsearch
 from smarter.apps.vectorsearch.serializers import VectorsearchSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -111,17 +115,26 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_vectorsearchs_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = VectorsearchSerializer(cloned_vectorsearch, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning Vectorsearch with id %s: %s",
                 self.formatted_class_name,
                 vectorsearch_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the Vectorsearch.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning Vectorsearch with id %s",
+                self.formatted_class_name,
+                vectorsearch_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the Vectorsearch: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the Vectorsearch."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -176,17 +189,26 @@ class VectorsearchListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"Vectorsearch with id {vectorsearch_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting Vectorsearch with id %s: %s",
                 self.formatted_class_name,
                 vectorsearch_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the Vectorsearch.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting Vectorsearch with id %s",
+                self.formatted_class_name,
+                vectorsearch_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the Vectorsearch: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the Vectorsearch."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -246,15 +268,24 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_vectorsearchs_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = VectorsearchSerializer(vectorsearch, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming Vectorsearch with id %s: %s",
                 self.formatted_class_name,
                 vectorsearch_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the Vectorsearch.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming Vectorsearch with id %s",
+                self.formatted_class_name,
+                vectorsearch_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the Vectorsearch: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the Vectorsearch."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
