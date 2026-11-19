@@ -24,3 +24,14 @@ only the query's parameter values, never its SQL. See :doc:`/smarter-resources/l
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/CmIQVkFM7OI" title="The SqlPlugin in 60 seconds" frameborder="0" allowfullscreen></iframe>
+
+Teaching Advanced Prompting in 60 Seconds
+-----------------------------------------
+
+Smarter in a classroom, used to teach advanced LLM prompting techniques. See the
+:doc:`Smarter Instructor Guide </smarter-instructor>` and the :doc:`Prompt Engineering course
+</smarter-instructors/example-courses/micro-courses/prompt-engineering>`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/E5L-mMbJHcA" title="Teaching advanced LLM prompting with Smarter, in 60 seconds" frameborder="0" allowfullscreen></iframe>

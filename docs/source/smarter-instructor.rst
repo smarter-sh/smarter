@@ -26,6 +26,14 @@ To introduce Smarter to a class, or to the colleagues who approve a new course, 
 and no technical jargon: it explains the problems Smarter solves, from connecting AI to an
 organization's systems to governing it and sharing AI resources within a workgroup.
 
+This one-minute video shows Smarter in a classroom, used to teach advanced LLM prompting
+techniques. The course behind it is :doc:`Prompt Engineering
+<smarter-instructors/example-courses/micro-courses/prompt-engineering>`, in the Free Course Catalog.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/E5L-mMbJHcA" title="Teaching advanced LLM prompting with Smarter, in 60 seconds" frameborder="0" allowfullscreen></iframe>
+
 
 Open Source, Free, and Community Supported
 -------------------------------------------

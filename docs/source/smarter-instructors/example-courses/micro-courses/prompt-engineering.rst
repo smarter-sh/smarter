@@ -17,7 +17,12 @@ shows, beside the chat, the configuration, every request sent to the model, ever
 which plugins were selected, and the server's logs. The same prompt can be tried against several
 providers and models by changing two lines, and Smarter records the tokens and the
 :doc:`cost </smarter-platform/cost-accounting>` of every request, so a comparison is measured, not
-guessed.
+guessed. This one-minute video shows Smarter used in a classroom to teach advanced LLM prompting
+techniques.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/E5L-mMbJHcA" title="Teaching advanced LLM prompting with Smarter, in 60 seconds" frameborder="0" allowfullscreen></iframe>
 
 Students start from real examples, not toy ones. Every installation ships with
 `nineteen built-in LLMClients <https://github.com/smarter-sh/example-manifests/tree/main/smarter/llm-clients>`__,
