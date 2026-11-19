@@ -14,3 +14,13 @@ workgroup can use which AI resources.
 .. raw:: html
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" frameborder="0" allowfullscreen></iframe>
+
+The SqlPlugin in 60 Seconds
+---------------------------
+
+An assistant answers from a database through a query declared in a manifest. The model chooses
+only the query's parameter values, never its SQL. See :doc:`/smarter-resources/llmtool/plugin/sql`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/CmIQVkFM7OI" title="The SqlPlugin in 60 seconds" frameborder="0" allowfullscreen></iframe>
