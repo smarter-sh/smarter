@@ -6,6 +6,7 @@ The class fixture ``static_plugin`` is owned by the admin user, and shared
 with the account's non-admin user.
 """
 
+from functools import partial
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -20,6 +21,7 @@ from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase
 
@@ -244,21 +246,29 @@ class TestPluginListApiViews(PluginAppTestBase):
                 self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
 
     def test_apis_report_errors(self):
-        """Test that an error while cloning, deleting or renaming a plugin is a bad request."""
+        """
+        Test how the clone, delete and rename apis report an error.
+
+        A plugin that cannot be cloned, and a validation error, are bad requests. Any other error
+        is the server's fault: the catch-all answers 500, without the error's text.
+        """
+        clone_url = self.api_url(PluginApiWebReverseNames.clone, new_name="test_plugin_views_x")
         with patch("smarter.apps.llmtool.views.listview.api.PluginController") as controller:
             controller.return_value.plugin = None
-            data = self.post(
-                self.api_url(PluginApiWebReverseNames.clone, new_name="test_plugin_views_x"),
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            data = self.post(clone_url, status=HTTPStatus.BAD_REQUEST)
         self.assertIn("cannot be cloned", data["error"])
+        with patch("smarter.apps.llmtool.views.listview.api.PluginController") as controller:
+            plugin = controller.return_value.plugin
+            plugin.ready = True
+            with self.subTest(api=PluginApiWebReverseNames.clone):
+                assert_reports_errors(self, partial(self.client.post, clone_url), raising(plugin, "clone"))
         for name, method, kwargs in (
             (PluginApiWebReverseNames.delete, "delete", {}),
             (PluginApiWebReverseNames.rename, "rename", {"new_name": "test_plugin_views_y"}),
         ):
-            with self.subTest(api=name), patch.object(PluginMeta, method, side_effect=RuntimeError("test error")):
-                data = self.post(self.api_url(name, **kwargs), status=HTTPStatus.BAD_REQUEST)
-                self.assertIn("test error", data["error"])
+            url = self.api_url(name, **kwargs)
+            with self.subTest(api=name):
+                assert_reports_errors(self, partial(self.client.post, url), raising(PluginMeta, method))
         assert self.static_plugin.id is not None
         self.assertTrue(PluginMeta.objects.filter(id=self.static_plugin.id, name=self.static_plugin.name).exists())
 

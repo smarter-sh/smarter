@@ -6,6 +6,10 @@ from http import HTTPStatus
 from django.http import HttpRequest, JsonResponse
 
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -87,17 +91,26 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_authtokens_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = AuthTokenSerializer(cloned_authtoken, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning AuthToken with id %s: %s",
                 self.formatted_class_name,
                 authtoken_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the AuthToken.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning AuthToken with id %s",
+                self.formatted_class_name,
+                authtoken_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the AuthToken: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the AuthToken."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -144,17 +157,26 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"AuthToken with id {authtoken_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting AuthToken with id %s: %s",
                 self.formatted_class_name,
                 authtoken_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the AuthToken.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting AuthToken with id %s",
+                self.formatted_class_name,
+                authtoken_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the AuthToken: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the AuthToken."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -210,15 +232,24 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_authtokens_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = AuthTokenSerializer(authtoken, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming AuthToken with id %s: %s",
                 self.formatted_class_name,
                 authtoken_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the AuthToken.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming AuthToken with id %s",
+                self.formatted_class_name,
+                authtoken_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the AuthToken: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the AuthToken."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

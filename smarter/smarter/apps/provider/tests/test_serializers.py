@@ -28,6 +28,15 @@ MODULE = "smarter.apps.provider.serializers"
 MISSING_PK = -1
 
 
+def model_settings(model_name: str = "gpt") -> dict:
+    """
+    What get_model_for_provider() returns: a model's settings, keyed as ProviderModelTypedDict, not its row.
+
+    Only the keys that the serializers read are filled in.
+    """
+    return {"provider_id": MISSING_PK, "model": model_name}
+
+
 def make_serializer(serializer_class, **query):
     serializer = serializer_class()
     serializer.request = RequestFactory().get("/", data=query)
@@ -67,13 +76,13 @@ class TestProviderModelSerializerQuerysets(SmarterTestBase):
     """Test ProviderModelSerializer.get_queryset()."""
 
     def test_by_name_and_model_name(self):
-        with patch(
-            f"{MODULE}.get_model_for_provider", return_value=SimpleNamespace(pk=MISSING_PK)
-        ) as get_model_for_provider:
+        with patch(f"{MODULE}.get_model_for_provider", return_value=model_settings()) as get_model_for_provider:
             queryset = make_serializer(ProviderModelSerializer, name="openai", model_name="gpt").get_queryset()
         get_model_for_provider.assert_called_once_with(provider_name="openai", model_name="gpt")
         self.assertEqual(queryset.model, ProviderModel)
         self.assertIn(str(MISSING_PK), where_pks(queryset))
+        self.assertIn("gpt", where_pks(queryset))
+        self.assertFalse(queryset.exists())
 
     def test_by_name_and_model_name_error(self):
         with patch(f"{MODULE}.get_model_for_provider", side_effect=SmarterException("no model")):
@@ -81,11 +90,13 @@ class TestProviderModelSerializerQuerysets(SmarterTestBase):
         self.assertEqual(list(queryset), [])
 
     def test_by_name(self):
-        models = [SimpleNamespace(pk=MISSING_PK)]
+        models = [model_settings("gpt"), model_settings("gpt-mini")]
         with patch(f"{MODULE}.get_models_for_provider", return_value=models) as get_models_for_provider:
             queryset = make_serializer(ProviderModelSerializer, name="openai").get_queryset()
         get_models_for_provider.assert_called_once_with(provider_name="openai")
         self.assertIn(str(MISSING_PK), where_pks(queryset))
+        self.assertIn("gpt-mini", where_pks(queryset))
+        self.assertFalse(queryset.exists())
 
     def test_by_name_error(self):
         with patch(f"{MODULE}.get_models_for_provider", side_effect=SmarterException("no provider")):
@@ -126,7 +137,7 @@ class TestProviderModelVerificationSerializerQuerysets(SmarterTestBase):
     """Test ProviderModelVerificationSerializer.get_queryset()."""
 
     def test_by_model_and_verification_type(self):
-        with patch(f"{MODULE}.get_model_for_provider", return_value=ProviderModel(pk=MISSING_PK)):
+        with patch(f"{MODULE}.get_model_for_provider", return_value=model_settings()):
             queryset = make_serializer(
                 ProviderModelVerificationSerializer, name="openai", model_name="gpt", verification_type="streaming"
             ).get_queryset()
@@ -135,11 +146,12 @@ class TestProviderModelVerificationSerializerQuerysets(SmarterTestBase):
         self.assertFalse(queryset.exists())
 
     def test_by_model(self):
-        with patch(f"{MODULE}.get_model_for_provider", return_value=ProviderModel(pk=MISSING_PK)):
+        with patch(f"{MODULE}.get_model_for_provider", return_value=model_settings()):
             queryset = make_serializer(
                 ProviderModelVerificationSerializer, name="openai", model_name="gpt"
             ).get_queryset()
         self.assertNotIn("verification_type", where_pks(queryset))
+        self.assertIn(str(MISSING_PK), where_pks(queryset))
         self.assertFalse(queryset.exists())
 
     def test_error(self):

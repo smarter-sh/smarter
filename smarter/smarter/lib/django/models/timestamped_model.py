@@ -621,7 +621,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 )
                 raise cls.DoesNotExist(f"{class_name} object with pk '{pk}' does not exist.") from e
 
-        if invalidate:
+        # without a pk there is no lookup, so no entry to invalidate.
+        if invalidate and pk:
             _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:

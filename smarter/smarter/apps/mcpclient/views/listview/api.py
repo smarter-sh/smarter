@@ -15,6 +15,10 @@ from smarter.apps.mcpclient.caching import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -109,17 +113,26 @@ class MCPClientListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_mcpclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = MCPClientSerializer(cloned_mcpclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning MCPClient with id %s: %s",
                 self.formatted_class_name,
                 mcpclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the MCPClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning MCPClient with id %s",
+                self.formatted_class_name,
+                mcpclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the MCPClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the MCPClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -170,17 +183,26 @@ class MCPClientListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"MCPClient with id {mcpclient_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting MCPClient with id %s: %s",
                 self.formatted_class_name,
                 mcpclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the MCPClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting MCPClient with id %s",
+                self.formatted_class_name,
+                mcpclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the MCPClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the MCPClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -238,15 +260,24 @@ class MCPClientListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_mcpclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = MCPClientSerializer(mcpclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming MCPClient with id %s: %s",
                 self.formatted_class_name,
                 mcpclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the MCPClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming MCPClient with id %s",
+                self.formatted_class_name,
+                mcpclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the MCPClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the MCPClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

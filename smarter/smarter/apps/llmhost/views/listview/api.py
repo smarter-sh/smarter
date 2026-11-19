@@ -16,6 +16,10 @@ from smarter.apps.llmhost.caching import (
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
 from smarter.apps.llmhost.serializers import LLMHostComputeSerializer, LLMHostSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -116,17 +120,26 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_llmhosts_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = LLMHostSerializer(cloned_llmhost, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning LLMHost with id %s: %s",
                 self.formatted_class_name,
                 llmhost_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the LLMHost.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning LLMHost with id %s",
+                self.formatted_class_name,
+                llmhost_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the LLMHost: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the LLMHost."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -177,17 +190,26 @@ class LLMHostListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"LLMHost with id {llmhost_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting LLMHost with id %s: %s",
                 self.formatted_class_name,
                 llmhost_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the LLMHost.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting LLMHost with id %s",
+                self.formatted_class_name,
+                llmhost_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the LLMHost: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the LLMHost."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -245,17 +267,26 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_llmhosts_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = LLMHostSerializer(llmhost, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming LLMHost with id %s: %s",
                 self.formatted_class_name,
                 llmhost_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the LLMHost.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming LLMHost with id %s",
+                self.formatted_class_name,
+                llmhost_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the LLMHost: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the LLMHost."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -320,18 +351,26 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             cloned = compute.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             invalidate_all_cached_llmhost_computes_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse(LLMHostComputeSerializer(cloned, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning LLMHostCompute with id %s: %s",
                 self.formatted_class_name,
                 compute_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the LLMHostCompute.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning LLMHostCompute with id %s",
+                self.formatted_class_name,
+                compute_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the LLMHostCompute: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while cloning the LLMHostCompute."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -386,18 +425,26 @@ class LLMHostComputeListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"LLMHostCompute with id {compute_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting LLMHostCompute with id %s: %s",
                 self.formatted_class_name,
                 compute_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the LLMHostCompute.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting LLMHostCompute with id %s",
+                self.formatted_class_name,
+                compute_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the LLMHostCompute: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while deleting the LLMHostCompute."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -448,16 +495,24 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             compute.rename(new_name=self.to_snake_case(new_name.strip()))
             invalidate_all_cached_llmhost_computes_for_user_profile(user_profile=self.user_profile)  # type: ignore
             return JsonResponse(LLMHostComputeSerializer(compute, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming LLMHostCompute with id %s: %s",
                 self.formatted_class_name,
                 compute_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the LLMHostCompute.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming LLMHostCompute with id %s",
+                self.formatted_class_name,
+                compute_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the LLMHostCompute: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while renaming the LLMHostCompute."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

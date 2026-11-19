@@ -371,7 +371,8 @@ class MetaDataModel(TimestampedModel):
                 )
                 raise cls.MultipleObjectsReturned(f"Multiple {class_name} objects found for name '{name}'.") from e
 
-        if invalidate:
+        # without a name there is no lookup, so no entry to invalidate.
+        if invalidate and name:
             _get_object_by_name.invalidate(name, cls.__name__)
 
         if name:

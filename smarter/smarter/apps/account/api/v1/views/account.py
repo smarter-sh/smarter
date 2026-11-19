@@ -4,7 +4,6 @@
 from http import HTTPStatus
 from typing import Optional
 
-from django.core.exceptions import ValidationError
 from django.http import (
     HttpResponseBadRequest,
     HttpResponseNotFound,
@@ -20,6 +19,11 @@ from smarter.apps.account.contract.models import AccountApiAccountDetail
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    REQUEST_DATA_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
 from smarter.lib.typing import SmarterDictType
@@ -80,9 +84,14 @@ class AccountView(AccountViewBase):
             name = data.get("name", data.get("account_number", "company_name")) or "Default_Account_Name"
             data["name"] = to_snake_case(name)
             account = Account.objects.create(**data)
-        except Exception as e:
-            logger.error("%s.post() error creating account: %s", self.formatted_class_name, str(e), exc_info=True)
-            return HttpResponseBadRequest(f"Invalid request data: {str(e)}")
+        except REQUEST_DATA_ERROR_TYPES as e:
+            logger.warning("%s.post() could not create the account: %s", self.formatted_class_name, type(e).__name__)
+            message = client_error_message(e, "The Account could not be created.")
+            return HttpResponseBadRequest(f"Invalid request data: {message}")
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() error creating account", self.formatted_class_name, exc_info=True)
+            return HttpResponseServerError("An unknown error occurred while creating the Account.")
 
         return HttpResponseRedirect(request.path_info + str(account.id) + "/")  # type: ignore
 
@@ -114,16 +123,9 @@ class AccountView(AccountViewBase):
             logger.debug("%s.patch() account with id %s not found", self.formatted_class_name, account_id)
             return HttpResponseNotFound("Account not found")
 
-        try:
-            data: SmarterDictType = request.data
-            if not isinstance(data, dict):
-                return HttpResponseBadRequest(
-                    f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"
-                )
-            logger.debug("%s.patch() received data: %s", self.formatted_class_name, data)
-        except Exception as e:
-            logger.error("%s.patch() error parsing request data: %s", self.formatted_class_name, str(e))
-            return HttpResponseBadRequest(f"Invalid request data: {str(e)}")
+        # the body was parsed, and found to be a dict, above.
+        data: SmarterDictType = request.data
+        logger.debug("%s.patch() received data: %s", self.formatted_class_name, data)
 
         try:
             for key, value in data.items():
@@ -131,16 +133,14 @@ class AccountView(AccountViewBase):
                     setattr(account, key, value)
             account.save()  # type: ignore
             logger.debug("%s.patch() updated account: %s", self.formatted_class_name, account)
-        except ValidationError as e:
-            logger.error(
-                "%s.patch() validation error updating account: %s", self.formatted_class_name, str(e), exc_info=True
-            )
-            return HttpResponseBadRequest(e.message)
-        except Exception as e:
-            logger.error(
-                "%s.patch() internal error updating account: %s", self.formatted_class_name, str(e), exc_info=True
-            )
-            return HttpResponseServerError(f"Internal error: {str(e)}")
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.patch() could not update the account: %s", self.formatted_class_name, type(e).__name__)
+            message = client_error_message(e, "The Account could not be updated.")
+            return HttpResponseBadRequest(message)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.patch() internal error updating account", self.formatted_class_name, exc_info=True)
+            return HttpResponseServerError("An unknown error occurred while updating the Account.")
 
         return HttpResponseRedirect(request.path_info)
 
@@ -160,11 +160,14 @@ class AccountView(AccountViewBase):
 
         try:
             account.delete()
-        except Exception as e:
-            logger.error(
-                "%s.delete() internal error deleting account: %s", self.formatted_class_name, str(e), exc_info=True
-            )
-            return HttpResponseServerError(f"Internal error: {str(e)}")
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, type(e).__name__)
+            message = client_error_message(e, "The Account could not be deleted.")
+            return HttpResponseBadRequest(message)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() internal error deleting account", self.formatted_class_name, exc_info=True)
+            return HttpResponseServerError("An unknown error occurred while deleting the Account.")
 
         return HttpResponseRedirect("/")
 

@@ -5,12 +5,18 @@ See :class:`smarter.lib.unittest.resource_api.ResourceApiTestMixin`.
 """
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 from django.urls import NoReverseMatch, reverse
 
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.orchestrator.api.v1.urls import OrchestratorApiV1ReverseViews
+from smarter.apps.orchestrator.api.v1.views.base import OrchestratorApiBaseViewSet
 from smarter.apps.orchestrator.models import Orchestrator
+from smarter.lib.unittest.error_responses import (
+    UNEXPECTED_ERROR_TEXT,
+    UNKNOWN_ERROR_MESSAGE_PREFIX,
+)
 from smarter.lib.unittest.resource_api import ResourceApiTestMixin
 
 
@@ -73,3 +79,13 @@ class TestOrchestratorApi(ResourceApiTestMixin, ApiV1TestBase):
         response = self.api_client.options(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertNotIn("POST", response["Allow"])
+
+    def test_default_api_reports_an_unknown_error(self):
+        """Test that an error in the default api is a 500 with a fixed message, never the error's text."""
+        url = self.url(self.default_api_by_hashed_id, hashed_id=self.resource.hashed_id)
+        with patch.object(OrchestratorApiBaseViewSet, "dispatch", side_effect=RuntimeError(UNEXPECTED_ERROR_TEXT)):
+            response = self.api_client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        content = response.content.decode()
+        self.assertNotIn(UNEXPECTED_ERROR_TEXT, content)
+        self.assertIn(UNKNOWN_ERROR_MESSAGE_PREFIX, content)

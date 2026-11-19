@@ -18,6 +18,11 @@ from smarter.apps.account.serializers import UserSerializer
 from smarter.apps.api.signals import api_request_completed
 from smarter.common.utils import is_authenticated_request, smarter_build_absolute_uri
 from smarter.lib import json, logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    REQUEST_DATA_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -57,10 +62,18 @@ def validate_request_body(request: Request):
             raise ValidationError("Invalid request data. Missing 'password' field.")
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
-    except ValidationError as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+    except REQUEST_DATA_ERROR_TYPES as e:
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse(
+            {"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST.value
+        )
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.validate_request_body() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while reading the request."},
+            status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+        )
     return None
 
 
@@ -224,9 +237,19 @@ def create_user(request: Request):
         with transaction.atomic():
             user = User.objects.create_user(**data)
             UserProfile.objects.create(name=user.username, user=user, account=account)
-    except Exception as e:
-        logger.debug("UserListView.get_queryset() - error creating user: %s", e)
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
+    except REQUEST_DATA_ERROR_TYPES as e:
+        logger.warning("%s.create_user() could not create the user: %s", logger_prefix, type(e).__name__)
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse(
+            {"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST.value
+        )
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.create_user() failed", logger_prefix, exc_info=True)
+        return JsonResponse(
+            {"error": "An unknown error occurred while creating the user."},
+            status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+        )
 
     logger.debug("UserListView.get_queryset() - user created successfully: %s", user)
     return HttpResponseRedirect(request.path_info + str(user.id) + "/")  # type: ignore[return-value]
@@ -283,13 +306,16 @@ def update_user(request: Request, user_id: int):
                 setattr(user_to_update, key, value)
         user_to_update.save()
         logger.debug("UserListView.get_queryset() - user updated successfully: %s", user_to_update)
-    except ValidationError as e:
-        logger.debug("UserListView.get_queryset() - validation error: %s", e)
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST.value)
-    except Exception as e:
-        logger.debug("UserListView.get_queryset() - internal error: %s", e)
+    except CLIENT_ERROR_TYPES as e:
+        logger.warning("%s.update_user() could not update the user: %s", logger_prefix, type(e).__name__)
+        message = client_error_message(e, "The request data is not valid.")
+        return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST.value)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.update_user() failed", logger_prefix, exc_info=True)
         return JsonResponse(
-            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+            {"error": "An unknown error occurred while updating the user."},
+            status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
         )
 
     return HttpResponseRedirect(request.path_info)
@@ -327,10 +353,16 @@ def delete_user(request: Request, user_id: Optional[int] = None):
             UserProfile.objects.get(user=user).delete()
             user.delete()
             logger.debug("%s.delete_user() - user deleted successfully: %s", __name__, user)
-    except Exception as e:
-        logger.debug("%s.delete_user() - error deleting user: %s", __name__, e)
+    except CLIENT_ERROR_TYPES as e:
+        logger.warning("%s.delete_user() refused: %s", logger_prefix, type(e).__name__)
+        message = client_error_message(e, "The user could not be deleted.")
+        return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST.value)
+    # pylint: disable=broad-except
+    except Exception:
+        logger.error("%s.delete_user() failed", logger_prefix, exc_info=True)
         return JsonResponse(
-            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+            {"error": "An unknown error occurred while deleting the user."},
+            status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
         )
 
     plugins_path = request.path_info.rsplit("/", 2)[0]

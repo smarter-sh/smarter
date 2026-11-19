@@ -19,6 +19,10 @@ from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.plugin.base import SmarterPluginError
 from smarter.apps.llmtool.serializers import PluginSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import (
     DEFAULT_SORT_FIELDS,
@@ -208,7 +212,14 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             # clone() also copies its selector, prompt and data.
             plugin = PluginController(user_profile=self.user_profile, plugin_meta=llmclient).plugin  # type: ignore[arg-type]
             if not plugin or not plugin.ready:
-                raise SmarterPluginError(f"PluginMeta with id {llmclient_id} is not ready, and cannot be cloned.")
+                # a refusal for the user, so it is returned here, not raised into the handler below.
+                logger.warning(
+                    "%s.post() PluginMeta %s is not ready to clone.", self.formatted_class_name, llmclient_id
+                )
+                return JsonResponse(
+                    {"error": f"PluginMeta with id {llmclient_id} is not ready, and cannot be cloned."},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
             cloned_id = plugin.clone(new_name=new_name, user_profile=self.user_profile)
             if not cloned_id:
                 raise SmarterPluginError(f"PluginMeta with id {llmclient_id} could not be cloned.")
@@ -216,17 +227,26 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = PluginSerializer(cloned_llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning PluginMeta with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the PluginMeta.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning PluginMeta with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the PluginMeta."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -277,17 +297,26 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"PluginMeta with id {llmclient_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting PluginMeta with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the PluginMeta.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting PluginMeta with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the PluginMeta."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -345,15 +374,24 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_plugins_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = PluginSerializer(llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming PluginMeta with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the PluginMeta.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming PluginMeta with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the PluginMeta: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the PluginMeta."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

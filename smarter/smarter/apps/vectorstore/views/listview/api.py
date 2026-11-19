@@ -11,8 +11,15 @@ from smarter.apps.vectorstore.caching import (
 )
 from smarter.apps.vectorstore.models import VectorstoreMeta, VectorstoreStatus
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
-from smarter.apps.vectorstore.service import VectorstoreService
+from smarter.apps.vectorstore.service import (
+    VectorstoreService,
+    VectorstoreServiceError,
+)
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -127,9 +134,20 @@ class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             vectorstore.delete()
             if secret is not None:
                 secret.delete()
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("%s.post() failed to delete %s: %s", self.formatted_class_name, vectorstore, e)
-            return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except VectorstoreServiceError as e:
+            # a refusal written for the user, e.g. deletionProtection, not a failure.
+            logger.warning("%s.post() refused to delete %s: %s", self.formatted_class_name, vectorstore, e.message)
+            return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.post() could not delete %s: %s", self.formatted_class_name, vectorstore, e)
+            message = client_error_message(e, "An error occurred while deleting the Vectorstore.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.error("%s.post() failed to delete %s", self.formatted_class_name, vectorstore, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while deleting the Vectorstore."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
         return JsonResponse({"message": f"Vectorstore {vectorstore_id} deleted."}, status=HTTPStatus.OK)
 

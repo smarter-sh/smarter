@@ -4,8 +4,8 @@ Test the connection app's views: :mod:`smarter.apps.connection.views.listview`, 
 The class fixture ``connection_django_model`` is owned by the account's admin user.
 """
 
+from functools import partial
 from http import HTTPStatus
-from unittest.mock import patch
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
@@ -21,6 +21,7 @@ from smarter.apps.connection.models import ApiConnection, ConnectionBase, SqlCon
 from smarter.apps.connection.urls import ConnectionReverseNames
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 from smarter.lib.unittest.resource_views import (
     assert_console_page,
     assert_no_resource,
@@ -200,7 +201,7 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
                 self.assertEqual(self.call_view(url).status_code, HTTPStatus.BAD_REQUEST)
 
     def test_apis_report_errors(self):
-        """Test that an error while cloning, deleting or renaming a connection is a bad request."""
+        """Test that an error while cloning, deleting or renaming a connection is a bad request, without its text."""
         connection = self.new_connection("test_connection_views_errors")
         for name, model, method, kwargs in (
             (
@@ -217,11 +218,9 @@ class TestConnectionListViews(ViewTestMixin, ApiConnectionTestMixin):
                 {"new_name": "test_connection_views_y"},
             ),
         ):
-            with self.subTest(api=name), patch.object(model, method, side_effect=RuntimeError("test error")):
-                data = self.post(
-                    self.web_url(name, connection_id=connection.id, **kwargs), status=HTTPStatus.BAD_REQUEST
-                )
-                self.assertIn("test error", data["error"])
+            url = self.web_url(name, connection_id=connection.id, **kwargs)
+            with self.subTest(api=name):
+                assert_reports_errors(self, partial(self.client.post, url), raising(model, method))
         self.assertTrue(ApiConnection.objects.filter(pk=connection.pk, name=connection.name).exists())
 
 

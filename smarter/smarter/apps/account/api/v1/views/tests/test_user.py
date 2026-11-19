@@ -16,6 +16,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.const import namespace as api_namespace
 from smarter.apps.api.v1.const import namespace as api_v1_namespace
 from smarter.lib import json, logging
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -307,6 +308,27 @@ class TestUserViewFunctions(TestAccountMixin):
         duplicate = json.dumps({"username": self.non_admin_user.username, "password": "pw"})
         response = user_views.create_user(self.request(self.admin_user, duplicate))
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_create_user_reports_errors(self):
+        """Test that create_user() answers a client's error with 400, and any other failure with 500."""
+        username = f"new_errors_{self.hash_suffix}"
+        body = json.dumps({"username": username, "password": "pw"})
+
+        def send():
+            return user_views.create_user(self.request(self.admin_user, body))  # type: ignore[arg-type]
+
+        assert_reports_errors(self, send, raising(User.objects, "create_user"))
+        self.assertFalse(User.objects.filter(username=username).exists())
+
+    def test_delete_user_reports_errors(self):
+        """Test that delete_user() answers a refused delete with 400, and any other failure with 500."""
+        mortal = self.create_user("delete_errors", account=self.account)
+
+        def send():
+            return user_views.delete_user(self.request(self.admin_user, method="delete"), mortal.id)  # type: ignore[arg-type]
+
+        assert_reports_errors(self, send, raising(UserProfile, "delete"))
+        self.assertTrue(UserProfile.objects.filter(user=mortal).exists())
 
     def test_update_user_refusals(self):
         """Test that update_user() refuses bad bodies, users without a profile, and failed saves."""
