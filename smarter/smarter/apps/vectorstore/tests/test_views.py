@@ -3,6 +3,9 @@
 the vectorstore from the dashboard's resource api.
 """
 
+from functools import partial
+
+from django.db.models import ProtectedError
 from django.test import Client
 from django.urls import reverse
 
@@ -11,6 +14,7 @@ from smarter.apps.vectorstore.api.web.urls import (
 )
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames as Names
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 from smarter.lib.unittest.resource_views import (
     assert_console_page,
     assert_no_resource,
@@ -128,6 +132,21 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("deletionProtection", response.json()["error"])
         self.assertTrue(VectorstoreMeta.objects.filter(pk=protected.pk).exists())
+
+    def test_delete_reports_errors(self):
+        """
+        Test how delete reports an error that isn't a refusal of the vectorstore service.
+
+        A validation error, or other resources that still refer to the vectorstore, are bad
+        requests. Any other error is the server's fault: the catch-all answers 500, without the
+        error's text.
+        """
+        vectorstore = self.new_vectorstore("test_views_delete_errors")
+        send = partial(self.client.post, web_url(WebNames.delete, vectorstore_id=vectorstore.pk))
+        referenced = ProtectedError("Cannot delete some instances of model 'VectorstoreMeta'", set())
+        assert_reports_errors(self, send, raising(VectorstoreMeta, "delete"))
+        assert_reports_errors(self, send, raising(VectorstoreMeta, "delete"), client_error=referenced)
+        self.assertTrue(VectorstoreMeta.objects.filter(pk=vectorstore.pk).exists())
 
     def test_detail_view(self):
         """Test that the manifest page is the console's, whose resource api returns the vectorstore's manifest."""

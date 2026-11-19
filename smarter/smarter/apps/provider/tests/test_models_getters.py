@@ -111,7 +111,9 @@ class TestProviderGetters(ProviderTestBase):
     def test_get_cached_active_provider_for_user(self):
         """The user's active provider is returned by name, and an unknown name or user returns None."""
         username = self.admin_user.username
-        self.assertEqual(get_cached_active_provider_for_user(self.name, username).pk, self.provider.pk)
+        provider = get_cached_active_provider_for_user(self.name, username)
+        assert provider is not None
+        self.assertEqual(provider.pk, self.provider.pk)
         self.assertIsNone(get_cached_active_provider_for_user(f"no_such_provider_{self.hash_suffix}", username))
         self.assertIsNone(get_cached_active_provider_for_user(self.name, f"no_such_user_{self.hash_suffix}"))
 

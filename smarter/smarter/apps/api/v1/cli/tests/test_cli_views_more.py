@@ -88,6 +88,26 @@ class TestSchemaAndExampleManifestViews(ApiV1CliTestBase):
                             response = client.post(self.url(view, kind))
                         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
 
+    def test_smarter_auth_token_writes_no_warning(self):
+        """
+        An anonymous example-manifest or json-schema request for SmarterAuthToken writes no WARNING.
+
+        Its broker is in smarter.lib, which the smarter.apps logger of
+        test_example_manifest_writes_no_warning doesn't cover. It used to log that its manifest
+        could not be initialized, because the request has no loader. See
+        https://github.com/smarter-sh/smarter/issues/1020.
+        """
+        client = Client()
+        views = (ApiV1CliReverseViews.example_manifest, ApiV1CliReverseViews.json_schema)
+        broker_logger = "smarter.lib.drf.manifest.brokers.auth_token"
+        # two anonymous requests would otherwise reach the anonymous rate limit.
+        with patch("smarter.lib.drf.throttling.SmarterAnonRateThrottle.allow_request", return_value=True):
+            for view in views:
+                with self.subTest(view=view):
+                    with self.assertNoLogs(broker_logger, level="WARNING"):
+                        response = client.post(self.url(view, "SmarterAuthToken"))
+                    self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+
     def test_unsupported_kind(self):
         """Test that an unsupported kind in the url is a 400 that names it, and parses the url only once (#954)."""
         client = Client()

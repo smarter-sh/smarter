@@ -1,9 +1,11 @@
 """Test the error responses of the LLMClient /api/v1/llm-clients/ endpoints, :mod:`smarter.apps.llmclient.api.v1.views.views`."""
 
+from functools import partial
 from http import HTTPStatus
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.urls import reverse
 from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 
@@ -23,7 +25,9 @@ from smarter.apps.llmclient.models import (
     LLMClientPlugin,
 )
 from smarter.apps.llmtool.models import Extension, PluginMeta
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.unittest.error_responses import assert_reports_errors, raising
 
 
 class TestLLMClientApiErrors(ApiV1TestBase):
@@ -85,7 +89,7 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         self.assertStatus(response, HTTPStatus.OK)
 
     def test_plugin_patch_and_delete_failure(self):
-        """A plugin is updated by patch, and a failed delete is an internal error."""
+        """A plugin is updated by patch; a client's error is a bad request, and any other failure an internal error."""
         plugin_meta = PluginMeta.objects.create(
             name=f"test_llmclient_api_errors_{self.hash_suffix}", user_profile=self.user_profile, plugin_class="static"
         )
@@ -95,11 +99,15 @@ class TestLLMClientApiErrors(ApiV1TestBase):
 
         with patch.object(LLMClientPlugin, "load", return_value=llmclient_plugin):
             self.assertStatus(self.api_client.patch(url, data={"name": "x"}, format="json"), HTTPStatus.FOUND)
-        with patch.object(LLMClientPlugin, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        with self.subTest(method="patch"):
+            send_patch = partial(self.api_client.patch, url, data={"name": "x"}, format="json")
+            assert_reports_errors(self, send_patch, raising(LLMClientPlugin, "load"))
+        with self.subTest(method="delete"):
+            assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientPlugin, "delete"))
+        self.assertTrue(LLMClientPlugin.objects.filter(pk=llmclient_plugin.pk).exists())
 
     def test_api_key_delete_failure(self):
-        """A failed api key delete is an internal error."""
+        """A refused api key delete is a bad request, and any other failure an internal error."""
         token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
             user_profile=self.user_profile,
             name=f"test_llmclient_api_errors_{self.hash_suffix}",
@@ -111,17 +119,17 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         url = self.url(
             Names.llmclient_api_key_view_by_id, llmclient_id=self.llmclient.pk, apikey_id=llmclient_api_key.pk
         )
-        with patch.object(LLMClientAPIKey, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientAPIKey, "delete"))
+        self.assertTrue(LLMClientAPIKey.objects.filter(pk=llmclient_api_key.pk).exists())
 
     def test_extension_delete_failure(self):
-        """A failed extension delete is an internal error."""
+        """A refused extension delete is a bad request, and any other failure an internal error."""
         extension = Extension.objects.create(slug="test-api-errors", display_name="Test Api Errors")
         self.addCleanup(Extension.objects.filter(pk=extension.pk).delete)
         link = LLMClientExtensions.objects.create(llmclient=self.llmclient, extension=extension)
         url = self.url(Names.llmclient_extension_view_by_id, llmclient_id=self.llmclient.pk, extension_id=link.pk)
-        with patch.object(LLMClientExtensions, "delete", side_effect=RuntimeError("database down")):
-            self.assertStatus(self.api_client.delete(url), HTTPStatus.INTERNAL_SERVER_ERROR)
+        assert_reports_errors(self, partial(self.api_client.delete, url), raising(LLMClientExtensions, "delete"))
+        self.assertTrue(LLMClientExtensions.objects.filter(pk=link.pk).exists())
 
     def call_view(self, view_class, method: str, data=None, **kwargs):
         """Call a view directly, for the handlers that no url routes to with these arguments."""
@@ -144,29 +152,37 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         self.assertEqual(list(view.get_queryset()), [self.llmclient])
 
     def test_deploy(self):
-        """Deploying sets deployed, and a failed save is a bad request."""
+        """Deploying sets deployed; a failed validation is a bad request, and any other failure an internal error."""
         with patch.object(LLMClient, "save") as save:
             self.assertStatus(
                 self.call_view(LLMClientDeployView, "post", llmclient_id=self.llmclient.pk), HTTPStatus.OK
             )
         save.assert_called_once()
-        with patch.object(LLMClient, "save", side_effect=RuntimeError("database down")):
+        with patch.object(LLMClient, "save", side_effect=ValidationError("invalid")):
             self.assertStatus(
                 self.call_view(LLMClientDeployView, "post", llmclient_id=self.llmclient.pk), HTTPStatus.BAD_REQUEST
             )
+        with patch.object(LLMClient, "save", side_effect=RuntimeError("database down")):
+            response = self.call_view(LLMClientDeployView, "post", llmclient_id=self.llmclient.pk)
+        self.assertStatus(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertNotIn(b"database down", response.content)
 
     def test_plugin_post(self):
-        """Adding a plugin redirects to it, and a plugin that fails to load is a bad request."""
+        """Adding a plugin redirects to it; an invalid manifest is a bad request, and any other failure an internal error."""
         with patch.object(LLMClientPlugin, "load", return_value=LLMClientPlugin(id=123)):
             response = self.call_view(LLMClientPluginView, "post", data={"name": "x"}, llmclient_id=self.llmclient.pk)
         self.assertStatus(response, HTTPStatus.FOUND)
         self.assertTrue(response["Location"].endswith("123/"))
-        with patch.object(LLMClientPlugin, "load", side_effect=RuntimeError("bad plugin")):
+        with patch.object(LLMClientPlugin, "load", side_effect=SmarterValueError("bad plugin")):
             response = self.call_view(LLMClientPluginView, "post", data={"name": "x"}, llmclient_id=self.llmclient.pk)
         self.assertStatus(response, HTTPStatus.BAD_REQUEST)
+        with patch.object(LLMClientPlugin, "load", side_effect=RuntimeError("internal detail")):
+            response = self.call_view(LLMClientPluginView, "post", data={"name": "x"}, llmclient_id=self.llmclient.pk)
+        self.assertStatus(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertNotIn(b"internal detail", response.content)
 
     def test_api_key_post(self):
-        """Adding an api key redirects to it, and a failed create is a bad request."""
+        """Adding an api key redirects to it; a duplicate link is a bad request, and any other failure an internal error."""
         token, _ = SmarterAuthToken.objects.create(  # type: ignore[misc]
             user_profile=self.user_profile,
             name=f"test_llmclient_api_errors_post_{self.hash_suffix}",
@@ -178,5 +194,9 @@ class TestLLMClientApiErrors(ApiV1TestBase):
         kwargs = {"llmclient_id": self.llmclient.pk, "apikey_id": token.pk}
         self.assertStatus(self.call_view(LLMClientAPIKeyView, "post", **kwargs), HTTPStatus.FOUND)
         self.assertTrue(LLMClientAPIKey.objects.filter(llmclient=self.llmclient, api_key=token).exists())
-        with patch.object(LLMClientAPIKey.objects, "create", side_effect=RuntimeError("database down")):
+        with patch.object(LLMClientAPIKey.objects, "create", side_effect=IntegrityError(1062, "Duplicate entry")):
             self.assertStatus(self.call_view(LLMClientAPIKeyView, "post", **kwargs), HTTPStatus.BAD_REQUEST)
+        with patch.object(LLMClientAPIKey.objects, "create", side_effect=RuntimeError("database down")):
+            response = self.call_view(LLMClientAPIKeyView, "post", **kwargs)
+        self.assertStatus(response, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertNotIn(b"database down", response.content)

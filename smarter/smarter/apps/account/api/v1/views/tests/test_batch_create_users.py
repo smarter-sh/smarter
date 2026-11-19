@@ -3,12 +3,14 @@
 
 import os
 from http import HTTPStatus
+from unittest.mock import patch
 
 from django.test import Client
 
 from smarter.apps.account.api.v1.urls import AccountAPINamespaces
 from smarter.apps.account.api.v1.views.batch_create_users import (
     BatchCreateUsersResponseModel,
+    BatchCreateUsersView,
     BatchModel,
 )
 from smarter.apps.account.const import namespace as account_namespace
@@ -83,6 +85,41 @@ class TestUrls(TestAccountMixin):
             self.assertEqual(created_user.account_number, self.batch_model.account_number)
             self.assertIsNone(created_user.error)
 
+    def test_response_has_no_passwords(self):
+        """Test that the response never sends back a password that the request gave."""
+        passwords = [user.password for user in self.batch_model.users if user.password]
+        self.assertTrue(passwords, "the fixture should give at least one user a password")
+        response = self.client.post(self.url, data=json.dumps(self.batch_data), content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        content = response.content.decode()
+        for password in passwords:
+            self.assertNotIn(password, content)
+        for created_user in response.json()["created_users"]:
+            self.assertNotIn("password", created_user)
+
+    def test_failed_user_gets_a_fixed_error(self):
+        """Test that a user who can't be created gets a fixed error, not the exception's text."""
+        batch_data = self.batch_model.model_dump()
+        batch_data["account_number"] = "0000-0000-0000"
+        response = self.client.post(self.url, data=json.dumps(batch_data), content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        for created_user in response.json()["created_users"]:
+            self.assertEqual(created_user["status"], "failure")
+            self.assertEqual(created_user["error"], "The user could not be created.")
+            self.assertNotIn("password", created_user)
+
+    def test_unexpected_failure_gets_a_fixed_error(self):
+        """Test that a user whose creation fails unexpectedly gets the unknown error, and the batch still answers."""
+        with patch(f"{BatchCreateUsersView.__module__}.call_command", side_effect=RuntimeError("internal detail")):
+            response = self.client.post(self.url, data=json.dumps(self.batch_data), content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertNotIn("internal detail", response.content.decode())
+        created_users = response.json()["created_users"]
+        self.assertEqual(len(created_users), len(self.batch_model.users))
+        for created_user in created_users:
+            self.assertEqual(created_user["status"], "failure")
+            self.assertEqual(created_user["error"], "An unknown error occurred while creating the user.")
+
     def test_get_not_allowed(self):
         """Test GET method is not allowed."""
         response = self.client.get(self.url)
@@ -115,6 +152,19 @@ class TestUrls(TestAccountMixin):
         response = self.client.post(self.url, data=invalid_data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertIn("Invalid request data", response.content.decode())
+
+    def test_post_invalid_body_does_not_echo_input(self):
+        """Test that a validation error names the field, but leaves out the values, which may be passwords."""
+        user = self.batch_model.users[0].model_dump()
+        user["email"] = "not-an-email"
+        user["password"] = "a-password-that-must-not-leak"
+        invalid_data = {"account_number": self.batch_model.account_number, "users": [user]}
+        response = self.client.post(self.url, data=json.dumps(invalid_data), content_type="application/json")
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        content = response.content.decode()
+        self.assertIn("users.0.email", content)
+        self.assertNotIn("a-password-that-must-not-leak", content)
+        self.assertNotIn("not-an-email", content)
 
     def test_post_admin_user(self):
         """Test POST with is_admin True creates admin user."""

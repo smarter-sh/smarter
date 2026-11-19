@@ -15,6 +15,10 @@ from rest_framework.request import Request
 from smarter.apps.account.contract.models import AccountApiProfile
 from smarter.apps.account.models import UserProfile
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
 
@@ -81,10 +85,23 @@ class UserProfileView(AccountViewBase):
 
         try:
             user_profile.delete()
-        except Exception as e:
-            logger.error("Error deleting user profile with id %s: %s", user_profile_id, str(e))
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
+                "%s.delete() refused for user_profile_id %s: %s",
+                self.formatted_class_name,
+                user_profile_id,
+                type(e).__name__,
+            )
+            message = client_error_message(e, "The UserProfile could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.delete() failed for user_profile_id %s", self.formatted_class_name, user_profile_id, exc_info=True
+            )
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the UserProfile."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         return HttpResponseRedirect("/")

@@ -18,6 +18,10 @@ from smarter.apps.account.contract.models import AccountApiContact
 from smarter.apps.account.models import AccountContact, UserProfile
 from smarter.apps.account.serializers import AccountContactSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
 
@@ -124,9 +128,16 @@ class AccountContactView(AccountViewBase):
                 self.account_contact.delete()
                 if not same_contact:
                     user_contact.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the AccountContact."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         plugins_path = request.path_info.rsplit("/", 2)[0]

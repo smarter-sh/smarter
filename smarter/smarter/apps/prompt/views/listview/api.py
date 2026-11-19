@@ -57,6 +57,10 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.serializers import LLMClientSerializer
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -208,17 +212,26 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = LLMClientSerializer(cloned_llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning LLMClient with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the LLMClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning LLMClient with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the LLMClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while cloning the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -273,17 +286,26 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"LLMClient with id {llmclient_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting LLMClient with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the LLMClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting LLMClient with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the LLMClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while deleting the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -345,15 +367,24 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             invalidate_all_cached_llmclients_for_user_profile(user_profile=self.user_profile)  # type: ignore
             data = LLMClientSerializer(llmclient, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming LLMClient with id %s: %s",
                 self.formatted_class_name,
                 llmclient_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the LLMClient.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming LLMClient with id %s",
+                self.formatted_class_name,
+                llmclient_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the LLMClient: {str(e)}"}, status=HTTPStatus.BAD_REQUEST
+                {"error": "An unknown error occurred while renaming the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

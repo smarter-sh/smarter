@@ -21,6 +21,10 @@ from smarter.apps.llmclient.const import CUSTOM_DOMAIN_LISTVIEW_CACHE_KIND
 from smarter.apps.llmclient.models import LLMClientCustomDomain
 from smarter.apps.llmclient.serializers import LLMClientCustomDomainListSerializer
 from smarter.lib import logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.listview import SmarterListApiView
 from smarter.lib.django.pagination import DEFAULT_SORT_FIELDS
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
@@ -97,18 +101,26 @@ class CustomDomainListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             cloned = custom_domain.clone(new_name=new_name, user_profile=self.user_profile)  # type: ignore
             data = LLMClientCustomDomainListSerializer(cloned, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error cloning custom domain with id %s: %s",
                 self.formatted_class_name,
                 custom_domain_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while cloning the custom domain.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error cloning custom domain with id %s",
+                self.formatted_class_name,
+                custom_domain_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while cloning the custom domain: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while cloning the custom domain."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -156,18 +168,26 @@ class CustomDomainListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(
                 {"message": f"Custom domain with id {custom_domain_id} deleted successfully."}, status=HTTPStatus.OK
             )
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error deleting custom domain with id %s: %s",
                 self.formatted_class_name,
                 custom_domain_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while deleting the custom domain.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error deleting custom domain with id %s",
+                self.formatted_class_name,
+                custom_domain_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while deleting the custom domain: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while deleting the custom domain."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
 
@@ -210,16 +230,24 @@ class CustomDomainListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             custom_domain.rename(new_name=new_name)
             data = LLMClientCustomDomainListSerializer(custom_domain, context={"request": request}).data
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error(
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning(
                 "%s.post() Error renaming custom domain with id %s: %s",
                 self.formatted_class_name,
                 custom_domain_id,
-                str(e),
+                e,
+            )
+            message = client_error_message(e, "An error occurred while renaming the custom domain.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error(
+                "%s.post() Error renaming custom domain with id %s",
+                self.formatted_class_name,
+                custom_domain_id,
                 exc_info=True,
             )
             return JsonResponse(
-                {"error": f"An error occurred while renaming the custom domain: {str(e)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "An unknown error occurred while renaming the custom domain."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

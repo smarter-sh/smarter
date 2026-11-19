@@ -553,7 +553,7 @@ class Account(MetaDataModel):
         )
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_number(account_number: str, class_name: str) -> "Account":
+        def _get_account_by_number(account_number: Optional[str], class_name: str) -> "Account":
             try:
                 logger.debug(
                     "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
@@ -566,7 +566,7 @@ class Account(MetaDataModel):
                 raise cls.DoesNotExist(f"No Account found with account_number={account_number}") from e
 
         @cache_results(cls.cache_expiration)
-        def _get_account_by_company_name(company_name: str, class_name: str) -> "Account":
+        def _get_account_by_company_name(company_name: Optional[str], class_name: str) -> "Account":
             try:
                 logger.debug(
                     "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
@@ -580,6 +580,7 @@ class Account(MetaDataModel):
                 )
                 raise cls.DoesNotExist(f"No Account found with company_name={company_name}") from e
 
+        # an argument that wasn't given is None: its lookup never cached anything, so there is nothing to invalidate.
         if invalidate:
             _get_account_by_number.invalidate(account_number=account_number, class_name=Account.__name__)
             _get_account_by_company_name.invalidate(company_name=company_name, class_name=Account.__name__)

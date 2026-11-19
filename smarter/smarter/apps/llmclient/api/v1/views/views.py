@@ -4,7 +4,6 @@
 from http import HTTPStatus
 from typing import Optional
 
-from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.http import (
     HttpRequest,
@@ -39,7 +38,13 @@ from smarter.apps.llmclient.serializers import (
     LLMClientSerializer,
 )
 from smarter.apps.llmclient.tasks.deploy_custom_api import deploy_custom_api
+from smarter.apps.llmtool.manifest.controller import SAMPluginControllerError
 from smarter.lib import json, logging
+from smarter.lib.django.http.client_errors import (
+    CLIENT_ERROR_TYPES,
+    REQUEST_DATA_ERROR_TYPES,
+    client_error_message,
+)
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.views.contract import ContractListMixin
@@ -47,7 +52,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
-from smarter.lib.typing import SmarterDictType, required
+from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
@@ -162,8 +167,16 @@ class LLMClientView(ViewBase):
             if not isinstance(data, dict):
                 raise TypeError(f"Expected a JSON dict in request body but received {type(data)}")
             llmclient = LLMClient.objects.create(**data)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while creating the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return HttpResponseRedirect(request.path_info + str(llmclient.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, *args, llmclient_id: Optional[int] = None, **kwargs):
@@ -178,12 +191,12 @@ class LLMClientView(ViewBase):
             fails validation; 500 if the save fails.
         """
         llmclient: Optional[LLMClient] = None
-        data: Optional[SmarterDictType] = None
 
         llmclient = self.llmclient
         if not llmclient:
             return HttpResponseNotFound("LLMClient not found")
 
+        # parsing the body, and saving its values, both handle the client's data.
         try:
             request_data = request.data
             if not isinstance(request_data, dict):
@@ -193,20 +206,19 @@ class LLMClientView(ViewBase):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-            data = request_data
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-        try:
-            for key, value in data.items():
+            for key, value in request_data.items():
                 if hasattr(llmclient, key):
                     setattr(llmclient, key, value)
             llmclient.save()
-        except ValidationError as e:
-            return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-        except Exception as e:
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.patch() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while updating the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         return HttpResponseRedirect(request.path_info)
@@ -230,9 +242,16 @@ class LLMClientView(ViewBase):
         try:
             if llmclient:
                 llmclient.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         plugins_path = request.path_info.rsplit("/", 2)[0]
@@ -290,8 +309,16 @@ class LLMClientDeployView(ViewBase):
         try:
             llmclient.deployed = True
             llmclient.save()
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while deploying the LLMClient."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return JsonResponse({}, status=HTTPStatus.OK)
 
 
@@ -330,8 +357,16 @@ class LLMClientPluginView(ViewBase):
         try:
             data = request.data
             llmclient_plugin = LLMClientPlugin.load(llmclient, data)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while creating the LLMClientPlugin."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return HttpResponseRedirect(request.path_info + str(llmclient_plugin.id) + "/")  # type: ignore[return-value]
 
     def patch(self, request: Request, llmclient_id: int, plugin_id: int):
@@ -350,8 +385,16 @@ class LLMClientPluginView(ViewBase):
             llmclient_plugin.load(llmclient, data)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=HTTPStatus.BAD_REQUEST)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES + (SAMPluginControllerError,) as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.patch() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while updating the LLMClientPlugin."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return HttpResponseRedirect(request.path_info)
 
     def delete(self, request: Request, llmclient_id: int, plugin_id: int):
@@ -367,9 +410,16 @@ class LLMClientPluginView(ViewBase):
         llmclient_plugin = get_object_or_404(LLMClientPlugin, pk=plugin_id, llmclient=llmclient)
         try:
             llmclient_plugin.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the LLMClientPlugin."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
@@ -432,8 +482,16 @@ class LLMClientAPIKeyView(ViewBase):
         api_key = get_object_or_404(SmarterAuthToken, pk=apikey_id)
         try:
             llmclient_api_key = LLMClientAPIKey.objects.create(llmclient=llmclient, api_key=api_key)
-        except Exception as e:
-            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        except REQUEST_DATA_ERROR_TYPES as e:
+            message = client_error_message(e, "The request data is not valid.")
+            return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            return JsonResponse(
+                {"error": "An unknown error occurred while creating the LLMClientAPIKey."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
         return HttpResponseRedirect(request.path_info + str(llmclient_api_key.id) + "/")  # type: ignore[return-value]
 
     def delete(self, request: Request, llmclient_id: int, apikey_id: int):
@@ -449,9 +507,16 @@ class LLMClientAPIKeyView(ViewBase):
         llmclient_api_key = get_object_or_404(LLMClientAPIKey, pk=apikey_id, llmclient=llmclient)
         try:
             llmclient_api_key.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the LLMClientAPIKey."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 
@@ -598,9 +663,16 @@ class LLMClientExtensionsView(ViewBase):
         link = get_object_or_404(LLMClientExtensions, pk=extension_id, llmclient=llmclient)
         try:
             link.delete()
-        except Exception as e:
+        except CLIENT_ERROR_TYPES as e:
+            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            message = client_error_message(e, "The resource could not be deleted.")
+            return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=broad-except
+        except Exception:
+            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
             return JsonResponse(
-                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+                {"error": "An unknown error occurred while deleting the LLMClientExtensions."},
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
         return HttpResponseRedirect(request.path_info.rsplit("/", 2)[0])
 

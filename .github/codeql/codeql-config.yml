@@ -1,0 +1,26 @@
+---
+#------------------------------------------------------------------------------
+# CodeQL configuration, read by .github/workflows/codeql.yml.
+#
+# Runs the default query suite, less the paths and queries below. Each one
+# says why it is left out. Alerts that are wrong only once are dismissed in
+# GitHub instead, so that the query still catches the next real one.
+#------------------------------------------------------------------------------
+name: "Smarter CodeQL config"
+
+paths-ignore:
+  # A vendored admin theme: library bundles and demo pages, most of which no
+  # template loads. Its alerts are upstream code's, fixed by upgrading the
+  # theme, not by editing a bundle (96 were dismissed in November 2026).
+  # Smarter's own JavaScript is the web console's, in smarter-sh/smarter-console.
+  - smarter/smarter/static/assets
+
+query-filters:
+  # Flags any logger call whose arguments CodeQL connects, by name alone, to
+  # a password, token, key or secret. Smarter logs ids, names, logger prefixes
+  # and masked values (e.g. loggable_manifest()), never the secret itself, so
+  # all 100 alerts it raised were false positives, and every new log line
+  # raised another. Keeping secrets and PII out of the log is the job of the
+  # smarter-logging skill and code review. Remove this filter to scan again.
+  - exclude:
+      id: py/clear-text-logging-sensitive-data

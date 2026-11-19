@@ -72,7 +72,8 @@ class ProviderModelTypedDict(TypedDict):
     api_key: str
     provider_name: str
     provider_id: int
-    base_url: str
+    # None for a provider whose client uses its own default url.
+    base_url: Optional[str]
     model: str
     max_completion_tokens: int
     temperature: float
@@ -547,6 +548,10 @@ class Provider(MetaDataWithOwnershipModel):
                     name,
                 )
                 return None
+
+        # without both, the lookup can only miss.
+        if account_id is None or not name:
+            return None
 
         if invalidate:
             cached_provider_by_account_id_and_name.invalidate(account_id, name)
