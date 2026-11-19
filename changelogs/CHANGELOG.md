@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.8...v0.46.9-alpha.1) (2026-11-19)
+
+### Bug Fixes
+
+* broken css on youtube page ([929216a](https://github.com/smarter-sh/smarter/commit/929216a2fde5382e753cbb2c2ffec25fbf81ab91))
+
 ## [0.46.8](https://github.com/smarter-sh/smarter/compare/v0.46.7...v0.46.8) (2026-11-19)
 
 ### Bug Fixes
