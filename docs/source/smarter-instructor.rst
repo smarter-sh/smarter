@@ -167,7 +167,13 @@ Quick Start
 
 Open http://localhost:9357/login/ and log in as ``admin@smarter.sh`` with the password
 ``smarter``. Change the password straight away. The
-:doc:`Quick Start Guide <smarter-platform/installation/quick-start>` has screenshots of each step.
+:doc:`Quick Start Guide <smarter-platform/installation/quick-start>` has screenshots of each step,
+and this video follows them from start to finish. It also makes a good first assignment for
+students who will run Smarter on their own laptops.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
 
 From Source
 ~~~~~~~~~~~

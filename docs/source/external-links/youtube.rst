@@ -15,6 +15,16 @@ workgroup can use which AI resources.
 
    <iframe width="560" height="315" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" frameborder="0" allowfullscreen></iframe>
 
+Up and Running in Less Than 10 Minutes
+--------------------------------------
+
+Clone the smarter-deploy repository, configure it, and run Smarter on your own computer with
+Docker. See the :doc:`/smarter-platform/installation/quick-start`.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/El8L6zgGyRU" title="Up and running in less than 10 minutes" frameborder="0" allowfullscreen></iframe>
+
 The SqlPlugin in 60 Seconds
 ---------------------------
 
