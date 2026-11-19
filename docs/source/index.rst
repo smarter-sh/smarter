@@ -58,11 +58,9 @@ their employees, and universities and bootcamps use it to teach their students. 
 non-programmers to Kubernetes for platform engineers. Most come as a one-day bootcamp, a
 two-week online course and a four-week online course.
 
-New to Smarter? Watch this video.
-
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" frameborder="0" allowfullscreen></iframe>
+   <iframe style="width: 100%; aspect-ratio: 16 / 9; border: 0;" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 .. admonition:: Quick Start: up and running on your desktop in about 10 minutes
    :class: tip
