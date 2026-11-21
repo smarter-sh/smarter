@@ -22,7 +22,9 @@ class ApiConfig(AppConfig):
 
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
-        """Import signals."""
+        """Import signals, and register the system checks of Smarter's security middleware."""
+        from smarter.lib.django import checks  # noqa: F401
+
         from . import receivers, signals  # noqa: F401
 
         logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.upper()}", SmarterReadyState.READY)

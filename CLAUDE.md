@@ -123,9 +123,15 @@ Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 ## Common commands
 
 ```bash
-# Python tests (run in the background; write the log to your scratchpad).
-# Stop Celery Beat first and start it after: its scheduled tasks change the
-# rows of running tests (make docker-test and make coverage do this for you).
+# The full Python suite: always sharded, in the background. Each shard runs in
+# a Docker stack of its own, from the image, so build first. Never run the
+# whole suite serially in the dev container: it takes several times longer.
+make build && make docker-test-sharded
+
+# One app or module while iterating (in the background; write the log to your
+# scratchpad). Stop Celery Beat first and start it after: its scheduled tasks
+# change the rows of running tests (make docker-test and make coverage do this
+# for you).
 docker stop smarter-beat
 docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter"
 docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.<app>"

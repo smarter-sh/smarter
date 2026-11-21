@@ -51,19 +51,6 @@ CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 
 # Database: DATABASES is base.py's, from smarter_settings.mysql_*.
 
-STRIPE_LIVE_SECRET_KEY = (
-    smarter_settings.stripe_live_secret_key.get_secret_value() if smarter_settings.stripe_live_secret_key else ""
-)
-STRIPE_TEST_SECRET_KEY = (
-    smarter_settings.stripe_test_secret_key.get_secret_value() if smarter_settings.stripe_test_secret_key else ""
-)
-STRIPE_LIVE_MODE = False  # Change to True in production
-DJSTRIPE_WEBHOOK_SECRET = (
-    "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
-)
-DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
-DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
-
 # Common security settings
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_PROXY_SSL_HEADER = None
@@ -79,7 +66,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = True
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
