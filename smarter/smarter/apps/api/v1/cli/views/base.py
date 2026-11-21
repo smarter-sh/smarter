@@ -832,13 +832,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return response
         # pylint: disable=broad-except
         except Exception as e:
-            api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
             status = http_status_for_exception(e)
             description = describe_exception(e, status)
-            if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
-                logger.error("%s: %s", type(e), str(e), exc_info=True)
-            else:
-                logger.warning("%s %s: %s", status, type(e), description)
+            # its receiver logs the failure, with the traceback of a 500: it runs inside this except block.
+            api_request_failed.send(
+                sender=self.__class__,
+                instance=self,
+                request=request,
+                response=response,
+                exception=e,
+                status=status,
+                description=description,
+            )
 
             return SmarterJournaledJsonErrorResponse(
                 request=request,

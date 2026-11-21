@@ -8,6 +8,8 @@ Test :mod:`smarter.apps.guardrail.receivers` and :mod:`smarter.apps.guardrail.si
     be documented.
 """
 
+import logging
+
 from django.dispatch import Signal
 
 from smarter.apps.guardrail import receivers, signals
@@ -16,7 +18,7 @@ from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import GuardrailTestBase, input_payload
 
-SIGNALS = ("guardrail_triggered", "guardrail_blocked", "guardrail_escalated", "guardrail_failed")
+SIGNALS = ("guardrail_called", "guardrail_triggered", "guardrail_blocked", "guardrail_escalated", "guardrail_failed")
 
 
 class TestGuardrailReceivers(GuardrailTestBase):
@@ -28,9 +30,8 @@ class TestGuardrailReceivers(GuardrailTestBase):
 
     def test_signals(self):
         """Test that each signal is a Django Signal, with a receiver."""
-        for name in SIGNALS + ("guardrail_called",):
-            self.assertIsInstance(getattr(signals, name), Signal, name)
         for name in SIGNALS:
+            self.assertIsInstance(getattr(signals, name), Signal, name)
             self.assertTrue(getattr(signals, name).has_listeners(), name)
 
     def test_model_receivers(self):
@@ -61,3 +62,11 @@ class TestGuardrailReceivers(GuardrailTestBase):
             fail_closed=True,
         )
         self.assertIn("failed on the output, and blocked it: provider down", self.capture.text())
+
+    def test_called_is_logged(self):
+        """Test that a request to a Guardrail's api is logged at DEBUG, with the Guardrail's id."""
+        guardrail = self.new_guardrail("test_receivers_called")
+        signals.guardrail_called.send(sender=self.__class__, guardrail=guardrail, request=None)
+        logged = self.capture.text(logging.DEBUG)
+        self.assertIn("handle_guardrail_called()", logged)
+        self.assertIn(f"(id {guardrail.pk})", logged)

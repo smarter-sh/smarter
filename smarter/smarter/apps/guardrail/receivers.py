@@ -20,12 +20,25 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .models import Guardrail
 from .signals import (
     guardrail_blocked,
+    guardrail_called,
     guardrail_escalated,
     guardrail_failed,
     guardrail_triggered,
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
+
+
+@receiver(guardrail_called, dispatch_uid="guardrail_called")
+def handle_guardrail_called(sender, guardrail: Guardrail, **kwargs):
+    """
+    Log a request to a Guardrail's api, at DEBUG.
+
+    :param sender: The class that sent the signal, a Guardrail api view.
+    :param guardrail: The Guardrail that the request reads or changes.
+    :param kwargs: The other signal arguments: ``request`` (unused).
+    """
+    logger.debug("called %s (id %s)", guardrail, guardrail.pk)
 
 
 @receiver(post_save, sender=Guardrail)

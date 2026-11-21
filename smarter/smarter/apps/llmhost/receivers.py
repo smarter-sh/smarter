@@ -11,9 +11,25 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMHost, LLMHostCompute
 from .models.compute import LLMHostComputeNodeGroupStatus
-from .signals import llmhost_destroyed, llmhost_launched
+from .signals import llmhost_destroyed, llmhost_launch_failed, llmhost_launched
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
+
+
+@receiver(llmhost_launch_failed, dispatch_uid="llmhost_launch_failed")
+def llmhost_launch_failed_receiver(sender, llmhost: LLMHost, error: str = "", **kwargs):
+    """
+    Log that an LLMHost could not be launched, and why.
+
+    The error is one that :class:`~smarter.apps.llmhost.services.LLMHostService` also records as the
+    LLMHost's status message and event: a refused budget, or the cluster's or the cloud's error.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The LLMHost that was not launched.
+    :param error: Why.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.warning("could not launch %s: %s", llmhost, error)
 
 
 @receiver(llmhost_launched, dispatch_uid="llmhost_launched")

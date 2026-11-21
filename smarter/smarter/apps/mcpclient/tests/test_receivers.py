@@ -8,12 +8,14 @@ Test :mod:`smarter.apps.mcpclient.receivers`.
     be documented.
 """
 
+import logging
 from unittest import mock
 
 from smarter.apps.mcpclient import receivers
 from smarter.apps.mcpclient.connection import MCPServerCatalog
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.signals import (
+    mcpclient_called,
     mcpclient_connected,
     mcpclient_connection_failed,
     mcpclient_resource_read,
@@ -89,3 +91,10 @@ class TestMCPClientReceivers(MCPClientTestBase):
             self.assertIn(text, logged)
         # tool arguments may contain user data, and are not logged
         self.assertNotIn("private", logged)
+
+    def test_called_is_logged(self):
+        """Test that a request to an MCPClient's api is logged at DEBUG, with the MCPClient's id."""
+        mcpclient_called.send(sender=self.__class__, mcpclient=self.mcpclient, request=None, args=(), kwargs={})
+        logged = self.capture.text(logging.DEBUG)
+        self.assertIn("handle_mcpclient_called()", logged)
+        self.assertIn(f"(id {self.mcpclient.pk})", logged)

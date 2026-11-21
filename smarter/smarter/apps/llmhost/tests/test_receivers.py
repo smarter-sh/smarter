@@ -4,13 +4,17 @@ import logging
 from unittest.mock import MagicMock
 
 from smarter.apps.llmhost import receivers
-from smarter.apps.llmhost.signals import llmhost_destroyed, llmhost_launched
+from smarter.apps.llmhost.signals import (
+    llmhost_destroyed,
+    llmhost_launch_failed,
+    llmhost_launched,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 
 class TestLLMHostReceivers(SmarterTestBase):
-    """Test the receivers that log an LLMHost's launch and destruction."""
+    """Test the receivers that log an LLMHost's launch, failed launch and destruction."""
 
     def setUp(self):
         super().setUp()
@@ -24,3 +28,7 @@ class TestLLMHostReceivers(SmarterTestBase):
     def test_destroyed(self):
         llmhost_destroyed.send(sender=self.__class__, llmhost=self.llmhost, purge=True)
         self.assertIn("destroyed qwen-host, purge=True", self.capture.text(logging.INFO))
+
+    def test_launch_failed(self):
+        llmhost_launch_failed.send(sender=self.__class__, llmhost=self.llmhost, error="the cluster is unavailable")
+        self.assertIn("could not launch qwen-host: the cluster is unavailable", self.capture.text(logging.WARNING))

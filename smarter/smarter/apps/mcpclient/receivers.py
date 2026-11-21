@@ -22,6 +22,7 @@ from smarter.lib.typing import SmarterDictType
 from .caching import invalidate_cached_catalog
 from .models import MCPClient
 from .signals import (
+    mcpclient_called,
     mcpclient_connected,
     mcpclient_connection_failed,
     mcpclient_resource_read,
@@ -60,6 +61,18 @@ def mcpclient_deleted(sender, instance: MCPClient, **kwargs):
     """
     logger.info("%s", instance)
     invalidate_cached_catalog(instance)
+
+
+@receiver(mcpclient_called, dispatch_uid="mcpclient_called")
+def handle_mcpclient_called(sender, mcpclient: MCPClient, **kwargs):
+    """
+    Log a request to an MCPClient's api, at DEBUG.
+
+    :param sender: The class that sent the signal, an MCPClient api view.
+    :param mcpclient: The MCPClient that the request reads or changes.
+    :param kwargs: The other signal arguments: ``request``, ``args`` and ``kwargs`` (unused).
+    """
+    logger.debug("called %s (id %s)", mcpclient, mcpclient.pk)
 
 
 @receiver(mcpclient_connected, dispatch_uid="mcpclient_connected")
