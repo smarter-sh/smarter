@@ -10,7 +10,7 @@ from smarter.common.utils.utils import bool_environment_variable
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
 VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
 
@@ -103,7 +103,6 @@ def get_env(
     :rtype: EnvValueType
     """
     # pylint: disable=W0621
-    logger_prefix = SmarterFormattedText.text(__name__) + ".get_env()"
 
     def cast_value(val: Optional[str], default: EnvValueType) -> EnvValueType:
         """
@@ -126,8 +125,7 @@ def get_env(
                 return int(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.warning(
-                    "%s Environment variable %s value '%s' cannot be converted to int. Using default %s.",
-                    logger_prefix,
+                    "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
                     var_name,
                     val,
                     default,
@@ -138,8 +136,7 @@ def get_env(
                 return float(val) if val is not None else default
             except (ValueError, TypeError):
                 logger.warning(
-                    "%s Environment variable %s value '%s' cannot be converted to float. Using default %s.",
-                    logger_prefix,
+                    "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
                     var_name,
                     val,
                     default,
@@ -152,8 +149,7 @@ def get_env(
                 return val if val is not None else default
             else:
                 logger.warning(
-                    "%s Environment variable %s value '%s' cannot be converted to list. Using default %s.",
-                    logger_prefix,
+                    "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
                     var_name,
                     val,
                     default,
@@ -167,8 +163,7 @@ def get_env(
                     return val if val is not None else default
                 else:
                     logger.warning(
-                        "%s Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
-                        logger_prefix,
+                        "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
                         var_name,
                         val,
                         default,
@@ -176,8 +171,7 @@ def get_env(
                     return default
             except json.JSONDecodeError:
                 logger.warning(
-                    "%s Environment variable %s value '%s' is not valid JSON. Using default %s.",
-                    logger_prefix,
+                    "Environment variable %s value '%s' is not valid JSON. Using default %s.",
                     var_name,
                     val,
                     default,
@@ -191,17 +185,16 @@ def get_env(
     # Strip surrounding quotes if present
     retval = str(retval).strip('"').strip("'") if retval is not None else None
     if retval is None and is_required:
-        msg = f"{logger_prefix} [WARNING] Required environment variable {var_name} is missing."
-        logger.warning(msg)
-        print(msg)
+        logger.warning("Required environment variable %s is missing.", var_name)
+        print(f"{SmarterFormattedText.text(__name__)} [WARNING] Required environment variable {var_name} is missing.")
         return default
     else:
         cast_val = cast_value(retval, default)  # type: ignore
         log_value = cast_val if not is_secret else "****"
         if VERBOSE_CONSOLE_OUTPUT:
-            msg = f"{logger_prefix} Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
+            msg = f"Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
             logger.debug(msg)
-            print(msg)
+            print(f"{SmarterFormattedText.text(__name__)} {msg}")
         return cast_val
 
 

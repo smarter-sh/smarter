@@ -19,9 +19,11 @@ from openai import (
     BadRequestError,
     InternalServerError,
     NotFoundError,
+    PermissionDeniedError,
     RateLimitError,
 )
 
+from smarter.apps.provider import receivers as provider_receivers
 from smarter.apps.provider.models import (
     Provider,
     ProviderModel,
@@ -301,6 +303,12 @@ class TestProviderModelVerification(ProviderTestBase):
             ),
             api_error(AuthenticationError, 401, "invalid x-api-key"),
             api_error(APIStatusError, 402, "payment required"),
+            # Together AI blocks a model that it serves through a third party until the account allows it.
+            api_error(
+                PermissionDeniedError,
+                403,
+                "Error code: 403 - {'error': {'message': 'This model sends your prompts to a third-party provider, and your organization has not enabled third-party data sharing.', 'code': 'third_party_data_sharing_blocked'}}",
+            ),
             api_error(
                 RateLimitError, 429, "You exceeded your current quota, please check your plan and billing details."
             ),
@@ -328,19 +336,40 @@ class TestProviderModelVerification(ProviderTestBase):
         errors = [
             api_error(NotFoundError, 404, "models/gemini-2.5-flash is no longer available to new users."),
             api_error(BadRequestError, 400, "This model only supports Interactions API."),
+            api_error(PermissionDeniedError, 403, "You do not have access to this model."),
         ]
         for error in errors:
             with self.subTest(error=str(error)):
                 self.reset()
                 ProviderModel.objects.filter(pk=self.model.pk).update(is_active=True)
                 self.openai.chat.completions.create.side_effect = error
-                model_checks.verify_provider_model(self.model.id)
+                # the failed check is logged where it failed, and the model's failure by the
+                # model_verification_failure receiver.
+                with (
+                    self.assertLogs(model_checks.base_logger, "ERROR") as logs,
+                    self.assertLogs(provider_receivers.base_logger, "ERROR") as receiver_logs,
+                ):
+                    model_checks.verify_provider_model(self.model.id)
+                # a provider's http error is an expected answer: logged with its origin, without a traceback.
+                for log_record in logs.records:
+                    self.assertIsNone(log_record.exc_info)
+                output = "\n".join(logs.output)
+                self.assertIn("verify_model_text_input()", output)
+                self.assertIn("handle_model_verification_failure()", "\n".join(receiver_logs.output))
                 self.assertFalse(ProviderModel.objects.get(pk=self.model.pk).is_active)
                 self.assertFalse(
                     ProviderModelVerification.objects.get(
                         provider_model=self.model, verification_type=ProviderModelVerificationTypes.TEXT_INPUT
                     ).is_successful
                 )
+
+    def test_unexpected_error_logs_a_traceback(self):
+        """Test that an exception that is not a provider's http error fails the check and is logged with its traceback."""
+        self.openai.chat.completions.create.side_effect = ValueError("unexpected")
+        with self.assertLogs(model_checks.base_logger, "ERROR") as logs:
+            self.assertFalse(model_checks.verify_model_text_input(provider_model=self.model))
+        self.assertIsNotNone(logs.records[0].exc_info)
+        self.assertIn("verify_model_text_input()", logs.output[0])
 
     def test_verify_provider_model(self):
         """Test that a model that passes its checks is activated, and one that fails is deactivated."""

@@ -50,7 +50,6 @@ from .installer import ExtensionInstaller
 from .manifest import is_development_version
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MAX_INDEX_BYTES = 5 * 1024 * 1024
 SIGNATURE_SUFFIX = ".sig"
@@ -173,7 +172,7 @@ def fetch_index_files(url: str) -> tuple[bytes, bytes]:
     :returns: The index's bytes, and its signature's bytes.
     :raises SafeHttpError: If either cannot be downloaded.
     """
-    logger.info("%s.fetch_index_files() downloading %s", logger_prefix, url)
+    logger.info("downloading %s", url)
     index = fetch(url, max_bytes=MAX_INDEX_BYTES).content
     signature = fetch(url + SIGNATURE_SUFFIX, max_bytes=1024).content
     return index, signature
@@ -326,7 +325,8 @@ def check_for_updates(refresh: bool = False) -> list[Extension]:
         if extension.update_available:
             updates.append(extension)
     logger.info(
-        "%s.check_for_updates() updates are available for: %s", logger_prefix, [extension.slug for extension in updates]
+        "updates are available for: %s",
+        [extension.slug for extension in updates],
     )
     return updates
 

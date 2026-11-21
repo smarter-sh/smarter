@@ -353,7 +353,7 @@ class PromptHelper(SmarterRequestMixin):
         :rtype: Optional[Prompt]
         """
         if not self.smarter_request:
-            logger.error("%s request object is required for PromptHelper.", self.formatted_class_name)
+            logger.error("request object is required for PromptHelper.")
             return None
 
         prompt: Optional[Prompt] = None
@@ -370,8 +370,7 @@ class PromptHelper(SmarterRequestMixin):
             # The key is masked: it is a credential for the other llmclient's chat.
             masked_session_key = mask_identifier(self.session_key)
             logger.warning(
-                "%s.get_cached_chat() - session_key %s belongs to llmclient %s, not %s. Starting a new session.",
-                self.formatted_class_name,
+                "session_key %s belongs to llmclient %s, not %s. Starting a new session.",
                 masked_session_key,
                 prompt.llmclient_id,  # type: ignore[attr-defined]
                 self.llmclient.id,  # type: ignore[attr-defined]

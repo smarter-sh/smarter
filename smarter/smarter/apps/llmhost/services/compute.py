@@ -49,7 +49,6 @@ from .exceptions import LLMHostComputeError
 from .nodegroups import NodeGroupBackend, get_nodegroups
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.ComputeProvisioner"
 
 NodeGroupStatus = LLMHostComputeNodeGroupStatus
 
@@ -330,7 +329,11 @@ class ComputeProvisioner:
             try:
                 spec = SAMLLMHostSpec(**(llmhost.spec or {}))
             except Exception as e:  # pylint: disable=broad-except
-                logger.warning("%s.demand() skipped %s, whose spec is invalid: %s", logger_prefix, llmhost, e)
+                logger.warning(
+                    "skipped %s, whose spec is invalid: %s",
+                    llmhost,
+                    e,
+                )
                 continue
             pods.extend([pod_requests(spec)] * spec.scaling.replicas)
         return pods
@@ -417,7 +420,7 @@ class ComputeProvisioner:
         )
         self._persist(compute, state)
         for action in actions:
-            logger.info("%s.reconcile() %s: %s", logger_prefix, compute, action)
+            logger.info("%s: %s", compute, action)
         return state
 
     @staticmethod

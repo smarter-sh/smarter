@@ -47,8 +47,7 @@ from django.db.models.fields.reverse_related import ForeignObjectRel
 from smarter.common.utils import mask_email
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 MERGED_NAME_SUFFIX = "_merged_"
 """Inserted between the name and the id of a resource that is renamed because the survivor's profile already uses its name."""
@@ -441,9 +440,13 @@ def merge_duplicate_users(apps: Apps, dry_run: bool = False) -> list[UserMergeRe
                     raise DryRunRollback()
         except DryRunRollback:
             pass
-        logger.info("%s.merge_duplicate_users() %s%s", logger_prefix, "(dry run) " if dry_run else "", report.summary())
+        logger.info(
+            "%s%s",
+            "(dry run) " if dry_run else "",
+            report.summary(),
+        )
         for line in report.renamed:
-            logger.warning("%s.merge_duplicate_users() renamed %s", logger_prefix, line)
+            logger.warning("renamed %s", line)
         reports.append(report)
 
     if reports and not dry_run:
@@ -464,4 +467,4 @@ def clear_cache() -> None:
         call_command("reset_cache")
     # pylint: disable=broad-exception-caught
     except (Exception, SystemExit) as e:
-        logger.warning("%s.clear_cache() could not clear the cache after merging users: %s", logger_prefix, e)
+        logger.warning("could not clear the cache after merging users: %s", e)

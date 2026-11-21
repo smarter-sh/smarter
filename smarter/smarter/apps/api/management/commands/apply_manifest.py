@@ -17,8 +17,7 @@ from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.parsing import parse_manifest
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(f"{__name__}")
+logger = logging.getSmarterLogger(__name__)
 
 
 class Command(SmarterCommand):
@@ -40,10 +39,9 @@ class Command(SmarterCommand):
 
     1. Validate the provided manifest input.
     2. Retrieve the specified user and ensure they have an associated admin profile.
-    3. Generate a single-use API token for authentication.
-    4. Construct the appropriate API endpoint URL, considering the current environment (HTTP/HTTPS).
-    5. Send the manifest data to the API endpoint using an authenticated HTTP POST request.
-    6. Display formatted output, including request details and the API response, with optional verbosity.
+    3. Parse the manifest and find the broker for its kind.
+    4. Apply the manifest with that broker, as the user, through a request built with Django's ``RequestFactory``.
+    5. Report success, or log the manifest and the broker's response and raise ``CommandError``.
 
     **Error Handling:**
 
@@ -55,8 +53,7 @@ class Command(SmarterCommand):
 
     .. seealso::
 
-        - :py:class:`smarter.apps.api.v1.cli.urls.ApiV1CliReverseViews`
-        - :py:class:`smarter.lib.drf.models.SmarterAuthToken`
+        - :py:class:`smarter.lib.manifest.broker.abstract_broker_class.AbstractBroker`
     """
 
     help = "Apply a Smarter manifest."
@@ -71,13 +68,13 @@ class Command(SmarterCommand):
 
         if self._data is None:
             if self.manifest:
-                logger.debug("%s using manifest provided on command line.", logger_prefix)
+                logger.debug("using manifest provided on command line.")
                 self._data = self.manifest
             elif self.filespec:
                 try:
                     with open(self.filespec, encoding="utf-8") as file:
                         self._data = file.read()
-                    logger.debug("%s using manifest from file: %s", logger_prefix, self.filespec)
+                    logger.debug("using manifest from file: %s", self.filespec)
                 except FileNotFoundError as e:
                     raise SmarterValueError(f"File not found: {self.filespec}") from e
             if not self._data:
@@ -136,8 +133,7 @@ class Command(SmarterCommand):
         verbose = options.get("verbose", False)
 
         logger.debug(
-            "%s handle called with filespec=%s, manifest=%s, username=%s",
-            logger_prefix,
+            "handle called with filespec=%s, manifest=%s, username=%s",
             self.filespec,
             loggable_manifest(self.manifest),
             username,
@@ -163,36 +159,8 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg="No admin user profile found.")
             return
 
-        # user = user_profile.cached_user
+        logger.debug("applying manifest")
 
-        # try:
-        #     token_record, token_key = SmarterAuthToken.objects.create(  # type: ignore[call-arg]
-        #         account=user_profile.cached_account,
-        #         name="apply_manifest",
-        #         user=user,
-        #         description="DELETE ME: single-use key created by manage.py apply_manifest",
-        #     )
-        #     logger.debug("%s - created single-use token %s for user %s", logger_prefix, token_key, user_profile)
-        # # pylint: disable=W0718
-        # except Exception as e:
-        #     self.handle_completed_failure(e, msg=f"Error creating API token: {e}")
-        #     return
-
-        # path = reverse(ApiV1CliReverseViews.namespace + ApiV1CliReverseViews.apply, kwargs={})
-        # url = urljoin(smarter_settings.environment_url, path)
-        # headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
-
-        # msg = f"{logger_prefix} applying manifest (verbose={verbose}) url={url} as user={user_profile} headers={headers}  data={self.data}"
-        # logger.debug("%s - %s", logger_prefix, msg)
-        # if verbose:
-        #     logger.debug("%s manifest: %s", logger_prefix, self.data)
-        #     logger.debug("%s headers: %s", logger_prefix, headers)
-
-        logger.debug("%s applying manifest", logger_prefix)
-
-        # ----------------------------------------------------------------------
-        # PLAN B
-        # ----------------------------------------------------------------------
         manifest = parse_manifest(self.data)
         factory = RequestFactory()
         fake_request = factory.post("/fake-url/", data=manifest, content_type="application/json")
@@ -212,9 +180,9 @@ class Command(SmarterCommand):
 
         if response and response.status_code == 200:
             if verbose:
-                logger.debug("%s manifest applied successfully", logger_prefix)
+                logger.debug("manifest applied successfully")
             else:
-                logger.debug("%s manifest applied successfully", logger_prefix)
+                logger.debug("manifest applied successfully")
             self.handle_completed_success()
             return
         else:
@@ -222,45 +190,7 @@ class Command(SmarterCommand):
             status_code = response.status_code if response is not None else None
             content = response.content.decode("utf-8", errors="replace") if response is not None else None
             self.handle_completed_failure(msg=f"Manifest apply failed with status code: {status_code}")
-            logger.error("%s manifest: %s", logger_prefix, loggable_manifest(self.data))
-            logger.error("%s response: %s", logger_prefix, content)
+            logger.error("manifest: %s", loggable_manifest(self.data))
+            logger.error("response: %s", content)
             msg = f"Manifest apply failed with status code: {status_code}\nmanifest: {loggable_manifest(self.data)}\nresponse: {content}"
             raise CommandError(msg)
-
-        # ----------------------------------------------------------------------
-        # PLAN B
-        # ----------------------------------------------------------------------
-        # try:
-        #     httpx_response = httpx.post(url, content=self.data, headers=headers)
-        # except httpx.HTTPError as e:
-        #     self.handle_completed_failure(e, msg=f"HTTP error applying manifest to {url}: {e}")
-        #     return
-        # finally:
-        #     token_record.delete()
-
-        # wrap up the request
-        # response_content = httpx_response.content.decode("utf-8")
-        # if isinstance(response_content, (str, bytearray, bytes)):
-        #     try:
-        #         response_json = json.loads(response_content)
-        #     except json.JSONDecodeError:
-        #         response_json = {"error": "unable to decode response content", "raw": response_content}
-        # else:
-        #     response_json = {"error": "unable to decode response content"}
-
-        # response = json.dumps(response_json) + "\n"
-        # if httpx_response.status_code == httpx.codes.OK:
-        #     if verbose:
-        #         logger.debug("%s - manifest apply response: %s", logger_prefix, response)
-        #     else:
-        #         logger.debug("%s - manifest applied successfully", logger_prefix)
-        # else:
-        #     self.handle_completed_failure(
-        #         msg=f"Manifest apply to {url} failed with status code: {httpx_response.status_code}"
-        #     )
-        #     logger.error("%s - manifest: %s", logger_prefix, self.data)
-        #     logger.error("%s - response: %s", logger_prefix, response)
-        #     msg = f"Manifest apply to {url} failed with status code: {httpx_response.status_code}\nmanifest: {loggable_manifest(self.data)}\nresponse: {response}"
-        #     raise CommandError(msg)
-
-        # self.handle_completed_success()

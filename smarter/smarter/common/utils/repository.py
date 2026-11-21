@@ -25,8 +25,7 @@ from urllib.parse import urlparse, urlunparse
 from smarter.common.const import REPO_ROOT, SMARTER_PROJECT_REPOSITORY_URL
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 GIT_TIMEOUT = 2  # seconds. git answers instantly, or not at all.
 
@@ -118,7 +117,7 @@ def get_repository_url() -> str:
             check=True,
         )
     except (OSError, subprocess.SubprocessError) as e:
-        logger.debug("%s.get_repository_url() git remote -v failed, using the default: %s", logger_prefix, e)
+        logger.debug("git remote -v failed, using the default: %s", e)
         return SMARTER_PROJECT_REPOSITORY_URL
     return parse_git_remotes(result.stdout) or SMARTER_PROJECT_REPOSITORY_URL
 

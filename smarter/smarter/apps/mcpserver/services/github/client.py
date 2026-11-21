@@ -46,7 +46,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CLASSIC_TOKEN_PATTERN = re.compile(r"^ghp_[A-Za-z0-9]{20,251}$")
 """What a GitHub classic personal access token looks like.
@@ -249,7 +248,7 @@ def github_request(
             allow_redirects=False,
         )
     except requests.exceptions.RequestException as e:
-        logger.warning("%s.github_request() GitHub could not be reached: %s", logger_prefix, type(e).__name__)
+        logger.warning("GitHub could not be reached: %s", type(e).__name__)
         raise SmarterMCPServerServiceError("GitHub could not be reached. Try again later.") from e
     return response
 

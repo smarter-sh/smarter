@@ -200,7 +200,7 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         self.assertEqual(llmclient.dns_verification_status, llmclient.DnsVerificationStatusChoices.NOT_VERIFIED)
         a_record = dns.get_record(api_hosted_zone_id, llmclient_default_host, "A")
         if a_record is not None:
-            logger.info("test_deploy_and_undeploy() found an existing DNS record: %s", a_record)
+            logger.info("found an existing DNS record: %s", a_record)
             self.assertEqual(a_record.name, dns.resolve_domain(llmclient_default_host))
 
     def test_initialize_waffle(self):

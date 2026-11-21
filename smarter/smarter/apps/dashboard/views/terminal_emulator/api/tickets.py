@@ -25,8 +25,7 @@ from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 from .const import TERMINAL_TICKET_TIMEOUT, TERMINAL_WEBSOCKET_PATH
 from .messages import TerminalTicket
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 TICKET_CACHE_PREFIX = "smarter.apps.dashboard.terminal.ticket."
 """The cache key prefix of a ticket, whose value is the id of the user that it was issued to."""
@@ -104,5 +103,5 @@ class TerminalTicketApiView(SmarterAuthenticatedNeverCachedWebView):
             # unreachable: login_required only lets a signed in user through.
             raise PermissionDenied("A terminal ticket is only issued to a signed in user.")
         ticket = TerminalTicket(ticket=issue_ticket(user_id), url=f"/{TERMINAL_WEBSOCKET_PATH}")
-        logger.info("%s.post() issued a terminal ticket to %s.", self.formatted_class_name, request.user)
+        logger.info("issued a terminal ticket to %s.", request.user)
         return JsonResponse(ticket.model_dump(mode="json"))

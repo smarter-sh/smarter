@@ -139,8 +139,7 @@ class PluginListApiExtensionsView(SmarterAuthenticatedNeverCachedWebView):
         :rtype: JsonResponse
         """
         logger.debug(
-            "%s.post() Listing the extensions available to user %s.",
-            self.formatted_class_name,
+            "Listing the extensions available to user %s.",
             request.user.username if request.user else "None",  # type: ignore[union-attr]
         )
         extensions, pagination = paginate_listview(
@@ -191,8 +190,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llmclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. llmclient_id: %s, new_name: %s",
                 llmclient_id,
                 new_name,
             )
@@ -201,9 +199,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             llmclient = PluginMeta.objects.with_read_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
-            logger.warning(
-                "%s.post() PluginMeta with id %s not found for cloning.", self.formatted_class_name, llmclient_id
-            )
+            logger.warning("PluginMeta with id %s not found for cloning.", llmclient_id)
             return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -213,9 +209,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             plugin = PluginController(user_profile=self.user_profile, plugin_meta=llmclient).plugin  # type: ignore[arg-type]
             if not plugin or not plugin.ready:
                 # a refusal for the user, so it is returned here, not raised into the handler below.
-                logger.warning(
-                    "%s.post() PluginMeta %s is not ready to clone.", self.formatted_class_name, llmclient_id
-                )
+                logger.warning("PluginMeta %s is not ready to clone.", llmclient_id)
                 return JsonResponse(
                     {"error": f"PluginMeta with id {llmclient_id} is not ready, and cannot be cloned."},
                     status=HTTPStatus.BAD_REQUEST,
@@ -229,8 +223,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning PluginMeta with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning PluginMeta with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -239,8 +232,7 @@ class PluginListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning PluginMeta with id %s",
-                self.formatted_class_name,
+                "Error cloning PluginMeta with id %s",
                 llmclient_id,
                 exc_info=True,
             )
@@ -280,14 +272,15 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         llmclient_id = kwargs.get("llmclient_id")
         if not llmclient_id:
-            logger.warning("%s.post() Missing required parameter llmclient_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter llmclient_id for deletion.")
             return JsonResponse({"error": "llmclient_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             llmclient = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
             logger.warning(
-                "%s.post() PluginMeta with id %s not found for deletion.", self.formatted_class_name, llmclient_id
+                "PluginMeta with id %s not found for deletion.",
+                llmclient_id,
             )
             return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
@@ -299,8 +292,7 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting PluginMeta with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting PluginMeta with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -309,8 +301,7 @@ class PluginListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting PluginMeta with id %s",
-                self.formatted_class_name,
+                "Error deleting PluginMeta with id %s",
                 llmclient_id,
                 exc_info=True,
             )
@@ -353,8 +344,7 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
                 llmclient_id,
                 new_name,
             )
@@ -364,7 +354,8 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             llmclient = PluginMeta.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except PluginMeta.DoesNotExist:
             logger.warning(
-                "%s.post() PluginMeta with id %s not found for renaming.", self.formatted_class_name, llmclient_id
+                "PluginMeta with id %s not found for renaming.",
+                llmclient_id,
             )
             return JsonResponse({"error": f"PluginMeta with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
@@ -376,8 +367,7 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming PluginMeta with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming PluginMeta with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -386,8 +376,7 @@ class PluginListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming PluginMeta with id %s",
-                self.formatted_class_name,
+                "Error renaming PluginMeta with id %s",
                 llmclient_id,
                 exc_info=True,
             )

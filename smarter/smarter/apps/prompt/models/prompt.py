@@ -22,7 +22,9 @@ class Prompt(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "Prompts"
-        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
+        constraints = [
+            models.UniqueConstraint(fields=[SMARTER_CHAT_SESSION_KEY_NAME, "url"], name="prompt_prompt_unique"),
+        ]
 
     objects = MetaDataWithOwnershipModelManager["Prompt"]()
 

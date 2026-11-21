@@ -293,8 +293,7 @@ class SmarterRequestMixin(AccountMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.__bool__() - encountered an error while checking srm_ready: %s",
-                self.srm_formatted_class_name,
+                "encountered an error while checking srm_ready: %s",
                 e,
                 exc_info=True,
             )
@@ -342,8 +341,7 @@ class SmarterRequestMixin(AccountMixin):
         :param kwargs: Keyword arguments passed to the setup method.
         """
         logger.debug(
-            "%s.smarter_request_setup() called with args: %s, kwargs: %s, request: %s, user: %s",
-            self.srm_formatted_class_name,
+            "called with args: %s, kwargs: %s, request: %s, user: %s",
             args,
             kwargs,
             request,
@@ -669,15 +667,13 @@ class SmarterRequestMixin(AccountMixin):
                 return base_url
             except SmarterValueError as e:
                 logger.error(
-                    "%s.url() property encountered an error while validating URL: %s",
-                    self.srm_formatted_class_name,
+                    "property encountered an error while validating URL: %s",
                     e,
                 )
                 return None
 
         logger.warning(
-            "%s.url() property was accessed before it was initialized. request: %s",
-            self.srm_formatted_class_name,
+            "property was accessed before it was initialized. request: %s",
             self.smarter_request,
         )
         return None
@@ -742,20 +738,17 @@ class SmarterRequestMixin(AccountMixin):
         """
         if not self.smarter_request:
             logger.warning(
-                "%s.params() - request is None or not set. Cannot extract query string parameters.",
-                self.srm_formatted_class_name,
+                "request is None or not set. Cannot extract query string parameters.",
             )
             return QueryDict("")
         if not hasattr(self.smarter_request, "META"):
             logger.warning(
-                "%s.params() - request does not have META attribute. Cannot extract query string parameters.",
-                self.srm_formatted_class_name,
+                "request does not have META attribute. Cannot extract query string parameters.",
             )
             return QueryDict("")
         if self.smarter_request.META is None:
             logger.warning(
-                "%s.params() - request.META is None. Cannot extract query string parameters.",
-                self.srm_formatted_class_name,
+                "request.META is None. Cannot extract query string parameters.",
             )
             return QueryDict("")
         # Always construct QueryDict, even if QUERY_STRING is empty
@@ -812,8 +805,7 @@ class SmarterRequestMixin(AccountMixin):
 
         if not self.smarter_request:
             logger.warning(
-                "%s.cache_key() - request is None or not set. Cannot generate cache key.",
-                self.srm_formatted_class_name,
+                "request is None or not set. Cannot generate cache key.",
             )
             return None
 
@@ -944,8 +936,7 @@ class SmarterRequestMixin(AccountMixin):
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_llmclient_name() - failed to extract llmclient name from sandbox url: %s",
-                    self.srm_formatted_class_name,
+                    "failed to extract llmclient name from sandbox url: %s",
                     self.url,
                 )
 
@@ -962,8 +953,7 @@ class SmarterRequestMixin(AccountMixin):
             # pylint: disable=broad-except
             except Exception:
                 logger.error(
-                    "%s.smarter_request_llmclient_name() - failed to extract llmclient name from cli url: %s",
-                    self.srm_formatted_class_name,
+                    "failed to extract llmclient name from cli url: %s",
                     self.url,
                 )
 
@@ -1051,14 +1041,12 @@ class SmarterRequestMixin(AccountMixin):
                 body = self.smarter_request.body
             except RawPostDataException as e:
                 logger.error(
-                    "%s.data() - failed to read request body due to RawPostDataException: %s",
-                    self.srm_formatted_class_name,
+                    "failed to read request body due to RawPostDataException: %s",
                     e,
                 )
             if not isinstance(body, (str, bytearray, bytes)):
                 logger.warning(
-                    "%s.data() - request body is not a string or bytes. Cannot parse request body of type %s",
-                    self.srm_formatted_class_name,
+                    "request body is not a string or bytes. Cannot parse request body of type %s",
                     type(body).__name__,
                 )
             try:
@@ -1067,8 +1055,7 @@ class SmarterRequestMixin(AccountMixin):
             except (AttributeError, UnicodeDecodeError):
                 # a body may be a Secret manifest or a password, so only its size is logged.
                 logger.warning(
-                    "%s.data() - request body of %d bytes could not be decoded as utf-8",
-                    self.srm_formatted_class_name,
+                    "request body of %d bytes could not be decoded as utf-8",
                     len(body) if isinstance(body, (str, bytearray, bytes)) else 0,
                 )
                 body_str = body if isinstance(body, str) else None
@@ -1092,8 +1079,7 @@ class SmarterRequestMixin(AccountMixin):
                     # logged: str(e) quotes the line it failed on.
                     mark = getattr(e, "problem_mark", None)
                     logger.error(
-                        "%s.data() - failed to parse a request body of %d bytes: %s at line %s, column %s",
-                        self.srm_formatted_class_name,
+                        "failed to parse a request body of %d bytes: %s at line %s, column %s",
                         len(body_str),
                         getattr(e, "problem", None) or type(e).__name__,
                         mark.line + 1 if mark else None,
@@ -1459,7 +1445,7 @@ class SmarterRequestMixin(AccountMixin):
         if not self.qualified_request:
             return False
         if not self.parsed_url:
-            logger.warning("%s.is_llmclient_sandbox_url() - url is None or not set.", self.srm_formatted_class_name)
+            logger.warning("url is None or not set.")
             return False
 
         # smarter api - http://localhost:9357/api/v1/prompt/1/prompt/
@@ -1557,9 +1543,7 @@ class SmarterRequestMixin(AccountMixin):
                 return f"{extracted.domain}.{extracted.suffix}"
             if extracted.domain:
                 return extracted.domain
-        logger.warning(
-            "%s.root_domain() - failed to extract root domain from url: %s", self.srm_formatted_class_name, self.url
-        )
+        logger.warning("failed to extract root domain from url: %s", self.url)
         return None
 
     @cached_property
@@ -1647,23 +1631,20 @@ class SmarterRequestMixin(AccountMixin):
             # That's an expected, routine state, not a problem, so this
             # doesn't warrant WARNING-level attention.
             logger.debug(
-                "%s.srm_ready() - AccountMixin is not srm_ready. Cannot process request.",
-                self.srm_formatted_class_name,
+                "AccountMixin is not srm_ready. Cannot process request.",
             )
             return False
         if not isinstance(self.smarter_request, SMARTER_REQUEST_CLASSES):
             return False
         if not isinstance(self.parsed_url, ParseResult):
             logger.warning(
-                "%s.srm_ready() - _parsed_url is not a ParseResult. Received %s. Cannot process request.",
-                self.srm_formatted_class_name,
+                "_parsed_url is not a ParseResult. Received %s. Cannot process request.",
                 type(self._parsed_url).__name__,
             )
             return False
         if not isinstance(self.url, str):
             logger.warning(
-                "%s.srm_ready() - _url is not a string. Received %s. Cannot process request.",
-                self.srm_formatted_class_name,
+                "_url is not a string. Received %s. Cannot process request.",
                 type(self.url).__name__,
             )
             return False
@@ -1724,8 +1705,7 @@ class SmarterRequestMixin(AccountMixin):
             return None
         if not SmarterValidator.is_valid_session_key(session_key):
             logger.warning(
-                "%s.accepted_session_key() - ignoring a malformed session key from the %s of the request.",
-                self.srm_formatted_class_name,
+                "ignoring a malformed session key from the %s of the request.",
                 source,
             )
             return None
@@ -1861,8 +1841,7 @@ class SmarterRequestMixin(AccountMixin):
             return
         log = logger.debug if is_debug else logger.warning
         log(
-            "%s._srm_log_ready_status() is %s - %s - authenticated user: %s",
-            self.srm_formatted_class_name,
+            "is %s - %s - authenticated user: %s",
             self.formatted_state_ready if ready else self.formatted_state_not_ready,
             self.url if self._url else "URL not initialized",
             self.user_profile if self.user_profile else "Anonymous",
@@ -1874,7 +1853,7 @@ class SmarterRequestMixin(AccountMixin):
 
         :returns: None.
         """
-        logger.info("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
+        logger.info("is %s", self.ready_state)
 
     def to_json(self) -> SmarterDictType:
         """
@@ -1935,8 +1914,7 @@ class SmarterRequestMixin(AccountMixin):
         """
         retval = getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False)
         logger.debug(
-            "%s.is_internal_api_request() - request %s internal API request: %s",
-            self.srm_formatted_class_name,
+            "request %s internal API request: %s",
             request,
             retval,
         )
@@ -1960,8 +1938,7 @@ class SmarterRequestMixin(AccountMixin):
             raise SmarterValueError(f"Expected request to be an instance of HttpRequest, got {type(request).__name__}")
 
         logger.debug(
-            "%s.set_is_internal_api_request() - setting request %s internal API request to: %s",
-            self.srm_formatted_class_name,
+            "setting request %s internal API request to: %s",
             request.path,
             value,
         )
@@ -1983,15 +1960,13 @@ class SmarterRequestMixin(AccountMixin):
             return self.smarter_request.user.is_authenticated  # type: ignore
         except AttributeError:
             logger.debug(
-                "%s.is_authenticated() - request.user is not set or does not have is_authenticated attribute.",
-                self.srm_formatted_class_name,
+                "request.user is not set or does not have is_authenticated attribute.",
             )
             return False
         # pylint: disable=broad-except
         except Exception as e:
             logger.warning(
-                "%s.is_authenticated() - unexpected error while checking authentication: %s",
-                self.srm_formatted_class_name,
+                "unexpected error while checking authentication: %s",
                 str(e),
             )
 

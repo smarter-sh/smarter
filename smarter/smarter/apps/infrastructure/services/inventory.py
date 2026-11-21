@@ -36,7 +36,6 @@ from .base import DiscoveredResource
 from .kubernetes import KubernetesService
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.INFRASTRUCTURE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def _spec(item: SmarterDictType) -> SmarterDictType:
@@ -197,14 +196,14 @@ def discover() -> dict[str, list[DiscoveredResource]]:
         retval.update(infrastructure.provider.get_kubernetes_cluster_resources())
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.discover() could not list the cluster's cloud resources: %s", logger_prefix, e)
+        logger.warning("could not list the cluster's cloud resources: %s", e)
     kubernetes = infrastructure.kubernetes
     for source in KUBERNETES_SOURCES:
         try:
             resources = source.find(kubernetes)
         # pylint: disable=broad-except
         except Exception as e:
-            logger.warning("%s.discover() could not list %s: %s", logger_prefix, source.resource_type, e)
+            logger.warning("could not list %s: %s", source.resource_type, e)
             continue
         if resources is not None:
             retval[source.resource_type] = resources
@@ -265,7 +264,7 @@ def sync_inventory() -> dict[str, dict[str, int]]:
         resource_type: reconcile(kubernetes, resource_type, resources)
         for resource_type, resources in discover().items()
     }
-    logger.info("%s.sync_inventory() %s", logger_prefix, retval)
+    logger.info("%s", retval)
     return retval
 
 

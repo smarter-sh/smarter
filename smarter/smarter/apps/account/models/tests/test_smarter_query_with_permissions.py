@@ -19,13 +19,11 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterQuerySetWithPermissions(TestAccountMixin):
     """Test SmarterQuerySetWithPermissions model."""
-
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestSmarterQuerySetWithPermissions()"
 
     unrelated_account_admin: User
     unrelated_account: Account
@@ -169,15 +167,13 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
         """Test that a staff user has read permissions for all objects in the account."""
 
         logger.debug(
-            "%s.test_with_read_permission_for_staff_user() starting test with unrelated_non_admin_user %s",
-            self.logger_prefix,
+            "starting test with unrelated_non_admin_user %s",
             self.unrelated_non_admin_user,
         )
 
         # temporarily demote the admin user to staff to test this case
         logger.debug(
-            "%s.test_with_read_permission_for_staff_user() demoting admin user to staff",
-            self.logger_prefix,
+            "demoting admin user to staff",
         )
         self.admin_user.is_superuser = False
         self.admin_user.is_staff = True
@@ -198,8 +194,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
             self.fail(f"with_read_permission_for() raised an exception for staff user: {e}")
         finally:
             logger.debug(
-                "%s.test_with_read_permission_for_staff_user() restoring admin user's superuser status",
-                self.logger_prefix,
+                "restoring admin user's superuser status",
             )
             # restore the admin user's superuser status
             self.admin_user.is_superuser = True
@@ -250,8 +245,7 @@ class TestSmarterQuerySetWithPermissions(TestAccountMixin):
         """Test that a regular user has ownership permissions only for their own objects."""
 
         logger.debug(
-            "%s.test_with_ownership_permission_for_regular_user() starting test with unrelated_non_admin_user %s",
-            self.logger_prefix,
+            "starting test with unrelated_non_admin_user %s",
             self.unrelated_non_admin_user,
         )
 

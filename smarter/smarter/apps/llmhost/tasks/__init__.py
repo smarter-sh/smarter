@@ -36,7 +36,6 @@ from smarter.apps.llmhost.services import LLMHostService, LLMHostServiceError
 from smarter.apps.llmhost.services.compute import ComputeProvisioner
 from smarter.apps.llmhost.services.exceptions import LLMHostComputeError
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -45,7 +44,6 @@ from smarter.workers.celery import app
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_HOST_LOGGING]
 )
-logger_prefix = SmarterFormattedText.text(__name__)
 
 
 def managed_hostname(llmhost: LLMHost) -> Optional[str]:
@@ -80,10 +78,15 @@ def create_dns_record(llmhost: LLMHost) -> None:
         infrastructure.dns.create_domain_a_record(
             hostname=hostname, api_host_domain=smarter_settings.environment_api_domain
         )
-        logger.info("%s created the DNS record %s for %s", logger_prefix, hostname, llmhost)
+        logger.info("created the DNS record %s for %s", hostname, llmhost)
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("%s failed to create the DNS record %s for %s: %s", logger_prefix, hostname, llmhost, e)
+        logger.error(
+            "failed to create the DNS record %s for %s: %s",
+            hostname,
+            llmhost,
+            e,
+        )
 
 
 def destroy_dns_record(llmhost: LLMHost) -> None:
@@ -112,7 +115,7 @@ def launch_llmhost(llmhost_id: int) -> Optional[str]:
     """
     llmhost = LLMHost.objects.filter(pk=llmhost_id).first()
     if llmhost is None:
-        logger.warning("%s.launch_llmhost() LLMHost %s does not exist.", logger_prefix, llmhost_id)
+        logger.warning("LLMHost %s does not exist.", llmhost_id)
         return None
     observation = LLMHostService().launch(llmhost)
     create_dns_record(llmhost)
@@ -130,7 +133,7 @@ def destroy_llmhost(llmhost_id: int, purge: bool = False) -> Optional[str]:
     """
     llmhost = LLMHost.objects.filter(pk=llmhost_id).first()
     if llmhost is None:
-        logger.warning("%s.destroy_llmhost() LLMHost %s does not exist.", logger_prefix, llmhost_id)
+        logger.warning("LLMHost %s does not exist.", llmhost_id)
         return None
     LLMHostService().destroy(llmhost, purge=purge)
     destroy_dns_record(llmhost)
@@ -153,14 +156,14 @@ def refresh_llmhost_status(llmhost_id: Optional[int] = None) -> dict[str, str]:
         llmhosts = LLMHost.objects.filter(status__in=SAMLLMHostStatusEnum.deployed())
     service = LLMHostService()
     if not service.cluster.ready:
-        logger.warning("%s.refresh_llmhost_status() the Kubernetes cluster is not available.", logger_prefix)
+        logger.warning("the Kubernetes cluster is not available.")
         return {}
     retval = {}
     for llmhost in llmhosts.select_related("user_profile", "user_profile__account"):
         try:
             retval[llmhost.name] = service.observe(llmhost).status
         except LLMHostServiceError as e:
-            logger.error("%s.refresh_llmhost_status() failed for %s: %s", logger_prefix, llmhost, e)
+            logger.error("failed for %s: %s", llmhost, e)
     return retval
 
 
@@ -176,20 +179,24 @@ def reconcile_llmhost_compute(compute_id: int, attempt: int = 1) -> Optional[Sma
     """
     compute = LLMHostCompute.objects.filter(pk=compute_id).first()
     if compute is None:
-        logger.warning("%s.reconcile_llmhost_compute() LLMHostCompute %s does not exist.", logger_prefix, compute_id)
+        logger.warning("LLMHostCompute %s does not exist.", compute_id)
         return None
     service = LLMHostService()
     state = None
     try:
         state = ComputeProvisioner(cluster=service.cluster).reconcile(compute)
     except LLMHostComputeError as e:
-        logger.error("%s.reconcile_llmhost_compute() failed for %s: %s", logger_prefix, compute, e)
+        logger.error("failed for %s: %s", compute, e)
     if service.cluster.ready:
         for llmhost in compute.llmhosts.filter(status__in=SAMLLMHostStatusEnum.deployed()):  # type: ignore[attr-defined]
             try:
                 service.observe(llmhost, probe=False)
             except LLMHostServiceError as e:
-                logger.error("%s.reconcile_llmhost_compute() status check of %s failed: %s", logger_prefix, llmhost, e)
+                logger.error(
+                    "status check of %s failed: %s",
+                    llmhost,
+                    e,
+                )
     if (state is None or not state.settled) and attempt < RECONCILE_MAX_ATTEMPTS:
         reconcile_llmhost_compute.apply_async((compute_id, attempt + 1), countdown=RECONCILE_INTERVAL_SECONDS)
     return asdict(state) if state is not None else None
@@ -211,7 +218,7 @@ def reconcile_llmhost_computes() -> dict[str, str]:
         try:
             retval[compute.name] = provisioner.reconcile(compute).message
         except LLMHostComputeError as e:
-            logger.error("%s.reconcile_llmhost_computes() failed for %s: %s", logger_prefix, compute, e)
+            logger.error("failed for %s: %s", compute, e)
             retval[compute.name] = str(e)
     return retval
 
@@ -247,7 +254,7 @@ def charge_llmhost_computes() -> dict[str, str]:
                 )
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("%s.charge_llmhost_computes() failed to charge %s: %s", logger_prefix, resource, e)
+                logger.error("failed to charge %s: %s", resource, e)
         retval[compute.name] = str(cost)
     return retval
 

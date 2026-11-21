@@ -23,8 +23,7 @@ from ..models import LLMClient, get_cached_llmclient_by_request
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
-    "%s is %s",
-    logging.SmarterFormattedText.text(__name__) + ".SmarterSecurityMiddleware",
+    "is %s",
     SmarterHelperMixin().formatted_state_ready,
 )
 
@@ -90,12 +89,12 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if self.deserves_amnesty(request.path):
             return self.get_response(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
         return super().__call__(request)
 
     async def __acall__(self, request):
         """Async version of __call__ that is swapped in when an async request is running."""
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
         return await super().__acall__(request)
 
     @property
@@ -119,11 +118,8 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SECURITY):
             return None
 
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
-
         logger.debug(
-            "%s.process_request() called for %s",
-            logger_prefix,
+            "called for %s",
             mask_url_query(self.smarter_build_absolute_uri(request)),
         )
 
@@ -133,8 +129,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # Short-circuit for health checks
         if request.path.replace("/", "") in self.amnesty_urls:
             logger.debug(
-                "%s %s found in amnesty_urls: %s",
-                logger_prefix,
+                "%s found in amnesty_urls: %s",
                 mask_url_query(self.smarter_build_absolute_uri(request)),
                 self.amnesty_urls,
             )
@@ -151,8 +146,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # This is unlikely, but not impossible.
         if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
             logger.debug(
-                "%s %s identified as an internal IP address, exiting.",
-                logger_prefix,
+                "%s identified as an internal IP address, exiting.",
                 mask_url_query(self.smarter_build_absolute_uri(request)),
             )
             return None
@@ -167,8 +161,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         base_host = host_no_port.split(".")[-1]
         if base_host in [h.rsplit(".", maxsplit=1)[-1] for h in SmarterValidator.LOCAL_HOSTS]:
             logger.debug(
-                "%s %s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
-                logger_prefix,
+                "%s base host matched in SmarterValidator.LOCAL_HOSTS: %s",
                 host,
                 SmarterValidator.LOCAL_HOSTS,
             )
@@ -176,8 +169,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         if host in SmarterValidator.LOCAL_HOSTS:
             logger.debug(
-                "%s %s found in SmarterValidator.LOCAL_HOSTS: %s",
-                logger_prefix,
+                "%s found in SmarterValidator.LOCAL_HOSTS: %s",
                 host,
                 SmarterValidator.LOCAL_HOSTS,
             )
@@ -191,8 +183,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in self.amnesty_urls:
             logger.debug(
-                "%s %s found in amnesty_urls: %s",
-                logger_prefix,
+                "%s found in amnesty_urls: %s",
                 host,
                 path_parts,
             )
@@ -204,8 +195,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         if ".well-known/acme-challenge" in str(parsed_url.path):
             logger.debug(
-                "%s %s identified as an ACME challenge request, exiting.",
-                logger_prefix,
+                "%s identified as an ACME challenge request, exiting.",
                 masked_url,
             )
             return None
@@ -216,8 +206,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         for allowed_host in smarter_settings.allowed_hosts:
             if fnmatch.fnmatch(host, allowed_host):
                 logger.debug(
-                    "%s %s matched with smarter_settings.allowed_hosts: %s",
-                    logger_prefix,
+                    "%s matched with smarter_settings.allowed_hosts: %s",
                     host,
                     allowed_host,
                 )
@@ -228,10 +217,13 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #     to instantiate a LLMClientHelper object just to check if the host is a domain
         #     for a deployed LLMClient.
         # ---------------------------------------------------------------------
-        logger.debug("%s instantiating LLMClientHelper() for url: %s", logger_prefix, masked_url)
+        logger.debug(
+            "instantiating LLMClientHelper() for url: %s",
+            masked_url,
+        )
         llmclient: Optional[LLMClient] = get_cached_llmclient_by_request(request=request)
         if llmclient is not None:
-            logger.info("%s LLMClientHelper() verified that %s is an llmclient.", logger_prefix, masked_url)
+            logger.info("verified that %s is an llmclient.", masked_url)
             return None
 
         # ---------------------------------------------------------------------
@@ -239,7 +231,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         # a rejected request is the client's error, a 4xx, which Django logs as a warning too ("Bad Request: ...").
         # Most are scanners probing an LLMClient's host for other paths, e.g. /wp-json/ or /.env.
-        logger.warning("%s %s failed security tests.", logger_prefix, masked_url)
+        logger.warning("%s failed security tests.", masked_url)
         return SmarterHttpResponseBadRequest(
             request=request, error_message="SecurityMiddleware() Bad Request (400) - Invalid Hostname."
         )

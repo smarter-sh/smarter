@@ -30,12 +30,10 @@ from typing import Callable, Optional
 from django.conf import settings
 from django.urls import NoReverseMatch
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 ConsolePath = Callable[[str], Optional[str]]
 """Builds the path of a resource's web console page from the part of its record locator after the prefix."""
@@ -197,7 +195,7 @@ def console_url(record_locator: Optional[str]) -> Optional[str]:
     try:
         prefix, rest = parse_record_locator(record_locator)
     except ValueError as e:
-        logger.warning("%s.console_url() %s", logger_prefix, e)
+        logger.warning("%s", e)
         return None
     path = console_paths().get(prefix)
     if path is None:
@@ -205,7 +203,7 @@ def console_url(record_locator: Optional[str]) -> Optional[str]:
     try:
         return path(rest)
     except NoReverseMatch as e:
-        logger.debug("%s.console_url() no web console page for %s: %s", logger_prefix, record_locator, e)
+        logger.debug("no web console page for %s: %s", record_locator, e)
         return None
 
 

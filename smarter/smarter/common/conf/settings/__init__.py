@@ -56,10 +56,10 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.processes import is_first_worker
 from smarter.common.utils import get_diagnostics, recursive_sort_dict
+from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__) + ".Settings()"
+logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods,too-many-ancestors
@@ -155,25 +155,27 @@ class Settings(
         # The prefix is gray rather than the usual red, so that a healthy start doesn't
         # look like an error. READY is logged by one uvicorn worker per server, and
         # NOT_READY by every process.
-        prefix = SmarterFormattedText.text(__name__, SmarterFormattedText.LIGHT_GRAY)
-        msg = f"{prefix} Pydantic version: {pydantic_version}"
+        prefix_format = SmarterFormattedText.LIGHT_GRAY
         if not self.ready():
             logger.warning(
-                "%s smarter_settings are %s.",
-                msg,
+                "Pydantic version: %s smarter_settings are %s.",
+                pydantic_version,
                 SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED),
+                prefix_format=prefix_format,
             )
         elif is_first_worker("settings-ready"):
             logger.warning(
-                "%s smarter_settings are %s.",
-                msg,
+                "Pydantic version: %s smarter_settings are %s.",
+                pydantic_version,
                 SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
+                prefix_format=prefix_format,
             )
         else:
             logger.debug(
-                "%s smarter_settings are %s.",
-                msg,
+                "Pydantic version: %s smarter_settings are %s.",
+                pydantic_version,
                 SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
+                prefix_format=prefix_format,
             )
 
     def ready(self) -> bool:
@@ -251,7 +253,7 @@ class Settings(
                 f"SECRET_KEY is not set. It is required in the {self.environment} environment. "
                 "Set SMARTER_SECRET_KEY to a long (50+ characters), random string that is the same for every pod."
             )
-        logger.warning("%s SECRET_KEY is not set. Using a randomized value.", logger_prefix)
+        logger.warning("SECRET_KEY is not set. Using a randomized value.")
 
     def to_json(self) -> SmarterDictType:
         """

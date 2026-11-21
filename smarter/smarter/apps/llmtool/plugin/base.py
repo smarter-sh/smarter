@@ -299,7 +299,7 @@ class PluginBase(ABC, AccountMixin):
         if self.ready:
             return None  # plugin is ready, no further action needed.
         else:
-            logger.debug("%s.__init__() Plugin is not ready. %r", self.formatted_pluginbase_class_name, self)
+            logger.debug("Plugin is not ready. %r", self)
 
     def __str__(self) -> str:
         """
@@ -777,8 +777,7 @@ class PluginBase(ABC, AccountMixin):
             self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
             if not self._plugin_meta_serializer:
                 logger.warning(
-                    "%s.plugin_meta_serializer() PluginMetaSerializer could not be created.",
-                    self.formatted_pluginbase_class_name,
+                    "PluginMetaSerializer could not be created.",
                 )
         return self._plugin_meta_serializer
 
@@ -803,8 +802,7 @@ class PluginBase(ABC, AccountMixin):
                 }
             else:
                 logger.warning(
-                    "%s.plugin_meta_django_model() UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
-                    self.formatted_pluginbase_class_name,
+                    "UserProfile or manifest is not set. Cannot construct plugin meta Django model dictionary.",
                 )
         return self._plugin_meta_django_model
 
@@ -848,8 +846,7 @@ class PluginBase(ABC, AccountMixin):
                     search_terms=self._manifest.spec.selector.searchTerms,
                 )
             logger.warning(
-                "%s.plugin_selector() PluginSelector did not exist for plugin %s %s %s. Created from manifest.",
-                self.formatted_pluginbase_class_name,
+                "PluginSelector did not exist for plugin %s %s %s. Created from manifest.",
                 self.plugin_meta.name,
                 self.plugin_meta.kind,
                 self.user_profile,
@@ -917,8 +914,7 @@ class PluginBase(ABC, AccountMixin):
                     max_completion_tokens=self._manifest.spec.prompt.maxTokens,
                 )
                 logger.warning(
-                    "%s.plugin_prompt() PluginPrompt did not exist for plugin %s %s %s. Created from manifest.",
-                    self.formatted_pluginbase_class_name,
+                    "PluginPrompt did not exist for plugin %s %s %s. Created from manifest.",
                     self.plugin_meta.name,
                     self.plugin_meta.kind,
                     self.user_profile,
@@ -995,8 +991,7 @@ class PluginBase(ABC, AccountMixin):
 
         if not self.user_profile:
             logger.debug(
-                "%s.ready() UserProfile is not set.",
-                self.formatted_pluginbase_class_name,
+                "UserProfile is not set.",
             )
             return False
 
@@ -1012,8 +1007,7 @@ class PluginBase(ABC, AccountMixin):
         # ---------------------------------------------------------------------
         if self._plugin_meta and not isinstance(self.plugin_meta, PluginMeta):
             logger.error(
-                "%s.ready() PluginMeta is not of type PluginMeta.",
-                self.formatted_pluginbase_class_name,
+                "PluginMeta is not of type PluginMeta.",
             )
             return False
 
@@ -1026,8 +1020,7 @@ class PluginBase(ABC, AccountMixin):
 
         if not isinstance(self.plugin_selector, PluginSelector):
             logger.error(
-                "%s.ready() PluginSelector is not of type PluginSelector.",
-                self.formatted_pluginbase_class_name,
+                "PluginSelector is not of type PluginSelector.",
             )
             return False
 
@@ -1035,8 +1028,7 @@ class PluginBase(ABC, AccountMixin):
 
         if not isinstance(self.plugin_prompt, PluginPrompt):
             logger.error(
-                "%s.ready() PluginPrompt is not of type PluginPrompt.",
-                self.formatted_pluginbase_class_name,
+                "PluginPrompt is not of type PluginPrompt.",
             )
             return False
 
@@ -1044,8 +1036,7 @@ class PluginBase(ABC, AccountMixin):
 
         if self._plugin_data and not isinstance(self.plugin_data, self.plugin_data_class):
             logger.error(
-                "%s.ready() PluginData is not of type %s.",
-                self.formatted_pluginbase_class_name,
+                "PluginData is not of type %s.",
                 self.plugin_data_class,
             )
             return False
@@ -1475,7 +1466,7 @@ class PluginBase(ABC, AccountMixin):
             plugin_updated.send(sender=self.__class__, plugin=self)
 
         if not self.ready:
-            logger.warning("%s.save() Plugin is not ready. Cannot save.", self.formatted_pluginbase_class_name)
+            logger.warning("Plugin is not ready. Cannot save.")
             return False
 
         with transaction.atomic():

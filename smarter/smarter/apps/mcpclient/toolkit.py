@@ -126,11 +126,6 @@ class MCPToolkit:
         self.errors: dict[str, str] = {}
         self.connected: list[MCPClient] = []
 
-    @property
-    def formatted_class_name(self) -> str:
-        """The class name, for logging."""
-        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}"
-
     def function_name(self, mcpclient: MCPClient, name: str) -> str:
         """
         Return a unique OpenAI function name for one of an MCPClient's tools.
@@ -182,7 +177,7 @@ class MCPToolkit:
                 catalog = get_cached_catalog(mcpclient)
             except SmarterMCPClientException as e:
                 self.errors[mcpclient.name] = e.message
-                logger.warning("%s.load() skipping MCPClient %s: %s", self.formatted_class_name, mcpclient.name, e)
+                logger.warning("skipping MCPClient %s: %s", mcpclient.name, e)
                 continue
             self.connected.append(mcpclient)
             acts_for_user = is_staff_endpoint_url(mcpclient.endpoint_url)

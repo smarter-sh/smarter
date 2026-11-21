@@ -52,7 +52,7 @@ class Vectorsearch(MetaDataWithOwnershipModel):
 
     search_type = models.CharField(
         max_length=32,
-        choices=VectorsearchSearchType.choices,
+        choices=VectorsearchSearchType,
         default=VectorsearchSearchType.SIMILARITY,
         help_text="The retrieval strategy to use when querying the VectorstoreMeta.",
     )
@@ -97,7 +97,9 @@ class Vectorsearch(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "Vectorsearches"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="vectorsearch_vectorsearch_unique"),
+        ]
 
     def clean(self):
         """

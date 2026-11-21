@@ -40,6 +40,8 @@ service-account.b64
 .ruff_cache
 celerybeat-schedule
 mariadb-data
+# a developer's own Django settings. See user-settings/README.md.
+user-settings/settings.yaml
 db.sqlite3
 .cache.sqlite
 staticfiles

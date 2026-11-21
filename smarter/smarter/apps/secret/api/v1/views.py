@@ -106,8 +106,7 @@ class SecretListView(ContractListMixin, SmarterAdminListAPIView):
             return HttpResponseForbidden("Forbidden: Invalid or missing authentication credentials.")
 
         logger.info(
-            "%s.dispatch() - request: %s, user: %s",
-            self.formatted_class_name,
+            "request: %s, user: %s",
             request,
             request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
         )
@@ -121,20 +120,17 @@ class SecretListView(ContractListMixin, SmarterAdminListAPIView):
         super().setup(request, *args, **kwargs)
         if not hasattr(self.request, "user") or not isinstance(self.request.user, User):
             logger.warning(
-                "%s.setup() - request has no user or user is not an instance of User: %s",
-                self.formatted_class_name,
+                "request has no user or user is not an instance of User: %s",
                 self.request.user,
             )
         else:
             if not is_authenticated_request(self.request):
                 logger.warning(
-                    "%s.setup() - request user is not authenticated: %s",
-                    self.formatted_class_name,
+                    "request user is not authenticated: %s",
                     self.request.user,
                 )
         logger.info(
-            "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
-            self.formatted_class_name,
+            "request: %s, user: %s, user_profile: %s is_authenticated: %s",
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,

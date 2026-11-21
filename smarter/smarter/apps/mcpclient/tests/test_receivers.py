@@ -8,12 +8,14 @@ Test :mod:`smarter.apps.mcpclient.receivers`.
     be documented.
 """
 
+import logging
 from unittest import mock
 
 from smarter.apps.mcpclient import receivers
 from smarter.apps.mcpclient.connection import MCPServerCatalog
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.signals import (
+    mcpclient_called,
     mcpclient_connected,
     mcpclient_connection_failed,
     mcpclient_resource_read,
@@ -21,6 +23,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_failed,
     mcpclient_tool_responded,
 )
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import MCPClientTestBase
 
@@ -32,20 +35,11 @@ class TestMCPClientReceivers(MCPClientTestBase):
 
     def setUp(self):
         super().setUp()
-        patcher = mock.patch.object(receivers, "logger")
-        self.logger = patcher.start()
-        self.addCleanup(patcher.stop)
-        self.messages: list[str] = []
-        self.logger.info.side_effect = self.log
-        self.logger.warning.side_effect = self.log
-
-    def log(self, msg, *args, **kwargs):  # pylint: disable=W0613
-        """Record a formatted log message."""
-        self.messages.append(msg % args if args else msg)
+        self.capture = WrappedLoggerCapture(self, receivers.logger)
 
     def logged(self) -> str:
         """Return everything the receivers logged, as one string."""
-        return "\n".join(self.messages)
+        return self.capture.text()
 
     def test_saved_queues_refresh(self):
         """Test that saving an active MCPClient queues a refresh of its catalog."""
@@ -97,3 +91,10 @@ class TestMCPClientReceivers(MCPClientTestBase):
             self.assertIn(text, logged)
         # tool arguments may contain user data, and are not logged
         self.assertNotIn("private", logged)
+
+    def test_called_is_logged(self):
+        """Test that a request to an MCPClient's api is logged at DEBUG, with the MCPClient's id."""
+        mcpclient_called.send(sender=self.__class__, mcpclient=self.mcpclient, request=None, args=(), kwargs={})
+        logged = self.capture.text(logging.DEBUG)
+        self.assertIn("handle_mcpclient_called()", logged)
+        self.assertIn(f"(id {self.mcpclient.pk})", logged)

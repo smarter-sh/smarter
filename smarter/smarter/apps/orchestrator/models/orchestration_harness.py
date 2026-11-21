@@ -42,7 +42,7 @@ class OrchestratorHarness(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="orchestrator_memberships",
     )
-    role = models.CharField(max_length=32, choices=Role.choices, default=Role.EXECUTOR)
+    role = models.CharField(max_length=32, choices=Role, default=Role.EXECUTOR)
     execution_order = models.PositiveIntegerField(
         default=0,
         help_text="Relative ordering for sequential/supervisor strategies. Ignored for parallel/voting.",
@@ -57,7 +57,11 @@ class OrchestratorHarness(TimestampedModel):
     class Meta:
         verbose_name = "Orchestrator Harness"
         verbose_name_plural = "Orchestrator Harnesses"
-        unique_together = ("orchestrator", "llmclient")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["orchestrator", "llmclient"], name="orchestrator_orchestratorharness_unique"
+            ),
+        ]
         ordering = ["execution_order"]
 
     def __str__(self) -> str:

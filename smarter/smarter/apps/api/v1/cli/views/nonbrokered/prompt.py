@@ -88,7 +88,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
                 raise APIV1CLIChatViewError(
                     f"Internal error. 'prompt' key is missing from the request body. self.data: {self.data}"
                 )
-            logger.debug("%s.prompt() found prompt: %s", self.formatted_class_name, self._prompt)
+            logger.debug("found prompt: %s", self._prompt)
         return self._prompt
 
     @property
@@ -146,7 +146,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
         """
         super().initial(request, *args, **kwargs)
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
-        logger.debug("%s.initial() prompt view name: %s", self.formatted_class_name, self.name)
+        logger.debug("prompt view name: %s", self.name)
 
         if not self.data and not self.is_config:
             raise APIV1CLIChatViewError(
@@ -162,14 +162,13 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
         # then we will delete the cache_key and the session_key.
         if self.new_session:
             logger.debug(
-                "%s.initial() new_session is True, resetting the session_key and deleting cache_key: %s",
-                self.formatted_class_name,
+                "new_session is True, resetting the session_key and deleting cache_key: %s",
                 self.cache_key,
             )
             self._session_key = self.generate_session_key()
             cache.delete(self.cache_key)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.debug("%s.initial() deleted cache_key: %s", self.formatted_class_name, self.cache_key)
+                logger.debug("deleted cache_key: %s", self.cache_key)
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
@@ -177,8 +176,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
         session_key = cache.get(self.cache_key)
         if session_key is not None:
             logger.debug(
-                "%s.initial() resetting session_key from %s to cached key: %s",
-                self.formatted_class_name,
+                "resetting session_key from %s to cached key: %s",
                 self.session_key,
                 session_key,
             )
@@ -189,8 +187,7 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
         if self.session_key:
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug(
-                    "%s.initial() caching session_key for prompt config: %s",
-                    self.formatted_class_name,
+                    "caching session_key for prompt config: %s",
                     self.session_key,
                 )
             if isinstance(self.data, dict):
@@ -302,7 +299,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             else:
                 # otherwise, create a new message list
                 self._messages = self.new_message_list_factory()
-        logger.debug("%s.messages() value is set: %s", self.formatted_class_name, self._messages)
+        logger.debug("value is set: %s", self._messages)
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
@@ -315,7 +312,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
         :returns: The messages, in OpenAI's ``role``/``content`` format.
         """
-        logger.debug("%s.new_message_list_factory() called", self.formatted_class_name)
+        logger.debug("called")
 
         system_dict: Optional[SmarterDictType] = None
         welcome_dict: Optional[SmarterDictType] = None
@@ -350,7 +347,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             retval.append(welcome_dict)
         retval.append(prompt_dict)
 
-        logger.debug("%s.new_message_list_factory() retval: %s", self.formatted_class_name, retval)
+        logger.debug("retval: %s", retval)
         return retval
 
     def chat_request_body_factory(self) -> SmarterDictType:
@@ -360,7 +357,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         :returns: The session key and :attr:`messages`.
         """
         retval = {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
-        logger.debug("%s.chat_request_body_factory() retval: %s", self.formatted_class_name, retval)
+        logger.debug("retval: %s", retval)
         return retval
 
     def chat_request_factory(self, request_body: SmarterDictType) -> HttpRequest:
@@ -420,8 +417,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         """
         # get the prompt configuration for the LLMClient (name)
         logger.debug(
-            "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
-            self.formatted_class_name,
+            "1. name: %s url: %s data: %s session_key: %s, new session: %s",
             name,
             self.url,
             self.data,
@@ -438,7 +434,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             raise APIV1CLIChatViewError(
                 f"Internal error. Failed to get prompt config for llmclient: {name} {chat_config.content.decode('utf-8', errors='replace')}"
             )
-        logger.debug("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
+        logger.debug("2. chat_config: %s %s", chat_config, type(chat_config))
 
         try:
             # bootstrap our prompt session configuration
@@ -458,15 +454,13 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             if session_key is not None:
                 self._session_key = session_key
                 logger.debug(
-                    "%s.handler() initialized session_key from chat_config: %s",
-                    self.formatted_class_name,
+                    "initialized session_key from chat_config: %s",
                     self.session_key,
                 )
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug(
-                    "%s.handler() caching session_key for prompt config: %s",
-                    self.formatted_class_name,
+                    "caching session_key for prompt config: %s",
                     self.session_key,
                 )
         except json.JSONDecodeError as e:
@@ -477,8 +471,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
             raise APIV1CLIViewError(f"Internal error. Prompt config 'content' is missing: {chat_config}") from e
 
         logger.debug(
-            "%s.handler() 3. config: %s",
-            self.formatted_class_name,
+            "3. config: %s",
             json.dumps(self.chat_config),
         )
 
@@ -509,8 +502,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
         logger.debug(
-            "%s.handler() 4. response_data: %s",
-            self.formatted_class_name,
+            "4. response_data: %s",
             json.dumps(response_data),
         )
         try:
@@ -540,7 +532,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.debug("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data))
+        logger.debug("5. data: %s", json.dumps(data))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

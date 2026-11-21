@@ -49,8 +49,28 @@ FLAKE8_FORMAT = "%(path)s\t%(row)d\t%(text)s"
 MESSAGE_PATTERN = re.compile(r"^'(?P<name>.+)' is too complex \((?P<complexity>\d+)\)$")
 """Mccabe's message, e.g. ``'SAMLLMClientBroker.apply' is too complex (47)``."""
 
+MODULE_BLOCK_PATTERN = re.compile(r"^(?P<kind>If|Loop|TryExcept|With) \d+$")
+"""Mccabe's name of a block of module-level code, e.g. ``Loop 2085``, which ends with the block's line."""
+
 FunctionKey = tuple[str, str]
 """A function, without its line: its file, relative to the root, and its qualified name."""
+
+
+def function_name(violation: "Violation") -> str:
+    """
+    The name that pairs a violation with the same function at the base.
+
+    Mccabe names a block of module-level code by its kind and line, e.g. ``Loop 2085``, so the
+    line is dropped: a block that a change only moved is the same block. Blocks of one kind in
+    the same file are then paired by complexity, as functions with the same name are.
+
+    :param violation: The violation.
+    :returns: Its qualified name, or a module-level block's kind.
+    """
+    match = MODULE_BLOCK_PATTERN.match(violation.name)
+    if match is None:
+        return violation.name
+    return match.group("kind")
 
 
 @dataclass(frozen=True)
@@ -105,15 +125,16 @@ def group_by_function(violations: list[Violation]) -> dict[FunctionKey, list[Vio
     Group violations by their file and qualified name, the most complex first.
 
     A file can define two functions with the same qualified name, e.g. a property's getter and
-    setter, or a function defined in both branches of an ``if``. They are compared in order of
-    complexity: the most complex now with the most complex at the base, and so on.
+    setter, or a function defined in both branches of an ``if``, and several module-level blocks
+    of one kind (see :func:`function_name`). They are compared in order of complexity: the most
+    complex now with the most complex at the base, and so on.
 
     :param violations: The violations of one run.
     :returns: Each function's violations, sorted by complexity, highest first.
     """
     groups: dict[FunctionKey, list[Violation]] = defaultdict(list)
     for violation in violations:
-        key = (violation.path, violation.name)
+        key = (violation.path, function_name(violation))
         groups[key].append(violation)
     for key, group in groups.items():
         group.sort(key=lambda violation: violation.complexity, reverse=True)

@@ -22,8 +22,7 @@ from urllib.parse import urlsplit, urlunsplit
 from smarter.common.helpers.processes import is_first_worker
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 ESC = "\033["
 RESET = f"{ESC}0m"
@@ -228,7 +227,7 @@ def print_startup_banner() -> None:
         sys.stdout.write(startup_banner(color=not os.environ.get("NO_COLOR")))
         sys.stdout.flush()
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.warning("%s.print_startup_banner() could not print the startup banner: %s", logger_prefix, e)
+        logger.warning("could not print the startup banner: %s", e)
 
 
 __all__ = ["mask_url", "platform_summary", "banner_facts", "startup_banner", "print_startup_banner"]

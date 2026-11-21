@@ -153,7 +153,10 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         super().__init__(*args, **kwargs)
         self.init_manifest_from_data(SAMWebsearchPlugin)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def plugin_init(self):
@@ -317,17 +320,14 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         #     in the request body then this is the authoritative source.
         if self.manifest_data is not None:
             self._manifest = SAMWebsearchPlugin.model_validate(self.manifest_sections)
-            logger.debug(
-                "%s.manifest initialized from manifest data for %s %s", self.formatted_class_name, self.kind, self.name
-            )
+            logger.debug("initialized from manifest data for %s %s", self.kind, self.name)
             return self._manifest
 
         # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing ORM model if available
         elif self.plugin_meta:
             logger.debug(
-                "%s.manifest building from ORM models for %s %s",
-                self.formatted_class_name,
+                "building from ORM models for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
@@ -355,14 +355,13 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 status=status,
             )
             logger.debug(
-                "%s.manifest initialized from ORM models for %s %s",
-                self.formatted_class_name,
+                "initialized from ORM models for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
             return self._manifest
         else:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     @property
@@ -439,15 +438,13 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         try:
             self._plugin_data = PluginDataWebsearch.get_cached_data_by_plugin(plugin=self.plugin_meta)
             logger.debug(
-                "%s.plugin_data() PluginDataWebsearch object retrieved for %s %s",
-                self.formatted_class_name,
+                "PluginDataWebsearch object retrieved for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
         except PluginDataWebsearch.DoesNotExist:
             logger.warning(
-                "%s.plugin_data() PluginDataWebsearch object does not exist for %s %s",
-                self.formatted_class_name,
+                "PluginDataWebsearch object does not exist for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
@@ -473,20 +470,18 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 print("Broker is ready for operations.")
         """
         if not super().ready:
-            logger.debug("%s.ready returning False because SAMPluginBaseBroker is not ready", self.formatted_class_name)
+            logger.debug("returning False because SAMPluginBaseBroker is not ready")
             return False
         if self._manifest or self._plugin:
             logger.debug(
-                "%s.ready returning True because manifest %s and/or plugin %s has been initialized",
-                self.formatted_class_name,
+                "returning True because manifest %s and/or plugin %s has been initialized",
                 self._manifest,
                 self._plugin,
             )
             self.send_broker_ready(broker_ready)
             return True
         logger.debug(
-            "%s.ready returning False because neither manifest nor plugin could be initialized",
-            self.formatted_class_name,
+            "returning False because neither manifest nor plugin could be initialized",
         )
         return False
 
@@ -575,7 +570,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Invalidate any relevant caches when the manifest or plugin data changes."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         PluginDataWebsearch.get_cached_object(invalidate=True, plugin=self.plugin_meta)  # type: ignore
         return super().cache_invalidations()
 
@@ -608,8 +603,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             - `SmarterJournalCliCommands`
         """
         logger.debug(
-            "%s.example_manifest() called for %s %s %s",
-            self.formatted_class_name,
+            "called for %s %s %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -670,7 +664,10 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             JSON response containing the plugin manifest or error details.
         """
         logger.debug(
-            "%s.describe() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+            "called for %s %s %s",
+            self.kind,
+            self.name,
+            self.user_profile,
         )
         command = SmarterJournalCliCommands(self.describe.__name__)
 
@@ -714,9 +711,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             - `WebsearchPlugin.save`
             - `SmarterJournaledJsonResponse`
         """
-        logger.debug(
-            "%s.apply() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
-        )
+        logger.debug("called for %s %s %s", self.kind, self.name, self.user_profile)
         command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not self.user:
@@ -762,8 +757,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
                 self.plugin.create()
         except Exception as e:
             logger.error(
-                "%s.apply() failed to create %s %s",
-                self.formatted_class_name,
+                "failed to create %s %s",
                 self.kind,
                 self.plugin_meta.name,
                 exc_info=True,
@@ -780,8 +774,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             )
         except SAMBrokerErrorNotReady as err:
             logger.error(
-                "%s.apply() failed to save %s %s",
-                self.formatted_class_name,
+                "failed to save %s %s",
                 self.kind,
                 self.plugin_meta.name,
                 exc_info=True,
@@ -802,9 +795,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug(
-            "%s.prompt() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
-        )
+        logger.debug("called for %s %s %s", self.kind, self.name, self.user_profile)
         super().prompt(request, kwargs)
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="prompt() not implemented", thing=self.kind, command=command)
@@ -831,9 +822,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
             - `SmarterJournaledJsonResponse`
             - :meth:`SAMPluginBaseBroker.set_and_verify_name_param`
         """
-        logger.debug(
-            "%s.delete() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
-        )
+        logger.debug("called for %s %s %s", self.kind, self.name, self.user_profile)
         command = SmarterJournalCliCommands(self.delete.__name__)
         self.set_and_verify_name_param(command=command)
 
@@ -891,9 +880,7 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug(
-            "%s.deploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
-        )
+        logger.debug("called for %s %s %s", self.kind, self.name, self.user_profile)
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
@@ -912,7 +899,10 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.undeploy() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
+            "called for %s %s %s",
+            self.kind,
+            self.name,
+            self.user_profile,
         )
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
@@ -931,8 +921,6 @@ class SAMWebsearchPluginBroker(SAMPluginBaseBroker):
         :return: JSON response indicating error.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug(
-            "%s.logs() called for %s %s %s", self.formatted_class_name, self.kind, self.name, self.user_profile
-        )
+        logger.debug("called for %s %s %s", self.kind, self.name, self.user_profile)
         command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

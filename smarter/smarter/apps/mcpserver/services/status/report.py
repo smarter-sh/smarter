@@ -56,7 +56,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 HIGH_USE_PERCENT = 90
 """
@@ -291,7 +290,7 @@ def read_database() -> Optional[DatabaseLoad]:
         return database_load()
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.read_database() could not read the database's load: %s", logger_prefix, e)
+        logger.warning("could not read the database's load: %s", e)
         return None
 
 

@@ -52,7 +52,7 @@ from .messages import (
 from .shell import TerminalShell
 from .tickets import redeem_ticket
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def query_int(query: dict[str, list[str]], name: str, default: int) -> int:
@@ -101,7 +101,9 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
         :param reason: Why, for the log.
         """
         logger.warning(
-            "%s.connect() refused a terminal connection from %s: %s.", self.formatted_class_name, self.username, reason
+            "refused a terminal connection from %s: %s.",
+            self.username,
+            reason,
         )
         await self.close()
 
@@ -133,7 +135,7 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
         try:
             await self.shell.start()
         except OSError as e:
-            logger.error("%s.connect() could not start a shell for %s: %s", self.formatted_class_name, self.username, e)
+            logger.error("could not start a shell for %s: %s", self.username, e)
             await self.send(text_data=TerminalExitMessage(reason="failed").model_dump_json())
             await self.close()
             return
@@ -149,8 +151,7 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
         await self.send(text_data=session.model_dump_json())
         self.watchdog = asyncio.get_running_loop().create_task(self.watch())
         logger.info(
-            "%s.connect() started a terminal session for %s on %s, as %s, shell pid %s.",
-            self.formatted_class_name,
+            "started a terminal session for %s on %s, as %s, shell pid %s.",
             self.username,
             session.hostname,
             session.user,
@@ -165,8 +166,7 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
         if self.shell is not None:
             await self.shell.terminate()
             logger.info(
-                "%s.disconnect() ended the terminal session of %s, shell pid %s, after %d seconds (close code %s).",
-                self.formatted_class_name,
+                "ended the terminal session of %s, shell pid %s, after %d seconds (close code %s).",
                 self.username,
                 self.shell.pid,
                 time.monotonic() - self.started,
@@ -190,7 +190,7 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
         try:
             message = terminal_client_message.validate_json(text_data or "")
         except ValidationError as e:
-            logger.warning("%s.receive() ignored a message that is not valid: %s", self.formatted_class_name, e)
+            logger.warning("ignored a message that is not valid: %s", e)
             return
         if isinstance(message, TerminalInputMessage):
             self.shell.write(message.data.encode("utf-8"))
@@ -230,8 +230,7 @@ class TerminalConsumer(AsyncWebsocketConsumer, SmarterHelperMixin):
             else:
                 continue
             logger.info(
-                "%s.watch() ending the terminal session of %s: %s.",
-                self.formatted_class_name,
+                "ending the terminal session of %s: %s.",
                 self.username,
                 self.exit_reason,
             )

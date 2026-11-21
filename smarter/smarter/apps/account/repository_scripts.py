@@ -56,8 +56,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SCRIPTS_FOLDER = "scripts"
 """A repository's scripts folder, at its root.
@@ -264,8 +263,7 @@ def run_script(local_path: str, script: RepositoryScript, env: dict[str, str]) -
     path = os.path.join(SCRIPTS_FOLDER, script.path)
     command = [os.path.join(local_path, path), *script.args]
     logger.info(
-        "%s.run_script() %s: running, as a %s script, with a timeout of %ss.",
-        logger_prefix,
+        "%s: running, as a %s script, with a timeout of %ss.",
         path,
         script.stage,
         script.timeout,
@@ -281,11 +279,11 @@ def run_script(local_path: str, script: RepositoryScript, env: dict[str, str]) -
         raise SmarterValueError(f"could not run: {e}") from e
     for line in result.stdout.splitlines():
         if line.strip():
-            logger.info("%s.run_script() %s: %s", logger_prefix, path, line)
+            logger.info("%s: %s", path, line)
     for line in result.stderr.splitlines():
         if line.strip():
-            logger.warning("%s.run_script() %s: %s", logger_prefix, path, line)
+            logger.warning("%s: %s", path, line)
     if result.returncode != 0:
         raise SmarterValueError(f"failed with exit code {result.returncode}: {result.stderr.strip()}")
-    logger.info("%s.run_script() %s: finished in %.1fs.", logger_prefix, path, time.monotonic() - started)
+    logger.info("%s: finished in %.1fs.", path, time.monotonic() - started)
     return result.stdout.strip()

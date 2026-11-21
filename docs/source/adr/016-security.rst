@@ -17,6 +17,8 @@ Pull requests implementing security modifications should also include updates to
 
 Our implementation of middleware features should always be consistent: we will consistently use Django's core features, or we will consistently use our own modification of those features.
 
+The Content Security Policy is one of Django's core features: ``django.middleware.csp.ContentSecurityPolicyMiddleware``, configured by ``SECURE_CSP_REPORT_ONLY`` in ``smarter.settings.base``. Browsers block nothing until the policy moves to ``SECURE_CSP``. They post what it would block to its ``report-uri``, ``/csp-report/`` on the platform's host (``smarter.lib.django.csp``), which logs each distinct violation once an hour at WARNING, naming the page by its url's name and the blocked resource by its origin, so that a token or signed url in a report never reaches the log. Inline scripts carry the request's nonce: ``nonce="{{ csp_nonce }}"`` in a Django template, and ``with_csp_nonce()`` on the web console's page, which isn't a template. No page uses an inline event handler (``onload=``), which a nonce can't allow.
+
 Alternatives Considered
 -----------------------
 - Implementing custom security features throughout the codebase.

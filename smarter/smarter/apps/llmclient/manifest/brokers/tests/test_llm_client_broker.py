@@ -98,9 +98,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(self.broker, SAMLLMClientBroker)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMLLMClientBroker)
-        logger.info(
-            "%s.test_setup() SAMLLMClientBroker initialized successfully for testing.", self.formatted_class_name
-        )
+        logger.info("SAMLLMClientBroker initialized successfully for testing.")
 
     def test_is_valid(self):
         """Test that the is_valid property returns True."""
@@ -146,7 +144,7 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         """Test that the SAMLLMClientBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
         metadata = {**required(self.manifest_data["metadata"], "manifest_metadata")}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.manifest_data["spec"])
+        logger.info("loading manifest spec: %s", self.manifest_data["spec"])
         SAMLLMClient(
             apiVersion=self.manifest_data["apiVersion"],
             kind=self.manifest_data["kind"],

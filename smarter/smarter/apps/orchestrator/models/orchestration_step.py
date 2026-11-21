@@ -53,7 +53,7 @@ class OrchestrationStep(TimestampedModel):
     sequence = models.PositiveIntegerField(
         help_text="Ordinal position of this step within the run.",
     )
-    status = models.CharField(max_length=16, choices=StepStatus.choices, default=StepStatus.SUCCEEDED)
+    status = models.CharField(max_length=16, choices=StepStatus, default=StepStatus.SUCCEEDED)
     error_message = models.TextField(
         null=True,
         blank=True,
@@ -64,7 +64,9 @@ class OrchestrationStep(TimestampedModel):
     class Meta:
         verbose_name = "Orchestration Step"
         verbose_name_plural = "Orchestration Steps"
-        unique_together = ("run", "sequence")
+        constraints = [
+            models.UniqueConstraint(fields=["run", "sequence"], name="orchestrator_orchestrationstep_unique"),
+        ]
         ordering = ["run", "sequence"]
 
     def __str__(self) -> str:

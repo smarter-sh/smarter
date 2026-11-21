@@ -180,8 +180,7 @@ class BatchCreateUsersView(AccountViewBase):
         """
         # the users in the request may have passwords, so the request data isn't logged.
         logger.debug(
-            "%s.post() received a batch user creation request with %d users",
-            self.formatted_class_name,
+            "received a batch user creation request with %d users",
             len(request.data.get("users") or []) if isinstance(request.data, dict) else 0,
         )
         if not request.data:
@@ -195,9 +194,7 @@ class BatchCreateUsersView(AccountViewBase):
             for error in e.errors(include_input=False, include_url=False):
                 location = ".".join(str(part) for part in error["loc"])
                 problems.append(f"{location}: {error['msg']}")
-            logger.warning(
-                "%s.post() the request data is not valid: %d errors", self.formatted_class_name, e.error_count()
-            )
+            logger.warning("the request data is not valid: %d errors", e.error_count())
             return HttpResponseBadRequest("Invalid request data: " + "; ".join(problems))
 
         response = BatchCreateUsersResponseModel(created_users=[])
@@ -252,8 +249,7 @@ class BatchCreateUsersView(AccountViewBase):
         # wrap a database error, so the response gets client_error_message()'s fixed message.
         except (CommandError,) + CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.create_user() could not create user %s for account %s: %s",
-                self.formatted_class_name,
+                "could not create user %s for account %s: %s",
                 mask_email(user.email),
                 account_number,
                 type(e).__name__,
@@ -263,8 +259,7 @@ class BatchCreateUsersView(AccountViewBase):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.create_user() could not create user %s for account %s",
-                self.formatted_class_name,
+                "could not create user %s for account %s",
                 mask_email(user.email),
                 account_number,
                 exc_info=True,

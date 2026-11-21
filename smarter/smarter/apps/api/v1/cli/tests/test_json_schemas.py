@@ -22,7 +22,7 @@ class TestDocsManifests(ApiV1CliTestBase):
         for kind in SAMKinds.singular_slugs():
             i += 1
             url = f"{self.base_path}{kind}/"
-            logger.info("test_json_schemas() %s.) Testing path: %s", i, url)
+            logger.info("%s.) Testing path: %s", i, url)
             response_body, status = self.get_response(path=url)
             self.assertEqual(status, HTTPStatus.OK.value)
 

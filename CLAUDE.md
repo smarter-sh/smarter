@@ -99,7 +99,8 @@ Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 `localhost:9357`), `smarter-worker`, `smarter-worker-infrastructure`,
 `smarter-beat`, `smarter-mariadb`, `smarter-redis`.
 
-- **There is no bind mount.** Host `smarter/smarter/<path>` is
+- **There is no bind mount of the code.** (The only one is `user-settings/`,
+  read-only, for a developer's own Django settings.) Host `smarter/smarter/<path>` is
   `/home/smarter_user/smarter/smarter/<path>` in the container, and edits must
   reach them. Prefer `make build && make run` (about 5 seconds, always with
   `run_in_background: true`, then wait for the dev server; see hard rule 9),
@@ -184,9 +185,11 @@ staticfiles.
 - **API testing by hand:** POST to `http://localhost:9357/api/v1/cli/<command>/`
   with a throwaway `SmarterAuthToken` you create and delete. Don't use the
   `smarter` CLI. See `smarter-api-testing`.
-- **Logging:** every log message starts with its origin, `logger_prefix`
-  (`logging.SmarterFormattedText.text(__name__)`) or `self.formatted_class_name`, then the
-  unformatted `.function_name()`, with %-style arguments. See `smarter-logging`.
+- **Logging:** log through `logging.getSmarterLogger(__name__)` (a
+  `WaffleSwitchedLoggerWrapper`), which starts every message with the caller's
+  dotted name. Never write an origin yourself (`logger_prefix`,
+  `self.formatted_class_name`, a hard-coded `function_name()`). Use %-style
+  arguments. See `smarter-logging`.
 - **Docstrings** are reStructuredText (`:param:`, `:returns:`, `:raises:`);
   Sphinx autodoc publishes them.
 - **Docs are evergreen.** Weave new features into the existing prose. No

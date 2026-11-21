@@ -58,7 +58,7 @@ def valid_or_default(normalize, value: Any, default: Optional[str]) -> Optional[
     try:
         return normalize(value) or default
     except ValueError:
-        logger.debug("valid_or_default() ignored an invalid search parameter from the LLM: %s", value)
+        logger.debug("ignored an invalid search parameter from the LLM: %s", value)
         return default
 
 

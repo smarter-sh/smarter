@@ -84,9 +84,7 @@ class RepositoryIndex(TimestampedModel):
     #: which has no commits, stores a fingerprint of its posts here.
     commit_sha = models.CharField(max_length=40, blank=True, null=True, help_text="The indexed commit.")
     #: Whether the repository has an index to search: see :class:`RepositoryIndexStatus`.
-    status = models.CharField(
-        max_length=16, choices=RepositoryIndexStatus.choices, default=RepositoryIndexStatus.PENDING
-    )
+    status = models.CharField(max_length=16, choices=RepositoryIndexStatus, default=RepositoryIndexStatus.PENDING)
     #: When the indexed commit was indexed, or None if nothing is indexed yet.
     indexed_at = models.DateTimeField(blank=True, null=True, help_text="When the indexed commit was indexed.")
     #: How many files of the indexed commit are stored, as :class:`RepositoryFile` rows.
@@ -135,7 +133,7 @@ class RepositoryFile(TimestampedModel):
     #: The file's path in the repository, e.g. ``docs/source/index.rst``, or a post's permalink path.
     path = models.CharField(max_length=512, help_text="The file's path in the repository.")
     #: Whether the file is documentation or code: see :class:`RepositoryFileKind`.
-    kind = models.CharField(max_length=16, choices=RepositoryFileKind.choices)
+    kind = models.CharField(max_length=16, choices=RepositoryFileKind)
     #: A document's first heading, or a post's title. Empty for code.
     title = models.CharField(max_length=255, blank=True, default="", help_text="A document's first heading.")
     #: The file's text, which the tools search and read.

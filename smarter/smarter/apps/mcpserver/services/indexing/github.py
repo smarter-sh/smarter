@@ -73,7 +73,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 REQUEST_TIMEOUT = 60
 """Seconds to wait for GitHub to respond, and between the chunks of an archive."""
@@ -704,8 +703,7 @@ def collect_files(archive: IO[bytes]) -> list[ArchiveFile]:
         too_large = total + file.size > MAX_INDEX_BYTES
         if too_many or too_large:
             logger.warning(
-                "%s.collect_files() the index limit was reached at %s files and %s bytes: the remaining files are not indexed.",
-                logger_prefix,
+                "the index limit was reached at %s files and %s bytes: the remaining files are not indexed.",
                 len(files),
                 total,
             )
@@ -795,7 +793,11 @@ def index_repository(name: str, force: bool = False) -> RepositoryIndex:
         commit_sha = latest_commit_sha(repository)
         is_up_to_date = index.is_ready and index.commit_sha == commit_sha
         if is_up_to_date and not force:
-            logger.info("%s.index_repository() %s is up to date at %s.", logger_prefix, repository.name, commit_sha)
+            logger.info(
+                "%s is up to date at %s.",
+                repository.name,
+                commit_sha,
+            )
             if index.error:
                 RepositoryIndex.objects.filter(pk=index.pk).update(error=None)
                 index.error = None
@@ -803,8 +805,7 @@ def index_repository(name: str, force: bool = False) -> RepositoryIndex:
         with tempfile.TemporaryFile() as archive:
             size = download_archive(repository, commit_sha, archive)
             logger.info(
-                "%s.index_repository() downloaded %s at %s: %s bytes.",
-                logger_prefix,
+                "downloaded %s at %s: %s bytes.",
                 repository.full_name,
                 commit_sha,
                 size,

@@ -1,6 +1,6 @@
 ---
 name: smarter-logging
-description: Use when writing or changing any logger call in Smarter Python code. Every log message starts with a formatted, dot-notated prefix that traces where it came from (logger_prefix or formatted_class_name), uses lazy %-style arguments, picks its level deliberately, uses a waffle-switched logger where a switch exists, and never logs secrets, credentials or PII (Smarter's log is shown to users in the web console in DEBUG mode).
+description: Use when writing or changing any logger call in Smarter Python code. Every log message starts with a formatted, dot-notated prefix that traces where it came from, which WaffleSwitchedLoggerWrapper writes from the caller's frame (call sites never write logger_prefix, formatted_class_name or a function name), uses lazy %-style arguments, picks its level deliberately, uses a waffle-switched logger where a switch exists, and never logs secrets, credentials or PII (Smarter's log is shown to users in the web console in DEBUG mode).
 ---
 
 # Smarter Logging Style
@@ -11,55 +11,55 @@ The policy is in the Sphinx docs. Read them once, then follow this skill's idiom
 - `docs/source/adr/011-logging.rst`
 - `docs/source/smarter-framework/developer-reference/lib/logging/waffle-switched-logging.rst`
 
-## The rule: every message starts with its origin
+## The rule: the logger writes the origin, you don't
 
-Each message's first argument is a formatted (colored) dot-notated path to the
-code that logged it, followed by the **unformatted** function or method name.
-Together they read like a stack trace: `smarter.apps.llmtool.extension.registry.fetch_index_files() ...`.
-A message without the prefix can't be traced, and is a defect in review.
-
-**Module-level code** (functions, receivers, tasks, management command helpers):
+Every message starts with a formatted (colored) dot-notated path to the code
+that logged it, which reads like a stack trace:
+`smarter.apps.llmtool.models.plugin_data_api.PluginDataApi.execute_request() API request failed: ...`.
+`WaffleSwitchedLoggerWrapper` writes it: each of its logging methods reads the
+caller's frame (`smarter.lib.logging.utils.caller_name()`) and puts the name in
+front of the message. So a call site writes only its own text:
 
 ```python
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def fetch_index_files(url):
-    logger.info("%s.fetch_index_files() downloading %s", logger_prefix, url)
+    logger.info("downloading %s", url)
 ```
-
-**Methods of a class** that has `formatted_class_name` (anything built on
-`SmarterHelperMixin`, e.g. brokers, models, plugins, views):
-
-```python
-logger.warning(
-    "%s.authenticate(): invalid api_token type: %s. Expected bytes.",
-    self.formatted_class_name,  # cls.formatted_class_name in a classmethod
-    type(api_token),
-)
-```
-
-A class without `formatted_class_name` uses the module's `logger_prefix` plus
-`ClassName.method()`: `"%s.CharacterForeignKey.add_sql() ..."`.
 
 Details:
 
-- Format only the prefix (`SmarterFormattedText.text()`), never the function
-  name. Write the name with `()`, and keep it right when you rename the function.
-- Prefer `logging.SmarterFormattedText.text(__name__)`, the most common form,
-  over a hard-coded module path, which goes stale when the module moves. Code
-  that runs before Django is set up, such as `smarter.common.conf`, imports
-  `SmarterFormattedText` from `smarter.common.helpers.console_helpers` instead,
-  because `smarter.lib.logging` imports Django.
-- Colors are attributes of the same class:
+- **Never write an origin yourself.** No `logger_prefix`, `module_prefix`,
+  `self.formatted_class_name` or `"%s.my_function()"` at the start of a
+  message: the wrapper already wrote it, so it would show twice, and a
+  hard-coded name goes stale when the function is renamed.
+- **The module's logger must be a wrapper**: `logging.getSmarterLogger(__name__)`
+  (with switches or without), or `WaffleSwitchedLoggerWrapper(...)`. A plain
+  `logging.getLogger(__name__)` logs without the origin. Modules that
+  `smarter.lib.logging` itself imports (e.g. `smarter.lib.django.waffle`) can't
+  call `getSmarterLogger()` while that package is still initializing; they
+  build `WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))`, importing
+  the class from `smarter.lib.logging.waffle_switched_logger`.
+- **A method is named after the class that runs it**, when its first parameter
+  is `self` or `cls`: a base class's method, run by a subclass, logs the
+  subclass's name. A staticmethod is named after the class that defines it, a
+  nested function as `outer.<locals>.inner()`, and module-level code by its
+  module alone.
+- Records keep the caller's `funcName` and `lineno`: the wrapper passes
+  `stacklevel` to the logger it wraps. A helper that logs on behalf of its
+  caller can pass `stacklevel=2` to be named after the caller instead.
+- **To color the prefix differently**, so that a family of lines stands out,
+  pass `prefix_format`, an ANSI code from `SmarterFormattedText`, to any
+  logging method: `logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)`.
+  Every `cache_invalidations()` logs its prefix in bold dark blue this way. Only
+  a wrapped logger takes it: a plain `logging.Logger` raises `TypeError`.
+- Colors are attributes of `SmarterFormattedText`:
   `SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED)`.
   `SmarterFormattedText.json()` colors a JSON dump, and `.banner()` frames a
   multi-line message.
-- `formatted_class_name` is the **runtime** class. In a base class's method, a
-  subclass's name is logged, which is usually what you want; say so if not.
 
 ## Arguments, not f-strings
 
@@ -67,8 +67,8 @@ Pass values as %-style arguments, so that a message that isn't emitted is never
 formatted, and so that log aggregation can group messages by their template:
 
 ```python
-logger.info("%s.apply() updated %s %s.", self.formatted_class_name, self.kind, self.name)  # yes
-logger.info(f"{self.formatted_class_name}.apply() updated {self.kind} {self.name}.")       # no
+logger.info("updated %s %s.", self.kind, self.name)    # yes
+logger.info(f"updated {self.kind} {self.name}.")       # no
 ```
 
 ## Levels
@@ -99,7 +99,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 ```
 
 `WARNING` and above are always emitted, whether or not the switch is on
@@ -110,7 +109,8 @@ depend on them without turning the switch on.
 
 A new app that logs a lot gets its own switch in
 `smarter/lib/django/waffle/switches.py`. Small library modules that log only
-warnings and errors may use plain `logging.getLogger(__name__)`.
+warnings and errors use `logging.getSmarterLogger(__name__)` without switches,
+which logs at every level the logger is enabled for, and still writes the origin.
 
 ## Never log secrets or PII
 
@@ -146,7 +146,8 @@ call that already breaks this rule, fix it in the same change.
 
 ## Tests
 
-Assert on a log call by patching the module's `logger`, not by capturing output:
+Assert on a log call by patching the module's `logger`, not by capturing output.
+A patched logger is a mock, so the origin isn't in the message it receives:
 
 ```python
 with patch.object(system_role, "logger") as logger:
@@ -156,8 +157,8 @@ logger.warning.assert_called_once()
 
 ## Checklist
 
-- Every new or changed log call starts with `logger_prefix` or
-  `formatted_class_name`, then `.function_name()`.
+- No log call writes its own origin (`logger_prefix`, `formatted_class_name`,
+  a hard-coded `function_name()`): the module's wrapped logger writes it.
 - %-style arguments, no f-strings.
 - The level matches the table above.
 - The module's logger uses its app's waffle switch, if it has one.

@@ -65,7 +65,6 @@ from .models import Proxy
 from .signals import proxy_request_completed, proxy_request_failed
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PROXY_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CONNECT_TIMEOUT = 10.0
 """Seconds to wait for a connection to the provider.
@@ -332,7 +331,7 @@ def record_charges(proxy: Proxy, user_profile: UserProfile, usage: Usage) -> Non
             )
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s.record_charges() failed to charge %s: %s", logger_prefix, resource_locator, e)
+            logger.error("failed to charge %s: %s", resource_locator, e)
 
 
 def budget_resource_locators(proxy: Proxy, user_profile: UserProfile) -> list[str]:
@@ -552,7 +551,11 @@ class ProxyForwarder:
                 reader.feed(chunk)
                 yield chunk
         except httpx.HTTPError as e:
-            logger.warning("%s Proxy %s: the provider's stream was interrupted: %s", logger_prefix, self.proxy.name, e)
+            logger.warning(
+                "Proxy %s: the provider's stream was interrupted: %s",
+                self.proxy.name,
+                e,
+            )
         finally:
             upstream.close()
             client.close()
@@ -561,17 +564,6 @@ class ProxyForwarder:
 
     def _completed(self, method: str, path: str, status: int, usage: Optional[Usage], started: float) -> None:
         elapsed = time.monotonic() - started
-        logger.info(
-            "%s Proxy %s: %s %s -> %s in %.2fs, usage %s, for %s",
-            logger_prefix,
-            self.proxy.name,
-            method,
-            path,
-            status,
-            elapsed,
-            usage,
-            self.user_profile,
-        )
         if usage:
             record_charges(self.proxy, self.user_profile, usage)
         proxy_request_completed.send(
@@ -586,9 +578,6 @@ class ProxyForwarder:
         )
 
     def _failed(self, method: str, path: str, error: ProxyError, started: float) -> None:
-        logger.warning(
-            "%s Proxy %s: %s %s refused: %s (%s)", logger_prefix, self.proxy.name, method, path, error.code, error
-        )
         proxy_request_failed.send(
             sender=self.__class__,
             proxy=self.proxy,

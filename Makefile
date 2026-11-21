@@ -245,8 +245,8 @@ docker-test: ## Run Python-Django unit tests in Docker
 # stack: they write rows without rollback, and share Redis, the dev server and the workers.
 # Each stack needs about 4 GB of Docker's memory. Logs go to .test-shards/. Needs the smarter
 # image (make build) and smarter-mariadb running. See scripts/run_test_shards.py.
-SHARDS ?= 8
-docker-test-sharded: ## Run them in SHARDS (default 8) Docker stacks at once
+SHARDS ?= 10
+docker-test-sharded: ## Run them in SHARDS (default 10) Docker stacks at once
 	python3 -I scripts/run_test_shards.py --shards $(SHARDS)
 
 docker-prune: ## Remove unused Docker objects and clean up Docker artifacts

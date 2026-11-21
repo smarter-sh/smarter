@@ -91,8 +91,7 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not connection_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. connection_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. connection_id: %s, new_name: %s",
                 connection_id,
                 new_name,
             )
@@ -102,7 +101,8 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             connection = ConnectionBase.objects.with_read_permission_for(self.user_profile.user).get(id=connection_id)  # type: ignore
         except ConnectionBase.DoesNotExist:
             logger.warning(
-                "%s.post() ConnectionBase with id %s not found for cloning.", self.formatted_class_name, connection_id
+                "ConnectionBase with id %s not found for cloning.",
+                connection_id,
             )
             return JsonResponse(
                 {"error": f"ConnectionBase with id {connection_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -126,8 +126,7 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning ConnectionBase with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning ConnectionBase with id %s: %s",
                 connection_id,
                 e,
             )
@@ -136,8 +135,7 @@ class ConnectionListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning ConnectionBase with id %s",
-                self.formatted_class_name,
+                "Error cloning ConnectionBase with id %s",
                 connection_id,
                 exc_info=True,
             )
@@ -177,16 +175,15 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         connection_id = kwargs.get("connection_id")
         if not connection_id:
-            logger.warning(
-                "%s.post() Missing required parameter connection_id for deletion.", self.formatted_class_name
-            )
+            logger.warning("Missing required parameter connection_id for deletion.")
             return JsonResponse({"error": "connection_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             connection = ConnectionBase.objects.with_ownership_permission_for(self.user_profile.user).get(id=connection_id)  # type: ignore
         except ConnectionBase.DoesNotExist:
             logger.warning(
-                "%s.post() ConnectionBase with id %s not found for deletion.", self.formatted_class_name, connection_id
+                "ConnectionBase with id %s not found for deletion.",
+                connection_id,
             )
             return JsonResponse(
                 {"error": f"ConnectionBase with id {connection_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -200,8 +197,7 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting ConnectionBase with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting ConnectionBase with id %s: %s",
                 connection_id,
                 e,
             )
@@ -210,8 +206,7 @@ class ConnectionListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting ConnectionBase with id %s",
-                self.formatted_class_name,
+                "Error deleting ConnectionBase with id %s",
                 connection_id,
                 exc_info=True,
             )
@@ -254,8 +249,7 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not connection_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. connection_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. connection_id: %s, new_name: %s",
                 connection_id,
                 new_name,
             )
@@ -265,7 +259,8 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             connection = ConnectionBase.objects.with_ownership_permission_for(self.user_profile.user).get(id=connection_id)  # type: ignore
         except ConnectionBase.DoesNotExist:
             logger.warning(
-                "%s.post() ConnectionBase with id %s not found for renaming.", self.formatted_class_name, connection_id
+                "ConnectionBase with id %s not found for renaming.",
+                connection_id,
             )
             return JsonResponse(
                 {"error": f"ConnectionBase with id {connection_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -279,8 +274,7 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming ConnectionBase with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming ConnectionBase with id %s: %s",
                 connection_id,
                 e,
             )
@@ -289,8 +283,7 @@ class ConnectionListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming ConnectionBase with id %s",
-                self.formatted_class_name,
+                "Error renaming ConnectionBase with id %s",
                 connection_id,
                 exc_info=True,
             )

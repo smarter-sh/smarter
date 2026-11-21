@@ -43,8 +43,6 @@ logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
 )
 
-module_prefix = f"{__name__}"
-
 
 @receiver(new_user_created)
 def new_user_created_receiver(sender, user_profile: UserProfile, **kwargs):
@@ -54,8 +52,7 @@ def new_user_created_receiver(sender, user_profile: UserProfile, **kwargs):
     - log the creation of a new user profile.
     """
     logger.info(
-        "%s New user created: %s, id: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.new_user_created_receiver()",
+        "New user created: %s, id: %s",
         user_profile,
         user_profile.id,  # type: ignore
     )
@@ -70,8 +67,7 @@ def new_charge_created_receiver(sender, charge: Charge, **kwargs):
     - evaluate the budgets attached to the charged resource.
     """
     logger.debug(
-        "%s New charge created: %s, id: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.new_charge_created()",
+        "New charge created: %s, id: %s",
         charge,
         charge.id,  # type: ignore
     )
@@ -86,8 +82,7 @@ def cache_invalidate_receiver(sender, **kwargs):
     - log the cache invalidation event.
     """
     logger.debug(
-        "%s Cache invalidation triggered.",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.cache_invalidate()",
+        "Cache invalidation triggered.",
     )
 
 
@@ -99,8 +94,7 @@ def charge_authorized_receiver(sender, record_locator: str, charge: str, **kwarg
     - log the authorization of a charge.
     """
     logger.debug(
-        "%s Charge authorized: record_locator: %s, charge: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.charge_authorized()",
+        "Charge authorized: record_locator: %s, charge: %s",
         record_locator,
         charge,
     )
@@ -114,8 +108,7 @@ def charge_declined_receiver(sender, record_locator: str, charge: str, **kwargs)
     - log the decline of a charge.
     """
     logger.error(
-        "%s Charge declined: record_locator: %s, charge: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.charge_declined()",
+        "Charge declined: record_locator: %s, charge: %s",
         record_locator,
         charge,
     )
@@ -134,15 +127,14 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
     # SmarterTokenAuthenticationMiddleware logs the user in on every api request that carries a token,
     # so those logins are logged at DEBUG. A sign-in to the web console is logged at INFO.
     log = logger.debug if request is not None and request.META.get("HTTP_AUTHORIZATION") else logger.info
-    log("%s User logged in: %s", f"{logging.SmarterFormattedText.text(module_prefix)}.user_logged_in()", user)
+    log("User logged in: %s", user)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
         account = get_cached_default_account()
         UserProfile.objects.create(name=user.username, user=user, account=account, language=active_language())
         logger.info(
-            "%s created a UserProfile for user %s with the default account %s",
-            f"{logging.SmarterFormattedText.text(module_prefix)}.user_logged_in()",
+            "created a UserProfile for user %s with the default account %s",
             user,
             account,
         )
@@ -169,8 +161,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     # a save of last_login alone happens on every login, including every api request with a token.
     log = logger.debug if last_login_only else logger.info
     log(
-        "%s User post_save: %s, created: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.user_post_save()",
+        "User post_save: %s, created: %s",
         instance,
         created,
     )
@@ -200,8 +191,7 @@ def user_post_delete(sender: User, instance: User, **kwargs):
     :param instance: The deleted User.
     """
     logger.info(
-        "%s User post_delete: %s, id: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.user_post_delete()",
+        "User post_delete: %s, id: %s",
         instance,
         instance.id,  # type: ignore
     )
@@ -217,8 +207,7 @@ def user_profile_post_save(sender: UserProfile, instance: UserProfile, created, 
     :param created: Whether it was created.
     """
     logger.info(
-        "%s UserProfile post_save: %s, created: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.user_profile_post_save()",
+        "UserProfile post_save: %s, created: %s",
         instance,
         created,
     )
@@ -243,8 +232,7 @@ def user_profile_post_delete(sender: UserProfile, instance: UserProfile, **kwarg
     :param instance: The deleted UserProfile.
     """
     logger.info(
-        "%s UserProfile: %s, id: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.user_profile_post_delete()",
+        "UserProfile: %s, id: %s",
         instance,
         instance.id,  # type: ignore
     )
@@ -297,15 +285,13 @@ def account_post_save(sender: Account, instance: Account, created, **kwargs):
     :param instance: The saved Account.
     :param created: Whether it was created.
     """
-    model_prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.account_post_save()"
     account_json = json.dumps(model_to_dict(instance, exclude=ACCOUNT_CONTACT_FIELDS))
     if created:
-        logger.info("%s Account created: %s", model_prefix, account_json)
+        logger.info("Account created: %s", account_json)
     else:
-        logger.info("%s Account updated: %s", model_prefix, account_json)
+        logger.info("Account updated: %s", account_json)
         logger.info(
-            "%s invalidating cache for Account: %s",
-            f"{logging.SmarterFormattedText.text(module_prefix)}.account_post_save()",
+            "invalidating cache for Account: %s",
             instance.account_number,
         )
 
@@ -322,8 +308,7 @@ def account_post_delete(sender: type[Account], instance: Account, **kwargs):
     :param instance: The deleted Account.
     """
     logger.info(
-        "%s Account post_delete: %s, id: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.account_post_delete()",
+        "Account post_delete: %s, id: %s",
         instance.account_number,
         instance.id,  # type: ignore
     )
@@ -342,8 +327,7 @@ def charge_post_save(sender: Charge, instance: Charge, created, **kwargs):
     """
     charge_json = json.dumps(model_to_dict(instance))
     logger.debug(
-        "%s Charge post_save: %s, created: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.charge_post_save()",
+        "Charge post_save: %s, created: %s",
         charge_json,
         created,
     )
@@ -389,8 +373,7 @@ def budget_warning_receiver(sender, resource_constraint: ResourceConstraint, act
     :param limit: The budget's limit.
     """
     logger.warning(
-        "%s Budget warning: %s has spent %s of its limit of %s.",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.budget_warning()",
+        "Budget warning: %s has spent %s of its limit of %s.",
         resource_constraint,
         actual,
         limit,
@@ -408,8 +391,7 @@ def budget_exceeded_receiver(sender, resource_constraint: ResourceConstraint, lo
     :param reason: Why the budget is exceeded.
     """
     logger.warning(
-        "%s Budget exceeded: %s %s %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.budget_exceeded()",
+        "Budget exceeded: %s %s %s",
         resource_constraint,
         "is locked." if lock else "is not locked, because the budget only warns.",
         reason,
@@ -425,8 +407,7 @@ def budget_released_receiver(sender, resource_constraint: ResourceConstraint, **
     :param resource_constraint: The resource's constraint.
     """
     logger.info(
-        "%s Budget released: %s is no longer locked.",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.budget_released()",
+        "Budget released: %s is no longer locked.",
         resource_constraint,
     )
 

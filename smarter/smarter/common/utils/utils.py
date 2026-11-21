@@ -36,8 +36,7 @@ from cryptography.fernet import Fernet
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 
@@ -254,14 +253,14 @@ def mask_string(string: Union[str, bytes], mask_char: str = "*", mask_length: in
         masked = mask_string("abc", mask_length=4)
         print(masked)  # Output: abc
     """
-    logger.debug("%s.mask_string()", logger_prefix)
+    logger.debug("called")
     warnings.warn(
         "mask_string is deprecated and will be removed in a future release.", DeprecationWarning, stacklevel=2
     )
     if isinstance(string, bytes):
         string = string.decode("utf-8")
     if not isinstance(string, str):
-        logger.warning("mask_string() - Input is not a string or bytes: %s", type(string))
+        logger.warning("Input is not a string or bytes: %s", type(string))
         return str(string)
     if len(string) <= mask_length:
         return string
@@ -306,7 +305,7 @@ def generate_fernet_encryption_key() -> str:
         key = generate_fernet_encryption_key()
         print(key)  # e.g., 'gAAAAABh...'
     """
-    logger.debug("%s.generate_fernet_encryption_key() Generating new Fernet encryption key.", logger_prefix)
+    logger.debug("Generating new Fernet encryption key.")
     return Fernet.generate_key().decode("utf-8")
 
 
@@ -336,7 +335,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
         # Returns True if the environment variable 'DEBUG' is set to a truthy value
         debug_mode = bool_environment_variable('DEBUG', default=False)
     """
-    logger.debug("%s.bool_environment_variable()", logger_prefix)
+    logger.debug("called")
     value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
     if value is None:
         return default

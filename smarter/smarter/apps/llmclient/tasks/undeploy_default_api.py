@@ -61,7 +61,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -109,8 +108,6 @@ def undeploy_default_api(llmclient_id: int):
         return
 
     task_id = undeploy_default_api.request.id
-    prefix = logger_prefix + f".{undeploy_default_api.__name__}()"
-    logger.info("%s llmclient %s task_id: %s", prefix, llmclient_id, task_id)
     pre_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
 
     llmclient: LLMClient
@@ -120,21 +117,25 @@ def undeploy_default_api(llmclient_id: int):
         try:
             llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
         except LLMClient.DoesNotExist:
-            logger.error("%s LLMClient %s not found. task_id: %s", prefix, llmclient_id, task_id)
-            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id)
+            post_undeploy_default_api.send(
+                sender=undeploy_default_api,
+                llmclient_id=llmclient_id,
+                success=False,
+                outcome="it was not found",
+                task_id=task_id,
+            )
             return None
 
         # this task is queued when an llmclient is saved as not deployed. If it is deployed now, then it
         # was deployed again since, and a deploy_default_api task is queued, so undeploying it would
         # destroy the A record of an llmclient that is meant to be deployed.
         if llmclient.deployed:
-            logger.info(
-                "%s LLMClient %s was deployed again since this task was queued. Nothing to do. task_id: %s",
-                prefix,
-                llmclient.name,
-                task_id,
+            post_undeploy_default_api.send(
+                sender=undeploy_default_api,
+                llmclient_id=llmclient_id,
+                outcome=f"{llmclient.name} was deployed again since this task was queued. Nothing to do",
+                task_id=task_id,
             )
-            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
             return None
 
         hostname = urlparse(llmclient.default_url).netloc

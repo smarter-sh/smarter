@@ -102,7 +102,10 @@ class SAMPromptBroker(AbstractBroker[Prompt, Prompt]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property
@@ -310,7 +313,7 @@ class SAMPromptBroker(AbstractBroker[Prompt, Prompt]):
             chats = chats.order_by("-created_at")[:MAX_RESULTS]
         chats = chats or Prompt.objects.none()
 
-        logger.debug("SAMPromptBroker().get() found %s Chats for account %s", chats.count(), self.account)
+        logger.debug("found %s Chats for account %s", chats.count(), self.account)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Prompt
         for prompt in chats:

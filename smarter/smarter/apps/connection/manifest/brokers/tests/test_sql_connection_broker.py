@@ -87,9 +87,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertIsInstance(self.broker, SAMSqlConnectionBroker)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSqlConnectionBroker)
-        logger.info(
-            "%s.test_setup() SAMSqlConnectionBroker initialized successfully for testing.", self.formatted_class_name
-        )
+        logger.info("SAMSqlConnectionBroker initialized successfully for testing.")
 
     def test_immutability(self):
         """Test that any property of any Pydantic broker model are immutable."""
@@ -113,7 +111,7 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
     def test_sam_broker_initialization(self):
         """Test that the SAMSqlConnection model can be initialized from the manifest data."""
         metadata = {**required(self.manifest_data["metadata"], "manifest_data.metadata")}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.manifest_data["spec"])
+        logger.info("loading manifest spec: %s", self.manifest_data["spec"])
         SAMSqlConnection(
             apiVersion=self.manifest_data["apiVersion"],
             kind=self.manifest_data["kind"],

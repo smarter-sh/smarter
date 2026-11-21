@@ -16,7 +16,7 @@ from smarter.apps.dashboard.search import GlobalSearchResponse, global_search
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class GlobalSearchView(SmarterAuthenticatedWebView):
@@ -67,6 +67,6 @@ class GlobalSearchView(SmarterAuthenticatedWebView):
         query = self.query_of(request)
         if user is None:
             return JsonResponse(GlobalSearchResponse(query=query).model_dump(mode="json"), status=HTTPStatus.OK)
-        logger.debug("%s.post() query=%s user=%s", self.formatted_class_name, query, user.username)
+        logger.debug("query=%s user=%s", query, user.username)
         response = global_search(user, query)
         return JsonResponse(response.model_dump(mode="json"), status=HTTPStatus.OK)

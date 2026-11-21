@@ -14,7 +14,6 @@ from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.base import SmarterPluginError
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType, required
@@ -25,7 +24,6 @@ from .models import PluginSelectorHistory
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
 )
-module_prefix = "smarter.apps.llmtool.tasks."
 
 
 @app.task(
@@ -105,8 +103,7 @@ def create_plugin_selector_history(*args, **kwargs):
         except User.DoesNotExist:
             # the user was deleted after this task was queued, which a retry cannot fix.
             logger.warning(
-                "%s user_id: %s no longer exists. Plugin selector history is not recorded.",
-                SmarterFormattedText.text(module_prefix + "create_plugin_selector_history()"),
+                "user_id: %s no longer exists. Plugin selector history is not recorded.",
                 user_id,
             )
             return
@@ -119,8 +116,7 @@ def create_plugin_selector_history(*args, **kwargs):
     plugin_meta = cached_plugin_by_id(plugin_id) if plugin_id else None
     if plugin_meta is None:
         logger.error(
-            "%s plugin_id: %s, user_profile: %s, error: plugin not found",
-            SmarterFormattedText.text(module_prefix + "create_plugin_selector_history()"),
+            "plugin_id: %s, user_profile: %s, error: plugin not found",
             plugin_id,
             user_profile,
         )
@@ -138,8 +134,7 @@ def create_plugin_selector_history(*args, **kwargs):
         plugin = plugin_controller.plugin
     except SmarterPluginError as e:
         logger.error(
-            "%s plugin_id: %s, user_profile: %s, error: %s",
-            SmarterFormattedText.text(module_prefix + "create_plugin_selector_history()"),
+            "plugin_id: %s, user_profile: %s, error: %s",
             plugin_id,
             user_profile,
             e,
@@ -147,8 +142,7 @@ def create_plugin_selector_history(*args, **kwargs):
         return
 
     logger.info(
-        "%s plugin_id: %s, user_profile: %s",
-        SmarterFormattedText.text(module_prefix + "create_plugin_selector_history()"),
+        "plugin_id: %s, user_profile: %s",
         plugin.id,
         user_profile,
     )
@@ -197,12 +191,11 @@ def check_extension_updates() -> list[str]:
     from .extension.exceptions import SmarterExtensionRegistryError
     from .extension.registry import check_for_updates, is_enabled
 
-    prefix = SmarterFormattedText.text(module_prefix + "check_extension_updates()")
     if not is_enabled():
-        logger.info("%s the extension registry is disabled", prefix)
+        logger.info("the extension registry is disabled")
         return []
     try:
         return [extension.slug for extension in check_for_updates(refresh=True)]
     except SmarterExtensionRegistryError as e:
-        logger.warning("%s could not check for updates: %s", prefix, e)
+        logger.warning("could not check for updates: %s", e)
         return []

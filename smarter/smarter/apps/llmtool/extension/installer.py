@@ -89,11 +89,6 @@ class ExtensionInstaller:
         self.user = user
         self.owner: UserProfile = smarter_cached_objects.smarter_admin_user_profile
 
-    @property
-    def formatted_class_name(self) -> str:
-        """The class name, for logging."""
-        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}"
-
     def context(
         self, extension: Extension, manifest: ExtensionManifest, previous_version: Optional[str] = None
     ) -> LifecycleContext:
@@ -156,7 +151,9 @@ class ExtensionInstaller:
             )
         if extension is not None and extension.installed_version_id == getattr(existing, "pk", None):  # type: ignore[attr-defined]
             logger.info(
-                "%s.install() %s %s is already installed", self.formatted_class_name, manifest.slug, manifest.version
+                "%s %s is already installed",
+                manifest.slug,
+                manifest.version,
             )
             return extension
 
@@ -244,8 +241,7 @@ class ExtensionInstaller:
                 sender=self.__class__, extension=extension, version=version, previous_version=previous_version
             )
         logger.info(
-            "%s.finish_install() installed %s %s (was %s)",
-            self.formatted_class_name,
+            "installed %s %s (was %s)",
             manifest.slug,
             manifest.version,
             previous_version,
@@ -324,7 +320,7 @@ class ExtensionInstaller:
                     "secret": None,
                 }
             ExtensionSetting.objects.update_or_create(extension=extension, name=name, defaults=defaults)
-        logger.info("%s.configure() configured %s: %s", self.formatted_class_name, extension.slug, sorted(values))
+        logger.info("configured %s: %s", extension.slug, sorted(values))
 
     def enable(self, extension: Extension) -> Extension:
         """
@@ -351,7 +347,6 @@ class ExtensionInstaller:
         extension.error = ""
         extension.save(update_fields=["enabled", "error", "updated_at"])
         extension_enabled.send(sender=self.__class__, extension=extension)
-        logger.info("%s.enable() enabled %s", self.formatted_class_name, extension.slug)
         return extension
 
     def disable(self, extension: Extension, reason: str = "disabled by an administrator") -> Extension:
@@ -374,11 +369,10 @@ class ExtensionInstaller:
             # a hook is the extension's code, which can fail in any way at all.
             # pylint: disable=broad-exception-caught
             except Exception as e:
-                logger.warning("%s.disable() %s on_disable failed: %s", self.formatted_class_name, extension.slug, e)
+                logger.warning("%s on_disable failed: %s", extension.slug, e)
         extension.enabled = False
         extension.save(update_fields=["enabled", "updated_at"])
         extension_disabled.send(sender=self.__class__, extension=extension, reason=reason)
-        logger.info("%s.disable() disabled %s: %s", self.formatted_class_name, extension.slug, reason)
         return extension
 
     # -------------------------------------------------------------------------
@@ -401,7 +395,9 @@ class ExtensionInstaller:
             except SmarterExtensionLoadError as e:
                 # an extension whose code no longer loads can still be uninstalled, without its hooks.
                 logger.warning(
-                    "%s.uninstall() %s does not load, so its hooks will not run: %s", self.formatted_class_name, slug, e
+                    "%s does not load, so its hooks will not run: %s",
+                    slug,
+                    e,
                 )
         if lifecycle is not None and loaded is not None:
             try:
@@ -418,11 +414,10 @@ class ExtensionInstaller:
                 lifecycle.post_uninstall(self.context(extension, loaded.manifest))
             # pylint: disable=broad-exception-caught
             except Exception as e:
-                logger.warning("%s.uninstall() %s post_uninstall failed: %s", self.formatted_class_name, slug, e)
+                logger.warning("%s post_uninstall failed: %s", slug, e)
         extension.delete()
         unload(slug)
         extension_uninstalled.send(sender=self.__class__, slug=slug)
-        logger.info("%s.uninstall() uninstalled %s", self.formatted_class_name, slug)
 
     # -------------------------------------------------------------------------
     # helpers
@@ -442,7 +437,7 @@ class ExtensionInstaller:
         :param extension: The extension.
         :param message: Why it failed, which is saved as its ``error``.
         """
-        logger.error("%s %s", self.formatted_class_name, message)
+        logger.error("%s", message)
         extension.enabled = False
         extension.error = message
         extension.save(update_fields=["enabled", "error", "updated_at"])

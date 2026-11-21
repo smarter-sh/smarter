@@ -173,8 +173,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         - OrchestratorHelper and PromptHelper for orchestrator and prompt session logic.
         """
         logger.debug(
-            "%s.setup() - request: %s, args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "request: %s, args: %s, kwargs: %s",
             self.smarter_build_absolute_uri(request),
             args,
             kwargs,
@@ -266,7 +265,7 @@ class OrchestratorApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
                     },
                 },
             }
-            logger.debug("%s.dispatch() - Orchestrator not ready", self.formatted_class_name)
+            logger.debug("Orchestrator not ready")
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
 
         if self.orchestrator:

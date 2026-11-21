@@ -130,11 +130,7 @@ def is_sphinx_build():
     return "sphinx" in sys.modules
 
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
-logger_prefix_cache_invalidations = logging.SmarterFormattedText.text(
-    f"{__name__}.cache_invalidations()", logging.SmarterFormattedText.BOLD_DARK_BLUE
-)
+logger = logging.getSmarterLogger(__name__)
 
 
 def static_version(request):
@@ -301,8 +297,7 @@ def base(request: "HttpRequest") -> SmarterDictType:
             }
         }
         logger.debug(
-            "%s.base() cached dashboard context for user %s: %s",
-            logger_prefix,
+            "cached dashboard context for user %s: %s",
             username,
             logging.SmarterFormattedText.json(cached_context),
         )
@@ -402,9 +397,7 @@ def branding(request: "HttpRequest") -> SmarterDictType:
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/"),
             }
         }
-        logger.debug(
-            "%s.branding() cached branding context: %s", logger_prefix, logging.SmarterFormattedText.json(context)
-        )
+        logger.debug("cached branding context: %s", logging.SmarterFormattedText.json(context))
         return context
 
     return get_cached_context()
@@ -491,12 +484,12 @@ def cache_invalidations(user_profile: Optional[UserProfile]) -> None:
     """
     if not user_profile:
         logger.warning(
-            "%s.cache_invalidations() called without user_profile. No caches will be invalidated.",
-            logger_prefix_cache_invalidations,
+            "called without user_profile. No caches will be invalidated.",
+            prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE,
         )
         return
 
-    logger.debug("%s called for %s", logger_prefix_cache_invalidations, user_profile)
+    logger.debug("called for %s", user_profile, prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
 
     ###########################################################################
     # resource invalidations

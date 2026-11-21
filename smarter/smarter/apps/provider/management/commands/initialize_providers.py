@@ -32,8 +32,7 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HERE = Path(__file__).resolve().parent
 
@@ -237,8 +236,7 @@ class Command(SmarterCommand):
                 response = requests.get(url, headers=headers, params=models_params, timeout=10)
             except requests.RequestException as e:
                 logger.error(
-                    "%s.initialize_generic_provider() failed to fetch the %s provider's models: %s",
-                    logger_prefix,
+                    "failed to fetch the %s provider's models: %s",
                     name,
                     e,
                 )
@@ -260,8 +258,7 @@ class Command(SmarterCommand):
                 # an error, not only command output: the command still succeeds, so without a logged ERROR an
                 # expired key or a suspended account is easy to miss.
                 logger.error(
-                    "%s.initialize_generic_provider() failed to fetch the %s provider's models from %s: %s %s",
-                    logger_prefix,
+                    "failed to fetch the %s provider's models from %s: %s %s",
                     name,
                     url,
                     response.status_code,
@@ -315,7 +312,7 @@ class Command(SmarterCommand):
             )
 
         self.echo_banner(name)
-        logger.info("%s.initialize_generic_provider() initializing the %s provider", logger_prefix, name)
+        logger.info("initializing the %s provider", name)
         if self.user_profile is None:
             self.stdout.write(self.style.ERROR(f"initialize_{name}: User profile is not set."))
             return
@@ -701,7 +698,7 @@ class Command(SmarterCommand):
         # pylint: disable=broad-except
         except Exception as e:
             # e.g. the file is missing from storage: it is saved again.
-            logger.debug("%s.has_logo() could not read the logo of %s: %s", logger_prefix, provider.name, e)
+            logger.debug("could not read the logo of %s: %s", provider.name, e)
             return False
 
     def missing_api_key(self, env_var: str, used_for: str, url: str):

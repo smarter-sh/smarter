@@ -31,9 +31,7 @@ from django.http import HttpRequest
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
-logger = logging.getLogger(__name__)
-
-logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.smarter_build_absolute_uri()"
+logger = logging.getSmarterLogger(__name__)
 
 
 def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
@@ -87,8 +85,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
             if hasattr(request, "get_host"):
                 retval = request.get_host()
                 logger.debug(
-                    "%s.smarter_build_absolute_uri() obtained host from %s request.get_host(): %s",
-                    logger_prefix,
+                    "obtained host from %s request.get_host(): %s",
                     type(request).__name__,
                     retval,
                 )
@@ -98,8 +95,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         if hasattr(request, "META") and "HTTP_HOST" in request.META:
             retval = request.META["HTTP_HOST"]
             logger.debug(
-                "%s.smarter_build_absolute_uri() obtained host from %s request.META['HTTP_HOST']: %s",
-                logger_prefix,
+                "obtained host from %s request.META['HTTP_HOST']: %s",
                 type(request).__name__,
                 retval,
             )
@@ -107,15 +103,13 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         if hasattr(request, "META") and "SERVER_NAME" in request.META:
             retval = request.META["SERVER_NAME"]
             logger.debug(
-                "%s.smarter_build_absolute_uri() obtained host from %s request.META['SERVER_NAME']: %s",
-                logger_prefix,
+                "obtained host from %s request.META['SERVER_NAME']: %s",
                 type(request).__name__,
                 retval,
             )
             return retval
         logger.warning(
-            "%s.smarter_build_absolute_uri() could not determine host from %s request; returning 'testserver'",
-            logger_prefix,
+            "could not determine host from %s request; returning 'testserver'",
             type(request).__name__,
         )
         return "testserver"
@@ -123,8 +117,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     if request is None:
         retval = "http://testserver/unknown/"
         logger.warning(
-            "%s.smarter_build_absolute_uri() called with None request. Returning fallback URL: %s",
-            logger_prefix,
+            "called with None request. Returning fallback URL: %s",
             retval,
         )
         return retval
@@ -132,8 +125,7 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
     if isinstance(request, Mock):
         retval = "http://testserver/mockpath/"
         logger.debug(
-            "%s.smarter_build_absolute_uri() called with Mock request; returning fake test URL: %s",
-            logger_prefix,
+            "called with Mock request; returning fake test URL: %s",
             retval,
         )
         return retval
@@ -147,9 +139,8 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         # pylint: disable=W0718
         except Exception as e:
             logger.warning(
-                "%s.smarter_build_absolute_uri() failed to call request.build_absolute_uri(): %s",
+                "failed to call request.build_absolute_uri(): %s",
                 logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
-                logger_prefix,
             )
 
     # Try to build from scheme, host, and path
@@ -159,19 +150,20 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         path = getattr(request, "get_full_path", lambda: None)() or "/"
         url = f"{scheme}://{host}{path}"
         if SmarterValidator.is_valid_url(url):
-            logger.debug("%s.smarter_build_absolute_uri() built URL from request attributes: %s", logger_prefix, url)
+            logger.debug(
+                "built URL from request attributes: %s",
+                url,
+            )
             return url
     except KeyError as e:
         logger.debug(
-            "%s.smarter_build_absolute_uri() could not build url from request attributes due to a KeyError: %s",
-            logger_prefix,
+            "could not build url from request attributes due to a KeyError: %s",
             logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
         )
     # pylint: disable=W0718
     except Exception as e:
         logger.debug(
-            "%s.smarter_build_absolute_uri() failed to build URL from request attributes: %s (%s)",
-            logger_prefix,
+            "failed to build URL from request attributes: %s (%s)",
             logging.SmarterFormattedText.text(str(e), logging.SmarterFormattedText.DARK_RED),
             type(e),
         )
@@ -185,19 +177,19 @@ def smarter_build_absolute_uri(request: "HttpRequest") -> Optional[str]:
         # pylint: disable=W0212
         if hasattr(request, "_request"):
             logger.debug(
-                "%s.smarter_build_absolute_uri() recasting DRF Request to Django HttpRequest",
-                logger_prefix,
+                "recasting DRF Request to Django HttpRequest",
             )
             request = request._request  # type: ignore
         if hasattr(request, "build_absolute_uri"):
             logger.debug(
-                "%s.smarter_build_absolute_uri() obtaining URL from recast DRF request.build_absolute_uri()",
-                logger_prefix,
+                "obtaining URL from recast DRF request.build_absolute_uri()",
             )
             return request.build_absolute_uri()
 
     # Fallback: synthesize a generic test URL
-    logger.debug("%s.smarter_build_absolute_uri() could not determine URL, returning fallback test URL", logger_prefix)
+    logger.debug(
+        "could not determine URL, returning fallback test URL",
+    )
     return "http://testserver/unknown/"
 
 

@@ -29,8 +29,7 @@ from rest_framework.throttling import (
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class SmarterAnonRateThrottle(AnonRateThrottle):
@@ -127,8 +126,7 @@ def credentials_throttle_wait(request: HttpRequest, view) -> Optional[int]:
     if wait is None:
         wait = 1
     logger.warning(
-        "%s.credentials_throttle_wait() throttled %s %s for %s seconds",
-        logger_prefix,
+        "throttled %s %s for %s seconds",
         request.method,
         request.path,
         wait,
@@ -167,8 +165,7 @@ def throttle_wait(request: HttpRequest, view) -> Optional[int]:
             known_waits.append(throttle_wait_seconds)
     wait = max(known_waits, default=1)
     logger.warning(
-        "%s.throttle_wait() throttled %s %s for %s seconds",
-        logger_prefix,
+        "throttled %s %s for %s seconds",
         request.method,
         request.path,
         wait,

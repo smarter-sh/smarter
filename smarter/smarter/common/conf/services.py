@@ -16,11 +16,9 @@ from botocore.exceptions import (
 
 from smarter.common.conf.const import get_env
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = f"{SmarterFormattedText.text(__name__)}.Services"
+logger = logging.getSmarterLogger(__name__)
 
 
 class Services:
@@ -59,35 +57,30 @@ class Services:
         """
 
         try:
-            logger.debug(
-                "%s.is_connected_to_aws(): Checking if AWS credentials are available and valid.", logger_prefix
-            )
+            logger.debug("Checking if AWS credentials are available and valid.")
             retval = bool(boto3.Session().get_credentials())
             if not retval:
                 logger.warning(
-                    "%s.is_connected_to_aws(): AWS is not configured properly. Credentials are invalid, or no credentials were found.",
-                    logger_prefix,
+                    "AWS is not configured properly. Credentials are invalid, or no credentials were found.",
                 )
                 return False
 
-            logger.debug("%s.is_connected_to_aws(): Attempting to connect to AWS using boto3", logger_prefix)
+            logger.debug("Attempting to connect to AWS using boto3")
             session = boto3.Session()
             sts = session.client("sts")
             logger.debug(
-                "%s.is_connected_to_aws(): Checking AWS connectivity by calling sts.get_caller_identity()",
-                logger_prefix,
+                "Checking AWS connectivity by calling sts.get_caller_identity()",
             )
             sts.get_caller_identity()
             return True
         except (NoCredentialsError, ProfileNotFound, EndpointConnectionError):
             logger.warning(
-                "%s.is_connected_to_aws(): AWS is not configured properly. Credentials are invalid, or no credentials were found.",
-                logger_prefix,
+                "AWS is not configured properly. Credentials are invalid, or no credentials were found.",
             )
             return False
         # pylint: disable=broad-except
         except Exception as e:
-            logger.warning("%s.is_connected_to_aws(): Failed to connect to AWS: %s", logger_prefix, e)
+            logger.warning("Failed to connect to AWS: %s", e)
             return False
 
     @classmethod

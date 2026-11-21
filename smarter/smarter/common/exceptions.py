@@ -4,8 +4,7 @@ import re
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class SmarterException(Exception):
@@ -20,7 +19,9 @@ class SmarterException(Exception):
     def __init__(self, message: str = ""):
         self.message = message
         logger.debug(
-            "%s.SmarterException.__init__() %s: %s", logger_prefix, self.get_formatted_err_message, self.message
+            "%s: %s",
+            self.get_formatted_err_message,
+            self.message,
         )
         super().__init__(self.message)
 

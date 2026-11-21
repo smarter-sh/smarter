@@ -41,7 +41,6 @@ from smarter.apps.secret.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.secret.manifest.models.secret.model import SAMSecret
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -51,7 +50,7 @@ from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 MANIFEST_PATH_API_PLUGIN = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "api-plugin.yaml")
 )
@@ -63,7 +62,6 @@ contains the actual connection parameters for the remote test database.
 Note that we're borrowing the sql-connection.yaml file from the
 broker tests.
 """
-HERE = __name__
 
 
 class TestSAMApiPlugin(TestSAMBrokerBaseClass):
@@ -76,18 +74,17 @@ class TestSAMApiPlugin(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_plugin_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMApiPlugin()"
     manifest_data: SmarterDictType
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("called.")
         cls.manifest_data = read_manifest_file(MANIFEST_PATH_API_PLUGIN)
 
     @classmethod
     def tearDownClass(cls):
-        logger.debug("%s.tearDownClass()", cls.test_sam_api_plugin_logger_prefix)
+        logger.debug("called.")
         super().tearDownClass()
 
     def setUp(self):

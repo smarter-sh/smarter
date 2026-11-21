@@ -90,6 +90,10 @@ one, and answers ``202`` with the run, ``pending``. The platform executes it in 
 - **Limits.** ``maxIterations`` bounds the steps of a run. A budget that has run out fails the step that it would
   charge. A failed step ends a ``sequential`` run; in a ``parallel`` run, the summarizer is told which harness
   failed.
+- **Signals.** A run sends a Django signal when it is queued, when a worker starts it, after each step, and when it
+  finishes: ``orchestration_run_queued``, ``orchestration_run_started``, ``orchestration_step_finished`` and
+  ``orchestration_run_finished`` (see :doc:`orchestrator/signals`). Code that must react to a run, e.g. to notify the
+  user who started it, receives them instead of polling the run's status.
 
 :doc:`ADR-037 <../adr/037-orchestration-runtime>` records the design.
 

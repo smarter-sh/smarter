@@ -44,7 +44,6 @@ from smarter.lib.unittest import running_unit_tests
 from .exceptions import LLMHostComputeError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NodeGroupStatus = LLMHostComputeNodeGroupStatus
 TAINT_EFFECTS = {"NoSchedule": "NO_SCHEDULE", "NoExecute": "NO_EXECUTE", "PreferNoSchedule": "PREFER_NO_SCHEDULE"}
@@ -275,7 +274,11 @@ class EKSNodeGroupBackend(NodeGroupBackend):
                 "smarter.sh/managed-by": smarter_settings.platform_name,
             },
         )
-        logger.info("%s created node group %s with %s nodes", logger_prefix, compute.nodegroup_name, desired)
+        logger.info(
+            "created node group %s with %s nodes",
+            compute.nodegroup_name,
+            desired,
+        )
         return NodeGroup(compute.nodegroup_name, NodeGroupStatus.CREATING, desired, compute.max_nodes)
 
     def scale(self, compute: LLMHostCompute, desired: int) -> None:
@@ -293,7 +296,11 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             nodegroupName=compute.nodegroup_name,
             scalingConfig={"minSize": 0, "maxSize": compute.max_nodes, "desiredSize": desired},
         )
-        logger.info("%s scaled node group %s to %s nodes", logger_prefix, compute.nodegroup_name, desired)
+        logger.info(
+            "scaled node group %s to %s nodes",
+            compute.nodegroup_name,
+            desired,
+        )
 
     def remove_node(self, compute: LLMHostCompute, provider_id: str) -> None:
         """
@@ -312,7 +319,11 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             InstanceId=instance,
             ShouldDecrementDesiredCapacity=True,
         )
-        logger.info("%s removed node %s from node group %s", logger_prefix, instance, compute.nodegroup_name)
+        logger.info(
+            "removed node %s from node group %s",
+            instance,
+            compute.nodegroup_name,
+        )
 
     def delete(self, compute: LLMHostCompute) -> None:
         """
@@ -335,7 +346,7 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         except Exception as e:  # pylint: disable=broad-except
             if type(e).__name__ != "ResourceNotFoundException":
                 raise
-        logger.info("%s deleted node group %s", logger_prefix, compute.nodegroup_name)
+        logger.info("deleted node group %s", compute.nodegroup_name)
 
 
 class InMemoryNodeGroupBackend(NodeGroupBackend):

@@ -43,8 +43,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 OWNERS_CONFIG = "owners.yaml"
 """A repository's owners file, at its root, :class:`RepositoryOwnersConfig`."""
@@ -178,7 +177,7 @@ def load_owners_config(local_path: str) -> Optional[RepositoryOwnersConfig]:
         config = RepositoryOwnersConfig.model_validate(data)
     except (yaml.YAMLError, ValidationError) as e:
         raise SmarterValueError(f"{OWNERS_CONFIG} is not valid: {e}") from e
-    logger.debug("%s.load_owners_config() %s lists %s folders", logger_prefix, OWNERS_CONFIG, len(config.owners))
+    logger.debug("%s lists %s folders", OWNERS_CONFIG, len(config.owners))
     return config
 
 

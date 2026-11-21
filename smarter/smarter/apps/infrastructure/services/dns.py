@@ -169,7 +169,11 @@ class DNSService(InfrastructureService):
             and smarter_settings.environment_api_domain in domain
         ):
             proxy_domain = domain.replace(smarter_settings.environment_api_domain, self.environment_api_domain)
-            logger.debug("%s replacing %s with proxy domain %s", self.formatted_class_name, domain, proxy_domain)
+            logger.debug(
+                "replacing %s with proxy domain %s",
+                domain,
+                proxy_domain,
+            )
             return proxy_domain
         return domain
 
@@ -250,7 +254,7 @@ class DNSService(InfrastructureService):
         with self.operation("create_zone"):
             zone = self._create_zone(domain)
         self.created_resource(resource, resource_id=zone.id)
-        logger.info("%s created DNS zone %s %s", self.formatted_class_name, zone.name, zone.id)
+        logger.info("created DNS zone %s %s", zone.name, zone.id)
         return zone, True
 
     def delete_zone(self, domain: str) -> bool:
@@ -354,8 +358,7 @@ class DNSService(InfrastructureService):
                 return record, create
             if attempt < self.record_wait_attempts:
                 logger.debug(
-                    "%s waiting %s seconds for %s %s, attempt %s of %s",
-                    self.formatted_class_name,
+                    "waiting %s seconds for %s %s, attempt %s of %s",
                     self.record_wait_seconds,
                     wanted.name,
                     wanted.type,
@@ -430,8 +433,7 @@ class DNSService(InfrastructureService):
         if a_record is None:
             raise DNSZoneNotFound(f"{api_host_domain} has no A record to copy to {hostname}.")
         logger.debug(
-            "%s copying the A record of %s to %s in zone %s",
-            self.formatted_class_name,
+            "copying the A record of %s to %s in zone %s",
             api_host_domain,
             hostname,
             zone_id,

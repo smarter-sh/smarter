@@ -22,9 +22,7 @@ from .factories import admin_user_factory, mortal_user_factory
 DUPLICATE_USERNAME_PREFIX = "test_duplicate_user_"
 """The username prefix of the users that :class:`DuplicateUsersMixin` creates, so that they can be cleaned up."""
 
-logger = logging.getLogger(__name__)
-HERE = __name__
-logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestAccountMixin(SmarterTestBase):
@@ -36,8 +34,6 @@ class TestAccountMixin(SmarterTestBase):
     non_admin_user: User
     non_admin_user_profile: UserProfile
 
-    test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(HERE)}.TestAccountMixin()"
-
     @classmethod
     def setUpClass(cls):
         """
@@ -47,7 +43,7 @@ class TestAccountMixin(SmarterTestBase):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
-        title = f" {logger_prefix}.setUpClass() "
+        title = " start "
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
@@ -55,7 +51,7 @@ class TestAccountMixin(SmarterTestBase):
 
     @classmethod
     def tearDownClass(cls):
-        title = f" {logger_prefix}.tearDownClass() "
+        title = " end "
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         try:
@@ -87,8 +83,7 @@ class TestAccountMixin(SmarterTestBase):
             # pylint: disable=W0718
             except Exception as e:
                 logger.error(
-                    "%s.delete_account_fixtures() could not delete the %s of account id %s: %s",
-                    cls.test_account_mixin_logger_prefix,
+                    "could not delete the %s of account id %s: %s",
                     label,
                     account_id,
                     type(e).__name__,
@@ -107,13 +102,13 @@ class TestAccountMixin(SmarterTestBase):
         self._manifest_path = None
         self._manifest_data = None
         self._model = None
-        title = f" {logger_prefix}.{self._testMethodName}() "
+        title = f" {self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
 
     def tearDown(self):
         """We use different manifest test data depending on the test case."""
-        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        title = f" {self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
         self._manifest = None

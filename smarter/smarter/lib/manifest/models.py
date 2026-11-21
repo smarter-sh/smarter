@@ -5,7 +5,6 @@ import datetime
 import re
 from contextlib import contextmanager
 from contextvars import ContextVar
-from logging import getLogger
 from typing import Iterator, List, Optional
 
 from django.utils.text import slugify
@@ -25,9 +24,9 @@ from smarter.apps.account.models import (
     is_authenticated_user,
 )
 from smarter.common.api import SmarterApiVersions
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import to_snake_case
+from smarter.lib import logging
 from smarter.lib.annotation.validation import (
     SmarterAnnotationError,
     normalize_annotations,
@@ -35,8 +34,7 @@ from smarter.lib.annotation.validation import (
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
-logger = getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 _CLIENT_MANIFEST: ContextVar[bool] = ContextVar("smarter_client_manifest", default=False)
 
@@ -221,9 +219,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         slugified = str(slugify(v, allow_unicode=False)).replace("-", "_")
         if slugified != v:
             logger.warning(
-                "%s.%s.validate_name() '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
-                logger_prefix,
-                cls.__name__,
+                "'%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
                 v,
                 slugified,
             )
@@ -231,9 +227,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         if not SmarterValidator.is_valid_snake_case(v):
             snake_case_name = to_snake_case(v)
             logger.warning(
-                "%s.%s.validate_name() '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
-                logger_prefix,
-                cls.__name__,
+                "'%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
                 v,
                 snake_case_name,
             )

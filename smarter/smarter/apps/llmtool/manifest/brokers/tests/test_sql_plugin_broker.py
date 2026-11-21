@@ -24,7 +24,6 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.apps.llmtool.plugin.sql import SqlPlugin
 from smarter.apps.llmtool.signals import plugin_updated
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
@@ -35,8 +34,7 @@ from smarter.lib.unittest.narrowing import json_object
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 from .base_classes.plugin_base import TestSmarterPluginBrokerBase
 
-logger = logging.getLogger(__name__)
-HERE = __name__
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBrokerBase):
@@ -52,18 +50,16 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
     apply_builds_plugin = True
     orm_spec_method = "plugin_sql_spec_orm2pydantic"
 
-    test_smarter_sql_plugin_broker_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSmarterSqlPluginBroker()"
-
     @classmethod
     def setUpClass(cls):
         """Class-level setup."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+        logger.debug("called.")
 
     @classmethod
     def tearDownClass(cls):
         """Class-level teardown."""
-        logger.debug("%s.tearDownClass()", cls.test_smarter_sql_plugin_broker_logger_prefix)
+        logger.debug("called.")
         super().tearDownClass()
 
     def setUp(self):
@@ -108,9 +104,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         self.assertIsInstance(self.request, HttpRequest)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSqlPluginBroker)
-        logger.debug(
-            "%s.test_setup() SAMSqlPluginBroker initialized successfully for testing.", self.formatted_class_name
-        )
+        logger.debug("SAMSqlPluginBroker initialized successfully for testing.")
 
     def test_is_valid(self):
         """Test that the is_valid property returns True."""
@@ -144,7 +138,7 @@ class TestSmarterSqlPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterPluginBr
         assert manifest_metadata is not None
         assert manifest_spec is not None
         metadata = {**manifest_metadata}
-        logger.debug("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
+        logger.debug("loading manifest spec: %s", manifest_spec)
         SAMSqlPlugin(
             apiVersion=self.manifest_data["apiVersion"],
             kind=self.manifest_data["kind"],

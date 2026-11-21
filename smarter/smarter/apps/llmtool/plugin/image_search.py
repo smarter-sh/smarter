@@ -122,7 +122,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
+base_logger = logging.getSmarterLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 MAX_VALIDATION_WORKERS = 10
@@ -416,8 +416,7 @@ class ImageSearchPlugin(PluginBase):
             return self._plugin_data
         except PluginDataImageSearch.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataImageSearch found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataImageSearch found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
         if self._manifest:
@@ -660,14 +659,11 @@ class ImageSearchPlugin(PluginBase):
             try:
                 value = secret.get_secret() or None
             except SmarterValueError as e:
-                base_logger.error(
-                    "%s.api_key() the Secret %s could not be read: %s", self.formatted_class_name, name, e
-                )
+                base_logger.error("the Secret %s could not be read: %s", name, e)
         if not value:
             base_logger.warning(
-                "%s plugin %s cannot search for images, and returns an empty list: the Brave Search API key Secret "
+                "plugin %s cannot search for images, and returns an empty list: the Brave Search API key Secret "
                 "%s is missing or not readable. %s",
-                self.formatted_class_name,
                 self.name,
                 name,
                 CREDENTIALS_HELP,
@@ -743,8 +739,7 @@ class ImageSearchPlugin(PluginBase):
                 )
             except SafeHttpError as e:
                 base_logger.warning(
-                    "%s plugin %s image search failed: %s",
-                    self.formatted_class_name,
+                    "plugin %s image search failed: %s",
                     self.name,
                     describe_brave_error(e),
                 )
@@ -759,8 +754,7 @@ class ImageSearchPlugin(PluginBase):
                 return parse_brave_images(json.loads(response.content))
             except (ValueError, UnicodeDecodeError) as e:
                 base_logger.warning(
-                    "%s plugin %s image search failed: the Brave Search API returned an invalid response.",
-                    self.formatted_class_name,
+                    "plugin %s image search failed: the Brave Search API returned an invalid response.",
                     self.name,
                 )
                 raise SmarterImageSearchRequestError("the Brave Search API returned an invalid response.") from e
@@ -839,8 +833,7 @@ class ImageSearchPlugin(PluginBase):
             for image, content_type in zip(batch, content_types):
                 if content_type is None:
                     logger.debug(
-                        "%s.validated_urls() %s is not available, or is not an image.",
-                        self.formatted_class_name,
+                        "%s is not available, or is not an image.",
                         image.url,
                     )
                     continue
@@ -925,7 +918,7 @@ class ImageSearchPlugin(PluginBase):
                 function_args = {}
             query = function_args.get("query")
             if not isinstance(query, str) or not query.strip():
-                logger.warning("%s.tool_call_fetch_plugin_response() query is missing.", self.formatted_class_name)
+                logger.warning("query is missing.")
                 plugin_request.failed(error="the query is missing.")
                 return []
 

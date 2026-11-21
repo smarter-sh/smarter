@@ -47,8 +47,7 @@ from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.typing import required
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 EXAMPLE_KINDS_PER_ACCOUNT = [
     SAMKinds.STATIC_PLUGIN.value,
@@ -176,8 +175,7 @@ class Command(SmarterCommand):
             # one example that fails, e.g. for a Secret that this platform has not set, must not prevent
             # the rest of the account's initialization.
             logger.error(
-                "%s.initialize_account() load_from_github %s failed for account %s: %s",
-                logger_prefix,
+                "load_from_github %s failed for account %s: %s",
                 EXAMPLE_MANIFESTS_REPOSITORY_URL,
                 account_number,
                 e,
@@ -203,8 +201,7 @@ class Command(SmarterCommand):
         except (CommandError, SystemExit) as e:
             # a Stackademy resource that fails must not prevent the rest of the account's initialization.
             logger.error(
-                "%s.initialize_account() load_from_github %s failed for account %s: %s",
-                logger_prefix,
+                "load_from_github %s failed for account %s: %s",
                 STACKADEMY_REPOSITORY_URL,
                 account_number,
                 e,

@@ -72,8 +72,7 @@ from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 MANIFEST_EXTENSIONS = (".yaml", ".yml", TEMPLATE_EXTENSION)
 """The extensions of the files that may hold a manifest.
@@ -252,7 +251,7 @@ class Command(SmarterCommand):
         result = subprocess.call(["git", "clone", "--depth", "1", "--quiet", self.url, local_path])
         if result != 0:
             raise subprocess.CalledProcessError(returncode=result, cmd=f"git clone {self.url} {local_path}")
-        logger.debug("%s.clone_repo() cloned %s to %s", logger_prefix, self.url, local_path)
+        logger.debug("cloned %s to %s", self.url, local_path)
 
     def head_commit(self, local_path: str) -> Optional[str]:
         """
@@ -272,7 +271,7 @@ class Command(SmarterCommand):
                 timeout=30,
             )
         except (OSError, subprocess.SubprocessError) as e:
-            logger.warning("%s.head_commit() could not read the commit of %s: %s", logger_prefix, self.url, e)
+            logger.warning("could not read the commit of %s: %s", self.url, e)
             return None
         return result.stdout.strip() or None
 
@@ -315,7 +314,7 @@ class Command(SmarterCommand):
         try:
             annotations = normalize_annotations(metadata.get("annotations"))
         except SmarterAnnotationError as e:
-            logger.debug("%s.add_source_annotations() left %s as it is: %s", logger_prefix, path, e)
+            logger.debug("left %s as it is: %s", path, e)
             return manifest
         annotations.update(self.source_annotations(path))
         metadata["annotations"] = annotations
@@ -473,10 +472,10 @@ class Command(SmarterCommand):
                 )
         except SAMBrokerErrorNotFound as exc:
             if not self.skip_missing_references:
-                logger.error("%s.apply() failed to apply %s: %s", logger_prefix, filespec, exc)
+                logger.error("failed to apply %s: %s", filespec, exc)
                 return f"{os.path.basename(filespec)}: {type(exc).__name__}: {exc}"
             # DEBUG, because the command's output below already says so, at the same moment.
-            logger.debug("%s.apply() skipped %s: %s", logger_prefix, filespec, exc)
+            logger.debug("skipped %s: %s", filespec, exc)
             self.skipped.add(filespec)
             self.stdout.write(
                 self.style.WARNING(
@@ -488,7 +487,7 @@ class Command(SmarterCommand):
         # SystemExit: SmarterCommand.handle_completed_failure() exits when it is given an exception.
         # pylint: disable=broad-except
         except (Exception, SystemExit) as exc:
-            logger.error("%s.apply() failed to apply %s: %s", logger_prefix, filespec, exc)
+            logger.error("failed to apply %s: %s", filespec, exc)
             return f"{os.path.basename(filespec)}: {type(exc).__name__}: {exc}"
         if self.verbose:
             self.stdout.write(f"Applied {filespec}. {output.getvalue()}")
@@ -801,7 +800,9 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=str(e))
             raise
         logger.debug(
-            "%s.handle() applying the manifests of %s as %s.", logger_prefix, self.url, self.user_profile.user.username
+            "applying the manifests of %s as %s.",
+            self.url,
+            self.user_profile.user.username,
         )
 
         local_path = tempfile.mkdtemp(prefix="load_from_github-")

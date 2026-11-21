@@ -34,7 +34,6 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.signals import broker_ready
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -58,7 +57,6 @@ from smarter.lib.typing import SmarterDictType, required
 from . import PluginSerializer, SAMPluginBrokerError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = SmarterFormattedText.text(__name__) + ".SAMPluginBaseBroker"
 
 
 class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
@@ -101,8 +99,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         has_source = has_data or bool(self.manifest) or bool(self.plugin)
         if not has_source:
             logger.debug(
-                "%s.init_manifest_from_data() No manifest data nor existing Plugin provided for %s broker.",
-                self.formatted_class_name,
+                "No manifest data nor existing Plugin provided for %s broker.",
                 self.kind,
             )
             return
@@ -111,8 +108,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         manifest = manifest_class.model_validate(self.manifest_sections)
         self._manifest = manifest
         logger.debug(
-            "%s.init_manifest_from_data() initialized manifest from manifest data for %s %s",
-            self.formatted_class_name,
+            "initialized manifest from manifest data for %s %s",
             self.kind,
             manifest.metadata.name,
         )
@@ -181,15 +177,13 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
         if not self.name:
             logger.debug(
-                "%s.orm_instance() - no name provided for %s, cannot retrieve ORM instance",
-                self.formatted_class_name,
+                "no name provided for %s, cannot retrieve ORM instance",
                 self.kind,
             )
             return None
         if not self.user_profile:
             logger.debug(
-                "%s.orm_instance() - no user_profile provided for %s, cannot retrieve ORM instance",
-                self.formatted_class_name,
+                "no user_profile provided for %s, cannot retrieve ORM instance",
                 self.kind,
             )
             return None
@@ -197,8 +191,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         try:
             # first try to get the PluginDataBase instance for the name & authenticated user_profile
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve %s for %s owned by %s",
-                self.formatted_class_name,
+                "attempting to retrieve %s for %s owned by %s",
                 PluginDataBase.__name__,
                 self.name,
                 self.user_profile,
@@ -207,8 +200,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 self._orm_instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
             if self._orm_instance:
                 logger.debug(
-                    "%s.orm_instance() - retrieved %s instance: %s for %s owned by %s",
-                    self.formatted_class_name,
+                    "retrieved %s instance: %s for %s owned by %s",
                     PluginDataBase.__name__,
                     serializers.serialize("json", [self._orm_instance]),  # type: ignore
                     self.name,
@@ -216,8 +208,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 )
             else:
                 logger.debug(
-                    "%s.orm_instance() - no %s instance found for %s owned by %s",
-                    self.formatted_class_name,
+                    "no %s instance found for %s owned by %s",
                     PluginDataBase.__name__,
                     self.name,
                     self.user_profile,
@@ -225,20 +216,17 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             if self._orm_instance:
                 self._orm_meta_instance = self._orm_instance.plugin
                 logger.debug(
-                    "%s.orm_instance() - retrieved meta instance %s",
-                    self.formatted_class_name,
+                    "retrieved meta instance %s",
                     self._orm_meta_instance,
                 )
                 self._plugin_meta = self._orm_meta_instance  # type: ignore
                 logger.debug(
-                    "%s.orm_instance() - set plugin_meta from self._orm_meta_instance %s",
-                    self.formatted_class_name,
+                    "set plugin_meta from self._orm_meta_instance %s",
                     self._plugin_meta,
                 )
             else:
                 logger.debug(
-                    "%s.orm_instance() - no meta instance found for %s",
-                    self.formatted_class_name,
+                    "no meta instance found for %s",
                     self.name,
                 )
 
@@ -249,8 +237,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             account_admin_user_profile = UserProfile.get_cached_object(user=account_admin_user)  # type: ignore
             try:
                 logger.debug(
-                    "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
-                    self.formatted_class_name,
+                    "attempting to retrieve %s for %s owned by %s.",
                     self.ORMModelClass.__name__,
                     self.name,
                     account_admin_user_profile,
@@ -258,8 +245,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 plugin_meta = self.plugin_meta_queryset().get(user_profile=account_admin_user_profile, name=self.name)
                 self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                 logger.debug(
-                    "%s.orm_instance() - retrieved %s for %s owned by %s",
-                    self.formatted_class_name,
+                    "retrieved %s for %s owned by %s",
                     PluginDataBase.__name__,
                     self.name,
                     account_admin_user_profile,
@@ -269,8 +255,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 smarter_admin_user_profile = smarter_cached_objects.smarter_admin_user_profile
                 try:
                     logger.debug(
-                        "%s.orm_instance() attempting to retrieve %s for %s owned by %s.",
-                        self.formatted_class_name,
+                        "attempting to retrieve %s for %s owned by %s.",
                         self.ORMModelClass.__name__,
                         self.name,
                         smarter_admin_user_profile,
@@ -280,16 +265,14 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                     )
                     self._orm_instance = PluginDataBase.objects.get(plugin=plugin_meta)
                     logger.debug(
-                        "%s.orm_instance() - retrieved %s for %s owned by %s",
-                        self.formatted_class_name,
+                        "retrieved %s for %s owned by %s",
                         PluginDataBase.__name__,
                         self.name,
                         smarter_admin_user_profile,
                     )
                 except (PluginDataBase.DoesNotExist, PluginMeta.DoesNotExist):
                     logger.warning(
-                        "%s.orm_instance() - %s does not exist for %s owned by %s",
-                        self.formatted_class_name,
+                        "%s does not exist for %s owned by %s",
                         PluginDataBase.__name__,
                         self.name,
                         self.user_profile,
@@ -298,8 +281,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
-                        "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
-                        self.formatted_class_name,
+                        "unexpected error retrieving %s for %s owned by %s: %s",
                         PluginDataBase.__name__,
                         self.name,
                         smarter_admin_user_profile,
@@ -309,8 +291,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    "%s.orm_instance() - unexpected error retrieving %s for %s owned by %s: %s",
-                    self.formatted_class_name,
+                    "unexpected error retrieving %s for %s owned by %s: %s",
                     PluginDataBase.__name__,
                     self.name,
                     account_admin_user_profile,
@@ -321,8 +302,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.orm_instance() - error retrieving %s for %s owned by %s: %s",
-                self.formatted_class_name,
+                "error retrieving %s for %s owned by %s: %s",
                 PluginDataBase.__name__,
                 self.name,
                 self.user_profile,
@@ -348,12 +328,11 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         """
         retval = super().ready
         if not retval:
-            logger.debug("%s.ready() AbstractBroker is not ready for %s", logger_prefix, self.kind)
+            logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
         retval = bool(self.manifest) or bool(self.plugin) or bool(self.orm_meta_instance)
         logger.debug(
-            "%s.ready() manifest or orm presence indicates ready=%s for %s",
-            logger_prefix,
+            "manifest or orm presence indicates ready=%s for %s",
             retval,
             self.kind,
         )
@@ -434,15 +413,13 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         self._plugin = controller.obj
         if isinstance(self._plugin, PluginBase):
             logger.debug(
-                "%s.plugin() - resolved plugin=%s, user_profile=%s",
-                logger_prefix,
+                "resolved plugin=%s, user_profile=%s",
                 self._plugin,
                 self.user_profile,
             )
         else:
             logger.warning(
-                "%s.plugin() - could not resolve plugin. manifest=%s, plugin_meta=%s, name=%s, user_profile=%s.",
-                logger_prefix,
+                "could not resolve plugin. manifest=%s, plugin_meta=%s, name=%s, user_profile=%s.",
                 manifest,
                 self._plugin_meta,
                 self.name,
@@ -573,8 +550,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         self._plugin_meta = self.plugin_meta_queryset().filter(name=self.name).with_read_permission_for(self.user).first()  # type: ignore
         if self._plugin_meta:
             logger.debug(
-                "%s.plugin_meta() %s found for %s",
-                self.formatted_class_name,
+                "%s found for %s",
                 self._plugin_meta.name,
                 self._plugin_meta.user_profile,
             )
@@ -582,8 +558,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
         if self._manifest:
             logger.warning(
-                "%s.plugin_meta() - created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
-                logger_prefix,
+                "created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
                 self.name,
                 self.user_profile,
             )
@@ -602,8 +577,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         :param value: The PluginMeta, or None to only reset the cached state.
         """
         logger.debug(
-            "%s.plugin_meta() setter called - setting PluginMeta to %s",
-            logger_prefix,
+            "setter called - setting PluginMeta to %s",
             value,
         )
         self._plugin_meta = value
@@ -731,8 +705,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             print(metadata.name, metadata.description)
         """
         logger.debug(
-            "%s.plugin_metadata_orm2pydantic() called for kind=%s, name=%s user=%s",
-            logger_prefix,
+            "called for kind=%s, name=%s user=%s",
             self.kind,
             self.name,
             self.user_profile,
@@ -761,8 +734,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                     command=command,
                 )
             logger.debug(
-                "%s.describe() PluginMeta %s %s",
-                logger_prefix,
+                "PluginMeta %s %s",
                 self.kind,
                 metadata_dict,
             )
@@ -770,7 +742,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{logger_prefix} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                f"{self.kind} PluginMeta does not exist for {self.plugin.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -813,8 +785,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             print(data["parameters"])
         """
         logger.debug(
-            "%s.plugin_data_orm2pydantic() called for kind=%s, name=%s user=%s",
-            logger_prefix,
+            "called for kind=%s, name=%s user=%s",
             self.kind,
             self.name,
             self.user_profile,
@@ -933,8 +904,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             return None
         try:
             logger.debug(
-                "%s.plugin_prompt_orm() called for kind=%s, name=%s user=%s",
-                logger_prefix,
+                "called for kind=%s, name=%s user=%s",
                 self.kind,
                 self.name,
                 self.user_profile,
@@ -976,8 +946,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             print(prompt.template, prompt.variables)
         """
         logger.debug(
-            "%s.plugin_prompt_orm2pydantic() called for kind=%s, name=%s user=%s",
-            logger_prefix,
+            "called for kind=%s, name=%s user=%s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1048,8 +1017,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         """
         command = SmarterJournalCliCommands("describe")
         logger.debug(
-            "%s.plugin_selector_orm2pydantic() called for kind=%s, name=%s user=%s",
-            logger_prefix,
+            "called for kind=%s, name=%s user=%s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1079,8 +1047,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
                     command=command,
                 )
             logger.debug(
-                "%s.describe() PluginSelector %s %s",
-                logger_prefix,
+                "PluginSelector %s %s",
                 self.kind,
                 plugin_selector_dict,
             )
@@ -1088,7 +1055,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{logger_prefix} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                f"{self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -1097,7 +1064,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
     def cache_invalidations(self) -> None:
         """Invalidate relevant cache entries for the plugin metadata and data."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         if self.plugin_meta:
             PluginMeta.get_cached_object(invalidate=True, pk=self.plugin_meta.id)  # type: ignore
         return super().cache_invalidations()
@@ -1133,7 +1100,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             if response:
                 print(response.status, response.data)
         """
-        logger.debug("%s.apply() called %s with args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+        logger.debug("called %s with args: %s, kwargs: %s", request, args, kwargs)
 
         if request.user != self.user:
             raise SAMBrokerError(
@@ -1193,7 +1160,9 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             plugins = self.plugin_meta_queryset().filter(user_profile__account=self.account)
         plugins = self.filter_by_annotation_selector(plugins, kwargs)
         logger.debug(
-            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, plugins.count(), self.account
+            "found %s SqlPlugins for account %s",
+            plugins.count(),
+            self.account,
         )
 
         model_titles = self.get_model_titles(serializer=PluginSerializer())
@@ -1207,8 +1176,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
             except Exception as e:
                 logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
+                    "failed to serialize %s %s",
                     self.kind,
                     plugin.name,
                     exc_info=True,

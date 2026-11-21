@@ -23,7 +23,7 @@ from smarter.lib.journal.enum import (
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
@@ -49,7 +49,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         try:
             return infrastructure.provider.get_kubernetes_cluster_info()
         except SmarterInfrastructureError as e:
-            logger.warning("%s.get_kubernetes_info() %s", self.formatted_class_name, e)
+            logger.warning("%s", e)
             return {"error": str(e)}
 
     def get_redis_info(self):
@@ -59,7 +59,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         :return: Redis server information
         :rtype: dict
         """
-        logger.debug("%s.get_redis_info() called", self.formatted_class_name)
+        logger.debug("called")
 
         client = get_redis_connection("default")
         info = client.info()
@@ -74,7 +74,7 @@ class ApiV1CliStatusApiView(CliBaseApiView):
     def status(self):
         """Get status information about the Smarter platform."""
 
-        logger.debug("%s.status() called", self.formatted_class_name)
+        logger.debug("called")
 
         status = CliApiStatus(
             infrastructures=CliApiStatusInfrastructures(

@@ -21,7 +21,7 @@ from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestAccountMixin(SmarterTestBase):
@@ -36,19 +36,17 @@ class TestAccountMixin(SmarterTestBase):
     other_account: Account
     other_user_profile: UserProfile
 
-    test_account_mixin_logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccountMixin()"
-
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_account_mixin_logger_prefix)
+        logger.debug("called.")
         cls.admin_user, cls.account, cls.admin_user_profile = admin_user_factory()
         cls.mortal_user, cls.account, cls.user_profile = mortal_user_factory(account=cls.account)
         cls.other_user, cls.other_account, cls.other_user_profile = mortal_user_factory()
 
     @classmethod
     def tearDownClass(cls) -> None:
-        logger.debug("%s.tearDownClass()", cls.test_account_mixin_logger_prefix)
+        logger.debug("called.")
         instance = cls()
         # tear down the user, account, and user_profile
         try:

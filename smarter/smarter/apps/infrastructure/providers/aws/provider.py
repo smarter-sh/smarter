@@ -162,7 +162,9 @@ class AWSProvider(CloudProvider):
         :returns: True if it was written, False if AWS is not ready or it could not be written.
         """
         if not self.ready:
-            logger.warning("%s AWS is not ready, so the kubeconfig cannot be updated.", self.formatted_class_name)
+            logger.warning(
+                "AWS is not ready, so the kubeconfig cannot be updated.",
+            )
             return False
         return self.eks.update_kubeconfig()
 
@@ -180,7 +182,7 @@ class AWSProvider(CloudProvider):
         # pylint: disable=broad-except
         except Exception as e:
             # kubectl falls back to the kubeconfig's aws eks get-token, which is slower but works.
-            logger.warning("%s could not create an EKS token: %s", self.formatted_class_name, e)
+            logger.warning("could not create an EKS token: %s", e)
             return None
 
     def get_kubernetes_cluster_info(self) -> SmarterDictType:
@@ -225,7 +227,10 @@ class AWSProvider(CloudProvider):
             with self.operation("get_kubernetes_cluster_resources"):
                 resources = self.eks.get_cluster_resources()
         except SmarterInfrastructureError as e:
-            logger.warning("%s could not describe the EKS cluster's resources: %s", self.formatted_class_name, e)
+            logger.warning(
+                "could not describe the EKS cluster's resources: %s",
+                e,
+            )
             return {}
         sources = (
             (KubernetesResourceTypes.CLUSTER, "cluster", True),

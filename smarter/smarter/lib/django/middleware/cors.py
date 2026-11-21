@@ -57,14 +57,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CORS):
     logger.debug(
-        "%s is %s",
-        logging.SmarterFormattedText.text(__name__) + ".SmarterCorsMiddleware",
+        "is %s",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
-        "%s is %s. Enable with Django waffle in the admin console.",
-        logging.SmarterFormattedText.text(__name__) + ".SmarterCorsMiddleware",
+        "is %s. Enable with Django waffle in the admin console.",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 

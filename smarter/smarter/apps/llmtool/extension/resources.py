@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.models import Extension
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 FAKE_REQUEST_PATH = "/api/v1/cli/apply/"
 
@@ -84,7 +83,7 @@ def apply_extension_manifest(
         user_profile=user_profile,
         defaults={"version": version, "managed": managed},
     )
-    logger.info("%s.apply_extension_manifest() %s applied %s %s", logger_prefix, extension.slug, kind, name)
+    logger.info("%s applied %s %s", extension.slug, kind, name)
     return kind, name
 
 
@@ -111,13 +110,17 @@ def delete_extension_resource(extension: "Extension", kind: str, name: str, user
         try:
             broker = broker_class(request=request, name=name, kind=kind, user_profile=user_profile)
             broker.delete(request=request)
-            logger.info("%s.delete_extension_resource() %s deleted %s %s", logger_prefix, extension.slug, kind, name)
+            logger.info(
+                "%s deleted %s %s",
+                extension.slug,
+                kind,
+                name,
+            )
         # a broker raises if the resource is already gone, or cannot be deleted.
         # pylint: disable=broad-exception-caught
         except Exception as e:
             logger.warning(
-                "%s.delete_extension_resource() %s could not delete %s %s: %s",
-                logger_prefix,
+                "%s could not delete %s %s: %s",
                 extension.slug,
                 kind,
                 name,

@@ -92,8 +92,7 @@ class MCPClientListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not mcpclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. mcpclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. mcpclient_id: %s, new_name: %s",
                 mcpclient_id,
                 new_name,
             )
@@ -102,9 +101,7 @@ class MCPClientListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             mcpclient = MCPClient.objects.with_read_permission_for(self.user_profile.user).get(id=mcpclient_id)  # type: ignore
         except MCPClient.DoesNotExist:
-            logger.warning(
-                "%s.post() MCPClient with id %s not found for cloning.", self.formatted_class_name, mcpclient_id
-            )
+            logger.warning("MCPClient with id %s not found for cloning.", mcpclient_id)
             return JsonResponse({"error": f"MCPClient with id {mcpclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -115,8 +112,7 @@ class MCPClientListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning MCPClient with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning MCPClient with id %s: %s",
                 mcpclient_id,
                 e,
             )
@@ -125,8 +121,7 @@ class MCPClientListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning MCPClient with id %s",
-                self.formatted_class_name,
+                "Error cloning MCPClient with id %s",
                 mcpclient_id,
                 exc_info=True,
             )
@@ -166,15 +161,13 @@ class MCPClientListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         mcpclient_id = kwargs.get("mcpclient_id")
         if not mcpclient_id:
-            logger.warning("%s.post() Missing required parameter mcpclient_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter mcpclient_id for deletion.")
             return JsonResponse({"error": "mcpclient_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             mcpclient = MCPClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=mcpclient_id)  # type: ignore
         except MCPClient.DoesNotExist:
-            logger.warning(
-                "%s.post() MCPClient with id %s not found for deletion.", self.formatted_class_name, mcpclient_id
-            )
+            logger.warning("MCPClient with id %s not found for deletion.", mcpclient_id)
             return JsonResponse({"error": f"MCPClient with id {mcpclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -185,8 +178,7 @@ class MCPClientListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting MCPClient with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting MCPClient with id %s: %s",
                 mcpclient_id,
                 e,
             )
@@ -195,8 +187,7 @@ class MCPClientListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting MCPClient with id %s",
-                self.formatted_class_name,
+                "Error deleting MCPClient with id %s",
                 mcpclient_id,
                 exc_info=True,
             )
@@ -239,8 +230,7 @@ class MCPClientListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not mcpclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. mcpclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. mcpclient_id: %s, new_name: %s",
                 mcpclient_id,
                 new_name,
             )
@@ -249,9 +239,7 @@ class MCPClientListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             mcpclient = MCPClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=mcpclient_id)  # type: ignore
         except MCPClient.DoesNotExist:
-            logger.warning(
-                "%s.post() MCPClient with id %s not found for renaming.", self.formatted_class_name, mcpclient_id
-            )
+            logger.warning("MCPClient with id %s not found for renaming.", mcpclient_id)
             return JsonResponse({"error": f"MCPClient with id {mcpclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -262,8 +250,7 @@ class MCPClientListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming MCPClient with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming MCPClient with id %s: %s",
                 mcpclient_id,
                 e,
             )
@@ -272,8 +259,7 @@ class MCPClientListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming MCPClient with id %s",
-                self.formatted_class_name,
+                "Error renaming MCPClient with id %s",
                 mcpclient_id,
                 exc_info=True,
             )

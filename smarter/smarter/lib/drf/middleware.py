@@ -57,7 +57,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from smarter.apps.account.models import User
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
@@ -80,18 +79,15 @@ from .token_authentication import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
-logger_prefix = SmarterFormattedText.text(__name__)
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_SMARTER_TOKEN_AUTH):
     logger.debug(
-        "%s.SmarterTokenAuthenticationMiddleware is %s",
-        logger_prefix,
+        "is %s",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
-        "%s.SmarterTokenAuthenticationMiddleware is %s. Enable with Django waffle in the admin console.",
-        logger_prefix,
+        "is %s. Enable with Django waffle in the admin console.",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -124,7 +120,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         if self.deserves_amnesty(request.path):
             return super().__call__(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
 
         return self.process_request(request)
 
@@ -135,7 +131,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         :param request: The request.
         :returns: The response.
         """
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
         # process_request() returns get_response()'s coroutine, in async mode, which must be awaited.
         response = await sync_to_async(self.process_request)(request)
         if inspect.isawaitable(response):
@@ -162,7 +158,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         request = self.ensure_request_user(request)
 
         if getattr(request, "auth", None) is not None:
-            logger.debug("%s.process_request() request already authenticated", self.formatted_class_name)
+            logger.debug("request already authenticated")
             return self.get_response(request)
 
         # The header is read first: it is the cheapest check, and most requests (console pages,
@@ -172,17 +168,17 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         token = self.extract_token(authorization_header)
 
         if not token:
-            logger.debug("%s.process_request() no token authentication detected", self.formatted_class_name)
+            logger.debug("no token authentication detected")
             return self.get_response(request)
 
         url = self.smarter_build_absolute_uri(request)
         if not isinstance(url, str):
             raise ValueError("Failed to build request URL.")
 
-        logger.debug("%s.process_request() processing request: %s", self.formatted_class_name, url)
+        logger.debug("processing request: %s", url)
 
         if not self.is_api_request(url):
-            logger.debug("%s.process_request() skipping non-api request", self.formatted_class_name)
+            logger.debug("skipping non-api request")
             return self.get_response(request)
 
         masked_token = mask_string(string=token)
@@ -205,7 +201,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
                 token=masked_token,
             )
 
-            logger.debug("%s.process_request() authenticated user %s", self.formatted_class_name, request.user)
+            logger.debug("authenticated user %s", request.user)
 
         except AuthenticationFailed as auth_failed:
 
@@ -215,7 +211,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
                 exc=auth_failed,
             )
 
-        logger.debug("%s.process_request() authentication completed", self.formatted_class_name)
+        logger.debug("authentication completed")
 
         return self.get_response(request)
 
@@ -289,8 +285,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             return None
 
         logger.debug(
-            "%s.extract_token() detected token authentication token=%s",
-            self.formatted_class_name,
+            "detected token authentication token=%s",
             mask_string(token),
         )
 
@@ -342,8 +337,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         :raises AuthenticationFailed: If the token is invalid or has no user.
         """
         logger.debug(
-            "%s.SmarterTokenAuthenticationMiddleware.authenticate_request() called",
-            logger_prefix,
+            "called",
         )
 
         # A middleware sees Django's HttpRequest, which declares no auth, and which DRF's
@@ -391,8 +385,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
             except SmarterAuthToken.DoesNotExist:
 
                 logger.warning(
-                    "%s.validate_token_lifetime() token digest not found",
-                    self.formatted_class_name,
+                    "token digest not found",
                 )
 
                 return
@@ -402,8 +395,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         if token.created < timezone.now() - max_age:
 
             logger.warning(
-                "%s.validate_token_lifetime() token exceeded maximum lifetime user=%s max_days=%d",
-                self.formatted_class_name,
+                "token exceeded maximum lifetime user=%s max_days=%d",
                 user,
                 smarter_settings.smarter_api_key_max_lifetime_days,
             )
@@ -431,8 +423,7 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
         )
 
         logger.warning(
-            "%s.handle_authentication_failure() authentication failed token=%s",
-            self.formatted_class_name,
+            "authentication failed token=%s",
             token,
         )
 

@@ -6,8 +6,7 @@ from django.dispatch import receiver
 from smarter.apps.account.signals import cache_invalidate
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @receiver(cache_invalidate)
@@ -17,8 +16,7 @@ def cache_invalidation_receiver(sender, *args, **kwargs):
 
     user_profile = kwargs.get("user_profile")
     logger.debug(
-        "%s.cache_invalidation_receiver() received cache_invalidate from %s for user profile %s",
-        logger_prefix,
+        "received cache_invalidate from %s for user profile %s",
         getattr(sender, "__name__", sender),
         user_profile.id if user_profile else None,
     )

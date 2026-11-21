@@ -39,6 +39,26 @@ class PlatformSettings(BaseModel):
     :raises SmarterConfigurationError: If the value is not an http or https url.
     """
 
+    user_settings_file: str = Field(
+        settings_defaults.USER_SETTINGS_FILE,
+        description="The path of the YAML file of the user's own Django settings, which supersede Smarter's.",
+        examples=["/home/smarter_user/user-settings/settings.yaml"],
+        title="User Settings File",
+    )
+    """
+    The path of the user settings file: a YAML mapping of Django setting names to values, which supersede.
+
+    every value in ``smarter.settings``.
+
+    :mod:`smarter.settings.user` reads the file, from this same environment variable, before
+    ``smarter_settings`` is used for anything else. A missing file is not an error: there are no user
+    settings. Locally, Docker Compose mounts ``user-settings/`` from the repository's root here; the Helm
+    chart mounts the file that it writes from ``djangoSettings``.
+
+    :type: str
+    :default: Value from ``settings_defaults.USER_SETTINGS_FILE``
+    """
+
     @before_field_validator("loki_url")
     def validate_loki_url(cls, v: Optional[str]) -> str:
         """Validates the 'loki_url' field: an http or https url without a trailing slash, or empty.
@@ -72,24 +92,6 @@ class PlatformSettings(BaseModel):
 
     :type: str
     :default: Value from ``DEFAULT_MISSING_VALUE``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
-    django_default_file_storage: str = Field(
-        settings_defaults.DJANGO_DEFAULT_FILE_STORAGE,
-        description="The default Django file storage backend.",
-        examples=["storages.backends.s3boto3.S3Boto3Storage", "django.core.files.storage.FileSystemStorage"],
-        title="Django Default File Storage Backend",
-    )
-    """
-    The default Django file storage backend.
-
-    This setting determines where Django will store uploaded files by default.
-    It can be configured to use different storage backends, such as Amazon S3 or the local file system,
-    depending on the needs of the application and its deployment environment.
-
-    :type: str
-    :default: Value from ``settings_defaults.DJANGO_DEFAULT_FILE_STORAGE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 

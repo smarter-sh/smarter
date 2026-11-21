@@ -38,7 +38,6 @@ from smarter.lib.typing import SmarterDictType
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.PROMPT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CACHED_RESPONSE_ID_PREFIX = "prompt_cache_hit_"
 """The prefix of a cached answer's id, so that the conversation's history says that it was cached."""
@@ -168,10 +167,10 @@ def get_cached_prompt_response(key: PromptCacheKey) -> Optional[ChatCompletion]:
     try:
         data = cached_prompt_response_function(miss)(key)
     except _PromptResponseNotCached:
-        logger.debug("%s.get_cached_prompt_response() miss for LLMClient %s", logger_prefix, key.llmclient_id)
+        logger.debug("miss for LLMClient %s", key.llmclient_id)
         return None
     response = ChatCompletion.model_validate(data)
-    logger.info("%s.get_cached_prompt_response() hit for LLMClient %s", logger_prefix, key.llmclient_id)
+    logger.info("hit for LLMClient %s", key.llmclient_id)
     return response.model_copy(
         update={
             "id": f"{CACHED_RESPONSE_ID_PREFIX}{response.id}",
@@ -197,7 +196,7 @@ def cache_prompt_response(key: PromptCacheKey, response: ChatCompletion) -> None
     function = cached_prompt_response_function(lambda: data)
     function.invalidate(key)  # type: ignore[attr-defined]
     function(key)
-    logger.debug("%s.cache_prompt_response() cached the answer for LLMClient %s", logger_prefix, key.llmclient_id)
+    logger.debug("cached the answer for LLMClient %s", key.llmclient_id)
 
 
 __all__ = [

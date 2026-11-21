@@ -23,7 +23,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 HOLIDAY_CACHE_TIMEOUT = 60 * 60 * 24
 """Seconds that a country's holidays of one year are cached."""
@@ -51,7 +50,7 @@ def country_holidays(country: str, year: int) -> dict[str, list[str]]:
     try:
         country_class = holidays.country_holidays(country).__class__
     except NotImplementedError:
-        logger.warning("%s.country_holidays() the holidays package doesn't support %s.", logger_prefix, country)
+        logger.warning("the holidays package doesn't support %s.", country)
         return {}
     categories = country_class.supported_categories
     with warnings.catch_warnings():
