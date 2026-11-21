@@ -1,15 +1,19 @@
 """Django admin of Smarter annotations."""
 
 from smarter.apps.dashboard.admin import (
-    SmarterStaffOnlyModelAdmin,
+    SmarterSuperUserOnlyModelAdmin,
     smarter_restricted_admin_site,
 )
 
 from .models import Annotation
 
 
-class AnnotationAdmin(SmarterStaffOnlyModelAdmin):
-    """Annotations, searchable by key and value."""
+class AnnotationAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    Annotations, searchable by key and value.
+
+    An annotation belongs to whichever resource it points at, of any account, so only superusers see them.
+    """
 
     list_display = ("key", "value", "content_type", "object_id", "updated_at")
     list_filter = ("content_type", "prefix")

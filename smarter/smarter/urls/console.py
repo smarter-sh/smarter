@@ -26,7 +26,7 @@ from smarter.apps.connection import urls as connection_urls
 from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
-    SmarterSuperUserOnlyModelAdmin,
+    smarter_auto_model_admin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
@@ -149,8 +149,9 @@ for model in models:
     try:
         # for anything that didn't pass muster, we register with
         # our own "superuser only" model configuration that will
-        # limit visibility of the model to superusers only.
-        smarter_restricted_admin_site.register(model, SmarterSuperUserOnlyModelAdmin)
+        # limit visibility of the model to superusers only, and
+        # build its list, filters and search from the model's fields.
+        smarter_restricted_admin_site.register(model, smarter_auto_model_admin(model))
     except AlreadyRegistered:
         pass
 

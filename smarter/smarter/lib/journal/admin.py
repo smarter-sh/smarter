@@ -11,7 +11,8 @@ url, method, an allowlist of its headers, and its ``body``, parsed and with its 
 The response document is the JSON body that Smarter returned.
 
 This admin is for staff only (:class:`~smarter.apps.dashboard.admin.SmarterStaffOnlyModelAdmin`),
-and is read-mostly: the documents are read-only. Its list shows each entry's who, what and when,
+and is read-mostly: the documents are read-only. A staff user sees the entries of the users of their
+own accounts; a superuser sees every entry. Its list shows each entry's who, what and when,
 without reading the documents, which are stored compressed (see :mod:`smarter.lib.journal.storage`)
 and read only when one entry is opened.
 
@@ -42,8 +43,11 @@ from openai.types.chat import (
 )
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.dashboard.admin import (
     SmarterStaffOnlyModelAdmin,
+    smarter_admin_account_ids,
+    smarter_admin_user,
     smarter_restricted_admin_site,
 )
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -182,17 +186,28 @@ class SAMJournalAdmin(SmarterStaffOnlyModelAdmin):
     readonly_fields = ("created_at", "prompt", "reply", "request", "response")
     list_display = ("created_at", "user", "thing", "command", "status_code")
     raw_id_fields = ("user",)
+    search_fields = ("key", "user__username", "user__email", "thing", "command")
     ordering = ("-created_at",)
+    date_hierarchy = "created_at"
 
     def get_queryset(self, request):
         """
-        Return the entries without their documents, which are read only when one entry is shown.
+        Return the entries the user may see, without their documents, which are read only when one entry is shown.
+
+        A superuser sees every entry. A staff user sees the entries of the users of their own accounts.
 
         :param request: The admin's request.
         :returns: The entries.
         """
         queryset = super().get_queryset(request)
-        return queryset.defer(*DOCUMENT_FIELDS)
+        queryset = queryset.defer(*DOCUMENT_FIELDS)
+        user = smarter_admin_user(request)
+        if user is None:
+            return queryset.none()
+        if user.is_superuser:
+            return queryset
+        account_users = UserProfile.objects.filter(account_id__in=smarter_admin_account_ids(user)).values("user_id")
+        return queryset.filter(user_id__in=account_users)
 
     @admin.display(description="Prompt")
     def prompt(self, obj: SAMJournal) -> str:

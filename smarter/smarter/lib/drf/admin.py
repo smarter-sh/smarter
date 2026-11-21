@@ -20,6 +20,8 @@ class SmarterAuthTokenAdmin(SmarterStaffOnlyModelAdmin):
     class Meta:
         verbose_name = "CLI API Keys"
 
+    search_fields = ("name", "description", "token_key", "user__username")
+
     readonly_fields = (
         "created_at",
         "updated_at",
