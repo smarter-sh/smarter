@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.logging import getLogger
+from smarter.lib.logging import getSmarterLogger
 
 from .base_aws import *
 
-logger = getLogger(__name__)
+logger = getSmarterLogger(__name__)
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")

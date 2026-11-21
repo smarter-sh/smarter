@@ -45,7 +45,7 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
 
     def validate_response(self, response: SmarterDictType) -> None:
 
-        logger.debug("validate_response(): %s", json.dumps(response))
+        logger.debug("%s", json.dumps(response))
 
         # validate the response and status are both good
         self.assertIsInstance(response, dict)

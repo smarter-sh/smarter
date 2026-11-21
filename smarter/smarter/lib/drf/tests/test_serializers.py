@@ -1,4 +1,4 @@
-"""Test SmarterAuthTokenMiniSerializer class"""
+"""Test SmarterAuthTokenMiniSerializer class."""
 
 from datetime import datetime, timedelta, timezone
 from logging import getLogger
@@ -23,7 +23,7 @@ class TestSmarterAuthTokenMiniSerializer(SmarterTestBase):
     def setUp(self):
         super().setUp()
         self.admin_user, self.account, self.user_profile = admin_user_factory()
-        logger.debug("%s Setting up test class with name: %s", self.formatted_class_name, self.name)
+        logger.debug("Setting up test class with name: %s", self.name)
         self.auth_token, self.token_key = SmarterAuthToken.objects.create(
             user_profile=self.user_profile,
             name=self.admin_user.username,

@@ -68,7 +68,6 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.cache.tool_results import is_error_result
 from smarter.lib.django import waffle
@@ -384,10 +383,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         try:
             return [message for message in self.messages if message[_InternalKeys.SMARTER_IS_NEW]]
         except KeyError:
-            prefix = SmarterFormattedText.text(f"{self.formatted_class_name} new_messages()")
-            logger.error(
-                "%s KeyError: '%s' key not found in message: %s", prefix, _InternalKeys.SMARTER_IS_NEW, self.messages
-            )
+            logger.error("KeyError: '%s' key not found in a message", _InternalKeys.SMARTER_IS_NEW)
         return self.messages
 
     def prep_first_request(self):
@@ -1453,8 +1449,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         sends_temperature = _InternalKeys.TEMPERATURE_KEY in completions_kwargs
         if parameter == _InternalKeys.TEMPERATURE_KEY and sends_temperature:
             base_logger.warning(
-                "%s - model %s rejected temperature=%s. Retrying with its default temperature.",
-                SmarterFormattedText.text("learn_from_rejection()"),
+                "model %s rejected temperature=%s. Retrying with its default temperature.",
                 model,
                 completions_kwargs[_InternalKeys.TEMPERATURE_KEY],
             )
@@ -1472,8 +1467,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if supported is None:
             return False
         base_logger.warning(
-            "%s - model %s rejected reasoning_effort=%s. It supports: %s.",
-            SmarterFormattedText.text("learn_from_rejection()"),
+            "model %s rejected reasoning_effort=%s. It supports: %s.",
             model,
             reasoning_effort,
             supported,
@@ -1562,8 +1556,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if supported is not None and REASONING_EFFORT_NONE not in supported:
             return self.retry_without_tools(completions_kwargs, offered_tools)
         base_logger.warning(
-            "%s - model %s rejected function tools at reasoning_effort=%s. Retrying with reasoning_effort='%s'.",
-            SmarterFormattedText.text("retry_with_no_reasoning()"),
+            "model %s rejected function tools at reasoning_effort=%s. Retrying with reasoning_effort='%s'.",
             model,
             rejected_effort,
             REASONING_EFFORT_NONE,
@@ -1599,8 +1592,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :raises openai.BadRequestError: When the provider rejects the request without tools too.
         """
         base_logger.warning(
-            "%s - model %s can't use function tools in /v1/chat/completions. Sending the request without its tools.",
-            SmarterFormattedText.text("retry_without_tools()"),
+            "model %s can't use function tools in /v1/chat/completions. Sending the request without its tools.",
             self.model,
         )
         model = str(self.model)
@@ -1799,8 +1791,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return
         warnings.add(content)
         base_logger.warning(
-            "%s - %s",
-            SmarterFormattedText.text("append_model_warning()"),
+            "%s",
             content,
         )
         self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
@@ -1989,8 +1980,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             completions_kwargs = self.prune_empty_values(completions_kwargs)
 
             logger.debug(
-                "%s - openai.chat.completions.create() completions_kwargs: %s",
-                SmarterFormattedText.text("handler()"),
+                "openai.chat.completions.create() completions_kwargs: %s",
                 completions_kwargs,
             )
 
@@ -2014,8 +2004,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if response_message.tool_calls is not None:
                 tool_calls: list[ChatCompletionMessageToolCallUnion] = response_message.tool_calls
                 logger.debug(
-                    "%s - %s tool calls detected, preparing second request",
-                    SmarterFormattedText.text("handler()"),
+                    "%s tool calls detected, preparing second request",
                     len(tool_calls),
                 )
                 self.iteration = 2
@@ -2076,8 +2065,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         tool_rounds += 1
                         self.iteration += 1
                         logger.debug(
-                            "%s - %s more tool calls in round %s",
-                            SmarterFormattedText.text("handler()"),
+                            "%s more tool calls in round %s",
                             len(tool_calls),
                             tool_rounds,
                         )

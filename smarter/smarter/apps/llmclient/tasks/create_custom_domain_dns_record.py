@@ -61,7 +61,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -133,7 +132,7 @@ def create_custom_domain_dns_record(
     try:
         custom_domain = LLMClientCustomDomain.objects.get(id=llmclient_custom_domain_id)
     except LLMClientCustomDomain.DoesNotExist as e:
-        err = f"{logger_prefix}.create_custom_domain_dns_record() - LLMClientCustomDomain {llmclient_custom_domain_id} not found. task_id: {task_id}"
+        err = f"LLMClientCustomDomain {llmclient_custom_domain_id} not found. task_id: {task_id}"
         logger.error(err)
         raise LLMClientCustomDomainNotFound(err) from e
 

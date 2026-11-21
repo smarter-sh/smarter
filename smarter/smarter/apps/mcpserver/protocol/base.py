@@ -282,12 +282,6 @@ class MCPEndpointBase(ABC):
         return f"<{self.__class__.__name__} name={self.name}>"
 
     @property
-    def formatted_class_name(self) -> str:
-        """The module, class and server name, formatted for the start of a log message."""
-        module_name = logging.SmarterFormattedText.text(__name__)
-        return f"{module_name}.{self.__class__.__name__}[{self.name}]"
-
-    @property
     @abstractmethod
     def name(self) -> str:
         """The server's name, e.g. ``smarter-project``."""

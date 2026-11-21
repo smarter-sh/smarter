@@ -21,7 +21,6 @@ KIND = SAMKinds.ACCOUNT.value
 
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestApiCliV1Account"
 
 
 class TestApiCliV1Account(ApiV1CliTestBase):
@@ -42,8 +41,7 @@ class TestApiCliV1Account(ApiV1CliTestBase):
         self.name = self.account.name
         self.query_params = urlencode({"name": self.name})
         logger.debug(
-            "%s Setup test with kwargs: %s and query_params: %s",
-            logger_prefix,
+            "Setup test with kwargs: %s and query_params: %s",
             json.dumps(self.kwargs),
             json.dumps(self.query_params),
         )

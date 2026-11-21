@@ -8,7 +8,7 @@ from smarter.apps.provider.models import Provider
 # our stuff
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestCharge(TestAccountMixin):
@@ -16,13 +16,11 @@ class TestCharge(TestAccountMixin):
 
     provider: Provider
 
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestCharge()"
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.provider = Provider.objects.create(name="Test Provider", user_profile=cls.user_profile)
-        logger.debug("%s Created provider: %s", cls.logger_prefix, cls.provider)
+        logger.debug("Created provider: %s", cls.provider)
 
     @classmethod
     def tearDownClass(cls):
@@ -30,10 +28,10 @@ class TestCharge(TestAccountMixin):
             cls.provider.delete()
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s Error deleting provider: %s", cls.logger_prefix, e)
+            logger.error("Error deleting provider: %s", e)
 
         super().tearDownClass()
-        logger.debug("%s Tear down complete.", cls.logger_prefix)
+        logger.debug("Tear down complete.")
 
     def test_crud(self):
         """Test that we can do all crud operations."""

@@ -34,7 +34,6 @@ from smarter.apps.llmtool.models import (
 )
 from smarter.apps.llmtool.plugin.base import PluginBase
 from smarter.apps.llmtool.signals import broker_ready
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -58,7 +57,6 @@ from smarter.lib.typing import SmarterDictType, required
 from . import PluginSerializer, SAMPluginBrokerError
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = SmarterFormattedText.text(__name__) + ".SAMPluginBaseBroker"
 
 
 class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
@@ -744,7 +742,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             return metadata
         except PluginMeta.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{logger_prefix} {self.kind} PluginMeta does not exist for {self.plugin.name}",
+                f"{self.kind} PluginMeta does not exist for {self.plugin.name}",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -1057,7 +1055,7 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             return plugin_selector
         except PluginSelector.DoesNotExist as e:
             raise SAMPluginBrokerError(
-                f"{logger_prefix} {self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
+                f"{self.kind} PluginSelector does not exist for {self.plugin_meta.name}",
                 thing=self.kind,
                 command=command,
             ) from e

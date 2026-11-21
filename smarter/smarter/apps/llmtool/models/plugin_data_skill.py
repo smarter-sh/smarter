@@ -327,15 +327,13 @@ class PluginDataSkill(PluginDataBase):
             try:
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s.get_cached_data_by_plugin() fetched and cached PluginDataSkill for plugin_id: %s",
-                    logging.SmarterFormattedText.text(cls.__name__),
+                    "fetched and cached PluginDataSkill for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    logging.SmarterFormattedText.text(cls.__name__),
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataSkill with plugin_id {plugin_id} does not exist.") from e

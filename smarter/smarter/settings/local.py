@@ -15,11 +15,11 @@ import sys
 from typing import TYPE_CHECKING
 
 from smarter.common.conf import smarter_settings
-from smarter.lib.logging import getLogger
+from smarter.lib.logging import getSmarterLogger
 
 from .base import *
 
-logger = getLogger(__name__)
+logger = getSmarterLogger(__name__)
 
 if smarter_settings.developer_mode:
     # dev only:

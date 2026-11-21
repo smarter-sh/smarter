@@ -10,12 +10,11 @@ from pydantic import SecretStr
 # our stuff
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.settings import Settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import INFRASTRUCTURE
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods
@@ -31,26 +30,24 @@ class TestSettings(SmarterTestBase):
     at runtime.
     """
 
-    smarter_test_base_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSettings()"
     smarter_settings: Settings
 
     @classmethod
     def setUpClass(cls):
         """Set up class by loading environment variables."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("called.")
         cls.smarter_settings = smarter_settings
 
         logger.debug(
-            "%s.setUpClass(): Testing environment %s",
-            cls.smarter_test_base_logger_prefix,
+            "Testing environment %s",
             smarter_settings.environment,
         )
 
     @classmethod
     def tearDownClass(cls) -> None:
         """Tear down the test class."""
-        logger.debug("%s.tearDownClass()", cls.smarter_test_base_logger_prefix)
+        logger.debug("called.")
         super().tearDownClass()
 
     ###########################################################################

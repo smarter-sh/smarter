@@ -39,8 +39,6 @@ logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.CONNECTION_LOGGING]
 )
 
-prefix = SmarterFormattedText.text(__name__) + "."
-
 
 # ------------------------------------------------------------------------------
 # Django model receivers.
@@ -352,8 +350,7 @@ def handle_api_connection_pre_delete(sender, instance, **kwargs):
     :param kwargs: Other keyword arguments sent with the signal.
     """
     logger.info(
-        "%s %s deleting.",
-        prefix + "ApiConnection().pre_delete()",
+        "ApiConnection %s deleting.",
         instance,
     )
 
@@ -368,8 +365,7 @@ def handle_sql_connection_pre_delete(sender, instance, **kwargs):
     :param kwargs: Other keyword arguments sent with the signal.
     """
     logger.info(
-        "%s %s deleting.",
-        prefix + "SqlConnection().pre_delete()",
+        "SqlConnection %s deleting.",
         instance,
     )
 

@@ -101,7 +101,8 @@ def rate_limited(view: SmarterView, request: HttpRequest) -> Optional[JsonRespon
     ip = client_ip(request)
     if not is_rate_limited(ip):
         return None
-    logger.warning("%s rate limited %s", view.formatted_class_name, ip)
+    # never the ip address itself: it is personal data.
+    logger.warning("rate limited a client of %s", type(view).__name__)
     message = "rate limit exceeded: too many requests from your IP address. Try again later."
     error = MCPEndpointBase.error(None, RATE_LIMITED, message)
     body = MCPEndpointBase.dump(error)
@@ -150,12 +151,6 @@ class PublicEndpointView(SmarterView):
     http_method_names = ["post", "options"]
     """Only POST and OPTIONS: GET and DELETE are ``405 Method Not Allowed``, as MCP clients expect of a stateless server."""
 
-    @property
-    def formatted_class_name(self) -> str:
-        """The module and class name, formatted for the start of a log message."""
-        module_name = logging.SmarterFormattedText.text(__name__)
-        return f"{module_name}.{self.__class__.__name__}"
-
     def post(self, request: HttpRequest, repository: Optional[str] = None) -> HttpResponse:
         """
         Answer the JSON-RPC message, or batch of messages, in the request body.
@@ -198,12 +193,6 @@ class StaffEndpointView(SmarterView):
 
     http_method_names = ["post", "options"]
     """Only POST and OPTIONS: GET and DELETE are ``405 Method Not Allowed``, as MCP clients expect of a stateless server."""
-
-    @property
-    def formatted_class_name(self) -> str:
-        """The module and class name, formatted for the start of a log message."""
-        module_name = logging.SmarterFormattedText.text(__name__)
-        return f"{module_name}.{self.__class__.__name__}"
 
     def post(self, request: HttpRequest) -> HttpResponse:
         """

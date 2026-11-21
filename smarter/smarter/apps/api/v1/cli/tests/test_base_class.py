@@ -71,7 +71,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
     ) -> tuple[SmarterDictType, int]:
         """Prepare and get a response from an api/v1/ endpoint."""
         logger.info(
-            "TestApiCliV1BaseClass.authentication_scenarios() testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",
+            "testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",
             path,
             wrong_key,
             missing_key,

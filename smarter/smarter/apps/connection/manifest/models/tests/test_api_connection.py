@@ -31,7 +31,6 @@ from smarter.apps.connection.models import ApiConnection
 from smarter.apps.connection.tests.base_classes import TestConnectionBase
 from smarter.apps.connection.tests.factories import secret_factory
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -39,7 +38,7 @@ from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 MANIFEST_PATH_API_CONNECTION = os.path.abspath(
     os.path.join(DATA_PATH, "manifest", "brokers", "tests", "data", "api-connection.yaml")
 )
@@ -51,7 +50,6 @@ contains the actual connection parameters for the remote test database.
 Note that we're borrowing the api-connection.yaml file from the
 broker tests.
 """
-HERE = __name__
 
 
 class TestSAMApiConnection(TestSAMBrokerBaseClass):
@@ -64,12 +62,10 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
         Pydantic models.
     """
 
-    test_sam_api_connection_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMApiConnection()"
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_sam_api_connection_logger_prefix)
+        logger.debug("called.")
         # this class reads one fixed manifest, in place of the base class's manifest_data property.
         manifest_data_patcher = patch.object(cls, "manifest_data", read_manifest_file(MANIFEST_PATH_API_CONNECTION))
         manifest_data_patcher.start()
@@ -77,7 +73,7 @@ class TestSAMApiConnection(TestSAMBrokerBaseClass):
 
     @classmethod
     def tearDownClass(cls):
-        logger.debug("%s.tearDownClass()", cls.test_sam_api_connection_logger_prefix)
+        logger.debug("called.")
         super().tearDownClass()
 
     def setUp(self):

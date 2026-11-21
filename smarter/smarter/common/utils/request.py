@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from rest_framework.request import Request
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 RequestType = Union["HttpRequest", "Request", "ASGIRequest"]
 
 
@@ -91,9 +90,9 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         path = request.path if hasattr(request, "path") else "unknown_path"
         method = request.method if hasattr(request, "method") else "unknown_method"
         username = getattr(getattr(request, "user", None), "username", "unknown_user")
-        cache_key = f"{logger_prefix}.is_authenticated_request.{method}_{path}_{username}"
+        cache_key = f"{__name__}.is_authenticated_request.{method}_{path}_{username}"
     else:
-        cache_key = f"{logger_prefix}.is_authenticated_request.invalid_request_{random.randint(1, 1000000)}"
+        cache_key = f"{__name__}.is_authenticated_request.invalid_request_{random.randint(1, 1000000)}"
 
     @cache_results(cache_key=cache_key)
     def cached_is_authenticated_request() -> bool:

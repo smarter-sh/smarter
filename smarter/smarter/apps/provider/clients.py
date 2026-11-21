@@ -19,7 +19,6 @@ from smarter.apps.prompt.signals import (
     prompt_started,
 )
 from smarter.apps.provider.models import Provider
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -160,12 +159,11 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             return HTTPStatus.BAD_GATEWAY
         return HTTPStatus.INTERNAL_SERVER_ERROR
 
-    def create_chat_completion(self, data: SmarterDictType, logger_prefix: str):
+    def create_chat_completion(self, data: SmarterDictType):
         """
         Send the prompt to the provider, retrying once with ``reasoning_effort="none"`` when OpenAI requires it for function tools.
 
         :param data: The chat completion request body. On a retry, ``reasoning_effort`` is set in it.
-        :param logger_prefix: The caller's log prefix, used in the retry's warning.
         :returns: The provider's chat completion.
         :raises openai.BadRequestError: If the provider rejects the request, and the rejection is not
             the one that the retry handles.
@@ -229,7 +227,6 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             profile.
         """
         charge_authorization(user_profile.record_locator, self.__class__.__name__)
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.handler()"
         response: Optional[ChatCompletion] = None
         provider: Optional[Provider] = None
         if not hasattr(request, "user") or not request.user.is_authenticated:
@@ -296,7 +293,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
                 openai.base_url,
                 request_summary,
             )
-            response = self.create_chat_completion(data, logger_prefix)
+            response = self.create_chat_completion(data)
         # pylint: disable=broad-except
         except Exception as e:
             stack_trace = traceback.format_exc()

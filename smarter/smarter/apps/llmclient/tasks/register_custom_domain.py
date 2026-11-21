@@ -67,7 +67,6 @@ from .verify_custom_domain import verify_custom_domain
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -187,7 +186,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
         LLMClientCustomDomain.objects.filter(domain_name=domain_name).exclude(user_profile__account=account).first()
     )
     if domain_record is not None:
-        err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
+        err = f"Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
         logger.error(err)
         raise LLMClientCustomDomainExists(err)
     logger.info(

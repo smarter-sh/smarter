@@ -166,19 +166,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :return: Formatted class name string for logging.
         :rtype: str
 
-        .. important::
-
-            Use this property in log statements to improve traceability and debugging.
-
         .. seealso::
 
             :meth:`SAMApiConnectionBroker.SerializerClass`
             :meth:`SAMApiConnectionBroker.manifest`
             :meth:`SAMApiConnectionBroker.ORMModelClass`
-
-        **Example usage**::
-
-            logger.info("%s: operation started", broker.formatted_class_name)
         """
         return self.formatted_text(f"{SAMApiConnectionBroker.__name__}[{id(self)}]")
 

@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 from smarter.common.conf import smarter_settings
 from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
-from smarter.lib.logging import getLogger
+from smarter.lib.logging import getSmarterLogger
 
 from .base import *
 
-logger = getLogger(__name__)
+logger = getSmarterLogger(__name__)
 logger.debug("Loading smarter.settings.base_aws")
 default_redis_server = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
 # The cache and the Celery broker use different Redis databases, so that cache.clear()

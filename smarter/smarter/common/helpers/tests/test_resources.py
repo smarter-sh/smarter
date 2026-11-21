@@ -166,20 +166,20 @@ class TestLogResourceLimits(SmarterTestBase):
             patch(f"{MODULE}.uvicorn_workers", return_value=workers),
             patch(f"{MODULE}.is_first_worker", return_value=first),
         ):
-            log_resource_limits(logger, "prefix")
+            log_resource_limits(logger)
         return logger
 
     def test_enough_resources_log_no_warning(self):
         logger = self._log()
         logger.warning.assert_not_called()
-        self.assertTrue(logger.debug.call_args.args[0].startswith("%s.log_resource_limits()"))
+        self.assertTrue(logger.debug.call_args.args[0].startswith("CPU limit:"))
 
     def test_too_little_is_warned_by_the_first_worker(self):
         logger = self._log(cpu=1, memory=1.0, workers=4)
         self.assertEqual(logger.warning.call_count, 2)
         cpu_warning, memory_warning = (c.args for c in logger.warning.call_args_list)
-        self.assertEqual(cpu_warning[1:], ("prefix", 4, 4, 1))
-        self.assertEqual(memory_warning[1:], ("prefix", 4, 2.5, 1.0))
+        self.assertEqual(cpu_warning[1:], (4, 4, 1))
+        self.assertEqual(memory_warning[1:], (4, 2.5, 1.0))
 
     def test_the_other_workers_dont_warn(self):
         self._log(cpu=1, memory=1.0, workers=4, first=False).warning.assert_not_called()
@@ -187,11 +187,11 @@ class TestLogResourceLimits(SmarterTestBase):
     def test_unreadable_limits_are_a_warning(self):
         logger = MagicMock()
         with patch(f"{MODULE}.cpu_limit", side_effect=OSError("no cgroup")):
-            log_resource_limits(logger, "prefix")
+            log_resource_limits(logger)
         self.assertIn("not available", logger.warning.call_args.args[0])
 
     def test_unparseable_limits_are_an_error(self):
         logger = MagicMock()
         with patch(f"{MODULE}.cpu_limit", side_effect=ValueError("bad")):
-            log_resource_limits(logger, "prefix")
+            log_resource_limits(logger)
         self.assertIn("error parsing", logger.error.call_args.args[0])

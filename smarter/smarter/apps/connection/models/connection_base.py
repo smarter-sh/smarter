@@ -175,8 +175,7 @@ class ConnectionBase(MetaDataWithOwnershipModel):
                 instances.extend(subclass.objects.with_read_permission_for(user))
             unique_instances = {(instance.__class__, instance.pk): instance for instance in instances}.values()
             logger.debug(
-                "%s.get_cached_connections_for_user: Found and cached these connections %s for user %s",
-                logging.SmarterFormattedText.text(ConnectionBase.__name__),
+                "Found and cached these connections %s for user %s",
                 unique_instances,
                 user,
             )

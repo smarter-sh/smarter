@@ -126,11 +126,6 @@ class MCPToolkit:
         self.errors: dict[str, str] = {}
         self.connected: list[MCPClient] = []
 
-    @property
-    def formatted_class_name(self) -> str:
-        """The class name, for logging."""
-        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}"
-
     def function_name(self, mcpclient: MCPClient, name: str) -> str:
         """
         Return a unique OpenAI function name for one of an MCPClient's tools.

@@ -139,7 +139,7 @@ def get_user_for_operation(request, user_id: int) -> tuple[User, UserProfile] | 
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.BAD_REQUEST.value)
 
-    logger.debug("%s.get_user_for_operation() - user: %s", request, user)
+    logger.debug("user: %s", user)
     return user, user_profile
 
 
@@ -167,7 +167,7 @@ def get_user(request, user_id: Optional[int] = None):
     :param user_id: The User's id, or None for the request user.
     :returns: The user's json response, or a 401 or 404 :class:`JsonResponse`.
     """
-    logger.debug("%s.get_user() - user_id: %s, request: %s", request, user_id, request)
+    logger.debug("user_id: %s, request: %s", user_id, request)
     if user_id is None:
         logger.debug("returning current user: %s", request.user)
         return user_response(request.user)
@@ -207,7 +207,7 @@ def get_user(request, user_id: Optional[int] = None):
 
 def create_user(request: Request):
     """Create an account from a json representation in the body of the request."""
-    logger.debug("%s.create_user() - request: %s", request, request)
+    logger.debug("request: %s", request)
     data: SmarterDictType
 
     user = get_resolved_user(request.user)

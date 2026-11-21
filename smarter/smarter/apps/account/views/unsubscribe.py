@@ -43,11 +43,6 @@ class AccountUnsubscribeView(SmarterNeverCachedWebView):
 
     template_path = "account/unsubscribe.html"
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        return logging.SmarterFormattedText.text(f"{__name__}.{AccountUnsubscribeView.__name__}")
-
     def email_address(self, token: str) -> Optional[str]:
         """
         Return the email address of the url's token.

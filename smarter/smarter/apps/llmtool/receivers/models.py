@@ -22,8 +22,6 @@ from ..models import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-prefix = f"{__name__}."
-
 
 @receiver(post_save, sender=PluginMeta)
 def handle_plugin_meta_saved(sender, instance, created, **kwargs):
@@ -38,13 +36,10 @@ def handle_plugin_meta_saved(sender, instance, created, **kwargs):
     """
 
     if created:
-        logger.info(
-            "%s %s", SmarterFormattedText.text(prefix + "post_save() PluginMeta() record created:"), instance.name
-        )
+        logger.info("PluginMeta record created: %s", instance.name)
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginMeta() record updated:"),
+            "PluginMeta record updated: %s",
             instance.name,
         )
 
@@ -62,11 +57,10 @@ def handle_plugin_selector_saved(sender, instance, created, **kwargs):
     """
 
     if created:
-        logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginSelector() record created."))
+        logger.info("PluginSelector record created.")
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginSelector() record updated:"),
+            "PluginSelector record updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -84,11 +78,10 @@ def handle_plugin_prompt_saved(sender, instance, created, **kwargs):
     """
 
     if created:
-        logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginPrompt() record created."))
+        logger.info("PluginPrompt record created.")
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginPrompt() record updated:"),
+            "PluginPrompt record updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -106,11 +99,10 @@ def handle_plugin_data_saved(sender, instance, created, **kwargs):
     """
 
     if created:
-        logger.info("%s", SmarterFormattedText.text(prefix + "post_save() PluginDataStatic() record created."))
+        logger.info("PluginDataStatic record created.")
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginDataStatic() record updated:"),
+            "PluginDataStatic record updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -129,14 +121,12 @@ def handle_plugin_selector_history_saved(sender, instance, created, **kwargs):
 
     if created:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginSelectorHistory() created"),
+            "PluginSelectorHistory created: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginSelectorHistory() updated"),
+            "PluginSelectorHistory updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -155,14 +145,12 @@ def handle_plugin_data_api_saved(sender, instance, created, **kwargs):
 
     if created:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginDataApi() created"),
+            "PluginDataApi created: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginDataApi() updated"),
+            "PluginDataApi updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -181,14 +169,12 @@ def handle_plugin_data_sql_saved(sender, instance, created, **kwargs):
 
     if created:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginDataSql() created"),
+            "PluginDataSql created: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
     else:
         logger.info(
-            "%s %s",
-            SmarterFormattedText.text(prefix + "post_save() PluginDataSql() updated"),
+            "PluginDataSql updated: %s",
             SmarterFormattedText.json(model_to_dict(instance)),
         )
 
@@ -204,8 +190,7 @@ def handle_plugin_data_api_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginDataApi().pre_delete()"),
+        "PluginDataApi %s deleting.",
         instance,
     )
 
@@ -221,8 +206,7 @@ def handle_plugin_data_sql_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginDataSql().pre_delete()"),
+        "PluginDataSql %s deleting.",
         instance,
     )
 
@@ -238,8 +222,7 @@ def handle_plugin_data_static_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginDataStatic().pre_delete()"),
+        "PluginDataStatic %s deleting.",
         instance,
     )
 
@@ -255,8 +238,7 @@ def handle_plugin_meta_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginMeta().pre_delete()"),
+        "PluginMeta %s deleting.",
         instance,
     )
 
@@ -272,8 +254,7 @@ def handle_plugin_prompt_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginPrompt().pre_delete()"),
+        "PluginPrompt %s deleting.",
         instance,
     )
 
@@ -289,8 +270,7 @@ def handle_plugin_selector_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginSelector().pre_delete()"),
+        "PluginSelector %s deleting.",
         instance,
     )
 
@@ -306,8 +286,7 @@ def handle_plugin_selector_history_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginSelectorHistory().pre_delete()"),
+        "PluginSelectorHistory %s deleting.",
         instance,
     )
 
@@ -324,8 +303,8 @@ def handle_plugin_data_websearch_saved(sender, instance, created, **kwargs):
     :param created: True if the row was created, False if it was updated.
     """
     logger.info(
-        "%s %s",
-        SmarterFormattedText.text(prefix + f"post_save() PluginDataWebsearch() {'created' if created else 'updated'}"),
+        "PluginDataWebsearch %s: %s",
+        "created" if created else "updated",
         SmarterFormattedText.json(instance.data()),
     )
 
@@ -341,7 +320,6 @@ def handle_plugin_data_websearch_pre_delete(sender, instance, **kwargs):
     :param instance: The row.
     """
     logger.info(
-        "%s %s deleting.",
-        SmarterFormattedText.text(prefix + "PluginDataWebsearch().pre_delete()"),
+        "PluginDataWebsearch %s deleting.",
         instance,
     )

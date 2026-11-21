@@ -425,12 +425,6 @@ class LLMClientEndpointsView(SmarterWebHtmlView):
 
     template_path = "llmclient/endpoints.html"
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
-        class_name = f"{__name__}.{LLMClientEndpointsView.__name__}[{id(self)}]"
-        return logging.SmarterFormattedText.text(class_name)
-
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         The page, for the LLMClient that serves the request's host.

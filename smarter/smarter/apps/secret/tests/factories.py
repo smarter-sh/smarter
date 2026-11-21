@@ -5,14 +5,11 @@ from typing import Optional
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.secret.models import Secret
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
-
-HERE = SmarterFormattedText.text(__name__)
 
 
 # pylint: disable=W0613
@@ -48,7 +45,7 @@ def secret_factory(
         encrypted_value=encrypted_value,
         expires_at=expiration,
     )
-    logger.debug("%s.secret_factory() Created secret: %s", HERE, secret)
+    logger.debug("Created secret: %s", secret)
     return secret
 
 
@@ -57,9 +54,9 @@ def factory_secret_teardown(secret: Secret):
         if secret:
             lbl = str(secret)
             secret.delete()
-            logger.debug("%s.factory_secret_teardown() Deleted secret: %s", HERE, lbl)
+            logger.debug("Deleted secret: %s", lbl)
     except Secret.DoesNotExist:
         pass
     except Exception as e:
-        logger.error("%s.factory_secret_teardown() Error deleting secret: %s", HERE, e)
+        logger.error("Error deleting secret: %s", e)
         raise

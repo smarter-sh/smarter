@@ -152,12 +152,9 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         if not isinstance(user, User):
             logger.debug(
-                "%s.with_read_permission_for() user is not an instance of User: %s",
-                logging.SmarterFormattedText.text(
-                    __name__
-                    + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
-                ),
-                user,
+                "user is not an instance of User: %s, model: %s",
+                type(user).__name__,
+                self.model.__name__,
             )
             return self.none()
 
@@ -644,8 +641,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     pk=pk
                 )
             logger.debug(
-                "%s._get_object_by_pk() fetched %s - %s",
-                logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                "fetched %s - %s",
                 type(retval).__name__,
                 str(retval),
             )
@@ -689,8 +685,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(name=name, user_profile_id=user_profile_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile_id: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for name: %s and user_profile_id: %s",
                     type(retval).__class__.__name__,
                     name,
                     user_profile_id,
@@ -739,8 +734,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(name=name, user_profile__account_id=account_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account_id: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for name: %s and account_id: %s",
                     type(retval).__class__.__name__,
                     name,
                     account_id,
@@ -792,8 +786,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(session_key=session_key)
                 logger.debug(
-                    "%s._get_object_by_session_key() fetched %s for session_key: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for session_key: %s",
                     type(retval).__class__.__name__,
                     session_key,
                 )
@@ -837,8 +830,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 .first()
             )
             logger.warning(
-                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
-                logging.SmarterFormattedText.text(cls.__name__) + ".get_cached_object()",
+                "Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
                 user,
                 account,
                 user_profile,

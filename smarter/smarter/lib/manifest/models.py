@@ -219,8 +219,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         slugified = str(slugify(v, allow_unicode=False)).replace("-", "_")
         if slugified != v:
             logger.warning(
-                ".%s.validate_name() '%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
-                cls.__name__,
+                "'%s' is not URL-friendly. Converting to URL-friendly format: %s. Please use URL-friendly characters for names.",
                 v,
                 slugified,
             )
@@ -228,8 +227,7 @@ class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
         if not SmarterValidator.is_valid_snake_case(v):
             snake_case_name = to_snake_case(v)
             logger.warning(
-                ".%s.validate_name() '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
-                cls.__name__,
+                "'%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
                 v,
                 snake_case_name,
             )

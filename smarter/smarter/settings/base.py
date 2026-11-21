@@ -37,14 +37,14 @@ from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils import mask_string
 from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
+from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 
 load_dotenv()
 
-logger.debug("%s Smarter version: %s", logger_prefix, smarter_version)
+logger.debug("Smarter version: %s", smarter_version)
 
 
 # pylint: disable=W0621
@@ -1647,8 +1647,7 @@ if smarter_settings.static_files_on_cdn:
         STATIC_URL = f"{cdn_url}/static/"
     else:
         logger.warning(
-            "%s SMARTER_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
-            logger_prefix,
+            "SMARTER_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
         )
 """
 While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the static files are on the environment's S3 bucket, under ``static/``,
@@ -2097,7 +2096,7 @@ for key, value in os.environ.items():
     # occur due to copy-paste errors or other issues. This is a common source
     # of hard-to-debug problems with environment variable configuration.
     value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
-    logger.debug("%s Processing Django setting override: %s", logger_prefix, key)
+    logger.debug("Processing Django setting override: %s", key)
 
     # If the environment variable does not match any existing Django setting,
     # analyze the value passed to attempt to infer the intended data type the value.
@@ -2107,9 +2106,8 @@ for key, value in os.environ.items():
     if key not in globals():
         logger.debug(
             SmarterFormattedText.text(
-                "%s Environment variable %s does not match any existing Django setting. Inspecting the value to attempt to determine its intended type and usage: %s=%s"
+                "Environment variable %s does not match any existing Django setting. Inspecting the value to attempt to determine its intended type and usage: %s=%s"
             ),
-            logger_prefix,
             key,
             key,
             mask_string(value),
@@ -2129,8 +2127,7 @@ for key, value in os.environ.items():
         try:
             cast_value = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
             logger.debug(
-                "%s Successfully cast value using ast.literal_eval() for %s=%s of Type '%s'",
-                logger_prefix,
+                "Successfully cast value using ast.literal_eval() for %s=%s of Type '%s'",
                 key,
                 mask_string(str(cast_value)),
                 type(cast_value).__name__,
@@ -2145,8 +2142,7 @@ for key, value in os.environ.items():
             default_value = globals()[key]
             cast_value = smart_cast(raw_value, default_value)
             logger.debug(
-                "%s Inferred type '%s' for %s=%s based on existing Django setting default value",
-                logger_prefix,
+                "Inferred type '%s' for %s=%s based on existing Django setting default value",
                 type(default_value).__name__,
                 key,
                 mask_string(str(cast_value)),
@@ -2162,16 +2158,15 @@ for key, value in os.environ.items():
         elif not cast_value and str(raw_value).replace(".", "").isdigit():
             try:
                 cast_value = int(raw_value)
-                logger.debug("%s Inferred type 'int' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+                logger.debug("Inferred type 'int' for %s=%s", key, mask_string(str(cast_value)))
             except ValueError:
                 try:
                     cast_value = float(raw_value)
-                    logger.debug("%s Inferred type 'float' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+                    logger.debug("Inferred type 'float' for %s=%s", key, mask_string(str(cast_value)))
                 except ValueError:
                     cast_value = raw_value
                     logger.warning(
-                        "%s could not cast as a numeric value. Falling back to string for %s=%s",
-                        logger_prefix,
+                        "could not cast as a numeric value. Falling back to string for %s=%s",
                         key,
                         mask_string(str(cast_value)),
                     )
@@ -2179,7 +2174,7 @@ for key, value in os.environ.items():
         elif not cast_value and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
             try:
                 cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
-                logger.debug("%s Inferred type 'date' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+                logger.debug("Inferred type 'date' for %s=%s", key, mask_string(str(cast_value)))
             except ValueError:
                 pass
 
@@ -2187,7 +2182,7 @@ for key, value in os.environ.items():
         elif not cast_value and "," in raw_value:
             try:
                 cast_value = [item.strip() for item in raw_value.split(",")]
-                logger.debug("%s Inferred type 'list' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+                logger.debug("Inferred type 'list' for %s=%s", key, mask_string(str(cast_value)))
             # pylint: disable=broad-except
             except Exception:
                 pass
@@ -2196,19 +2191,18 @@ for key, value in os.environ.items():
         elif not cast_value and raw_value.startswith("{") and raw_value.endswith("}"):
             try:
                 cast_value = json.loads(raw_value)
-                logger.debug("%s Inferred type 'dict' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+                logger.debug("Inferred type 'dict' for %s=%s", key, mask_string(str(cast_value)))
             # pylint: disable=broad-except
             except Exception:
                 cast_value = raw_value
         # String (default)
         elif not cast_value:
             cast_value = str(raw_value)
-            logger.debug("%s Inferred type 'str' for %s=%s", logger_prefix, key, mask_string(str(cast_value)))
+            logger.debug("Inferred type 'str' for %s=%s", key, mask_string(str(cast_value)))
 
         globals()[key] = cast_value
         logger.info(
-            "%s Creating new Django setting from environment variable: %s=%s of Type '%s'",
-            logger_prefix,
+            "Creating new Django setting from environment variable: %s=%s of Type '%s'",
             key,
             mask_string(repr(cast_value)),
             type(cast_value),
@@ -2229,15 +2223,13 @@ for key, value in os.environ.items():
             "AWS_SECRET_ACCESS_KEY",
         ]:
             logger.info(
-                "%s Overriding Django setting from environment variable: %s=%s",
-                logger_prefix,
+                "Overriding Django setting from environment variable: %s=%s",
                 key,
                 repr(cast_value),
             )
         else:
             logger.info(
-                "%s Overriding Django setting from environment variable: %s=******",
-                logger_prefix,
+                "Overriding Django setting from environment variable: %s=******",
                 key,
             )
 
@@ -2248,7 +2240,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.debug("=" * 80)
     logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18))
     logger.debug("=" * 80)
-    logger.debug("%s Django settings module: %s", logger_prefix, os.environ.get("DJANGO_SETTINGS_MODULE"))
+    logger.debug("Django settings module: %s", os.environ.get("DJANGO_SETTINGS_MODULE"))
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
@@ -2260,7 +2252,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     except OSError as e:
         logger.error("Error reading container uptime: %s", e)
 
-    log_resource_limits(logger, logger_prefix)
+    log_resource_limits(logger)
 
     try:
         debian_version = "not found"

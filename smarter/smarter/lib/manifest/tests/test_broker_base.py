@@ -9,7 +9,6 @@ import yaml
 from django.http import HttpRequest
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import mask_string
 from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
@@ -24,9 +23,7 @@ from smarter.lib.manifest.enum import (
 from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import SmarterDictType
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-logger = logging.getLogger(__name__)
-logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSAMBrokerBaseClass()"
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSAMBrokerBaseClass(TestAccountMixin):
@@ -53,20 +50,19 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
             is_active=True,
         )  # type: ignore
         logger.debug(
-            "%s.setUpClass() Created test API token for user %s - %s",
-            logger_prefix,
+            "Created test API token for user %s - %s",
             cls.admin_user.username,
             mask_string(cls.token_key),
         )
 
-        title = f" {logger_prefix}.setUpClass() "
+        title = " start "
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
 
     @classmethod
     def tearDownClass(cls):
         """Class-level teardown."""
-        title = f" {logger_prefix}.tearDownClass() "
+        title = " end "
         msg = "*" * ((cls.line_width - len(title)) // 2) + title + "*" * ((cls.line_width - len(title)) // 2)
         logger.debug(msg)
         try:
@@ -84,12 +80,12 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._request = None  # type: ignore
         self._manifest_data = None  # type: ignore
         self._manifest_filespec = None  # type: ignore
-        title = f" {logger_prefix}.{self._testMethodName}() "
+        title = f" {self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
 
     def tearDown(self):
-        title = f" {logger_prefix}.tearDown() {self._testMethodName} "
+        title = f" {self._testMethodName}() "
         msg = "-" * ((self.line_width - len(title)) // 2) + title + "-" * ((self.line_width - len(title)) // 2)
         logger.debug(msg)
         self._here = None  # type: ignore
@@ -138,8 +134,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
         self._manifest_data = read_manifest_file(self.manifest_filespec)
         json.loads(json.dumps(self._manifest_data))  # should not raise an exception
         logger.debug(
-            "%s.manifest_data Loaded SAM manifest for testing from %s",
-            self.formatted_class_name,
+            "Loaded SAM manifest for testing from %s",
             self.manifest_filespec,
         )
         return self._manifest_data
@@ -156,7 +151,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         self._request = HttpRequest()
         self._request.headers = {"Authorization": f"Token {self.token_key}"}  # type: ignore
-        logger.debug("%s.request() Set Authorization header: %s", self.formatted_class_name, self._request.headers)
+        logger.debug("Set Authorization header: %s", self._request.headers)
         # self._request.user = self.admin_user
 
         # # Ensure user.is_authenticated is True (for mock users)
@@ -178,8 +173,7 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
 
         self.assertIsInstance(self._request, HttpRequest)
         logger.debug(
-            "%s.request() Created HttpRequest for testing with SAM manifest in body from %s",
-            self.formatted_class_name,
+            "Created HttpRequest for testing with SAM manifest in body from %s",
             self.manifest_filespec,
         )
         return self._request

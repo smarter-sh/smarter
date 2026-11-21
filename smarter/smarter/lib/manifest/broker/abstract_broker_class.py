@@ -5,7 +5,7 @@ import contextlib
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
-from functools import cached_property, wraps
+from functools import wraps
 from http import HTTPStatus
 from typing import (
     Any,
@@ -480,25 +480,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
-    @cached_property
-    def abstract_broker_logger_prefix(self) -> str:
-        """Return the logger prefix for the AbstractBroker.
-
-        It is built once per broker: every log message starts with it.
-
-        :return: The logger prefix for the AbstractBroker.
-        """
-        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    # a property, not SmarterHelperMixin's classproperty, so that the prefix has the instance's id.
+    # a property, not SmarterHelperMixin's classproperty, so that the name has the instance's id.
     @property
     def formatted_class_name(self) -> str:  # type: ignore[override]  # pylint: disable=arguments-renamed
-        """Return the logger prefix for the AbstractBroker.
+        """Return the AbstractBroker's formatted class name, with the instance's id.
 
-        :return: The logger prefix for the AbstractBroker.
+        :return: The formatted class name of the AbstractBroker.
         """
-        return self.abstract_broker_logger_prefix
+        return self.formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
 
     @property
     def is_ready_abstract_broker(self) -> bool:

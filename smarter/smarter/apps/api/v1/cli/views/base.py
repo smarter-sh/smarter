@@ -321,16 +321,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    @cached_property
-    def logger_prefix(self) -> str:
-        """
-        Get the logger prefix for this class.
-
-        :return: Logger prefix string
-        :rtype: str
-        """
-        return f"{logging.SmarterFormattedText.text(__name__)}.{CliBaseApiView.__name__}[{id(self)}]"
-
     @property
     def formatted_class_name(self) -> str:
         """

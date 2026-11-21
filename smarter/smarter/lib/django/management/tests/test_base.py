@@ -25,7 +25,7 @@ class TestSmarterCommand(SmarterTestBase):
             self.command.handle_completed_success("all done")
         messages = [call.args for call in logger.info.call_args_list]
         self.assertIn(("%s", "all done"), messages)
-        self.assertIn(("%s completed successfully.", self.command.__module__), messages)
+        self.assertIn(("completed successfully.",), messages)
 
     def test_banner_has_no_empty_dividers(self):
         """Test that a command that logs nothing between start and success logs one divider, at the end."""
@@ -33,7 +33,7 @@ class TestSmarterCommand(SmarterTestBase):
             self.command.handle_begin()
             self.command.handle_completed_success()
         messages = [call.args[0] for call in logger.info.call_args_list]
-        self.assertEqual(messages, ["%s manage.py %s", "%s started.", "%s completed successfully.", "-" * 80])
+        self.assertEqual(messages, ["%s manage.py %s", "started.", "completed successfully.", "-" * 80])
 
     def test_nested_command_logs_no_banner(self):
         """Test that a command that another command called logs its start and success at DEBUG, without dividers."""
@@ -71,8 +71,8 @@ class TestSmarterCommand(SmarterTestBase):
         self.assertEqual(context.exception.code, 1)
         messages = [call.args for call in logger.error.call_args_list]
         self.assertIn(("%s", "an error"), messages)
-        self.assertIn(("%s", f"{self.command.__module__} failed."), messages)
-        self.assertIn(("%s", f"{self.command.__module__} failed with error: bad"), messages)
+        self.assertIn(("failed.",), messages)
+        self.assertIn(("failed with error: %s",), [m[:1] for m in messages])
 
     def test_parser(self):
         parser = self.command.create_parser("manage.py", "a_command")

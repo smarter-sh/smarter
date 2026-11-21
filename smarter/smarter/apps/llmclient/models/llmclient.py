@@ -996,7 +996,6 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: The cloned LLMClient instance.
         :rtype: LLMClient
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".clone()")
         logger.debug(
             "called for LLMClient id: %s with new_name: %s, new_version: %s, user_profile: %s",
             self.pk,
@@ -1006,12 +1005,12 @@ class LLMClient(MetaDataWithOwnershipModel):
         )
 
         cloned_llmclient = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)  # type: ignore
-        self.clone_links(cloned_llmclient, logger_prefix)  # type: ignore[arg-type]
+        self.clone_links(cloned_llmclient)  # type: ignore[arg-type]
 
         logger.debug("completed Returning cloned instance %s", cloned_llmclient)
         return cloned_llmclient  # type: ignore[return-value]
 
-    def clone_links(self, clone: "LLMClient", logger_prefix: str) -> None:
+    def clone_links(self, clone: "LLMClient") -> None:
         """
         Link a clone of this LLMClient to the same plugins, MCPClients, guardrails and extensions.
 
@@ -1021,7 +1020,6 @@ class LLMClient(MetaDataWithOwnershipModel):
         owner may read, and extensions that are available to its owner's account.
 
         :param clone: The clone, which has no links yet.
-        :param logger_prefix: The prefix of log messages.
         """
         # pylint: disable=import-outside-toplevel
         from .llmclient_extension import LLMClientExtensions

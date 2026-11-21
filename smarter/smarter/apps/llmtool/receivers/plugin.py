@@ -247,14 +247,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     """
     Log that a broker is ready.
 
-    Brokers of every kind send this signal, so the message names the broker's own class, e.g.
-    ``smarter.apps.guardrail.manifest.brokers.guardrail.SAMGuardrailBroker.broker_ready()``,
-    rather than this module.
+    Brokers of every kind send this signal, so the message names the broker's class, e.g.
+    ``SAMGuardrailBroker``.
     """
-    logger.debug(
-        "%s %s %s for %s is ready.",
-        f"{SmarterFormattedText.text(sender.__module__)}.{sender.__name__}.broker_ready()",
-        broker.kind,
-        str(broker),
-        broker.name,
-    )
+    logger.debug("%s %s for %s is ready.", sender.__name__, broker.kind, broker.name)

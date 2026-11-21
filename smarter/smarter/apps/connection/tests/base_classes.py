@@ -60,7 +60,7 @@ class TestConnectionBase(TestAccountMixin):
     @property
     def manifest(self) -> Optional[SmarterDictType]:
         if not self._manifest and self.manifest_path:
-            logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
+            logger.info("Loading manifest from %s", self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
             self.assertIsNotNone(self._manifest)
         return self._manifest
@@ -71,7 +71,7 @@ class TestConnectionBase(TestAccountMixin):
         if not self._manifest_data:
             if not self.manifest:
                 raise SmarterValueError(f"{self.__class__.__name__}.manifest_data() called but manifest is None")
-            logger.info("%s.manifest_data copying the manifest", self.formatted_class_name)
+            logger.info("copying the manifest")
             self._manifest_data = parse_manifest(json.dumps(self.manifest))
             self.assertIsNotNone(self._manifest_data)
         return self._manifest_data

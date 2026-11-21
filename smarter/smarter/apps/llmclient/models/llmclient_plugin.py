@@ -114,8 +114,7 @@ class LLMClientPlugin(TimestampedModel):
                 plugin_meta=self.plugin_meta,
             )
             logger.debug(
-                "%s.get_cached_plugin_controller() fetched and cached plugin controller for llmclient_id: %s, plugin_meta_id: %s",
-                class_name,
+                "fetched and cached plugin controller for llmclient_id: %s, plugin_meta_id: %s",
                 self.llmclient.id,
                 self.plugin_meta.id,
             )

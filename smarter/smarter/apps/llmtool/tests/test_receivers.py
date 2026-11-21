@@ -157,8 +157,8 @@ class TestPluginReceivers(PluginAppTestBase):
         broker.name = "a_broker"
         broker_ready.send(sender=self.__class__, broker=broker)
         self.assertIn("a_broker", self.logged())
-        # the message names the sender, whatever its kind, not the llmtool receivers module.
-        self.assertIn(f"{self.__class__.__name__}.broker_ready()", self.logged())
+        # the message names the sender, whatever its kind.
+        self.assertIn(f"{self.__class__.__name__} Plugin for a_broker is ready.", self.logged())
 
     # -------------------------------------------------------------------------
     # plugin_selected
@@ -266,10 +266,10 @@ class TestPluginReceivers(PluginAppTestBase):
         """Test that the post_save receivers log each model that a new plugin creates."""
         self.new_static_plugin("test_plugin_app_receivers_created")
         logged = self.logged()
-        self.assertIn("PluginMeta() record created", logged)
-        self.assertIn("PluginSelector() record created", logged)
-        self.assertIn("PluginPrompt() record created", logged)
-        self.assertIn("PluginDataStatic() record created", logged)
+        self.assertIn("PluginMeta record created", logged)
+        self.assertIn("PluginSelector record created", logged)
+        self.assertIn("PluginPrompt record created", logged)
+        self.assertIn("PluginDataStatic record created", logged)
 
     def test_model_updated(self):
         """Test that the post_save receivers log an updated model."""
@@ -278,7 +278,7 @@ class TestPluginReceivers(PluginAppTestBase):
         plugin_meta: PluginMeta = plugin.plugin_meta  # type: ignore[assignment]
         plugin_meta.description = "An updated description."
         plugin_meta.save()
-        self.assertIn("PluginMeta() record updated", self.logged())
+        self.assertIn("PluginMeta record updated", self.logged())
 
     def test_model_deleted(self):
         """Test that the pre_delete receivers log each model that a deleted plugin deletes."""
@@ -287,10 +287,10 @@ class TestPluginReceivers(PluginAppTestBase):
         self.capture.clear()
         self.delete_plugin_by_name(name)
         logged = self.logged()
-        self.assertIn("PluginMeta().pre_delete()", logged)
-        self.assertIn("PluginSelector().pre_delete()", logged)
-        self.assertIn("PluginPrompt().pre_delete()", logged)
-        self.assertIn("PluginDataStatic().pre_delete()", logged)
+        self.assertIn("handle_plugin_meta_pre_delete()", logged)
+        self.assertIn("handle_plugin_selector_pre_delete()", logged)
+        self.assertIn("handle_plugin_prompt_pre_delete()", logged)
+        self.assertIn("handle_plugin_data_static_pre_delete()", logged)
 
     def test_selector_history(self):
         """Test that the post_save and pre_delete receivers log PluginSelectorHistory."""
@@ -299,9 +299,9 @@ class TestPluginReceivers(PluginAppTestBase):
         history = PluginSelectorHistory.objects.create(
             plugin_selector=plugin_selector, search_term="Gobstopper", messages=[]
         )
-        self.assertIn("PluginSelectorHistory() created", self.logged())
+        self.assertIn("PluginSelectorHistory created", self.logged())
         history.delete()
-        self.assertIn("PluginSelectorHistory().pre_delete()", self.logged())
+        self.assertIn("handle_plugin_selector_history_pre_delete()", self.logged())
 
     # -------------------------------------------------------------------------
     # request lifecycle signals
