@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.10-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.10-alpha.2...v0.46.10-alpha.3) (2026-11-21)
+
+### Bug Fixes
+
+* **django:** adopt django 6 csp, unique constraints, and storages ([c81f3a6](https://github.com/smarter-sh/smarter/commit/c81f3a650448aeee55588a54e8d17daeab251bf1))
+
 ## [0.46.10-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.10-alpha.1...v0.46.10-alpha.2) (2026-11-21)
 
 ### Bug Fixes
