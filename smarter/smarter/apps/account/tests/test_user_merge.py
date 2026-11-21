@@ -6,6 +6,8 @@ from unittest import mock
 from django.apps.registry import Apps
 from django.contrib.auth.models import Group
 from django.db import IntegrityError, connection, transaction
+from django.db.migrations import Migration
+from django.db.migrations.loader import MigrationLoader
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from social_django.models import UserSocialAuth
@@ -64,6 +66,23 @@ class TestUserMerge(DuplicateUsersMixin):
     def secret(self, user_profile: UserProfile, name: str) -> Secret:
         """Create a Secret that the profile owns."""
         return Secret.objects.create(user_profile=user_profile, name=name, encrypted_value=Secret.encrypt("v"))
+
+    def test_historical_apps_ignores_uninstalled_apps(self):
+        """A migration that the database recorded for an app that is no longer installed is left out."""
+
+        class LoaderWithUninstalledApp(MigrationLoader):
+            """A loader whose database also recorded a migration of an app that isn't installed."""
+
+            def build_graph(self):
+                super().build_graph()
+                if self.applied_migrations is not None:
+                    self.applied_migrations[("an_uninstalled_app", "0001_initial")] = Migration(
+                        "0001_initial", "an_uninstalled_app"
+                    )
+
+        with mock.patch("smarter.apps.account.user_merge.MigrationLoader", LoaderWithUninstalledApp):
+            apps = historical_apps()
+        self.assertTrue(apps.get_model("account", "UserProfile"))
 
     def test_email_key_ignores_case_and_trailing_spaces(self):
         self.assertEqual(email_key("Bob@Example.COM  "), "bob@example.com")

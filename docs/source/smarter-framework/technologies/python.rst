@@ -32,7 +32,6 @@ Smarter Framework uses Python type hinting extensively throughout the codebase. 
 provides better support for IDEs, and enables static type checking with tools like mypy.
 
 - `pandas-stubs <https://github.com/VirtusLab/pandas-stubs>`__ for pandas type annotations.
-- `types-cachetools <https://pypi.org/project/types-cachetools/>`__ for cachetools type annotations.
 - `types-lxml <https://pypi.org/project/types-lxml/>`__ for lxml type annotations.
 - `types-Markdown <https://pypi.org/project/types-Markdown/>`__ for Markdown type annotations.
 - `types-paramiko <https://pypi.org/project/types-paramiko/>`__ for paramiko type annotations.

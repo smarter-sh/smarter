@@ -124,10 +124,13 @@ def historical_apps() -> Apps:
     and send no signals, so a merge can't trigger a deploy or a DNS change. They match the tables
     as they are, so a dry run works on a database that a newer version hasn't migrated yet.
 
+    The database also records the migrations of apps that are no longer installed, e.g.
+    django_celery_beat's. They aren't in the migration graph, so they are left out.
+
     :returns: The app registry.
     """
     loader = MigrationLoader(connection)
-    applied = list(loader.applied_migrations or [])
+    applied = [key for key in loader.applied_migrations or [] if key in loader.graph.nodes]
     project_state = loader.project_state(nodes=applied)
     return project_state.apps
 
