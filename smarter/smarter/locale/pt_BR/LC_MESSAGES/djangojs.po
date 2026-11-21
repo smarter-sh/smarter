@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 00:34+0000\n"
+"POT-Creation-Date: 2026-11-21 22:51+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -2680,11 +2680,11 @@ msgstr "Explorar o repositório"
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid ""
-"Smarter's backend is written in Python. The primary PyPi libraries that it "
-"uses include Django, Django REST Framework, Pydantic, and OpenAI."
+"Smarter is written in Python, with Django and Django REST Framework, and its "
+"web console is written in React."
 msgstr ""
-"O backend do Smarter é escrito em Python. As principais bibliotecas do PyPi "
-"que ele usa incluem Django, Django REST Framework, Pydantic e OpenAI."
+"O Smarter é escrito em Python, com Django e Django REST Framework, e seu "
+"console web é escrito em React."
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid "Read about its technologies"
@@ -10680,6 +10680,13 @@ msgstr "Novidades"
 #. Translators: used in packages/smarter.sh-widgets/src/components/WhatsNew/Component.tsx
 msgid "Recently added Smarter features"
 msgstr "Recursos do Smarter adicionados recentemente"
+
+#~ msgid ""
+#~ "Smarter's backend is written in Python. The primary PyPi libraries that "
+#~ "it uses include Django, Django REST Framework, Pydantic, and OpenAI."
+#~ msgstr ""
+#~ "O backend do Smarter é escrito em Python. As principais bibliotecas do "
+#~ "PyPi que ele usa incluem Django, Django REST Framework, Pydantic e OpenAI."
 
 #~ msgid "Manifest is not a valid object"
 #~ msgstr "O manifesto não é um objeto válido"

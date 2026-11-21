@@ -2,10 +2,12 @@
 
 import os
 
+from django.utils.translation import gettext_noop
+
 from smarter.common.enum import SmarterEnumAbstract
 
 namespace = "infrastructure"
-presentation_app_name = "Infrastructure"
+presentation_app_name = gettext_noop("Infrastructure")
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 

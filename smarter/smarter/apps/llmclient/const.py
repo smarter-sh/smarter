@@ -2,8 +2,10 @@
 
 import os
 
+from django.utils.translation import gettext_noop
+
 namespace = "llmclient"
-presentation_app_name = "LLMClient"
+presentation_app_name = gettext_noop("LLMClient")
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 EXAMPLE_MANIFESTS_REPOSITORY_URL = "https://github.com/smarter-sh/example-manifests"

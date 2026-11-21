@@ -1,22 +1,20 @@
 """Django Config for the Doodle app."""
 
-from django.apps import AppConfig
+from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
+from smarter.lib.django.apps import SmarterAppConfig
 
-from .const import namespace as app_name
-
-logger = logging.getLogger(__name__)
+from .const import namespace, presentation_app_name
 
 
-class DoodleConfig(AppConfig):
-    """Django Config for the Doodle app."""
+class DoodleConfig(SmarterAppConfig):
+    """Django app configuration of the Doodle app.
 
-    name = f"smarter.apps.{app_name.lower()}"
-    verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
+    See :class:`~smarter.lib.django.apps.SmarterAppConfig`.
+    """
 
-    def ready(self):
-        """Log that the app is ready."""
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)
+    name = f"smarter.apps.{namespace}"
+    verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _(presentation_app_name))
+    ready_modules = ()

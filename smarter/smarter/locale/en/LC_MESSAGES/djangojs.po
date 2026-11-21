@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 00:34+0000\n"
+"POT-Creation-Date: 2026-11-21 22:47+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -2517,8 +2517,8 @@ msgstr ""
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts
 msgid ""
-"Smarter's backend is written in Python. The primary PyPi libraries that it "
-"uses include Django, Django REST Framework, Pydantic, and OpenAI."
+"Smarter is written in Python, with Django and Django REST Framework, and its "
+"web console is written in React."
 msgstr ""
 
 #. Translators: used in packages/smarter-didyouknow/src/lib/facts.ts

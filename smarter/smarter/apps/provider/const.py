@@ -2,7 +2,14 @@
 
 import os
 
+from django.utils.translation import gettext_noop
+
 namespace = "provider"
+presentation_app_name = gettext_noop("Provider")
+"""The app's name as people read it, e.g. in the Django admin.
+
+Translated where it is shown.
+"""
 VERIFICATION_LIFETIME = 60 * 60 * 24 * 10  # 10 calendar days, expressed in seconds
 VERIFICATION_LEAD_TIME = 60 * 60 * 36  # 36 hours in seconds
 
