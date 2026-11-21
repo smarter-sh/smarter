@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.10](https://github.com/smarter-sh/smarter/compare/v0.46.9...v0.46.10) (2026-11-21)
+
+### Bug Fixes
+
+* bump smarter-console to v1.1.13 ([1859986](https://github.com/smarter-sh/smarter/commit/1859986f9f2785742538846972f808a41936c5b1))
+* **django:** adopt django 6 csp, unique constraints, and storages ([c81f3a6](https://github.com/smarter-sh/smarter/commit/c81f3a650448aeee55588a54e8d17daeab251bf1))
+* **logging:** fix stale ready-message test, drop decorative prefixes ([cc0c07e](https://github.com/smarter-sh/smarter/commit/cc0c07e351aeefaba16dfedf0da1c3c496d5c6ff))
+* **orchestrator:** send a signal at each step of a run's lifecycle ([d71cd1b](https://github.com/smarter-sh/smarter/commit/d71cd1b0955e74e3b8edc5df6ef5ef196cfbb9ee))
+* **provider:** treat account-policy 403s as inconclusive ([0a39ea1](https://github.com/smarter-sh/smarter/commit/0a39ea1b3b3980652c18f0767db8ec668f4de7c2)), closes [smarter-sh/smarter#1024](https://github.com/smarter-sh/smarter/issues/1024) [#1024](https://github.com/smarter-sh/smarter/issues/1024)
+* **secret:** send each secret event once, and receive secret_edited ([3481b61](https://github.com/smarter-sh/smarter/commit/3481b6129b2001b323bdef8fbc02195972a710a4))
+* **settings:** let user-defined django settings supersede every module ([01b8919](https://github.com/smarter-sh/smarter/commit/01b8919e6841c66f1083e7fd29d5fd3ed667b48d))
+* **signals:** add receivers for four signals that had none ([8409542](https://github.com/smarter-sh/smarter/commit/840954284ffb8f9db25166a7b7596f5bfc0ecfb0))
+
+### Refactoring
+
+* consolidate formatted_log_prefix logic ([8035827](https://github.com/smarter-sh/smarter/commit/8035827292666fab5e6e1c7d9d43c59cd34437f4))
+* **logging:** let the logger write each message's origin prefix ([8039a46](https://github.com/smarter-sh/smarter/commit/8039a4677516c0876b7dae8fcfbd94f6ec9edc76))
+* **logging:** remove hand-written origins from log messages ([5603401](https://github.com/smarter-sh/smarter/commit/5603401228a99034f88e88b5c9fb8873c8c86018))
+* **prompt:** remove the prompt_handler_console_output signal ([a8ef86d](https://github.com/smarter-sh/smarter/commit/a8ef86da1fe42513be878af3cf9722d2cbfdca09))
+* **signals:** log each signaled event once, from its receiver ([cd34249](https://github.com/smarter-sh/smarter/commit/cd342496dbe3b182aca627e6fd3c2b145f4da94c))
+
 ## [0.46.10-alpha.5](https://github.com/smarter-sh/smarter/compare/v0.46.10-alpha.4...v0.46.10-alpha.5) (2026-11-21)
 
 ### Bug Fixes
