@@ -45,6 +45,31 @@ The rest of data/ stays the image's own, read from the image.
 {{- end }}
 
 {{/*
+The user's own Django settings: the Secret that templates/secret-django-settings.yaml writes from
+.Values.djangoSettings, mounted read-only where smarter.settings.user reads it,
+/home/smarter_user/user-settings/settings.yaml (smarter_settings.user_settings_file's default). Every pod
+that loads Django's settings mounts it: the api, the workers, beat, and the init and migrate jobs.
+
+The Secret is optional. job-migrate.yaml is a pre-upgrade hook, which runs before Helm applies the
+release's Secrets: on the first upgrade to a chart that has this Secret, it doesn't exist yet, and a
+required volume would hold the Job's pod in ContainerCreating, and fail the upgrade. Without it, the
+directory is empty, which smarter.settings.user reads as no user settings. On later upgrades, the
+migrate Job reads the previous release's Secret, as it does secret-env.yaml's.
+*/}}
+{{- define "smarter.userSettingsVolumes" -}}
+- name: smarter-user-settings
+  secret:
+    secretName: "{{ .Values.global.appName }}-django-settings"
+    optional: true
+{{- end }}
+
+{{- define "smarter.userSettingsVolumeMounts" -}}
+- name: smarter-user-settings
+  mountPath: /home/smarter_user/user-settings
+  readOnly: true
+{{- end }}
+
+{{/*
 The names of the api's Deployments, and of their Services, HorizontalPodAutoscalers and
 PodDisruptionBudgets, comma-separated: <appName>-api, and while app.legacyName.enabled is true,
 <appName> too, the name that they had before.

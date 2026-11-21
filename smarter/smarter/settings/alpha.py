@@ -10,7 +10,9 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.logging import getSmarterLogger
 
+from .base import log_settings_diagnostics
 from .base_aws import *
+from .user import apply_user_settings
 
 logger = getSmarterLogger(__name__)
 
@@ -34,6 +36,12 @@ CORS_ALLOWED_ORIGINS += [
 
 # see: https://python-social-auth.readthedocs.io/en/latest/configuration/settings.html
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+# The user's own Django settings supersede every setting above: the user settings file, then
+# DJANGO_* environment variables. No setting is assigned below this line, and the settings are
+# logged only below it, so that the log shows the values that Django runs with.
+apply_user_settings(globals())
+log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:

@@ -182,6 +182,8 @@ class SettingsDefaults:
     )
     EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("EXTENSION_REGISTRY_PUBLIC_KEY", "")
     LOKI_URL: str = get_env("LOKI_URL", "")  # e.g. http://smarter-loki:3100. Empty: no pod log store
+    # the user's own Django settings: see smarter.settings.user, which reads the same variable.
+    USER_SETTINGS_FILE: str = get_env("USER_SETTINGS_FILE", "/home/smarter_user/user-settings/settings.yaml")
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),

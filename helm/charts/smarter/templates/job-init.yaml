@@ -134,8 +134,10 @@ spec:
             {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
+            {{- include "smarter.userSettingsVolumeMounts" . | nindent 12 }}
       volumes:
         {{- include "smarter.writableVolumes" . | nindent 8 }}
+        {{- include "smarter.userSettingsVolumes" . | nindent 8 }}
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never

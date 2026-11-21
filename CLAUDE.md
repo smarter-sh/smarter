@@ -99,7 +99,8 @@ Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 `localhost:9357`), `smarter-worker`, `smarter-worker-infrastructure`,
 `smarter-beat`, `smarter-mariadb`, `smarter-redis`.
 
-- **There is no bind mount.** Host `smarter/smarter/<path>` is
+- **There is no bind mount of the code.** (The only one is `user-settings/`,
+  read-only, for a developer's own Django settings.) Host `smarter/smarter/<path>` is
   `/home/smarter_user/smarter/smarter/<path>` in the container, and edits must
   reach them. Prefer `make build && make run` (about 5 seconds, always with
   `run_in_background: true`, then wait for the dev server; see hard rule 9),

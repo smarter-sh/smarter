@@ -18,6 +18,8 @@ from smarter.common.conf import smarter_settings
 from smarter.lib.logging import getSmarterLogger
 
 from .base import *
+from .base import log_settings_diagnostics
+from .user import apply_user_settings
 
 logger = getSmarterLogger(__name__)
 
@@ -80,6 +82,12 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
 
 environment_name = os.path.basename(__file__).replace(".py", "")
+# The user's own Django settings supersede every setting above: the user settings file, then
+# DJANGO_* environment variables. No setting is assigned below this line, and the settings are
+# logged only below it, so that the log shows the values that Django runs with.
+apply_user_settings(globals())
+log_settings_diagnostics(globals())
+
 logger.debug("Loading smarter.settings.%s", environment_name)
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
 

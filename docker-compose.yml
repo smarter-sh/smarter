@@ -62,6 +62,10 @@ services:
       - smarter-redis
     env_file:
       - ./.env
+    volumes:
+      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
+      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
+      - ./user-settings:/home/smarter_user/user-settings:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=app
@@ -94,6 +98,10 @@ services:
       - smarter-api
     env_file:
       - ./.env
+    volumes:
+      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
+      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
+      - ./user-settings:/home/smarter_user/user-settings:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
@@ -136,6 +144,10 @@ services:
       - smarter-api
     env_file:
       - ./.env
+    volumes:
+      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
+      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
+      - ./user-settings:/home/smarter_user/user-settings:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
@@ -175,6 +187,10 @@ services:
       - smarter-api
     env_file:
       - ./.env
+    volumes:
+      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
+      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
+      - ./user-settings:/home/smarter_user/user-settings:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=beat

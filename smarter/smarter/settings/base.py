@@ -12,16 +12,14 @@ Notes:
 - For the full list of settings and their values, see the `Django settings reference <https://docs.djangoproject.com/en/5.0/ref/settings/>`_.
 """
 
-import ast
 import logging
 import logging.config
 import os
-import re
 import secrets
 import sys
 import time
 import urllib.parse
-from datetime import datetime
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,9 +33,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.resources import log_resource_limits
-from smarter.common.utils import mask_string
 from smarter.common.utils.redis_url import redis_url_with_database
-from smarter.lib import json
 from smarter.lib.django.csp import CSP_REPORT_PATH
 from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
@@ -47,47 +43,6 @@ logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 load_dotenv()
 
 logger.debug("Smarter version: %s", smarter_version)
-
-
-# pylint: disable=W0621
-def smart_cast(value, default_value):
-    """
-    Cast string value to the same data type as the type of the default_value.
-
-    This is used for casting environment variable strings to the appropriate settings type.
-    """
-    if isinstance(default_value, bool):
-        return str(value).lower() in ("1", "true", "yes", "on")
-    if isinstance(default_value, int):
-        try:
-            return int(value)
-        except ValueError:
-            return default_value
-    if isinstance(default_value, float):
-        try:
-            return float(value)
-        except ValueError:
-            return default_value
-    if isinstance(default_value, list):
-        # Try JSON, fallback to comma-separated
-        try:
-            parsed = ast.literal_eval(value)
-            if isinstance(parsed, list):
-                return parsed
-        # pylint: disable=broad-except
-        except Exception:
-            pass
-        return [item.strip() for item in value.split(",") if item.strip()]
-    if isinstance(default_value, dict):
-        try:
-            parsed = ast.literal_eval(value)
-            if isinstance(parsed, dict):
-                return parsed
-        # pylint: disable=broad-except
-        except Exception:
-            pass
-        return default_value
-    return value  # str or fallback
 
 
 APPEND_SLASH = True
@@ -2095,192 +2050,38 @@ to "True". If set to True, tags will be treated as case insensitive
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
 
-# step 2: load environment variables from .env file (if present)
-ASCII_CONTROL_CHAR_REGEX = re.compile(r"[\x00-\x1F\x7F]")
-"""
-Process environment variables to override settings values.
-
-This allows for 12-factor style configuration via environment variables.
-Environment variable values are cast to the same data type as the
-existing Django or Smarter setting value.
-
-The basic process is:
-
-1. Set default settings values.
-2. Load environment variables from a .env file (if present) and os.environ.
-3. Map environment variables to Django settings by removing the ``DJANGO_``
-   prefix. For any environment variable that matches an existing Django
-   setting, cast the value to the same type as the existing setting value
-   and override the default.
-
-   For anything else, analyze the passed value to infer the intended data
-   type and create a new setting if it does not already exist.
-
-Note:
-Django settings are prefixed with ``DJANGO_`` and Smarter settings
-are prefixed with ``SMARTER_``.
-"""
-
-# step 3: override settings from environment variables
-if any(key.startswith("DJANGO_") for key, _ in os.environ.items()):
-    logger.debug("=" * 80)
-    logger.debug("%s Django settings overrides %s", "=" * (40 - 13), "=" * (40 - 14))
-    logger.debug("=" * 80)
-for key, value in os.environ.items():
-    if not key.startswith("DJANGO_"):
-        continue
-    if key == "DJANGO_SETTINGS_MODULE":
-        continue
-
-    # Remove the "DJANGO_" prefix to get the actual Django setting name
-    key = key.upper().replace("DJANGO_", "")
-
-    # Remove any ASCII control characters from the value to prevent issues with
-    # non-printable characters in environment variables, which can sometimes
-    # occur due to copy-paste errors or other issues. This is a common source
-    # of hard-to-debug problems with environment variable configuration.
-    value = ASCII_CONTROL_CHAR_REGEX.sub("", str(value).strip())
-    logger.debug("Processing Django setting override: %s", key)
-
-    # If the environment variable does not match any existing Django setting,
-    # analyze the value passed to attempt to infer the intended data type the value.
-    # This allows for dynamic creation of new settings from environment variables,
-    # which can be useful for custom or third-party app configuration without
-    # needing to modify the settings file.
-    if key not in globals():
-        logger.debug(
-            SmarterFormattedText.text(
-                "Environment variable %s does not match any existing Django setting. Inspecting the value to attempt to determine its intended type and usage: %s=%s"
-            ),
-            key,
-            key,
-            mask_string(value),
-        )
-
-        raw_value = value
-        cast_value = None
-
-        # Ideally, we'd like to leverage the built-in ast.literal_eval()
-        # function to safely evaluate string representations of Python
-        # literals (e.g. lists, dicts, numbers, booleans) in environment
-        # variables. However, this can be problematic if the value is a
-        # string that just happens to look like a Python literal
-        # (e.g. a string that looks like a list or dict). Therefore, we will
-        # attempt to use ast.literal_eval() but fall back to other inference
-        # methods if it fails or if the result is not a valid type.
-        try:
-            cast_value = ast.literal_eval(raw_value) if isinstance(raw_value, str) else raw_value
-            logger.debug(
-                "Successfully cast value using ast.literal_eval() for %s=%s of Type '%s'",
-                key,
-                mask_string(str(cast_value)),
-                type(cast_value).__name__,
-            )
-        except (ValueError, SyntaxError):
-            cast_value = None
-
-        # Attempt to find Django's default value inside of Python's global
-        # namespace and use it to infer the intended type of the environment
-        # variable value.
-        if not cast_value and globals().get(key) is not None:
-            default_value = globals()[key]
-            cast_value = smart_cast(raw_value, default_value)
-            logger.debug(
-                "Inferred type '%s' for %s=%s based on existing Django setting default value",
-                type(default_value).__name__,
-                key,
-                mask_string(str(cast_value)),
-            )
-
-        # Hereon, we're simply trying to infer the intended type of the
-        # environment variable value based on common patterns and heuristics,
-        # since we have no existing Django setting to use as a reference for
-        # type casting. This is inherently error-prone, but can be effective
-        # for the most common data types and usage patterns.
-
-        # Integer
-        elif not cast_value and str(raw_value).replace(".", "").isdigit():
-            try:
-                cast_value = int(raw_value)
-                logger.debug("Inferred type 'int' for %s=%s", key, mask_string(str(cast_value)))
-            except ValueError:
-                try:
-                    cast_value = float(raw_value)
-                    logger.debug("Inferred type 'float' for %s=%s", key, mask_string(str(cast_value)))
-                except ValueError:
-                    cast_value = raw_value
-                    logger.warning(
-                        "could not cast as a numeric value. Falling back to string for %s=%s",
-                        key,
-                        mask_string(str(cast_value)),
-                    )
-        # Date (ISO format)
-        elif not cast_value and re.match(r"^\d{4}-\d{2}-\d{2}$", raw_value):
-            try:
-                cast_value = datetime.strptime(raw_value, "%Y-%m-%d").date()
-                logger.debug("Inferred type 'date' for %s=%s", key, mask_string(str(cast_value)))
-            except ValueError:
-                pass
-
-        # List (comma-separated)
-        elif not cast_value and "," in raw_value:
-            try:
-                cast_value = [item.strip() for item in raw_value.split(",")]
-                logger.debug("Inferred type 'list' for %s=%s", key, mask_string(str(cast_value)))
-            # pylint: disable=broad-except
-            except Exception:
-                pass
-
-        # Dict (JSON)
-        elif not cast_value and raw_value.startswith("{") and raw_value.endswith("}"):
-            try:
-                cast_value = json.loads(raw_value)
-                logger.debug("Inferred type 'dict' for %s=%s", key, mask_string(str(cast_value)))
-            # pylint: disable=broad-except
-            except Exception:
-                cast_value = raw_value
-        # String (default)
-        elif not cast_value:
-            cast_value = str(raw_value)
-            logger.debug("Inferred type 'str' for %s=%s", key, mask_string(str(cast_value)))
-
-        globals()[key] = cast_value
-        logger.info(
-            "Creating new Django setting from environment variable: %s=%s of Type '%s'",
-            key,
-            mask_string(repr(cast_value)),
-            type(cast_value),
-        )
-        continue
-
-    # If the environment variable matches an existing Django setting, cast the
-    # value to the same type as the existing setting value and override it.
-    default_value = globals()[key]
-    cast_value = smart_cast(value, default_value)
-    globals()[key] = cast_value
-    if smarter_settings.settings_output:
-        if key not in [
-            "SECRET_KEY",
-            "SMTP_PASSWORD",
-            "SMTP_USERNAME",
-            "AWS_ACCESS_KEY_ID",
-            "AWS_SECRET_ACCESS_KEY",
-        ]:
-            logger.info(
-                "Overriding Django setting from environment variable: %s=%s",
-                key,
-                repr(cast_value),
-            )
-        else:
-            logger.info(
-                "Overriding Django setting from environment variable: %s=******",
-                key,
-            )
-
 ###############################################################################
 # Settings diagnostics information for all environments
 ###############################################################################
-if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
+def default_storage_backend(settings: Mapping[str, object]) -> str:
+    """
+    Return the backend of the default storage in ``STORAGES``.
+
+    :param settings: A settings module's namespace.
+    :returns: Its dotted path, or ``unknown`` when ``STORAGES`` has no default.
+    """
+    storages = settings.get("STORAGES")
+    if not isinstance(storages, dict):
+        return "unknown"
+    default_storage = storages.get("default")
+    if not isinstance(default_storage, dict):
+        return "unknown"
+    backend = str(default_storage.get("BACKEND", "unknown"))
+    return backend
+
+
+def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
+    """
+    Log the platform's diagnostics, and the settings that every environment shares, outside of manage.py.
+
+    Each environment's module calls it with its ``globals()``, after
+    :func:`smarter.settings.user.apply_user_settings`, so that the log shows the values that Django
+    runs with, the user's own settings included, rather than this module's.
+
+    :param settings: The environment's settings module's namespace.
+    """
+    if not (smarter_settings.settings_output or "manage.py" not in sys.argv[0]):
+        return
     logger.debug("=" * 80)
     logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18))
     logger.debug("=" * 80)
@@ -2313,10 +2114,16 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
 
     logger.debug("Django v%s", get_version())
     logger.debug("Smarter v%s", smarter_version)
-    logger.debug("Storages backend: %s", STORAGES["default"]["BACKEND"])
+    logger.debug("Storages backend: %s", default_storage_backend(settings))
 
     if smarter_settings.smtp_is_configured:
-        logger.debug("SMTP server configured: %s:%s (SSL=%s, TLS=%s)", SMTP_HOST, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS)
+        logger.debug(
+            "SMTP server configured: %s:%s (SSL=%s, TLS=%s)",
+            settings["SMTP_HOST"],
+            settings["SMTP_PORT"],
+            settings["SMTP_USE_SSL"],
+            settings["SMTP_USE_TLS"],
+        )
     else:
         logger.warning("SMTP server not configured")
     if smarter_settings.aws_is_configured:
@@ -2324,6 +2131,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     else:
         logger.warning("AWS credentials not found.")
     logger.debug("=" * 80)
+
 
 # mypy can't evaluate a computed __all__, and would then treat a star import of this
 # module as importing nothing. It skips this block, and exports every public name.

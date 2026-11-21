@@ -8,11 +8,14 @@ alpha.py extend CORS_ALLOWED_ORIGINS in place, and that list object is shared
 with the live settings, so every test restores it.
 """
 
+import ast
 import importlib
 import logging
 import os
 import re
 import sys
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from pydantic import SecretStr
@@ -124,24 +127,123 @@ class TestEnvironmentSettings(SmarterTestBase):
         )
 
 
+ENVIRONMENT_MODULES = ("local", "alpha", "beta", "next", "prod")
+"""The settings modules that DJANGO_SETTINGS_MODULE names, one per environment."""
+
+
+class TestUserSettingsInEveryEnvironment(SmarterTestBase):
+    """
+    The user's own settings supersede Smarter's in every environment: base.py, base_aws.py and the environment's module.
+
+    Each test re-executes an environment's module, with a user settings file and DJANGO_* variables of its
+    own, then restores the module's namespace.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._cors_allowed_origins = list(base_settings.CORS_ALLOWED_ORIGINS)
+        settings_directory = tempfile.TemporaryDirectory()
+        self.addCleanup(settings_directory.cleanup)
+        self.settings_file = Path(settings_directory.name) / "settings.yaml"
+        argv_patcher = patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"])
+        argv_patcher.start()
+        self.addCleanup(argv_patcher.stop)
+
+    def tearDown(self):
+        base_settings.CORS_ALLOWED_ORIGINS[:] = self._cors_allowed_origins
+        super().tearDown()
+
+    def load(self, environment: str, file_text: str, environ: dict[str, str]) -> SmarterDictType:
+        """Re-execute an environment's settings module with this file and these variables, and return its settings."""
+        self.settings_file.write_text(file_text, encoding="utf-8")
+        variables = {"SMARTER_USER_SETTINGS_FILE": str(self.settings_file), **environ}
+        module = sys.modules.get(f"smarter.settings.{environment}")
+        saved = dict(vars(module)) if module else None
+        try:
+            with patch.dict(os.environ, variables):
+                return dict(vars(fresh_import(f"smarter.settings.{environment}")))
+        finally:
+            if module is not None and saved is not None:
+                vars(module).clear()
+                vars(module).update(saved)
+
+    def test_the_file_supersedes_every_settings_module(self):
+        """
+        A setting from base.py (APPEND_SLASH), base_aws.py (SESSION_COOKIE_SAMESITE) and the environment's own module.
+
+        local.py sets SESSION_COOKIE_SAMESITE and SESSION_COOKIE_SECURE itself; the AWS environments inherit them
+        from base_aws.py.
+        """
+        file_text = "APPEND_SLASH: false\nSESSION_COOKIE_SAMESITE: Strict\nSESSION_COOKIE_SECURE: false\n"
+        for environment in ENVIRONMENT_MODULES:
+            with self.subTest(environment=environment):
+                settings = self.load(environment, file_text, {})
+                self.assertIs(settings["APPEND_SLASH"], False)
+                self.assertEqual(settings["SESSION_COOKIE_SAMESITE"], "Strict")
+                self.assertIs(settings["SESSION_COOKIE_SECURE"], False)
+
+    def test_a_variable_supersedes_the_file(self):
+        file_text = "SESSION_COOKIE_AGE: 100\n"
+        environ = {"DJANGO_SESSION_COOKIE_AGE": "200", "DJANGO_CSRF_COOKIE_SECURE": "true"}
+        for environment in ENVIRONMENT_MODULES:
+            with self.subTest(environment=environment):
+                settings = self.load(environment, file_text, environ)
+                self.assertEqual(settings["SESSION_COOKIE_AGE"], 200)
+                self.assertIs(settings["CSRF_COOKIE_SECURE"], True)
+
+    def test_the_log_shows_the_values_django_runs_with(self):
+        """The environment's module logs its settings after the user's own: here, prod's warning about an insecure cookie."""
+        with self.assertLogs("smarter.settings.prod", level=logging.DEBUG) as captured:
+            self.load("prod", "", {"DJANGO_SESSION_COOKIE_SECURE": "false"})
+        messages = [record.getMessage() for record in captured.records]
+        self.assertTrue([message for message in messages if message.endswith("SESSION_COOKIE_SECURE: False")])
+        self.assertTrue([message for message in messages if "SESSION_COOKIE_SECURE should be set to True" in message])
+
+    def test_no_setting_is_assigned_after_the_user_settings(self):
+        """In each environment's module, apply_user_settings() comes after every assignment of a setting."""
+        for environment in ENVIRONMENT_MODULES:
+            with self.subTest(environment=environment):
+                path = Path(base_settings.__file__).parent / f"{environment}.py"
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                statements = tree.body
+                call_index = None
+                for index, statement in enumerate(statements):
+                    if ast.unparse(statement) == "apply_user_settings(globals())":
+                        call_index = index
+                self.assertIsNotNone(call_index, f"{path.name} doesn't call apply_user_settings(globals()).")
+                assert call_index is not None
+                self.assertEqual(ast.unparse(statements[call_index + 1]), "log_settings_diagnostics(globals())")
+                for statement in statements[call_index + 1 :]:
+                    self.assertEqual(settings_assigned_in(statement), [], f"{path.name} sets a setting after them.")
+
+
+SEQUENCE_MUTATORS = ("append", "extend", "insert", "update", "setdefault", "pop", "remove", "clear")
+"""The methods of a list or dict that change a setting in place."""
+
+
+def settings_assigned_in(statement: ast.stmt) -> list[str]:
+    """Return the upper case names that a statement assigns, or changes in place, anywhere inside it."""
+    retval = []
+    for node in ast.walk(statement):
+        targets: list[ast.expr] = []
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        if isinstance(node, (ast.AugAssign, ast.AnnAssign)):
+            targets = [node.target]
+        for target in targets:
+            while isinstance(target, (ast.Subscript, ast.Attribute)):
+                target = target.value
+            if isinstance(target, ast.Name) and target.id.isupper():
+                retval.append(target.id)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            owner = node.func.value
+            if node.func.attr in SEQUENCE_MUTATORS and isinstance(owner, ast.Name) and owner.id.isupper():
+                retval.append(owner.id)
+    return retval
+
+
 class TestBaseSettings(SmarterTestBase):
     """Test smarter.settings.base: environment variable overrides and diagnostics."""
-
-    def test_smart_cast(self):
-        """Smart_cast casts a string to the type of the default value."""
-        smart_cast = base_settings.smart_cast
-        self.assertIs(smart_cast("yes", False), True)
-        self.assertIs(smart_cast("0", True), False)
-        self.assertEqual(smart_cast("42", 1), 42)
-        self.assertEqual(smart_cast("forty-two", 1), 1)
-        self.assertEqual(smart_cast("1.5", 1.0), 1.5)
-        self.assertEqual(smart_cast("not-a-float", 1.0), 1.0)
-        self.assertEqual(smart_cast("['a', 'b']", []), ["a", "b"])
-        self.assertEqual(smart_cast("a, b,,c", []), ["a", "b", "c"])
-        self.assertEqual(smart_cast("{'a': 1}", {}), {"a": 1})
-        self.assertEqual(smart_cast("not a dict", {"default": True}), {"default": True})
-        self.assertEqual(smart_cast("['not', 'a', 'dict']", {"default": True}), {"default": True})
-        self.assertEqual(smart_cast("text", "default"), "text")
 
     def _reload_preserving(self, module_name: str):
         """Re-execute a settings module, then put its original namespace back."""
@@ -152,37 +254,6 @@ class TestBaseSettings(SmarterTestBase):
         finally:
             vars(module).clear()
             vars(module).update(saved)
-
-    def test_environment_overrides_and_diagnostics(self):
-        """
-        DJANGO_* environment variables override existing settings, cast to the existing type, or create new settings with an inferred type.
-
-        Outside of manage.py, base.py also logs container diagnostics.
-        """
-        environ = {
-            "DJANGO_APPEND_SLASH": "false",
-            "DJANGO_SECRET_KEY": "not-a-real-secret",
-            "DJANGO_SMARTER_TEST_LITERAL": "[1, 2]",
-            "DJANGO_SMARTER_TEST_VERSION": "1.2.3",
-            "DJANGO_SMARTER_TEST_LIST": "a, b",
-            "DJANGO_SMARTER_TEST_DICT": "{not: json}",
-            "DJANGO_SMARTER_TEST_STR": "hello",
-        }
-        with (
-            patch.dict(os.environ, environ),
-            patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
-            patch("logging.config.dictConfig"),
-        ):
-            namespace = self._reload_preserving("smarter.settings.base")
-        self.assertIs(namespace["APPEND_SLASH"], False)
-        self.assertEqual(namespace["SECRET_KEY"], "not-a-real-secret")
-        self.assertEqual(namespace["SMARTER_TEST_LITERAL"], [1, 2])
-        self.assertEqual(namespace["SMARTER_TEST_VERSION"], "1.2.3")
-        self.assertEqual(namespace["SMARTER_TEST_LIST"], ["a", "b"])
-        self.assertEqual(namespace["SMARTER_TEST_DICT"], "{not: json}")
-        self.assertEqual(namespace["SMARTER_TEST_STR"], "hello")
-        # the live module is untouched
-        self.assertNotIn("SMARTER_TEST_STR", vars(base_settings))
 
     def _reload_base_with_secret_key(self, secret_key: str) -> tuple[SmarterDictType, list[str]]:
         """Re-execute base.py with the given smarter_settings.secret_key, capturing every log message it emits."""
@@ -217,30 +288,6 @@ class TestBaseSettings(SmarterTestBase):
             [message for message in messages if message.endswith("SECRET_KEY not set. Using a randomized value.")]
         )
         self.assertFalse([message for message in messages if secret_key in message])
-
-    def test_new_setting_values_are_never_logged(self):
-        """A DJANGO_* environment variable that creates a new setting is logged with its value masked, whatever type is inferred."""
-        environ = {
-            "DJANGO_SMARTER_TEST_TOKEN_STR": f"unit-test-token-{self.hash_suffix}",
-            "DJANGO_SMARTER_TEST_TOKEN_INT": "8675309424242",
-            "DJANGO_SMARTER_TEST_TOKEN_LIST": f"unit-test-token-a-{self.hash_suffix}, b",
-            "DJANGO_SMARTER_TEST_TOKEN_DICT": f'{{"token": "unit-test-token-d-{self.hash_suffix}"}}',
-        }
-        with (
-            patch.dict(os.environ, environ),
-            patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
-            patch("logging.config.dictConfig"),
-            self.assertLogs("smarter.settings.base", level=logging.DEBUG) as captured,
-        ):
-            namespace = self._reload_preserving("smarter.settings.base")
-        messages = [record.getMessage() for record in captured.records]
-        self.assertEqual(namespace["SMARTER_TEST_TOKEN_STR"], environ["DJANGO_SMARTER_TEST_TOKEN_STR"])
-        self.assertEqual(namespace["SMARTER_TEST_TOKEN_INT"], 8675309424242)
-        self.assertEqual(namespace["SMARTER_TEST_TOKEN_LIST"], [f"unit-test-token-a-{self.hash_suffix}", "b"])
-        self.assertEqual(namespace["SMARTER_TEST_TOKEN_DICT"], {"token": f"unit-test-token-d-{self.hash_suffix}"})
-        self.assertTrue([message for message in messages if "SMARTER_TEST_TOKEN_STR" in message])
-        for secret in ("unit-test-token", "8675309"):
-            self.assertFalse([message for message in messages if secret in message])
 
     def test_local_settings_diagnostics(self):
         """Local.py logs its configuration outside of manage.py."""

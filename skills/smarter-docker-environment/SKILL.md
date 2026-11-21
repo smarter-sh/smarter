@@ -62,7 +62,9 @@ never deploy an LLMClient for real to try (see `smarter-infrastructure-safety`).
 
 ## The containers don't see your edits
 
-There's **no bind mount** of the source. Edits on the host do nothing until they
+There's **no bind mount** of the source. (Docker Compose mounts only `user-settings/`, read-only, at
+`/home/smarter_user/user-settings/`: a developer's own Django settings, which `smarter.settings.user`
+applies. A change to it needs only a restart.) Edits on the host do nothing until they
 reach the containers, which can drift far behind the host, by dozens of files
 and unapplied migrations. Celery tasks run in the workers, so a stale worker runs
 stale task code even when smarter-api is current.

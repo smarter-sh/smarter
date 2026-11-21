@@ -158,6 +158,11 @@
         "SMTP_PASSWORD": { "type": "string" }
       }
     },
+    "djangoSettings": {
+      "type": "object",
+      "description": "Your own Django settings, by upper case name, which supersede Smarter's in every environment. Written to the Secret <appName>-django-settings, and mounted at /home/smarter_user/user-settings/settings.yaml.",
+      "propertyNames": { "pattern": "^[A-Z][A-Z0-9_]*$" }
+    },
     "externalDatabase": {
       "type": "object",
       "properties": {
