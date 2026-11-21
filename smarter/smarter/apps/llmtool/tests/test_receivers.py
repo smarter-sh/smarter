@@ -383,5 +383,7 @@ class TestPluginReceivers(PluginAppTestBase):
         signals.extension_disabled.send(sender=self.__class__, extension=extension, reason="disabled by admin")
         signals.extension_tool_failed.send(sender=self.__class__, error="timed out", **tool)
         self.assertEqual(self.capture.count(logging.WARNING), 2)
+        # the receiver runs in the thread that sent the signal, and names it.
+        self.assertIn("get_weather failed in thread MainThread: timed out", self.logged())
         self.assertIn("disabled by admin", self.logged())
         self.assertIn("timed out", self.logged())

@@ -768,7 +768,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s", plugin.name)
         chat_plugin_called.send(
             sender=self.handler,
             prompt=self.prompt,

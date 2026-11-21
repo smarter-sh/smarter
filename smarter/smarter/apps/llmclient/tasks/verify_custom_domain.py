@@ -156,8 +156,9 @@ def verify_custom_domain(
     custom_domain = LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).first()
 
     if attempt == 0:
-        logger.info("verifying %s, DNS zone %s task_id: %s", domain_name, hosted_zone_id, task_id)
-        pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
+        pre_verify_custom_domain.send(
+            sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, domain_name=domain_name, task_id=task_id
+        )
         if custom_domain and not custom_domain.is_verified:
             custom_domain.set_verification_status(Status.VERIFYING, "Verification has started.")
     logger.info(
@@ -171,7 +172,6 @@ def verify_custom_domain(
 
     blocker = _verification_blocker(hosted_zone_id, domain_name, task_id)
     if blocker is None:
-        logger.info("%s is verified: its certificate is issued. task_id %s", domain_name, task_id)
         if custom_domain:
             custom_domain.set_verification_status(Status.VERIFIED)
             _deploy_llmclient_on(custom_domain)
@@ -187,7 +187,13 @@ def verify_custom_domain(
             )
         else:
             logger.info("domain %s is not a LLMClient custom domain.", domain_name)
-        post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
+        post_verify_custom_domain.send(
+            sender=verify_custom_domain,
+            hosted_zone_id=hosted_zone_id,
+            domain_name=domain_name,
+            verified=True,
+            task_id=task_id,
+        )
         return True
 
     logger.info("%s is not verified yet: %s task_id %s", domain_name, blocker, task_id)
@@ -207,7 +213,6 @@ def verify_custom_domain(
         )
         return None
 
-    logger.error("Domain verification failed for domain %s: %s task_id: %s", domain_name, blocker, task_id)
     if custom_domain:
         custom_domain.set_verification_status(Status.FAILED, blocker)
         _notify(
@@ -219,7 +224,14 @@ def verify_custom_domain(
                 f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
             ),
         )
-    post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
+    post_verify_custom_domain.send(
+        sender=verify_custom_domain,
+        hosted_zone_id=hosted_zone_id,
+        domain_name=domain_name,
+        verified=False,
+        blocker=blocker,
+        task_id=task_id,
+    )
     return False
 
 

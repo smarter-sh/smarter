@@ -10,8 +10,21 @@ from smarter.lib.django.listview import connect_listview_cache
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import Vectorsearch
+from .signals import vectorsearch_called
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING])
+
+
+@receiver(vectorsearch_called, dispatch_uid="vectorsearch_called")
+def vectorsearch_called_receiver(sender, vectorsearch: Vectorsearch, **kwargs):
+    """
+    Log that a Vectorsearch is about to run.
+
+    :param sender: The class that sent the signal, e.g. the Vectorsearch api view.
+    :param vectorsearch: The Vectorsearch that was called.
+    :param kwargs: Other signal arguments: ``request``, ``args`` and ``kwargs`` (unused).
+    """
+    logger.info("running vectorsearch %s", vectorsearch.pk)
 
 
 @receiver(post_save, sender=Vectorsearch)

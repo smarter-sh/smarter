@@ -234,5 +234,4 @@ def verify_provider(provider_id, **kwargs):
         provider.is_verified = False
         provider.is_active = False
         provider.save(update_fields=["status", "is_active", "is_verified"])
-        logger.error("Verification failed for provider: %s", provider.name)
         provider_verification_failure.send(sender=Provider, provider=provider)

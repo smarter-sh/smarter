@@ -973,16 +973,8 @@ class LLMClient(MetaDataWithOwnershipModel):
                 should_undeploy = True
         super().save(*args, **kwargs)
         if should_deploy:
-            logger.debug(
-                "sending llmclient_deploy signal for LLMClient id: %s",
-                self.pk,
-            )
             llmclient_deploy.send(sender=self.__class__, llmclient=self)
         if should_undeploy:
-            logger.debug(
-                "sending llmclient_undeploy signal for LLMClient id: %s",
-                self.pk,
-            )
             llmclient_undeploy.send(sender=self.__class__, llmclient=self)
 
     # pylint: disable=C0415

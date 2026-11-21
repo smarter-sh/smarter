@@ -108,7 +108,6 @@ def undeploy_default_api(llmclient_id: int):
         return
 
     task_id = undeploy_default_api.request.id
-    logger.info("llmclient %s task_id: %s", llmclient_id, task_id)
     pre_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
 
     llmclient: LLMClient
@@ -118,20 +117,25 @@ def undeploy_default_api(llmclient_id: int):
         try:
             llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
         except LLMClient.DoesNotExist:
-            logger.error("LLMClient %s not found. task_id: %s", llmclient_id, task_id)
-            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id)
+            post_undeploy_default_api.send(
+                sender=undeploy_default_api,
+                llmclient_id=llmclient_id,
+                success=False,
+                outcome="it was not found",
+                task_id=task_id,
+            )
             return None
 
         # this task is queued when an llmclient is saved as not deployed. If it is deployed now, then it
         # was deployed again since, and a deploy_default_api task is queued, so undeploying it would
         # destroy the A record of an llmclient that is meant to be deployed.
         if llmclient.deployed:
-            logger.info(
-                "LLMClient %s was deployed again since this task was queued. Nothing to do. task_id: %s",
-                llmclient.name,
-                task_id,
+            post_undeploy_default_api.send(
+                sender=undeploy_default_api,
+                llmclient_id=llmclient_id,
+                outcome=f"{llmclient.name} was deployed again since this task was queued. Nothing to do",
+                task_id=task_id,
             )
-            post_undeploy_default_api.send(sender=undeploy_default_api, llmclient_id=llmclient_id, task_id=task_id)
             return None
 
         hostname = urlparse(llmclient.default_url).netloc

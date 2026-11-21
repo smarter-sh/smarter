@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """Django signal receivers of Smarter Extensions: installation, and calls to their tools."""
 
+import threading
+
 from django.dispatch import receiver
 
 from smarter.lib import logging
@@ -18,7 +20,9 @@ from ..signals.extension import (
     extension_upgraded,
 )
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.EXTENSION_LOGGING]
+)
 
 
 @receiver(extension_installed, dispatch_uid="extension_installed")
@@ -148,7 +152,8 @@ def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str
     """
     Handle extension tool failed signal.
 
-    Logs it at WARNING.
+    Logs it at WARNING, with the name of the thread that ran the tool: the signal is sent from that
+    thread, so its receivers run in it too.
 
     :param sender: The class that sent the signal.
     :param slug: The extension's slug.
@@ -157,10 +162,11 @@ def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str
     :param error: Why it failed.
     """
     logger.warning(
-        "%s %s %s failed: %s",
+        "%s %s %s failed in thread %s: %s",
         slug,
         version,
         tool_name,
+        threading.current_thread().name,
         error,
     )
 

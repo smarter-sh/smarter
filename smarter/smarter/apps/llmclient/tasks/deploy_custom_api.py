@@ -92,8 +92,13 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
         )
         return None
 
-    pre_deploy_custom_api.send(sender=deploy_custom_api, llmclient_id=llmclient_id)
-    logger.info("deploying llmclient %s on %s task_id: %s", llmclient.name, custom_host, task_id)
+    pre_deploy_custom_api.send(
+        sender=deploy_custom_api,
+        llmclient_id=llmclient_id,
+        name=llmclient.name,
+        custom_host=custom_host,
+        task_id=task_id,
+    )
 
     if smarter_settings.llmclient_tasks_create_dns_record:
         # the custom host's A record is a copy of the platform API domain's A record, in the

@@ -381,7 +381,6 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`get_user`.
         """
-        logger.debug("user_id: %s, request: %s", user_id, request)
         response = get_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -394,7 +393,6 @@ class UserView(AccountViewBase):
         :param user_id: Unused.
         :returns: The response of :func:`create_user`.
         """
-        logger.debug("request: %s", request)
         response = create_user(request)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -407,7 +405,6 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`update_user`.
         """
-        logger.debug("user_id: %s, request: %s", user_id, request)
         response = update_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -420,7 +417,6 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`delete_user`.
         """
-        logger.debug("user_id: %s, request: %s", user_id, request)
         response = delete_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response

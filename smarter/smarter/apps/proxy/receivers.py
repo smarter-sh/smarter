@@ -43,15 +43,15 @@ def log_proxy_request_completed(sender, proxy, user_profile, method, path, statu
     :param usage: The token usage that the response reported.
     :param elapsed: The seconds that the forward took.
     """
-    logger.debug(
-        "Proxy %s forwarded %s %s for %s: %s in %.2fs, usage %s",
+    logger.info(
+        "Proxy %s: %s %s -> %s in %.2fs, usage %s, for %s",
         proxy.name,
         method,
         path,
-        user_profile,
         status,
         elapsed,
         usage,
+        user_profile,
     )
 
 
@@ -68,12 +68,13 @@ def log_proxy_request_failed(sender, proxy, user_profile, method, path, error, e
     :param error: The error.
     :param elapsed: The seconds until the failure.
     """
-    logger.debug(
-        "Proxy %s failed %s %s for %s: %s",
+    logger.warning(
+        "Proxy %s: %s %s refused for %s: %s (%s)",
         proxy.name,
         method,
         path,
         user_profile,
+        getattr(error, "code", None),
         error,
     )
 

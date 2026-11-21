@@ -671,12 +671,7 @@ def verify_provider_model(provider_model_id, **kwargs):
         provider_model.is_active = True
         provider_model.save(update_fields=["is_active"])
         model_verification_success.send(sender=ProviderModel, provider_model=provider_model)
-        logger.debug("Verification tests succeeded for provider model: %s", provider_model.name)
     else:
         provider_model.is_active = False
         provider_model.save(update_fields=["is_active"])
         model_verification_failure.send(sender=ProviderModel, provider_model=provider_model)
-        logger.error(
-            "one or more verification tests failed for provider model: %s",
-            provider_model.name,
-        )

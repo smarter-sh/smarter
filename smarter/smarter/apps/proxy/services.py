@@ -564,16 +564,6 @@ class ProxyForwarder:
 
     def _completed(self, method: str, path: str, status: int, usage: Optional[Usage], started: float) -> None:
         elapsed = time.monotonic() - started
-        logger.info(
-            "Proxy %s: %s %s -> %s in %.2fs, usage %s, for %s",
-            self.proxy.name,
-            method,
-            path,
-            status,
-            elapsed,
-            usage,
-            self.user_profile,
-        )
         if usage:
             record_charges(self.proxy, self.user_profile, usage)
         proxy_request_completed.send(
@@ -588,14 +578,6 @@ class ProxyForwarder:
         )
 
     def _failed(self, method: str, path: str, error: ProxyError, started: float) -> None:
-        logger.warning(
-            "Proxy %s: %s %s refused: %s (%s)",
-            self.proxy.name,
-            method,
-            path,
-            error.code,
-            error,
-        )
         proxy_request_failed.send(
             sender=self.__class__,
             proxy=self.proxy,

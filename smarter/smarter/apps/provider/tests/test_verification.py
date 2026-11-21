@@ -23,6 +23,7 @@ from openai import (
     RateLimitError,
 )
 
+from smarter.apps.provider import receivers as provider_receivers
 from smarter.apps.provider.models import (
     Provider,
     ProviderModel,
@@ -342,14 +343,19 @@ class TestProviderModelVerification(ProviderTestBase):
                 self.reset()
                 ProviderModel.objects.filter(pk=self.model.pk).update(is_active=True)
                 self.openai.chat.completions.create.side_effect = error
-                with self.assertLogs(model_checks.base_logger, "ERROR") as logs:
+                # the failed check is logged where it failed, and the model's failure by the
+                # model_verification_failure receiver.
+                with (
+                    self.assertLogs(model_checks.base_logger, "ERROR") as logs,
+                    self.assertLogs(provider_receivers.base_logger, "ERROR") as receiver_logs,
+                ):
                     model_checks.verify_provider_model(self.model.id)
                 # a provider's http error is an expected answer: logged with its origin, without a traceback.
                 for log_record in logs.records:
                     self.assertIsNone(log_record.exc_info)
                 output = "\n".join(logs.output)
                 self.assertIn("verify_model_text_input()", output)
-                self.assertIn("verify_provider_model()", output)
+                self.assertIn("handle_model_verification_failure()", "\n".join(receiver_logs.output))
                 self.assertFalse(ProviderModel.objects.get(pk=self.model.pk).is_active)
                 self.assertFalse(
                     ProviderModelVerification.objects.get(

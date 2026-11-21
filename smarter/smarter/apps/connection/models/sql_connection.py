@@ -574,13 +574,11 @@ class SqlConnection(ConnectionBase):
             return tcpip_ssh_connection
 
         except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
-            logger.error("SSH connection failed: %s", e)
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
+            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
             return None
         # pylint: disable=W0718
         except Exception as e:
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error("An unexpected error occurred: %s", e)
+            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
             return None
 
     def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
@@ -604,10 +602,8 @@ class SqlConnection(ConnectionBase):
             return ldap_user_pwd_connection
         # pylint: disable=W0718
         except Exception as e:
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error(
-                "LDAP User/Password connection failed: %s",
-                e,
+            sql_connection_failed.send(
+                sender=self.__class__, connection=self, stage="LDAP user/password connection", error=str(e)
             )
             return None
 
@@ -741,7 +737,6 @@ class SqlConnection(ConnectionBase):
                 return json_str
         except (DatabaseError, ImproperlyConfigured) as e:
             sql_connection_query_failed.send(sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(e))
-            logger.error("SQL query execution failed: %s", e)
             return False
         finally:
             self.close()

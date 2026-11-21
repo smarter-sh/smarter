@@ -18,7 +18,6 @@ extension does not fail the prompt.
 
 import hashlib
 import re
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeoutError
@@ -330,13 +329,6 @@ class ExtensionToolkit:
             version=function.loaded.version,
             tool_name=function.tool.name,
             error=error,
-        )
-        logger.warning(
-            "%s %s failed in thread %s: %s",
-            function.extension.slug,
-            function.tool.name,
-            threading.current_thread().name,
-            error,
         )
         return {"error": error}
 

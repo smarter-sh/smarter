@@ -150,14 +150,12 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
                 LLMClientCustomDomain.VerificationStatusChoices.VERIFYING, "Verification has started."
             )
             verify_custom_domain.delay(hosted_zone_id=existing.aws_hosted_zone_id)
-        logger.info(
-            "custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
-            domain_name,
-            account.company_name,
-            task_id,
-        )
         post_register_custom_domain.send(
-            sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
+            sender=register_custom_domain,
+            account_id=account_id,
+            domain_name=domain_name,
+            outcome=f"it already exists for account {account.company_name}, and its certificate is verified. Nothing to do",
+            task_id=task_id,
         )
         return True
     except LLMClientCustomDomain.DoesNotExist:

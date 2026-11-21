@@ -421,7 +421,6 @@ class LLMHostService:
             llmhost.status_message = f"Compute {compute}: {state.message}"
             llmhost.save(update_fields=["status", "status_message", "updated_at"])
         llmhost_launched.send(sender=self.__class__, llmhost=llmhost, resources=summary)
-        logger.info("launched %s: %s", llmhost, summary)
         return LLMHostObservation(
             status=llmhost.status,
             message=llmhost.status_message,
@@ -599,7 +598,6 @@ class LLMHostService:
         llmhost.save()
         llmhost.record_event(EventType.DESTROYED.value, llmhost.status_message, details)
         llmhost_destroyed.send(sender=self.__class__, llmhost=llmhost, purge=delete_volume)
-        logger.info("destroyed %s, purge=%s", llmhost, delete_volume)
         self.release_compute(llmhost)
 
     def release_compute(self, llmhost: LLMHost) -> Optional[ComputeState]:

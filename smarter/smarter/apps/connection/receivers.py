@@ -35,7 +35,9 @@ from .signals import (
     sql_connection_validated,
 )
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.CONNECTION_LOGGING]
+)
 
 prefix = SmarterFormattedText.text(__name__) + "."
 
@@ -150,12 +152,18 @@ def handle_sql_connection_failed(sender, connection: SqlConnection, error: str, 
 
     Only logs the failure: the method that sent the signal reports it to its caller, by returning
     None. The connection string is always masked, so that its password is never logged.
-    """
 
+    :param sender: The class that sent the signal.
+    :param connection: The SqlConnection that failed.
+    :param error: Why it failed.
+    :param kwargs: Other signal arguments: ``stage``, what failed, e.g. ``"SSH connection"``.
+    """
+    stage = kwargs.get("stage", "connection")
     logger.error(
-        "%s is %s - error: %s",
+        "%s is %s - %s failed: %s",
         connection.get_connection_string(),
         SmarterReadyState.NOT_READY,
+        stage,
         error,
     )
 

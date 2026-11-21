@@ -166,14 +166,6 @@ def delete_default_api(
         sender=delete_default_api, url=api_url, account_number=account_number, name=name, task_id=task_id
     )
 
-    logger.info(
-        "llmclient %s account: %s name: %s task_id: %s",
-        api_url,
-        account_number,
-        name,
-        task_id,
-    )
-
     destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id)
     ingress_deleted, certificate_deleted, secret_delete = infrastructure.kubernetes.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace

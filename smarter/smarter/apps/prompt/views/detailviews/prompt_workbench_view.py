@@ -101,8 +101,6 @@ class SmarterPromptSession(SmarterHelperMixin):
         # PromptHelper starts a new session when the key belongs to another llmclient's session.
         self._session_key = self._chat_helper.session_key
 
-        verbose_logger.debug("session established: %s", self.session_key)
-
         prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
     def __str__(self) -> str:

@@ -141,7 +141,6 @@ class DefaultVectorsearchApiView(SmarterAuthenticatedAPIView):
         vectorsearch_called.send(
             sender=self.__class__, vectorsearch=vectorsearch, request=request, args=args, kwargs=kwargs
         )
-        logger.info("running vectorsearch %s", vectorsearch.pk)
         metadata_filter = self.metadata_filter(vectorsearch, run)
         vectorstore = vectorsearch.vectorstore
         try:

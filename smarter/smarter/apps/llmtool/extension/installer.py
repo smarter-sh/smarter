@@ -352,7 +352,6 @@ class ExtensionInstaller:
         extension.error = ""
         extension.save(update_fields=["enabled", "error", "updated_at"])
         extension_enabled.send(sender=self.__class__, extension=extension)
-        logger.info("enabled %s", extension.slug)
         return extension
 
     def disable(self, extension: Extension, reason: str = "disabled by an administrator") -> Extension:
@@ -379,7 +378,6 @@ class ExtensionInstaller:
         extension.enabled = False
         extension.save(update_fields=["enabled", "updated_at"])
         extension_disabled.send(sender=self.__class__, extension=extension, reason=reason)
-        logger.info("disabled %s: %s", extension.slug, reason)
         return extension
 
     # -------------------------------------------------------------------------
@@ -425,7 +423,6 @@ class ExtensionInstaller:
         extension.delete()
         unload(slug)
         extension_uninstalled.send(sender=self.__class__, slug=slug)
-        logger.info("uninstalled %s", slug)
 
     # -------------------------------------------------------------------------
     # helpers

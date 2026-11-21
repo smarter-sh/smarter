@@ -11,8 +11,35 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMHost, LLMHostCompute
 from .models.compute import LLMHostComputeNodeGroupStatus
+from .signals import llmhost_destroyed, llmhost_launched
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
+
+
+@receiver(llmhost_launched, dispatch_uid="llmhost_launched")
+def llmhost_launched_receiver(sender, llmhost: LLMHost, resources=None, **kwargs):
+    """
+    Log that an LLMHost was launched, and the resources it was launched with.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The launched LLMHost.
+    :param resources: A summary of the resources that were created or found.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.info("launched %s: %s", llmhost, resources)
+
+
+@receiver(llmhost_destroyed, dispatch_uid="llmhost_destroyed")
+def llmhost_destroyed_receiver(sender, llmhost: LLMHost, purge: bool = False, **kwargs):
+    """
+    Log that an LLMHost was destroyed.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The destroyed LLMHost.
+    :param purge: True if its model volume was deleted too.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.info("destroyed %s, purge=%s", llmhost, purge)
 
 
 @receiver(post_save, sender=LLMHost)

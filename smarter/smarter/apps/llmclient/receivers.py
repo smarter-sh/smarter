@@ -78,7 +78,9 @@ from .tasks import (
     undeploy_default_api,
 )
 
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
+logger = logging.getSmarterLogger(
+    __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
+)
 
 module_prefix = __name__
 
@@ -101,9 +103,15 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
 
 @receiver(llmclient_deploy_failed, dispatch_uid="llmclient_deploy_failed")
 def handle_llmclient_deploy_failed(sender, **kwargs):
-    """Handle llmclient_deploy_failed signal."""
-    llmclient: Optional[LLMClient] = kwargs.get("llmclient")
-    logger.error("%s", llmclient.hostname if llmclient else "No llmclient instance provided")
+    """
+    Log that an LLMClient could not be deployed, and why.
+
+    :param sender: The signal's sender, the ``deploy_default_api`` task.
+    :param kwargs: The signal's arguments: ``llmclient_id``, ``name`` (when the LLMClient was found),
+        ``reason`` and ``task_id``.
+    """
+    name = kwargs.get("name") or kwargs.get("llmclient_id")
+    logger.error("cannot deploy llmclient %s: %s. task_id: %s", name, kwargs.get("reason"), kwargs.get("task_id"))
 
 
 @receiver(post_save, sender=LLMClient)
@@ -305,31 +313,49 @@ def handle_llmclient_undeploy(sender, llmclient: Optional[LLMClient] = None, **k
     :param llmclient: The LLMClient to undeploy. If None, only a log message is written.
     :param kwargs: Other signal arguments (unused).
     """
-
-    logger.info("%s", llmclient if llmclient else "No llmclient instance provided")
-    if llmclient:
-        undeploy_default_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
+    if not llmclient:
+        logger.warning("no llmclient instance provided. Nothing to undeploy.")
+        return
+    logger.info("undeploying llmclient %s", llmclient)
+    undeploy_default_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
 
 
 @receiver(llmclient_deploy, dispatch_uid="llmclient_deploy")
 def handle_llmclient_deploy(sender, **kwargs):
-    """Handle llmclient_deploy signal."""
+    """
+    Queue the ``deploy_default_api`` Celery task for the LLMClient.
 
+    :param sender: The signal's sender.
+    :param kwargs: The signal's arguments: ``llmclient``, the LLMClient to deploy.
+    """
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
-    logger.info("signal received - %s", llmclient.hostname if llmclient else "No llmclient instance provided")
-    if llmclient:
-        logger.info("deploying llmclient - %s", llmclient.hostname)
-        deploy_default_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
+    if not llmclient:
+        logger.warning("no llmclient instance provided. Nothing to deploy.")
+        return
+    logger.info("deploying llmclient %s", llmclient.hostname)
+    deploy_default_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
 
 
 @receiver(llmclient_deployed, dispatch_uid="llmclient_deployed")
 def handle_llmclient_deployed(sender, **kwargs):
-    """Handle llmclient_deployed signal."""
+    """
+    Log that an LLMClient was deployed, and deploy it on its custom host too, if it has one.
 
+    :param sender: The signal's sender, the ``deploy_default_api`` task.
+    :param kwargs: The signal's arguments: ``llmclient``, the deployed LLMClient, and ``task_id``.
+    """
     llmclient: Optional[LLMClient] = kwargs.get("llmclient")
-    logger.info("%s", llmclient.hostname if llmclient else "No llmclient instance provided")
+    if not llmclient:
+        logger.warning("no llmclient instance provided.")
+        return
+    logger.info(
+        "LLMClient %s has been deployed to %s task_id: %s",
+        llmclient.name,
+        llmclient.default_host,
+        kwargs.get("task_id"),
+    )
     # an llmclient with a verified custom domain is also served on its custom host.
-    if llmclient and llmclient.custom_host:
+    if llmclient.custom_host:
         logger.info("deploying llmclient %s on %s", llmclient.name, llmclient.custom_host)
         deploy_custom_api.delay(llmclient_id=llmclient.id)  # type: ignore[union-attr]
 
@@ -356,18 +382,35 @@ def handle_llmclient_dns_verification_initiated(sender, **kwargs):
 
 @receiver(llmclient_dns_verified, dispatch_uid="llmclient_dns_verified")
 def handle_llmclient_dns_verified(sender, **kwargs):
-    """Handle llmclient_dns_verified signal."""
+    """
+    Log that a domain resolved to the records it should.
 
-    llmclient: Optional[LLMClient] = kwargs.get("llmclient")
-    logger.info("%s", llmclient.hostname if llmclient else "No llmclient instance provided")
+    :param sender: The signal's sender, the ``verify_domain`` task.
+    :param kwargs: The signal's arguments: ``domain_name``, ``record_type``, ``addresses`` and ``task_id``.
+    """
+    logger.info(
+        "resolved domain %s to %s records %s task_id: %s",
+        kwargs.get("domain_name"),
+        kwargs.get("record_type"),
+        kwargs.get("addresses"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(llmclient_dns_failed, dispatch_uid="llmclient_dns_failed")
 def handle_llmclient_dns_failed(sender, **kwargs):
-    """Handle llmclient_dns_failed signal."""
+    """
+    Log that a domain could not be verified, and why.
 
-    llmclient: Optional[LLMClient] = kwargs.get("llmclient")
-    logger.info("%s", llmclient.hostname if llmclient else "No llmclient instance provided")
+    :param sender: The signal's sender, e.g. the ``verify_domain`` task.
+    :param kwargs: The signal's arguments: ``domain_name``, ``reason`` and ``task_id``.
+    """
+    logger.warning(
+        "unable to verify domain %s: %s. task_id: %s",
+        kwargs.get("domain_name"),
+        kwargs.get("reason"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(llmclient_called, dispatch_uid="llmclient_called")
@@ -413,30 +456,50 @@ def handle_llmclient_called(sender, **kwargs):
 
 @receiver(pre_verify_certificate, dispatch_uid="pre_verify_certificate")
 def handle_pre_verify_certificate(sender, **kwargs):
-    """Handle pre_verify_certificate signal."""
-    certificate_arn = kwargs.get("certificate_arn")
-    logger.info("certificate_arn: %s", certificate_arn)
+    """Log that a certificate's verification started."""
+    logger.info("verifying certificate %s task_id: %s", kwargs.get("certificate_arn"), kwargs.get("task_id"))
 
 
 @receiver(post_verify_certificate, dispatch_uid="post_verify_certificate")
 def handle_post_verify_certificate(sender, **kwargs):
-    """Handle post_verify_certificate signal."""
+    """
+    Log whether a certificate was verified.
+
+    :param sender: The signal's sender, the ``verify_certificate`` task.
+    :param kwargs: The signal's arguments: ``certificate_arn``, ``verified`` and ``task_id``.
+    """
     certificate_arn = kwargs.get("certificate_arn")
-    logger.info("certificate_arn: %s", certificate_arn)
+    task_id = kwargs.get("task_id")
+    if kwargs.get("verified"):
+        logger.info("certificate %s verified. task_id: %s", certificate_arn, task_id)
+    else:
+        logger.error("certificate %s verification failed. task_id: %s", certificate_arn, task_id)
 
 
 @receiver(pre_create_llmclient_request, dispatch_uid="pre_create_llmclient_request")
 def handle_pre_create_llmclient_request(sender, **kwargs):
-    """Handle pre_create_llmclient_request signal."""
-    llmclient_id = kwargs.get("llmclient_id")
+    """
+    Log the size of a chat request that is about to be recorded.
+
+    The request holds the user's prompt, which is personal data, so only its number of messages
+    and its masked session key are logged.
+
+    :param sender: The signal's sender, the ``create_llmclient_request`` task.
+    :param kwargs: The signal's arguments: ``llmclient_id``, ``request_data`` and ``task_id``.
+    """
     request_data = kwargs.get("request_data")
     request_data = json.loads(request_data) if isinstance(request_data, str) else request_data
-    # the user's prompt is personal data, so it is logged at DEBUG only, and the
-    # session key, which would let anyone continue the conversation, is masked.
+    messages = None
+    session_key = None
+    if isinstance(request_data, dict):
+        messages = request_data.get("messages")
+        session_key = request_data.get(SMARTER_CHAT_SESSION_KEY_NAME)
     logger.debug(
-        "llmclient_id: %s, request_data: %s",
-        llmclient_id,
-        logging.SmarterFormattedText.json(_masked_request_data(request_data)) if request_data else "No data",
+        "llmclient %s task_id: %s received %s message(s) for session %s",
+        kwargs.get("llmclient_id"),
+        kwargs.get("task_id"),
+        len(messages or []),
+        mask_identifier(session_key),
     )
 
 
@@ -454,19 +517,6 @@ def handle_post_create_llmclient_request(sender, **kwargs):
     )
 
 
-def _masked_request_data(request_data):
-    """
-    Return a copy of a chat request's data, with its session key masked, for logging.
-
-    :param request_data: The request data that the chat api received, usually a dict.
-    :returns: A shallow copy of the dict with its session key masked, or ``request_data``
-        unchanged when it isn't a dict.
-    """
-    if not isinstance(request_data, dict) or SMARTER_CHAT_SESSION_KEY_NAME not in request_data:
-        return request_data
-    return {**request_data, SMARTER_CHAT_SESSION_KEY_NAME: mask_identifier(request_data[SMARTER_CHAT_SESSION_KEY_NAME])}
-
-
 @receiver(pre_register_custom_domain, dispatch_uid="pre_register_custom_domain")
 def handle_pre_register_custom_domain(sender, **kwargs):
     """Handle pre_register_custom_domain signal."""
@@ -477,27 +527,32 @@ def handle_pre_register_custom_domain(sender, **kwargs):
 
 @receiver(post_register_custom_domain, dispatch_uid="post_register_custom_domain")
 def handle_post_register_custom_domain(sender, **kwargs):
-    """Handle post_register_custom_domain signal."""
-    account_id = kwargs.get("account_id")
-    domain_name = kwargs.get("domain_name")
-    logger.info("account_id: %s, domain_name: %s", account_id, domain_name)
+    """
+    Log the outcome of a custom domain's registration.
+
+    :param sender: The signal's sender, the ``register_custom_domain`` task.
+    :param kwargs: The signal's arguments: ``account_id``, ``domain_name``, ``outcome`` and ``task_id``.
+    """
+    logger.info(
+        "custom domain %s of account %s: %s. task_id: %s",
+        kwargs.get("domain_name"),
+        kwargs.get("account_id"),
+        kwargs.get("outcome", "registered"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(pre_create_custom_domain_dns_record, dispatch_uid="pre_create_custom_domain_dns_record")
 def handle_pre_create_custom_domain_dns_record(sender, **kwargs):
-    """Handle pre_create_custom_domain_dns_record signal."""
-    llmclient_custom_domain_id = kwargs.get("llmclient_custom_domain_id")
-    record_name = kwargs.get("record_name")
-    record_type = kwargs.get("record_type")
-    record_value = kwargs.get("record_value")
-    record_ttl = kwargs.get("record_ttl")
+    """Log the DNS record that is about to be created for a custom domain."""
     logger.info(
-        "llmclient_custom_domain_id: %s, record_name: %s, record_type: %s, record_value: %s, record_ttl: %s",
-        llmclient_custom_domain_id,
-        record_name,
-        record_type,
-        record_value,
-        record_ttl,
+        "creating DNS record %s %s, value %s, ttl %s, for LLMClientCustomDomain %s task_id: %s",
+        kwargs.get("record_type"),
+        kwargs.get("record_name"),
+        kwargs.get("record_value"),
+        kwargs.get("record_ttl"),
+        kwargs.get("llmclient_custom_domain_id"),
+        kwargs.get("task_id"),
     )
 
 
@@ -521,36 +576,65 @@ def handle_post_create_custom_domain_dns_record(sender, **kwargs):
 
 @receiver(pre_verify_custom_domain, dispatch_uid="pre_verify_custom_domain")
 def handle_pre_verify_custom_domain(sender, **kwargs):
-    """Handle pre_verify_custom_domain signal."""
-    hosted_zone_id = kwargs.get("hosted_zone_id")
-    task_id = kwargs.get("task_id")
-    logger.info("hosted_zone_id: %s, task_id: %s", hosted_zone_id, task_id)
+    """Log that a custom domain's verification started."""
+    logger.info(
+        "verifying %s, DNS zone %s task_id: %s",
+        kwargs.get("domain_name"),
+        kwargs.get("hosted_zone_id"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(post_verify_custom_domain, dispatch_uid="post_verify_custom_domain")
 def handle_post_verify_custom_domain(sender, **kwargs):
-    """Handle post_verify_custom_domain signal."""
-    hosted_zone_id = kwargs.get("hosted_zone_id")
+    """
+    Log whether a custom domain was verified, and if not, what blocks it.
+
+    :param sender: The signal's sender, the ``verify_custom_domain`` task.
+    :param kwargs: The signal's arguments: ``domain_name``, ``hosted_zone_id``, ``verified``,
+        ``blocker`` and ``task_id``.
+    """
+    domain_name = kwargs.get("domain_name")
     task_id = kwargs.get("task_id")
-    logger.info("hosted_zone_id: %s, task_id: %s", hosted_zone_id, task_id)
+    if kwargs.get("verified"):
+        logger.info("%s is verified: its certificate is issued. task_id %s", domain_name, task_id)
+    else:
+        logger.error(
+            "domain verification failed for domain %s: %s task_id: %s", domain_name, kwargs.get("blocker"), task_id
+        )
 
 
 @receiver(pre_verify_domain, dispatch_uid="pre_verify_domain")
 def handle_pre_verify_domain(sender, **kwargs):
-    """Handle pre_verify_domain signal."""
-    domain_name = kwargs.get("domain_name")
-    record_type = kwargs.get("record_type")
-    task_id = kwargs.get("task_id")
-    logger.info("domain_name: %s, record_type: %s, task_id: %s", domain_name, record_type, task_id)
+    """Log that a domain's verification started."""
+    logger.info(
+        "verifying domain %s, %s record, task_id: %s",
+        kwargs.get("domain_name"),
+        kwargs.get("record_type"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(post_verify_domain, dispatch_uid="post_verify_domain")
 def handle_post_verify_domain(sender, **kwargs):
-    """Handle post_verify_domain signal."""
+    """
+    Log whether a domain was verified.
+
+    :param sender: The signal's sender, the ``verify_domain`` task.
+    :param kwargs: The signal's arguments: ``domain_name``, ``record_type``, ``verified``, ``attempts``
+        (when it gave up) and ``task_id``.
+    """
     domain_name = kwargs.get("domain_name")
-    record_type = kwargs.get("record_type")
     task_id = kwargs.get("task_id")
-    logger.info("domain_name: %s, record_type: %s, task_id: %s", domain_name, record_type, task_id)
+    verified = kwargs.get("verified")
+    if verified is False:
+        attempts = kwargs.get("attempts")
+        if attempts:
+            logger.error("unable to verify domain %s after %s attempts task_id: %s", domain_name, attempts, task_id)
+        else:
+            logger.error("unable to verify domain %s task_id: %s", domain_name, task_id)
+        return
+    logger.info("verified domain %s, %s record, task_id: %s", domain_name, kwargs.get("record_type"), task_id)
 
 
 @receiver(pre_destroy_domain_A_record, dispatch_uid="pre_destroy_domain_A_record")
@@ -573,56 +657,66 @@ def handle_post_destroy_domain_A_record(sender, **kwargs):
 
 @receiver(pre_deploy_default_api, dispatch_uid="pre_deploy_default_api")
 def handle_pre_deploy_default_api(sender, **kwargs):
-    """Handle pre_deploy_default_api signal."""
-    llmclient_id = kwargs.get("llmclient_id")
-    with_domain_verification = kwargs.get("with_domain_verification")
-    task_id = kwargs.get("task_id")
+    """Log that an LLMClient's deployment started."""
     logger.info(
-        "llmclient_id: %s, with_domain_verification: %s, task_id: %s",
-        llmclient_id,
-        with_domain_verification,
-        task_id,
+        "deploying llmclient %s, with domain verification: %s task_id: %s",
+        kwargs.get("llmclient_id"),
+        kwargs.get("with_domain_verification"),
+        kwargs.get("task_id"),
     )
 
 
 @receiver(post_deploy_default_api, dispatch_uid="post_deploy_default_api")
 def handle_post_deploy_default_api(sender, **kwargs):
-    """Handle post_deploy_default_api signal."""
-    llmclient_id = kwargs.get("llmclient_id")
-    with_domain_verification = kwargs.get("with_domain_verification")
-    task_id = kwargs.get("task_id")
+    """
+    Log the outcome of an LLMClient's deployment task.
+
+    :param sender: The signal's sender, the ``deploy_default_api`` task.
+    :param kwargs: The signal's arguments: ``llmclient_id``, ``with_domain_verification``, ``outcome``
+        and ``task_id``.
+    """
     logger.info(
-        "llmclient_id: %s, with_domain_verification: %s, task_id: %s",
-        llmclient_id,
-        with_domain_verification,
-        task_id,
+        "llmclient %s: %s. task_id: %s",
+        kwargs.get("llmclient_id"),
+        kwargs.get("outcome", "the deployment task finished"),
+        kwargs.get("task_id"),
     )
 
 
 @receiver(pre_undeploy_default_api, dispatch_uid="pre_undeploy_default_api")
 def handle_pre_undeploy_default_api(sender, **kwargs):
-    """Handle pre_undeploy_default_api signal."""
-    llmclient_id = kwargs.get("llmclient_id")
-    task_id = kwargs.get("task_id")
-    logger.info("llmclient_id: %s, task_id: %s", llmclient_id, task_id)
+    """Log that an LLMClient's undeployment started."""
+    logger.info("undeploying llmclient %s task_id: %s", kwargs.get("llmclient_id"), kwargs.get("task_id"))
 
 
 @receiver(post_undeploy_default_api, dispatch_uid="post_undeploy_default_api")
 def handle_post_undeploy_default_api(sender, **kwargs):
-    """Handle post_undeploy_default_api signal."""
+    """
+    Log the outcome of an LLMClient's undeployment task.
+
+    :param sender: The signal's sender, the ``undeploy_default_api`` task.
+    :param kwargs: The signal's arguments: ``llmclient_id``, ``success`` (False when it failed),
+        ``outcome`` and ``task_id``.
+    """
     llmclient_id = kwargs.get("llmclient_id")
+    outcome = kwargs.get("outcome", "undeployed")
     task_id = kwargs.get("task_id")
-    logger.info("llmclient_id: %s, task_id: %s", llmclient_id, task_id)
+    if kwargs.get("success") is False:
+        logger.error("cannot undeploy llmclient %s: %s. task_id: %s", llmclient_id, outcome, task_id)
+        return
+    logger.info("llmclient %s: %s. task_id: %s", llmclient_id, outcome, task_id)
 
 
 @receiver(pre_delete_default_api, dispatch_uid="pre_delete_default_api")
 def handle_pre_delete_default_api(sender, **kwargs):
-    """Handle pre_delete_default_api signal."""
-    url = kwargs.get("url")
-    account_number = kwargs.get("account_number")
-    name = kwargs.get("name")
-    task_id = kwargs.get("task_id")
-    logger.info("url: %s, account_number: %s, name: %s, task_id: %s", url, account_number, name, task_id)
+    """Log that an LLMClient's default api is about to be deleted."""
+    logger.info(
+        "deleting the default api %s of llmclient %s, account %s task_id: %s",
+        kwargs.get("url"),
+        kwargs.get("name"),
+        kwargs.get("account_number"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(post_delete_default_api, dispatch_uid="post_delete_default_api")
@@ -637,10 +731,13 @@ def handle_post_delete_default_api(sender, **kwargs):
 
 @receiver(pre_deploy_custom_api, dispatch_uid="pre_deploy_custom_api")
 def handle_pre_deploy_custom_api(sender, **kwargs):
-    """Handle pre_deploy_custom_api signal."""
-    llmclient_id = kwargs.get("llmclient_id")
-    task_id = kwargs.get("task_id")
-    logger.info("llmclient_id: %s, task_id: %s", llmclient_id, task_id)
+    """Log that an LLMClient is about to be deployed on its custom host."""
+    logger.info(
+        "deploying llmclient %s on %s task_id: %s",
+        kwargs.get("name") or kwargs.get("llmclient_id"),
+        kwargs.get("custom_host"),
+        kwargs.get("task_id"),
+    )
 
 
 @receiver(post_deploy_custom_api, dispatch_uid="post_deploy_custom_api")

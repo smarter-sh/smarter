@@ -155,7 +155,6 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         return
 
     task_id = deploy_default_api.request.id
-    logger.info("llmclient %s task_id: %s", llmclient_id, task_id)
     llmclient: LLMClient
 
     pre_deploy_default_api.send(
@@ -174,29 +173,29 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
             llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
             logger.info("found llmclient %s for deployment task_id: %s", llmclient.name, task_id)
         except LLMClient.DoesNotExist:
-            logger.error("LLMClient %s not found. Nothing to do, returning. task_id: %s", llmclient_id, task_id)
-
             llmclient_deploy_failed.send(
                 sender=deploy_default_api,
                 llmclient_id=llmclient_id,
                 with_domain_verification=with_domain_verification,
+                reason="it was not found",
                 task_id=task_id,
             )
             return None
 
         if not infrastructure.dns.ready:
-            logger.error(
-                "the DNS service is not ready. Cannot deploy llmclient %s. task_id: %s",
-                llmclient.name,
-                task_id,
-            )
             llmclient_deploy_failed.send(
-                sender=deploy_default_api, llmclient_id=llmclient_id, with_domain_verification=with_domain_verification
+                sender=deploy_default_api,
+                llmclient_id=llmclient_id,
+                with_domain_verification=with_domain_verification,
+                name=llmclient.name,
+                reason="the DNS service is not ready",
+                task_id=task_id,
             )
             post_deploy_default_api.send(
                 sender=deploy_default_api,
                 llmclient_id=llmclient_id,
                 with_domain_verification=with_domain_verification,
+                outcome="not deployed: the DNS service is not ready",
                 task_id=task_id,
             )
             return None
@@ -225,16 +224,11 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         )
 
     if already_deployed:
-        logger.info(
-            "LLMClient %s is already deployed and verified at domain %s. Nothing to do. task_id: %s",
-            llmclient.name,
-            domain_name,
-            task_id,
-        )
         post_deploy_default_api.send(
             sender=deploy_default_api,
             llmclient_id=llmclient_id,
             with_domain_verification=with_domain_verification,
+            outcome=f"{llmclient.name} is already deployed and verified at domain {domain_name}. Nothing to do",
             task_id=task_id,
         )
         return
@@ -410,16 +404,11 @@ def continue_default_api_deployment(
 
         llmclient.tls_certificate_issuance_status = llmclient.TlsCertificateIssuanceStatusChoices.ISSUED
         llmclient.save(asynchronous=True)
-        logger.info(
-            "llmclient %s %s all resources successfully created task_id: %s",
-            domain_name,
-            llmclient,
-            task_id,
-        )
         post_deploy_default_api.send(
             sender=deploy_default_api,
             llmclient_id=llmclient_id,
             with_domain_verification=with_domain_verification,
+            outcome=f"all resources of {llmclient.name} were created at domain {domain_name}",
             task_id=task_id,
         )
         llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient, task_id=task_id)
@@ -440,16 +429,17 @@ def continue_default_api_deployment(
             check_again(STAGE_DOMAIN, attempt + 1, VERIFY_DOMAIN_INTERVAL)
             return
         if result != DomainCheck.VERIFIED:
-            logger.error(
-                "unable to verify domain %s. LLMClient %s will not be deployed. task_id: %s",
-                domain_name,
-                llmclient.name,
-                task_id,
-            )
             llmclient_dns_failed.send(
-                sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type="A", task_id=task_id
+                sender=verify_domain,
+                llmclient=llmclient,
+                domain_name=domain_name,
+                record_type="A",
+                reason=f"it doesn't resolve, so llmclient {llmclient.name} will not be deployed",
+                task_id=task_id,
             )
-            post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
+            post_verify_domain.send(
+                sender=verify_domain, domain_name=domain_name, record_type="A", verified=False, task_id=task_id
+            )
             llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.FAILED
             llmclient.save(asynchronous=True)
             _deployment_failed(llmclient_id, with_domain_verification, task_id)
@@ -458,12 +448,13 @@ def continue_default_api_deployment(
         if not llmclient.deployed:
             llmclient.deployed = True
             llmclient.save(asynchronous=True)
-        post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
+        post_verify_domain.send(
+            sender=verify_domain, domain_name=domain_name, record_type="A", verified=True, task_id=task_id
+        )
 
     llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.VERIFIED
     llmclient.save(asynchronous=True)
-    llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient)
-    logger.info("LLMClient %s has been deployed to %s task_id: %s", llmclient.name, domain_name, task_id)
+    llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient, task_id=task_id)
 
     # send an email to the account owner to notify them that the llmclient has been deployed
     subject = f"Your Smarter llmclient {llmclient.url} has been deployed"

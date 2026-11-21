@@ -121,14 +121,6 @@ def create_custom_domain_dns_record(
 
     task_id = create_custom_domain_dns_record.request.id
 
-    logger.info(
-        "creating DNS record %s %s for LLMClientCustomDomain %s task_id: %s",
-        record_type,
-        record_name,
-        llmclient_custom_domain_id,
-        task_id,
-    )
-
     pre_create_custom_domain_dns_record.send(
         sender=create_custom_domain_dns_record,
         llmclient_custom_domain_id=llmclient_custom_domain_id,

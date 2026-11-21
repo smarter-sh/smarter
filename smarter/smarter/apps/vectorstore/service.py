@@ -143,13 +143,6 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         vectorstore.status_message = message
         vectorstore.save(update_fields=["status", "status_message", "updated_at"])
         if previous != status:
-            logger.info(
-                "%s: %s -> %s %s",
-                vectorstore,
-                previous,
-                status,
-                message,
-            )
             vectorstore_status_changed.send(
                 sender=self.__class__, vectorstore=vectorstore, previous=previous, status=status, message=message
             )

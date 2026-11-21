@@ -628,7 +628,6 @@ class SecretTransformer(SmarterHelperMixin):
                 setattr(self._secret, attr, value)
         self.secret.save()
         self.secret.tags.set(self.tags)
-        logger.debug("secret %s: %s.", self.name, self.id)
         secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 
         return True
@@ -660,7 +659,6 @@ class SecretTransformer(SmarterHelperMixin):
         self._secret = None
         self._secret_serializer = None
         secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
-        logger.debug("secret %s: %s.", secret_id, secret_name)
         return True
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:
