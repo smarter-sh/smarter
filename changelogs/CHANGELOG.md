@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.12](https://github.com/smarter-sh/smarter/compare/v0.46.11...v0.46.12) (2026-11-21)
+
+### Bug Fixes
+
+* **api:** turn each SAM resource type off with its SMARTER_ENABLE flag ([c1dc9dc](https://github.com/smarter-sh/smarter/commit/c1dc9dca877ddee1d2c67779f59d7caf7c204b36))
+* **dashboard:** scope admin to staff accounts, delete through brokers ([ccb8e0c](https://github.com/smarter-sh/smarter/commit/ccb8e0c09153890678fecf6687a21acdfb973499))
+* **manifest:** warn about SAM app flags that don't hold together ([647cccb](https://github.com/smarter-sh/smarter/commit/647cccb3d369ce6e784bc40471a790c2bfe9888d))
+
+### Refactoring
+
+* **django:** base every AppConfig on SmarterAppConfig ([7e38873](https://github.com/smarter-sh/smarter/commit/7e38873d43459b8235204bb40220156721db4c98))
+
+## [0.46.12-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.12-alpha.1...v0.46.12-alpha.2) (2026-11-21)
+
+### Bug Fixes
+
+* **api:** turn each SAM resource type off with its SMARTER_ENABLE flag ([c1dc9dc](https://github.com/smarter-sh/smarter/commit/c1dc9dca877ddee1d2c67779f59d7caf7c204b36))
+* **manifest:** warn about SAM app flags that don't hold together ([647cccb](https://github.com/smarter-sh/smarter/commit/647cccb3d369ce6e784bc40471a790c2bfe9888d))
+
+### Refactoring
+
+* **django:** base every AppConfig on SmarterAppConfig ([7e38873](https://github.com/smarter-sh/smarter/commit/7e38873d43459b8235204bb40220156721db4c98))
+
+## [0.46.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.11...v0.46.12-alpha.1) (2026-11-21)
+
+### Bug Fixes
+
+* **dashboard:** scope admin to staff accounts, delete through brokers ([ccb8e0c](https://github.com/smarter-sh/smarter/commit/ccb8e0c09153890678fecf6687a21acdfb973499))
+
 ## [0.46.11](https://github.com/smarter-sh/smarter/compare/v0.46.10...v0.46.11) (2026-11-21)
 
 ### Bug Fixes

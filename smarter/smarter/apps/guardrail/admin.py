@@ -85,6 +85,7 @@ class GuardrailEventAdmin(SmarterCustomerModelAdmin):
     ]
     list_filter = ["disposition", "reviewed", "stage", "category", "severity", "mode"]
     search_fields = ["guardrail_name", "session_key", "rationale"]
+    date_hierarchy = "created_at"
     ordering = ["-created_at"]
     actions = ["mark_reviewed"]
 

@@ -1,6 +1,13 @@
 """Constants of Smarter annotations, which follow Kubernetes annotations."""
 
+from django.utils.translation import gettext_noop
+
 namespace = "annotation"
+presentation_app_name = gettext_noop("Annotation")
+"""The app's name as people read it, e.g. in the Django admin.
+
+Translated where it is shown.
+"""
 
 ANNOTATION_KEY_PREFIX_MAX_LENGTH = 253
 """The longest key prefix, a DNS subdomain such as ``acme.com``, as in Kubernetes."""

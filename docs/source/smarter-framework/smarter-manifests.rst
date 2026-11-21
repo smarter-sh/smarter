@@ -396,3 +396,4 @@ The modules and classes below establish the foundation of Smarter's SAM data mod
    smarter-manifests/record-locators
    smarter-manifests/error-handling
    smarter-manifests/validation-strategy
+   smarter-manifests/sam-apps

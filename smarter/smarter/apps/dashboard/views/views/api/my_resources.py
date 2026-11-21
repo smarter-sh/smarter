@@ -95,13 +95,13 @@ from smarter.apps.secret.models import Secret
 from smarter.apps.secret.urls import SecretReverseNames
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
-from smarter.common.conf import smarter_settings
 from smarter.common.utils.decorators import snake_case
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
+from smarter.lib.manifest.sam_apps import reverse_if_enabled
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -480,31 +480,43 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                     reverse(PromptReverseNames.namespace, PromptReverseNames.listview) + f"?filter={PENDING_FILTER}"
                 ),
                 "plugins_qty": get_plugins(user_profile=user_profile),
-                "plugins_url": reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
+                "plugins_url": reverse_if_enabled(
+                    "enable_llmtool", PluginReverseNames.namespace, PluginReverseNames.listview
+                ),
                 "mcpclients_qty": get_mcpclients(user_profile=user_profile),
-                "mcpclients_url": reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
+                "mcpclients_url": reverse_if_enabled(
+                    "enable_mcpclient", MCPClientReverseNames.namespace, MCPClientReverseNames.listview
+                ),
                 "providers_qty": get_providers(user_profile=user_profile),
-                "providers_url": reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
+                "providers_url": reverse_if_enabled(
+                    "enable_provider", ProviderReverseNames.namespace, ProviderReverseNames.listview
+                ),
                 "guardrails_qty": get_guardrails(user_profile=user_profile),
-                "guardrails_url": reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
+                "guardrails_url": reverse_if_enabled(
+                    "enable_guardrail", GuardrailReverseNames.namespace, GuardrailReverseNames.listview
+                ),
                 "secrets_qty": get_secrets(user_profile=user_profile),
-                "secrets_url": reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
+                "secrets_url": reverse_if_enabled(
+                    "enable_secret", SecretReverseNames.namespace, SecretReverseNames.listview
+                ),
                 "vectorstores_qty": get_vectorstores(user_profile=user_profile),
-                "vectorstores_url": (
-                    reverse(VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview)
-                    if smarter_settings.enable_vectorstore
-                    else None
+                "vectorstores_url": reverse_if_enabled(
+                    "enable_vectorstore", VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
                 ),
                 "custom_domains_qty": get_custom_domains(user_profile=user_profile),
-                "custom_domains_url": reverse(
-                    LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
+                "custom_domains_url": reverse_if_enabled(
+                    "enable_llmclient", LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
                 ),
                 "llmhosts_qty": get_llmhosts(user_profile=user_profile),
-                "llmhosts_url": reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
+                "llmhosts_url": reverse_if_enabled(
+                    "enable_llmhost", LLMHostReverseNames.namespace, LLMHostReverseNames.listview
+                ),
                 "extensions_qty": get_extensions(user_profile=user_profile),
                 # only superusers may open the console's Extensions page.
                 "extensions_url": (
-                    reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview)
+                    reverse_if_enabled(
+                        "enable_llmtool", ExtensionReverseNames.namespace, ExtensionReverseNames.listview
+                    )
                     if user.is_superuser
                     else EXTENSIONS_DOCS_URL
                 ),

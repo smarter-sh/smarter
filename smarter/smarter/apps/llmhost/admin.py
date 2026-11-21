@@ -80,6 +80,7 @@ class LLMHostEventAdmin(SmarterCustomerModelAdmin):
     model = LLMHostEvent
 
     list_display = ["created_at", "llmhost_name", "event_type", "status", "message"]
+    date_hierarchy = "created_at"
     list_filter = ["event_type", "status"]
     search_fields = ["llmhost_name", "message"]
     ordering = ["-created_at"]

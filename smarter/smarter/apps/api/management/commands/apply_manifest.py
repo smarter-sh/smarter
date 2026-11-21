@@ -15,6 +15,7 @@ from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.parsing import parse_manifest
+from smarter.lib.manifest.sam_apps import kind_is_enabled
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getSmarterLogger(__name__)
@@ -118,6 +119,34 @@ class Command(SmarterCommand):
             help="Enable verbose output.",
         )
 
+    def get_user_profile(self, username: Optional[str], account_number: Optional[str]) -> Optional[UserProfile]:
+        """
+        Return the user profile that applies the manifest, and set ``self.user``.
+
+        :param username: The ``--username`` option.
+        :param account_number: The ``--account_number`` option, for a user who belongs to several accounts.
+        :returns: The profile, or None after reporting the failure, if there is no such user or profile.
+        """
+        if not isinstance(username, str) or not username.strip():
+            self.handle_completed_failure(msg="No username provided.")
+            return None
+
+        try:
+            self.user = User.objects.get(username=username.strip())
+        except User.DoesNotExist as e:
+            self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
+            return None
+
+        if account_number:
+            # a user, e.g. the Smarter admin, or a department's administrator, may belong to several accounts.
+            user_profile = UserProfile.objects.filter(user=self.user, account__account_number=account_number).first()
+        else:
+            user_profile = UserProfile.get_cached_object(user=self.user)
+        if not isinstance(user_profile, UserProfile):
+            self.handle_completed_failure(msg="No admin user profile found.")
+            return None
+        return user_profile
+
     def handle(self, *args, **options):
         """
         Prepare and get a response from the api/v1/cli/apply endpoint.
@@ -139,24 +168,8 @@ class Command(SmarterCommand):
             username,
         )
 
-        if not isinstance(username, str) or not username.strip():
-            self.handle_completed_failure(msg="No username provided.")
-            return
-
-        try:
-            self.user = User.objects.get(username=username.strip())
-        except User.DoesNotExist as e:
-            self.handle_completed_failure(e, msg=f"User '{username}' does not exist.")
-            return
-
-        account_number = options.get("account_number")
-        if account_number:
-            # a user, e.g. the Smarter admin, or a department's administrator, may belong to several accounts.
-            user_profile = UserProfile.objects.filter(user=self.user, account__account_number=account_number).first()
-        else:
-            user_profile = UserProfile.get_cached_object(user=self.user)
-        if not isinstance(user_profile, UserProfile):
-            self.handle_completed_failure(msg="No admin user profile found.")
+        user_profile = self.get_user_profile(username, options.get("account_number"))
+        if user_profile is None:
             return
 
         logger.debug("applying manifest")
@@ -173,6 +186,11 @@ class Command(SmarterCommand):
         BrokerClass = Brokers.get_broker(kind)
         if BrokerClass is None or not issubclass(BrokerClass, AbstractBroker):
             self.handle_completed_failure(msg=f"No broker found for manifest kind: {kind}")
+            return
+        if not kind_is_enabled(kind):
+            # e.g. an example manifest, from initialize_platform, of a kind that this platform has disabled.
+            logger.info("skipping the %s manifest: its kind is disabled on this platform.", kind)
+            self.handle_completed_success()
             return
 
         broker = BrokerClass(request=fake_request, manifest=manifest, user_profile=user_profile)

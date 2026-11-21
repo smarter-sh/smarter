@@ -7,6 +7,7 @@ from django.core.management import CommandError
 
 from smarter.apps.guardrail.models import Guardrail
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 from .base import CommandTestBase
 
@@ -79,6 +80,12 @@ class TestApplyManifestCommand(CommandTestBase):
         with open(GUARDRAIL_MANIFEST, encoding="utf-8") as f:
             text = f.read().replace("kind: Guardrail", "kind: NotAKind")
         self.run_command("apply_manifest", manifest=text, username=self.admin_user.username)
+
+    def test_disabled_kind_is_skipped(self):
+        """Test that a manifest of a disabled kind is skipped, without failing, and not applied."""
+        with disabled_sam_apps("enable_guardrail"):
+            self.run_command("apply_manifest", filespec=GUARDRAIL_MANIFEST, username=self.admin_user.username)
+        self.assertFalse(Guardrail.objects.filter(name="test_guardrail", user_profile=self.user_profile).exists())
 
     def test_apply_failure(self):
         """Test that a failed apply, or no response from the broker, is a CommandError."""

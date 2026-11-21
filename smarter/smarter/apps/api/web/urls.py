@@ -50,6 +50,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.utils import to_snake_case
 from smarter.lib.drf.api.web import urls as drf_web_urls
 from smarter.lib.drf.const import namespace as drf_namespace
+from smarter.lib.manifest.sam_apps import SamAppUrls, sam_app_urlpatterns
 
 from .const import namespace, path_namespace
 
@@ -69,27 +70,50 @@ urlpatterns = [
     path(f"{account_namespace}/", include(account_web_urls, namespace=account_namespace)),
     # the one path that isn't its namespace: it matches the console page, /authtoken/.
     path("authtoken/", include(drf_web_urls, namespace=drf_namespace)),
-    path(f"{connection_namespace}/", include(connection_web_urls, namespace=connection_namespace)),
     path(f"{dashboard_namespace}/", include(dashboard_web_urls, namespace=dashboard_namespace)),
-    path(f"{guardrail_namespace}/", include(guardrail_web_urls, namespace=guardrail_namespace)),
     path(f"{infrastructure_namespace}/", include(infrastructure_web_urls, namespace=infrastructure_namespace)),
-    path(f"{llmclient_namespace}/", include(llmclient_web_urls, namespace=llmclient_namespace)),
-    path(f"{llmhost_namespace}/", include(llmhost_web_urls, namespace=llmhost_namespace)),
-    path(f"{llmtool_namespace}/", include(llmtool_web_urls, namespace=llmtool_namespace)),
-    path(f"{mcpclient_namespace}/", include(mcpclient_web_urls, namespace=mcpclient_namespace)),
-    path(f"{orchestrator_namespace}/", include(orchestrator_web_urls, namespace=orchestrator_namespace)),
     path(f"{prompt_namespace}/", include(prompt_web_urls, namespace=prompt_namespace)),
-    path(f"{provider_namespace}/", include(provider_web_urls, namespace=provider_namespace)),
-    path(f"{secret_namespace}/", include(secret_web_urls, namespace=secret_namespace)),
-    path(f"{vectorsearch_namespace}/", include(vectorsearch_web_urls, namespace=vectorsearch_namespace)),
 ]
 
-# the same feature flags as the console pages' in smarter.urls.console.
-if smarter_settings.enable_proxy:
-    urlpatterns += [
-        path(f"{proxy_namespace}/", include(proxy_web_urls, namespace=proxy_namespace)),
-    ]
-if smarter_settings.enable_vectorstore:
-    urlpatterns += [
-        path(f"{vectorstore_namespace}/", include(vectorstore_web_urls, namespace=vectorstore_namespace)),
-    ]
+SAM_APP_WEB_API_URLS: list[SamAppUrls] = [
+    SamAppUrls(
+        "enable_connection", "Connection", f"{connection_namespace}/", connection_web_urls, connection_namespace
+    ),
+    SamAppUrls("enable_guardrail", "Guardrail", f"{guardrail_namespace}/", guardrail_web_urls, guardrail_namespace),
+    SamAppUrls("enable_llmclient", "LLMClient", f"{llmclient_namespace}/", llmclient_web_urls, llmclient_namespace),
+    SamAppUrls("enable_llmhost", "LLMHost", f"{llmhost_namespace}/", llmhost_web_urls, llmhost_namespace),
+    SamAppUrls("enable_llmtool", "LLMTool", f"{llmtool_namespace}/", llmtool_web_urls, llmtool_namespace),
+    SamAppUrls("enable_mcpclient", "MCPClient", f"{mcpclient_namespace}/", mcpclient_web_urls, mcpclient_namespace),
+    SamAppUrls(
+        "enable_orchestrator",
+        "Orchestrator",
+        f"{orchestrator_namespace}/",
+        orchestrator_web_urls,
+        orchestrator_namespace,
+    ),
+    SamAppUrls("enable_provider", "Provider", f"{provider_namespace}/", provider_web_urls, provider_namespace),
+    SamAppUrls("enable_proxy", "Proxy", f"{proxy_namespace}/", proxy_web_urls, proxy_namespace),
+    SamAppUrls("enable_secret", "Secret", f"{secret_namespace}/", secret_web_urls, secret_namespace),
+    SamAppUrls(
+        "enable_vectorsearch",
+        "VectorSearch",
+        f"{vectorsearch_namespace}/",
+        vectorsearch_web_urls,
+        vectorsearch_namespace,
+    ),
+    SamAppUrls(
+        "enable_vectorstore",
+        "Vectorstore",
+        f"{vectorstore_namespace}/",
+        vectorstore_web_urls,
+        vectorstore_namespace,
+    ),
+]
+"""
+The web console api endpoints of the SAM resource apps.
+
+Each app's endpoints are mounted only if its ``smarter_settings.enable_<app>`` flag is true. See
+:mod:`smarter.lib.manifest.sam_apps`.
+"""
+
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_WEB_API_URLS, "web console api endpoints")

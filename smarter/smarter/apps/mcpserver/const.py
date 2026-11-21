@@ -10,12 +10,14 @@ Constants of the MCPServer app: its url namespace, its display name, and the Use
 
 import os
 
+from django.utils.translation import gettext_noop
+
 from smarter.common.const import VERSION
 
 namespace = "mcpserver"
 """The app's url namespace, and the last part of its dotted path, ``smarter.apps.mcpserver``."""
 
-presentation_app_name = "MCPServer"
+presentation_app_name = gettext_noop("MCPServer")
 """The app's name as people read it, e.g. in the Django admin and in log messages."""
 
 HERE = os.path.abspath(os.path.dirname(__file__))

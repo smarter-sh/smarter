@@ -42,6 +42,7 @@ class VectorstoreAdmin(SmarterCustomerModelAdmin):
     """
 
     model = VectorstoreMeta
+    search_fields = ("name", "description", "index_name", "embeddings_model", "user_profile__user__username")
     inlines = [VectorstoreDocumentInline, VectorstoreSnapshotInline]
     readonly_fields = (
         "created_at",

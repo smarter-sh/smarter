@@ -23,6 +23,7 @@ from smarter.apps.dashboard.views.views.api import onboarding
 from smarter.apps.dashboard.views.views.api.welcome import WELCOME_SHOWN_SESSION_KEY
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 
 class TestConsoleSessionView(TestAccountMixin):
@@ -69,6 +70,27 @@ class TestConsoleSessionView(TestAccountMixin):
         session = self.get_session()
         self.assertEqual(session.sam_kinds, sorted(SAMKinds.all()))
         self.assertIn("LLMClient", session.sam_kinds)
+
+    def test_disabled_sam_app(self):
+        """A disabled SAM app's flag is false, its kinds have no docs pages, and its sidebar links are null."""
+        self.client.force_login(self.non_admin_user)
+        modules = ("smarter.apps.api.web.session.views", "smarter.apps.dashboard.context_processors")
+        sidebar_context.invalidate()  # type: ignore[attr-defined]
+        self.addCleanup(sidebar_context.invalidate)  # type: ignore[attr-defined]
+        with disabled_sam_apps("enable_guardrail", "enable_llmtool", modules=modules):
+            session = self.get_session()
+        self.assertFalse(session.flags.guardrail)
+        self.assertFalse(session.flags.llmtool)
+        self.assertTrue(session.flags.secret)
+        self.assertNotIn(SAMKinds.GUARDRAIL.value, session.sam_kinds)
+        self.assertNotIn(SAMKinds.SQL_PLUGIN.value, session.sam_kinds)
+        self.assertIn(SAMKinds.SECRET.value, session.sam_kinds)
+        sidebar = session.sidebar
+        self.assertIsNotNone(sidebar)
+        self.assertIsNone(sidebar.guardrails)  # type: ignore[union-attr]
+        self.assertIsNone(sidebar.plugins)  # type: ignore[union-attr]
+        self.assertIsNone(sidebar.extensions)  # type: ignore[union-attr]
+        self.assertIsNotNone(sidebar.secrets)  # type: ignore[union-attr]
 
     def test_sets_the_csrf_cookie_and_is_never_cached(self):
         """The first call gives the console a CSRF token for its first POST, and is never cached."""
