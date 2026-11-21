@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.46.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.9...v0.46.10-alpha.1) (2026-11-21)
+
+### Bug Fixes
+
+* **provider:** treat account-policy 403s as inconclusive ([0a39ea1](https://github.com/smarter-sh/smarter/commit/0a39ea1b3b3980652c18f0767db8ec668f4de7c2)), closes [smarter-sh/smarter#1024](https://github.com/smarter-sh/smarter/issues/1024) [#1024](https://github.com/smarter-sh/smarter/issues/1024)
+
 ## [0.46.9](https://github.com/smarter-sh/smarter/compare/v0.46.8...v0.46.9) (2026-11-19)
 
 ### Bug Fixes
