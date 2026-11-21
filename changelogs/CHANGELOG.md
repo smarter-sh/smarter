@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.10-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.10-alpha.3...v0.46.10-alpha.4) (2026-11-21)
+
+### Bug Fixes
+
+* **settings:** let user-defined django settings supersede every module ([01b8919](https://github.com/smarter-sh/smarter/commit/01b8919e6841c66f1083e7fd29d5fd3ed667b48d))
+
 ## [0.46.10-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.10-alpha.2...v0.46.10-alpha.3) (2026-11-21)
 
 ### Bug Fixes
