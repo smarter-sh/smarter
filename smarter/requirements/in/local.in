@@ -22,7 +22,6 @@ django-extensions                  # a collection of custom extensions for the D
 # type annotations for packages that don't include them
 # ------------
 pandas-stubs
-types-cachetools
 types-lxml
 types-Markdown
 types-paramiko

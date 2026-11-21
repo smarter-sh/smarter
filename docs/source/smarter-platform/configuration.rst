@@ -126,10 +126,11 @@ See `Celery configuration <https://github.com/smarter-sh/smarter/blob/alpha/smar
 5. Beat Scheduler Configuration
 -------------------------------
 
-Smarter uses Celery Beat to schedule periodic tasks. The Beat scheduler configuration can be found in `smarter/settings/celery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/celery.py>`_.
-Like asynchronous task queue configuration, the Beat scheduler relies on the same message broker and result backend as Celery.
-
-See `Celery Beat configuration <https://github.com/smarter-sh/smarter/blob/alpha/smarter/smarter/workers/celery.py>`_ for more details on how Celery Beat is configured in Smarter.
+Smarter uses Celery Beat to schedule periodic tasks. The schedule is defined in code, in `smarter/workers/celerybeat.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/workers/celerybeat.py>`_,
+not in the database, so it can't be edited in the Django admin.
+Like asynchronous task queue configuration, the Beat scheduler relies on the same message broker as Celery.
+In AWS, Beat keeps its schedule state in Redis with RedBeat (``CELERY_BEAT_SCHEDULER``), so that a restarted Beat pod
+picks up where the last one stopped. Locally it uses Celery's default file-based scheduler.
 
 6. Helm Chart Configuration
 ---------------------------
