@@ -374,7 +374,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             retval = UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
         except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug(
-                "- No UserProfile found for user: %s, account: %s",
+                "No UserProfile found for user: %s, account: %s",
                 user.username,
                 account.id if account else None,  # type: ignore[attr-defined]
             )

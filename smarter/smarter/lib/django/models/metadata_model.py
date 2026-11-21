@@ -357,7 +357,7 @@ class MetaDataModel(TimestampedModel):
                 raise cls.DoesNotExist(f"{class_name} object with name '{name}' does not exist.") from e
             except cls.MultipleObjectsReturned as e:
                 logger.error(
-                    "- Multiple %s objects found for name '%s'.",
+                    "Multiple %s objects found for name '%s'.",
                     class_name,
                     name,
                 )

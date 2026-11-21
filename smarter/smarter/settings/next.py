@@ -56,7 +56,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.debug("*" * 80)
     if not SESSION_COOKIE_SECURE:
         logger.warning(
-            "WARNING: SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
+            "SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
         )
         logger.debug("*" * 80)
 

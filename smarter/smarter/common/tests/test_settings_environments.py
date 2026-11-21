@@ -13,6 +13,7 @@ from smarter.common.conf import Settings, settings_defaults
 from smarter.common.conf.util import validate_throttle_rate
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 CONFIG_ERRORS = (SmarterConfigurationError, PydanticValidationError)
@@ -194,4 +195,4 @@ class TestSettingsReadyMessage(SmarterTestBase):
             patch("smarter.common.conf.settings.logger") as logger,
         ):
             make_settings()
-        self.assertTrue(logger.warning.call_args.args[1].startswith("\033[37m"))
+        self.assertEqual(logger.warning.call_args.kwargs["prefix_format"], SmarterFormattedText.LIGHT_GRAY)
