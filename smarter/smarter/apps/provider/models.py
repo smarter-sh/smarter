@@ -149,7 +149,7 @@ class Provider(MetaDataWithOwnershipModel):
 
     status = models.CharField(
         max_length=32,
-        choices=ProviderStatus.choices,
+        choices=ProviderStatus,
         default=ProviderStatus.UNVERIFIED,
         blank=False,
         null=False,
@@ -624,7 +624,9 @@ class ProviderModel(TimestampedModel):
     class Meta:
         verbose_name = "Provider Model"
         verbose_name_plural = "Provider Models"
-        unique_together = (("provider", "name"),)
+        constraints = [
+            models.UniqueConstraint(fields=["provider", "name"], name="provider_providermodel_unique"),
+        ]
 
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
     name = models.CharField(max_length=255, blank=False, null=False)
@@ -676,12 +678,16 @@ class ProviderVerification(TimestampedModel):
     class Meta:
         verbose_name = "Provider Verification"
         verbose_name_plural = "Provider Verifications"
-        unique_together = (("provider", "verification_type"),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "verification_type"], name="provider_providerverification_unique"
+            ),
+        ]
 
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, blank=False, null=False)
     verification_type = models.CharField(
         max_length=32,
-        choices=ProviderVerificationTypes.choices,
+        choices=ProviderVerificationTypes,
         default=ProviderVerificationTypes.API_CONNECTIVITY,
         blank=False,
         null=False,
@@ -718,12 +724,16 @@ class ProviderModelVerification(TimestampedModel):
     class Meta:
         verbose_name = "Provider Model Verification"
         verbose_name_plural = "Provider Model Verifications"
-        unique_together = (("provider_model", "verification_type"),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider_model", "verification_type"], name="provider_providermodelverification_unique"
+            ),
+        ]
 
     provider_model = models.ForeignKey(ProviderModel, on_delete=models.CASCADE, blank=False, null=False)
     verification_type = models.CharField(
         max_length=32,
-        choices=ProviderModelVerificationTypes.choices,
+        choices=ProviderModelVerificationTypes,
         default=ProviderModelVerificationTypes.TEXT_INPUT,
         blank=False,
         null=False,

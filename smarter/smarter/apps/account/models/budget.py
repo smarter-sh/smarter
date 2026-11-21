@@ -230,13 +230,13 @@ class Budget(MetaDataModel):
     )
     period = models.CharField(
         max_length=10,
-        choices=BudgetPeriod.choices,
+        choices=BudgetPeriod,
         default=BudgetPeriod.MONTH,
         help_text="The billing period of the periodic limit, and of the duration.",
     )
     unit = models.CharField(
         max_length=10,
-        choices=BudgetUnit.choices,
+        choices=BudgetUnit,
         default=BudgetUnit.COST,
         help_text="What the limits measure: cost in USD, or total tokens.",
     )
@@ -258,7 +258,7 @@ class Budget(MetaDataModel):
     )
     action = models.CharField(
         max_length=10,
-        choices=BudgetAction.choices,
+        choices=BudgetAction,
         default=BudgetAction.BLOCK,
         help_text="What happens when a limit is reached: block further charges, or only send the budget_exceeded signal.",
     )
@@ -371,7 +371,9 @@ class ResourceConstraint(TimestampedModel):
 
     # pylint: disable=C0115
     class Meta:
-        unique_together = ("budget", "resource_locator")
+        constraints = [
+            models.UniqueConstraint(fields=["budget", "resource_locator"], name="account_resourceconstraint_unique"),
+        ]
 
     budget = models.ForeignKey(
         Budget,

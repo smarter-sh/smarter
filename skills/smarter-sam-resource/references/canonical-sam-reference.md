@@ -37,7 +37,7 @@ unless they start with `docs/`.
 
 | Step          | File                                                                                                                                                                  |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Model         | `apps/llmclient/models/llmclient_custom_domain.py`: `LLMClientCustomDomain(MetaDataWithOwnershipModel)`, with `unique_together` on `user_profile` and `name`          |
+| Model         | `apps/llmclient/models/llmclient_custom_domain.py`: `LLMClientCustomDomain(MetaDataWithOwnershipModel)`, with a `UniqueConstraint` on `user_profile` and `name`       |
 | Status fields | `verification_status` (`VerificationStatusChoices`: not verified, verifying, verified, failed), the verification date, and `set_verification_status()`                |
 | Migration     | `apps/llmclient/migrations/0006_llmclientcustomdomain_ownership.py`: added ownership to a released app, so it's a new migration with a data migration for legacy rows |
 | Serializer    | `apps/llmclient/serializers.py`: `LLMClientCustomDomainListSerializer`, a `MetaDataWithOwnershipModelSerializer` with `Meta.kind`                                     |

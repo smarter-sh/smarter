@@ -58,7 +58,9 @@ class LLMHostCompute(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name = "LLMHost Compute"
         verbose_name_plural = "LLMHost Compute"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="llmhost_llmhostcompute_unique"),
+        ]
 
     # --- the manifest's spec, as it is -----------------------------------
     spec = models.JSONField(

@@ -61,7 +61,9 @@ class LLMClientPlugin(TimestampedModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Plugins"
-        unique_together = ("llmclient", "plugin_meta")
+        constraints = [
+            models.UniqueConstraint(fields=["llmclient", "plugin_meta"], name="llmclient_llmclientplugin_unique"),
+        ]
 
     #: The LLMClient instance associated with this plugin.
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)

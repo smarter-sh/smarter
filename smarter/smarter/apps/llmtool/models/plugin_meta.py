@@ -60,7 +60,9 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
     class Meta:
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="llmtool_pluginmeta_unique"),
+        ]
 
     objects = MetaDataWithOwnershipModelManager["PluginMeta"]()
 

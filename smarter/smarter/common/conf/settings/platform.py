@@ -75,24 +75,6 @@ class PlatformSettings(BaseModel):
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    django_default_file_storage: str = Field(
-        settings_defaults.DJANGO_DEFAULT_FILE_STORAGE,
-        description="The default Django file storage backend.",
-        examples=["storages.backends.s3boto3.S3Boto3Storage", "django.core.files.storage.FileSystemStorage"],
-        title="Django Default File Storage Backend",
-    )
-    """
-    The default Django file storage backend.
-
-    This setting determines where Django will store uploaded files by default.
-    It can be configured to use different storage backends, such as Amazon S3 or the local file system,
-    depending on the needs of the application and its deployment environment.
-
-    :type: str
-    :default: Value from ``settings_defaults.DJANGO_DEFAULT_FILE_STORAGE``
-    :raises SmarterConfigurationError: If the value is not a string.
-    """
-
     environment: str = Field(
         settings_defaults.ENVIRONMENT,
         description="The deployment environment for the platform.",

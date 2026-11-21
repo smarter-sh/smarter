@@ -184,9 +184,6 @@ class TestSettings(SmarterTestBase):
     def test_developer_mode(self):
         self.assertIsNotNone(smarter_settings.developer_mode)
 
-    def test_django_default_file_storage(self):
-        self.assertIsNotNone(smarter_settings.django_default_file_storage)
-
     def test_email_admin(self):
         self.assertIsNotNone(smarter_settings.email_admin)
 

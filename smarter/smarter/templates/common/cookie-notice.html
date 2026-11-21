@@ -31,7 +31,7 @@ localStorage, e.g. in a private window, it shows on every page until closed ther
     }
   }
 </style>
-<script>
+<script nonce="{{ csp_nonce }}">
   (function () {
     var KEY = "smarter-cookie-notice-dismissed";
     var notice = document.getElementById("smarter-cookie-notice");

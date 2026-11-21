@@ -36,7 +36,6 @@ from smarter.common.utils.utils import (
 
 from .const import DEFAULT_ROOT_DOMAIN
 from .env import get_env, is_missing_value
-from .services import Services
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +72,6 @@ def github_token_env() -> Optional[SecretStr]:
         if token is not None:
             return token
     return None
-
-
-class DjangoPermittedStorages:
-    """Django permitted storage backends."""
-
-    AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
-    FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
 
 
 # pylint: disable=too-few-public-methods
@@ -206,13 +198,6 @@ class SettingsDefaults:
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
-
-    DJANGO_DEFAULT_FILE_STORAGE = get_env("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
-    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not Services.is_connected_to_aws():
-        DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
-        logger.warning(
-            "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
-        )
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")

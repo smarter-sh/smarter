@@ -75,6 +75,7 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
+from smarter.lib.django.csp import CSP_REPORT_PATH, CspReportView
 from smarter.lib.django.http import error_handlers
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
@@ -171,6 +172,7 @@ class ConsoleReverseNames:
     register_view = "account_register_view"
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
+    csp_report = to_snake_case(CspReportView.__name__)
 
 
 urlpatterns = [
@@ -235,6 +237,7 @@ urlpatterns = [
     path("sitemap.xml", SitemapXmlView.as_view(), name=ConsoleReverseNames.sitemap_xml),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
+    path(CSP_REPORT_PATH.lstrip("/"), CspReportView.as_view(), name=ConsoleReverseNames.csp_report),
     re_path(
         r"^apple-touch-icon\.png$",
         serve,

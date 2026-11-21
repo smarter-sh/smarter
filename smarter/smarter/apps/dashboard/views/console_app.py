@@ -24,6 +24,7 @@ from typing import Optional
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
+from django.middleware.csp import get_nonce
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import never_cache
@@ -134,6 +135,32 @@ def with_silent_splash(html: str) -> str:
     return silent
 
 
+INLINE_ELEMENTS = ("<script>", "<style>")
+"""The opening tags of the console's built page's inline scripts and styles, which carry no attributes."""
+
+
+def with_csp_nonce(html: str, nonce: Optional[str]) -> str:
+    """
+    The console's page, with the request's Content Security Policy nonce on its inline scripts and styles.
+
+    ``ContentSecurityPolicyMiddleware`` gives each request a nonce, and puts it in the policy's
+    ``script-src`` (see ``SECURE_CSP_REPORT_ONLY``). A template reads it as ``{{ csp_nonce }}``. The
+    console's page isn't a template, so its inline elements get it here.
+
+    :param html: The built page.
+    :param nonce: The request's nonce, or None when the middleware isn't installed.
+    :returns: The page, with ``nonce="..."`` on each attribute-less ``<script>`` and ``<style>``, or
+        unchanged without a nonce.
+    """
+    if nonce is None:
+        return html
+    for element in INLINE_ELEMENTS:
+        tag_name = element[1:-1]
+        with_nonce = f'<{tag_name} nonce="{nonce}">'
+        html = html.replace(element, with_nonce)
+    return html
+
+
 def console_index_html() -> Optional[str]:
     """
     The console's built ``index.html``, from ``STATIC_ROOT``.
@@ -187,4 +214,10 @@ class ConsoleAppView(View):
             page = with_static_url(page, settings.STATIC_URL)
         if not request.user.is_authenticated:
             page = with_silent_splash(page)
+        lazy_nonce = get_nonce(request)
+        nonce: Optional[str] = None
+        if lazy_nonce is not None:
+            # Django's LazyNonce is false until it is first read: reading it puts it in the policy.
+            nonce = str(lazy_nonce)
+        page = with_csp_nonce(page, nonce)
         return HttpResponse(page, content_type="text/html; charset=utf-8")

@@ -112,10 +112,9 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Custom Domains"
-        unique_together = (
-            "user_profile",
-            "name",
-        )
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="llmclient_llmclientcustomdomain_unique"),
+        ]
 
     objects = MetaDataWithOwnershipModelManager()
 
@@ -144,7 +143,7 @@ class LLMClientCustomDomain(MetaDataWithOwnershipModel):
     #: delegated to its Route53 hosted zone, and its TLS certificate is issued.
     verification_status = models.CharField(
         max_length=32,
-        choices=VerificationStatusChoices.choices,
+        choices=VerificationStatusChoices,
         default=VerificationStatusChoices.NOT_VERIFIED,
     )
 

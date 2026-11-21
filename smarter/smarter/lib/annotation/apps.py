@@ -14,7 +14,6 @@ logger = logging.getSmarterLogger(__name__)
 class AnnotationConfig(AppConfig):
     """Django app configuration of Smarter annotations."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.annotation"
     label = "annotation"
     verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"

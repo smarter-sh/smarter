@@ -486,10 +486,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     # pylint: disable=missing-class-docstring
     class Meta:
         abstract = True
-        unique_together = (
-            "user_profile",
-            "name",
-        )
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="%(app_label)s_%(class)s_unique"),
+        ]
 
     objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
 

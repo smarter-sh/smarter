@@ -139,7 +139,9 @@ class Secret(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name = "Secret"
         verbose_name_plural = "Secrets"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="secret_secret_unique"),
+        ]
 
     objects: SecretManager = SecretManager()
 

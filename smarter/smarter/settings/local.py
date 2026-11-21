@@ -27,7 +27,12 @@ if smarter_settings.developer_mode:
     django_apps_dir = BASE_DIR / "apps"
     keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
     STATICFILES_DIRS.extend(keen_source)
-    STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
+    # Uncompressed static files in development, unless they are on the CDN.
+    if not smarter_settings.static_files_on_cdn:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "whitenoise.storage.StaticFilesStorage",
+            "OPTIONS": {},
+        }
 
     INSTALLED_APPS += ["django_extensions"]
 

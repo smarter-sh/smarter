@@ -65,8 +65,8 @@ class DataExport(TimestampedModel):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="data_exports")
-    status = models.CharField(max_length=16, choices=DataExportStatus.choices, default=DataExportStatus.QUEUED)
-    step = models.CharField(max_length=16, choices=DataExportStep.choices, default=DataExportStep.QUEUED)
+    status = models.CharField(max_length=16, choices=DataExportStatus, default=DataExportStatus.QUEUED)
+    step = models.CharField(max_length=16, choices=DataExportStep, default=DataExportStep.QUEUED)
     resource_count = models.PositiveIntegerField(default=0)
     manifest_count = models.PositiveIntegerField(default=0)
     failed_count = models.PositiveIntegerField(default=0)

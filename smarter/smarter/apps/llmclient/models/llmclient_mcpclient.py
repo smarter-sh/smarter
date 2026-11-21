@@ -39,7 +39,9 @@ class LLMClientMCPClients(TimestampedModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient MCPClients"
-        unique_together = ("llmclient", "mcpclient")
+        constraints = [
+            models.UniqueConstraint(fields=["llmclient", "mcpclient"], name="llmclient_llmclientmcpclients_unique"),
+        ]
 
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)
     mcpclient = models.ForeignKey(

@@ -370,10 +370,9 @@ class UserProfile(MetaDataModel):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        unique_together = (
-            "user",
-            "account",
-        )
+        constraints = [
+            models.UniqueConstraint(fields=["user", "account"], name="account_userprofile_unique"),
+        ]
 
     objects: SmarterBaseModelManager = SmarterBaseModelManager()
 

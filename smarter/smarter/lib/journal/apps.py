@@ -14,7 +14,6 @@ logger = logging.getSmarterLogger(__name__)
 class JournalConfig(AppConfig):
     """Django app configuration for the journal app."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.journal"
     verbose_name = "Smarter Journal"
 

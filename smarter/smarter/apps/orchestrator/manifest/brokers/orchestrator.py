@@ -322,7 +322,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
         ``harnesses`` list. The manifest is treated as the full desired state:
         memberships not present in the manifest are deleted, memberships present
         are created or updated, matched on (orchestrator, llmclient) per the
-        model's unique_together constraint.
+        model's unique constraint.
 
         Must be called from within apply()'s transaction, after self.orchestrator
         has been saved.

@@ -117,7 +117,9 @@ class LLMClient(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClients"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="llmclient_llmclient_unique"),
+        ]
 
     class Modes:
         """
@@ -283,7 +285,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         default=DnsVerificationStatusChoices.NOT_VERIFIED,
         blank=True,
         null=True,
-        choices=DnsVerificationStatusChoices.choices,
+        choices=DnsVerificationStatusChoices,
     )
 
     # : The TLS certificate issuance status of the LLMClient's custom domain. This is part of the deployment process and is managed by
@@ -294,7 +296,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         default=TlsCertificateIssuanceStatusChoices.NO_CERTIFICATE,
         blank=True,
         null=True,
-        choices=TlsCertificateIssuanceStatusChoices.choices,
+        choices=TlsCertificateIssuanceStatusChoices,
     )
 
     def __str__(self) -> str:

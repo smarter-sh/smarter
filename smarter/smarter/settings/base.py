@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 import django
 from corsheaders.defaults import default_headers
+from django.utils.csp import CSP
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
@@ -37,6 +38,7 @@ from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils import mask_string
 from smarter.common.utils.redis_url import redis_url_with_database
 from smarter.lib import json
+from smarter.lib.django.csp import CSP_REPORT_PATH
 from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
@@ -507,21 +509,6 @@ Uses AWS S3 if AWS is configured,
 otherwise uses local filesystem storage.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#std:setting-STORAGES
-"""
-
-DEFAULT_FILE_STORAGE = smarter_settings.django_default_file_storage
-"""
-The default file storage backend for Django.
-
-Uses AWS S3 if AWS is configured,
-otherwise uses local filesystem storage. smarter_settings determines the appropriate
-value based on whether or not it detects AWS authentication configuration in
-the running environment.
-
-See:
-
-    - https://docs.djangoproject.com/en/5.0/ref/settings/#default-file-storage
-    - smarter_settings.django_default_file_storage
 """
 
 AWS_ACCESS_KEY_ID = (
@@ -1020,6 +1007,13 @@ MIDDLEWARE = [
     "smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware",
     #
     # -------------------------------
+    # sends the Content-Security-Policy(-Report-Only) header from SECURE_CSP and
+    # SECURE_CSP_REPORT_ONLY, and gives each request the nonce that templates
+    # read as {{ csp_nonce }}.
+    # -------------------------------
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
+    #
+    # -------------------------------
     # to handle 'already associated error from python social auth'
     # -------------------------------
     "smarter.apps.account.pipeline.SmarterSocialAuthExceptionMiddleware",
@@ -1104,6 +1098,7 @@ TEMPLATES: list[SmarterDictType] = [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.i18n",
                 "django.template.context_processors.request",
+                "django.template.context_processors.csp",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
@@ -1656,6 +1651,69 @@ and ``STATIC_URL`` is its CDN's, e.g. ``https://cdn.platform.example.com/static/
 own host. See :mod:`smarter.lib.django.static_storage` and :doc:`ADR-035 </adr/035-single-page-app>`.
 """
 
+# -------------------------------
+# Content Security Policy
+# -------------------------------
+CSP_STATIC_SOURCES: list[str] = []
+"""The origin of ``STATIC_URL`` while the static files are on the CDN, else nothing: ``'self'`` covers ``/static/``."""
+
+static_url_parts = urllib.parse.urlsplit(STATIC_URL)
+if static_url_parts.netloc:
+    static_origin = f"{static_url_parts.scheme}://{static_url_parts.netloc}"
+    CSP_STATIC_SOURCES.append(static_origin)
+
+csp_api_domain = smarter_settings.environment_api_domain
+CSP_API_SOURCES: list[str] = [csp_api_domain, f"*.{csp_api_domain}"]
+"""The environment's api host and its subdomains, which a deployed LLMClient's chat calls."""
+
+CSP_GOOGLE_FONTS_STYLES = "https://fonts.googleapis.com"
+CSP_GOOGLE_FONTS_FILES = "https://fonts.gstatic.com"
+CSP_GOOGLE_TAG_MANAGER = "https://www.googletagmanager.com"
+CSP_GOOGLE_ANALYTICS = "https://*.google-analytics.com"
+CSP_JSDELIVR = "https://cdn.jsdelivr.net"
+"""The CDN that the console's code editor (Monaco) loads from."""
+
+CSP_REPORT_URL = urllib.parse.urljoin(smarter_settings.environment_url, CSP_REPORT_PATH)
+"""
+Where browsers send violation reports: :class:`smarter.lib.django.csp.CspReportView`, on the platform's.
+
+host, so that a page on a deployed LLMClient's host reports there too.
+"""
+
+SECURE_CSP_REPORT_ONLY = {
+    "default-src": [CSP.SELF],
+    "base-uri": [CSP.SELF],
+    "object-src": [CSP.NONE],
+    "form-action": [CSP.SELF],
+    "script-src": [CSP.SELF, CSP.NONCE, *CSP_STATIC_SOURCES, CSP_JSDELIVR, CSP_GOOGLE_TAG_MANAGER],
+    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, *CSP_STATIC_SOURCES, CSP_JSDELIVR, CSP_GOOGLE_FONTS_STYLES],
+    "font-src": [CSP.SELF, "data:", *CSP_STATIC_SOURCES, CSP_JSDELIVR, CSP_GOOGLE_FONTS_FILES],
+    "img-src": [CSP.SELF, "data:", "blob:", "https:"],
+    "connect-src": [
+        CSP.SELF,
+        *CSP_STATIC_SOURCES,
+        *CSP_API_SOURCES,
+        CSP_JSDELIVR,
+        CSP_GOOGLE_ANALYTICS,
+        CSP_GOOGLE_TAG_MANAGER,
+    ],
+    "worker-src": [CSP.SELF, "blob:"],
+    "report-uri": [CSP_REPORT_URL],
+}
+"""
+The Content Security Policy that Django's ``ContentSecurityPolicyMiddleware`` sends, in report-only mode.
+
+Browsers block nothing. They report what the policy would block to ``report-uri``, which logs each distinct
+violation once an hour at WARNING (:mod:`smarter.lib.django.csp`). Inline scripts
+in the Django templates carry ``nonce="{{ csp_nonce }}"``, and the console's page gets the same nonce
+(:func:`smarter.apps.dashboard.views.console_app.with_csp_nonce`). Styles keep ``'unsafe-inline'``: React
+and the Bootstrap theme set inline ``style`` attributes. A view that sets its own
+``Content-Security-Policy`` header, such as the doodle artwork view, keeps it. Once the reports are clean,
+the same dictionary moves to ``SECURE_CSP``, which enforces it.
+
+See: https://docs.djangoproject.com/en/6.0/ref/csp/
+"""
+
 STATICFILES_DIRS = [BASE_DIR / "static"]
 """
 A list of directories where Django will also look for static files, in addition.
@@ -1665,20 +1723,6 @@ in the BASE_DIR. This allows for global static files that are not tied to
 a specific app.
 
 See: https://docs.djangoproject.com/en/5.0/ref/settings/#staticfiles-dirs
-"""
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-"""
-The default primary key field type for Django models in Smarter.
-
-This is set to 'BigAutoField', which
-is a 64-bit integer that automatically increments. This is suitable for most use cases and provides
-a large range of values for primary keys.
-
-See: https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 """
 
 REST_FRAMEWORK = {
@@ -2269,7 +2313,6 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
 
     logger.debug("Django v%s", get_version())
     logger.debug("Smarter v%s", smarter_version)
-    logger.debug("Default file storage: %s", DEFAULT_FILE_STORAGE)
     logger.debug("Storages backend: %s", STORAGES["default"]["BACKEND"])
 
     if smarter_settings.smtp_is_configured:
