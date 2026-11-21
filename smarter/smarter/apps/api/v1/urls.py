@@ -21,8 +21,11 @@ delegates route handling to app-specific URL modules.
 - ``providers/``: Provider integration endpoints.
 - ``secrets/``: Secret management endpoints.
 - ``tests/``: Test-only endpoints.
-- ``vectorstores/``: Vector store endpoints (enabled only when
-    ``SMARTER_ENABLE_VECTORSTORE=true``).
+- ``vectorstores/``: Vector store endpoints.
+
+The SAM resource apps' endpoints (connections, guardrails, llm-clients, plugins, secrets, ...) are
+mounted only if the app's ``SMARTER_ENABLE_<APP>`` flag is true, which it is by default. See
+:mod:`smarter.lib.manifest.sam_apps`.
 
 Each included URL set uses a namespace to avoid naming collisions and to keep
 API components logically separated.
@@ -72,17 +75,14 @@ from smarter.apps.vectorsearch.api.v1 import urls as vectorsearch_urls
 from smarter.apps.vectorsearch.const import namespace as vectorsearch_namespace
 from smarter.apps.vectorstore.api.v1 import urls as vectorstore_urls
 from smarter.common.conf import smarter_settings
-from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
-from smarter.lib import logging
 from smarter.lib.journal.api.v1 import urls as journal_urls
 from smarter.lib.journal.const import namespace as journal_namespace
+from smarter.lib.manifest.sam_apps import SamAppUrls, sam_app_urlpatterns
 
 from .cli.const import namespace as cli_namespace
 from .const import namespace
 from .demos.const import namespace as demos_namespace
-
-logger = logging.getSmarterLogger(__name__)
 
 app_name = namespace
 
@@ -110,43 +110,35 @@ urlpatterns = [
     # the main API
     # -------------------------------------------
     path("accounts/", include(account_urls, namespace=account_namespace)),
-    path("llm-clients/", include(llmclient_urls, namespace=llmclient_namespace)),
-    path("llmhosts/", include(llmhost_urls, namespace=llmhost_namespace)),
-    path("mcpclients/", include(mcpclient_urls, namespace=mcpclient_namespace)),
     path("mcp/", include(mcpserver_urls, namespace=mcpserver_namespace)),
     path("cli/", include(cli_urls, namespace=cli_namespace)),
     path("demos/", include(demos_urls, namespace=demos_namespace)),
-    path("connections/", include(connection_urls, namespace=connnection_namespace)),
     path("doodles/", include(doodle_urls, namespace=doodle_namespace)),
-    path("extensions/", include(extension_urls, namespace=extension_namespace)),
-    path("guardrails/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("journal/", include(journal_urls, namespace=journal_namespace)),
-    path("orchestrators/", include(orchestrator_urls, namespace=orchestrator_namespace)),
-    path("plugins/", include(llmtool_urls, namespace=llmtool_namespace)),
     path("prompts/", include(prompt_urls, namespace=prompt_namespace)),
-    path("providers/", include(provider_urls, namespace=provider_namespace)),
-    path("secrets/", include(secret_urls, namespace=secret_namespace)),
     path("tests/", include(tests_urls, namespace="tests")),
-    path("vectorsearches/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
 ]
 
-if smarter_settings.enable_proxy:
-    urlpatterns += [
-        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
-    ]
-    logger.debug("Proxy API endpoints are %s.", SmarterReadyState.READY)
-else:
-    logger.info(
-        "Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        SmarterReadyState.NOT_READY,
-    )
-if smarter_settings.enable_vectorstore:
-    urlpatterns += [
-        path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
-    ]
-    logger.debug("Vectorstore API endpoints are %s.", SmarterReadyState.READY)
-else:
-    logger.info(
-        "Vectorstore API endpoints are %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        SmarterReadyState.NOT_READY,
-    )
+SAM_APP_API_URLS: list[SamAppUrls] = [
+    SamAppUrls("enable_connection", "Connection", "connections/", connection_urls, connnection_namespace),
+    SamAppUrls("enable_guardrail", "Guardrail", "guardrails/", guardrail_urls, guardrail_namespace),
+    SamAppUrls("enable_llmclient", "LLMClient", "llm-clients/", llmclient_urls, llmclient_namespace),
+    SamAppUrls("enable_llmhost", "LLMHost", "llmhosts/", llmhost_urls, llmhost_namespace),
+    SamAppUrls("enable_llmtool", "LLMTool", "plugins/", llmtool_urls, llmtool_namespace),
+    SamAppUrls("enable_llmtool", "Extension", "extensions/", extension_urls, extension_namespace),
+    SamAppUrls("enable_mcpclient", "MCPClient", "mcpclients/", mcpclient_urls, mcpclient_namespace),
+    SamAppUrls("enable_orchestrator", "Orchestrator", "orchestrators/", orchestrator_urls, orchestrator_namespace),
+    SamAppUrls("enable_provider", "Provider", "providers/", provider_urls, provider_namespace),
+    SamAppUrls("enable_proxy", "Proxy", "proxy/", proxy_urls, proxy_namespace),
+    SamAppUrls("enable_secret", "Secret", "secrets/", secret_urls, secret_namespace),
+    SamAppUrls("enable_vectorsearch", "VectorSearch", "vectorsearches/", vectorsearch_urls, vectorsearch_namespace),
+    SamAppUrls("enable_vectorstore", "Vectorstore", "vectorstores/", vectorstore_urls, "vectorstore"),
+]
+"""
+The REST api endpoints of the SAM resource apps.
+
+Each app's endpoints are mounted only if its ``smarter_settings.enable_<app>`` flag is true. See
+:mod:`smarter.lib.manifest.sam_apps`.
+"""
+
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_API_URLS, "API endpoints")

@@ -14,6 +14,7 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import Extension
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 COUNTERS = (
     my_resources.get_pending_deployments,
@@ -95,6 +96,17 @@ class TestDashboardApiViews(TestAccountMixin):
         self.assertEqual(data["pending_deployments_url"], data["llmclients_url"] + "?filter=pending")
         self.assertEqual(data["mcpclients_url"], "/mcpclient/")
         self.assertNotIn("connections_qty", data)
+
+    def test_my_resources_disabled_sam_apps(self):
+        """Test that a disabled SAM app's list url is None, since its pages aren't mounted."""
+        self.clear_cache()
+        with disabled_sam_apps("enable_guardrail", "enable_llmtool"):
+            data = self.my_resources()
+        self.addCleanup(lazy_cache.clear)
+        self.assertIsNone(data["guardrails_url"])
+        self.assertIsNone(data["plugins_url"])
+        self.assertIsNone(data["extensions_url"])
+        self.assertTrue(data["secrets_url"].startswith("/"))
 
     def test_my_resources_extensions_url(self):
         """Test that a superuser's Extensions link opens the console page, and anyone else's the docs."""

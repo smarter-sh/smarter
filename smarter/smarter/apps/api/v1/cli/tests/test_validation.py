@@ -12,6 +12,7 @@ from smarter.apps.api.v1.cli.validation import validate_manifest
 from smarter.apps.guardrail.manifest.brokers.guardrail import SAMGuardrailBroker
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 GUARDRAIL_MANIFEST = os.path.join(
     os.path.dirname(__file__),
@@ -50,6 +51,14 @@ class TestValidateManifest(SmarterTestBase):
         self.assertEqual(validate_manifest(["a list"]).errors[0].type, "invalid_manifest")
         self.assertEqual(validate_manifest({**self.manifest, "kind": "Chatbot"}).errors[0].loc, ["kind"])
         self.assertEqual(validate_manifest({"apiVersion": "smarter.sh/v1"}).errors[0].type, "invalid_kind")
+
+    def test_disabled_kind(self):
+        """A manifest of a kind whose SAM app is disabled has one error."""
+        with disabled_sam_apps("enable_guardrail"):
+            validation = validate_manifest(self.manifest)
+        self.assertFalse(validation.valid)
+        self.assertEqual(validation.errors[0].type, "disabled_kind")
+        self.assertEqual(validation.errors[0].loc, ["kind"])
 
     def test_external_checks(self):
         """External checks run by default, and are passed to the broker."""

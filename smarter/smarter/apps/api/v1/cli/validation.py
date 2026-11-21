@@ -13,6 +13,7 @@ from pydantic import JsonValue
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.contract.models import CliApiValidation
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib.manifest.sam_apps import kind_is_enabled
 from smarter.lib.typing import SmarterDictType
 
 
@@ -36,6 +37,14 @@ def validate_manifest(manifest: JsonValue, external_checks: bool = True) -> CliA
                 "loc": ["kind"],
                 "message": f"kind must be one of: {', '.join(SAMKinds.all())}",
                 "type": "invalid_kind",
+            }
+        ]
+    elif isinstance(kind, str) and not kind_is_enabled(kind):
+        errors = [
+            {
+                "loc": ["kind"],
+                "message": f"{kind} manifests are disabled on this platform.",
+                "type": "disabled_kind",
             }
         ]
     else:

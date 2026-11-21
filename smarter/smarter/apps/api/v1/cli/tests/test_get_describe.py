@@ -32,6 +32,7 @@ from smarter.lib.manifest.enum import (
 )
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.narrowing import json_object
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 from .base_class import ApiV1CliTestBase
 
@@ -176,6 +177,37 @@ class TestApplyResult(ApiV1CliTestBase):
         self.assertEqual(response["data"], {"apiVersion": "smarter.sh/v1", "kind": "Secret", "name": name})
         for leaked in ("api_token", "auth_header", "cache_key", "manifest_data", "ip_address", "orm_instance"):
             self.assertNotIn(leaked, str(response))
+
+
+class TestDisabledKinds(ApiV1CliTestBase):
+    """Test that the cli api refuses the kinds of a disabled SAM app, e.g. with SMARTER_ENABLE_SECRET=false."""
+
+    def test_get_a_disabled_kind(self):
+        """Test that get of a disabled kind is a bad request that names the environment variable."""
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs={SAMKeys.KIND.value: SAMKinds.SECRET.value})
+        with disabled_sam_apps("enable_secret"):
+            response, status = self.get_response(path=path)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)
+        self.assertIn("SMARTER_ENABLE_SECRET=true", str(response))
+
+    def test_get_a_core_kind(self):
+        """Test that the core kinds, e.g. User, have no flag."""
+        path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs={SAMKeys.KIND.value: SAMKinds.USER.value})
+        with disabled_sam_apps("enable_secret"):
+            response, status = self.get_response(path=path)
+        self.assertEqual(status, HTTPStatus.OK, response)
+
+    def test_apply_a_disabled_kind(self):
+        """Test that apply of a disabled kind is a bad request, and creates nothing."""
+        manifest = json_object(self.get_readonly_yaml_file(os.path.join(HERE, "data", "good-secret.yaml")))
+        name = manifest["metadata"]["name"]
+        self.addCleanup(lambda: Secret.objects.filter(name=name, user_profile=self.user_profile).delete())
+        path = reverse(self.namespace + ApiV1CliReverseViews.apply)
+        with disabled_sam_apps("enable_secret"):
+            response, status = self.get_response(path, manifest=manifest)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)
+        self.assertIn("SMARTER_ENABLE_SECRET=true", str(response))
+        self.assertFalse(Secret.objects.filter(name=name, user_profile=self.user_profile).exists())
 
 
 class TestAnnotationSelectors(ApiV1CliTestBase):

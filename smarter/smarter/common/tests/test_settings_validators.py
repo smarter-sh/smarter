@@ -66,7 +66,7 @@ def field_validators() -> dict[str, list[str]]:
     }
 
 
-def call(validator, value, data: SmarterDictType):
+def call(validator, value, data: SmarterDictType, field_name: Optional[str] = None):
     """Call a validator, with a ValidationInfo whose data is ``data`` if the validator takes one."""
     parameters = [
         p for p in inspect.signature(validator).parameters.values() if p.kind not in (p.VAR_KEYWORD, p.VAR_POSITIONAL)
@@ -74,6 +74,7 @@ def call(validator, value, data: SmarterDictType):
     if len(parameters) >= 2:
         info = Mock()
         info.data = data
+        info.field_name = field_name
         return validator(value, info)
     return validator(value)
 
@@ -93,7 +94,7 @@ class TestSettingsValidators(SmarterTestBase):
                 value = getattr(smarter_settings, field)
                 with self.subTest(validator=name, field=field):
                     try:
-                        call(validator, value, data)
+                        call(validator, value, data, field)
                     except EXPECTED_ERRORS:
                         # a few validators refuse their own defaults, e.g. a placeholder value.
                         pass
@@ -101,12 +102,12 @@ class TestSettingsValidators(SmarterTestBase):
     def test_probes(self):
         """Test that each validator returns a value or raises a configuration error, for every probe value."""
         for data in ({}, smarter_settings.model_dump()):
-            for name in field_validators():
+            for name, fields in field_validators().items():
                 validator = getattr(Settings, name)
                 for value in PROBES:
                     with self.subTest(validator=name, value=value, data=bool(data)):
                         try:
-                            call(validator, value, data)
+                            call(validator, value, data, fields[0])
                         except EXPECTED_ERRORS:
                             pass
 
@@ -117,7 +118,7 @@ class TestSettingsValidators(SmarterTestBase):
             validator = getattr(Settings, name)
             for value in (None, ""):
                 try:
-                    call(validator, value, {})
+                    call(validator, value, {}, fields[0])
                 except EXPECTED_ERRORS:
                     failures.append((name, fields, value))
         # a field that is required has no default, but most do.
