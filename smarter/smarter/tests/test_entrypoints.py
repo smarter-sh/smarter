@@ -54,7 +54,7 @@ class TestEnvironmentSettings(SmarterTestBase):
         super().tearDown()
 
     def test_base_aws(self):
-        """Base_aws uses redis for caching and celery, mysql, and secure session cookies."""
+        """Base_aws uses redis for caching and celery, mysql, and secure, HttpOnly session cookies."""
         module = fresh_import("smarter.settings.base_aws")
         self.assertEqual(module.CACHES["default"]["BACKEND"], "django_redis.cache.RedisCache")
         self.assertEqual(module.SESSION_ENGINE, "django.contrib.sessions.backends.cache")
@@ -62,7 +62,7 @@ class TestEnvironmentSettings(SmarterTestBase):
         self.assertEqual(module.CELERY_BEAT_SCHEDULER, "redbeat.RedBeatScheduler")
         self.assertEqual(module.DATABASES["default"]["ENGINE"], "django.db.backends.mysql")
         self.assertTrue(module.SESSION_COOKIE_SECURE)
-        self.assertFalse(module.STRIPE_LIVE_MODE)
+        self.assertTrue(module.SESSION_COOKIE_HTTPONLY)
         self.assertIsNone(module.SECURE_PROXY_SSL_HEADER)
         self.assertTrue(all(origin.startswith("https://") for origin in module.CSRF_TRUSTED_ORIGINS))
         self.assertIn(f"https://{module.ENVIRONMENT_DOMAIN}", module.CORS_ALLOWED_ORIGINS)

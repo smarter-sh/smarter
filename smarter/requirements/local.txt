@@ -31,7 +31,6 @@ asgiref==3.13.0
     # via
     #   cache-results
     #   channels
-    #   channels-redis
     #   django
     #   django-cors-headers
     #   social-auth-app-django
@@ -42,10 +41,8 @@ astroid==4.3.4
 attrs==26.1.0
     # via
     #   aiohttp
-    #   cattrs
     #   jsonschema
     #   referencing
-    #   requests-cache
 autodoc-pydantic==2.2.0
     # via -r smarter/requirements/in/local.in
 babel==2.18.0
@@ -74,16 +71,11 @@ build==1.6.1
 cache-results==0.2.1
     # via -r smarter/requirements/in/base.in
 cachetools==7.2.8
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   tox
-cattrs==26.2.1
-    # via requests-cache
+    # via tox
 celery==5.6.3
     # via
     #   -r smarter/requirements/in/base.in
     #   celery-redbeat
-    #   django-celery-beat
 celery-redbeat==2.4.2
     # via -r smarter/requirements/in/base.in
 celery-types==0.26.0
@@ -102,10 +94,6 @@ cffi==2.1.1
 cfgv==3.5.0
     # via pre-commit
 channels==4.3.2
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   channels-redis
-channels-redis==4.3.0
     # via -r smarter/requirements/in/base.in
 charset-normalizer==3.5.2
     # via
@@ -135,10 +123,9 @@ colorama==0.4.6
     # via tox
 coverage==7.17.2
     # via -r smarter/requirements/in/local.in
-cron-descriptor==1.4.5
-    # via django-celery-beat
 cryptography==50.0.2
     # via
+    #   -r smarter/requirements/in/base.in
     #   google-auth
     #   paramiko
     #   pyjwt
@@ -148,6 +135,7 @@ cssselect==1.6.0
     # via types-lxml
 defusedxml==0.7.1
     # via
+    #   -r smarter/requirements/in/base.in
     #   nltk
     #   python3-openid
     #   social-auth-core
@@ -165,32 +153,25 @@ django==6.0.10
     #   -r smarter/requirements/in/base.in
     #   cache-results
     #   channels
-    #   django-celery-beat
     #   django-cors-headers
     #   django-debug-toolbar
     #   django-extensions
-    #   django-filter
     #   django-redis
     #   django-rest-knox
     #   django-storages
     #   django-stubs
     #   django-stubs-ext
     #   django-taggit
-    #   django-timezone-field
     #   django-waffle
     #   djangorestframework
     #   social-auth-app-django
     #   sphinxcontrib-django
-django-celery-beat==2.9.0
-    # via -r smarter/requirements/in/base.in
 django-cors-headers==4.9.0
     # via -r smarter/requirements/in/base.in
 django-debug-toolbar==8.0.0
     # via -r smarter/requirements/in/base.in
 django-extensions==4.1
     # via -r smarter/requirements/in/local.in
-django-filter==26.2
-    # via -r smarter/requirements/in/base.in
 django-hosts==7.0.0
     # via -r smarter/requirements/in/base.in
 django-redis==7.0.0
@@ -207,8 +188,6 @@ django-stubs-ext==6.1.2
     # via django-stubs
 django-taggit==7.0.0
     # via -r smarter/requirements/in/base.in
-django-timezone-field==7.2.2
-    # via django-celery-beat
 django-waffle==5.0.0
     # via -r smarter/requirements/in/base.in
 djangorestframework==3.18.3
@@ -276,6 +255,7 @@ httpcore2==2.16.0
     # via httpx2
 httpx[http2]==0.28.1
     # via
+    #   -r smarter/requirements/in/base.in
     #   google-genai
     #   langchain-core
     #   langgraph-sdk
@@ -284,6 +264,7 @@ httpx[http2]==0.28.1
     #   qdrant-client
 httpx2==2.16.0
     # via
+    #   -r smarter/requirements/in/base.in
     #   langsmith
     #   mcp
 hyperframe==6.1.0
@@ -298,16 +279,13 @@ idna==3.20
     #   httpx2
     #   requests
     #   tldextract
-    #   url-normalize
     #   yarl
 imagesize==2.0.1
     # via sphinx
 inflect==7.6.0
     # via -r smarter/requirements/in/base.in
 inflection==0.5.1
-    # via
-    #   -r smarter/requirements/in/base.in
-    #   smarter-types
+    # via smarter-types
 iniconfig==2.3.1
     # via pytest
 invoke==3.0.3
@@ -339,9 +317,12 @@ jsonschema-specifications==2025.9.1
 kombu==5.7.0
     # via celery
 langchain==1.2.18
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
 langchain-core==1.7.6
     # via
+    #   -r smarter/requirements/in/base.in
     #   langchain
     #   langchain-openai
     #   langchain-qdrant
@@ -394,7 +375,9 @@ mccabe==0.7.0
     #   flake8
     #   pylint
 mcp==2.3.0
-    # via -r smarter/requirements/in/base.in
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
 mcp-types==2.3.0
     # via mcp
 mdurl==0.1.2
@@ -403,8 +386,6 @@ more-itertools==11.2.1
     # via
     #   inflect
     #   jaraco-functools
-msgpack==1.2.4
-    # via channels-redis
 msgspec==0.22.0
     # via pinecone
 multidict==7.2.1
@@ -426,11 +407,12 @@ niquests==3.21.2
 nltk==3.10.4
     # via
     #   -r smarter/requirements/in/base.in
-    #   textblob
+    #   -r smarter/requirements/in/constraints.in
 nodeenv==1.12.0
     # via pre-commit
 numpy==2.5.4
     # via
+    #   -r smarter/requirements/in/base.in
     #   pandas
     #   pandas-stubs
     #   qdrant-client
@@ -441,6 +423,7 @@ oauthlib==4.0.1
 openai==2.54.0
     # via
     #   -r smarter/requirements/in/base.in
+    #   -r smarter/requirements/in/constraints.in
     #   langchain-openai
 openmeteo-requests==1.7.5
     # via -r smarter/requirements/in/base.in
@@ -491,7 +474,6 @@ platformdirs==4.14.5
     #   black
     #   pint
     #   pylint
-    #   requests-cache
     #   tox
     #   virtualenv
 pluggy==1.7.0
@@ -571,7 +553,9 @@ pylint-plugin-utils==0.9.0
 pymysql==1.2.3
     # via -r smarter/requirements/in/base.in
 pynacl==1.6.2
-    # via paramiko
+    # via
+    #   -r smarter/requirements/in/base.in
+    #   paramiko
 pypdf==6.21.4
     # via -r smarter/requirements/in/base.in
 pyproject-api==1.12.4
@@ -586,10 +570,9 @@ pytest==9.2.0
     #   pytest-mock
 pytest-mock==3.17.0
     # via -r smarter/requirements/in/local.in
-python-crontab==3.4.0
-    # via django-celery-beat
 python-dateutil==2.9.0.post0
     # via
+    #   -r smarter/requirements/in/base.in
     #   botocore
     #   celery
     #   celery-redbeat
@@ -629,8 +612,8 @@ rapidfuzz==3.14.6
     # via levenshtein
 redis==8.1.0
     # via
+    #   -r smarter/requirements/in/base.in
     #   celery-redbeat
-    #   channels-redis
     #   django-redis
 referencing==0.37.0
     # via
@@ -649,26 +632,20 @@ requests==2.34.2
     #   googlemaps
     #   langsmith
     #   llamaai
-    #   requests-cache
     #   requests-file
     #   requests-oauthlib
     #   requests-toolbelt
-    #   retry-requests
     #   social-auth-core
     #   sphinx
     #   sphinx-contributors
     #   tiktoken
     #   tldextract
-requests-cache==1.3.3
-    # via -r smarter/requirements/in/base.in
 requests-file==3.0.1
     # via tldextract
 requests-oauthlib==2.0.0
     # via social-auth-core
 requests-toolbelt==1.0.0
     # via langsmith
-retry-requests==2.0.0
-    # via -r smarter/requirements/in/base.in
 rich==15.0.0
     # via bandit
 roman-numerals==4.1.0
@@ -759,8 +736,6 @@ tenacity==9.1.4
     #   celery-redbeat
     #   google-genai
     #   langchain-core
-textblob==0.20.1
-    # via -r smarter/requirements/in/base.in
 tiktoken==0.14.0
     # via langchain-openai
 tldextract==5.4.0
@@ -781,8 +756,6 @@ truststore==0.10.5
     #   httpx2
 typeguard==4.6.0
     # via inflect
-types-cachetools==7.0.0.20260713
-    # via -r smarter/requirements/in/local.in
 types-html5lib==1.1.11.20260518
     # via types-lxml
 types-lxml==2026.2.16
@@ -804,7 +777,6 @@ typing-extensions==4.16.0
     # via
     #   anyio
     #   beautifulsoup4
-    #   cattrs
     #   celery-types
     #   click-repl
     #   django-stubs
@@ -836,20 +808,16 @@ typing-inspection==0.4.5
     #   pydantic
     #   pydantic-settings
 tzdata==2026.6
-    # via django-celery-beat
+    # via -r smarter/requirements/in/base.in
 tzlocal==5.4.5
     # via celery
 unittest-xml-reporting==4.0.0
     # via -r smarter/requirements/in/local.in
-url-normalize==3.1.0
-    # via requests-cache
 urllib3==2.8.0
     # via
     #   botocore
     #   qdrant-client
     #   requests
-    #   requests-cache
-    #   retry-requests
     #   types-requests
 urllib3-future==2.25.905
     # via niquests
