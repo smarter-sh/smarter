@@ -6,6 +6,7 @@ from django.contrib import admin
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
+    smarter_admin_user,
     smarter_restricted_admin_site,
 )
 
@@ -77,11 +78,12 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
     Provider admin.
 
     This is a primary Smarter resource, that descends directly from
-    MetaDataWithOwnershipModel. Visibility of Providers is granted to any
-    authenticated user.
+    MetaDataWithOwnershipModel. :class:`~smarter.apps.dashboard.admin.SmarterCustomerModelAdmin`
+    shows staff the Providers of their own account.
     """
 
     model = Provider
+    search_fields = ("name", "description", "base_url", "default_model", "user_profile__user__username")
     inlines = [ProviderVerificationAdmin]
 
     readonly_fields = (
@@ -91,27 +93,17 @@ class ProviderAdmin(SmarterCustomerModelAdmin):
 
     list_display = ["name", "status", "is_active", "user_profile", "created_at", "updated_at"]
 
-    def get_queryset(self, request):
-        """Visibility is granted to authenticated users."""
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        if user is None:
-            return qs.none()
-        if user.is_authenticated:
-            return qs
-        return qs.none()
-
 
 class ProviderModelAdmin(SmarterCustomerModelAdmin):
     """
     ProviderModel admin.
 
     This descends from Provider, so visibility
-    is determined by the parent Provider. Provider visibility is granted to any
-    authenticated user.
+    is determined by the parent Provider's ownership.
     """
 
     model = ProviderModel
+    search_fields = ("name", "provider__name")
     inlines = [ProviderModelVerificationAdmin]
 
     readonly_fields = (
@@ -121,14 +113,19 @@ class ProviderModelAdmin(SmarterCustomerModelAdmin):
     list_display = ["provider", "name", "created_at", "is_active"]
 
     def get_queryset(self, request):
-        """Visibility is granted to authenticated users."""
-        user = get_resolved_user(request.user)  # type: ignore
+        """
+        Return the models of the Providers that the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted rows, or an empty queryset if the request has no authenticated user.
+        """
+        user = smarter_admin_user(request)
         qs = super().get_queryset(request)
         if user is None:
             return qs.none()
-        if user.is_authenticated:
+        if user.is_superuser:
             return qs
-        return qs.none()
+        return qs.filter(provider__in=Provider.objects.with_ownership_permission_for(user=user))
 
 
 # Provider Models

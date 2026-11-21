@@ -29,6 +29,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.lib import logging
 from smarter.lib.django.listview import ListviewPageRequest
+from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.manifest.record_locator import (
     console_url,
@@ -164,6 +165,24 @@ def kind_of_instance(instance: models.Model) -> Optional[str]:
     return KIND_BY_RECORD_LOCATOR_PREFIX.get(record_locator_prefix(type(instance)))
 
 
+def model_has_kind(model: type[models.Model]) -> bool:
+    """
+    Return whether a model's rows are SAM resources, which have a kind, a broker and a manifest.
+
+    A model's rows have a kind when its record locator prefix is in :data:`KIND_BY_RECORD_LOCATOR_PREFIX`, or when
+    each row has its own ``kind``, a field or a property, as a plugin's PluginMeta has (see :func:`kind_of_instance`).
+
+    :param model: The Django model.
+    :type model: type[models.Model]
+    :returns: True if its rows have a kind.
+    :rtype: bool
+    """
+    prefix = record_locator_prefix(model)
+    if prefix in KIND_BY_RECORD_LOCATOR_PREFIX:
+        return True
+    return hasattr(model, "kind")
+
+
 def readable_instance(user, record_locator: str) -> Optional[models.Model]:
     """
     Return the resource of a record locator, if the user may read it.
@@ -240,13 +259,120 @@ def instance_of_kind(broker, kind: str, instance: models.Model) -> Optional[mode
     return None
 
 
+def owner_broker(
+    kind: str, instance: models.Model, reader=None
+) -> tuple[Optional[AbstractBroker], Optional[ListviewPageRequest], str]:
+    """
+    Return a broker of a resource, on behalf of its owner, in its own account, and the request it was built with.
+
+    A broker finds a resource by its name among those of its own user profile, so it is built for the resource's
+    owner. A resource that has no owner, e.g. a Budget, gets a broker for the user who reads it. The caller has
+    already checked that the user may read it (see :func:`readable_instance`).
+
+    :param kind: The resource's SAM kind.
+    :type kind: str
+    :param instance: The resource's Django ORM instance, which has a ``name``, and usually a ``user_profile``.
+    :type instance: models.Model
+    :param reader: The user who reads it, for a resource that has no owner.
+    :returns: The broker and its request, and an empty string, or None, None and why there is no broker.
+    :rtype: tuple[Optional[AbstractBroker], Optional[ListviewPageRequest], str]
+    :raises Exception: Whatever the broker raises when the resource's stored data doesn't initialize it.
+    """
+    broker_class = Brokers.get_broker(kind)
+    owner_profile = getattr(instance, "user_profile", None)
+    owner = getattr(owner_profile, "user", None)
+    if owner is None and not hasattr(instance, "user_profile"):
+        owner = reader
+    name = getattr(instance, "name", None)
+    if broker_class is None or owner is None or not name:
+        return None, None, f"A {kind} has no manifest."
+    request = ListviewPageRequest(owner)
+    # the owner's profile in the resource's own account: the owner's default profile may be another account's, e.g.
+    # the newest account that they joined, where the broker wouldn't find the resource.
+    broker_kwargs: SmarterDictType = {"name": name, "kind": kind}
+    if isinstance(owner_profile, UserProfile):
+        broker_kwargs["user_profile"] = owner_profile
+    broker = broker_class(request, **broker_kwargs)
+    return broker, request, ""
+
+
+def dependent_names(kind: str, instance: models.Model, reader) -> list[str]:
+    """
+    Return the resources that depend on a resource, and keep it from being deleted, as the reader may see them.
+
+    These are the resources that the broker's ``verify_no_dependencies()`` names when it refuses a delete. A
+    superuser sees each one's kind and name. Another user sees those of their own account, and a count of the
+    others, as ``smarter delete`` tells them.
+
+    :param kind: The resource's SAM kind.
+    :type kind: str
+    :param instance: The resource's Django ORM instance.
+    :type instance: models.Model
+    :param reader: The user who would delete it.
+    :returns: A line for each dependent, e.g. ``LLMClient stackademy``, sorted, or an empty list if there are none,
+        or the resource has no broker.
+    :rtype: list[str]
+    """
+    try:
+        broker, _, _ = owner_broker(kind, instance, reader=reader)
+        if broker is None:
+            return []
+        references = broker.dependency_references()
+    # a resource whose broker doesn't initialize has no dependents that its broker could find. pylint: disable=W0718
+    except Exception as e:
+        logger.warning("could not list the dependents of %s %s: %s", kind, getattr(instance, "name", None), e)
+        return []
+    reader_profile = UserProfile.get_cached_object(user=reader) if reader is not None else None
+    reader_account = getattr(reader_profile, "account", None)
+    is_superuser = getattr(reader, "is_superuser", False)
+    names: list[str] = []
+    hidden = 0
+    for reference in references:
+        same_account = reader_account is not None and reference.account == reader_account
+        if is_superuser or same_account:
+            names.append(f"{reference.kind} {reference.name}")
+        else:
+            hidden += 1
+    names.sort()
+    if hidden:
+        names.append(f"{hidden} resource(s) in other accounts")
+    return names
+
+
+def delete_with_broker(kind: str, instance: models.Model, reader) -> str:
+    """
+    Delete a resource with its broker, as ``smarter delete`` does.
+
+    The broker refuses while other resources depend on it, invalidates its caches, and journals the delete.
+
+    :param kind: The resource's SAM kind.
+    :type kind: str
+    :param instance: The resource's Django ORM instance.
+    :type instance: models.Model
+    :param reader: The user who deletes it, for a resource that has no owner.
+    :returns: An empty string if it was deleted, or why it wasn't.
+    :rtype: str
+    """
+    name = getattr(instance, "name", None)
+    try:
+        broker, request, error = owner_broker(kind, instance, reader=reader)
+        if broker is None or request is None:
+            return error
+        broker.delete(request)
+    # the broker's refusal, e.g. SAMBrokerErrorDependencies, or any failure of the delete. pylint: disable=W0718
+    except Exception as e:
+        logger.warning("could not delete %s %s: %s", kind, name, e)
+        return str(e)
+    logger.info("deleted %s %s", kind, name)
+    return ""
+
+
 def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optional[SmarterDictType], str]:
     """
     Return a resource's manifest, as ``smarter describe`` returns it to its owner.
 
-    The resource is described on behalf of its owner, in its own account, because a broker finds a resource by its
-    name among those of its own user profile. A resource that has no owner, e.g. a Budget, is described on behalf of the user who reads it. The
-    caller has already checked that the user may read it (see :func:`readable_instance`).
+    The resource is described by :func:`owner_broker`, on behalf of its owner. The caller has already checked that the
+    user may read it (see :func:`readable_instance`).
 
     :param kind: The resource's SAM kind.
     :type kind: str
@@ -256,22 +382,11 @@ def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optio
     :returns: The manifest, and an empty string, or None and why it could not be read.
     :rtype: tuple[Optional[SmarterDictType], str]
     """
-    broker_class = Brokers.get_broker(kind)
-    owner_profile = getattr(instance, "user_profile", None)
-    owner = getattr(owner_profile, "user", None)
-    if owner is None and not hasattr(instance, "user_profile"):
-        owner = reader
     name = getattr(instance, "name", None)
-    if broker_class is None or owner is None or not name:
-        return None, f"A {kind} has no manifest."
-    request = ListviewPageRequest(owner)
-    # the owner's profile in the resource's own account: the owner's default profile may be another account's, e.g.
-    # the newest account that they joined, where the broker wouldn't find the resource.
-    broker_kwargs: SmarterDictType = {"name": name, "kind": kind}
-    if isinstance(owner_profile, UserProfile):
-        broker_kwargs["user_profile"] = owner_profile
     try:
-        broker = broker_class(request, **broker_kwargs)
+        broker, request, error = owner_broker(kind, instance, reader=reader)
+        if broker is None or request is None:
+            return None, error
         response = broker.describe(request)
         data = json.loads(response.content).get("data")
     # a broken resource must not break its detail: its other tabs still work. pylint: disable=W0718

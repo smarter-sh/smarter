@@ -260,9 +260,34 @@
       "additionalProperties": false,
       "description": "The console's optional features: which pages exist, and which tabs and widgets show.",
       "properties": {
+        "connection": {
+          "description": "Whether the Connections pages exist.",
+          "title": "Connection",
+          "type": "boolean"
+        },
         "didYouKnow": {
           "description": "Whether the header shows a Did you know? tip.",
           "title": "Didyouknow",
+          "type": "boolean"
+        },
+        "guardrail": {
+          "description": "Whether the Guardrails pages exist.",
+          "title": "Guardrail",
+          "type": "boolean"
+        },
+        "llmclient": {
+          "description": "Whether the LLMClients and Custom Domains pages exist.",
+          "title": "Llmclient",
+          "type": "boolean"
+        },
+        "llmhost": {
+          "description": "Whether the LLMHosts pages exist.",
+          "title": "Llmhost",
+          "type": "boolean"
+        },
+        "llmtool": {
+          "description": "Whether the LLMTools and Extensions pages exist.",
+          "title": "Llmtool",
           "type": "boolean"
         },
         "manifestDropZone": {
@@ -270,9 +295,24 @@
           "title": "Manifestdropzone",
           "type": "boolean"
         },
+        "mcpclient": {
+          "description": "Whether the MCPClients pages exist.",
+          "title": "Mcpclient",
+          "type": "boolean"
+        },
+        "orchestrator": {
+          "description": "Whether the Orchestrators pages exist.",
+          "title": "Orchestrator",
+          "type": "boolean"
+        },
         "passthrough": {
           "description": "Whether the Prompt Passthrough page exists.",
           "title": "Passthrough",
+          "type": "boolean"
+        },
+        "provider": {
+          "description": "Whether the Providers pages exist.",
+          "title": "Provider",
           "type": "boolean"
         },
         "proxy": {
@@ -285,6 +325,11 @@
           "title": "Reactdebugmode",
           "type": "boolean"
         },
+        "secret": {
+          "description": "Whether the Secrets pages exist.",
+          "title": "Secret",
+          "type": "boolean"
+        },
         "serverLogs": {
           "description": "Whether the Server Logs tabs show.",
           "title": "Serverlogs",
@@ -295,6 +340,11 @@
           "title": "Terminal",
           "type": "boolean"
         },
+        "vectorsearch": {
+          "description": "Whether the VectorSearches pages exist.",
+          "title": "Vectorsearch",
+          "type": "boolean"
+        },
         "vectorstore": {
           "description": "Whether the Vectorstores pages exist.",
           "title": "Vectorstore",
@@ -302,7 +352,17 @@
         }
       },
       "required": [
+        "connection",
+        "guardrail",
+        "llmclient",
+        "llmhost",
+        "llmtool",
+        "mcpclient",
+        "orchestrator",
+        "provider",
         "proxy",
+        "secret",
+        "vectorsearch",
         "vectorstore",
         "manifestDropZone",
         "terminal",
@@ -542,14 +602,28 @@
           "type": "string"
         },
         "connections": {
-          "description": "The Connections list.",
-          "title": "Connections",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Connections list, while connections are enabled.",
+          "title": "Connections"
         },
         "customDomains": {
-          "description": "The Custom Domains list.",
-          "title": "Customdomains",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Custom Domains list, while LLMClients are enabled.",
+          "title": "Customdomains"
         },
         "dashboard": {
           "description": "The dashboard.",
@@ -562,14 +636,28 @@
           "type": "string"
         },
         "extensions": {
-          "description": "The Extensions console.",
-          "title": "Extensions",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Extensions console, while LLMTools are enabled.",
+          "title": "Extensions"
         },
         "guardrails": {
-          "description": "The Guardrails list.",
-          "title": "Guardrails",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Guardrails list, while guardrails are enabled.",
+          "title": "Guardrails"
         },
         "infrastructureResources": {
           "anyOf": [
@@ -589,14 +677,28 @@
           "type": "string"
         },
         "llmhost": {
-          "description": "The LLM Hosts list.",
-          "title": "Llmhost",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The LLM Hosts list, while LLMHosts are enabled.",
+          "title": "Llmhost"
         },
         "llmhostcompute": {
-          "description": "The LLM Host Compute list.",
-          "title": "Llmhostcompute",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The LLM Host Compute list, while LLMHosts are enabled.",
+          "title": "Llmhostcompute"
         },
         "manifestDropZone": {
           "anyOf": [
@@ -611,9 +713,16 @@
           "title": "Manifestdropzone"
         },
         "mcpclients": {
-          "description": "The MCP Clients list.",
-          "title": "Mcpclients",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The MCP Clients list, while MCPClients are enabled.",
+          "title": "Mcpclients"
         },
         "openapi": {
           "description": "The OpenAPI contract.",
@@ -621,14 +730,28 @@
           "type": "string"
         },
         "orchestrators": {
-          "description": "The Orchestrators list.",
-          "title": "Orchestrators",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Orchestrators list, while orchestrators are enabled.",
+          "title": "Orchestrators"
         },
         "plugins": {
-          "description": "The LLM Tools list.",
-          "title": "Plugins",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The LLM Tools list, while LLMTools are enabled.",
+          "title": "Plugins"
         },
         "promptPassthrough": {
           "anyOf": [
@@ -643,9 +766,16 @@
           "title": "Promptpassthrough"
         },
         "providers": {
-          "description": "The Providers list.",
-          "title": "Providers",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Providers list, while providers are enabled.",
+          "title": "Providers"
         },
         "proxies": {
           "anyOf": [
@@ -660,9 +790,16 @@
           "title": "Proxies"
         },
         "secrets": {
-          "description": "The Secrets list.",
-          "title": "Secrets",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Secrets list, while secrets are enabled.",
+          "title": "Secrets"
         },
         "terminal": {
           "anyOf": [
@@ -677,9 +814,16 @@
           "title": "Terminal"
         },
         "vectorsearches": {
-          "description": "The Vectorsearches list.",
-          "title": "Vectorsearches",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Vectorsearches list, while vectorsearches are enabled.",
+          "title": "Vectorsearches"
         },
         "vectorstores": {
           "anyOf": [

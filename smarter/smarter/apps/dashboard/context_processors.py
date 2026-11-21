@@ -118,6 +118,7 @@ from smarter.common.utils import snake_case
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.urls import AuthTokenReverseNames
+from smarter.lib.manifest.sam_apps import get_sam_app
 from smarter.lib.typing import SmarterDictType
 
 if TYPE_CHECKING:
@@ -166,7 +167,7 @@ def sidebar_context() -> SmarterDictType:
     """
     The urls of the web console sidebar's links, reversed against ``settings.ROOT_URLCONF``.
 
-    Proxies, Vectorstores, the manifest drop zone and the terminal are included only when their
+    The SAM resource apps' lists, the manifest drop zone and the terminal are included only when their
     settings enable them. The result is cached.
 
     :returns: ``{"sidebar": {<link name>: <url>, ...}}``.
@@ -178,37 +179,51 @@ def sidebar_context() -> SmarterDictType:
             "prompt_passthrough": console_reverse(
                 DashboardReverseNames.namespace, PassthroughReverseNames.namespace, PassthroughReverseNames.view
             ),
-            "llmhost": console_reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.listview),
-            "llmhostcompute": console_reverse(LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview),
-            "mcpclients": console_reverse(MCPClientReverseNames.namespace, MCPClientReverseNames.listview),
-            "orchestrators": console_reverse(OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
-            "providers": console_reverse(ProviderReverseNames.namespace, ProviderReverseNames.listview),
-            "plugins": console_reverse(PluginReverseNames.namespace, PluginReverseNames.listview),
-            "connections": console_reverse(ConnectionReverseNames.namespace, ConnectionReverseNames.listview),
-            "guardrails": console_reverse(GuardrailReverseNames.namespace, GuardrailReverseNames.listview),
             "budgets": console_reverse(BudgetReverseNames.namespace, BudgetReverseNames.listview),
             "infrastructure_resources": console_reverse(
                 InfrastructureReverseNames.namespace, InfrastructureReverseNames.listview
             ),
-            "extensions": console_reverse(ExtensionReverseNames.namespace, ExtensionReverseNames.listview),
-            "secrets": console_reverse(SecretReverseNames.namespace, SecretReverseNames.listview),
-            "vectorsearches": console_reverse(VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
             "api_keys": console_reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
-            "custom_domains": console_reverse(
-                LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
-            ),
             "example_manifests": console_reverse(DocsReverseNames.namespace, DocsReverseNames.example_manifests),
             "openapi": console_reverse(DocsReverseNames.namespace, DocsReverseNames.openapi),
             "json_schemas": console_reverse(DocsReverseNames.namespace, DocsReverseNames.json_schemas),
             "admin": "/admin/",  # FIX ME
         }
     }
-    if smarter_settings.enable_proxy:
-        context["sidebar"]["proxies"] = console_reverse(ProxyReverseNames.namespace, ProxyReverseNames.listview)
-    if smarter_settings.enable_vectorstore:
-        context["sidebar"]["vectorstores"] = console_reverse(
-            VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
-        )
+    # the SAM resource apps' lists, each only while its app is enabled. See smarter.lib.manifest.sam_apps.
+    sam_app_links = [
+        ("llmhost", "enable_llmhost", (LLMHostReverseNames.namespace, LLMHostReverseNames.listview)),
+        ("llmhostcompute", "enable_llmhost", (LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview)),
+        ("mcpclients", "enable_mcpclient", (MCPClientReverseNames.namespace, MCPClientReverseNames.listview)),
+        (
+            "orchestrators",
+            "enable_orchestrator",
+            (OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
+        ),
+        ("providers", "enable_provider", (ProviderReverseNames.namespace, ProviderReverseNames.listview)),
+        ("plugins", "enable_llmtool", (PluginReverseNames.namespace, PluginReverseNames.listview)),
+        ("extensions", "enable_llmtool", (ExtensionReverseNames.namespace, ExtensionReverseNames.listview)),
+        ("connections", "enable_connection", (ConnectionReverseNames.namespace, ConnectionReverseNames.listview)),
+        ("guardrails", "enable_guardrail", (GuardrailReverseNames.namespace, GuardrailReverseNames.listview)),
+        ("secrets", "enable_secret", (SecretReverseNames.namespace, SecretReverseNames.listview)),
+        (
+            "vectorsearches",
+            "enable_vectorsearch",
+            (VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
+        ),
+        (
+            "custom_domains",
+            "enable_llmclient",
+            (LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview),
+        ),
+        ("proxies", "enable_proxy", (ProxyReverseNames.namespace, ProxyReverseNames.listview)),
+        ("vectorstores", "enable_vectorstore", (VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview)),
+    ]
+    for link_name, setting, url_name in sam_app_links:
+        sam_app = get_sam_app(setting)
+        if not sam_app.is_enabled(smarter_settings):
+            continue
+        context["sidebar"][link_name] = console_reverse(*url_name)
     if smarter_settings.enable_dropzone_manifest_apply:
         context["sidebar"]["manifest_drop_zone"] = console_reverse(
             DashboardReverseNames.namespace,

@@ -2,7 +2,14 @@
 
 import os
 
+from django.utils.translation import gettext_noop
+
 namespace = "vectorstore"
+presentation_app_name = gettext_noop("Vectorstore")
+"""The app's name as people read it, e.g. in the Django admin.
+
+Translated where it is shown.
+"""
 HERE = os.path.abspath(os.path.dirname(__file__))
 PINECONE_API_KEY_SECRET_NAME = "pinecone_api_key"
 PINECONE_CONNECTION_NAME = "pinecone"

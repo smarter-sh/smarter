@@ -1,26 +1,19 @@
 """Django app configuration for the journal app."""
 
-from django.apps import AppConfig
+from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
+from smarter.lib.django.apps import SmarterAppConfig
 
-from .const import namespace as app_name
-
-logger = logging.getSmarterLogger(__name__)
+from .const import namespace, presentation_app_name
 
 
-class JournalConfig(AppConfig):
-    """Django app configuration for the journal app."""
+class JournalConfig(SmarterAppConfig):
+    """Django app configuration of the Journal app.
 
-    name = "smarter.lib.journal"
-    verbose_name = "Smarter Journal"
+    See :class:`~smarter.lib.django.apps.SmarterAppConfig`.
+    """
 
-    # pylint: disable=import-outside-toplevel,W0611
-    def ready(self):
-        """Import the receivers and signals, which connects the receivers."""
-        from . import receivers, signals  # noqa: F401
-
-        app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-        logger.debug("%s app is %s", app_label, SmarterReadyState.READY)
+    name = f"smarter.lib.{namespace}"
+    verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _(presentation_app_name))

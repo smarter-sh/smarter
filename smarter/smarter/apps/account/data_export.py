@@ -97,6 +97,22 @@ class ExportResource:
         """The resource's name."""
         return str(getattr(self.instance, "name", "") or "")
 
+    @classmethod
+    def for_instance(cls, kind: str, instance: models.Model) -> "ExportResource":
+        """
+        Return the export resource of a resource, in the folder of its owner's account.
+
+        :param kind: The resource's SAM kind, e.g. ``Guardrail``.
+        :param instance: The resource's Django ORM instance.
+        :returns: The export resource. A resource that has no owner is in the folder ``account``.
+        """
+        user_profile = getattr(instance, "user_profile", None)
+        account = getattr(user_profile, "account", None)
+        account_number = getattr(account, "account_number", "")
+        if not account_number:
+            account_number = "account"
+        return cls(kind=kind, instance=instance, account_number=str(account_number))
+
 
 @dataclass
 class ExportFile:
@@ -316,10 +332,7 @@ def owned_resources(user: User) -> list[ExportResource]:
                     instance.pk,
                 )
                 continue
-            user_profile = getattr(instance, "user_profile", None)
-            account = getattr(user_profile, "account", None)
-            account_number = str(getattr(account, "account_number", "") or "account")
-            resources.append(ExportResource(kind=kind, instance=instance, account_number=account_number))
+            resources.append(ExportResource.for_instance(kind, instance))
     return resources
 
 
@@ -360,6 +373,32 @@ def manifest_path(resource: ExportResource, taken: set[str]) -> str:
     return path
 
 
+def manifest_file(resource: ExportResource, reader: User, taken: set[str]) -> tuple[Optional[ExportFile], str]:
+    """
+    Return a resource's manifest as a YAML file, as ``smarter describe`` prints it, with a Secret's value redacted.
+
+    :param resource: The resource.
+    :param reader: The user who exports it, for a resource that has no owner.
+    :param taken: The paths of the files so far, to which the file's path is added.
+    :returns: The file, and an empty string, or None and a line that says which resource has no manifest, and why.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.dashboard.resource_detail import (
+        manifest_data,
+        manifest_to_yaml,
+    )
+
+    data, error = manifest_data(resource.kind, resource.instance, reader=reader)
+    if data is None:
+        failure = f"{resource.account_number} {resource.kind} {resource.name}: {error}"
+        return None, failure
+    if resource.kind == SECRET_KIND:
+        data = redact_secret(data)
+    path = manifest_path(resource, taken)
+    exported = ExportFile(path=path, content=manifest_to_yaml(data))
+    return exported, ""
+
+
 def write_manifests(export: DataExport, resources: list[ExportResource]) -> tuple[list[ExportFile], list[str]]:
     """
     Return each resource's manifest as a YAML file, and the resources that have none.
@@ -368,24 +407,15 @@ def write_manifests(export: DataExport, resources: list[ExportResource]) -> tupl
     :param resources: The resources.
     :returns: The files, and a line for each resource that has no manifest, saying why.
     """
-    # pylint: disable=import-outside-toplevel
-    from smarter.apps.dashboard.resource_detail import (
-        manifest_data,
-        manifest_to_yaml,
-    )
-
     files: list[ExportFile] = []
     failures: list[str] = []
     taken: set[str] = set()
     for resource in resources:
-        data, error = manifest_data(resource.kind, resource.instance, reader=export.user)
-        if data is None:
-            failures.append(f"{resource.account_number} {resource.kind} {resource.name}: {error}")
+        exported, error = manifest_file(resource, reader=export.user, taken=taken)
+        if exported is None:
+            failures.append(error)
         else:
-            if resource.kind == SECRET_KIND:
-                data = redact_secret(data)
-            path = manifest_path(resource, taken)
-            files.append(ExportFile(path=path, content=manifest_to_yaml(data)))
+            files.append(exported)
         done = len(files) + len(failures)
         if done % MANIFEST_PROGRESS_INTERVAL == 0:
             update_export(export, manifest_count=len(files), failed_count=len(failures))

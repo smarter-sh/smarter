@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 00:34+0000\n"
+"POT-Creation-Date: 2026-11-21 22:51+0000\n"
 "PO-Revision-Date: 2026-10-16 19:22+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: English\n"
@@ -96,6 +96,10 @@ msgstr ""
 msgid "Your password has been changed. Sign in with it."
 msgstr ""
 
+#: smarter/apps/account/const.py
+msgid "Account"
+msgstr ""
+
 #: smarter/apps/account/data_export.py
 msgid "Your account has no email address to send the download link to."
 msgstr ""
@@ -152,6 +156,94 @@ msgstr ""
 msgid ""
 "This unsubscribe link is not valid. Copy the whole link from the email, and "
 "try again."
+msgstr ""
+
+#: smarter/apps/api/const.py
+msgid "API"
+msgstr ""
+
+#: smarter/apps/connection/const.py
+msgid "Connection"
+msgstr ""
+
+#: smarter/apps/dashboard/const.py
+msgid "Dashboard"
+msgstr ""
+
+#: smarter/apps/docs/const.py
+msgid "Docs"
+msgstr ""
+
+#: smarter/apps/doodle/const.py
+msgid "Doodle"
+msgstr ""
+
+#: smarter/apps/guardrail/const.py
+msgid "Guardrail"
+msgstr ""
+
+#: smarter/apps/infrastructure/const.py
+msgid "Infrastructure"
+msgstr ""
+
+#: smarter/apps/llmclient/const.py
+msgid "LLMClient"
+msgstr ""
+
+#: smarter/apps/llmhost/const.py
+msgid "LLMHost"
+msgstr ""
+
+#: smarter/apps/llmtool/const.py
+msgid "LLMTool"
+msgstr ""
+
+#: smarter/apps/mcpclient/const.py
+msgid "MCPClient"
+msgstr ""
+
+#: smarter/apps/mcpserver/const.py
+msgid "MCPServer"
+msgstr ""
+
+#: smarter/apps/orchestrator/const.py
+msgid "Orchestrator"
+msgstr ""
+
+#: smarter/apps/prompt/const.py
+msgid "Prompt"
+msgstr ""
+
+#: smarter/apps/provider/const.py
+msgid "Provider"
+msgstr ""
+
+#: smarter/apps/proxy/const.py
+msgid "Proxy"
+msgstr ""
+
+#: smarter/apps/secret/const.py
+msgid "Secret"
+msgstr ""
+
+#: smarter/apps/vectorsearch/const.py
+msgid "Vectorsearch"
+msgstr ""
+
+#: smarter/apps/vectorstore/const.py
+msgid "Vectorstore"
+msgstr ""
+
+#: smarter/lib/annotation/const.py
+msgid "Annotation"
+msgstr ""
+
+#: smarter/lib/drf/const.py
+msgid "API Keys"
+msgstr ""
+
+#: smarter/lib/journal/const.py
+msgid "Journal"
 msgstr ""
 
 #: smarter/lib/social_core/backends/multitenant.py

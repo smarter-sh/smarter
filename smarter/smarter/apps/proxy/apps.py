@@ -1,28 +1,20 @@
-"""This module is used to configure the Smarter Admin app."""
+"""Django app configuration of the Proxy app."""
 
-from django.apps import AppConfig
+from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
+from smarter.lib.django.apps import SmarterAppConfig
 
-from .const import namespace as app_name
-
-logger = logging.getLogger(__name__)
+from .const import namespace, presentation_app_name
 
 
-class ApiConfig(AppConfig):
-    """AdminConfig class.
+class ProxyConfig(SmarterAppConfig):
+    """Django app configuration of the Proxy app.
 
-    This class is used to configure the Smarter Admin app.
+    See :class:`~smarter.lib.django.apps.SmarterAppConfig`.
     """
 
-    name = f"smarter.apps.{app_name.lower()}"
-    verbose_name = f"{SMARTER_APP_NAME} {app_name.upper()}"
-
-    # pylint: disable=import-outside-toplevel,W0611
-    def ready(self):
-        """Import signals."""
-        from . import receivers, signals  # noqa: F401
-
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)
+    name = f"smarter.apps.{namespace}"
+    verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _(presentation_app_name))
+    enabled_setting = "enable_proxy"

@@ -129,7 +129,7 @@ The actions are siblings of ``listview/``, so a React app derives them from its 
      - ``/api/web/provider/``
      - ``ProviderApiWebReverseNames``
    * - Proxies
-     - ``/api/web/proxy/``, when ``SMARTER_ENABLE_PROXY`` is true
+     - ``/api/web/proxy/``
      - ``ProxyApiWebReverseNames``
    * - Secrets
      - ``/api/web/secret/``
@@ -138,8 +138,11 @@ The actions are siblings of ``listview/``, so a React app derives them from its 
      - ``/api/web/vectorsearch/``
      - ``VectorsearchApiWebReverseNames``
    * - Vector Stores
-     - ``/api/web/vectorstore/``, when ``SMARTER_ENABLE_VECTORSTORE`` is true
+     - ``/api/web/vectorstore/``
      - ``VectorstoreApiWebReverseNames``
+
+A resource family's endpoints are mounted only while the platform enables it, e.g. with
+``SMARTER_ENABLE_GUARDRAIL``. See :ref:`Turning resource types off <sam-app-feature-flags>`.
 
 Each list's console page stays at its own path (``/guardrail/``, ``/secret/``, ...). Its view class
 is named after its list api's, e.g. ``GuardrailListView`` for ``GuardrailListApiView``, which is how

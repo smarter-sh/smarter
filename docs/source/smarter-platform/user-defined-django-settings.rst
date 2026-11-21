@@ -294,7 +294,7 @@ setting:
 
 To see the value that Django runs with, ask Django, in the container or the pod:
 
-.. code-block:: console
+.. code-block:: bash
 
    # locally
    docker exec smarter-api python manage.py diffsettings | grep SESSION_COOKIE_AGE

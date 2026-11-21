@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smarter web console\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 00:34+0000\n"
+"POT-Creation-Date: 2026-11-21 22:51+0000\n"
 "PO-Revision-Date: 2026-10-16 21:00+0000\n"
 "Last-Translator: The Smarter Project\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -101,6 +101,10 @@ msgstr "As senhas não coincidem."
 msgid "Your password has been changed. Sign in with it."
 msgstr "Sua senha foi alterada. Entre com ela."
 
+#: smarter/apps/account/const.py
+msgid "Account"
+msgstr "Conta"
+
 #: smarter/apps/account/data_export.py
 msgid "Your account has no email address to send the download link to."
 msgstr ""
@@ -169,6 +173,94 @@ msgid ""
 msgstr ""
 "Este link de cancelamento não é válido. Copie o link completo do e-mail e "
 "tente novamente."
+
+#: smarter/apps/api/const.py
+msgid "API"
+msgstr "API"
+
+#: smarter/apps/connection/const.py
+msgid "Connection"
+msgstr "Conexão"
+
+#: smarter/apps/dashboard/const.py
+msgid "Dashboard"
+msgstr "Painel"
+
+#: smarter/apps/docs/const.py
+msgid "Docs"
+msgstr "Documentação"
+
+#: smarter/apps/doodle/const.py
+msgid "Doodle"
+msgstr "Doodle"
+
+#: smarter/apps/guardrail/const.py
+msgid "Guardrail"
+msgstr "Guardrail"
+
+#: smarter/apps/infrastructure/const.py
+msgid "Infrastructure"
+msgstr "Infraestrutura"
+
+#: smarter/apps/llmclient/const.py
+msgid "LLMClient"
+msgstr "LLMClient"
+
+#: smarter/apps/llmhost/const.py
+msgid "LLMHost"
+msgstr "LLMHost"
+
+#: smarter/apps/llmtool/const.py
+msgid "LLMTool"
+msgstr "LLMTool"
+
+#: smarter/apps/mcpclient/const.py
+msgid "MCPClient"
+msgstr "MCPClient"
+
+#: smarter/apps/mcpserver/const.py
+msgid "MCPServer"
+msgstr "MCPServer"
+
+#: smarter/apps/orchestrator/const.py
+msgid "Orchestrator"
+msgstr "Orquestrador"
+
+#: smarter/apps/prompt/const.py
+msgid "Prompt"
+msgstr "Prompt"
+
+#: smarter/apps/provider/const.py
+msgid "Provider"
+msgstr "Provedor"
+
+#: smarter/apps/proxy/const.py
+msgid "Proxy"
+msgstr "Proxy"
+
+#: smarter/apps/secret/const.py
+msgid "Secret"
+msgstr "Segredo"
+
+#: smarter/apps/vectorsearch/const.py
+msgid "Vectorsearch"
+msgstr "Pesquisa vetorial"
+
+#: smarter/apps/vectorstore/const.py
+msgid "Vectorstore"
+msgstr "Banco vetorial"
+
+#: smarter/lib/annotation/const.py
+msgid "Annotation"
+msgstr "Anotação"
+
+#: smarter/lib/drf/const.py
+msgid "API Keys"
+msgstr "Chaves de API"
+
+#: smarter/lib/journal/const.py
+msgid "Journal"
+msgstr "Diário"
 
 #: smarter/lib/social_core/backends/multitenant.py
 msgid "Your subscription is not active. Please check your payment status."
@@ -992,9 +1084,6 @@ msgstr "Fechar"
 #~ msgid "Show header menu"
 #~ msgstr "Mostrar menu do cabeçalho"
 
-#~ msgid "API"
-#~ msgstr "API"
-
 #~ msgid "OpenAPI Contract"
 #~ msgstr "Contrato OpenAPI"
 
@@ -1281,9 +1370,6 @@ msgstr "Fechar"
 #~ msgid "Workbench"
 #~ msgstr "Área de trabalho"
 
-#~ msgid "Dashboard"
-#~ msgstr "Painel"
-
 #~ msgid "Prompt Passthrough"
 #~ msgstr "Repasse de prompts"
 
@@ -1296,29 +1382,11 @@ msgstr "Fechar"
 #~ msgid "Models"
 #~ msgstr "Modelos"
 
-#~ msgid "Providers"
-#~ msgstr "Provedores"
-
-#~ msgid "Proxies"
-#~ msgstr "Proxies"
-
-#~ msgid "LLM Hosts"
-#~ msgstr "Hosts LLM"
-
 #~ msgid "LLM Host Compute"
 #~ msgstr "Computação de hosts LLM"
 
 #~ msgid "Harnesses"
 #~ msgstr "Harnesses"
-
-#~ msgid "LLM Clients"
-#~ msgstr "Clientes LLM"
-
-#~ msgid "Orchestrators"
-#~ msgstr "Orquestradores"
-
-#~ msgid "API Keys"
-#~ msgstr "Chaves de API"
 
 #~ msgid "Custom Domains"
 #~ msgstr "Domínios personalizados"
@@ -1332,35 +1400,14 @@ msgstr "Fechar"
 #~ msgid "Updates available"
 #~ msgstr "Atualizações disponíveis"
 
-#~ msgid "LLM Tools"
-#~ msgstr "Ferramentas de LLM"
-
-#~ msgid "MCP Clients"
-#~ msgstr "Clientes MCP"
-
-#~ msgid "Connections"
-#~ msgstr "Conexões"
-
 #~ msgid "RAG"
 #~ msgstr "RAG"
-
-#~ msgid "Vectorsearches"
-#~ msgstr "Pesquisas vetoriais"
-
-#~ msgid "Vectorstores"
-#~ msgstr "Bancos vetoriais"
 
 #~ msgid "Governance"
 #~ msgstr "Governança"
 
 #~ msgid "Budgets"
 #~ msgstr "Orçamentos"
-
-#~ msgid "Guardrails"
-#~ msgstr "Guardrails"
-
-#~ msgid "Secrets"
-#~ msgstr "Segredos"
 
 #~ msgid "Read the Docs"
 #~ msgstr "Leia a documentação"
@@ -1377,9 +1424,6 @@ msgstr "Fechar"
 
 #~ msgid "Settings"
 #~ msgstr "Configurações"
-
-#~ msgid "Infrastructure Resources"
-#~ msgstr "Recursos de infraestrutura"
 
 #~ msgid "Django Admin"
 #~ msgstr "Admin do Django"
@@ -1650,9 +1694,6 @@ msgstr "Fechar"
 
 #~ msgid "Home"
 #~ msgstr "Início"
-
-#~ msgid "Account"
-#~ msgstr "Conta"
 
 #~ msgid "New User"
 #~ msgstr "Novo usuário"
@@ -2271,9 +2312,6 @@ msgstr "Fechar"
 
 #~ msgid "Sign Out"
 #~ msgstr "Sair"
-
-#~ msgid "Unknown action."
-#~ msgstr "Ação desconhecida."
 
 #~ msgid ""
 #~ "Only the LLMClient's owner, or an account admin, can change its api key."
@@ -3150,9 +3188,3 @@ msgstr "Fechar"
 #~ "%(switch)s estiver ativo. Desative o switch, no admin do Django em "
 #~ "Waffle, Switches, ou com este comando, e um GET do navegador nestes "
 #~ "endpoints volta a receber 405 Method Not Allowed. A api não é afetada."
-
-#~ msgid "Docs"
-#~ msgstr "Documentação"
-
-#~ msgid "Server Logs"
-#~ msgstr "Logs do servidor"
