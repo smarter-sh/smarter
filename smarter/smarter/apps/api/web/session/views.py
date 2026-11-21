@@ -64,6 +64,7 @@ from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NA
 from smarter.lib import logging
 from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
+from smarter.lib.manifest.sam_apps import kind_is_enabled
 from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__)
@@ -168,7 +169,17 @@ def flags(user: Optional[User]) -> ConsoleFlags:
     """
     is_superuser = user is not None and user.is_superuser
     return ConsoleFlags(
+        connection=smarter_settings.enable_connection,
+        guardrail=smarter_settings.enable_guardrail,
+        llmclient=smarter_settings.enable_llmclient,
+        llmhost=smarter_settings.enable_llmhost,
+        llmtool=smarter_settings.enable_llmtool,
+        mcpclient=smarter_settings.enable_mcpclient,
+        orchestrator=smarter_settings.enable_orchestrator,
+        provider=smarter_settings.enable_provider,
         proxy=smarter_settings.enable_proxy,
+        secret=smarter_settings.enable_secret,
+        vectorsearch=smarter_settings.enable_vectorsearch,
         vectorstore=smarter_settings.enable_vectorstore,
         manifest_drop_zone=smarter_settings.enable_dropzone_manifest_apply,
         terminal=terminal_enabled() and is_superuser,
@@ -270,23 +281,23 @@ def sidebar(user: User, console_flags: ConsoleFlags) -> ConsoleSidebar:
         prompt_passthrough=prompt_passthrough,
         manifest_drop_zone=links.get("manifest_drop_zone"),
         terminal=terminal,
-        providers=links["providers"],
+        providers=links.get("providers"),
         proxies=links.get("proxies"),
-        llmhost=links["llmhost"],
-        llmhostcompute=links["llmhostcompute"],
+        llmhost=links.get("llmhost"),
+        llmhostcompute=links.get("llmhostcompute"),
         workbench=links["workbench"],
-        orchestrators=links["orchestrators"],
+        orchestrators=links.get("orchestrators"),
         api_keys=links["api_keys"],
-        custom_domains=links["custom_domains"],
-        extensions=links["extensions"],
-        plugins=links["plugins"],
-        mcpclients=links["mcpclients"],
-        connections=links["connections"],
-        vectorsearches=links["vectorsearches"],
+        custom_domains=links.get("custom_domains"),
+        extensions=links.get("extensions"),
+        plugins=links.get("plugins"),
+        mcpclients=links.get("mcpclients"),
+        connections=links.get("connections"),
+        vectorsearches=links.get("vectorsearches"),
         vectorstores=links.get("vectorstores"),
         budgets=links["budgets"],
-        guardrails=links["guardrails"],
-        secrets=links["secrets"],
+        guardrails=links.get("guardrails"),
+        secrets=links.get("secrets"),
         example_manifests=links["example_manifests"],
         openapi=links["openapi"],
         json_schemas=links["json_schemas"],
@@ -297,11 +308,15 @@ def sidebar(user: User, console_flags: ConsoleFlags) -> ConsoleSidebar:
 
 def sam_kinds() -> list[str]:
     """
-    Every SAM kind, sorted by name, for the console's docs pages.
+    Every SAM kind that this platform enables, sorted by name, for the console's docs pages.
 
     :returns: The kinds, e.g. ``["Account", "ApiConnection", ...]``.
     """
-    kinds = SAMKinds.all()
+    kinds = []
+    for kind in SAMKinds.all():
+        # a kind whose SAM app is disabled has no docs pages. See smarter.lib.manifest.sam_apps.
+        if kind_is_enabled(kind):
+            kinds.append(kind)
     return sorted(kinds)
 
 

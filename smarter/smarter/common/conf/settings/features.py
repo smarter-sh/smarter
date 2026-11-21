@@ -4,7 +4,7 @@
 import logging
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationInfo
 
 from smarter.common.conf.const import THE_EMPTY_SET
 from smarter.common.conf.defaults import settings_defaults
@@ -159,12 +159,132 @@ class FeatureSettings(BaseModel):
 
         raise SmarterConfigurationError(f"could not validate enable_dropzone_manifest_apply: {v}")
 
+    # -------------------------------------------------------------------------
+    # One flag per SAM resource app. Each one mounts, or leaves out, the app's
+    # web console urls. See smarter.urls.console. All of them default to True.
+    # -------------------------------------------------------------------------
+    enable_connection: bool = Field(
+        settings_defaults.ENABLE_CONNECTION,
+        description="True if the web console serves the Connection pages. Set with SMARTER_ENABLE_CONNECTION.",
+        title="Enable Connection",
+    )
+    """True if the web console serves the Connection pages, under ``/connection/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_CONNECTION``, True unless ``SMARTER_ENABLE_CONNECTION`` is false.
+    """
+
+    enable_guardrail: bool = Field(
+        settings_defaults.ENABLE_GUARDRAIL,
+        description="True if the web console serves the Guardrail pages. Set with SMARTER_ENABLE_GUARDRAIL.",
+        title="Enable Guardrail",
+    )
+    """True if the web console serves the Guardrail pages, under ``/guardrail/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_GUARDRAIL``, True unless ``SMARTER_ENABLE_GUARDRAIL`` is false.
+    """
+
+    enable_llmclient: bool = Field(
+        settings_defaults.ENABLE_LLMCLIENT,
+        description="True if the web console serves the LLMClient pages. Set with SMARTER_ENABLE_LLMCLIENT.",
+        title="Enable LLMClient",
+    )
+    """True if the web console serves the LLMClient pages, under ``/llmclient/``.
+
+    It doesn't affect the chat and config endpoints of LLMClients on their custom domains.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_LLMCLIENT``, True unless ``SMARTER_ENABLE_LLMCLIENT`` is false.
+    """
+
+    enable_llmhost: bool = Field(
+        settings_defaults.ENABLE_LLMHOST,
+        description="True if the web console serves the LLMHost pages. Set with SMARTER_ENABLE_LLMHOST.",
+        title="Enable LLMHost",
+    )
+    """True if the web console serves the LLMHost pages, under ``/llmhost/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_LLMHOST``, True unless ``SMARTER_ENABLE_LLMHOST`` is false.
+    """
+
+    enable_llmtool: bool = Field(
+        settings_defaults.ENABLE_LLMTOOL,
+        description="True if the web console serves the LLMTool and Extension pages. Set with SMARTER_ENABLE_LLMTOOL.",
+        title="Enable LLMTool",
+    )
+    """True if the web console serves the LLMTool pages, under ``/llm-tools/``, and the Extension pages.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_LLMTOOL``, True unless ``SMARTER_ENABLE_LLMTOOL`` is false.
+    """
+
+    enable_mcpclient: bool = Field(
+        settings_defaults.ENABLE_MCPCLIENT,
+        description="True if the web console serves the MCPClient pages. Set with SMARTER_ENABLE_MCPCLIENT.",
+        title="Enable MCPClient",
+    )
+    """True if the web console serves the MCPClient pages, under ``/mcpclient/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_MCPCLIENT``, True unless ``SMARTER_ENABLE_MCPCLIENT`` is false.
+    """
+
+    enable_orchestrator: bool = Field(
+        settings_defaults.ENABLE_ORCHESTRATOR,
+        description="True if the web console serves the Orchestrator pages. Set with SMARTER_ENABLE_ORCHESTRATOR.",
+        title="Enable Orchestrator",
+    )
+    """True if the web console serves the Orchestrator pages, under ``/orchestrator/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_ORCHESTRATOR``, True unless ``SMARTER_ENABLE_ORCHESTRATOR``
+        is false.
+    """
+
+    enable_provider: bool = Field(
+        settings_defaults.ENABLE_PROVIDER,
+        description="True if the web console serves the Provider pages. Set with SMARTER_ENABLE_PROVIDER.",
+        title="Enable Provider",
+    )
+    """True if the web console serves the Provider pages, under ``/provider/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_PROVIDER``, True unless ``SMARTER_ENABLE_PROVIDER`` is false.
+    """
+
+    enable_secret: bool = Field(
+        settings_defaults.ENABLE_SECRET,
+        description="True if the web console serves the Secret pages. Set with SMARTER_ENABLE_SECRET.",
+        title="Enable Secret",
+    )
+    """True if the web console serves the Secret pages, under ``/secret/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_SECRET``, True unless ``SMARTER_ENABLE_SECRET`` is false.
+    """
+
+    enable_vectorsearch: bool = Field(
+        settings_defaults.ENABLE_VECTORSEARCH,
+        description="True if the web console serves the VectorSearch pages. Set with SMARTER_ENABLE_VECTORSEARCH.",
+        title="Enable VectorSearch",
+    )
+    """True if the web console serves the VectorSearch pages, under ``/vectorsearch/``.
+
+    :type: bool
+    :default: Value from ``settings_defaults.ENABLE_VECTORSEARCH``, True unless ``SMARTER_ENABLE_VECTORSEARCH``
+        is false.
+    """
+
     enable_vectorstore: bool = Field(
         settings_defaults.ENABLE_VECTORSTORE,
         description="True if the vectorstore feature is enabled based on the current environment.",
         title="Enable Vectorstore",
     )
     """Determines if the vectorstore feature is enabled based on the current environment.
+
+    It mounts the VectorStore web console pages, under ``/vectorstore/``, and its api endpoints.
 
     Returns:
         bool: True if the vectorstore is enabled, False otherwise.
@@ -177,27 +297,49 @@ class FeatureSettings(BaseModel):
     )
     """Determines if the proxy feature is enabled based on the current environment.
 
+    It mounts the Proxy web console pages, under ``/proxy/``, and its api endpoints.
+
     Returns:
         bool: True if the proxy is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_vectorstore")
-    def parse_enable_vectorstore(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_vectorstore' field.
-
-        Args:
-            v (Optional[Union[bool, str]]): the enable_vectorstore value to validate
-        Returns:
-            bool: The validated enable_vectorstore.
+    @before_field_validator(
+        "enable_connection",
+        "enable_guardrail",
+        "enable_llmclient",
+        "enable_llmhost",
+        "enable_llmtool",
+        "enable_mcpclient",
+        "enable_orchestrator",
+        "enable_provider",
+        "enable_proxy",
+        "enable_secret",
+        "enable_vectorsearch",
+        "enable_vectorstore",
+    )
+    def parse_enable_sam_app(cls, v: Optional[Union[bool, str]], info: ValidationInfo) -> bool:
         """
+        Validate one of the SAM apps' ``enable_<app>`` flags.
+
+        An empty value falls back to the field's default in ``settings_defaults``, e.g.
+        ``settings_defaults.ENABLE_GUARDRAIL`` for ``enable_guardrail``.
+
+        :param v: The value to validate.
+        :param info: Pydantic's validation info, which names the field.
+        :returns: The validated flag.
+        :raises SmarterConfigurationError: If the value is neither a boolean nor a string.
+        """
+        field_name = str(info.field_name)
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_VECTORSTORE
+            default_name = field_name.upper()
+            default = getattr(settings_defaults, default_name)
+            return bool(default)
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_vectorstore: {v}")
+        raise SmarterConfigurationError(f"could not validate {field_name}: {v}")
 
     enable_dashboard_server_logs: bool = Field(
         settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS,

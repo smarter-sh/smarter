@@ -511,6 +511,7 @@ class PluginSelectionHistoryAdmin(SmarterCustomerModelAdmin):
     """
 
     model = PluginSelectorHistory
+    search_fields = ("search_term", "session_key", "plugin_selector__plugin__name")
 
     readonly_fields = (
         "created_at",

@@ -12,13 +12,18 @@ from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.connection.models import ConnectionBase, SqlConnection
+from smarter.apps.dashboard.models import EmailContactList
 from smarter.apps.dashboard.resource_detail import (
     KIND_BY_RECORD_LOCATOR_PREFIX,
     ResourceDetail,
+    delete_with_broker,
+    dependent_names,
     instance_of_kind,
     kind_of_instance,
     manifest_yaml,
+    model_has_kind,
     models_by_record_locator_prefix,
+    owner_broker,
     readable_instance,
     resource_detail,
 )
@@ -28,6 +33,7 @@ from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.guardrail.serializers import GuardrailSerializer
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
+from smarter.apps.llmtool.models import PluginMeta
 from smarter.lib import json
 from smarter.lib.django.listview import ListviewPageRequest
 from smarter.lib.manifest.record_locator import console_paths
@@ -267,3 +273,54 @@ class TestResourceDetail(TestAccountMixin):
         self.assertEqual(readers, [self.user_profile.user])
         self.assertEqual((manifest, error), (None, "described"))
         self.assertEqual(manifest_yaml("Budget", Ownerless()), (None, "A Budget has no manifest."))  # type: ignore[arg-type]
+
+    def test_owner_broker(self):
+        """The broker of a resource is built for its owner, in its own account."""
+        broker, request, error = owner_broker("Guardrail", self.guardrail, reader=self.other_user)
+        self.assertIsInstance(broker, SAMGuardrailBroker)
+        assert broker is not None and request is not None
+        self.assertEqual(error, "")
+        self.assertEqual(request.user, self.user_profile.user)
+        self.assertEqual(broker.user_profile, self.user_profile)
+        self.assertEqual(owner_broker("NoSuchKind", self.guardrail), (None, None, "A NoSuchKind has no manifest."))
+
+    def test_model_has_kind(self):
+        """A model of SAM resources has a kind, by its record locator prefix or its rows' own kind field."""
+        self.assertTrue(model_has_kind(Guardrail))
+        self.assertTrue(model_has_kind(LLMClient))
+        self.assertTrue(model_has_kind(PluginMeta))
+        self.assertFalse(model_has_kind(EmailContactList))
+        self.assertFalse(model_has_kind(LLMClientGuardrails))
+
+    def test_dependent_names(self):
+        """The LLMClient that uses the Guardrail is named to its owner, and counted for another account's user."""
+        self.assertEqual(
+            dependent_names("Guardrail", self.guardrail, reader=self.user_profile.user),
+            [f"LLMClient {self.llmclient.name}"],
+        )
+        self.assertEqual(
+            dependent_names("Guardrail", self.guardrail, reader=self.other_user),
+            ["1 resource(s) in other accounts"],
+        )
+        self.assertEqual(dependent_names("NoSuchKind", self.guardrail, reader=self.other_user), [])
+        with patch.object(SAMGuardrailBroker, "dependency_references", side_effect=ValueError("broken")):
+            self.assertEqual(dependent_names("Guardrail", self.guardrail, reader=self.user_profile.user), [])
+
+    def test_delete_with_broker(self):
+        """The broker refuses to delete a resource that others depend on, and deletes one that none do."""
+        error = delete_with_broker("Guardrail", self.guardrail, reader=self.user_profile.user)
+        self.assertIn(f"LLMClient {self.llmclient.name}", error)
+        self.assertTrue(Guardrail.objects.filter(pk=self.guardrail.pk).exists())
+        self.assertEqual(
+            delete_with_broker("NoSuchKind", self.guardrail, reader=self.user_profile.user),
+            "A NoSuchKind has no manifest.",
+        )
+
+        unused = Guardrail.objects.create(
+            name=f"test_delete_{self.hash_suffix}",
+            user_profile=self.user_profile,
+            **copy.deepcopy(GUARDRAIL_DEFAULTS),
+        )
+        self.addCleanup(Guardrail.objects.filter(pk=unused.pk).delete)
+        self.assertEqual(delete_with_broker("Guardrail", unused, reader=self.user_profile.user), "")
+        self.assertFalse(Guardrail.objects.filter(pk=unused.pk).exists())

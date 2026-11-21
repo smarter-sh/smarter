@@ -3,8 +3,10 @@
 import os
 from enum import IntEnum
 
+from django.utils.translation import gettext_noop
+
 namespace = "llmtool"
-presentation_app_name = "LLMTool"
+presentation_app_name = gettext_noop("LLMTool")
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = HERE
 

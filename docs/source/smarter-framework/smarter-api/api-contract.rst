@@ -269,9 +269,9 @@ sessions, newest first, and the tool calls and plugin usage of each. A session h
 conversation, so the history includes only the sessions whose user the requesting user may manage:
 their own, their account's users' for an account admin, and every one for a superuser. The journal's
 list is paged: ``page``, ``page_size``, ``search`` and ``ordering`` select the page, and its
-``pagination`` describes it. The Proxies'
-and vectorstores' routes exist only when the platform enables them (``SMARTER_ENABLE_PROXY``,
-``SMARTER_ENABLE_VECTORSTORE``).
+``pagination`` describes it. A resource
+family's routes exist only while the platform enables it, e.g. ``SMARTER_ENABLE_PROXY``. See
+:ref:`Turning resource types off <sam-app-feature-flags>`.
 
 A Guardrail's events, the prompt history, and a catalog's models in an LLMHost discovery, keep the
 snake_case keys that they had, e.g. ``guardrail_name``, ``session_key`` and ``parameter_count``, unlike the rest of the REST api, which is

@@ -69,6 +69,7 @@ from smarter.lib.annotation.validation import (
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
+from smarter.lib.manifest.sam_apps import kind_is_enabled
 from smarter.lib.manifest.template import TEMPLATE_EXTENSION, render_manifest_template
 from smarter.lib.typing import SmarterDictType
 
@@ -697,6 +698,9 @@ class Command(SmarterCommand):
         """
         failed: list[str] = []
         manifest = item.manifest
+        if not kind_is_enabled(item.kind):
+            self.stdout.write(f"Skipped {item.path}: {item.kind} manifests are disabled on this platform.")
+            return failed
         if self.is_existing_detached_budget(item):
             self.stdout.write(
                 f"Kept Budget {item.name} as it is ({item.path}): applying its manifest, which attaches it to "

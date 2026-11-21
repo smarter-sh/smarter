@@ -40,6 +40,7 @@ from smarter.lib.annotation.selectors import filter_by_annotations
 from smarter.lib.manifest.broker import SAMBrokerErrorNotFound
 from smarter.lib.manifest.template import manifest_template_values
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.sam_apps import disabled_sam_apps
 
 MODULE = "smarter.apps.account.management.commands.load_from_github"
 URL = "https://github.com/smarter-sh/no-such-repo"
@@ -164,6 +165,14 @@ class TestLoadFromGithub(TestAccountMixin):
         self.assertTrue(Secret.objects.filter(name=self.secret_name, user_profile=self.user_profile).exists())
         self.run_command()
         self.assertEqual(Secret.objects.filter(name=self.secret_name).count(), 1)
+
+    def test_a_disabled_kind_is_skipped(self):
+        """Test that a manifest of a disabled SAM app's kind is skipped, and isn't a failure."""
+        self.use_repo(self.repo({"secrets/s.yaml": manifest("Secret", self.secret_name, "  config:\n    value: x\n")}))
+        with disabled_sam_apps("enable_secret"):
+            output = self.run_command()
+        self.assertIn("Skipped secrets/s.yaml: Secret manifests are disabled on this platform.", output)
+        self.assertFalse(Secret.objects.filter(name=self.secret_name).exists())
 
     # -------------------------------------------------------------------------
     # source annotations
