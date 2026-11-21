@@ -3,12 +3,14 @@
 See :class:`smarter.lib.unittest.receivers.ReceiversTestMixin`.
 """
 
+import logging
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret import receivers
 from smarter.apps.secret.tests.factories import factory_secret_teardown, secret_factory
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 from smarter.lib.unittest.receivers import ReceiversTestMixin
 
 RECEIVERS = "smarter.apps.secret.receivers"
@@ -56,16 +58,29 @@ class TestSecretLogging(TestAccountMixin):
             self.assertNotIn("encrypted_value", self.logged(logger))
 
     def test_one_info_line_per_apply(self):
-        """Loading and saving a Secret log at DEBUG; only created or updated log at INFO."""
+        """Loading, updating and saving a Secret's manifest log at DEBUG; only the model's secret_edited logs at INFO."""
         transformer = MagicMock(secret=self.secret, id=self.secret.id)
         transformer.name = self.secret.name
-        with patch(f"{RECEIVERS}.logger") as logger:
-            receivers.secret_initializing_receiver(
-                sender=None, secret_name=self.secret.name, user_profile=self.user_profile
-            )
-            receivers.secret_ready_receiver(sender=None, secret=transformer)
-            receivers.secret_updated_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
-            receivers.secret_saved_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
-        self.assertEqual(logger.info.call_count, 1)
-        self.assertIn("secret_updated()", logger.info.call_args.args[0])
-        self.assertEqual(logger.info.call_args.args[3], self.secret.name)
+        capture = WrappedLoggerCapture(self, receivers.logger)
+        receivers.secret_initializing_receiver(
+            sender=None, secret_name=self.secret.name, user_profile=self.user_profile
+        )
+        receivers.secret_ready_receiver(sender=None, secret=transformer)
+        receivers.secret_edited_receiver(sender=None, secret=self.secret)
+        receivers.secret_updated_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
+        receivers.secret_saved_receiver(sender=None, secret=transformer, user_profile=self.user_profile)
+        info = capture.messages(logging.INFO)
+        self.assertEqual(len(info), 1)
+        self.assertIn("secret_edited_receiver()", info[0])
+        self.assertIn(self.secret.name, info[0])
+
+    def test_saving_a_secret_sends_one_signal(self):
+        """Saving a new Secret sends secret_created once, and saving it again sends secret_edited, both logged at INFO."""
+        capture = WrappedLoggerCapture(self, receivers.logger)
+        self.secret.description = "edited"
+        self.secret.save()
+        info = capture.messages(logging.INFO)
+        edited = [message for message in info if "secret_edited_receiver()" in message]
+        self.assertEqual(len(edited), 1)
+        self.assertIn(self.secret.name, edited[0])
+        self.assertNotIn(self.ciphertext, " ".join(info))

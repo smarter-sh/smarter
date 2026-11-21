@@ -119,7 +119,10 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property
@@ -149,12 +152,11 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             return self._ready
         retval = super().ready
         if not retval:
-            logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
         retval = self.manifest is not None or self.account is not None
         logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
+            "manifest presence indicates ready=%s for %s",
             retval,
             self.kind,
         )
@@ -202,8 +204,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 .get(user_profile=self.user_profile, name=self.name)
             )
             logger.debug(
-                "%s.vectorsearch() retrieved existing Vectorsearch instance %s owned by %s from database.",
-                self.formatted_class_name,
+                "retrieved existing Vectorsearch instance %s owned by %s from database.",
                 self._vectorsearch,
                 self.user_profile,
             )
@@ -212,8 +213,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             self._vectorsearch = None
 
         logger.debug(
-            "%s.vectorsearch() Vectorsearch instance not found for user_profile %s. Attempting to create a new instance.",
-            self.formatted_class_name,
+            "Vectorsearch instance not found for user_profile %s. Attempting to create a new instance.",
             self.user_profile,
         )
         if self.manifest:
@@ -223,22 +223,20 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             auth_secret_name = data.pop("auth_secret_name", None)
             data["vectorstore"] = self.resolve_vectorstore(vectorstore_name)
             data["auth_secret"] = self.resolve_auth_secret(auth_secret_name)
-            logger.debug("%s.vectorsearch() Creating new Vectorsearch with data: %s", self.formatted_class_name, data)
+            logger.debug("Creating new Vectorsearch with data: %s", data)
             tags = data.pop("tags", [])
             self._vectorsearch = Vectorsearch.objects.create(**data)
             if self._vectorsearch and tags:
                 self._vectorsearch.tags.set(tags)
             self._created = True
             logger.warning(
-                "%s.vectorsearch() lazily created new Vectorsearch instance %s owned by %s. This logic should be handled in apply().",
-                self.formatted_class_name,
+                "lazily created new Vectorsearch instance %s owned by %s. This logic should be handled in apply().",
                 self._vectorsearch,
                 self.user_profile,
             )
         else:
             logger.warning(
-                "%s.vectorsearch() %s not found for user_profile %s",
-                self.formatted_class_name,
+                "%s not found for user_profile %s",
                 self._vectorsearch,
                 self.user_profile,
             )
@@ -319,8 +317,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             **config_dump,
         }
         logger.debug(
-            "%s.manifest_to_django_orm() converted manifest to Django ORM dict: %s",
-            self.formatted_class_name,
+            "converted manifest to Django ORM dict: %s",
             retval,
         )
 
@@ -368,8 +365,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             )
         if not self.vectorsearch:
             logger.warning(
-                "%s.django_orm_to_manifest_dict() called without a Vectorsearch. This could affect broker operations.",
-                self.formatted_class_name,
+                "called without a Vectorsearch. This could affect broker operations.",
             )
             return None
         vectorsearch_dict = model_to_dict(self.vectorsearch)
@@ -409,8 +405,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
         )
 
         logger.debug(
-            "%s.django_orm_to_manifest_dict() converted Vectorsearch %s to manifest dict: %s",
-            self.formatted_class_name,
+            "converted Vectorsearch %s to manifest dict: %s",
             self.vectorsearch.name,
             model.model_dump(),
         )
@@ -460,8 +455,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             return self._manifest
         if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from manifest data with name %s",
-                self.formatted_class_name,
+                "initializing %s from manifest data with name %s",
                 self.kind,
                 (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
@@ -471,16 +465,14 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from manifest data for existing Vectorsearch %s with name %s",
-                    self.formatted_class_name,
+                    "initialized from manifest data for existing Vectorsearch %s with name %s",
                     self._vectorsearch,
                     self._vectorsearch.name,
                 )
                 return self._manifest
         else:
             logger.debug(
-                "%s.manifest() could not initialize",
-                self.formatted_class_name,
+                "could not initialize",
             )
         return self._manifest
 
@@ -499,7 +491,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name)
+        logger.debug("called.")
 
         # 1.) invalidate the Vectorsearch cache itself.
         # -----------------------------
@@ -622,8 +614,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
             :MAX_RESULTS
         ]
         logger.debug(
-            "%s.get() found %s Vectorsearches for account %s",
-            self.formatted_class_name,
+            "found %s Vectorsearches for account %s",
             vectorsearches.count(),
             self.account,
         )
@@ -640,8 +631,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
+                    "failed to serialize %s %s",
                     self.kind,
                     vectorsearch.name,
                     exc_info=True,
@@ -722,10 +712,9 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 try:
                     if not isinstance(self.vectorsearch.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
-                            "%s.apply() vectorsearch.tags is a list instead of a TaggableManager for %s %s "
+                            "vectorsearch.tags is a list instead of a TaggableManager for %s %s "
                             "owned by %s. This is unexpected and may indicate an issue with the Vectorsearch "
                             "model definition or the database state. Tags=%s",
-                            self.formatted_class_name,
                             self.kind,
                             self.manifest.metadata.name,
                             self.user_profile,
@@ -736,8 +725,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
-                        "%s.apply() failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
-                        self.formatted_class_name,
+                        "failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
                         self.kind,
                         self.manifest.metadata.name,
                         self.user_profile,
@@ -748,8 +736,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 self.vectorsearch.refresh_from_db()
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s owned by %s. Error: %s",
-                    self.formatted_class_name,
+                    "failed to save %s %s owned by %s. Error: %s",
                     self.kind,
                     self.manifest.metadata.name,
                     self.user_profile,
@@ -793,8 +780,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 logger.error(
-                    "%s.describe() failed to describe %s %s",
-                    self.formatted_class_name,
+                    "failed to describe %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,
@@ -871,8 +857,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
-                    "%s.delete() failed to delete %s %s",
-                    self.formatted_class_name,
+                    "failed to delete %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,

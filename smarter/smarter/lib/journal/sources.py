@@ -53,7 +53,6 @@ from smarter.lib import logging
 from .storage import RESERVED_PREFIX, to_json_bytes
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 UNRESOLVED_KEY = RESERVED_PREFIX + "unresolved"
 """The key that stands in for a source's value that could not be read: ``{"$journal:unresolved": <reference>}``."""
@@ -199,13 +198,12 @@ def detach_sources(
     :param sources: The sources that the view named.
     :returns: The document, with None at each source's path, and the sources' references.
     """
-    prefix = f"{logger_prefix}.detach_sources()"
     references = []
     for source in sources:
         try:
             value = get_at_path(document, source.path)
         except KeyError:
-            logger.debug("%s the response has no %s, which stays in the journal entry", prefix, source.name)
+            logger.debug("the response has no %s, which stays in the journal entry", source.name)
             continue
         digest = value_digest(value)
         reference = SAMJournalSourceReference(name=source.name, path=source.path, lookup=source.lookup, digest=digest)
@@ -223,20 +221,19 @@ def resolve_source(reference: SAMJournalSourceReference) -> JsonValue:
         that the client received.
     :raises JournalSourceNotReady: If the source's row is not written yet.
     """
-    prefix = f"{logger_prefix}.resolve_source()"
     unresolved: JsonValue = {UNRESOLVED_KEY: reference.model_dump(mode="json")}
     resolver: Optional[JournalSourceResolver] = _resolvers.get(reference.name)
     if resolver is None:
-        logger.error("%s no journal source is registered as %s", prefix, reference.name)
+        logger.error("no journal source is registered as %s", reference.name)
         return unresolved
     try:
         value = resolver(dict(reference.lookup))
     except JournalSourceGone as e:
-        logger.warning("%s journal source %s is gone: %s", prefix, reference.name, e)
+        logger.warning("journal source %s is gone: %s", reference.name, e)
         return unresolved
     if value_digest(value) != reference.digest:
         # the row's value isn't what the client received. Journal the reference, which names what was sent.
-        logger.error("%s journal source %s does not match the response's digest", prefix, reference.name)
+        logger.error("journal source %s does not match the response's digest", reference.name)
         return unresolved
     return value
 

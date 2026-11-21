@@ -50,8 +50,7 @@ from smarter.lib import logging
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 CHAT_CONTRACT_V2 = "chat-contract-v2"
 """The capability that asks the chat api for version 2 of its contract."""
@@ -112,7 +111,7 @@ def send_message(session: Prompt, message: str, acting: Optional[User] = None) -
     )
 
     llmclient = session.llmclient
-    logger.debug("%s.send_message() prompting LLMClient %s", logger_prefix, llmclient.name)
+    logger.debug("prompting LLMClient %s", llmclient.name)
     handler = smarter_compatible_client.get_smarter_harness(request=None, provider_name=llmclient.provider)
     plugins = LLMClientPlugin.plugins(llmclient=llmclient)
     data = {"session_key": session.session_key, "messages": [{"role": "user", "content": message}]}
@@ -121,7 +120,7 @@ def send_message(session: Prompt, message: str, acting: Optional[User] = None) -
             response = handler(llmclient.user_profile, session, data, plugins=plugins)
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("%s.send_message() LLMClient %s failed: %s", logger_prefix, llmclient.name, type(e).__name__)
+        logger.error("LLMClient %s failed: %s", llmclient.name, type(e).__name__)
         raise SmarterLLMClientPromptError(f"LLMClient {llmclient.name} failed: {type(e).__name__}") from e
     result, error, _ = prompt_result_v2(response)
     if error:
@@ -198,7 +197,7 @@ def prompt_llmclient(llmclient: LLMClient, token_key: str, prompt: str) -> Promp
             )
         return response.json()
 
-    logger.debug("%s.prompt_llmclient() prompting LLMClient %s", logger_prefix, llmclient.name)
+    logger.debug("prompting LLMClient %s", llmclient.name)
     config = post("config/", {"session_key": None})
     session_key = config["data"]["session_key"]
     messages = [{"role": "user", "content": prompt}]

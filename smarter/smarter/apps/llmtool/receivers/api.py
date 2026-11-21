@@ -3,7 +3,6 @@
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -20,8 +19,6 @@ from .utils import response_characters
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = SmarterFormattedText.text(__name__)
-
 
 @receiver(api_plugin_request_started, dispatch_uid="api_plugin_request_started")
 def handle_api_plugin_request_started(sender, plugin: PluginBase, function_args=None, **kwargs):
@@ -34,7 +31,11 @@ def handle_api_plugin_request_started(sender, plugin: PluginBase, function_args=
     :param plugin: The plugin.
     :param function_args: The arguments that the LLM called the tool with.
     """
-    logger.info("%s.api_plugin_request_started() %s function_args: %s", logger_prefix, plugin.name, function_args)
+    logger.info(
+        "%s function_args: %s",
+        plugin.name,
+        function_args,
+    )
 
 
 @receiver(api_plugin_authenticated, dispatch_uid="api_plugin_authenticated")
@@ -49,8 +50,7 @@ def handle_api_plugin_authenticated(sender, plugin: PluginBase, **kwargs):
     :param kwargs: The signal's other arguments, of which ``connection``, ``auth_method``, ``status_code`` are logged.
     """
     logger.info(
-        "%s.api_plugin_authenticated() %s connection: %s auth_method: %s status_code: %s",
-        logger_prefix,
+        "%s connection: %s auth_method: %s status_code: %s",
         plugin.name,
         kwargs.get("connection"),
         kwargs.get("auth_method"),
@@ -71,8 +71,7 @@ def handle_api_plugin_authentication_failed(sender, plugin: PluginBase, error: s
     :param kwargs: The signal's other arguments, of which ``connection``, ``auth_method``, ``status_code`` are logged.
     """
     logger.warning(
-        "%s.api_plugin_authentication_failed() %s connection: %s auth_method: %s status_code: %s error: %s",
-        logger_prefix,
+        "%s connection: %s auth_method: %s status_code: %s error: %s",
         plugin.name,
         kwargs.get("connection"),
         kwargs.get("auth_method"),
@@ -95,8 +94,7 @@ def handle_api_plugin_responded(sender, plugin: PluginBase, response=None, cache
     :param kwargs: The signal's other arguments, of which ``method``, ``endpoint`` are logged.
     """
     logger.info(
-        "%s.api_plugin_responded() %s %s %s characters: %s cached: %s",
-        logger_prefix,
+        "%s %s %s characters: %s cached: %s",
         plugin.name,
         kwargs.get("method"),
         kwargs.get("endpoint"),
@@ -116,7 +114,7 @@ def handle_api_plugin_failed(sender, plugin: PluginBase, error: str, **kwargs):
     :param plugin: The plugin.
     :param error: Why it failed.
     """
-    logger.warning("%s.api_plugin_failed() %s failed: %s", logger_prefix, plugin.name, error)
+    logger.warning("%s failed: %s", plugin.name, error)
 
 
 @receiver(api_plugin_request_completed, dispatch_uid="api_plugin_request_completed")
@@ -132,8 +130,7 @@ def handle_api_plugin_request_completed(sender, plugin: PluginBase, success: boo
     :param duration: Seconds that the request took.
     """
     logger.info(
-        "%s.api_plugin_request_completed() %s success: %s duration: %.3fs",
-        logger_prefix,
+        "%s success: %s duration: %.3fs",
         plugin.name,
         success,
         duration,

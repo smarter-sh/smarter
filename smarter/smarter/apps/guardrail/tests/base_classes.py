@@ -137,7 +137,7 @@ class GuardrailTestBase(TestAccountMixin):
             Guardrail.objects.filter(user_profile__account=cls.account).delete()
         # pylint: disable=W0718
         except Exception as e:
-            logger.warning("%s.tearDownClass() cleanup failed: %s", cls.__name__, e)
+            logger.warning("cleanup failed: %s", e)
         finally:
             super().tearDownClass()
 

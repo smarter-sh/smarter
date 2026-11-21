@@ -191,8 +191,7 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llmclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. llmclient_id: %s, new_name: %s",
                 llmclient_id,
                 new_name,
             )
@@ -201,9 +200,7 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             llmclient = LLMClient.objects.with_read_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
-            logger.warning(
-                "%s.post() LLMClient with id %s not found for cloning.", self.formatted_class_name, llmclient_id
-            )
+            logger.warning("LLMClient with id %s not found for cloning.", llmclient_id)
             return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -214,8 +211,7 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning LLMClient with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning LLMClient with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -224,8 +220,7 @@ class PromptListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning LLMClient with id %s",
-                self.formatted_class_name,
+                "Error cloning LLMClient with id %s",
                 llmclient_id,
                 exc_info=True,
             )
@@ -269,15 +264,13 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         llmclient_id = kwargs.get("llmclient_id")
         if not llmclient_id:
-            logger.warning("%s.post() Missing required parameter llmclient_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter llmclient_id for deletion.")
             return JsonResponse({"error": "llmclient_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             llmclient = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
-            logger.warning(
-                "%s.post() LLMClient with id %s not found for deletion.", self.formatted_class_name, llmclient_id
-            )
+            logger.warning("LLMClient with id %s not found for deletion.", llmclient_id)
             return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -288,8 +281,7 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting LLMClient with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting LLMClient with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -298,8 +290,7 @@ class PromptListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting LLMClient with id %s",
-                self.formatted_class_name,
+                "Error deleting LLMClient with id %s",
                 llmclient_id,
                 exc_info=True,
             )
@@ -346,8 +337,7 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not llmclient_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. llmclient_id: %s, new_name: %s",
                 llmclient_id,
                 new_name,
             )
@@ -356,9 +346,7 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             llmclient = LLMClient.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmclient_id)  # type: ignore
         except LLMClient.DoesNotExist:
-            logger.warning(
-                "%s.post() LLMClient with id %s not found for renaming.", self.formatted_class_name, llmclient_id
-            )
+            logger.warning("LLMClient with id %s not found for renaming.", llmclient_id)
             return JsonResponse({"error": f"LLMClient with id {llmclient_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -369,8 +357,7 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming LLMClient with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming LLMClient with id %s: %s",
                 llmclient_id,
                 e,
             )
@@ -379,8 +366,7 @@ class PromptListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming LLMClient with id %s",
-                self.formatted_class_name,
+                "Error renaming LLMClient with id %s",
                 llmclient_id,
                 exc_info=True,
             )

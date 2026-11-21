@@ -274,11 +274,13 @@ class LLMClientDeploymentView(SmarterAuthenticatedNeverCachedWebView):
         llmclient = readable_llmclient(request, kwargs.get("hashed_id"))
         if llmclient is None:
             logger.debug(
-                "%s.get() no llmclient %s for %s", self.formatted_class_name, kwargs.get("hashed_id"), request.user
+                "no llmclient %s for %s",
+                kwargs.get("hashed_id"),
+                request.user,
             )
             error = ErrorResponse(error="LLMClient not found.", code="not_found")
             return JsonResponse(error.to_json(), status=HTTPStatus.NOT_FOUND)
-        logger.debug("%s.get() deployment of %s", self.formatted_class_name, llmclient)
+        logger.debug("deployment of %s", llmclient)
         return JsonResponse(workbench_page(request, llmclient).to_json())
 
 
@@ -361,7 +363,7 @@ class LLMClientDeploymentApiView(SmarterAuthenticatedNeverCachedWebView):
                 raise DeploymentApiError("not_found", "LLMClient not found.", HTTPStatus.NOT_FOUND)
             new_api_key = self.handle(request, llmclient, self.parse(request))
         except DeploymentApiError as e:
-            logger.debug("%s.post() %s: %s", self.formatted_class_name, e.code, e.message)
+            logger.debug("%s: %s", e.code, e.message)
             return JsonResponse(ErrorResponse(error=e.message, code=e.code).to_json(), status=e.status)
         response = ApiKeyActionResponse(page=workbench_page(request, llmclient), new_api_key=new_api_key)
         return JsonResponse(response.to_json())
@@ -430,11 +432,14 @@ class LLMClientDeploymentApiKeyCreateView(LLMClientDeploymentApiView):
             name=name,
             description=body.description.strip()[:255] or None,
         )
-        logger.info("%s.handle() %s created api key %s", self.formatted_class_name, user, api_key.name)
+        logger.info("%s created api key %s", user, api_key.name)
         if attach:
             LLMClientAPIKey.attach(llmclient, api_key)
             logger.info(
-                "%s.handle() %s attached api key %s to %s", self.formatted_class_name, user, api_key.name, llmclient
+                "%s attached api key %s to %s",
+                user,
+                api_key.name,
+                llmclient,
             )
         return NewApiKey(name=api_key.name, secret=secret)
 
@@ -468,7 +473,10 @@ class LLMClientDeploymentApiKeyAttachView(LLMClientDeploymentApiView):
             raise DeploymentApiError("api_key_not_found", "That api key was not found.")
         LLMClientAPIKey.attach(llmclient, api_key)
         logger.info(
-            "%s.handle() %s attached api key %s to %s", self.formatted_class_name, request.user, api_key.name, llmclient
+            "%s attached api key %s to %s",
+            request.user,
+            api_key.name,
+            llmclient,
         )
         return None
 
@@ -494,5 +502,5 @@ class LLMClientDeploymentApiKeyDetachView(LLMClientDeploymentApiView):
         """
         self.require_manage(request, llmclient)
         LLMClientAPIKey.detach(llmclient)
-        logger.info("%s.handle() %s detached the api key of %s", self.formatted_class_name, request.user, llmclient)
+        logger.info("%s detached the api key of %s", request.user, llmclient)
         return None

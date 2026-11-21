@@ -57,7 +57,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MAX_DELETIONS_PER_RUN = 50
 """The most records that one run deletes.
@@ -131,9 +130,8 @@ def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
     :param dry_run: Find the orphans, and log them, but delete nothing.
     :returns: The names of the orphaned records that were deleted, or that would be deleted by a dry run.
     """
-    fn_name = logger_prefix + ".delete_orphan_dns_records()"
     if smarter_settings.environment not in SmarterEnvironments.aws_environments:
-        logger.info("%s skipped: the %s environment shares its DNS zone.", fn_name, smarter_settings.environment)
+        logger.info("skipped: the %s environment shares its DNS zone.", smarter_settings.environment)
         return []
     if not is_taskable():
         return []
@@ -142,12 +140,12 @@ def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
     dns = infrastructure.dns
     zone = dns.get_zone(domain)
     if zone is None:
-        logger.warning("%s DNS zone not found for %s. Nothing to do.", fn_name, domain)
+        logger.warning("DNS zone not found for %s. Nothing to do.", domain)
         return []
     try:
         live = live_hosts()
     except OrphanDNSRecordsError as e:
-        logger.error("%s deleted nothing: %s", fn_name, e)
+        logger.error("deleted nothing: %s", e)
         return []
 
     pattern = host_pattern(domain)
@@ -158,8 +156,7 @@ def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
     )
     if len(orphans) > MAX_DELETIONS_PER_RUN:
         logger.warning(
-            "%s found %s orphaned A records in %s. Deleting the first %s; the next runs delete the rest.",
-            fn_name,
+            "found %s orphaned A records in %s. Deleting the first %s; the next runs delete the rest.",
             len(orphans),
             domain,
             MAX_DELETIONS_PER_RUN,
@@ -167,7 +164,7 @@ def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
         orphans = orphans[:MAX_DELETIONS_PER_RUN]
     if dry_run:
         for name in orphans:
-            logger.info("%s dry run: would delete the orphaned A record %s", fn_name, name)
+            logger.info("dry run: would delete the orphaned A record %s", name)
         return orphans
 
     deleted = []
@@ -175,10 +172,10 @@ def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
         try:
             if dns.delete_record(zone.id, name, "A"):
                 deleted.append(name)
-                logger.info("%s deleted the orphaned A record %s from zone %s", fn_name, name, zone.id)
+                logger.info("deleted the orphaned A record %s from zone %s", name, zone.id)
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s failed to delete the orphaned A record %s: %s", fn_name, name, e)
+            logger.error("failed to delete the orphaned A record %s: %s", name, e)
     return deleted
 
 

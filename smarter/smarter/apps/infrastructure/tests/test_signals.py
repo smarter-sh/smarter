@@ -202,7 +202,7 @@ class TestReceivers(InfrastructureTestBase):
             self.send(infrastructure_authenticated, identity={"Account": "123456789012"})
             self.send(infrastructure_authenticated, identity={"account": "1234"})
             self.send(infrastructure_authenticated)
-        accounts = [c.args[2] for c in logger.info.call_args_list]
+        accounts = [c.args[3] for c in logger.info.call_args_list]
         self.assertEqual(accounts, ["********9012", "1234", None])
 
     def test_reconciled_is_logged_as_found(self):

@@ -37,7 +37,7 @@ from .const import (
     TERMINAL_TERMINATE_GRACE,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 OutputCallback = Callable[[bytes], Awaitable[None]]
 """Called with each chunk of the shell's output, in order."""
@@ -168,7 +168,7 @@ class TerminalShell(SmarterHelperMixin):
         os.set_blocking(fd, False)
         self._resume_reading()
         self._pump = self._loop.create_task(self._send_output())
-        logger.debug("%s.start() started %s, pid %s.", self.formatted_class_name, argv, self.pid)
+        logger.debug("started %s, pid %s.", argv, self.pid)
 
     @staticmethod
     def set_size(fd: int, cols: int, rows: int) -> None:
@@ -215,7 +215,7 @@ class TerminalShell(SmarterHelperMixin):
             written = 0
         except OSError as e:
             # the shell exited: its output's end, which is being read, ends the session.
-            logger.debug("%s._flush() could not write to the terminal: %s", self.formatted_class_name, e)
+            logger.debug("could not write to the terminal: %s", e)
             self._pending = b""
             return
         self._pending = self._pending[written:]
@@ -265,7 +265,7 @@ class TerminalShell(SmarterHelperMixin):
                 await self.on_output(data)
             # pylint: disable=broad-except
             except Exception as e:
-                logger.warning("%s._send_output() could not send output: %s", self.formatted_class_name, e)
+                logger.warning("could not send output: %s", e)
             if self._queue.qsize() < TERMINAL_MAX_QUEUED_READS // 2:
                 self._resume_reading()
         await self._finish()
@@ -277,7 +277,7 @@ class TerminalShell(SmarterHelperMixin):
             self._loop.remove_writer(self.fd)
             os.close(self.fd)
             self.fd = None
-        logger.debug("%s._finish() pid %s exited with status %s.", self.formatted_class_name, self.pid, code)
+        logger.debug("pid %s exited with status %s.", self.pid, code)
         await self.on_exit(code)
 
     def _signal(self, sig: int) -> None:
@@ -314,8 +314,7 @@ class TerminalShell(SmarterHelperMixin):
             )
         except asyncio.TimeoutError:
             logger.warning(
-                "%s.terminate() pid %s did not hang up within %s seconds, and is killed.",
-                self.formatted_class_name,
+                "pid %s did not hang up within %s seconds, and is killed.",
                 self.pid,
                 TERMINAL_TERMINATE_GRACE,
             )

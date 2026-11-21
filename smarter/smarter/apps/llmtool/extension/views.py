@@ -387,7 +387,7 @@ class ExtensionApiHandler:
         # a lifecycle hook is an extension's code, which can fail in any way at all.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.exception("%s.respond() failed", self.formatted_class_name)
+            logger.exception("failed")
             return HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(e).__name__}: {e}"
         return HTTPStatus.OK, result
 

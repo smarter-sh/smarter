@@ -20,7 +20,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.parsing import parse_manifest
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -112,11 +112,9 @@ def apply_manifest(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = logging.SmarterFormattedText.text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
-        "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
-        logger_prefix,
+        "called with filespec=%s, manifest=%s, username=%s, verbose=%s",
         filespec,
         loggable_manifest(manifest),
         username,
@@ -124,31 +122,31 @@ def apply_manifest(
     )
 
     if manifest:
-        logger.debug("%s Using manifest provided in manifest argument.", logger_prefix)
+        logger.debug("Using manifest provided in manifest argument.")
         data = manifest
     elif filespec:
         try:
             with open(filespec, encoding="utf-8") as file:
                 data = file.read()
-            logger.debug("%s Using manifest from file: %s", logger_prefix, filespec)
+            logger.debug("Using manifest from file: %s", filespec)
         except FileNotFoundError as e:
             raise SmarterValueError(f"File not found: {filespec}") from e
     if not data:
         raise SmarterValueError("Provide either a filespec or a manifest.")
 
     if not isinstance(username, str) or not username.strip():
-        logger.error("%s Invalid username provided: %s", logger_prefix, username)
+        logger.error("Invalid username provided: %s", username)
         return False
 
     try:
         user = User.objects.get(username=username.strip())
     except User.DoesNotExist:
-        logger.error("%s User with username '%s' does not exist.", logger_prefix, username)
+        logger.error("User with username '%s' does not exist.", username)
         return False
 
     user_profile = UserProfile.get_cached_object(user=user)
     if not isinstance(user_profile, UserProfile):
-        logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
+        logger.error("No UserProfile found for user '%s'.", username)
         return False
 
     user = user_profile.cached_user
@@ -161,7 +159,8 @@ def apply_manifest(
             description="DELETE ME: single-use key created by smarter.apps.api.utils.apply_manifest()",
         )
         logger.debug(
-            "%s Created single-use API token for user '%s'.", logger_prefix, user.username if user else "unknown"
+            "Created single-use API token for user '%s'.",
+            user.username if user else "unknown",
         )
     # pylint: disable=W0718
     except Exception:
@@ -172,14 +171,13 @@ def apply_manifest(
     headers = {"Authorization": f"Token {token_key}", "Content-Type": "application/json"}
 
     logger.debug(
-        "%s Applying manifest via api endpoint %s as user %s (verbose=%s)",
-        logger_prefix,
+        "Applying manifest via api endpoint %s as user %s (verbose=%s)",
         url,
         user.username if user else "unknown",
         verbose,
     )
     if verbose:
-        logger.debug("%s manifest: %s", logger_prefix, loggable_manifest(data))
+        logger.debug("manifest: %s", loggable_manifest(data))
 
     # the key is deleted even if the request raises, e.g. on a timeout, so that no key outlives it.
     try:
@@ -187,9 +185,12 @@ def apply_manifest(
     finally:
         token_record.delete()
     if httpx_response.status_code == httpx.codes.OK:
-        logger.debug("%s Manifest applied.", logger_prefix)
+        logger.debug("Manifest applied.")
     else:
-        logger.error("%s Manifest apply failed. Response was %s", logger_prefix, httpx_response.status_code)
+        logger.error(
+            "Manifest apply failed. Response was %s",
+            httpx_response.status_code,
+        )
         return False
 
     # wrap up the request
@@ -198,7 +199,7 @@ def apply_manifest(
         response_content = httpx_response.content.decode("utf-8")
     # pylint: disable=W0718
     except Exception:
-        logger.error("%s Unable to decode response content.", logger_prefix)
+        logger.error("Unable to decode response content.")
         response_content = httpx_response.content
 
     if isinstance(response_content, (str, bytearray, bytes)):
@@ -213,8 +214,7 @@ def apply_manifest(
     if verbose:
         if httpx_response.status_code == httpx.codes.OK:
             logger.debug(
-                "%s %s",
-                logger_prefix,
+                "%s",
                 logging.SmarterFormattedText.text(response, logging.SmarterFormattedText.BRIGHT_GREEN),
             )
             return True
@@ -241,11 +241,9 @@ def apply_manifest_v2(
 
     user: Optional[User] = None
     data: Optional[str] = None
-    logger_prefix = logging.SmarterFormattedText.text("smarter.apps.api.utils.apply_manifest()")
 
     logger.debug(
-        "%s apply_manifest() called with filespec=%s, manifest=%s, username=%s, verbose=%s",
-        logger_prefix,
+        "called with filespec=%s, manifest=%s, username=%s, verbose=%s",
         filespec,
         loggable_manifest(manifest),
         username,
@@ -253,37 +251,37 @@ def apply_manifest_v2(
     )
 
     if manifest:
-        logger.debug("%s Using manifest provided in manifest argument.", logger_prefix)
+        logger.debug("Using manifest provided in manifest argument.")
         data = manifest
     elif filespec:
         try:
             with open(filespec, encoding="utf-8") as file:
                 data = file.read()
-            logger.debug("%s Using manifest from file: %s", logger_prefix, filespec)
+            logger.debug("Using manifest from file: %s", filespec)
         except FileNotFoundError as e:
             raise SmarterValueError(f"File not found: {filespec}") from e
     if not data:
         raise SmarterValueError("Provide either a filespec or a manifest.")
 
     if not isinstance(username, str) or not username.strip():
-        logger.error("%s Invalid username provided: %s", logger_prefix, username)
+        logger.error("Invalid username provided: %s", username)
         return False
 
     try:
         user = User.objects.get(username=username.strip())
     except User.DoesNotExist:
-        logger.error("%s User with username '%s' does not exist.", logger_prefix, username)
+        logger.error("User with username '%s' does not exist.", username)
         return False
 
     user_profile = UserProfile.get_cached_object(user=user)
     if not isinstance(user_profile, UserProfile):
-        logger.error("%s No UserProfile found for user '%s'.", logger_prefix, username)
+        logger.error("No UserProfile found for user '%s'.", username)
         return False
 
     user = user_profile.cached_user
 
     if verbose:
-        logger.debug("%s manifest: %s", logger_prefix, loggable_manifest(data))
+        logger.debug("manifest: %s", loggable_manifest(data))
 
     # ----------------------------------------------------------------------
     # PLAN B
@@ -303,14 +301,14 @@ def apply_manifest_v2(
     broker = BrokerClass(request=fake_request, manifest=parsed_manifest, user_profile=user_profile)
     response_content = broker.apply(request=fake_request)
     if response_content is None:
-        logger.error("%s broker.apply() returned None", logger_prefix)
+        logger.error("returned None")
         return False
 
     if response_content.status_code == 200:
-        logger.debug("%s manifest applied successfully", logger_prefix)
+        logger.debug("manifest applied successfully")
     else:
-        logger.error("%s manifest: %s", logger_prefix, loggable_manifest(data))
-        logger.error("%s response: %s", logger_prefix, response_content.content)
+        logger.error("manifest: %s", loggable_manifest(data))
+        logger.error("response: %s", response_content.content)
         msg = f"Manifest apply failed with status code: {response_content.status_code}\nmanifest: {loggable_manifest(data)}\nresponse: {response_content.content!r}"
         # pylint: disable=W0719
         raise Exception(msg)
@@ -327,8 +325,7 @@ def apply_manifest_v2(
     if verbose:
         if response_content.status_code == 200:
             logger.debug(
-                "%s %s",
-                logger_prefix,
+                "%s",
                 logging.SmarterFormattedText.text(response, logging.SmarterFormattedText.BRIGHT_GREEN),
             )
             return True

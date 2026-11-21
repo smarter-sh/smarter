@@ -80,8 +80,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not proxy_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. proxy_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. proxy_id: %s, new_name: %s",
                 proxy_id,
                 new_name,
             )
@@ -90,7 +89,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             proxy = Proxy.objects.with_read_permission_for(self.user_profile.user).get(id=proxy_id)  # type: ignore
         except Proxy.DoesNotExist:
-            logger.warning("%s.post() Proxy with id %s not found for cloning.", self.formatted_class_name, proxy_id)
+            logger.warning("Proxy with id %s not found for cloning.", proxy_id)
             return JsonResponse({"error": f"Proxy with id {proxy_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -101,8 +100,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Proxy with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Proxy with id %s: %s",
                 proxy_id,
                 e,
             )
@@ -111,8 +109,7 @@ class ProxyListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Proxy with id %s",
-                self.formatted_class_name,
+                "Error cloning Proxy with id %s",
                 proxy_id,
                 exc_info=True,
             )
@@ -145,13 +142,13 @@ class ProxyListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         proxy_id = kwargs.get("proxy_id")
         if not proxy_id:
-            logger.warning("%s.post() Missing required parameter proxy_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter proxy_id for deletion.")
             return JsonResponse({"error": "proxy_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             proxy = Proxy.objects.with_ownership_permission_for(self.user_profile.user).get(id=proxy_id)  # type: ignore
         except Proxy.DoesNotExist:
-            logger.warning("%s.post() Proxy with id %s not found for deletion.", self.formatted_class_name, proxy_id)
+            logger.warning("Proxy with id %s not found for deletion.", proxy_id)
             return JsonResponse({"error": f"Proxy with id {proxy_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -160,8 +157,7 @@ class ProxyListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"message": f"Proxy with id {proxy_id} deleted successfully."}, status=HTTPStatus.OK)
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Proxy with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Proxy with id %s: %s",
                 proxy_id,
                 e,
             )
@@ -170,8 +166,7 @@ class ProxyListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Proxy with id %s",
-                self.formatted_class_name,
+                "Error deleting Proxy with id %s",
                 proxy_id,
                 exc_info=True,
             )
@@ -208,8 +203,7 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not proxy_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. proxy_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. proxy_id: %s, new_name: %s",
                 proxy_id,
                 new_name,
             )
@@ -218,7 +212,7 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             proxy = Proxy.objects.with_ownership_permission_for(self.user_profile.user).get(id=proxy_id)  # type: ignore
         except Proxy.DoesNotExist:
-            logger.warning("%s.post() Proxy with id %s not found for renaming.", self.formatted_class_name, proxy_id)
+            logger.warning("Proxy with id %s not found for renaming.", proxy_id)
             return JsonResponse({"error": f"Proxy with id {proxy_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -229,8 +223,7 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Proxy with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Proxy with id %s: %s",
                 proxy_id,
                 e,
             )
@@ -239,8 +232,7 @@ class ProxyListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Proxy with id %s",
-                self.formatted_class_name,
+                "Error renaming Proxy with id %s",
                 proxy_id,
                 exc_info=True,
             )

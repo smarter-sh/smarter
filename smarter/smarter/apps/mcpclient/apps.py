@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 class MCPClientConfig(AppConfig):
     """Django Config for the MCPClient app."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"
     verbose_name = f"{SMARTER_APP_NAME} {presentation_app_name}"
 

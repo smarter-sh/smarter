@@ -16,6 +16,9 @@ servers learn of.
 
 It runs the ``sequential``, ``parallel``, ``supervisor`` and ``router`` strategies, and a ``summarizer`` harness
 after any of them. ``voting`` and ``debate`` are refused, by name.
+
+A run sends a signal of :mod:`smarter.apps.orchestrator.signals` when it is queued, when it starts, after each step,
+and when it finishes. Their receivers log the run.
 """
 
 from dataclasses import dataclass, field
@@ -47,6 +50,12 @@ from smarter.apps.orchestrator.models import (
 )
 from smarter.apps.orchestrator.models.orchestration_run import OrchestrationRunStatus
 from smarter.apps.orchestrator.models.orchestrator import OrchestrationStrategy
+from smarter.apps.orchestrator.signals import (
+    orchestration_run_finished,
+    orchestration_run_queued,
+    orchestration_run_started,
+    orchestration_step_finished,
+)
 from smarter.apps.prompt.models import Prompt
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
@@ -54,7 +63,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SUPPORTED_STRATEGIES = (
     OrchestrationStrategy.SEQUENTIAL,
@@ -216,7 +224,7 @@ def start_run(orchestrator: Orchestrator, user_profile: UserProfile, objective: 
     run = OrchestrationRun.objects.create(orchestrator=orchestrator, objective=objective, started_by=user_profile)
     run_id = run.pk
     transaction.on_commit(lambda: execute_orchestration_run.delay(run_id))
-    logger.info("%s.start_run() queued run %s of orchestrator %s", logger_prefix, run_id, orchestrator.pk)
+    orchestration_run_queued.send(sender=start_run, run=run)
     return run
 
 
@@ -345,13 +353,16 @@ class RunContext:
         # a step's failure is recorded, and its message kept from the log: it may quote the LLM provider.
         except Exception as e:  # pylint: disable=broad-except
             logger.error(
-                "%s.step() step %s of run %s failed: %s", logger_prefix, run.iteration_count, run.pk, type(e).__name__
+                "step %s of run %s failed: %s",
+                run.iteration_count,
+                run.pk,
+                type(e).__name__,
             )
             text, error = "", "The step failed."
         status = OrchestrationStep.StepStatus.SUCCEEDED
         if error:
             status = OrchestrationStep.StepStatus.FAILED
-        OrchestrationStep.objects.create(
+        step = OrchestrationStep.objects.create(
             run=run,
             harness=harness,
             prompt=prompt,
@@ -359,6 +370,7 @@ class RunContext:
             status=status,
             error_message=error or None,
         )
+        orchestration_step_finished.send(sender=self.__class__, run=run, step=step)
         if error:
             return StepOutput(harness_name=llmclient.name, text=error, failed=True)
         return StepOutput(harness_name=llmclient.name, text=text, failed=False)
@@ -556,7 +568,7 @@ def finish(run: OrchestrationRun, status: str, result: Optional[str] = None, err
     if result is not None:
         run.result = {"text": result}
     run.save()
-    logger.info("%s.finish() run %s %s after %s steps", logger_prefix, run.pk, status, run.iteration_count)
+    orchestration_run_finished.send(sender=finish, run=run)
 
 
 def execute_run(run_id: int) -> None:
@@ -569,11 +581,12 @@ def execute_run(run_id: int) -> None:
     """
     run = OrchestrationRun.objects.select_related("orchestrator", "started_by__user").filter(pk=run_id).first()
     if run is None or run.status != OrchestrationRunStatus.PENDING:
-        logger.warning("%s.execute_run() run %s is not pending", logger_prefix, run_id)
+        logger.warning("run %s is not pending", run_id)
         return
     run.status = OrchestrationRunStatus.RUNNING
     run.started_at = timezone.now()
     run.save()
+    orchestration_run_started.send(sender=execute_run, run=run)
     try:
         result = run_strategy(run)
     except OrchestrationStepFailed as e:
@@ -583,7 +596,7 @@ def execute_run(run_id: int) -> None:
         finish(run, OrchestrationRunStatus.MAX_ITERATIONS_EXCEEDED, error=str(e))
         return
     except Exception as e:  # pylint: disable=broad-except
-        logger.error("%s.execute_run() run %s failed: %s", logger_prefix, run_id, type(e).__name__)
+        logger.error("run %s failed: %s", run_id, type(e).__name__)
         finish(run, OrchestrationRunStatus.FAILED, error="The run failed.")
         return
     finish(run, OrchestrationRunStatus.SUCCEEDED, result=result)

@@ -62,7 +62,6 @@ from .signals import mcpclient_connected, mcpclient_connection_failed
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @cache_results()

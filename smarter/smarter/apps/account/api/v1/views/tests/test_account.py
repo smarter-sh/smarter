@@ -99,9 +99,7 @@ class TestAccountView(TestAccountMixin):
         """PATCH with invalid id returns 404."""
         url = reverse(self.reverse_name, args=[999999])
         patch_data = {"name": "patched_account_name"}
-        logger.debug(
-            "test_patch_account_not_found() Testing PATCH with invalid account id. URL: %s, Data: %s", url, patch_data
-        )
+        logger.debug("Testing PATCH with invalid account id. URL: %s, Data: %s", url, patch_data)
         response = self.client.patch(url, patch_data, content_type="application/json")
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
@@ -188,7 +186,7 @@ class TestAccountListView(TestAccountMixin):
         """Superuser can GET all accounts."""
         self.client = Client()
         self.client.force_login(self.admin_user)
-        logger.debug("test_get_queryset_superuser() Testing GET on AccountListView with superuser. URL: %s", self.url)
+        logger.debug("Testing GET on AccountListView with superuser. URL: %s", self.url)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 

@@ -41,6 +41,7 @@ The Smarter platform's fundamental building blocks to this extent are:
    smarter-platform/smarter-journal
    smarter-platform/mcpserver
    smarter-platform/configuration
+   smarter-platform/user-defined-django-settings
    smarter-platform/security
    smarter-platform/backup-and-restore
    smarter-platform/updates

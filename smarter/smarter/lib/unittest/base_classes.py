@@ -15,8 +15,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.waffle.is_active import clear_switch_cache
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
@@ -34,8 +33,6 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     name: str
     hash_suffix: str
     uid: str
-    #: The log prefix of this class's messages. A subclass can override it.
-    smarter_test_base_logger_prefix = f"{logger_prefix}.SmarterTestBase()"
     #: The width of the banners that are logged at the start and end of each test.
     line_width = 150
 
@@ -62,7 +59,7 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         values that an earlier one cached.
         """
         super().setUpClass()
-        title = f" {SmarterTestBase.smarter_test_base_logger_prefix}.setUpClass() "
+        title = " start "
         msg = cls._banner(title, "*")
         logger.debug(msg)
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
@@ -72,17 +69,13 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
         clear_switch_cache()
 
         logger.debug(
-            "%s.setUpClass() Setting up test class with hash suffix: %s",
-            cls.smarter_test_base_logger_prefix,
+            "Setting up test class with hash suffix: %s",
             cls.hash_suffix,
         )
+        logger.debug("Setting up test class with name: %s", cls.name)
+        logger.debug("Setting up test class with uid: %s", cls.uid)
         logger.debug(
-            "%s.setUpClass() Setting up test class with name: %s", cls.smarter_test_base_logger_prefix, cls.name
-        )
-        logger.debug("%s.setUpClass() Setting up test class with uid: %s", cls.smarter_test_base_logger_prefix, cls.uid)
-        logger.debug(
-            "%s.setUpClass() %s",
-            cls.smarter_test_base_logger_prefix,
+            "%s",
             logging.SmarterFormattedText.text("Django cache has been cleared", logging.SmarterFormattedText.DARK_RED),
         )
 
@@ -94,13 +87,13 @@ class SmarterTestBase(unittest.TestCase, SmarterHelperMixin):
     def setUp(self) -> None:
         """Set up the test: log a banner with the test method's name."""
         super().setUp()
-        title = f" {SmarterTestBase.smarter_test_base_logger_prefix}.{self._testMethodName}() "
+        title = f" {self._testMethodName}() "
         msg = self._banner(title, "-")
         logger.debug(msg)
 
     def tearDown(self) -> None:
         """Tear down the test: log a banner with the test method's name."""
-        title = f" {SmarterTestBase.smarter_test_base_logger_prefix}.tearDown() {self._testMethodName} "
+        title = f" {self._testMethodName}() "
         msg = self._banner(title, "-")
         logger.debug(msg)
         super().tearDown()

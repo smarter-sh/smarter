@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.manifest.models.common import TestValue
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -20,7 +19,6 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataSql(PluginDataBase):
@@ -168,8 +166,7 @@ class PluginDataSql(PluginDataBase):
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
         logger.debug(
-            "%s.validate_all_placeholders_in_parameters() Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
-            self.formatted_class_name,
+            "Validating all placeholders in SQL query parameters: %s\n properties: %s, placeholders: %s",
             self.sql_query,
             properties,
             placeholders,
@@ -224,7 +221,7 @@ class PluginDataSql(PluginDataBase):
 
     def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Union[str, bool]:
         """Return a dict by executing the query with the provided params."""
-        logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
+        logger.info("called. - %s", params)
         return self.execute_query(params)
 
     def save(self, *args, **kwargs):
@@ -267,10 +264,8 @@ class PluginDataSql(PluginDataBase):
         :rtype: Optional[PluginDataSql]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataSql.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk: %s, plugin: %s",
-            logger_prefix,
+            "called with pk: %s, plugin: %s",
             pk,
             plugin,
         )
@@ -283,21 +278,18 @@ class PluginDataSql(PluginDataBase):
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataSql"]:
             try:
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
-                    logger_prefix,
+                    "cache miss for plugin_id: %s",
                     plugin_id,
                 )
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() fetched and cached PluginDataBase for plugin_id: %s",
-                    logger_prefix,
+                    "fetched and cached PluginDataBase for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"No {cls.formatted_class_name} found for plugin_id: {plugin_id}") from e
@@ -338,15 +330,13 @@ class PluginDataSql(PluginDataBase):
             try:
                 retval = model.objects.select_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s.get_cached_data_by_plugin() fetched and cached PluginDataSql for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "fetched and cached PluginDataSql for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"No {cls.formatted_class_name} found for plugin_id: {plugin_id}") from e

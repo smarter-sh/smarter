@@ -38,8 +38,7 @@ Example
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def recursive_sort_dict(d):
@@ -70,7 +69,7 @@ def recursive_sort_dict(d):
         print(sorted_data)
         # Output: {'a': {'c': 3, 'd': 4}, 'b': 2}
     """
-    logger.debug("%s.recursive_sort_dict()", logger_prefix)
+    logger.debug("called")
     return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
@@ -120,7 +119,7 @@ def dict_is_contained_in(dict1, dict2):
         result = dict_is_contained_in(model, test_missing)
         print(result)  # False
     """
-    logger.debug("%s.dict_is_contained_in()", logger_prefix)
+    logger.debug("called")
     for key, value in dict1.items():
         if key not in dict2:
             return False
@@ -185,7 +184,7 @@ def dict_is_subset(small, big) -> bool:
         result = dict_is_subset(small_missing, big)
         print(result)  # False
     """
-    logger.debug("%s.dict_is_subset()", logger_prefix)
+    logger.debug("called")
     if isinstance(small, dict) and isinstance(big, dict):
         for k, v in small.items():
             if k not in big:

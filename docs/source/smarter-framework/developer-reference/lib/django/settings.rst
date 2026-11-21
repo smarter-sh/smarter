@@ -4,12 +4,14 @@ Django Settings
 The Smarter platform should run out of the box on AWS infrastructure, using the
 default settings provided in `smarter.settings.prod`, assuming that you
 created your cloud infrastructure using Smarter's Terraform scripts. However,
-you may want to customize certain settings for your deployment.
+you may want to customize certain settings for your deployment, without
+changing Smarter's code: see :doc:`/smarter-platform/user-defined-django-settings`.
 See the complete set of Django settings available to the Smarter
-platform at `docs.djangoproject.com <https://docs.djangoproject.com/en/5.2/ref/settings/>`_.
+platform at `docs.djangoproject.com <https://docs.djangoproject.com/en/6.0/ref/settings/>`_.
 
 
 .. toctree::
     :maxdepth: 1
 
     settings/base
+    settings/user

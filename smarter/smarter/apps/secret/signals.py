@@ -1,31 +1,11 @@
-"""Signals for account app."""
+"""
+Signals of the secret app.
+
+The Secret model sends ``secret_created``, ``secret_edited`` and ``secret_accessed``, whichever
+code saves or reads it. The SecretTransformer, which applies a Secret's manifest, sends the others.
+"""
 
 from django.dispatch import Signal
-
-new_user_created = Signal()
-"""
-Signal sent when a new user is created.
-
-Arguments:
-
-    user_profile (UserProfile): The profile of the newly created user.
-
-Example::
-
-    new_user_created.send(sender=self.__class__, user_profile=self)
-"""
-
-new_charge_created = Signal()
-"""
-Signal sent when a new charge is created.
-
-Arguments:
-    charge (Charge): The newly created charge instance.
-
-Example::
-
-    new_charge_created.send(sender=self.__class__, charge=self)
-"""
 
 secret_initializing = Signal()
 """
@@ -85,11 +65,12 @@ secret_deleted = Signal()
 Signal sent when a secret is deleted.
 
 Arguments:
-    secret (Secret): The deleted secret instance.
+    secret_id (int): The deleted secret's id.
+    secret_name (str): The deleted secret's name.
 
 Example::
 
-    secret_deleted.send(sender=self.__class__, secret=self)
+    secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
 """
 
 secret_accessed = Signal()
@@ -142,16 +123,4 @@ Example::
 
     # a broker sends it once, from its ready property
     self.send_broker_ready(broker_ready)
-"""
-
-cache_invalidate = Signal()
-"""
-Signal sent to trigger cache invalidation.
-
-Arguments:
-    None
-
-Example::
-
-    cache_invalidate.send(sender=self.__class__)
 """

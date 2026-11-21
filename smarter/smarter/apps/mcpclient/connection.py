@@ -297,11 +297,6 @@ class MCPServerConnection:
         return f"<{self.__class__.__name__} mcpclient={self.mcpclient.name}>"
 
     @property
-    def formatted_class_name(self) -> str:
-        """The class name, for logging."""
-        return f"{logging.SmarterFormattedText.text(__name__)}.{self.__class__.__name__}[{self.mcpclient.name}]"
-
-    @property
     def timeout(self) -> float:
         """Seconds to wait for the MCP server to connect and respond."""
         return float(self.mcpclient.timeout or 30)
@@ -425,7 +420,7 @@ class MCPServerConnection:
                 message = f"HTTP {cause.response.status_code} from {cause.request.url}"
             else:
                 message = str(cause) or type(cause).__name__
-            logger.warning("%s %s failed: %s", self.formatted_class_name, description, message)
+            logger.warning("%s failed: %s", description, message)
             raise SmarterMCPClientConnectionError(
                 f"MCPClient {self.mcpclient.name} could not {description}: {message}"
             ) from cause

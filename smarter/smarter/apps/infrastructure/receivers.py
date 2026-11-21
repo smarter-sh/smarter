@@ -40,12 +40,6 @@ from .signals import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.INFRASTRUCTURE_LOGGING])
 
-module_prefix = __name__
-
-
-def _prefix(fn_name: str, service, provider) -> str:
-    return f"{logging.SmarterFormattedText.text(module_prefix)}.{fn_name}()" + f" [{provider}.{service}]"
-
 
 # pylint: disable=too-many-arguments
 def _record(created: bool, service, provider, resource_type, resource_name, resource_id, billable: bool) -> None:
@@ -62,9 +56,7 @@ def _record(created: bool, service, provider, resource_type, resource_name, reso
         )
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error(
-            "%s could not record %s %s: %s", _prefix("record", service, provider), resource_type, resource_name, e
-        )
+        logger.error("[%s.%s] could not record %s %s: %s", provider, service, resource_type, resource_name, e)
 
 
 @receiver(infrastructure_authenticated, dispatch_uid="infrastructure_authenticated")
@@ -79,7 +71,7 @@ def handle_infrastructure_authenticated(sender, service, provider, identity=None
     account = identity.get("Account")
     if not account:
         account = identity.get("account")
-    logger.info("%s authenticated, account %s", _prefix("authenticated", service, provider), _mask_account(account))
+    logger.info("[%s.%s] authenticated, account %s", provider, service, _mask_account(account))
 
 
 def _mask_account(account) -> Optional[str]:
@@ -108,7 +100,7 @@ def handle_infrastructure_authentication_failed(sender, service, provider, error
     :param error: Why it failed.
     :param kwargs: The signal's other arguments.
     """
-    logger.error("%s authentication failed: %s", _prefix("authentication_failed", service, provider), error)
+    logger.error("[%s.%s] authentication failed: %s", provider, service, error)
 
 
 @receiver(infrastructure_connected, dispatch_uid="infrastructure_connected")
@@ -121,7 +113,7 @@ def handle_infrastructure_connected(sender, service, provider, **kwargs):
     :param provider: The cloud provider's name, e.g. ``aws``.
     :param kwargs: The signal's other arguments.
     """
-    logger.info("%s connected", _prefix("connected", service, provider))
+    logger.info("[%s.%s] connected", provider, service)
 
 
 @receiver(infrastructure_connection_failed, dispatch_uid="infrastructure_connection_failed")
@@ -135,7 +127,7 @@ def handle_infrastructure_connection_failed(sender, service, provider, error=Non
     :param error: Why it failed.
     :param kwargs: The signal's other arguments.
     """
-    logger.error("%s connection failed: %s", _prefix("connection_failed", service, provider), error)
+    logger.error("[%s.%s] connection failed: %s", provider, service, error)
 
 
 @receiver(billable_resource_creating, dispatch_uid="infrastructure_billable_resource_creating")
@@ -151,8 +143,9 @@ def handle_billable_resource_creating(sender, service, provider, resource_type, 
     :param kwargs: The signal's other arguments.
     """
     logger.warning(
-        "%s creating billable %s %s",
-        _prefix("billable_resource_creating", service, provider),
+        "[%s.%s] creating billable %s %s",
+        provider,
+        service,
         resource_type,
         resource_name,
     )
@@ -177,16 +170,18 @@ def handle_billable_resource_created(
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service created it.
         logger.info(
-            "%s found billable %s %s (%s), which already exists, and recorded it in the ledger",
-            _prefix("billable_resource_created", service, provider),
+            "[%s.%s] found billable %s %s (%s), which already exists, and recorded it in the ledger",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
         )
     else:
         logger.warning(
-            "%s created billable %s %s (%s)",
-            _prefix("billable_resource_created", service, provider),
+            "[%s.%s] created billable %s %s (%s)",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
@@ -210,8 +205,9 @@ def handle_billable_resource_destroying(
     :param kwargs: The signal's other arguments.
     """
     logger.warning(
-        "%s destroying billable %s %s (%s)",
-        _prefix("billable_resource_destroying", service, provider),
+        "[%s.%s] destroying billable %s %s (%s)",
+        provider,
+        service,
         resource_type,
         resource_name,
         resource_id,
@@ -237,16 +233,18 @@ def handle_billable_resource_destroyed(
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service destroyed it.
         logger.info(
-            "%s found that billable %s %s (%s) no longer exists, and recorded it in the ledger",
-            _prefix("billable_resource_destroyed", service, provider),
+            "[%s.%s] found that billable %s %s (%s) no longer exists, and recorded it in the ledger",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
         )
     else:
         logger.warning(
-            "%s destroyed billable %s %s (%s)",
-            _prefix("billable_resource_destroyed", service, provider),
+            "[%s.%s] destroyed billable %s %s (%s)",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
@@ -271,16 +269,18 @@ def handle_resource_created(sender, service, provider, resource_type, resource_n
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service created it.
         logger.info(
-            "%s found %s %s (%s), which already exists, and recorded it in the ledger",
-            _prefix("resource_created", service, provider),
+            "[%s.%s] found %s %s (%s), which already exists, and recorded it in the ledger",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
         )
     else:
         logger.info(
-            "%s created %s %s (%s)",
-            _prefix("resource_created", service, provider),
+            "[%s.%s] created %s %s (%s)",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
@@ -305,16 +305,18 @@ def handle_resource_destroyed(sender, service, provider, resource_type, resource
     if kwargs.get("reconciled"):
         # the inventory found it, or found it gone: no service destroyed it.
         logger.info(
-            "%s found that %s %s (%s) no longer exists, and recorded it in the ledger",
-            _prefix("resource_destroyed", service, provider),
+            "[%s.%s] found that %s %s (%s) no longer exists, and recorded it in the ledger",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
         )
     else:
         logger.info(
-            "%s destroyed %s %s (%s)",
-            _prefix("resource_destroyed", service, provider),
+            "[%s.%s] destroyed %s %s (%s)",
+            provider,
+            service,
             resource_type,
             resource_name,
             resource_id,
@@ -333,7 +335,7 @@ def handle_resource_applied(sender, service, provider, kinds=None, **kwargs):
     :param kinds: The kinds of the manifest's resources, or None.
     :param kwargs: The signal's other arguments.
     """
-    logger.info("%s applied %s", _prefix("resource_applied", service, provider), ", ".join(kinds or []))
+    logger.info("[%s.%s] applied %s", provider, service, ", ".join(kinds or []))
 
 
 @receiver(infrastructure_operation_failed, dispatch_uid="infrastructure_operation_failed")
@@ -348,13 +350,15 @@ def handle_infrastructure_operation_failed(sender, service, provider, operation=
     :param error: Why it failed.
     :param kwargs: The signal's other arguments.
     """
-    logger.error("%s %s failed: %s", _prefix("operation_failed", service, provider), operation, error)
+    logger.error("[%s.%s] %s failed: %s", provider, service, operation, error)
 
 
 @receiver(email_sent, dispatch_uid="infrastructure_email_sent")
 def handle_email_sent(sender, service, provider, subject=None, recipients=None, **kwargs):
     """
-    Log that an email was sent. The recipients are logged masked, e.g. ``j****@example.com``.
+    Log that an email was sent.
+
+    The recipients are logged masked, e.g. ``j****@example.com``.
 
     :param sender: The service's class.
     :param service: The service's name, e.g. ``dns``.
@@ -364,13 +368,15 @@ def handle_email_sent(sender, service, provider, subject=None, recipients=None, 
     :param kwargs: The signal's other arguments.
     """
     logged_recipients = masked_recipients(recipients)
-    logger.info("%s sent '%s' to %s", _prefix("email_sent", service, provider), subject, logged_recipients)
+    logger.info("[%s.%s] sent '%s' to %s", provider, service, subject, logged_recipients)
 
 
 @receiver(email_failed, dispatch_uid="infrastructure_email_failed")
 def handle_email_failed(sender, service, provider, subject=None, recipients=None, error=None, **kwargs):
     """
-    Log that an email could not be sent. The recipients are logged masked, e.g. ``j****@example.com``.
+    Log that an email could not be sent.
+
+    The recipients are logged masked, e.g. ``j****@example.com``.
 
     :param sender: The service's class.
     :param service: The service's name, e.g. ``dns``.
@@ -382,8 +388,9 @@ def handle_email_failed(sender, service, provider, subject=None, recipients=None
     """
     logged_recipients = masked_recipients(recipients)
     logger.error(
-        "%s could not send '%s' to %s: %s",
-        _prefix("email_failed", service, provider),
+        "[%s.%s] could not send '%s' to %s: %s",
+        provider,
+        service,
         subject,
         logged_recipients,
         error,

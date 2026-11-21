@@ -10,7 +10,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CliBaseApiView
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ApiV1CliManifestApiView(CliBaseApiView):
@@ -65,12 +65,14 @@ class ApiV1CliManifestApiView(CliBaseApiView):
         :returns: The journaled json response.
         """
         logger.debug(
-            "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+            "called with request=%s, args=%s, kwargs=%s",
+            request,
+            args,
+            kwargs,
         )
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             logger.error(
-                "%s.get() is not allowed because %s switch is inactive.",
-                self.formatted_class_name,
+                "is not allowed because %s switch is inactive.",
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )
             return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])

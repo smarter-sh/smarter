@@ -129,12 +129,12 @@ class AccountContactView(AccountViewBase):
                 if not same_contact:
                     user_contact.delete()
         except CLIENT_ERROR_TYPES as e:
-            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            logger.warning("refused: %s", e)
             message = client_error_message(e, "The resource could not be deleted.")
             return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
+            logger.error("failed", exc_info=True)
             return JsonResponse(
                 {"error": "An unknown error occurred while deleting the AccountContact."},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,

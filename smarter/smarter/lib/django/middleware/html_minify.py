@@ -167,7 +167,6 @@ from asgiref.sync import sync_to_async
 from bs4 import BeautifulSoup, Comment
 from django.http import FileResponse, HttpRequest, HttpResponseBase
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -176,14 +175,12 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_HTML_MINIFY):
     logger.debug(
-        "%s is %s",
-        SmarterFormattedText.text(__name__) + ".HTMLMinifyMiddleware",
+        "is %s",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
-        "%s is %s. Enable with Django waffle in the admin console.",
-        SmarterFormattedText.text(__name__) + ".HTMLMinifyMiddleware",
+        "is %s. Enable with Django waffle in the admin console.",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -365,7 +362,7 @@ class HTMLMinifyMiddleware(SmarterMiddlewareMixin):
             response["Content-Length"] = str(len(response.content))
 
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("%s.minify_response() - failed to minify HTML: %s", self.formatted_class_name, exc)
+            logger.exception("failed to minify HTML: %s", exc)
 
         return response
 

@@ -677,7 +677,7 @@ class LokiLogService(LogService):
         # Loki limits each query, but orders lines only within a stream.
         latest_first = query.direction == "backward"
         lines.sort(key=_line_time, reverse=latest_first)
-        logger.debug("%s.query() %s returned %s lines", self.formatted_class_name, query.logql(), len(lines))
+        logger.debug("%s returned %s lines", query.logql(), len(lines))
         limited_lines = lines[: query.limit]
         return limited_lines
 

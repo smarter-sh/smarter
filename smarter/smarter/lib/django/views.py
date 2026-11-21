@@ -20,7 +20,6 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 
 from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
@@ -47,7 +46,6 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->")
 """Matches an html comment, for :meth:`SmarterView.remove_comments`."""
 
-logger_prefix = SmarterFormattedText.text(__name__)
 cache_prefix = f"{__name__}.smarter_cache_page_by_user"
 
 
@@ -114,8 +112,7 @@ def smarter_cache_page_by_user(timeout: int) -> Callable[[Callable], Callable]:
                 if hit is not None:
                     lazy_cache.delete(key_prefix)
                     logger.info(
-                        "%s.smarter_cache_page_by_user.invalidate() cache invalidated for key_prefix: %s",
-                        logger_prefix,
+                        "cache invalidated for key_prefix: %s",
                         key_prefix,
                     )
 
@@ -211,8 +208,7 @@ class SmarterView(View):
         # pylint: disable=W0718
         except Exception as e:
             logger.error(
-                "%s.render_clean_html(): %s, %s. error: %s",
-                self.formatted_class_name,
+                "%s, %s. error: %s",
                 request.build_absolute_uri(),
                 template_path,
                 e,
@@ -428,7 +424,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         :returns: None.
         """
         if logger.should_log(logging.DEBUG):
-            logger.debug("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
+            logger.debug("is %s", self.ready_state)
 
     def setup(self, request: HttpRequest, *args, **kwargs) -> None:
         """
@@ -504,7 +500,7 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
         :returns: None.
         """
         if logger.should_log(logging.INFO):
-            logger.info("%s.log_ready_status() is %s", self.formatted_class_name, self.ready_state)
+            logger.info("is %s", self.ready_state)
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponseBase:
         """

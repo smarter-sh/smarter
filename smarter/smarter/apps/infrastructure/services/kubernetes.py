@@ -291,9 +291,14 @@ class KubernetesService(InfrastructureService):
                 ready = condition.get("status")
                 break
         if str(ready).lower() == "true":
-            logger.info("%s certificate %s %s is issued", self.formatted_class_name, namespace, name)
+            logger.info("certificate %s %s is issued", namespace, name)
             return True
-        logger.warning("%s certificate %s %s is not ready: %s", self.formatted_class_name, namespace, name, ready)
+        logger.warning(
+            "certificate %s %s is not ready: %s",
+            namespace,
+            name,
+            ready,
+        )
         return False
 
     def verify_ingress_resources(
@@ -406,13 +411,13 @@ class KubectlKubernetesService(KubernetesService):
             if self.provider is None:
                 self._configured = True
             elif in_cluster_server():
-                logger.debug("%s.configured() using the pod's ServiceAccount", self.formatted_class_name)
+                logger.debug("using the pod's ServiceAccount")
                 self._configured = True
             else:
                 try:
                     self._configured = self.provider.update_kubeconfig()
                 except InfrastructureConfigurationError as e:
-                    logger.debug("%s %s", self.formatted_class_name, e)
+                    logger.debug("%s", e)
                     self._configured = False
         return self._configured
 
@@ -498,14 +503,22 @@ class KubectlKubernetesService(KubernetesService):
         """Run kubectl with ``-o json``, and return its output, or None if it fails or is empty."""
         result = self._kubectl(*args, "-o", "json")
         if result.returncode != 0:
-            logger.warning("%s kubectl %s failed: %s", self.formatted_class_name, " ".join(args), result.stderr)
+            logger.warning(
+                "kubectl %s failed: %s",
+                " ".join(args),
+                result.stderr,
+            )
             return None
         if not result.stdout.strip():
             return None
         try:
             return json.loads(result.stdout)
         except json.JSONDecodeError as e:
-            logger.error("%s kubectl %s returned invalid json: %s", self.formatted_class_name, " ".join(args), e)
+            logger.error(
+                "kubectl %s returned invalid json: %s",
+                " ".join(args),
+                e,
+            )
             return None
 
     def verify_namespace(self, namespace: str) -> bool:
@@ -515,7 +528,7 @@ class KubectlKubernetesService(KubernetesService):
         try:
             return self._kubectl_json("get", "namespace", namespace) is not None
         except InfrastructureConfigurationError as e:
-            logger.debug("%s %s", self.formatted_class_name, e)
+            logger.debug("%s", e)
             return False
 
     def apply_manifest(self, manifest: str) -> None:
@@ -530,12 +543,13 @@ class KubectlKubernetesService(KubernetesService):
         :raises KubernetesServiceError: If the cluster rejects it.
         """
         logger.info(
-            "%s.apply_manifest() applying a manifest to the cluster:\n%s",
-            self.formatted_class_name,
+            "applying a manifest to the cluster:\n%s",
             redacted_manifest(manifest),
         )
         if not self.ready:
-            logger.error("%s the cluster is not ready. The manifest was not applied.", self.formatted_class_name)
+            logger.error(
+                "the cluster is not ready. The manifest was not applied.",
+            )
             return None
         billable = [
             self.creating_resource(f"{RESOURCE_TYPE_PREFIX}.{kind}", name, billable=True)
@@ -577,14 +591,22 @@ class KubectlKubernetesService(KubernetesService):
         refs = [f"{kind}/{name}" for kind, name in resources]
         result = self._kubectl("get", *refs, "-n", namespace, "--ignore-not-found", "-o", "json")
         if result.returncode != 0:
-            logger.warning("%s kubectl get %s failed: %s", self.formatted_class_name, " ".join(refs), result.stderr)
+            logger.warning(
+                "kubectl get %s failed: %s",
+                " ".join(refs),
+                result.stderr,
+            )
             return super().get_resources(resources, namespace)
         if not result.stdout.strip():
             return {}
         try:
             output = json.loads(result.stdout)
         except json.JSONDecodeError as e:
-            logger.error("%s kubectl get %s returned invalid json: %s", self.formatted_class_name, " ".join(refs), e)
+            logger.error(
+                "kubectl get %s returned invalid json: %s",
+                " ".join(refs),
+                e,
+            )
             return {}
         # kubectl returns a List of several resources, or the resource itself when only one exists.
         if output.get("kind") == "List":
@@ -631,12 +653,20 @@ class KubectlKubernetesService(KubernetesService):
         args = ["get", kind] + (["-n", namespace] if namespace else [])
         result = self._kubectl(*args, "-o", "json")
         if result.returncode != 0:
-            logger.warning("%s kubectl %s failed: %s", self.formatted_class_name, " ".join(args), result.stderr)
+            logger.warning(
+                "kubectl %s failed: %s",
+                " ".join(args),
+                result.stderr,
+            )
             return None
         try:
             items = json.loads(result.stdout).get("items")
         except (json.JSONDecodeError, AttributeError) as e:
-            logger.error("%s kubectl %s returned invalid json: %s", self.formatted_class_name, " ".join(args), e)
+            logger.error(
+                "kubectl %s returned invalid json: %s",
+                " ".join(args),
+                e,
+            )
             return None
         return items if isinstance(items, list) else None
 
@@ -661,7 +691,12 @@ class KubectlKubernetesService(KubernetesService):
         # --ignore-not-found: a resource that is already gone counts as deleted.
         result = self._kubectl("delete", kind, name, "-n", namespace, "--ignore-not-found")
         if result.returncode != 0:
-            logger.error("%s failed to delete %s %s: %s", self.formatted_class_name, kind, name, result.stderr)
+            logger.error(
+                "failed to delete %s %s: %s",
+                kind,
+                name,
+                result.stderr,
+            )
             return False
         self.destroyed_resource(resource)
         return True
@@ -689,7 +724,12 @@ class KubectlKubernetesService(KubernetesService):
         ]
         result = self._kubectl("delete", ",".join(kinds), "-n", namespace, "-l", selector, "--ignore-not-found")
         if result.returncode != 0:
-            logger.error("%s failed to delete %s %s: %s", self.formatted_class_name, kinds, selector, result.stderr)
+            logger.error(
+                "failed to delete %s %s: %s",
+                kinds,
+                selector,
+                result.stderr,
+            )
             return False
         for resource in billable:
             self.destroyed_resource(resource)
@@ -717,7 +757,11 @@ class KubectlKubernetesService(KubernetesService):
         if result.returncode == 0:
             return result.stdout
         # the error explains why there are no logs, e.g. a pod that is still pulling its image.
-        logger.warning("%s failed to get the logs of %s: %s", self.formatted_class_name, selector, result.stderr)
+        logger.warning(
+            "failed to get the logs of %s: %s",
+            selector,
+            result.stderr,
+        )
         return (result.stdout or "") + (result.stderr or "")
 
 

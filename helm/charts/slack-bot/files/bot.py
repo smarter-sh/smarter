@@ -33,8 +33,8 @@ import threading
 import urllib.request
 from collections import OrderedDict
 
+# the format in main() starts each message with its origin: this name and the function that logged it.
 logger = logging.getLogger("smarter.slack_bot")
-logger_prefix = "smarter.slack_bot"
 
 NO_ANSWER = "Sorry, I have no answer to that."
 AGENT_ERROR = "Sorry, I couldn't reach the Smarter agent. Please try again in a minute."
@@ -204,7 +204,7 @@ class AgentClient:
         try:
             return to_slack(self.ask(thread_id, question))
         except Exception:  # pylint: disable=broad-exception-caught
-            logger.exception("%s.reply() the agent at %s did not answer", logger_prefix, self.url)
+            logger.exception("the agent at %s did not answer", self.url)
             return AGENT_ERROR
 
 
@@ -230,7 +230,7 @@ def register(app, agent: AgentClient) -> None:
         if not user.get("id") or user.get("is_bot") or user.get("deleted"):
             return
         client.chat_postMessage(channel=user["id"], text=WELCOME, unfurl_links=False)
-        logger.info("%s.on_team_join() welcomed a new member", logger_prefix)
+        logger.info("welcomed a new member")
 
     @app.event("app_home_opened")
     def on_app_home_opened(event, client):
@@ -240,7 +240,7 @@ def register(app, agent: AgentClient) -> None:
         if history.get("messages"):
             return
         client.chat_postMessage(channel=event["channel"], text=WELCOME, unfurl_links=False)
-        logger.info("%s.on_app_home_opened() welcomed a member to its direct message", logger_prefix)
+        logger.info("welcomed a member to its direct message")
 
     @app.event("app_mention")
     def on_mention(event, say):
@@ -264,14 +264,14 @@ def main() -> None:
     from slack_bolt import App
     from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s.%(funcName)s() %(message)s")
     agent = AgentClient(
         os.environ["SMARTER_SLACK_BOT_AGENT_URL"],
         timeout=float(os.environ.get("SMARTER_SLACK_BOT_TIMEOUT", "240")),
     )
     app = App(token=os.environ["SMARTER_SLACK_BOT_TOKEN"])
     register(app, agent)
-    logger.info("%s.main() answering with %s", logger_prefix, agent.url)
+    logger.info("answering with %s", agent.url)
     SocketModeHandler(app, os.environ["SMARTER_SLACK_APP_TOKEN"]).start()
 
 

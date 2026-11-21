@@ -1335,7 +1335,8 @@ class TestSmarterRequestMixin(TestAccountMixin):
         ):
             with self.assertLogs("smarter.lib.django.request", level="WARNING") as captured:
                 srm._srm_log_ready_status()
-        self.assertIn("._srm_log_ready_status() is", captured.output[0])
+        self.assertIn("SmarterRequestMixin._srm_log_ready_status()", captured.output[0])
+        self.assertIn(" is ", captured.output[0])
 
     def test_log_ready_status_ready_is_debug(self):
         """A ready request is logged at DEBUG."""

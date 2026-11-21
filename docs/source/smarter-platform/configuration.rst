@@ -35,22 +35,84 @@ Usage:
    smarter_settings.openai_api_key.get_secret_value()
    smarter_settings.dump()
 
-In all other cases, Smarter uses standard Django settings located in `smarter/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`_.
-Django settings that can be overridden via environment variables are discoverable in `smarter/settings/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py>`_
-and generally follow the form:
+In all other cases, Smarter uses standard Django settings located in `smarter/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`_:
+``base.py`` for every environment, ``base_aws.py`` for the environments on AWS, and one module per environment
+(``local.py``, ``alpha.py``, ``beta.py``, ``next.py``, ``prod.py``).
 
-.. code-block:: python
+Django defines many more settings than Smarter sets. See `Django Settings <https://docs.djangoproject.com/en/6.0/ref/settings/>`_
+for every one, and the next section for how to set them yourself.
 
-   import os
+3. User-Defined Django Settings
+-------------------------------
 
-   CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False").lower() in ("true", "1", "t")
+You can set any Django setting yourself, without changing Smarter's code: a session's lifetime, the administrators'
+email addresses, a Content Security Policy, or a setting of a Django package that you add. Your value supersedes
+Smarter's own, in every environment.
 
-See `Django Settings <https://docs.djangoproject.com/en/5.2/ref/settings/>`_ for a comprehensive list of Django settings that can be configured in Smarter.
+.. danger::
 
-To the extent that you find a given Django settings variable initialized in this manner, you'll be able to override
-it by setting the corresponding environment variables in your deployment configuration.
+   **A user-defined setting is a hammer.** It replaces Smarter's value of that setting outright, in every environment,
+   however carefully Smarter's value was built, and Smarter does nothing to stop you or warn you.
 
-3. Asynchronous Task Queue Configuration
+   - Many of Smarter's settings are computed, per environment, from other settings and from ``smarter_settings``:
+     the database, the caches and their separate Redis databases for sessions and Celery, storage on S3 or disk,
+     allowed hosts, CORS and CSRF origins, cookie security, the Content Security Policy. Yours replaces the result,
+     and nothing that was derived from the old value is computed again.
+   - A list or a dictionary is replaced whole, not merged. A ``LOGGING`` or ``CACHES`` that leaves out one of
+     Smarter's entries removes it.
+   - Smarter checks only that a value has the right type, not that it is sensible. A wrong value can stop the
+     platform, or quietly weaken its security: a cookie sent without HTTPS, a host that should be refused.
+
+   Before you override a setting, read how Smarter sets it in ``smarter/settings/``, prefer a ``SMARTER_*`` setting
+   where one exists, change as few settings as you can, and try the change locally before you deploy it. To undo
+   one, delete it: Smarter's own value applies again.
+
+.. important::
+
+   **Where your settings go depends on where Smarter runs.**
+
+   - **Local development** (Docker Compose, ``make run``): ``user-settings/settings.yaml``, in the repository's root.
+     This is for your own computer only. The file is never built into the Docker image, and no deployed environment
+     reads it.
+   - **alpha, beta, next, prod, and every other environment on AWS** (Kubernetes): ``djangoSettings`` in the Helm
+     chart's values. To change prod, change the Helm values that prod's deployment uses, never ``user-settings/``.
+
+Both places take the same YAML, a map of upper case setting names to values:
+
+.. code-block:: yaml
+
+   # user-settings/settings.yaml, locally
+   SESSION_COOKIE_AGE: 3600
+   ADMINS:
+     - ops@example.com
+
+.. code-block:: yaml
+
+   # the Helm chart's values, on Kubernetes
+   djangoSettings:
+     SESSION_COOKIE_AGE: 3600
+     ADMINS:
+       - ops@example.com
+
+To set one setting at a time, use an environment variable named ``DJANGO_<SETTING>``, e.g.
+``DJANGO_SESSION_COOKIE_AGE=3600``: in ``.env`` locally, or in ``env`` in the Helm chart's values on Kubernetes.
+
+Settings supersede each other in this order, from lowest to highest priority:
+
+1. ``smarter/settings/base.py``
+2. ``smarter/settings/base_aws.py``, in the environments on AWS
+3. the environment's own module, e.g. ``prod.py``
+4. your settings file (``user-settings/settings.yaml``, or ``djangoSettings``)
+5. your ``DJANGO_*`` environment variables
+
+Your value replaces Smarter's whole setting: a dictionary such as ``LOGGING`` is not merged with Smarter's. Where a
+``SMARTER_*`` setting exists for what you want to change (see the previous section), prefer it, since Smarter
+derives other settings from it.
+
+See :doc:`user-defined-django-settings` for the full explanation: the steps for local development and for the Helm
+chart, how to write each kind of value, the rules, and how to check what applied.
+
+4. Asynchronous Task Queue Configuration
 ----------------------------------------
 
 Smarter uses Celery as its asynchronous task queue. Celery configuration settings can be found in `smarter/settings/celery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/celery.py>`_.
@@ -61,7 +123,7 @@ This is known to work well for most use cases. However, you can configure Celery
 
 See `Celery configuration <https://github.com/smarter-sh/smarter/blob/alpha/smarter/smarter/workers/celery.py>`_ for more details on how Celery is configured in Smarter.
 
-4. Beat Scheduler Configuration
+5. Beat Scheduler Configuration
 -------------------------------
 
 Smarter uses Celery Beat to schedule periodic tasks. The Beat scheduler configuration can be found in `smarter/settings/celery.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/celery.py>`_.
@@ -69,7 +131,7 @@ Like asynchronous task queue configuration, the Beat scheduler relies on the sam
 
 See `Celery Beat configuration <https://github.com/smarter-sh/smarter/blob/alpha/smarter/smarter/workers/celery.py>`_ for more details on how Celery Beat is configured in Smarter.
 
-5. Helm Chart Configuration
+6. Helm Chart Configuration
 ---------------------------
 
 The Smarter cloud platform is deployed using `Smarter's official Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_. Configuration options for this Helm chart can be found
@@ -83,7 +145,7 @@ documentation on this Helm chart can be found in the `Helm Chart Documentation <
   Therefore, you are **STRONGLY** recommended to avoid modifying the Helm chart itself, beyond providing the pre-programmed values.yml data,
   unless you know what you are doing, and you are fully aware of the implications.
 
-6. Dockerfile Configuration
+7. Dockerfile Configuration
 ---------------------------
 
 The official Docker container image for Smarter (`hub.docker.com/r/mcdaniel0073/smarter <https://hub.docker.com/r/mcdaniel0073/smarter>`_) is
@@ -93,7 +155,7 @@ repository, `https://github.com/smarter-sh/smarter <https://github.com/smarter-s
 This Docker image favors simplicity over configurability, hence, there are limited configuration options.
 
 
-7. GitHub Actions Secrets Configuration
+8. GitHub Actions Secrets Configuration
 ---------------------------------------
 
 If you intend to use the provided GitHub Actions workflows for CI/CD, you will need to a.) fork the repository, and b.) configure several GitHub Secrets in your repository.
@@ -157,7 +219,7 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
    * - SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
      - OAuth client secret for LinkedIn social login
 
-8. Secrets Management
+9. Secrets Management
 ---------------------
 
 One of Smarter's broader challenges is secure secrets management. Smarter uses many kinds of secrets, including API keys, database credentials, and encryption keys.
@@ -226,8 +288,8 @@ Smarter currently relies on four primary mechanisms for secrets management:
 
 *Less is more, and simpler is better, so the fewer secrets management mechanisms you have to deal with, the better.*
 
-9. Logging Configuration
-------------------------
+10. Logging Configuration
+-------------------------
 
 Smarter application logs are highly configurable. By default, Smarter uses Python's built-in logging module to log messages to an application log file that
 resides inside the running Kubernetes pod at `/var/log/???????????` (FIX NOTE: where in the heck are these???). This can be changed by modifying the logging configuration in `smarter/settings/base.py (logging config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L477>`_.
@@ -243,7 +305,7 @@ debugging and trouble shooting without requiring application restarts or code ch
         alt="Smarter Django Admin Waffle Switches"/>
 
 
-10. Database Configuration
+11. Database Configuration
 -----------------------------
 
 Database configuration settings are ultimately controlled by `smarter/settings/base.py (database config) <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/settings/base.py#L336>`_
@@ -272,7 +334,7 @@ Regardless of how the configuration values were ingested, the final database con
   However, they operate at different layers of the application stack. Kubernetes Secrets are used for securely storing and managing secrets at the infrastructure level,
   while Pydantic SecretStr is used within the application code itself to ensure that sensitive information is not inadvertently exposed in logs or error messages.
 
-11.   Email/Notification Configuration
+12.   Email/Notification Configuration
 ---------------------------------------
 
 SMTP Email Services allow your system to send emails using an external SMTP server.
@@ -314,7 +376,7 @@ You can test your SMTP configuration by sending a test email from the Django con
 
    python manage.py send_welcome_email --email john.doe@example.com
 
-1.   Static & Media Files Configuration
+13.   Static & Media Files Configuration
 ---------------------------------------------
 
 Media files, the files that users upload, are stored in the environment's Amazon S3 bucket when AWS is
@@ -340,7 +402,7 @@ Avoid changing them unless you have a specific need.
 
 See `Django Static Files Documentation <https://docs.djangoproject.com/en/5.2/howto/static-files/>`_ for more details on how static and media files are configured in Smarter.
 
-13. Smarter Settings Class Reference
+14. Smarter Settings Class Reference
 ------------------------------------
 
 The Smarter settings system is implemented as an immutable singleton object called `smarter_settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`_.

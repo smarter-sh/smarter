@@ -43,11 +43,6 @@ class AccountUnsubscribeView(SmarterNeverCachedWebView):
 
     template_path = "account/unsubscribe.html"
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns a formatted string of the class name for logging purposes."""
-        return logging.SmarterFormattedText.text(f"{__name__}.{AccountUnsubscribeView.__name__}")
-
     def email_address(self, token: str) -> Optional[str]:
         """
         Return the email address of the url's token.
@@ -58,7 +53,7 @@ class AccountUnsubscribeView(SmarterNeverCachedWebView):
         try:
             return unsubscribe_email_address(token)
         except signing.BadSignature:
-            logger.warning("%s.email_address() received an invalid unsubscribe token.", self.formatted_class_name)
+            logger.warning("received an invalid unsubscribe token.")
             return None
 
     def render(self, request: HttpRequest, email: str, unsubscribed: bool) -> HttpResponse:

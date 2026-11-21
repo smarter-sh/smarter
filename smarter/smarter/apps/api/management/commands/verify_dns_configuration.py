@@ -8,7 +8,7 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class Command(SmarterCommand):
@@ -86,7 +86,7 @@ class Command(SmarterCommand):
         This is a simple traversal method to look for and retrieve an A record
         from the AWS Route53 hosted zone for any of the existing domains.
         """
-        log_prefix = self.log_prefix + ".get_any_A_record()"
+        log_prefix = f"{self.log_prefix}.get_any_A_record()"
         if not infrastructure.dns.ready:
             raise SmarterConfigurationError(f"{log_prefix} the DNS service is not ready. Cannot proceed.")
 
@@ -114,16 +114,15 @@ class Command(SmarterCommand):
         :rtype: DNSRecord
         :raises SmarterConfigurationError: if neither the platform domain nor the root domain has an A record.
         """
-        log_prefix = self.log_prefix + ".get_load_balancer_a_record()"
+        log_prefix = f"{self.log_prefix}.get_load_balancer_a_record()"
         dns = infrastructure.dns
         if dns.get_zone(smarter_settings.root_platform_domain) is not None:
             a_record = dns.get_environment_a_record(domain=smarter_settings.root_platform_domain)
             if a_record:
                 return a_record
         logger.warning(
-            "%s %s has no A record. Falling back to the A record of the root domain %s, "
+            "%s has no A record. Falling back to the A record of the root domain %s, "
             "which must point at the platform's load balancer.",
-            log_prefix,
             smarter_settings.root_platform_domain,
             smarter_settings.root_domain,
         )
@@ -167,13 +166,11 @@ class Command(SmarterCommand):
         :rtype: bool
         """
 
-        log_prefix = self.log_prefix + ".verify_domain_delegated_from_parent()"
         self.stdout.write(f"{child_domain} is delegated from parent domain {parent_domain}.")
         dns = infrastructure.dns
         if not dns.ready:
             logger.warning(
-                "%s the DNS service is not ready. Skipping DNS verification for %s.",
-                log_prefix,
+                "the DNS service is not ready. Skipping DNS verification for %s.",
                 child_domain,
             )
             return False
@@ -210,8 +207,7 @@ class Command(SmarterCommand):
                 # by design, e.g. a host that a CDN serves. The command's output says so once; the
                 # targets, which are infrastructure host names, are only logged at DEBUG.
                 logger.debug(
-                    "%s A record for %s points at %s, not at the A record of %s (%s). Leaving it unchanged.",
-                    log_prefix,
+                    "A record for %s points at %s, not at the A record of %s (%s). Leaving it unchanged.",
                     child_domain,
                     existing_a_record.alias or existing_a_record.values,
                     a_record.name,
@@ -300,7 +296,7 @@ class Command(SmarterCommand):
 
         :return: None
         """
-        log_prefix = self.log_prefix + ".verify_root_domain_dns_config()"
+        log_prefix = f"{self.log_prefix}.verify_root_domain_dns_config()"
         # Look for an A record in the root domain hosted zone
         self.stdout.write(self.style.NOTICE(f"Root domain DNS verification: {smarter_settings.root_domain}"))
         self.stdout.write(
@@ -309,8 +305,7 @@ class Command(SmarterCommand):
         dns = infrastructure.dns
         if not dns.ready:
             logger.warning(
-                "%s the DNS service is not ready. Skipping root domain DNS verification for %s.",
-                log_prefix,
+                "the DNS service is not ready. Skipping root domain DNS verification for %s.",
                 smarter_settings.root_domain,
             )
             return

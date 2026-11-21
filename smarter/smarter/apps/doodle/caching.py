@@ -31,7 +31,6 @@ from .planner import candidates, default_theme
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def artwork_url(sha256: str) -> str:
@@ -123,17 +122,23 @@ def doodle_of_the_day(day: str, region: str) -> DoodleOfTheDay:
     due = candidates(date, region)
     if due:
         logger.debug(
-            "%s.doodle_of_the_day() no approved doodle for %s in %s: the calendar's.", logger_prefix, day, region
+            "no approved doodle for %s in %s: the calendar's.",
+            day,
+            region,
         )
         return doodle_from_theme(due[0], day, region, is_default=False)
 
     theme = default_theme()
     if theme is not None:
-        logger.debug("%s.doodle_of_the_day() no approved doodle for %s in %s: the default.", logger_prefix, day, region)
+        logger.debug(
+            "no approved doodle for %s in %s: the default.",
+            day,
+            region,
+        )
         return doodle_from_theme(theme, day, region, is_default=True)
 
     logger.warning(
-        "%s.doodle_of_the_day() the doodle themes aren't loaded. Run manage.py load_doodle_themes.", logger_prefix
+        "the doodle themes aren't loaded. Run manage.py load_doodle_themes.",
     )
     return DoodleOfTheDay(
         date=day,

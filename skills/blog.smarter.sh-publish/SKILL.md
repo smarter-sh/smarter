@@ -69,7 +69,8 @@ opens cleanly in the block editor, and the user can edit it there.
   indented line continues the item), pipe tables, `>` quotes, `---`, fenced
   code, and inline `**bold**`, `*italics*`, `` `code` `` and `[links](url)`.
   An image is `![alt](url "caption")` on a line of its own, and becomes an
-  image block linked to the full-size file. Nested lists, inline images and
+  image block linked to the full-size file. A bare YouTube url on a line of
+  its own becomes a video embed block. Nested lists, inline images and
   raw HTML are not supported. Keep the post within that.
 - Code fences need a language that SyntaxHighlighter has a brush for: `bash`,
   `yaml`, `python`, `jscript`, `sql`, `xml`, `css`, `diff` or `plain`. An
@@ -284,6 +285,12 @@ which bypasses the cache and shows you a page that visitors don't get.
 
 - The host shell is zsh. `${(P)name}` reads a variable by name, and an unquoted
   `--include=*.py` is a glob error. Pass arguments to the scripts quoted.
+- Make sure a YouTube video is public or unlisted before you publish a post
+  that embeds it. WordPress caches a failed oEmbed lookup for a private video,
+  and re-saving the post or clearing the page cache doesn't refresh it, so the
+  player stays blank after the video goes public. The cache is keyed by url, so
+  switching between the `youtu.be/<id>` and `youtube.com/watch?v=<id>` forms
+  forces a new lookup. Check for an `<iframe` on the public page.
 - `.env` is git-ignored. Make sure it stays that way (`git check-ignore .env`),
   and never add the credentials to a skill, a script or a commit.
 - A post on the blog is not the source. If the user edits a post in WordPress

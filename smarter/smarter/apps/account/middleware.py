@@ -102,5 +102,5 @@ class SmarterUserProfileSelectionMiddleware(SmarterMiddlewareMixin):
         try:
             return int(value)  # type: ignore[call-overload]
         except (TypeError, ValueError):
-            logger.warning("%s.as_profile_id() ignored a malformed session value: %r", self.formatted_class_name, value)
+            logger.warning("ignored a malformed session value: %r", value)
             return None

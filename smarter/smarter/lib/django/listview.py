@@ -86,7 +86,6 @@ if TYPE_CHECKING:
     from smarter.apps.account.models import UserProfile
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CACHE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 LISTVIEW_CACHE_ALL = "*"
 """The generation of every list: invalidating it makes the cached pages of every list stale."""
@@ -164,7 +163,7 @@ def invalidate_listview_cache(kind: str, user_profile_id: Optional[int] = None) 
     :param kind: The list, e.g. ``LLMClient``, or :data:`LISTVIEW_CACHE_ALL` for every list.
     :param user_profile_id: The user profile whose pages to make stale, or None for every user's.
     """
-    logger.debug("%s.invalidate_listview_cache() kind=%s user_profile_id=%s", logger_prefix, kind, user_profile_id)
+    logger.debug("kind=%s user_profile_id=%s", kind, user_profile_id)
     transaction.on_commit(lambda: listview_cache_generation.invalidate(kind, user_profile_id))
 
 
@@ -287,7 +286,10 @@ def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
     view_class: type[SmarterListApiView] = import_string(view)
     user_profile = UserProfile.objects.select_related("user", "account").get(id=user_profile_id)
     logger.debug(
-        "%s.cached_listview_page() building %s page=%s for user_profile %s", logger_prefix, view, page, user_profile_id
+        "building %s page=%s for user_profile %s",
+        view,
+        page,
+        user_profile_id,
     )
     return view_class.build_page(
         user_profile,
@@ -489,8 +491,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             ownership_filter = SmarterResourceOwnershipFilterEnum.ALL
         if ownership_filter not in OWNERSHIP_FILTERS:
             logger.warning(
-                "%s.post() Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'.",
-                self.formatted_class_name,
+                "Received an invalid ownership_filter value: %s. Must be one of 'owned', 'shared', or 'all'.",
                 ownership_filter,
             )
             return JsonResponse(
@@ -505,8 +506,7 @@ class SmarterListApiView(SmarterAuthenticatedNeverCachedWebView):
             listview_cache_generation.invalidate(kind, user_profile_id)
 
         logger.debug(
-            "%s.post() ownership_filter=%s, query=%s, user_profile=%s",
-            self.formatted_class_name,
+            "ownership_filter=%s, query=%s, user_profile=%s",
             ownership_filter,
             request.GET.dict(),
             user_profile_id,
@@ -639,13 +639,17 @@ def listview_registry() -> tuple[ListviewEntry, ...]:
         page_class_name = view_class.__name__.replace("ListApiView", LISTVIEW_PAGE_SUFFIX)
         page = pages.get(page_class_name)
         if page is None:
-            logger.warning("%s.listview_registry() found no page %s for %s", logger_prefix, page_class_name, view_class)
+            logger.warning(
+                "found no page %s for %s",
+                page_class_name,
+                view_class,
+            )
             continue
         page_name = page[1]
         try:
             page_url = django_reverse(page_name)
         except NoReverseMatch:
-            logger.warning("%s.listview_registry() can't reverse %s's page %s", logger_prefix, view_class, page_name)
+            logger.warning("can't reverse %s's page %s", view_class, page_name)
             continue
         retval.append(ListviewEntry(view_class=view_class, page_url=page_url))
     return tuple(retval)

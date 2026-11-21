@@ -25,7 +25,7 @@ from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError, SAMDepen
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 MAX_RESULTS = 1000
 
@@ -126,23 +126,20 @@ class SAMTestBroker(AbstractBroker[PluginDataBase, PluginMeta]):
 
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve ORM instance %s for user=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "attempting to retrieve ORM instance %s for user=%s, name=%s",
                 PluginDataBase.__name__,
                 self.user,
                 self.name,
             )
             instance = PluginDataBase.objects.get(plugin=self.plugin_meta)
             logger.debug(
-                "%s.orm_instance() - retrieved ORM instance: %s",
-                self.abstract_broker_logger_prefix,
+                "retrieved ORM instance: %s",
                 serializers.serialize("json", [instance]),
             )
             return instance
         except PluginDataBase.DoesNotExist:
             logger.warning(
-                "%s.orm_instance() - ORM instance does not exist for account=%s, name=%s",
-                self.abstract_broker_logger_prefix,
+                "ORM instance does not exist for account=%s, name=%s",
                 self.account,
                 self.name,
             )

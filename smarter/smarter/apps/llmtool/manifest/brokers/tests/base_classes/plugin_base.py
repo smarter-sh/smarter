@@ -9,14 +9,13 @@ from smarter.apps.api.utils import apply_manifest
 from smarter.apps.connection.models import SqlConnection
 from smarter.apps.llmtool.const import DATA_PATH as PLUGIN_DATA_PATH
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.manifest.parsing import read_manifest_file
 from smarter.lib.typing import required
 
 from .connection_base import TestSmarterConnectionBrokerBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 MANIFEST_PATH_SQL_CONNECTION = os.path.abspath(
     os.path.join(PLUGIN_DATA_PATH, "manifest", "brokers", "tests", "data", "sql-connection.yaml")
 )
@@ -26,13 +25,10 @@ Path to the Sql connection manifest file 'sql-connection.yaml' which.
 contains the actual connection parameters for the remote test database.
 """
 
-HERE = __name__
-
 
 class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     """Adds a class-level setup to create SqlConnection instances for use in plugin broker tests."""
 
-    test_smarter_plugin_broker_base_logger_prefix = f"{SmarterFormattedText.text(HERE)}.TestSmarterPluginBrokerBase()"
     test_sql_connection_name: str
     sql_connection: SqlConnection
 
@@ -50,7 +46,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
         so that the django SqlConnection model can be queried.
         """
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
+        logger.debug("called.")
         test_sql_connection_manifest_data = read_manifest_file(MANIFEST_PATH_SQL_CONNECTION)
         apply_manifest(
             username=cls.admin_user.username, manifest=yaml.safe_dump(test_sql_connection_manifest_data), verbose=True
@@ -73,8 +69,7 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
         except SqlConnection.DoesNotExist as e:
             raise SmarterValueError(f"Failed to get test secret '{cls.test_sql_connection_name}' from database.") from e
         logger.debug(
-            "%s.setUpClass() %s owned by %s created for connection broker tests.",
-            cls.test_smarter_plugin_broker_base_logger_prefix,
+            "%s owned by %s created for connection broker tests.",
             cls.test_sql_connection_name,
             cls.user_profile,
         )
@@ -82,20 +77,18 @@ class TestSmarterPluginBrokerBase(TestSmarterConnectionBrokerBase):
     @classmethod
     def tearDownClass(cls):
         """Clean up the created secret after all tests have run."""
-        logger.debug("%s.tearDownClass()", cls.test_smarter_plugin_broker_base_logger_prefix)
+        logger.debug("called.")
         try:
             cls.sql_connection.delete()
             logger.debug(
-                "%s.tearDownClass() Test SqlConnection %s owned by %s deleted after connection broker tests.",
-                cls.test_smarter_plugin_broker_base_logger_prefix,
+                "Test SqlConnection %s owned by %s deleted after connection broker tests.",
                 cls.test_sql_connection_name,
                 cls.user_profile,
             )
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.tearDownClass() Failed to delete test SqlConnection %s owned by %s after connection broker tests: %s",
-                cls.test_smarter_plugin_broker_base_logger_prefix,
+                "Failed to delete test SqlConnection %s owned by %s after connection broker tests: %s",
                 cls.test_sql_connection_name,
                 cls.user_profile,
                 str(e),

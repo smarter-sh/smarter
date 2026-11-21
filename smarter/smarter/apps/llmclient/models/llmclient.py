@@ -117,7 +117,9 @@ class LLMClient(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClients"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="llmclient_llmclient_unique"),
+        ]
 
     class Modes:
         """
@@ -283,7 +285,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         default=DnsVerificationStatusChoices.NOT_VERIFIED,
         blank=True,
         null=True,
-        choices=DnsVerificationStatusChoices.choices,
+        choices=DnsVerificationStatusChoices,
     )
 
     # : The TLS certificate issuance status of the LLMClient's custom domain. This is part of the deployment process and is managed by
@@ -294,7 +296,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         default=TlsCertificateIssuanceStatusChoices.NO_CERTIFICATE,
         blank=True,
         null=True,
-        choices=TlsCertificateIssuanceStatusChoices.choices,
+        choices=TlsCertificateIssuanceStatusChoices,
     )
 
     def __str__(self) -> str:
@@ -859,10 +861,8 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["LLMClient"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".get_cached_object()")
         logger.debug(
-            "%s called %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
-            logger_prefix,
+            "called %s with pk=%s, name=%s, user=%s, user_profile=%s, account=%s, invalidate=%s",
             cls.__name__,
             pk,
             name,
@@ -899,21 +899,19 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: A queryset of LLMClient instances associated with the user profile.
         :rtype: models.QuerySet["LLMClient"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".get_cached_objects()")
 
         @cache_results()
         def _get_llmclients_for_user_profile_id(
             user_profile_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClient"]:
-            logger.debug("%s called with user_profile=%s, invalidate=%s", logger_prefix, user_profile, invalidate)
+            logger.debug("called with user_profile=%s, invalidate=%s", user_profile, invalidate)
             retval = (
                 cls.objects.with_read_permission_for(user=user_profile.user)  # type: ignore
                 .prefetch_related("tags")
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
             )
             logger.debug(
-                "%s._get_llmclients_for_user_profile_id() fetched and cached %s llmclients for user_profile_id: %s",
-                logger_prefix,
+                "fetched and cached %s llmclients for user_profile_id: %s",
                 len(retval),
                 user_profile_id,
             )
@@ -938,11 +936,10 @@ class LLMClient(MetaDataWithOwnershipModel):
         :kwargs: Keyword arguments for the save method.
         :returns: None
         """
-        logger.debug("%s.save() called for LLMClient id: %s %s", self.formatted_class_name, self.pk, self.default_host)
+        logger.debug("called for LLMClient id: %s %s", self.pk, self.default_host)
         if asynchronous:
             logger.debug(
-                "%s.save() running in asynchronous mode for LLMClient id: %s. Skipping signal sending.",
-                self.formatted_class_name,
+                "running in asynchronous mode for LLMClient id: %s. Skipping signal sending.",
                 self.pk,
             )
             super().save(*args, **kwargs)
@@ -959,9 +956,7 @@ class LLMClient(MetaDataWithOwnershipModel):
             try:
                 orig = LLMClient.objects.get(id=self.pk)
             except LLMClient.DoesNotExist:
-                logger.error(
-                    "%s.save() could not find original LLMClient with id: %s", self.formatted_class_name, self.pk
-                )
+                logger.error("could not find original LLMClient with id: %s", self.pk)
                 return super().save(*args, **kwargs)
 
             if orig.dns_verification_status != self.dns_verification_status:
@@ -980,18 +975,8 @@ class LLMClient(MetaDataWithOwnershipModel):
                 should_undeploy = True
         super().save(*args, **kwargs)
         if should_deploy:
-            logger.debug(
-                "%s.LLMClient.save() sending llmclient_deploy signal for LLMClient id: %s",
-                self.formatted_class_name,
-                self.pk,
-            )
             llmclient_deploy.send(sender=self.__class__, llmclient=self)
         if should_undeploy:
-            logger.debug(
-                "%s.LLMClient.save() sending llmclient_undeploy signal for LLMClient id: %s",
-                self.formatted_class_name,
-                self.pk,
-            )
             llmclient_undeploy.send(sender=self.__class__, llmclient=self)
 
     # pylint: disable=C0415
@@ -1013,10 +998,8 @@ class LLMClient(MetaDataWithOwnershipModel):
         :returns: The cloned LLMClient instance.
         :rtype: LLMClient
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + LLMClient.__name__ + ".clone()")
         logger.debug(
-            "%s.clone() called for LLMClient id: %s with new_name: %s, new_version: %s, user_profile: %s",
-            logger_prefix,
+            "called for LLMClient id: %s with new_name: %s, new_version: %s, user_profile: %s",
             self.pk,
             new_name,
             new_version,
@@ -1024,12 +1007,12 @@ class LLMClient(MetaDataWithOwnershipModel):
         )
 
         cloned_llmclient = super().clone(new_name=new_name, new_version=new_version, user_profile=user_profile)  # type: ignore
-        self.clone_links(cloned_llmclient, logger_prefix)  # type: ignore[arg-type]
+        self.clone_links(cloned_llmclient)  # type: ignore[arg-type]
 
-        logger.debug("%s.clone() completed Returning cloned instance %s", logger_prefix, cloned_llmclient)
+        logger.debug("completed Returning cloned instance %s", cloned_llmclient)
         return cloned_llmclient  # type: ignore[return-value]
 
-    def clone_links(self, clone: "LLMClient", logger_prefix: str) -> None:
+    def clone_links(self, clone: "LLMClient") -> None:
         """
         Link a clone of this LLMClient to the same plugins, MCPClients, guardrails and extensions.
 
@@ -1039,7 +1022,6 @@ class LLMClient(MetaDataWithOwnershipModel):
         owner may read, and extensions that are available to its owner's account.
 
         :param clone: The clone, which has no links yet.
-        :param logger_prefix: The prefix of log messages.
         """
         # pylint: disable=import-outside-toplevel
         from .llmclient_extension import LLMClientExtensions
@@ -1059,28 +1041,30 @@ class LLMClient(MetaDataWithOwnershipModel):
                 readable = type(resource).objects.filter(pk=resource.pk).with_read_permission_for(user)  # type: ignore[attr-defined]
                 if not readable.exists():
                     logger.warning(
-                        "%s.clone_links() did not link %s %s to LLMClient %s: its owner may not use it.",
-                        logger_prefix,
+                        "did not link %s %s to LLMClient %s: its owner may not use it.",
                         field,
                         resource,
                         clone.pk,
                     )
                     continue
                 link_model.objects.get_or_create(llmclient=clone, **{field: resource})
-                logger.debug("%s.clone_links() linked %s %s to LLMClient %s", logger_prefix, field, resource, clone.pk)
+                logger.debug(
+                    "linked %s %s to LLMClient %s",
+                    field,
+                    resource,
+                    clone.pk,
+                )
         for extension_link in LLMClientExtensions.objects.filter(llmclient=self).select_related("extension"):
             if not extension_link.extension.is_available_to(clone.user_profile.account):
                 logger.warning(
-                    "%s.clone_links() did not link extension %s to LLMClient %s: it is not available to its account.",
-                    logger_prefix,
+                    "did not link extension %s to LLMClient %s: it is not available to its account.",
                     extension_link.extension.slug,
                     clone.pk,
                 )
                 continue
             LLMClientExtensions.objects.get_or_create(llmclient=clone, extension=extension_link.extension)
             logger.debug(
-                "%s.clone_links() linked extension %s to LLMClient %s",
-                logger_prefix,
+                "linked extension %s to LLMClient %s",
                 extension_link.extension,
                 clone.pk,
             )

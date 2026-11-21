@@ -39,8 +39,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 )
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class PluginView(SmarterAuthenticatedAPIView):
@@ -56,8 +55,7 @@ class PluginView(SmarterAuthenticatedAPIView):
         """
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             logger.error(
-                "%s.get() is not allowed because %s switch is inactive.",
-                self.formatted_class_name,
+                "is not allowed because %s switch is inactive.",
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )
             return JsonResponse(
@@ -253,7 +251,7 @@ def get_plugin(request, plugin_id):
         return JsonResponse({"detail": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.get_plugin() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"detail": "An unknown error occurred while loading the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
         )
@@ -303,7 +301,7 @@ def create_plugin(request, data: Optional[SmarterDictType] = None):
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.create_plugin() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while creating the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
         )
@@ -381,7 +379,7 @@ def update_plugin(request: HttpRequest, plugin_id: Optional[int] = None):
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.update_plugin() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while updating the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
         )
@@ -416,7 +414,7 @@ def delete_plugin(request, plugin_id):
         return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.delete_plugin() could not load the plugin", logger_prefix, exc_info=True)
+        logger.error("could not load the plugin", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while loading the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
         )
@@ -424,12 +422,12 @@ def delete_plugin(request, plugin_id):
     try:
         plugin.delete()
     except CLIENT_ERROR_TYPES as e:
-        logger.warning("%s.delete_plugin() refused: %s", logger_prefix, e)
+        logger.warning("refused: %s", e)
         message = client_error_message(e, "The resource could not be deleted.")
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.delete_plugin() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while deleting the plugin."}, status=HTTPStatus.INTERNAL_SERVER_ERROR
         )

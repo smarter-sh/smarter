@@ -5,7 +5,7 @@ import contextlib
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
-from functools import cached_property, wraps
+from functools import wraps
 from http import HTTPStatus
 from typing import (
     Any,
@@ -480,44 +480,14 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
     ###########################################################################
     # Class Instance Properties
     ###########################################################################
-    @cached_property
-    def abstract_broker_logger_cache_invalidation_prefix(self) -> str:
-        """Return the logger prefix for the AbstractBroker cache invalidation.
-
-        It is built once per broker: every log message starts with it.
-
-        :return: The logger prefix for the AbstractBroker.
-        """
-        prefix = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
-        return self.formatted_text_blue(prefix)
-
-    @cached_property
-    def abstract_broker_logger_prefix(self) -> str:
-        """Return the logger prefix for the AbstractBroker.
-
-        It is built once per broker: every log message starts with it.
-
-        :return: The logger prefix for the AbstractBroker.
-        """
-        class_name = f"{__name__}.{AbstractBroker.__name__}[{id(self)}]"
-        return self.formatted_text(class_name)
-
-    # a property, not SmarterHelperMixin's classproperty, so that the prefix has the instance's id.
+    # a property, not SmarterHelperMixin's classproperty, so that the name has the instance's id.
     @property
     def formatted_class_name(self) -> str:  # type: ignore[override]  # pylint: disable=arguments-renamed
-        """Return the logger prefix for the AbstractBroker.
+        """Return the AbstractBroker's formatted class name, with the instance's id.
 
-        :return: The logger prefix for the AbstractBroker.
+        :return: The formatted class name of the AbstractBroker.
         """
-        return self.abstract_broker_logger_prefix
-
-    @property
-    def formatted_class_name_cache_invalidations(self) -> str:
-        """Return the logger prefix for the AbstractBroker cache invalidations.
-
-        :return: The logger prefix for the AbstractBroker cache invalidations.
-        """
-        return self.abstract_broker_logger_cache_invalidation_prefix
+        return self.formatted_text(f"{__name__}.{AbstractBroker.__name__}[{id(self)}]")
 
     @property
     def is_ready_abstract_broker(self) -> bool:
@@ -569,23 +539,19 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         # ---------------------------------------------------------------------
         if not self._name:
             logger.debug(
-                "%s.is_ready_abstract_broker() - Broker name is not set. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
+                "Broker name is not set. Cannot process broker.",
             )
         if not self.srm_ready:
             logger.debug(
-                "%s.is_ready_abstract_broker() - SmarterRequestMixin is not ready. Cannot process broker.",
-                self.abstract_broker_logger_prefix,
+                "SmarterRequestMixin is not ready. Cannot process broker.",
             )
         if not bool(self._manifest):
             logger.debug(
-                "%s.is_ready_abstract_broker() returning false because manifest is not loaded.",
-                self.abstract_broker_logger_prefix,
+                "returning false because manifest is not loaded.",
             )
         if self.manifest_data is None:
             logger.debug(
-                "%s.is_ready_abstract_broker() returning false because there is no manifest data.",
-                self.abstract_broker_logger_prefix,
+                "returning false because there is no manifest data.",
             )
 
         return self._is_ready_abstract_broker
@@ -613,8 +579,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         retval = super().ready
         if not retval:
             logger.warning(
-                "%s.ready() SmarterRequestMixin is not ready for kind=%s",
-                self.abstract_broker_logger_prefix,
+                "SmarterRequestMixin is not ready for kind=%s",
                 self.kind,
             )
             return False
@@ -738,8 +703,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         """
         if value is None:
             logger.warning(
-                "%s.kind_setter() - cannot unset kind. Ignoring this operation.",
-                self.abstract_broker_logger_prefix,
+                "cannot unset kind. Ignoring this operation.",
             )
             return
         if not isinstance(value, str):
@@ -780,7 +744,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             self._name = metadata.get(SAMMetadataKeys.NAME.value)
             if self._name:
                 return self._name
-            logger.warning("%s.name() manifest metadata does not contain a name", self.abstract_broker_logger_prefix)
+            logger.warning("manifest metadata does not contain a name")
         params = self.params
         if isinstance(params, QueryDict):
             name_param = params.get("name", None)
@@ -789,7 +753,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         if not self._name:
             # debug, not warning: commands such as json-schema need no name, and the commands
             # that do (get, describe, delete, ...) fail with their own error (issue #952).
-            logger.debug("%s.name() unable to lazily set name.", self.abstract_broker_logger_prefix)
+            logger.debug("unable to lazily set name.")
         return self._name
 
     def manifest_to_django_orm(self) -> SmarterDictType:
@@ -896,8 +860,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         missing = self.missing_manifest_sections
         if missing:
             logger.debug(
-                "%s.manifest_data - the manifest data has no %s.",
-                self.abstract_broker_logger_prefix,
+                "the manifest data has no %s.",
                 ", ".join(missing),
             )
             return None
@@ -1126,8 +1089,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 return cast(OwnedModelT, owned_object)
             except model_class.MultipleObjectsReturned:
                 logger.error(
-                    "%s.%s() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
-                    self.abstract_broker_logger_prefix,
+                    ".%s() - Multiple %s instances found for name '%s' and user_profile '%s'. Cannot determine which one to use.",
                     caller,
                     model_class.__name__,
                     self.name,
@@ -1139,8 +1101,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    "%s.%s() - unexpected error retrieving %s for %s owned by %s: %s",
-                    self.abstract_broker_logger_prefix,
+                    ".%s() - unexpected error retrieving %s for %s owned by %s: %s",
                     caller,
                     model_class.__name__,
                     self.name,
@@ -1246,8 +1207,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             # build the Pydantic model now, so that an invalid manifest fails here, as the client's error.
             if not self.manifest:
                 logger.warning(
-                    "%s.manifest_setter() - the %s manifest could not be built from the manifest data.",
-                    self.abstract_broker_logger_prefix,
+                    "the %s manifest could not be built from the manifest data.",
                     self.kind,
                 )
             manifest_api_version = value.get(SAMKeys.APIVERSION.value)
@@ -1263,8 +1223,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             self._validated = False
             self._created = False
             logger.warning(
-                "%s.manifest_setter() - manifest is not set after attempt to set it. validated and created flags set to False.",
-                self.abstract_broker_logger_prefix,
+                "manifest is not set after attempt to set it. validated and created flags set to False.",
             )
 
     @property
@@ -1779,8 +1738,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         # any error in the dependent's own data. pylint: disable=W0718
         except Exception as e:
             logger.warning(
-                "%s.dependency_broker() could not initialize the broker of %s %s, which depends on %s %s: %s",
-                self.abstract_broker_logger_prefix,
+                "could not initialize the broker of %s %s, which depends on %s %s: %s",
                 kind,
                 resource_name,
                 self.kind,
@@ -2098,8 +2056,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 )
             except IntegrityError as ie:
                 logger.error(
-                    "%s.get_or_create_secret() IntegrityError creating Secret %s for user %s: %s",
-                    self.abstract_broker_logger_prefix,
+                    "IntegrityError creating Secret %s for user %s: %s",
                     name,
                     user_profile,
                     ie,
@@ -2110,8 +2067,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 ) from ie
             except Exception as create_exception:
                 logger.error(
-                    "%s.get_or_create_secret() Exception creating Secret %s for user %s: %s",
-                    self.abstract_broker_logger_prefix,
+                    "Exception creating Secret %s for user %s: %s",
                     name,
                     user_profile,
                     create_exception,
@@ -2219,8 +2175,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 data[SAMKeys.STATUS.value]["dependencies"] = self.dependencies_status()
             except (SAMBrokerError, SAMValidationError) as e:
                 logger.warning(
-                    "%s.json_response_ok() could not add the dependencies of %s %s to its status: %s",
-                    self.abstract_broker_logger_prefix,
+                    "could not add the dependencies of %s %s to its status: %s",
                     self.kind,
                     self.name,
                     e,
@@ -2350,8 +2305,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
                 fields_and_types.append(item)
             else:
                 logger.warning(
-                    "%s.get_model_titles() skipping field %s: expected dict with str keys and str values but got: %s",
-                    self.abstract_broker_logger_prefix,
+                    "skipping field %s: expected dict with str keys and str values but got: %s",
                     field_name,
                     item,
                 )
@@ -2388,8 +2342,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             retval: Optional[str] = param.strip()
             if not retval:
                 logger.warning(
-                    "%s.clean_cli_param() param <%s> is an empty string, setting to None for url: %s",
-                    self.formatted_class_name,
+                    "param <%s> is an empty string, setting to None for url: %s",
                     param_name,
                     url,
                 )
@@ -2397,8 +2350,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             return retval
 
         logger.warning(
-            "%s.clean_cli_param() param: <%s>. Expected str but got type: %s (%s) for url: %s",
-            self.formatted_class_name,
+            "param: <%s>. Expected str but got type: %s (%s) for url: %s",
             param_name,
             type(param),
             param,
@@ -2407,8 +2359,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
         if isinstance(param, list):
             first_element = param[0]
             logger.warning(
-                "%s.clean_cli_param() set param <%s> to first element of list: %s for url: %s",
-                self.formatted_class_name,
+                "set param <%s> to first element of list: %s for url: %s",
                 param_name,
                 param,
                 url,
@@ -2476,8 +2427,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             # pylint: disable=W0703
             except Exception:
                 logger.warning(
-                    "%s.to_json() - failed to serialize orm_instance: %s",
-                    self.abstract_broker_logger_prefix,
+                    "failed to serialize orm_instance: %s",
                     serialized,
                 )
 
@@ -2529,8 +2479,7 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             "user_profile": self.user_profile,
         }
         logger.debug(
-            "%s.log_abstract_broker_state() %s broker is %s: %s",
-            self.abstract_broker_logger_prefix,
+            "%s broker is %s: %s",
             self.kind,
             self.abstract_broker_ready_state,
             logging.SmarterFormattedText.json(state),

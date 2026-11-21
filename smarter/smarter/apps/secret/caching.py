@@ -41,7 +41,6 @@ from .models import Secret
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.SECRET_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @cache_results()

@@ -2,7 +2,7 @@
 Console helpers for formatting output.
 
 :class:`SmarterFormattedText` colors text, JSON and banners with ANSI codes for the logs, e.g.
-``logger_prefix = logging.SmarterFormattedText.text(__name__)``.
+``SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN)``.
 
 This module doesn't import Django, so that modules that load before Django is set up, such
 as :mod:`smarter.common.conf.settings`, can use it. :mod:`smarter.lib.logging` re-exports it.

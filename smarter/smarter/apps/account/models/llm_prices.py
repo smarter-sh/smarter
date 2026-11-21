@@ -106,7 +106,9 @@ class LLMPrices(TimestampedModel):
 
     # pylint: disable=C0115
     class Meta:
-        unique_together = ("charge_type", "provider", "model")
+        constraints = [
+            models.UniqueConstraint(fields=["charge_type", "provider", "model"], name="account_llmprices_unique"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.charge_type} - {self.provider} - {self.model} - {self.price}"

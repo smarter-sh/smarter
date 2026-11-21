@@ -14,8 +14,8 @@ from redis.exceptions import RedisError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
+from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 from .ready import is_database_ready
 from .switches import smarter_waffle_switches
@@ -23,8 +23,7 @@ from .switches import smarter_waffle_switches
 if TYPE_CHECKING:
     from waffle.models import AbstractBaseSwitch
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 
 # Also catch driver-specific DB errors for lower-level connector failures.
 try:
@@ -40,7 +39,6 @@ except ImportError:
     MariaDBOperationalError = None
     MariaDBProgrammingError = None
 
-prefix = f"{logger_prefix}.switch_is_active()"
 
 SWITCH_CACHE_SECONDS = 5
 """
@@ -153,7 +151,9 @@ def create_missing_switch(switch_name: str) -> "AbstractBaseSwitch":
     get_cache().set(switch._cache_key(switch_name), switch)  # pylint: disable=protected-access
     if created:
         logger.info(
-            "%s.create_missing_switch() created missing switch %s, active=%s", logger_prefix, switch_name, switch.active
+            "created missing switch %s, active=%s",
+            switch_name,
+            switch.active,
         )
     return switch
 
@@ -190,22 +190,22 @@ def switch_is_active(switch_name: str) -> bool:
 
     # Prevent model access before Django app registry is ready
     if not apps.ready:
-        logger.warning("%s App registry not ready, assuming switch %s is inactive.", prefix, switch_name)
+        logger.warning("App registry not ready, assuming switch %s is inactive.", switch_name)
         return False
 
     try:
         if not is_database_ready():
-            logger.debug("%s Database not ready, assuming switch %s is inactive.", prefix, switch_name)
+            logger.debug("Database not ready, assuming switch %s is inactive.", switch_name)
             return False
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s Error checking database readiness: %s", prefix, e, exc_info=True)
+        logger.warning("Error checking database readiness: %s", e, exc_info=True)
         return False
     if not isinstance(switch_name, str):
-        logger.error("%s switch_name must be a string, got %s", prefix, type(switch_name).__name__)
+        logger.error("switch_name must be a string, got %s", type(switch_name).__name__)
         return False
     if switch_name not in smarter_waffle_switches.all_set:
-        logger.error("%s switch_name '%s' is not a valid SmarterWaffleSwitches attribute", prefix, switch_name)
+        logger.error("switch_name '%s' is not a valid SmarterWaffleSwitches attribute", switch_name)
         return False
     try:
         try:
@@ -215,18 +215,16 @@ def switch_is_active(switch_name: str) -> bool:
             is_active = switch.is_active()
         except CACHE_EXCEPTIONS as e:
             # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
-            logger.warning("%s the cache failed, reading switch %s from the database: %s", prefix, switch_name, e)
+            logger.warning("the cache failed, reading switch %s from the database: %s", switch_name, e)
             is_active = switch_from_database(switch_name)
         _switch_cache[switch_name] = (is_active, time.monotonic() + SWITCH_CACHE_SECONDS)
         return is_active
     except DB_CONNECTION_EXCEPTIONS as e:
         # one line, no traceback: the database being away is an outage to report, not a bug to debug.
-        logger.warning("%s the database is unavailable, assuming switch %s is inactive: %s", prefix, switch_name, e)
+        logger.warning("the database is unavailable, assuming switch %s is inactive: %s", switch_name, e)
         return False
     except SWITCH_NOT_READY_EXCEPTIONS as e:
-        logger.error(
-            "%s Database not ready, App Registry not ready, or switch does not exist: %s", prefix, e, exc_info=True
-        )
+        logger.error("Database not ready, App Registry not ready, or switch does not exist: %s", e, exc_info=True)
         return False
 
 

@@ -18,7 +18,6 @@ from django.core.exceptions import AppRegistryNotReady
 
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
@@ -50,9 +49,6 @@ def should_log(level: int) -> bool:
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-
-logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterValidator"
 
 
 # pylint: disable=R0904
@@ -147,7 +143,7 @@ class SmarterValidator:
             SmarterValidator.validate_camel_case("myCamelCase")  # returns "myCamelCase"
             SmarterValidator.validate_camel_case("NotCamelCase")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_camel_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         if not re.match(SmarterValidator.VALID_CAMEL_CASE, value):
             raise SmarterValueError(f"Invalid camel case {value}")
         if not value:
@@ -177,12 +173,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_camel_case("myCamelCase")  # returns True
             SmarterValidator.is_valid_camel_case("NotCamelCase")  # returns False
         """
-        logger.debug("%s.is_valid_camel_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             SmarterValidator.validate_camel_case(value)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_camel_case() invalid %s", logger_prefix, value)
+            logger.debug("invalid %s", value)
             return False
 
     @staticmethod
@@ -201,7 +197,7 @@ class SmarterValidator:
             SmarterValidator.validate_snake_case("my_snake_case")  # returns None
             SmarterValidator.validate_snake_case("NotSnakeCase")   # raises SmarterValueError
         """
-        logger.debug("%s.validate_snake_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         if not value:
             raise SmarterValueError("Value cannot be empty")
         if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
@@ -227,12 +223,12 @@ class SmarterValidator:
         constructing a ``SmarterValueError`` logs an error, and a value that is not snake case
         is an expected answer here, e.g. when the drf 0004 migration finds names to convert.
         """
-        logger.debug("%s.is_valid_snake_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         valid = False
         if value:
             valid = re.match(SmarterValidator.VALID_SNAKE_CASE, value) is not None
         if not valid:
-            logger.debug("%s.is_valid_snake_case() invalid %s", logger_prefix, value)
+            logger.debug("invalid %s", value)
         return valid
 
     @staticmethod
@@ -251,7 +247,7 @@ class SmarterValidator:
             SmarterValidator.validate_pascal_case("MyPascalCase")  # returns "MyPascalCase"
             SmarterValidator.validate_pascal_case("notPascalCase") # raises SmarterValueError
         """
-        logger.debug("%s.validate_pascal_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         if not re.match(SmarterValidator.VALID_PASCAL_CASE, value):
             raise SmarterValueError(f"Invalid pascal case {value}")
         if not value:
@@ -283,12 +279,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_pascal_case("MyPascalCase")  # returns True
             SmarterValidator.is_valid_pascal_case("notPascalCase") # returns False
         """
-        logger.debug("%s.is_valid_pascal_case() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             SmarterValidator.validate_pascal_case(value)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_pascal_case() invalid %s", logger_prefix, value)
+            logger.debug("invalid %s", value)
             return False
 
     @staticmethod
@@ -307,7 +303,7 @@ class SmarterValidator:
             SmarterValidator.validate_json('{"key": "value"}')  # returns '{"key": "value"}'
             SmarterValidator.validate_json('not json')          # raises SmarterValueError
         """
-        logger.debug("%s.validate_json() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             if not isinstance(value, str):
                 raise SmarterValueError("Value must be a string")
@@ -333,12 +329,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_json('{"key": "value"}')  # returns True
             SmarterValidator.is_valid_json('not json')          # returns False
         """
-        logger.debug("%s.is_valid_json() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             SmarterValidator.validate_json(value)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_json() invalid %s", logger_prefix, value)
+            logger.debug("invalid %s", value)
             return False
 
     @staticmethod
@@ -357,7 +353,7 @@ class SmarterValidator:
             SmarterValidator.validate_semantic_version("1.2.3")    # returns "1.2.3"
             SmarterValidator.validate_semantic_version("1.2")      # raises SmarterValueError
         """
-        logger.debug("%s.validate_semantic_version() %s", logger_prefix, version)
+        logger.debug("%s", version)
         if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, version):
             raise SmarterValueError(f"Invalid semantic version {version}")
         return version
@@ -377,12 +373,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_semantic_version("1.2.3")    # returns True
             SmarterValidator.is_valid_semantic_version("1.2")      # returns False
         """
-        logger.debug("%s.is_valid_semantic_version() %s", logger_prefix, version)
+        logger.debug("%s", version)
         try:
             SmarterValidator.validate_semantic_version(version)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_semantic_version() invalid %s", logger_prefix, version)
+            logger.debug("invalid %s", version)
             return False
 
     @staticmethod
@@ -401,7 +397,7 @@ class SmarterValidator:
             SmarterValidator.validate_is_not_none("something")  # returns "something"
             SmarterValidator.validate_is_not_none(None)         # raises SmarterValueError
         """
-        logger.debug("%s.validate_is_not_none() %s", logger_prefix, value)
+        logger.debug("%s", value)
         if value is None:
             raise SmarterValueError("Value cannot be None")
         if not value:
@@ -423,12 +419,12 @@ class SmarterValidator:
             SmarterValidator.is_not_none("something")  # returns True
             SmarterValidator.is_not_none(None)         # returns False
         """
-        logger.debug("%s.is_not_none() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             SmarterValidator.validate_is_not_none(value)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_not_none() invalid %s", logger_prefix, value)
+            logger.debug("invalid %s", value)
             return False
 
     @staticmethod
@@ -447,7 +443,7 @@ class SmarterValidator:
             SmarterValidator.validate_session_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")  # returns the session key
             SmarterValidator.validate_session_key("invalid")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_session_key() %s", logger_prefix, session_key)
+        logger.debug("%s", session_key)
         if not re.match(SmarterValidator.VALID_SESSION_KEY, session_key):
             raise SmarterValueError(f"Invalid session key {session_key}")
         return session_key
@@ -468,7 +464,7 @@ class SmarterValidator:
             SmarterValidator.validate_account_number("1234-5678-9012")  # returns "1234-5678-9012"
             SmarterValidator.validate_account_number("invalid")         # raises SmarterValueError
         """
-        logger.debug("%s.validate_account_number() %s", logger_prefix, account_number)
+        logger.debug("%s", account_number)
         if not re.match(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, account_number):
             raise SmarterValueError(f"Invalid account number {account_number}")
         return account_number
@@ -489,7 +485,7 @@ class SmarterValidator:
             SmarterValidator.validate_llmclient_slug("example-slug")  # returns "example-slug"
             SmarterValidator.validate_llmclient_slug("invalid slug")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_llmclient_slug() %s", logger_prefix, slug)
+        logger.debug("%s", slug)
         if not re.match(SmarterValidator.VALID_LLM_CLIENT_SLUG_PATTERN, slug):
             raise SmarterValueError(f"Invalid llmclient slug {slug}")
         return slug
@@ -510,7 +506,7 @@ class SmarterValidator:
             SmarterValidator.validate_username("valid_username")  # returns "valid_username"
             SmarterValidator.validate_username("invalid username") # raises SmarterValueError
         """
-        logger.debug("%s.validate_username() %s", logger_prefix, username)
+        logger.debug("%s", username)
         if not re.match(r"^[a-zA-Z0-9_.-]+$", username):
             raise SmarterValueError(f"Invalid username {username}")
         return username
@@ -531,7 +527,7 @@ class SmarterValidator:
             SmarterValidator.validate_domain("example.com")  # returns "example.com"
             SmarterValidator.validate_domain("invalid_domain")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_domain() %s", logger_prefix, domain)
+        logger.debug("%s", domain)
         if isinstance(domain, str) and domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
             SmarterValidator.validate_hostname(domain.split(":")[0])
             SmarterValidator.validate_url("http://" + domain)
@@ -553,7 +549,7 @@ class SmarterValidator:
             SmarterValidator.validate_email("user@example.com")  # returns "user@example.com"
             SmarterValidator.validate_email("invalid")           # raises SmarterValueError
         """
-        logger.debug("%s.validate_email() %s", logger_prefix, email)
+        logger.debug("%s", email)
 
         if not isinstance(email, str) or not re.match(SmarterValidator.VALID_EMAIL_PATTERN, email):
             raise SmarterValueError(f"Invalid email {email}")
@@ -575,7 +571,7 @@ class SmarterValidator:
             SmarterValidator.validate_ip("192.168.1.1")  # returns "192.168.1.1"
             SmarterValidator.validate_ip("invalid")      # raises SmarterValueError
         """
-        logger.debug("%s.validate_ip() %s", logger_prefix, ip)
+        logger.debug("%s", ip)
         try:
             # pylint: disable=import-outside-toplevel
             from django.core.exceptions import ValidationError
@@ -602,7 +598,7 @@ class SmarterValidator:
             SmarterValidator.validate_port("8080")  # returns "8080"
             SmarterValidator.validate_port("99999") # raises SmarterValueError
         """
-        logger.debug("%s.validate_port() %s", logger_prefix, port)
+        logger.debug("%s", port)
         if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
             raise SmarterValueError(f"Invalid port {port}")
         if not port.isdigit():
@@ -628,7 +624,7 @@ class SmarterValidator:
             SmarterValidator.validate_url_path("/api/v1/resource/")  # returns "/api/v1/resource/"
             SmarterValidator.validate_url_path("invalid_path")       # raises SmarterValueError
         """
-        logger.debug("%s.validate_url_path() %s", logger_prefix, path)
+        logger.debug("%s", path)
         if not path.startswith("/"):
             raise SmarterValueError(f"Invalid URL path {path}. Must start with '/'")
         if not bool(re.fullmatch(r"/[A-Za-z0-9._~!$&'()*+,;=:@/-]*", path)):
@@ -669,7 +665,7 @@ class SmarterValidator:
             SmarterValidator.validate_url("https://example.com")  # returns "https://example.com"
             SmarterValidator.validate_url("invalid_url")          # raises SmarterValueError
         """
-        logger.debug("%s.validate_url() %s", logger_prefix, url)
+        logger.debug("%s", url)
         valid_protocols = ["http", "https"]
         if not url:
             raise SmarterValueError(f"Invalid url {url}")
@@ -720,7 +716,7 @@ class SmarterValidator:
             SmarterValidator.validate_hostname("example.com")  # returns "example.com"
             SmarterValidator.validate_hostname("invalid_hostname!")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_hostname() %s", logger_prefix, hostname)
+        logger.debug("%s", hostname)
         # Accept Django wildcard hostnames starting with a dot (e.g., .api.localhost)
         if hostname.startswith("."):
             # Allow leading dot for ALLOWED_HOSTS wildcard, validate the rest
@@ -763,7 +759,7 @@ class SmarterValidator:
             SmarterValidator.validate_uuid("123e4567-e89b-12d3-a456-426614174000")  # returns the UUID
             SmarterValidator.validate_uuid("invalid")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_uuid() %s", logger_prefix, uuid)
+        logger.debug("%s", uuid)
         if not re.match(SmarterValidator.VALID_UUID_PATTERN, uuid):
             raise SmarterValueError(f"Invalid UUID {uuid}")
         return uuid
@@ -784,7 +780,7 @@ class SmarterValidator:
             SmarterValidator.validate_clean_string("valid_string-123")  # returns "valid_string-123"
             SmarterValidator.validate_clean_string("invalid string!")   # raises SmarterValueError
         """
-        logger.debug("%s.validate_clean_string() %s", logger_prefix, v)
+        logger.debug("%s", v)
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             raise SmarterValueError(f"Invalid clean string {v}")
         return v
@@ -805,7 +801,7 @@ class SmarterValidator:
             SmarterValidator.validate_http_request_header_key("X-Custom-Header")  # returns "X-Custom-Header"
             SmarterValidator.validate_http_request_header_key("Invalid Header!")  # raises SmarterValueError
         """
-        logger.debug("%s.validate_http_request_header_key() %s", logger_prefix, key)
+        logger.debug("%s", key)
         if not key.isascii() or not re.match(r"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$", key):
             raise SmarterValueError("Header name contains invalid characters or is not ASCII.")
         return key
@@ -821,7 +817,7 @@ class SmarterValidator:
         :raises SmarterValueError: If the header value contains invalid characters.
         :returns: The validated header value.
         """
-        logger.debug("%s.validate_http_request_header_value() %s", logger_prefix, value)
+        logger.debug("%s", value)
         if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
             raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
         return value
@@ -844,12 +840,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_http_request_header_key("X-Custom-Header")  # returns True
             SmarterValidator.is_valid_http_request_header_key("Invalid Header!")  # returns False
         """
-        logger.debug("%s.is_valid_http_request_header_key() %s", logger_prefix, key)
+        logger.debug("%s", key)
         try:
             SmarterValidator.validate_http_request_header_key(key)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_http_request_header_key() invalid %s", logger_prefix, key)
+            logger.debug("invalid %s", key)
             return False
 
     @staticmethod
@@ -862,12 +858,15 @@ class SmarterValidator:
         :param value: The HTTP header value to check.
         :returns: True if the header value is valid, otherwise False.
         """
-        logger.debug("%s.is_valid_http_request_header_value() %s", logger_prefix, value)
+        logger.debug("%s", value)
         try:
             SmarterValidator.validate_http_request_header_value(value)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_http_request_header_value() invalid %s", logger_prefix, value)
+            logger.debug(
+                "invalid %s",
+                value,
+            )
             return False
 
     @staticmethod
@@ -885,12 +884,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_session_key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")  # returns True
             SmarterValidator.is_valid_session_key("invalid")  # returns False
         """
-        logger.debug("%s.is_valid_session_key() %s", logger_prefix, session_key)
+        logger.debug("%s", session_key)
         try:
             SmarterValidator.validate_session_key(session_key)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_session_key() invalid %s", logger_prefix, session_key)
+            logger.debug("invalid %s", session_key)
             return False
 
     @staticmethod
@@ -908,12 +907,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_account_number("1234-5678-9012")  # returns True
             SmarterValidator.is_valid_account_number("invalid")         # returns False
         """
-        logger.debug("%s.is_valid_account_number() %s", logger_prefix, account_number)
+        logger.debug("%s", account_number)
         try:
             SmarterValidator.validate_account_number(account_number)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_account_number() invalid %s", logger_prefix, account_number)
+            logger.debug("invalid %s", account_number)
             return False
 
     @staticmethod
@@ -931,12 +930,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_llmclient_slug("example-slug")  # returns True
             SmarterValidator.is_valid_llmclient_slug("invalid slug")  # returns False
         """
-        logger.debug("%s.is_valid_llmclient_slug() %s", logger_prefix, slug)
+        logger.debug("%s", slug)
         try:
             SmarterValidator.validate_llmclient_slug(slug)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_llmclient_slug() invalid %s", logger_prefix, slug)
+            logger.debug("invalid %s", slug)
             return False
 
     @staticmethod
@@ -954,12 +953,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_username("valid_username")  # returns True
             SmarterValidator.is_valid_username("invalid username") # returns False
         """
-        logger.debug("%s.is_valid_username() %s", logger_prefix, username)
+        logger.debug("%s", username)
         try:
             SmarterValidator.validate_username(username)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_username() invalid %s", logger_prefix, username)
+            logger.debug("invalid %s", username)
             return False
 
     @staticmethod
@@ -977,12 +976,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_domain("example.com")      # returns True
             SmarterValidator.is_valid_domain("invalid_domain")   # returns False
         """
-        logger.debug("%s.is_valid_domain() %s", logger_prefix, domain)
+        logger.debug("%s", domain)
         try:
             SmarterValidator.validate_domain(domain)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_domain() invalid %s", logger_prefix, domain)
+            logger.debug("invalid %s", domain)
             return False
 
     @staticmethod
@@ -1000,12 +999,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_email("user@example.com")  # returns True
             SmarterValidator.is_valid_email("invalid")           # returns False
         """
-        logger.debug("%s.is_valid_email() %s", logger_prefix, email)
+        logger.debug("%s", email)
         try:
             SmarterValidator.validate_email(email)
             return True
         except (SmarterValueError, ValueError):
-            logger.debug("%s.is_valid_email() invalid %s", logger_prefix, email)
+            logger.debug("invalid %s", email)
             return False
 
     @staticmethod
@@ -1023,12 +1022,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_ip("192.168.1.1")  # returns True
             SmarterValidator.is_valid_ip("invalid")      # returns False
         """
-        logger.debug("%s.is_valid_ip() %s", logger_prefix, ip)
+        logger.debug("%s", ip)
         try:
             SmarterValidator.validate_ip(ip)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_ip() invalid %s", logger_prefix, ip)
+            logger.debug("invalid %s", ip)
             return False
 
     @staticmethod
@@ -1046,12 +1045,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_port("8080")  # returns True
             SmarterValidator.is_valid_port("invalid")  # returns False
         """
-        logger.debug("%s.is_valid_port() %s", logger_prefix, port)
+        logger.debug("%s", port)
         try:
             SmarterValidator.validate_port(port)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_port() invalid %s", logger_prefix, port)
+            logger.debug("invalid %s", port)
             return False
 
     @staticmethod
@@ -1069,12 +1068,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_url("https://example.com")  # returns True
             SmarterValidator.is_valid_url("invalid_url")          # returns False
         """
-        logger.debug("%s.is_valid_url() %s", logger_prefix, url)
+        logger.debug("%s", url)
         try:
             SmarterValidator.validate_url(url)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_url() invalid %s", logger_prefix, url)
+            logger.debug("invalid %s", url)
             return False
 
     @staticmethod
@@ -1092,12 +1091,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_url_path("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_valid_url_path("invalid_url_path")                     # returns False
         """
-        logger.debug("%s.is_valid_url_path() %s", logger_prefix, url_path)
+        logger.debug("%s", url_path)
         try:
             SmarterValidator.validate_url_path(url_path)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_url_path() invalid %s", logger_prefix, url_path)
+            logger.debug("invalid %s", url_path)
             return False
 
     @staticmethod
@@ -1115,12 +1114,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_hostname("example.com")         # returns True
             SmarterValidator.is_valid_hostname("invalid_hostname!")   # returns False
         """
-        logger.debug("%s.is_valid_hostname() %s", logger_prefix, hostname)
+        logger.debug("%s", hostname)
         try:
             SmarterValidator.validate_hostname(hostname)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_hostname() invalid %s", logger_prefix, hostname)
+            logger.debug("invalid %s", hostname)
             return False
 
     @staticmethod
@@ -1138,12 +1137,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_uuid("123e4567-e89b-12d3-a456-426614174000")  # returns True
             SmarterValidator.is_valid_uuid("invalid")                                # returns False
         """
-        logger.debug("%s.is_valid_uuid() %s", logger_prefix, uuid)
+        logger.debug("%s", uuid)
         try:
             SmarterValidator.validate_uuid(uuid)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_uuid() invalid %s", logger_prefix, uuid)
+            logger.debug("invalid %s", uuid)
             return False
 
     @staticmethod
@@ -1161,12 +1160,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_cleanstring("valid_string-123")  # returns True
             SmarterValidator.is_valid_cleanstring("invalid string!")   # returns False
         """
-        logger.debug("%s.is_valid_cleanstring() %s", logger_prefix, v)
+        logger.debug("%s", v)
         try:
             SmarterValidator.validate_clean_string(v)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_cleanstring() invalid %s", logger_prefix, v)
+            logger.debug("invalid %s", v)
             return False
 
     @staticmethod
@@ -1184,12 +1183,12 @@ class SmarterValidator:
             SmarterValidator.is_valid_url_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_valid_url_endpoint("/api/v1/tests/unauthenticated/list")   # returns False
         """
-        logger.debug("%s.is_valid_url_endpoint() %s", logger_prefix, url)
+        logger.debug("%s", url)
         try:
             SmarterValidator.validate_url_endpoint(url)
             return True
         except SmarterValueError:
-            logger.debug("%s.is_valid_url_endpoint() invalid %s", logger_prefix, url)
+            logger.debug("invalid %s", url)
             return False
 
     @staticmethod
@@ -1207,7 +1206,7 @@ class SmarterValidator:
             SmarterValidator.is_api_endpoint("/api/v1/tests/unauthenticated/list/")  # returns True
             SmarterValidator.is_api_endpoint("/v1/tests/unauthenticated/list/")      # returns False
         """
-        logger.debug("%s.is_api_endpoint() %s", logger_prefix, url)
+        logger.debug("%s", url)
         if not isinstance(url, str):
             return False
 
@@ -1220,7 +1219,7 @@ class SmarterValidator:
                 # checks for api subdomain in base url: api.example.com
                 return True
         except SmarterValueError:
-            logger.debug("%s.is_api_endpoint() invalid %s", logger_prefix, url)
+            logger.debug("invalid %s", url)
             return False
 
         return False
@@ -1244,7 +1243,7 @@ class SmarterValidator:
             SmarterValidator.validate_url_endpoint("/api/v1/tests/unauthenticated/list/")  # returns None
             SmarterValidator.validate_url_endpoint("/api/v1/tests/unauthenticated/list")   # raises SmarterValueError
         """
-        logger.debug("%s.validate_url_endpoint() %s", logger_prefix, url)
+        logger.debug("%s", url)
         if not re.match(SmarterValidator.VALID_URL_ENDPOINT, url):
             raise SmarterValueError(f"URL endpoint '{url}' contains invalid characters.")
         if not url.startswith("/"):
@@ -1268,7 +1267,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_account_numbers(["1234-5678-9012", "2345-6789-0123"])  # returns None
             SmarterValidator.validate_list_of_account_numbers(["invalid", "2345-6789-0123"])         # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_account_numbers() %s", logger_prefix, account_numbers)
+        logger.debug("%s", account_numbers)
         for account_number in account_numbers:
             SmarterValidator.validate_account_number(account_number)
 
@@ -1288,7 +1287,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_domains(["example.com", "test.com"])  # returns None
             SmarterValidator.validate_list_of_domains(["invalid_domain", "test.com"])  # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_domains() %s", logger_prefix, domains)
+        logger.debug("%s", domains)
         for domain in domains:
             SmarterValidator.validate_domain(domain)
 
@@ -1308,7 +1307,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_emails(["user@example.com", "admin@test.com"])  # returns None
             SmarterValidator.validate_list_of_emails(["invalid", "admin@test.com"])           # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_emails() %s", logger_prefix, emails)
+        logger.debug("%s", emails)
         for email in emails:
             SmarterValidator.validate_email(email)
 
@@ -1328,7 +1327,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_ips(["192.168.1.1", "10.0.0.1"])  # returns None
             SmarterValidator.validate_list_of_ips(["invalid", "10.0.0.1"])      # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_ips() %s", logger_prefix, ips)
+        logger.debug("%s", ips)
         for ip in ips:
             SmarterValidator.validate_ip(ip)
 
@@ -1348,7 +1347,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_ports(["8080", "443"])    # returns None
             SmarterValidator.validate_list_of_ports(["invalid", "443"]) # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_ports() %s", logger_prefix, ports)
+        logger.debug("%s", ports)
         for port in ports:
             SmarterValidator.validate_port(port)
 
@@ -1368,7 +1367,7 @@ class SmarterValidator:
             SmarterValidator.validate_list_of_urls(["https://example.com", "https://test.com"])  # returns None
             SmarterValidator.validate_list_of_urls(["invalid_url", "https://test.com"])          # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_urls() %s", logger_prefix, urls)
+        logger.debug("%s", urls)
         for url in urls:
             SmarterValidator.validate_url(url)
 
@@ -1395,7 +1394,7 @@ class SmarterValidator:
                 "987e6543-e21b-12d3-a456-426614174111"
             ])  # raises SmarterValueError
         """
-        logger.debug("%s.validate_list_of_uuids() %s", logger_prefix, uuids)
+        logger.debug("%s", uuids)
         for uuid in uuids:
             SmarterValidator.validate_uuid(uuid)
 
@@ -1417,7 +1416,7 @@ class SmarterValidator:
             SmarterValidator.base_domain("https://example.com/path/")  # returns "example.com"
             SmarterValidator.base_domain("")                           # returns None
         """
-        logger.debug("%s.base_domain() %s", logger_prefix, url)
+        logger.debug("%s", url)
         if not url:
             return None
         base_url = SmarterValidator.base_url(url)
@@ -1441,7 +1440,7 @@ class SmarterValidator:
             SmarterValidator.base_url("https://example.com/path/")  # returns "https://example.com"
             SmarterValidator.base_url("")                           # returns None
         """
-        logger.debug("%s.base_url() %s", logger_prefix, url)
+        logger.debug("%s", url)
         if not url:
             return None
         SmarterValidator.validate_url(url)
@@ -1465,7 +1464,7 @@ class SmarterValidator:
             SmarterValidator.trailing_slash("https://example.com/")  # returns "https://example.com/"
             SmarterValidator.trailing_slash("")                      # returns None
         """
-        logger.debug("%s.trailing_slash() %s", logger_prefix, url)
+        logger.debug("%s", url)
         if not url:
             return None
         return url if url.endswith("/") else url + "/"
@@ -1486,7 +1485,7 @@ class SmarterValidator:
             SmarterValidator.leading_slash("/api/v1/resource/")  # returns "/api/v1/resource/"
             SmarterValidator.leading_slash("")                    # returns None
         """
-        logger.debug("%s.leading_slash() %s", logger_prefix, path)
+        logger.debug("%s", path)
         if not path:
             return None
         return path if path.startswith("/") else "/" + path
@@ -1511,7 +1510,7 @@ class SmarterValidator:
             SmarterValidator.urlify("example.com", environment=SmarterEnvironments.PROD) # returns "https://example.com/"
             SmarterValidator.urlify("https://example.com")                               # returns "https://example.com/"
         """
-        logger.debug("%s.urlify() %s, %s", logger_prefix, url, scheme)
+        logger.debug("%s, %s", url, scheme)
         if not url:
             raise SmarterValueError("URL cannot be empty")
         if scheme:

@@ -33,7 +33,6 @@ from smarter.lib.openai.model_quirks import (
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CLIENT_TIMEOUT = 15.0
 
@@ -237,8 +236,7 @@ class OpenAIGuardrailClient:
             if "temperature" not in kwargs or rejected_parameter(e) != "temperature":
                 raise
             logger.warning(
-                "%s.create_judge_completion() model %s rejected temperature=%s. Retrying with its default temperature.",
-                logger_prefix,
+                "model %s rejected temperature=%s. Retrying with its default temperature.",
                 kwargs["model"],
                 kwargs["temperature"],
             )

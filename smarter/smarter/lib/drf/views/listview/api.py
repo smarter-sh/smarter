@@ -70,8 +70,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not authtoken_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. authtoken_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. authtoken_id: %s, new_name: %s",
                 authtoken_id,
                 new_name,
             )
@@ -80,9 +79,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             authtoken = AuthToken.objects.with_read_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
-            logger.warning(
-                "%s.post() AuthToken with id %s not found for cloning.", self.formatted_class_name, authtoken_id
-            )
+            logger.warning("AuthToken with id %s not found for cloning.", authtoken_id)
             return JsonResponse({"error": f"AuthToken with id {authtoken_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -93,8 +90,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning AuthToken with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning AuthToken with id %s: %s",
                 authtoken_id,
                 e,
             )
@@ -103,8 +99,7 @@ class AuthTokenListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning AuthToken with id %s",
-                self.formatted_class_name,
+                "Error cloning AuthToken with id %s",
                 authtoken_id,
                 exc_info=True,
             )
@@ -140,15 +135,13 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         authtoken_id = kwargs.get("authtoken_id")
         if not authtoken_id:
-            logger.warning("%s.post() Missing required parameter authtoken_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter authtoken_id for deletion.")
             return JsonResponse({"error": "authtoken_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
-            logger.warning(
-                "%s.post() AuthToken with id %s not found for deletion.", self.formatted_class_name, authtoken_id
-            )
+            logger.warning("AuthToken with id %s not found for deletion.", authtoken_id)
             return JsonResponse({"error": f"AuthToken with id {authtoken_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -159,8 +152,7 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting AuthToken with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting AuthToken with id %s: %s",
                 authtoken_id,
                 e,
             )
@@ -169,8 +161,7 @@ class AuthTokenListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting AuthToken with id %s",
-                self.formatted_class_name,
+                "Error deleting AuthToken with id %s",
                 authtoken_id,
                 exc_info=True,
             )
@@ -211,8 +202,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not authtoken_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. authtoken_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. authtoken_id: %s, new_name: %s",
                 authtoken_id,
                 new_name,
             )
@@ -221,9 +211,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             authtoken = AuthToken.objects.with_ownership_permission_for(self.user_profile.user).get(key_id=authtoken_id)  # type: ignore
         except AuthToken.DoesNotExist:
-            logger.warning(
-                "%s.post() AuthToken with id %s not found for renaming.", self.formatted_class_name, authtoken_id
-            )
+            logger.warning("AuthToken with id %s not found for renaming.", authtoken_id)
             return JsonResponse({"error": f"AuthToken with id {authtoken_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -234,8 +222,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming AuthToken with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming AuthToken with id %s: %s",
                 authtoken_id,
                 e,
             )
@@ -244,8 +231,7 @@ class AuthTokenListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming AuthToken with id %s",
-                self.formatted_class_name,
+                "Error renaming AuthToken with id %s",
                 authtoken_id,
                 exc_info=True,
             )

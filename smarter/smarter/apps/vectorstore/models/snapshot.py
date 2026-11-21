@@ -33,7 +33,7 @@ class VectorstoreSnapshot(TimestampedModel):
     vectorstore = models.ForeignKey(VectorstoreMeta, on_delete=models.CASCADE, related_name="snapshots")
     name = models.CharField(max_length=255, help_text="The snapshot's name, or the backup's id, in the backend.")
     status = models.CharField(
-        max_length=10, choices=VectorstoreSnapshotStatus.choices, default=VectorstoreSnapshotStatus.CREATING
+        max_length=10, choices=VectorstoreSnapshotStatus, default=VectorstoreSnapshotStatus.CREATING
     )
     status_message = models.TextField(blank=True, default="")
     size_bytes = models.PositiveBigIntegerField(null=True, blank=True)

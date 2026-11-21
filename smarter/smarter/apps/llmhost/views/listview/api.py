@@ -101,8 +101,7 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not llmhost_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llmhost_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. llmhost_id: %s, new_name: %s",
                 llmhost_id,
                 new_name,
             )
@@ -111,7 +110,7 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             llmhost = LLMHost.objects.with_read_permission_for(self.user_profile.user).get(id=llmhost_id)  # type: ignore
         except LLMHost.DoesNotExist:
-            logger.warning("%s.post() LLMHost with id %s not found for cloning.", self.formatted_class_name, llmhost_id)
+            logger.warning("LLMHost with id %s not found for cloning.", llmhost_id)
             return JsonResponse({"error": f"LLMHost with id {llmhost_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -122,8 +121,7 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning LLMHost with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning LLMHost with id %s: %s",
                 llmhost_id,
                 e,
             )
@@ -132,8 +130,7 @@ class LLMHostListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning LLMHost with id %s",
-                self.formatted_class_name,
+                "Error cloning LLMHost with id %s",
                 llmhost_id,
                 exc_info=True,
             )
@@ -173,15 +170,13 @@ class LLMHostListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         llmhost_id = kwargs.get("llmhost_id")
         if not llmhost_id:
-            logger.warning("%s.post() Missing required parameter llmhost_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter llmhost_id for deletion.")
             return JsonResponse({"error": "llmhost_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             llmhost = LLMHost.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmhost_id)  # type: ignore
         except LLMHost.DoesNotExist:
-            logger.warning(
-                "%s.post() LLMHost with id %s not found for deletion.", self.formatted_class_name, llmhost_id
-            )
+            logger.warning("LLMHost with id %s not found for deletion.", llmhost_id)
             return JsonResponse({"error": f"LLMHost with id {llmhost_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -192,8 +187,7 @@ class LLMHostListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting LLMHost with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting LLMHost with id %s: %s",
                 llmhost_id,
                 e,
             )
@@ -202,8 +196,7 @@ class LLMHostListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting LLMHost with id %s",
-                self.formatted_class_name,
+                "Error deleting LLMHost with id %s",
                 llmhost_id,
                 exc_info=True,
             )
@@ -246,8 +239,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not llmhost_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. llmhost_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. llmhost_id: %s, new_name: %s",
                 llmhost_id,
                 new_name,
             )
@@ -256,9 +248,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             llmhost = LLMHost.objects.with_ownership_permission_for(self.user_profile.user).get(id=llmhost_id)  # type: ignore
         except LLMHost.DoesNotExist:
-            logger.warning(
-                "%s.post() LLMHost with id %s not found for renaming.", self.formatted_class_name, llmhost_id
-            )
+            logger.warning("LLMHost with id %s not found for renaming.", llmhost_id)
             return JsonResponse({"error": f"LLMHost with id {llmhost_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -269,8 +259,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming LLMHost with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming LLMHost with id %s: %s",
                 llmhost_id,
                 e,
             )
@@ -279,8 +268,7 @@ class LLMHostListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming LLMHost with id %s",
-                self.formatted_class_name,
+                "Error renaming LLMHost with id %s",
                 llmhost_id,
                 exc_info=True,
             )
@@ -329,8 +317,7 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not compute_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llmhost_compute_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. llmhost_compute_id: %s, new_name: %s",
                 compute_id,
                 new_name,
             )
@@ -341,7 +328,7 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             compute = LLMHostCompute.objects.with_read_permission_for(self.user_profile.user).get(id=compute_id)  # type: ignore
         except LLMHostCompute.DoesNotExist:
-            logger.warning("%s.post() LLMHostCompute with id %s not found.", self.formatted_class_name, compute_id)
+            logger.warning("LLMHostCompute with id %s not found.", compute_id)
             return JsonResponse(
                 {"error": f"LLMHostCompute with id {compute_id} not found."}, status=HTTPStatus.NOT_FOUND
             )
@@ -353,8 +340,7 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(LLMHostComputeSerializer(cloned, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning LLMHostCompute with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning LLMHostCompute with id %s: %s",
                 compute_id,
                 e,
             )
@@ -363,8 +349,7 @@ class LLMHostComputeListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning LLMHostCompute with id %s",
-                self.formatted_class_name,
+                "Error cloning LLMHostCompute with id %s",
                 compute_id,
                 exc_info=True,
             )
@@ -398,13 +383,13 @@ class LLMHostComputeListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         compute_id = kwargs.get("llmhost_compute_id")
         if not compute_id:
-            logger.warning("%s.post() Missing required parameter llmhost_compute_id.", self.formatted_class_name)
+            logger.warning("Missing required parameter llmhost_compute_id.")
             return JsonResponse({"error": "llmhost_compute_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             compute = LLMHostCompute.objects.with_ownership_permission_for(self.user_profile.user).get(id=compute_id)  # type: ignore
         except LLMHostCompute.DoesNotExist:
-            logger.warning("%s.post() LLMHostCompute with id %s not found.", self.formatted_class_name, compute_id)
+            logger.warning("LLMHostCompute with id %s not found.", compute_id)
             return JsonResponse(
                 {"error": f"LLMHostCompute with id {compute_id} not found."}, status=HTTPStatus.NOT_FOUND
             )
@@ -427,8 +412,7 @@ class LLMHostComputeListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting LLMHostCompute with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting LLMHostCompute with id %s: %s",
                 compute_id,
                 e,
             )
@@ -437,8 +421,7 @@ class LLMHostComputeListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting LLMHostCompute with id %s",
-                self.formatted_class_name,
+                "Error deleting LLMHostCompute with id %s",
                 compute_id,
                 exc_info=True,
             )
@@ -474,8 +457,7 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not compute_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. llmhost_compute_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. llmhost_compute_id: %s, new_name: %s",
                 compute_id,
                 new_name,
             )
@@ -486,7 +468,7 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             compute = LLMHostCompute.objects.with_ownership_permission_for(self.user_profile.user).get(id=compute_id)  # type: ignore
         except LLMHostCompute.DoesNotExist:
-            logger.warning("%s.post() LLMHostCompute with id %s not found.", self.formatted_class_name, compute_id)
+            logger.warning("LLMHostCompute with id %s not found.", compute_id)
             return JsonResponse(
                 {"error": f"LLMHostCompute with id {compute_id} not found."}, status=HTTPStatus.NOT_FOUND
             )
@@ -497,8 +479,7 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(LLMHostComputeSerializer(compute, context={"request": request}).data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming LLMHostCompute with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming LLMHostCompute with id %s: %s",
                 compute_id,
                 e,
             )
@@ -507,8 +488,7 @@ class LLMHostComputeListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming LLMHostCompute with id %s",
-                self.formatted_class_name,
+                "Error renaming LLMHostCompute with id %s",
                 compute_id,
                 exc_info=True,
             )

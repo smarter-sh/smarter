@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 class PromptConfig(AppConfig):
     """Django Config for the OpenAI Function Calling app."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"
     verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
 

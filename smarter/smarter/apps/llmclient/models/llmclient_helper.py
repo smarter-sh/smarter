@@ -143,16 +143,14 @@ class LLMClientHelper(SmarterRequestMixin):
                         self.llmclient = LLMClient.get_cached_object(name=self._name, user_profile=self.user_profile)
                     except LLMClient.DoesNotExist:
                         llmclient_helper_logger.warning(
-                            "%s.__init__() could not find LLMClient with name=%s and user_profile=%s",
-                            self.formatted_class_name,
+                            "could not find LLMClient with name=%s and user_profile=%s",
                             self._name,
                             self.user_profile,
                         )
 
             if not isinstance(self._llmclient, LLMClient):
                 llmclient_helper_logger.warning(
-                    "%s.__init__() did not find a LLMClient for url=%s, name=%s, llmclient_id=%s, user_profile=%s",
-                    self.formatted_class_name,
+                    "did not find a LLMClient for url=%s, name=%s, llmclient_id=%s, user_profile=%s",
                     self.url,
                     self.name,
                     self.llmclient_id,
@@ -164,8 +162,7 @@ class LLMClientHelper(SmarterRequestMixin):
         # is an error.
         if not self.ready:
             llmclient_helper_logger.debug(
-                "%s.__init__() is %s - %s - %s",
-                self.formatted_class_name,
+                "is %s - %s - %s",
                 self.llmclienthelper_ready_state,
                 self.llmclient if self.llmclient else "LLMClient not initialized",
                 self.user_profile if self.user_profile else "UserProfile not initialized",
@@ -364,19 +361,15 @@ class LLMClientHelper(SmarterRequestMixin):
             return False
         if not self.user or not self.user.is_authenticated:
             llmclient_helper_logger.warning(
-                "%s.is_helper_ready() returning false because called with unauthenticated request",
-                self.formatted_class_name,
+                "returning false because called with unauthenticated request",
             )
             return False
         if not self.account:
-            llmclient_helper_logger.warning(
-                "%s.is_helper_ready() returning false because called with no account", self.formatted_class_name
-            )
+            llmclient_helper_logger.warning("returning false because called with no account")
             return False
         if not isinstance(self.name, str):
             llmclient_helper_logger.warning(
-                "%s.is_helper_ready() returning false because did not find a name for the llmclient.",
-                self.formatted_class_name,
+                "returning false because did not find a name for the llmclient.",
             )
             return False
         if not isinstance(self._llmclient, LLMClient):
@@ -542,8 +535,7 @@ class LLMClientHelper(SmarterRequestMixin):
                 return self._llmclient
             except LLMClient.DoesNotExist:
                 llmclient_helper_logger.error(
-                    "%s.llmclient() did not find llmclient for %s name: %s",
-                    self.formatted_class_name,
+                    "did not find llmclient for %s name: %s",
                     self._user_profile,
                     self.name,
                 )

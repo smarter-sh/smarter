@@ -24,7 +24,7 @@ from smarter.lib.typing import SmarterDictType
 
 from .exceptions import SmarterAWSError
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
@@ -87,7 +87,7 @@ class AWSBase(SmarterHelperMixin):
     ):
         super().__init__()
         services.raise_error_on_disabled(services.AWS_CLI)
-        logger.debug("%s.__init__() initializing", self.formatted_class_name)
+        logger.debug("initializing")
 
         self._shared_resource_identifier = shared_resource_identifier or smarter_settings.shared_resource_identifier
         self._environment = environment or smarter_settings.environment
@@ -107,7 +107,7 @@ class AWSBase(SmarterHelperMixin):
         # priority 1: AWS IAM role based security
         if not self.authentication_credentials_are_initialized and self.is_aws_deployed:
             # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
-            logger.debug("%s.__init__() running inside AWS Lambda", self.formatted_class_name)
+            logger.debug("running inside AWS Lambda")
             self._aws_access_key_id_source = "overridden by IAM role-based security"
             self._aws_secret_access_key_source = "overridden by IAM role-based security"
             self._authentication_credentials_are_initialized = True
@@ -147,12 +147,12 @@ class AWSBase(SmarterHelperMixin):
         # priority 4: the pod's IAM role (IRSA). Static credentials win, as they do in boto3's
         # default credential chain, so a pod that has both is labeled with the one it uses.
         if not self.authentication_credentials_are_initialized and self.is_aws_web_identity_configured:
-            logger.debug("%s.__init__() using the pod's IAM role (IRSA)", self.formatted_class_name)
+            logger.debug("using the pod's IAM role (IRSA)")
             self._aws_access_key_id_source = "IAM role for service accounts"
             self._aws_secret_access_key_source = "IAM role for service accounts"
             self._authentication_credentials_are_initialized = True
 
-        msg = f"{self.formatted_class_name}.__init__() is {self.authentication_credentials_state}"
+        msg = f"AWS credentials are {self.authentication_credentials_state}"
         if self.authentication_credentials_are_initialized:
             logger.debug(msg)
         else:
@@ -183,22 +183,19 @@ class AWSBase(SmarterHelperMixin):
             raise SmarterAWSError("Client type is not specified.")
 
         if not self.ready:
-            logger.error("%s.client() AWS session is not ready", self.formatted_class_name)
+            logger.error("AWS session is not ready")
             return None
         try:
-            logger.debug("%s.client() creating AWS %s client", self.formatted_class_name, self.client_type.upper())
+            logger.debug("creating AWS %s client", self.client_type.upper())
             if not isinstance(self.aws_session, boto3.Session):
-                logger.error(
-                    "%s.client() AWS session is not available. Cannot create client.", self.formatted_class_name
-                )
+                logger.error("AWS session is not available. Cannot create client.")
                 return None
             self._client = self.aws_session.client(self.client_type)
-            msg = f"{self.formatted_class_name}.client() {SmarterFormattedText.text(f'AWS Boto {type(self._client).__name__} client created', SmarterFormattedText.BRIGHT_GREEN)}."
+            msg = f"{SmarterFormattedText.text(f'AWS Boto {type(self._client).__name__} client created', SmarterFormattedText.BRIGHT_GREEN)}."
             logger.debug(msg)
         except botocore.exceptions.BotoCoreError as e:
             logger.error(
-                "%s.client() Failed to create AWS %s client: %s",
-                self.formatted_class_name,
+                "Failed to create AWS %s client: %s",
                 self.client_type.upper(),
                 str(e),
             )
@@ -252,23 +249,23 @@ class AWSBase(SmarterHelperMixin):
         if self._identity:
             return self._identity
         if not self.authentication_credentials_are_initialized:
-            logger.warning("%s.identity requested but AWSBase is not initialized", self.formatted_class_name)
+            logger.warning("requested but AWSBase is not initialized")
             return None
 
         try:
-            logger.debug("%s.identity fetching AWS IAM identity", self.formatted_class_name)
+            logger.debug("fetching AWS IAM identity")
             self._identity = self.aws_session.client("sts").get_caller_identity() if self.aws_session else None
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            msg = f"{self.formatted_class_name}.identity {SmarterFormattedText.text('could not fetch AWS IAM identity due to an error', SmarterFormattedText.DARK_RED)}: {e}"
+            msg = f"{SmarterFormattedText.text('could not fetch AWS IAM identity due to an error', SmarterFormattedText.DARK_RED)}: {e}"
             logger.error(msg)
             self._identity = None
 
         if self._identity:
-            msg = f"{self.formatted_class_name}.identity {SmarterFormattedText.text('successfully fetched AWS IAM identity.', SmarterFormattedText.BRIGHT_GREEN)}: {self._identity}"
+            msg = f"{SmarterFormattedText.text('successfully fetched AWS IAM identity.', SmarterFormattedText.BRIGHT_GREEN)}: {self._identity}"
             logger.debug(msg)
         else:
-            msg = f"{self.formatted_class_name}.identity {SmarterFormattedText.text('could not fetch AWS IAM identity.', SmarterFormattedText.DARK_RED)}"
+            msg = f"{SmarterFormattedText.text('could not fetch AWS IAM identity.', SmarterFormattedText.DARK_RED)}"
             logger.error(msg)
         return self._identity
 
@@ -459,9 +456,9 @@ class AWSBase(SmarterHelperMixin):
         if self._aws_session:
             return self._aws_session
 
-        logger.debug("%s.aws_session() establishing AWS boto session", self.formatted_class_name)
+        logger.debug("establishing AWS boto session")
         if not self.authentication_credentials_are_initialized:
-            msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('AWSBase is not initialized', SmarterFormattedText.DARK_RED)}"
+            msg = f"{SmarterFormattedText.text('AWSBase is not initialized', SmarterFormattedText.DARK_RED)}"
             logger.error(msg)
             return None
 
@@ -469,15 +466,15 @@ class AWSBase(SmarterHelperMixin):
             try:
                 self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
             except botocore.exceptions.ProfileNotFound:
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text(f'Unable to establish AWS boto session: aws_profile {self.aws_profile} not found', SmarterFormattedText.DARK_RED)}"
+                msg = f"{SmarterFormattedText.text(f'Unable to establish AWS boto session: aws_profile {self.aws_profile} not found', SmarterFormattedText.DARK_RED)}"
                 logger.error(msg)
 
             if self._aws_session:
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('established AWS boto session using aws_profile', SmarterFormattedText.BRIGHT_GREEN)}: {self.aws_profile}"
+                msg = f"{SmarterFormattedText.text('established AWS boto session using aws_profile', SmarterFormattedText.BRIGHT_GREEN)}: {self.aws_profile}"
                 logger.debug(msg)
                 return self._aws_session
             else:
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('Unable to establish AWS boto session using aws_profile', SmarterFormattedText.DARK_RED)}: {self.aws_profile}"
+                msg = f"{SmarterFormattedText.text('Unable to establish AWS boto session using aws_profile', SmarterFormattedText.DARK_RED)}: {self.aws_profile}"
                 logger.error(msg)
 
         if self.aws_access_key_id is not None and self.aws_secret_access_key is not None:
@@ -488,36 +485,34 @@ class AWSBase(SmarterHelperMixin):
                     aws_secret_access_key=self.aws_secret_access_key,
                 )
             except Exception as e:  # pylint: disable=broad-exception-caught
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('Encountered an error while attempting to establish AWS boto session using aws key-pair', SmarterFormattedText.DARK_RED)}: {e}"
+                msg = f"{SmarterFormattedText.text('Encountered an error while attempting to establish AWS boto session using aws key-pair', SmarterFormattedText.DARK_RED)}: {e}"
                 logger.error(msg)
 
             if self._aws_session:
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('established AWS boto session using aws key-pair', SmarterFormattedText.BRIGHT_GREEN)}"
+                msg = f"{SmarterFormattedText.text('established AWS boto session using aws key-pair', SmarterFormattedText.BRIGHT_GREEN)}"
                 logger.debug(msg)
                 return self._aws_session
             else:
-                msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('Unable to establish AWS boto session using aws key-pair', SmarterFormattedText.DARK_RED)}"
+                msg = f"{SmarterFormattedText.text('Unable to establish AWS boto session using aws key-pair', SmarterFormattedText.DARK_RED)}"
                 logger.error(msg)
 
         if self.is_aws_deployed or self.is_aws_web_identity_configured:
             # boto3's default credential chain finds the IAM role.
-            logger.debug("%s.aws_session() creating aws_session with the IAM role", self.formatted_class_name)
+            logger.debug("creating aws_session with the IAM role")
         else:
-            logger.warning(
-                "%s.aws_session() creating new aws_session without aws credentials", self.formatted_class_name
-            )
+            logger.warning("creating new aws_session without aws credentials")
 
         try:
             self._aws_session = boto3.Session(region_name=self.aws_region)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            msg = f"{self.formatted_class_name}.aws_session() {SmarterFormattedText.text('Encountered an error while attempting to establish AWS boto session without aws credentials', SmarterFormattedText.DARK_RED)}: {e}"
+            msg = f"{SmarterFormattedText.text('Encountered an error while attempting to establish AWS boto session without aws credentials', SmarterFormattedText.DARK_RED)}: {e}"
             logger.error(msg)
 
         if self._aws_session:
-            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_ready}"
+            msg = f"AWS boto session is {self.formatted_state_ready}"
             logger.debug(msg)
         else:
-            msg = f"{self.formatted_class_name}.aws_session() is {self.formatted_state_not_ready}"
+            msg = f"AWS boto session is {self.formatted_state_not_ready}"
             logger.error(msg)
 
         return self._aws_session

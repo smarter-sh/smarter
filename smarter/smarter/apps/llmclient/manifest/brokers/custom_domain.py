@@ -96,7 +96,10 @@ class SAMCustomDomainBroker(AbstractBroker[LLMClientCustomDomain, LLMClientCusto
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property

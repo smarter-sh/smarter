@@ -107,11 +107,10 @@ class VectorsearchView(ViewBase):
                 self._account = self.vectorsearch.user_profile.account
                 self._user = self.vectorsearch.user_profile.user
                 logger.debug(
-                    "%s.initial() - reinitializing user, account, and user_profile from vectorsearch.user_profile: %s",
-                    self.formatted_class_name,
+                    "reinitializing user, account, and user_profile from vectorsearch.user_profile: %s",
                     self.vectorsearch.user_profile,
                 )
-            logger.debug("%s.initial() - %s %s", self.formatted_class_name, self.vectorsearch, self.user_profile)
+            logger.debug("%s %s", self.vectorsearch, self.user_profile)
 
     def get(self, request: Request, vectorsearch_id: Optional[int] = None):
         """
@@ -146,7 +145,7 @@ class VectorsearchView(ViewBase):
             return JsonResponse({"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.post() failed", self.formatted_class_name, exc_info=True)
+            logger.error("failed", exc_info=True)
             return JsonResponse(
                 {"error": "An unknown error occurred while creating the Vectorsearch."},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -189,7 +188,7 @@ class VectorsearchView(ViewBase):
             return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.patch() failed", self.formatted_class_name, exc_info=True)
+            logger.error("failed", exc_info=True)
             return JsonResponse(
                 {"error": "An unknown error occurred while updating the Vectorsearch."},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -217,12 +216,12 @@ class VectorsearchView(ViewBase):
             if vectorsearch:
                 vectorsearch.delete()
         except CLIENT_ERROR_TYPES as e:
-            logger.warning("%s.delete() refused: %s", self.formatted_class_name, e)
+            logger.warning("refused: %s", e)
             message = client_error_message(e, "The resource could not be deleted.")
             return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.delete() failed", self.formatted_class_name, exc_info=True)
+            logger.error("failed", exc_info=True)
             return JsonResponse(
                 {"error": "An unknown error occurred while deleting the Vectorsearch."},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,

@@ -14,12 +14,10 @@ from smarter.apps.llmclient.prompting import (
 )
 from smarter.apps.prompt.contract.models import PromptChatApiMessage
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
+logger = logging.getSmarterLogger(__name__)
 
 STACKADEMY_LLMCLIENTS = ("stackademy_sql", "stackademy_api")
 """The Stackademy LLMClients, in :data:`~smarter.apps.llmclient.const.STACKADEMY_REPOSITORY_URL`."""
@@ -67,7 +65,7 @@ class Command(SmarterCommand):
 
         account_number = options.get("account_number")
         if not account_number:
-            logger.error("%s account number is required.", logger_prefix)
+            logger.error("account number is required.")
             self.handle_completed_failure(msg="account number is required.")
             return
         try:
@@ -75,12 +73,15 @@ class Command(SmarterCommand):
         except Account.DoesNotExist:
             account = None
         if not account:
-            logger.error("%s Account with account number %s does not exist.", logger_prefix, account_number)
+            logger.error(
+                "Account with account number %s does not exist.",
+                account_number,
+            )
             self.handle_completed_failure(msg=f"Account with account number {account_number} does not exist.")
             return
         admin_user = get_cached_admin_user_for_account(account=account)
         if not admin_user:
-            logger.error("%s No admin user found for account %s.", logger_prefix, account_number)
+            logger.error("No admin user found for account %s.", account_number)
             self.handle_completed_failure(msg=f"No admin user found for account {account_number}.")
             return
 
@@ -119,7 +120,7 @@ class Command(SmarterCommand):
         :param token_key: An api key of the owner.
         :raises CommandError: If the LLMClient doesn't work.
         """
-        logger.debug("%s.verify_llmclient() verifying LLMClient %s", logger_prefix, name)
+        logger.debug("verifying LLMClient %s", name)
         try:
             llmclient = LLMClient.objects.get(name=name, user_profile=user_profile)
         except LLMClient.DoesNotExist as e:
@@ -140,7 +141,7 @@ class Command(SmarterCommand):
         if not answers:
             raise CommandError(f"LLMClient {name} did not answer '{VERIFICATION_PROMPT}'.")
 
-        logger.debug("%s.verify_llmclient() LLMClient %s works.", logger_prefix, name)
+        logger.debug("LLMClient %s works.", name)
         self.stdout.write(self.style.SUCCESS(f"LLMClient {name} works: its plugin returned course catalogue data."))
 
     @staticmethod

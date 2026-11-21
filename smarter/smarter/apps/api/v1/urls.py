@@ -82,7 +82,7 @@ from .cli.const import namespace as cli_namespace
 from .const import namespace
 from .demos.const import namespace as demos_namespace
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 app_name = namespace
 
@@ -134,23 +134,19 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
-    logger.debug("%s Proxy API endpoints are %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY)
+    logger.debug("Proxy API endpoints are %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Proxy API endpoints are %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
         SmarterReadyState.NOT_READY,
     )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstores/", include(vectorstore_urls, namespace="vectorstore")),
     ]
-    logger.debug(
-        "%s Vectorstore API endpoints are %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
-    )
+    logger.debug("Vectorstore API endpoints are %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Vectorstore API endpoints are %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Vectorstore API endpoints are %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
         SmarterReadyState.NOT_READY,
     )

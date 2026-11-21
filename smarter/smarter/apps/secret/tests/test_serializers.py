@@ -3,7 +3,6 @@
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.serializers import SecretSerializer
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .factories import (
@@ -11,26 +10,25 @@ from .factories import (
     secret_factory,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSerializers(TestAccountMixin):
     """Test serializers for the account app."""
 
     secret: Secret
-    test_serializers_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSerializers()"
 
     @classmethod
     def setUpClass(cls):
         """Set up test data for the test case."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.test_serializers_logger_prefix)
+        logger.debug("called.")
         cls.secret = secret_factory(user_profile=cls.user_profile, name=cls.name, description="test", value="test")
 
     @classmethod
     def tearDownClass(cls):
         """Tear down test data after the test case."""
-        logger.debug("%s.tearDownClass()", cls.test_serializers_logger_prefix)
+        logger.debug("called.")
         try:
             factory_secret_teardown(secret=cls.secret)
         # pylint: disable=W0718

@@ -22,7 +22,6 @@ from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -42,7 +41,6 @@ def should_log(level):
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_level = logger.getEffectiveLevel()
-module_prefix = "smarter.apps.prompt.tasks."
 
 # Errors that fail the same way on every retry, e.g. a value too long for its column.
 NOT_RETRYABLE = (DataError,)
@@ -69,13 +67,12 @@ def create_prompt_history(prompt_id, request, response, messages):
     :param response: The LLM's response, as JSON.
     :param messages: The conversation's messages.
     """
-    logger.debug("%s prompt_id: %s", SmarterFormattedText.text(module_prefix + "create_prompt_history()"), prompt_id)
+    logger.debug("prompt_id: %s", prompt_id)
     try:
         prompt = Prompt.objects.get(id=prompt_id)
     except Prompt.DoesNotExist:
         logger.error(
-            "%s prompt_id: %s does not exist",
-            SmarterFormattedText.text(module_prefix + "create_prompt_history()"),
+            "prompt_id: %s does not exist",
             prompt_id,
         )
         return
@@ -91,7 +88,7 @@ def create_prompt_history(prompt_id, request, response, messages):
 )
 def aggregate_prompt_history():
     """Summarize detail llmclient history into aggregate records."""
-    logger.debug("%s", SmarterFormattedText.text(module_prefix + "aggregate_prompt_history()"))
+    logger.debug("called")
 
 
 @app.task(
@@ -130,7 +127,7 @@ def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, fu
     :param response: The tool's response.
     :raises SmarterValueError: when the Prompt, or a given PluginMeta, does not exist.
     """
-    logger.debug("%s", SmarterFormattedText.text(module_prefix + "create_prompt_tool_call_history()"))
+    logger.debug("called")
     prompt = None
     plugin_meta = None
 
@@ -168,8 +165,7 @@ def create_prompt_plugin_usage(*args, **kwargs):
     plugin_id = kwargs.get("plugin_id", None)
 
     logger.debug(
-        "%s prompt_id=%s, plugin_id=%s",
-        SmarterFormattedText.text(module_prefix + "create_plugin_usage()"),
+        "prompt_id=%s, plugin_id=%s",
         prompt_id,
         plugin_id,
     )
@@ -262,8 +258,7 @@ def purge_prompt_history(days: Optional[int] = None) -> dict[str, int]:
     deleted[Prompt.__name__] = deleted_prompts
 
     logger.info(
-        "%s deleted the prompt history older than %s days: %s",
-        SmarterFormattedText.text(module_prefix + "purge_prompt_history()"),
+        "deleted the prompt history older than %s days: %s",
         days,
         deleted,
     )

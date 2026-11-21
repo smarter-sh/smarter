@@ -20,6 +20,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .models import Guardrail
 from .signals import (
     guardrail_blocked,
+    guardrail_called,
     guardrail_escalated,
     guardrail_failed,
     guardrail_triggered,
@@ -27,7 +28,17 @@ from .signals import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.GUARDRAIL_LOGGING])
 
-module_prefix = __name__
+
+@receiver(guardrail_called, dispatch_uid="guardrail_called")
+def handle_guardrail_called(sender, guardrail: Guardrail, **kwargs):
+    """
+    Log a request to a Guardrail's api, at DEBUG.
+
+    :param sender: The class that sent the signal, a Guardrail api view.
+    :param guardrail: The Guardrail that the request reads or changes.
+    :param kwargs: The other signal arguments: ``request`` (unused).
+    """
+    logger.debug("called %s (id %s)", guardrail, guardrail.pk)
 
 
 @receiver(post_save, sender=Guardrail)
@@ -43,9 +54,8 @@ def guardrail_saved(sender, instance: Guardrail, created: bool, **kwargs):
     :param created: True if the Guardrail was created, False if it was updated.
     :param kwargs: The other ``post_save`` arguments.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_saved()"
     action = "created" if created else "updated"
-    logger.info("%s %s %s (id %s)", prefix, action, instance, instance.pk)
+    logger.info("%s %s (id %s)", action, instance, instance.pk)
 
 
 @receiver(pre_delete, sender=Guardrail)
@@ -57,8 +67,7 @@ def guardrail_deleted(sender, instance: Guardrail, **kwargs):
     :param instance: The Guardrail being deleted.
     :param kwargs: The other ``pre_delete`` arguments.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
 
 
 @receiver(guardrail_triggered, dispatch_uid="guardrail_triggered")
@@ -68,8 +77,7 @@ def handle_guardrail_triggered(sender, guardrail: Guardrail, stage: str, disposi
     What it matched is not logged, because it may be personal data.
     """
     logger.info(
-        "%s %s %s: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_triggered",
+        "%s %s: %s",
         guardrail.name,
         stage,
         disposition,
@@ -88,8 +96,7 @@ def handle_guardrail_blocked(sender, guardrail: Guardrail, stage: str, message: 
     :param kwargs: The other signal arguments.
     """
     logger.warning(
-        "%s %s blocked the %s: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_blocked",
+        "%s blocked the %s: %s",
         guardrail.name,
         stage,
         message,
@@ -103,8 +110,7 @@ def handle_guardrail_escalated(sender, guardrail: Guardrail, stage: str, event=N
     Its event awaits review in the Smarter admin.
     """
     logger.warning(
-        "%s %s escalated the %s to human review, severity %s, event %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_escalated",
+        "%s escalated the %s to human review, severity %s, event %s",
         guardrail.name,
         stage,
         guardrail.severity,
@@ -125,8 +131,7 @@ def handle_guardrail_failed(sender, guardrail: Guardrail, stage: str, error: str
     :param kwargs: The other signal arguments.
     """
     logger.error(
-        "%s %s failed on the %s%s: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.guardrail_failed",
+        "%s failed on the %s%s: %s",
         guardrail.name,
         stage,
         ", and blocked it" if fail_closed else "",

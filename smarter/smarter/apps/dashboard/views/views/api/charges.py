@@ -19,8 +19,7 @@ from smarter.apps.account.token_usage import TokenUsageWindow, token_usage_serie
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def requested_periodicity(request: HttpRequest) -> str:
@@ -66,7 +65,7 @@ class ChargesView(SmarterAuthenticatedWebView):
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore
         periodicity = requested_periodicity(request)
-        logger.debug("%s.post() periodicity=%s", self.formatted_class_name, periodicity)
+        logger.debug("periodicity=%s", periodicity)
         try:
             TokenUsageWindow.get(periodicity)
         except ValueError as e:

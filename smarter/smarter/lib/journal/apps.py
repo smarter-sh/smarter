@@ -8,14 +8,12 @@ from smarter.lib import logging
 
 from .const import namespace as app_name
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class JournalConfig(AppConfig):
     """Django app configuration for the journal app."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.journal"
     verbose_name = "Smarter Journal"
 
@@ -25,4 +23,4 @@ class JournalConfig(AppConfig):
         from . import receivers, signals  # noqa: F401
 
         app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, SmarterReadyState.READY)
+        logger.debug("%s app is %s", app_label, SmarterReadyState.READY)

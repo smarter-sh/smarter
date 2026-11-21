@@ -54,15 +54,17 @@ class OnboardingHint(TimestampedModel):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="onboarding_hints")
-    hint = models.CharField(max_length=64, choices=OnboardingHints.choices)
-    outcome = models.CharField(max_length=32, choices=OnboardingOutcomes.choices)
+    hint = models.CharField(max_length=64, choices=OnboardingHints)
+    outcome = models.CharField(max_length=32, choices=OnboardingOutcomes)
 
     class Meta:
         """Metadata for the model."""
 
         verbose_name = "Onboarding Hint"
         verbose_name_plural = "Onboarding Hints"
-        unique_together = ("user", "hint")
+        constraints = [
+            models.UniqueConstraint(fields=["user", "hint"], name="dashboard_onboardinghint_unique"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.user}: {self.hint} ({self.outcome})"

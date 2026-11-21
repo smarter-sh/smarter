@@ -78,8 +78,8 @@ class TestLogLoginFailure(SmarterTestBase):
         logger.warning.assert_called_once()
         args = logger.warning.call_args.args
         self.assertIn("reason=%s identity=%s", args[0])
-        self.assertEqual(args[2], LoginFailure.WRONG_PASSWORD)
-        self.assertEqual(args[3], login_identity("someone@example.com"))
+        self.assertEqual(args[1], LoginFailure.WRONG_PASSWORD)
+        self.assertEqual(args[2], login_identity("someone@example.com"))
         self.assertNotIn("someone@example.com", repr(args))
 
     def test_reason_values(self):

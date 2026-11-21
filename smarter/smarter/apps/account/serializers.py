@@ -16,7 +16,7 @@ from smarter.lib import logging
 from smarter.lib.django.serializers import MetaDataModelSerializer
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class UserSerializer(MetaDataModelSerializer):
@@ -335,7 +335,10 @@ def user_can_delete(obj, kind: Optional[str], user: object, owned_pks: Optional[
     # e.g. a broker that does not implement dependents(). pylint: disable=W0718
     except Exception as e:
         logger.warning(
-            "%s.user_can_delete() could not check the dependencies of %s %s: %s", __name__, kind, obj.name, e
+            "could not check the dependencies of %s %s: %s",
+            kind,
+            obj.name,
+            e,
         )
         return False
 

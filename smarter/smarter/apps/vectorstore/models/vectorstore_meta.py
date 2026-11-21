@@ -18,7 +18,6 @@ from smarter.apps.vectorstore.enum import (
     VectorstoreHosting,
     VectorstoreMetric,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType, required
@@ -85,16 +84,16 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name = "Vectorstore"
         verbose_name_plural = "Vectorstores"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="vectorstore_vectorstoremeta_unique"),
+        ]
 
     # --- the manifest ---------------------------------------------------------
     spec = models.JSONField(default=dict, blank=True, help_text="The manifest's spec, as it was applied.")
-    backend = models.CharField(
-        max_length=50, choices=VectorstoreBackendKind.choices, help_text="The vector database product."
-    )
+    backend = models.CharField(max_length=50, choices=VectorstoreBackendKind, help_text="The vector database product.")
     hosting = models.CharField(
         max_length=20,
-        choices=VectorstoreHostingKind.choices,
+        choices=VectorstoreHostingKind,
         default=VectorstoreHostingKind.MANAGED,
         help_text="self_hosted: Smarter runs it on Kubernetes. managed: a service such as Pinecone or Qdrant Cloud.",
     )
@@ -108,9 +107,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
     )
     is_active = models.BooleanField(default=True, help_text="Whether the vector database may be used.")
     dimension = models.PositiveIntegerField(default=1536, help_text="The number of dimensions of its vectors.")
-    metric = models.CharField(
-        max_length=20, choices=VectorstoreMetricKind.choices, default=VectorstoreMetricKind.COSINE
-    )
+    metric = models.CharField(max_length=20, choices=VectorstoreMetricKind, default=VectorstoreMetricKind.COSINE)
     deletion_protection = models.BooleanField(
         default=False, help_text="Refuse to destroy the database while it is enabled."
     )
@@ -125,7 +122,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
     embeddings_model = models.CharField(max_length=255, blank=True, default="", help_text="e.g. text-embedding-3-small")
 
     # --- state ------------------------------------------------------------------
-    status = models.CharField(max_length=20, choices=VectorstoreStatus.choices, default=VectorstoreStatus.PENDING)
+    status = models.CharField(max_length=20, choices=VectorstoreStatus, default=VectorstoreStatus.PENDING)
     status_message = models.TextField(blank=True, default="")
     index_name = models.CharField(
         max_length=255, blank=True, default="", help_text="The Pinecone index, or Qdrant collection, of the database."
@@ -238,7 +235,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
 
         if invalidate:
             get_cached_vectorstores_for_user_id.invalidate(user_id=user.id)  # type: ignore
-        logger.debug("%s for %s", f"{SmarterFormattedText.text(__name__)}.get_cached_vectorstores_for_user()", user)
+        logger.debug("for %s", user)
         return get_cached_vectorstores_for_user_id(user_id=user.id)  # type: ignore
 
     def __str__(self) -> str:

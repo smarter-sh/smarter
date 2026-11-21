@@ -49,7 +49,6 @@ from .client import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 PULL_REQUEST_FOOTER = "\n\n---\n_Opened with Smarter's MCPServer._"
 """Appended to every pull request's body, so that maintainers can tell where it came from."""
@@ -376,7 +375,7 @@ def parse(response: requests.Response, model: type[Model], what: str) -> Model:
         data = response.json()
         result = model.model_validate(data)
     except (ValueError, ValidationError) as e:
-        logger.warning("%s.parse() GitHub's response for %s could not be read: %s", logger_prefix, what, e)
+        logger.warning("GitHub's response for %s could not be read: %s", what, e)
         raise SmarterMCPServerServiceError(f"GitHub's response for {what} could not be read. Try again later.") from e
     return result
 
@@ -437,8 +436,7 @@ class PullRequestWriter:
         response = github_request(method, full_path, self.token, json=json)
         if response.status_code != expected:
             logger.info(
-                "%s.request() GitHub did not %s in %s: HTTP %s",
-                logger_prefix,
+                "GitHub did not %s in %s: HTTP %s",
                 action,
                 self.repository.full_name,
                 response.status_code,
@@ -651,7 +649,11 @@ class PullRequestWriter:
         new_commit = parse(response, GitObject, "the new commit")
         new_branch: SmarterDictType = {"ref": f"refs/heads/{branch}", "sha": new_commit.sha}
         self.request("POST", "/git/refs", f"create the branch {branch}", expected=201, json=new_branch)
-        logger.info("%s.write() created the branch %s in %s", logger_prefix, branch, self.repository.full_name)
+        logger.info(
+            "created the branch %s in %s",
+            branch,
+            self.repository.full_name,
+        )
         new_pull_request: SmarterDictType = {
             "title": title,
             "head": branch,
@@ -676,12 +678,12 @@ class PullRequestWriter:
             description["commit_sha"] = new_commit.sha
             pull_request = GitHubPullRequest.model_validate(description)
         except (ValueError, AttributeError, ValidationError) as e:
-            logger.warning("%s.write() GitHub's response is not a pull request: %s", logger_prefix, e)
+            logger.warning("GitHub's response is not a pull request: %s", e)
             raise SmarterMCPServerServiceError(
                 f"GitHub opened a pull request from {branch} in {self.repository.full_name}, but its response could "
                 f"not be read. See {self.repository.github_url}/pulls."
             ) from e
-        logger.info("%s.write() opened %s", logger_prefix, pull_request.html_url)
+        logger.info("opened %s", pull_request.html_url)
         return pull_request
 
 

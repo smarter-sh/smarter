@@ -83,7 +83,6 @@ from .verify_domain import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 # continue_default_api_deployment checks the ingress resources and certificate 10 minutes after
@@ -155,9 +154,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
     if not is_taskable():
         return
 
-    fn_name = logger_prefix + ".deploy_default_api()"
     task_id = deploy_default_api.request.id
-    logger.info("%s llmclient %s task_id: %s", fn_name, llmclient_id, task_id)
     llmclient: LLMClient
 
     pre_deploy_default_api.send(
@@ -174,34 +171,31 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
     with transaction.atomic():
         try:
             llmclient = LLMClient.objects.select_for_update().get(id=llmclient_id)
-            logger.info("%s found llmclient %s for deployment task_id: %s", fn_name, llmclient.name, task_id)
+            logger.info("found llmclient %s for deployment task_id: %s", llmclient.name, task_id)
         except LLMClient.DoesNotExist:
-            logger.error(
-                "%s LLMClient %s not found. Nothing to do, returning. task_id: %s", fn_name, llmclient_id, task_id
-            )
-
             llmclient_deploy_failed.send(
                 sender=deploy_default_api,
                 llmclient_id=llmclient_id,
                 with_domain_verification=with_domain_verification,
+                reason="it was not found",
                 task_id=task_id,
             )
             return None
 
         if not infrastructure.dns.ready:
-            logger.error(
-                "%s the DNS service is not ready. Cannot deploy llmclient %s. task_id: %s",
-                fn_name,
-                llmclient.name,
-                task_id,
-            )
             llmclient_deploy_failed.send(
-                sender=deploy_default_api, llmclient_id=llmclient_id, with_domain_verification=with_domain_verification
+                sender=deploy_default_api,
+                llmclient_id=llmclient_id,
+                with_domain_verification=with_domain_verification,
+                name=llmclient.name,
+                reason="the DNS service is not ready",
+                task_id=task_id,
             )
             post_deploy_default_api.send(
                 sender=deploy_default_api,
                 llmclient_id=llmclient_id,
                 with_domain_verification=with_domain_verification,
+                outcome="not deployed: the DNS service is not ready",
                 task_id=task_id,
             )
             return None
@@ -213,16 +207,14 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
             )
             if created:
                 logger.info(
-                    "%s created A record for llmclient %s at domain %s task_id: %s",
-                    fn_name,
+                    "created A record for llmclient %s at domain %s task_id: %s",
                     llmclient.name,
                     domain_name,
                     task_id,
                 )
             else:
                 logger.info(
-                    "%s verified the A record for llmclient %s at domain %s. task_id: %s",
-                    fn_name,
+                    "verified the A record for llmclient %s at domain %s. task_id: %s",
                     llmclient.name,
                     domain_name,
                     task_id,
@@ -232,17 +224,11 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
         )
 
     if already_deployed:
-        logger.info(
-            "%s LLMClient %s is already deployed and verified at domain %s. Nothing to do. task_id: %s",
-            fn_name,
-            llmclient.name,
-            domain_name,
-            task_id,
-        )
         post_deploy_default_api.send(
             sender=deploy_default_api,
             llmclient_id=llmclient_id,
             with_domain_verification=with_domain_verification,
+            outcome=f"{llmclient.name} is already deployed and verified at domain {domain_name}. Nothing to do",
             task_id=task_id,
         )
         return
@@ -251,20 +237,18 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
     # for the customer API domain so that we can issue a certificate for it.
     if not smarter_settings.llmclient_tasks_create_ingress_manifest:
         logger.info(
-            "%s llmclient_tasks_create_ingress_manifest is set to False. Skipping creation of ingress manifest for llmclient %s at domain %s task_id: %s",
-            fn_name,
+            "llmclient_tasks_create_ingress_manifest is set to False. Skipping creation of ingress manifest for llmclient %s at domain %s task_id: %s",
             llmclient.name,
             domain_name,
             task_id,
         )
     else:
-        logger.info("%s verifying/creating ingress manifest for %s task_id: %s", fn_name, domain_name, task_id)
+        logger.info("verifying/creating ingress manifest for %s task_id: %s", domain_name, task_id)
         try:
             apply_ingress_manifest(domain_name)
         except SmarterException as e:
             logger.error(
-                "%s failed to apply ingress manifest for llmclient %s at domain %s task_id: %s. Error: %s",
-                fn_name,
+                "failed to apply ingress manifest for llmclient %s at domain %s task_id: %s. Error: %s",
                 llmclient.name,
                 domain_name,
                 task_id,
@@ -293,8 +277,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
             # the certificate takes minutes to be issued. Rather than wait for it, which would block
             # this worker, continue_default_api_deployment verifies the ingress resources later.
             logger.info(
-                "%s checking in %s seconds that the ingress resources were created and that the certificate was issued",
-                fn_name,
+                "checking in %s seconds that the ingress resources were created and that the certificate was issued",
                 CERTIFICATE_FIRST_CHECK_SECONDS,
             )
             continue_default_api_deployment.apply_async(
@@ -370,13 +353,12 @@ def continue_default_api_deployment(
     :param stage: ``certificate`` or ``domain``.
     :param attempt: The number of checks of the stage already made.
     """
-    fn_name = f"{logger_prefix}.continue_default_api_deployment()"
     if not is_taskable():
         return
 
     llmclient = LLMClient.objects.filter(id=llmclient_id).first()
     if not llmclient:
-        logger.error("%s LLMClient %s not found. Nothing to do, returning. task_id: %s", fn_name, llmclient_id, task_id)
+        logger.error("LLMClient %s not found. Nothing to do, returning. task_id: %s", llmclient_id, task_id)
         _deployment_failed(llmclient_id, with_domain_verification, task_id)
         return
     domain_name = llmclient.default_host
@@ -401,8 +383,7 @@ def continue_default_api_deployment(
         if not (ingress_verified and secret_verified and certificate_verified):
             if attempt + 1 < CERTIFICATE_MAX_ATTEMPTS:
                 logger.info(
-                    "%s llmclient %s ingress resources are not ready. Check %s of %s. task_id: %s",
-                    fn_name,
+                    "llmclient %s ingress resources are not ready. Check %s of %s. task_id: %s",
                     domain_name,
                     attempt + 1,
                     CERTIFICATE_MAX_ATTEMPTS,
@@ -411,8 +392,7 @@ def continue_default_api_deployment(
                 check_again(STAGE_CERTIFICATE, attempt + 1, CERTIFICATE_CHECK_INTERVAL)
                 return
             logger.error(
-                "%s llmclient %s %s one or more resources were not created task_id: %s",
-                fn_name,
+                "llmclient %s %s one or more resources were not created task_id: %s",
                 domain_name,
                 llmclient,
                 task_id,
@@ -424,17 +404,11 @@ def continue_default_api_deployment(
 
         llmclient.tls_certificate_issuance_status = llmclient.TlsCertificateIssuanceStatusChoices.ISSUED
         llmclient.save(asynchronous=True)
-        logger.info(
-            "%s llmclient %s %s all resources successfully created task_id: %s",
-            fn_name,
-            domain_name,
-            llmclient,
-            task_id,
-        )
         post_deploy_default_api.send(
             sender=deploy_default_api,
             llmclient_id=llmclient_id,
             with_domain_verification=with_domain_verification,
+            outcome=f"all resources of {llmclient.name} were created at domain {domain_name}",
             task_id=task_id,
         )
         llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient, task_id=task_id)
@@ -455,17 +429,17 @@ def continue_default_api_deployment(
             check_again(STAGE_DOMAIN, attempt + 1, VERIFY_DOMAIN_INTERVAL)
             return
         if result != DomainCheck.VERIFIED:
-            logger.error(
-                "%s unable to verify domain %s. LLMClient %s will not be deployed. task_id: %s",
-                fn_name,
-                domain_name,
-                llmclient.name,
-                task_id,
-            )
             llmclient_dns_failed.send(
-                sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type="A", task_id=task_id
+                sender=verify_domain,
+                llmclient=llmclient,
+                domain_name=domain_name,
+                record_type="A",
+                reason=f"it doesn't resolve, so llmclient {llmclient.name} will not be deployed",
+                task_id=task_id,
             )
-            post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
+            post_verify_domain.send(
+                sender=verify_domain, domain_name=domain_name, record_type="A", verified=False, task_id=task_id
+            )
             llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.FAILED
             llmclient.save(asynchronous=True)
             _deployment_failed(llmclient_id, with_domain_verification, task_id)
@@ -474,12 +448,13 @@ def continue_default_api_deployment(
         if not llmclient.deployed:
             llmclient.deployed = True
             llmclient.save(asynchronous=True)
-        post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type="A", task_id=task_id)
+        post_verify_domain.send(
+            sender=verify_domain, domain_name=domain_name, record_type="A", verified=True, task_id=task_id
+        )
 
     llmclient.dns_verification_status = llmclient.DnsVerificationStatusChoices.VERIFIED
     llmclient.save(asynchronous=True)
-    llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient)
-    logger.info("%s LLMClient %s has been deployed to %s task_id: %s", fn_name, llmclient.name, domain_name, task_id)
+    llmclient_deployed.send(sender=deploy_default_api, llmclient=llmclient, task_id=task_id)
 
     # send an email to the account owner to notify them that the llmclient has been deployed
     subject = f"Your Smarter llmclient {llmclient.url} has been deployed"

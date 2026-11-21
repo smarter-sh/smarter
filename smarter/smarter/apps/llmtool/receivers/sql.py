@@ -3,7 +3,6 @@
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -20,8 +19,6 @@ from .utils import response_characters
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = SmarterFormattedText.text(__name__)
-
 
 @receiver(sql_plugin_request_started, dispatch_uid="sql_plugin_request_started")
 def handle_sql_plugin_request_started(sender, plugin: PluginBase, function_args=None, **kwargs):
@@ -34,7 +31,11 @@ def handle_sql_plugin_request_started(sender, plugin: PluginBase, function_args=
     :param plugin: The plugin.
     :param function_args: The arguments that the LLM called the tool with.
     """
-    logger.info("%s.sql_plugin_request_started() %s function_args: %s", logger_prefix, plugin.name, function_args)
+    logger.info(
+        "%s function_args: %s",
+        plugin.name,
+        function_args,
+    )
 
 
 @receiver(sql_plugin_authenticated, dispatch_uid="sql_plugin_authenticated")
@@ -49,8 +50,7 @@ def handle_sql_plugin_authenticated(sender, plugin: PluginBase, **kwargs):
     :param kwargs: The signal's other arguments, of which ``connection`` are logged.
     """
     logger.info(
-        "%s.sql_plugin_authenticated() %s connection: %s",
-        logger_prefix,
+        "%s connection: %s",
         plugin.name,
         kwargs.get("connection"),
     )
@@ -69,8 +69,7 @@ def handle_sql_plugin_authentication_failed(sender, plugin: PluginBase, error: s
     :param kwargs: The signal's other arguments, of which ``connection`` are logged.
     """
     logger.warning(
-        "%s.sql_plugin_authentication_failed() %s connection: %s error: %s",
-        logger_prefix,
+        "%s connection: %s error: %s",
         plugin.name,
         kwargs.get("connection"),
         error,
@@ -91,8 +90,7 @@ def handle_sql_plugin_responded(sender, plugin: PluginBase, response=None, cache
     :param kwargs: The signal's other arguments, of which ``sql`` are logged.
     """
     logger.info(
-        "%s.sql_plugin_responded() %s sql: %s characters: %s cached: %s",
-        logger_prefix,
+        "%s sql: %s characters: %s cached: %s",
         plugin.name,
         kwargs.get("sql"),
         response_characters(response),
@@ -111,7 +109,7 @@ def handle_sql_plugin_failed(sender, plugin: PluginBase, error: str, **kwargs):
     :param plugin: The plugin.
     :param error: Why it failed.
     """
-    logger.warning("%s.sql_plugin_failed() %s failed: %s", logger_prefix, plugin.name, error)
+    logger.warning("%s failed: %s", plugin.name, error)
 
 
 @receiver(sql_plugin_request_completed, dispatch_uid="sql_plugin_request_completed")
@@ -127,8 +125,7 @@ def handle_sql_plugin_request_completed(sender, plugin: PluginBase, success: boo
     :param duration: Seconds that the request took.
     """
     logger.info(
-        "%s.sql_plugin_request_completed() %s success: %s duration: %.3fs",
-        logger_prefix,
+        "%s success: %s duration: %.3fs",
         plugin.name,
         success,
         duration,

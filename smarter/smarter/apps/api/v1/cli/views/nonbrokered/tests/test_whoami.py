@@ -49,7 +49,7 @@ class TestApiCliV1Whoami(ApiV1CliTestBase):
         """Test whoami command."""
 
         path = reverse(self.namespace + ApiV1CliReverseViews.whoami, kwargs=None)
-        logger.info("TestApiCliV1Whoami().test_whoami() Testing whoami command at path: %s", path)
+        logger.info("Testing whoami command at path: %s", path)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)

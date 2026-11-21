@@ -9,7 +9,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.provider.models import Provider
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestLLMPrices(TestAccountMixin):
@@ -17,13 +17,11 @@ class TestLLMPrices(TestAccountMixin):
 
     provider: Provider
 
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestLLMPrices()"
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.provider = Provider.objects.create(name="Test Provider", user_profile=cls.user_profile)
-        logger.debug("%s Created provider: %s", cls.logger_prefix, cls.provider)
+        logger.debug("Created provider: %s", cls.provider)
 
     @classmethod
     def tearDownClass(cls):
@@ -31,10 +29,10 @@ class TestLLMPrices(TestAccountMixin):
             cls.provider.delete()
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s Error deleting provider: %s", cls.logger_prefix, e)
+            logger.error("Error deleting provider: %s", e)
 
         super().tearDownClass()
-        logger.debug("%s Tear down complete.", cls.logger_prefix)
+        logger.debug("Tear down complete.")
 
     def test_crud(self):
         """Test that we can do all crud."""
@@ -73,7 +71,7 @@ class TestLLMPrices(TestAccountMixin):
                 record.delete()
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("%s Error deleting record: %s", self.logger_prefix, e)
+                logger.error("Error deleting record: %s", e)
 
     def test_cost_of_is_cached_and_invalidated(self):
         """A price is cached, and saving or deleting it invalidates the cache."""

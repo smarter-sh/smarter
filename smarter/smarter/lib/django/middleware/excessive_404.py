@@ -150,7 +150,6 @@ from cache_results import lazy_cache as cache
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
@@ -161,14 +160,12 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_EXCESSIVE_404):
     logger.debug(
-        "%s is %s",
-        SmarterFormattedText.text(__name__) + ".SmarterBlockExcessive404Middleware",
+        "is %s",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
-        "%s is %s. Enable with Django waffle in the admin console.",
-        SmarterFormattedText.text(__name__) + ".SmarterBlockExcessive404Middleware",
+        "is %s. Enable with Django waffle in the admin console.",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -305,8 +302,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         if blocked_count >= self.THROTTLE_LIMIT:
 
             logger.warning(
-                "%s._process_response() blocked client=%s count=%d",
-                self.formatted_class_name,
+                "blocked client=%s count=%d",
                 client_ip,
                 blocked_count,
             )
@@ -381,8 +377,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
             return
 
         logger.debug(
-            "%s.log_404_event() 404 probe detected client=%s count=%d path=%s",
-            self.formatted_class_name,
+            "404 probe detected client=%s count=%d path=%s",
             client_ip,
             blocked_count,
             request.path,

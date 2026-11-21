@@ -37,8 +37,7 @@ from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 CELERY_PING_TIMEOUT = 0.5  # seconds. the widget loads asynchronously, but should not hang.
 HEALTH_CHECKS_CACHE_TIMEOUT = 60  # seconds. one run of the checks serves every dashboard for a minute.
@@ -109,7 +108,7 @@ def run_health_checks() -> list[dict[str, object]]:
             healthy = bool(check())
         # pylint: disable=broad-except
         except Exception as e:
-            logger.warning("%s health check %s failed: %s", logger_prefix, name, e)
+            logger.warning("health check %s failed: %s", name, e)
             healthy = False
             error = f"{type(e).__name__}: {e}"
         if not healthy and not error:
@@ -173,7 +172,10 @@ def current_health_checks() -> list[dict[str, object]]:
         return cached_health_checks()
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.current_health_checks() the cache failed, running the checks uncached: %s", logger_prefix, e)
+        logger.warning(
+            "the cache failed, running the checks uncached: %s",
+            e,
+        )
         return run_health_checks()
 
 
@@ -236,7 +238,7 @@ class ServiceHealthView(SmarterAuthenticatedWebView):
         """
 
         if wants_refresh(request):
-            logger.info("%s.post() refreshing the health checks", self.formatted_class_name)
+            logger.info("refreshing the health checks")
             cached_health_checks.invalidate()
         health_checks = public_health_checks(current_health_checks())
         healthy = sum(1 for check in health_checks if check["healthy"])

@@ -24,6 +24,12 @@ from smarter.apps.orchestrator.models import (
 )
 from smarter.apps.orchestrator.models.orchestration_run import OrchestrationRunStatus
 from smarter.apps.orchestrator.models.orchestrator import OrchestrationStrategy
+from smarter.apps.orchestrator.signals import (
+    orchestration_run_finished,
+    orchestration_run_queued,
+    orchestration_run_started,
+    orchestration_step_finished,
+)
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
@@ -150,6 +156,49 @@ class TestOrchestrationRuntime(TestAccountMixin):
         self.assertEqual(run.status, OrchestrationRunStatus.PENDING)
         self.assertEqual(run.started_by, self.user_profile)
         delay.assert_called_once_with(run.pk)
+
+    def record_signals(self) -> list[tuple[str, Optional[str]]]:
+        """Record each run signal that is sent until the end of the test, as its name and its step's status, if any."""
+        sent: list[tuple[str, Optional[str]]] = []
+        names = {
+            orchestration_run_queued: "queued",
+            orchestration_run_started: "started",
+            orchestration_step_finished: "step",
+            orchestration_run_finished: "finished",
+        }
+        for signal, name in names.items():
+
+            def received(sender, run, step=None, name=name, **kwargs):
+                step_status = step.status if step is not None else None
+                sent.append((name, step_status))
+
+            signal.connect(received, weak=False)
+            self.addCleanup(signal.disconnect, received)
+        return sent
+
+    def test_start_run_sends_queued(self):
+        """Starting a run sends orchestration_run_queued, once."""
+        sent = self.record_signals()
+        with patch("smarter.apps.orchestrator.tasks.execute_orchestration_run.delay"):
+            runtime.start_run(self.orchestrator, self.user_profile, "Prepare the board pack.")
+        self.assertEqual(sent, [("queued", None)])
+
+    def test_a_run_sends_its_lifecycle(self):
+        """A run sends started, then one step signal per step, with its status, then finished."""
+        sent = self.record_signals()
+        self.use(FakeHandler(fail_for=self.llmclients["second"].name))
+        run = self.executed(self.new_run())
+        self.assertEqual(run.status, OrchestrationRunStatus.FAILED)
+        expected = [("started", None), ("step", "succeeded"), ("step", "failed"), ("finished", None)]
+        self.assertEqual(sent, expected)
+
+    def test_a_run_that_is_not_pending_sends_nothing(self):
+        """A run that already ran sends no signal when it is delivered again."""
+        sent = self.record_signals()
+        run = self.new_run()
+        OrchestrationRun.objects.filter(pk=run.pk).update(status=OrchestrationRunStatus.SUCCEEDED)
+        runtime.execute_run(run.pk)
+        self.assertEqual(sent, [])
 
     def test_refused_runs(self):
         """An inactive Orchestrator, a strategy that can't run yet, or one without harnesses, may not run."""

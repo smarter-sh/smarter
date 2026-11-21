@@ -4,11 +4,9 @@ import yaml
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = f"{SmarterFormattedText.text(__name__)}.YAMLParser()"
+logger = logging.getSmarterLogger(__name__)
 
 YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 """PyYAML's C safe loader when PyYAML was built with libyaml, which is much faster, else the pure Python one."""
@@ -37,7 +35,7 @@ class YAMLParser(BaseParser):
         except (ValueError, yaml.YAMLError) as exc:
             # the parser's own message stays in the log: it describes the parser's internals, and
             # quotes the body, which the client already has.
-            logger.debug("%s.parse() YAML parse error: %s", logger_prefix, exc)
+            logger.debug("YAML parse error: %s", exc)
             raise ParseError("YAML parse error - the request body is not valid UTF-8 YAML.") from exc
-        logger.debug("%s.parse() parsed a YAML body of type %s", logger_prefix, type(retval).__name__)
+        logger.debug("parsed a YAML body of type %s", type(retval).__name__)
         return retval

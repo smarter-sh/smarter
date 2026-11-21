@@ -71,7 +71,7 @@ from smarter.lib.logging.redis_log_handler import (
 if TYPE_CHECKING:
     from redis import Redis
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 STREAM_REPLAY_BATCH_SIZE = 500
 STREAM_REPLAY_MAX_ENTRIES = 2000
 
@@ -450,14 +450,12 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     else:
         user_context = get_user_context(user)
         user_id = user.pk
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.stream_user_logs()"
     min_level = _min_log_level(request)
     request_id = _request_id(request)
     session_key = _session_key(request)
     masked_session_key = mask_identifier(session_key)
     logger.info(
-        "%s called for user_id=%s min_level=%s request_id=%s session_key=%s",
-        logger_prefix,
+        "called for user_id=%s min_level=%s request_id=%s session_key=%s",
         user_id,
         logging.getLevelName(min_level),
         request_id,
@@ -476,9 +474,14 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         pubsub = redis_cache.pubsub()
         channel = build_channel(user_context)
         pubsub.subscribe(channel)
-        logger.info("%s Subscribed to the user's Redis channel for log streaming.", logger_prefix)
+        logger.info(
+            "Subscribed to the user's Redis channel for log streaming.",
+        )
     except RedisError:
-        logger.exception("%s Failed to connect to Redis for log streaming.", logger_prefix, exc_info=True)
+        logger.exception(
+            "Failed to connect to Redis for log streaming.",
+            exc_info=True,
+        )
         return HttpResponse(
             "Log stream is temporarily unavailable.",
             content_type="text/plain",
@@ -504,7 +507,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         :rtype: AsyncIterator[str]
         """
         try:
-            logger.info("%s.event_stream() Starting log stream event generator.", logger_prefix)
+            logger.info("Starting log stream event generator.")
             # Ask the browser to retry quickly if disconnected.
             yield "retry: 3000\n\n"
 
@@ -512,7 +515,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                 async for event in _replay_stream_history(redis_cache, channel, min_level, request_id, session_key):
                     yield event
             except RedisError:
-                logger.exception("%s Failed to replay Redis stream history for log streaming.", logger_prefix)
+                logger.exception("Failed to replay Redis stream history for log streaming.")
 
             while True:
                 message = await asyncio.to_thread(
@@ -532,13 +535,11 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                     # Keep idle connections alive through proxies.
                     yield ": keepalive\n\n"
         finally:
-            logger.info("%s Closing Redis pubsub connection for log streaming.", logger_prefix)
+            logger.info("Closing Redis pubsub connection for log streaming.")
             try:
                 await asyncio.to_thread(pubsub.close)
             except RedisError:
-                logger.exception(
-                    "%s Failed to close Redis pubsub connection for log streaming.", logger_prefix, exc_info=True
-                )
+                logger.exception("Failed to close Redis pubsub connection for log streaming.", exc_info=True)
 
     response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
     response["Cache-Control"] = "no-cache"

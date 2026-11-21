@@ -5,7 +5,7 @@ from smarter.lib import logging
 
 from .base import APIV1CLIViewError, CliBaseApiView
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ApiV1CliDescribeApiView(CliBaseApiView):
@@ -39,7 +39,10 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
         :returns: The journaled json response.
         """
         logger.debug(
-            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+            "called with request=%s, args=%s, kwargs=%s",
+            request,
+            args,
+            kwargs,
         )
         if self.broker is None:
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")
@@ -58,7 +61,10 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
         """
 
         logger.debug(
-            "%s.get() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+            "called with request=%s, args=%s, kwargs=%s",
+            request,
+            args,
+            kwargs,
         )
         if self.broker is None:
             raise APIV1CLIViewError(f"No broker found for manifest kind '{self.manifest_kind}'.")

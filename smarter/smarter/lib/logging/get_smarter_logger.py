@@ -5,8 +5,8 @@ This function allows for dynamic control over logging output based on the state 
 Waffle switches or a custom condition.
 """
 
-from logging import Logger, getLogger
-from typing import Callable, Optional, Union
+from logging import getLogger
+from typing import Callable, Optional
 
 from smarter.lib.django.waffle import switch_is_active
 
@@ -18,9 +18,11 @@ def getSmarterLogger(
     any_switches: Optional[list[str]] = None,
     all_switches: Optional[list[str]] = None,
     condition_func: Optional[Callable[[int], bool]] = None,
-) -> Union[Logger, WaffleSwitchedLoggerWrapper]:
+) -> WaffleSwitchedLoggerWrapper:
     """
-    Return a logger from Python's logging module, with optional Waffle switch control.
+    Return a logger from Python's logging module, wrapped in a :class:`WaffleSwitchedLoggerWrapper`.
+
+    The wrapper starts every message with the dotted name of the function or method that logged it.
 
     If any of ``any_switches``, ``all_switches`` or ``condition_func`` is provided, the
     logger only emits debug and info logs if at least one of the specified conditions is met.
@@ -34,7 +36,8 @@ def getSmarterLogger(
        All switches in this list must be active to enable logging output.
     :param condition_func: An optional callable, called with the log level, that returns a boolean
        to control logging output. If provided, logging will only occur if this function returns True.
-    :returns: A logger instance that may be wrapped with Waffle switch control.
+    :returns: The wrapped logger. Without switches or a condition, it logs at every level the logger
+       is enabled for.
     """
 
     def eval_any_switches() -> bool:
@@ -80,4 +83,6 @@ def getSmarterLogger(
 
     if switches_are_provided():
         return WaffleSwitchedLoggerWrapper(logger, eval_switches)
-    return logger
+    # no condition: the wrapper logs at every level the logger is enabled for, and still starts each
+    # message with its caller's name.
+    return WaffleSwitchedLoggerWrapper(logger)

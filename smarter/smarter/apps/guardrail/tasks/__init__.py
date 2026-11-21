@@ -16,7 +16,6 @@ from django.db.models import Q
 from django.utils import timezone
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -47,8 +46,7 @@ def purge_guardrail_events(days: int = EVENT_RETENTION_DAYS) -> int:
     awaiting_review = Q(disposition__in=AWAITING_REVIEW, reviewed=False)
     deleted, _ = GuardrailEvent.objects.filter(created_at__lt=cutoff).exclude(awaiting_review).delete()
     logger.info(
-        "%s deleted %s guardrail events older than %s days.",
-        SmarterFormattedText.text("smarter.apps.guardrail.tasks.purge_guardrail_events()"),
+        "deleted %s guardrail events older than %s days.",
         deleted,
         days,
     )

@@ -7,7 +7,6 @@ from typing import Optional, Union, cast
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.listview import connect_listview_cache
@@ -48,16 +47,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-module_prefix = "smarter.apps.provider.receivers"
-
-
-def get_prefix(function_name: str = "") -> str:
-    """Get the module prefix for logging."""
-    return (
-        SmarterFormattedText.text(module_prefix + "." + function_name + "()")
-        if function_name
-        else SmarterFormattedText.text(module_prefix)
-    )
 
 
 # ------------------------------------------------------------------------------
@@ -71,8 +60,7 @@ def handle_model_verification_requested(sender, instance: ProviderModel, **kwarg
     :param instance: The ProviderModel to verify.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_model_verification_requested")
-    logger.info("%s Model verification requested for model: %s", prefix, instance.name)
+    logger.info("Model verification requested for model: %s", instance.name)
 
     # pylint: disable=C0415
     from .tasks import verify_provider_model
@@ -96,21 +84,19 @@ def handle_model_verification_success(
     :param provider_model_verification: The verification that succeeded, if known.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_model_verification_success")
     if provider_model_verification:
         if not provider_model:
             # the ForeignKey is non-null, but pyright cannot see a ForeignKey's type.
             provider_model = cast(ProviderModel, provider_model_verification.provider_model)
         logger.info(
-            "%s Model verification successful for model: %s with verification: %s",
-            prefix,
+            "Model verification successful for model: %s with verification: %s",
             provider_model.name,
             provider_model_verification.verification_type,
         )
     elif provider_model:
-        logger.info("%s Model verification successful for model: %s", prefix, provider_model.name)
+        logger.info("Model verification successful for model: %s", provider_model.name)
     else:
-        logger.info("%s Model verification successful for an unknown model for an unknown reason", prefix)
+        logger.info("Model verification successful for an unknown model for an unknown reason")
 
 
 @receiver(model_verification_failure, dispatch_uid="model_verification_failure_receiver")
@@ -129,23 +115,19 @@ def handle_model_verification_failure(
     :param provider_model_verification: The verification that failed, if known.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_model_verification_failure")
     if provider_model_verification:
         if not provider_model:
             # the ForeignKey is non-null, but pyright cannot see a ForeignKey's type.
             provider_model = cast(ProviderModel, provider_model_verification.provider_model)
         logger.error(
-            "%s Model verification failed for model: %s with verification: %s",
-            prefix,
+            "Model verification failed for model: %s with verification: %s",
             provider_model.name if provider_model else "Unknown",
             provider_model_verification.verification_type if provider_model_verification else "Unknown",
         )
     elif provider_model:
-        logger.error(
-            "%s Model verification failed for model: %s", prefix, provider_model.name if provider_model else "Unknown"
-        )
+        logger.error("Model verification failed for model: %s", provider_model.name if provider_model else "Unknown")
     else:
-        logger.error("%s Model verification failed for an unknown model for an unknown reason", prefix)
+        logger.error("Model verification failed for an unknown model for an unknown reason")
 
 
 # ------------------------------------------------------------------------------
@@ -164,8 +146,7 @@ def handle_provider_verification_requested(sender, instance: Provider, **kwargs)
     :param instance: The Provider to verify.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_verification_requested")
-    logger.info("%s Test requested for provider: %s", prefix, instance.name)
+    logger.info("Test requested for provider: %s", instance.name)
 
     # pylint: disable=C0415
     from .tasks import verify_provider
@@ -185,21 +166,19 @@ def handle_provider_verification_success(
     :param provider_verification: The verification that succeeded, if known.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_verification_success")
     if provider_verification:
         if not provider:
             # the ForeignKey is non-null, but pyright cannot see a ForeignKey's type.
             provider = cast(Provider, provider_verification.provider)
         logger.info(
-            "%s Test passed for provider: %s with verification: %s",
-            prefix,
+            "Test passed for provider: %s with verification: %s",
             provider.name,
             provider_verification.verification_type,
         )
     elif provider:
-        logger.info("%s Test passed for provider: %s", prefix, provider.name)
+        logger.info("Test passed for provider: %s", provider.name)
     else:
-        logger.info("%s Test passed for an unknown provider for an unknown reason", prefix)
+        logger.info("Test passed for an unknown provider for an unknown reason")
 
 
 @receiver(provider_verification_failure, dispatch_uid="verification_failure_receiver")
@@ -214,21 +193,19 @@ def handle_provider_verification_failure(
     :param provider_verification: The verification that failed, if known.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_verification_failure")
     if provider_verification:
         if not provider:
             # the ForeignKey is non-null, but pyright cannot see a ForeignKey's type.
             provider = cast(Provider, provider_verification.provider)
         logger.error(
-            "%s Test failed for provider: %s with verification: %s",
-            prefix,
+            "Test failed for provider: %s with verification: %s",
             provider.name,
             provider_verification.verification_type,
         )
     elif provider:
-        logger.error("%s Test failed for provider: %s", prefix, provider.name)
+        logger.error("Test failed for provider: %s", provider.name)
     else:
-        logger.error("%s Test failed for an unknown provider for an unknown reason", prefix)
+        logger.error("Test failed for an unknown provider for an unknown reason")
 
 
 @receiver(provider_deactivated, dispatch_uid="provider_deactivated_receiver")
@@ -240,8 +217,7 @@ def handle_provider_deactivated(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_deactivated")
-    logger.info("%s Provider deactivated: %s", prefix, instance.name)
+    logger.info("Provider deactivated: %s", instance.name)
 
 
 @receiver(provider_activated, dispatch_uid="provider_activated_receiver")
@@ -253,8 +229,7 @@ def handle_provider_activated(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_activated")
-    logger.info("%s Provider activated: %s", prefix, instance.name)
+    logger.info("Provider activated: %s", instance.name)
 
 
 @receiver(provider_activated, dispatch_uid="provider_verified_receiver")
@@ -268,8 +243,7 @@ def handle_provider_verified(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_verified")
-    logger.info("%s Provider verified: %s", prefix, instance.name)
+    logger.info("Provider verified: %s", instance.name)
 
 
 @receiver(provider_suspended, dispatch_uid="provider_suspended_receiver")
@@ -281,8 +255,7 @@ def handle_provider_suspended(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_suspended")
-    logger.info("%s Provider suspended: %s", prefix, instance.name)
+    logger.info("Provider suspended: %s", instance.name)
 
 
 @receiver(provider_unsuspended, dispatch_uid="provider_unsuspended_receiver")
@@ -294,8 +267,7 @@ def handle_provider_unsuspended(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_unsuspended")
-    logger.info("%s Provider unsuspended: %s", prefix, instance.name)
+    logger.info("Provider unsuspended: %s", instance.name)
 
 
 @receiver(provider_deprecated, dispatch_uid="provider_deprecated_receiver")
@@ -307,8 +279,7 @@ def handle_provider_deprecated(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_deprecated")
-    logger.info("%s Provider deprecated: %s", prefix, instance.name)
+    logger.info("Provider deprecated: %s", instance.name)
 
 
 @receiver(provider_undeprecated, dispatch_uid="provider_undeprecated_receiver")
@@ -320,8 +291,7 @@ def handle_provider_undeprecated(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_undeprecated")
-    logger.info("%s Provider undeprecated: %s", prefix, instance.name)
+    logger.info("Provider undeprecated: %s", instance.name)
 
 
 @receiver(provider_flagged, dispatch_uid="provider_flagged_receiver")
@@ -333,8 +303,7 @@ def handle_provider_flagged(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_flagged")
-    logger.info("%s Provider flagged: %s", prefix, instance.name)
+    logger.info("Provider flagged: %s", instance.name)
 
 
 @receiver(provider_unflagged, dispatch_uid="provider_unflagged_receiver")
@@ -346,8 +315,7 @@ def handle_provider_unflagged(sender, instance: Provider, **kwargs):
     :param instance: The Provider.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("handle_provider_unflagged")
-    logger.info("%s Provider unflagged: %s", prefix, instance.name)
+    logger.info("Provider unflagged: %s", instance.name)
 
 
 @receiver(post_save, sender=Provider)
@@ -360,11 +328,10 @@ def log_provider_save(sender, instance: Provider, created: bool, **kwargs):
     :param created: True if the Provider was created, False if it was updated.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("log_provider_save")
     if created:
-        logger.info("%s Created Provider: %s", prefix, instance.name)
+        logger.info("Created Provider: %s", instance.name)
     else:
-        logger.info("%s Updated Provider: %s", prefix, instance.name)
+        logger.info("Updated Provider: %s", instance.name)
 
 
 # ------------------------------------------------------------------------------
@@ -385,20 +352,19 @@ def provider_model_save(sender, instance: ProviderModel, created: bool, **kwargs
     :param created: True if the ProviderModel was created, False if it was updated.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("provider_model_save")
     # pylint: disable=W0212
     supports_fields = [f.name for f in instance._meta.fields if f.name.startswith("supports_")]
 
     # determine whether we need to run verifications
     if created:
-        logger.info("%s Created ProviderModel: %s for Provider: %s", prefix, instance.name, instance.provider.name)
+        logger.info("Created ProviderModel: %s for Provider: %s", instance.name, instance.provider.name)
         model_verification_requested.send(
             sender=ProviderModel,
             instance=instance,
             provider=instance.provider,
         )
     else:
-        logger.info("%s Updated ProviderModel: %s for Provider: %s", prefix, instance.name, instance.provider.name)
+        logger.info("Updated ProviderModel: %s for Provider: %s", instance.name, instance.provider.name)
         try:
             old_instance = sender.objects.get(pk=instance.pk)
             for field in supports_fields:
@@ -430,18 +396,15 @@ def provider_model_verification_save(sender, instance: ProviderModelVerification
     :param created: True if the verification was created, False if it was updated.
     :param kwargs: Other signal arguments, not used.
     """
-    prefix = get_prefix("provider_model_verification_save")
     if created:
         logger.info(
-            "%s Created Model Verification: %s for Provider Model: %s",
-            prefix,
+            "Created Model Verification: %s for Provider Model: %s",
             instance.verification_type,
             instance.provider_model.name,
         )
     else:
         logger.info(
-            "%s Updated Model Verification: %s for Provider Model: %s",
-            prefix,
+            "Updated Model Verification: %s for Provider Model: %s",
             instance.verification_type,
             instance.provider_model.name,
         )
@@ -459,8 +422,7 @@ def handle_embed_started(sender, backend, provider, user_profile, **kwargs):
     :param kwargs: Other signal arguments, not used.
     """
     logger.info(
-        "%s embed started for backend: %s, provider: %s, user_profile: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_started()",
+        "embed started for backend: %s, provider: %s, user_profile: %s",
         backend,
         provider,
         user_profile,
@@ -479,8 +441,7 @@ def handle_embed_success(sender, backend, provider, user_profile, **kwargs):
     :param kwargs: Other signal arguments, not used.
     """
     logger.info(
-        "%s embed succeeded for backend: %s, provider: %s, user_profile: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_success()",
+        "embed succeeded for backend: %s, provider: %s, user_profile: %s",
         backend,
         provider,
         user_profile,
@@ -499,8 +460,7 @@ def handle_embed_failed(sender, backend, provider, user_profile, **kwargs):
     :param kwargs: Other signal arguments, not used.
     """
     logger.error(
-        "%s embed failed for backend: %s, provider: %s, user_profile: %s",
-        f"{SmarterFormattedText.text(module_prefix)}.handle_embed_failed()",
+        "embed failed for backend: %s, provider: %s, user_profile: %s",
         backend,
         provider,
         user_profile,

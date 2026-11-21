@@ -57,7 +57,7 @@ class DataExportView(SmarterAuthenticatedNeverCachedWebView):
         try:
             export, started = start_data_export(request.user)
         except DataExportStartRefused as e:
-            logger.info("%s.post() refused a data export for %s: %s", self.formatted_class_name, request.user, e)
+            logger.info("refused a data export for %s: %s", request.user, e)
             return http.JsonResponse(status=HTTPStatus.TOO_MANY_REQUESTS.value, data={"error": str(e)})
         status = HTTPStatus.ACCEPTED if started else HTTPStatus.OK
         progress = DataExportStatusResponse.from_model(export)
