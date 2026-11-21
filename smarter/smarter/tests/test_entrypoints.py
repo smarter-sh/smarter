@@ -213,7 +213,9 @@ class TestBaseSettings(SmarterTestBase):
         secret_key = namespace["SECRET_KEY"]
         self.assertNotEqual(secret_key, smarter_settings.default_missing_value)
         self.assertEqual(len(secret_key), 64)
-        self.assertIn("SECRET_KEY not set. Using a randomized value.", messages)
+        self.assertTrue(
+            [message for message in messages if message.endswith("SECRET_KEY not set. Using a randomized value.")]
+        )
         self.assertFalse([message for message in messages if secret_key in message])
 
     def test_new_setting_values_are_never_logged(self):
