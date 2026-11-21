@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.11...v0.46.12-alpha.1) (2026-11-21)
+
+### Bug Fixes
+
+* **dashboard:** scope admin to staff accounts, delete through brokers ([ccb8e0c](https://github.com/smarter-sh/smarter/commit/ccb8e0c09153890678fecf6687a21acdfb973499))
+
 ## [0.46.11](https://github.com/smarter-sh/smarter/compare/v0.46.10...v0.46.11) (2026-11-21)
 
 ### Bug Fixes
