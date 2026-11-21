@@ -751,18 +751,16 @@ class SmarterChatProviderBase(ChatDbMixin):
         if unexpected:
             roles = sorted({str(message.get(role_key)) for message in unexpected})
             logger.warning(
-                "%s.get_message_thread() dropped %d of the client's messages that a new session does not accept, "
+                "dropped %d of the client's messages that a new session does not accept, "
                 "with the roles %s, for prompt %s. The LLMClient's system role, and the client's latest user message, "
                 "are used instead.",
-                self.formatted_class_name,
                 len(unexpected),
                 roles,
                 self.prompt.id if self.prompt else None,
             )
         if len(dropped) > len(unexpected):
             logger.debug(
-                "%s.get_message_thread() dropped %d of the client's messages that copy the LLMClient's introduction.",
-                self.formatted_class_name,
+                "dropped %d of the client's messages that copy the LLMClient's introduction.",
                 len(dropped) - len(unexpected),
             )
 

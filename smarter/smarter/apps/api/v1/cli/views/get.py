@@ -43,7 +43,10 @@ class ApiV1CliGetApiView(CliBaseApiView):
         :returns: The journaled json response.
         """
         logger.debug(
-            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+            "called with request=%s, args=%s, kwargs=%s",
+            request,
+            args,
+            kwargs,
         )
         if self.broker is None:
             raise ValueError(f"No broker found for kind '{kind}' in {self.formatted_class_name}")

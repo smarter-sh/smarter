@@ -8,7 +8,6 @@ from smarter.apps.account.models import User
 from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -16,7 +15,6 @@ from .api_connection import ApiConnection
 from .sql_connection import SqlConnection
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 def get_cached_connection_detail_view_and_kind(
@@ -53,7 +51,7 @@ def get_cached_connection_detail_view_and_kind(
     - :func:`smarter.apps.account.utils.get_cached_account_for_user`
     """
 
-    logger.debug("%s.get_cached_connection_detail_view_and_kind: Retrieving connection for user_id=%s, kind=%s, name=%s, invalidate=%s", logger_prefix, user.id if user else None, kind, name, invalidate)  # type: ignore[union-attr]
+    logger.debug("Retrieving connection for user_id=%s, kind=%s, name=%s, invalidate=%s", user.id if user else None, kind, name, invalidate)  # type: ignore[union-attr]
 
     @cache_results()
     def cached_sqlconnection_by_id_and_name(account_id: int, name: str) -> Union["SqlConnection", None]:
@@ -64,8 +62,7 @@ def get_cached_connection_detail_view_and_kind(
                 .get(user_profile__account__id=account_id, name=name)
             )
             logger.debug(
-                "%s.cached_sqlconnection_by_id_and_name() fetched and cached SqlConnection for account_id: %s, name: %s",
-                logger_prefix,
+                "fetched and cached SqlConnection for account_id: %s, name: %s",
                 account_id,
                 name,
             )
@@ -82,8 +79,7 @@ def get_cached_connection_detail_view_and_kind(
                 .get(user_profile__account__id=account_id, name=name)
             )
             logger.debug(
-                "%s.cached_apiconnection_by_id_and_name() fetched and cached ApiConnection for account_id: %s, name: %s",
-                logger_prefix,
+                "fetched and cached ApiConnection for account_id: %s, name: %s",
                 account_id,
                 name,
             )

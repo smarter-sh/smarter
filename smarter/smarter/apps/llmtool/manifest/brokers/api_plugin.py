@@ -84,7 +84,10 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def plugin_init(self) -> None:
@@ -261,7 +264,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             )
             return self._manifest
         else:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     @property
@@ -334,24 +337,21 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
 
         if self.plugin_meta is None:
             logger.warning(
-                "%s.plugin_data could not be retrieved because plugin_meta is None",
-                self.formatted_class_name,
+                "could not be retrieved because plugin_meta is None",
             )
             return None
 
         try:
             self._plugin_data = PluginDataApi.get_cached_data_by_plugin(plugin=self.plugin_meta)
             logger.debug(
-                "%s.plugin_data PluginDataApi object retrieved for %s %s",
-                self.formatted_class_name,
+                "PluginDataApi object retrieved for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
             return self._plugin_data
         except PluginDataApi.DoesNotExist:
             logger.warning(
-                "%s.plugin_data could not be found for %s %s",
-                self.formatted_class_name,
+                "could not be found for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
@@ -390,8 +390,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             return self._api_plugin_spec
         if not self.plugin_meta:
             logger.warning(
-                "%s.plugin_api_spec_orm2pydantic could not be built for %s %s because plugin_meta is None",
-                self.formatted_class_name,
+                "could not be built for %s %s because plugin_meta is None",
                 self.kind,
                 self.manifest.metadata.name if self.manifest and self.manifest.metadata else "<-- Missing Name -->",
             )
@@ -502,9 +501,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
             )
         for test_value in orm_test_values:
-            logger.info(
-                "%s.plugin_data_orm2pydantic() processing test_value: %s", self.formatted_class_name, test_value
-            )
+            logger.info("processing test_value: %s", test_value)
             # example:  {'name': 'username', 'value': 'admin'}
             if not isinstance(test_value, dict):
                 raise SAMPluginBrokerError(
@@ -538,7 +535,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Invalidate any relevant caches when the manifest or plugin data changes."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         if self.plugin:
             PluginDataApi.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
         return super().cache_invalidations()
@@ -572,8 +569,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournaledJsonResponse`
         """
         logger.debug(
-            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -623,8 +619,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginMeta`
         """
         logger.debug(
-            "%s.describe() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -673,8 +668,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             :class:`SAMBrokerErrorNotReady`
         """
         logger.debug(
-            "%s.apply() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -734,8 +728,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.prompt() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -771,8 +764,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournalCliCommands`
         """
         logger.debug(
-            "%s.delete() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -835,8 +827,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.deploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -861,8 +852,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.undeploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -886,8 +876,7 @@ class SAMApiPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.logs() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,

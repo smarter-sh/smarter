@@ -12,8 +12,7 @@ from smarter.lib.django.waffle.switches import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MIDDLEWARE_LOGGING])
 logger.debug(
-    "%s is %s",
-    logging.SmarterFormattedText.text(__name__) + ".MiddlewareDebugMiddleware",
+    "is %s",
     SmarterHelperMixin().formatted_state_ready,
 )
 
@@ -37,12 +36,10 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
         if self.deserves_amnesty(request.path):
             return self.get_response(request)
 
-        logger.debug("%s.__call__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
 
         response = super().__call__(request)
-        logger.debug(
-            "%s.__call__(): type(response)=%s, response=%s", self.formatted_class_name, type(response), response
-        )
+        logger.debug("type(response)=%s, response=%s", type(response), response)
         if not isinstance(response, HttpResponseBase):
             raise TypeError(
                 f"Middleware chain expects HttpResponseBase, but returned an invalid response of {type(response)}"
@@ -58,11 +55,9 @@ class MiddlewareDebugMiddleware(SmarterMiddlewareMixin):
         :returns: The response.
         :raises TypeError: if the middleware chain returned something other than a response.
         """
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
         response = await super().__acall__(request)
-        logger.debug(
-            "%s.__acall__(): type(response)=%s, response=%s", self.formatted_class_name, type(response), response
-        )
+        logger.debug("type(response)=%s, response=%s", type(response), response)
 
         if not isinstance(response, HttpResponseBase):
             raise TypeError(

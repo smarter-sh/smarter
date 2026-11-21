@@ -49,7 +49,7 @@ class AccountView(AccountViewBase):
         :returns: The :class:`AccountApiAccountDetail` of the Account.
         :raises PermissionDenied: when a non-superuser has no UserProfile.
         """
-        logger.debug("%s.get() called with account_id: %s", self.formatted_class_name, account_id)
+        logger.debug("called with account_id: %s", account_id)
         if account_id and request.user.is_superuser:  # type: ignore
             account = get_object_or_404(Account, pk=account_id)
         else:
@@ -68,16 +68,16 @@ class AccountView(AccountViewBase):
         :returns: A redirect to the new Account's url, or a 400 response when the body is not a json
             dict or the Account cannot be created.
         """
-        logger.debug("%s.post() called with data: %s", self.formatted_class_name, request.data)
+        logger.debug("called with data: %s", request.data)
         try:
             data = request.data
             if not isinstance(data, dict):
                 raise json.JSONDecodeError(
                     f"Expected a JSON dict in request body but received {type(data)}", doc=str(data), pos=0
                 )
-            logger.debug("%s.post() parsed JSON data: %s", self.formatted_class_name, data)
+            logger.debug("parsed JSON data: %s", data)
         except json.JSONDecodeError as e:
-            logger.error("%s.post() JSON decode error: %s", self.formatted_class_name, str(e))
+            logger.error("JSON decode error: %s", str(e))
             return HttpResponseBadRequest(f"Invalid JSON data: {str(e)}")
 
         try:
@@ -85,12 +85,12 @@ class AccountView(AccountViewBase):
             data["name"] = to_snake_case(name)
             account = Account.objects.create(**data)
         except REQUEST_DATA_ERROR_TYPES as e:
-            logger.warning("%s.post() could not create the account: %s", self.formatted_class_name, type(e).__name__)
+            logger.warning("could not create the account: %s", type(e).__name__)
             message = client_error_message(e, "The Account could not be created.")
             return HttpResponseBadRequest(f"Invalid request data: {message}")
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.post() error creating account", self.formatted_class_name, exc_info=True)
+            logger.error("error creating account", exc_info=True)
             return HttpResponseServerError("An unknown error occurred while creating the Account.")
 
         return HttpResponseRedirect(request.path_info + str(account.id) + "/")  # type: ignore
@@ -106,7 +106,7 @@ class AccountView(AccountViewBase):
         :returns: The response: 404 when the Account does not exist, 400 when the body or the new values
             are not valid.
         """
-        logger.debug("%s.patch() called for account_id: %s", self.formatted_class_name, account_id)
+        logger.debug("called for account_id: %s", account_id)
         account: Account
 
         if not isinstance(request.data, dict):
@@ -118,28 +118,28 @@ class AccountView(AccountViewBase):
             account = Account.get_cached_object(pk=account_id)
             if not isinstance(account, Account):
                 raise Account.DoesNotExist(f"Account with id {account_id} does not exist.")
-            logger.debug("%s.patch() retrieved account: %s", self.formatted_class_name, account)
+            logger.debug("retrieved account: %s", account)
         except Account.DoesNotExist:
-            logger.debug("%s.patch() account with id %s not found", self.formatted_class_name, account_id)
+            logger.debug("account with id %s not found", account_id)
             return HttpResponseNotFound("Account not found")
 
         # the body was parsed, and found to be a dict, above.
         data: SmarterDictType = request.data
-        logger.debug("%s.patch() received data: %s", self.formatted_class_name, data)
+        logger.debug("received data: %s", data)
 
         try:
             for key, value in data.items():
                 if hasattr(account, key):
                     setattr(account, key, value)
             account.save()  # type: ignore
-            logger.debug("%s.patch() updated account: %s", self.formatted_class_name, account)
+            logger.debug("updated account: %s", account)
         except CLIENT_ERROR_TYPES as e:
-            logger.warning("%s.patch() could not update the account: %s", self.formatted_class_name, type(e).__name__)
+            logger.warning("could not update the account: %s", type(e).__name__)
             message = client_error_message(e, "The Account could not be updated.")
             return HttpResponseBadRequest(message)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.patch() internal error updating account", self.formatted_class_name, exc_info=True)
+            logger.error("internal error updating account", exc_info=True)
             return HttpResponseServerError("An unknown error occurred while updating the Account.")
 
         return HttpResponseRedirect(request.path_info)
@@ -153,20 +153,20 @@ class AccountView(AccountViewBase):
         :returns: A redirect to ``/``, or a 500 response when the delete fails.
         :raises Http404: when the Account does not exist.
         """
-        logger.debug("%s.delete() called with account_id: %s", self.formatted_class_name, account_id)
+        logger.debug("called with account_id: %s", account_id)
         account: Account
         account = get_object_or_404(Account, pk=account_id)
-        logger.debug("%s.delete() retrieved account: %s", self.formatted_class_name, account)
+        logger.debug("retrieved account: %s", account)
 
         try:
             account.delete()
         except CLIENT_ERROR_TYPES as e:
-            logger.warning("%s.delete() refused: %s", self.formatted_class_name, type(e).__name__)
+            logger.warning("refused: %s", type(e).__name__)
             message = client_error_message(e, "The Account could not be deleted.")
             return HttpResponseBadRequest(message)
         # pylint: disable=broad-except
         except Exception:
-            logger.error("%s.delete() internal error deleting account", self.formatted_class_name, exc_info=True)
+            logger.error("internal error deleting account", exc_info=True)
             return HttpResponseServerError("An unknown error occurred while deleting the Account.")
 
         return HttpResponseRedirect("/")
@@ -183,7 +183,7 @@ class AccountListView(ContractListMixin, AccountListViewBase):
 
         :returns: The queryset.
         """
-        logger.debug("%s.get_queryset() called", self.formatted_class_name)
+        logger.debug("called")
         if self.is_superuser():
             return Account.objects.all()
         return Account.objects.none()

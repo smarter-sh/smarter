@@ -125,7 +125,7 @@ class TestOpenAIPassthroughClientReasoningEffort(SmarterTestBase):
     def test_retries_with_reasoning_effort_none(self, mock_create):
         mock_create.side_effect = [bad_request("reasoning_effort"), "completion"]
         with self.assertLogs("smarter.apps.provider.clients", level="WARNING") as logs:
-            result = self.client.create_chat_completion(self.data, "prefix")
+            result = self.client.create_chat_completion(self.data)
         self.assertEqual(result, "completion")
         self.assertEqual(mock_create.call_count, 2)
         self.assertEqual(mock_create.call_args.kwargs["reasoning_effort"], "none")
@@ -135,7 +135,7 @@ class TestOpenAIPassthroughClientReasoningEffort(SmarterTestBase):
     def test_other_errors_not_retried(self, mock_create):
         mock_create.side_effect = bad_request("temperature")
         with self.assertRaises(openai.BadRequestError):
-            self.client.create_chat_completion(self.data, "prefix")
+            self.client.create_chat_completion(self.data)
         self.assertEqual(mock_create.call_count, 1)
 
 

@@ -42,24 +42,21 @@ from typing import Any, Optional
 from django.utils.functional import Promise
 from pydantic import HttpUrl
 
-# The standard library's logging, not smarter.lib.logging: smarter.lib.logging imports
-# this module (through console_helpers), so importing it here would be circular.
-# smarter.lib.logging.getLogger is this same function.
-logger = std_logging.getLogger(__name__)
 
-
-def _logger_prefix() -> str:
+@functools.cache
+def _logger():
     """
-    Return this module's formatted log prefix.
+    Return this module's logger, wrapped so that each message starts with its caller's name.
 
-    ``console_helpers`` is imported on use, not at import, because it imports this module.
+    The wrapper is imported on first use, not at import: :mod:`smarter.lib.logging` imports this
+    module (through ``console_helpers``), so importing it here would be circular.
 
-    :returns: The formatted module name.
+    :returns: The module's :class:`~smarter.lib.logging.waffle_switched_logger.WaffleSwitchedLoggerWrapper`.
     """
     # pylint: disable=import-outside-toplevel
-    from smarter.common.helpers.console_helpers import SmarterFormattedText
+    from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
-    return SmarterFormattedText.text(__name__)
+    return WaffleSwitchedLoggerWrapper(std_logging.getLogger(__name__))
 
 
 def _get_duration_components(duration: datetime.timedelta) -> tuple[int, int, int, int, int]:
@@ -202,19 +199,13 @@ class SmarterJSONEncoder(json.JSONEncoder):
                 return o.name
             if _is_class(o, "taggit.models", "TaggedItem"):
                 retval = o.tag.name
-                logger.debug(
-                    "%s.SmarterJSONEncoder.default() Serializing TaggedItem with tag: %s", _logger_prefix(), retval
-                )
+                _logger().debug("Serializing TaggedItem with tag: %s", retval)
                 return retval
 
             # Handle TaggableManager
             if _is_class(o, "taggit.managers", "TaggableManager", "_TaggableManager"):
                 retval = list(o.all().values_list("name", flat=True))
-                logger.debug(
-                    "%s.SmarterJSONEncoder.default() Serializing TaggableManager with tags: %s",
-                    _logger_prefix(),
-                    retval,
-                )
+                _logger().debug("Serializing TaggableManager with tags: %s", retval)
                 return retval
 
             return super().default(o)

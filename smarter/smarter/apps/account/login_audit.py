@@ -31,7 +31,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 LOGIN_IDENTITY_SALT = "smarter.apps.account.login_audit.login_identity"
 """The salt of :func:`login_identity`'s hash.
@@ -106,8 +105,7 @@ def log_login_failure(email: Optional[str], failure: LoginFailure) -> None:
     :param failure: Why the sign-in failed.
     """
     logger.warning(
-        "%s.log_login_failure() sign-in failed: reason=%s identity=%s",
-        logger_prefix,
+        "sign-in failed: reason=%s identity=%s",
         failure,
         login_identity(email),
     )

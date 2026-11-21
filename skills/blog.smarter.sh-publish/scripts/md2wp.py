@@ -7,7 +7,8 @@ table, quote, separator) plus the SyntaxHighlighter plugin's code block, so a po
 converted here edits in the block editor like the posts that were written there.
 Only the Markdown that the release announcements use is supported: ATX headings,
 paragraphs, ``-`` and ``1.`` lists (one level), pipe tables, ``>`` quotes, ``---``,
-fenced code, ``![alt](url "caption")`` images on a line of their own, and inline
+fenced code, ``![alt](url "caption")`` images and bare YouTube urls (as video
+embeds) on a line of their own, and inline
 bold, italics, code and links.
 
 The post's ``# Title`` line and the date line after it are left out of the content,
@@ -26,6 +27,7 @@ FENCE = re.compile(r"^```\s*([\w+-]*)\s*$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 BULLET = re.compile(r"^(\s*)(?:[-*]|(\d+)\.)\s+(.*)$")
 IMAGE = re.compile(r'^!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)\s*$')
+YOUTUBE = re.compile(r"^(https://(?:youtu\.be/[\w-]+|(?:www\.)?youtube\.com/watch\?v=[\w-]+)\S*)\s*$")
 
 
 def inline(text: str) -> str:
@@ -78,6 +80,32 @@ def image(alt: str, url: str, caption: str | None) -> str:
         f"{figcaption}</figure>"
     )
     return block("image", figure, {"linkDestination": "media"})
+
+
+def youtube(url: str) -> str:
+    """A YouTube embed block, which WordPress renders through oEmbed as the video player."""
+    figure = (
+        '<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube '
+        'wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">\n'
+        f"{url}\n</div></figure>"
+    )
+    attrs = {
+        "url": url,
+        "type": "video",
+        "providerNameSlug": "youtube",
+        "responsive": True,
+        "className": "wp-embed-aspect-16-9 wp-has-aspect-ratio",
+    }
+    return block("embed", figure, attrs)
+
+
+def media_block(line: str) -> str | None:
+    """An image or YouTube embed block for a line that holds only an image or a video url, else None."""
+    video = YOUTUBE.match(line)
+    if video:
+        return youtube(video.group(1))
+    picture = IMAGE.match(line)
+    return image(*picture.groups()) if picture else None
 
 
 def bullets(items: list[str], ordered: bool) -> str:
@@ -155,9 +183,9 @@ def convert(markdown: str) -> str:
             pre = f'<pre class="wp-block-syntaxhighlighter-code">{html.escape(chr(10).join(code), quote=False)}</pre>'
             blocks.append(block("syntaxhighlighter/code", pre, {"language": language} if language else None))
             continue
-        picture = IMAGE.match(line)
-        if picture:
-            blocks.append(image(*picture.groups()))
+        media = media_block(line)
+        if media:
+            blocks.append(media)
             i += 1
             continue
         heading = HEADING.match(line)

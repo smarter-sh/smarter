@@ -155,7 +155,11 @@ class SlackService(InfrastructureService):
 
         :param channel: The channel it was for.
         """
-        logger.warning("%s %s is not configured. Nothing was posted to %s.", self.formatted_class_name, self, channel)
+        logger.warning(
+            "%s is not configured. Nothing was posted to %s.",
+            self,
+            channel,
+        )
 
     def post_message(self, channel: str, text: str, thread_ts: Optional[str] = None) -> Optional[SlackMessage]:
         """
@@ -188,9 +192,9 @@ class SlackService(InfrastructureService):
                 raise SlackServiceError("chat.postMessage returned no channel or ts")
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s.post_message() could not post to %s: %s", self.formatted_class_name, channel, e)
+            logger.error("could not post to %s: %s", channel, e)
             return None
-        logger.info("%s.post_message() posted to %s", self.formatted_class_name, channel)
+        logger.info("posted to %s", channel)
         return SlackMessage(channel_id=response.channel, ts=response.ts)
 
     # pylint: disable=too-many-arguments
@@ -238,12 +242,14 @@ class SlackService(InfrastructureService):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.upload_file() could not upload %s to %s: %s", self.formatted_class_name, filename, channel_id, e
+                "could not upload %s to %s: %s",
+                filename,
+                channel_id,
+                e,
             )
             return False
         logger.info(
-            "%s.upload_file() uploaded %s (%s bytes) to %s",
-            self.formatted_class_name,
+            "uploaded %s (%s bytes) to %s",
             filename,
             len(content),
             channel_id,

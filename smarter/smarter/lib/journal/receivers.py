@@ -23,7 +23,6 @@ from .signals import (
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 error_logger = logging.getSmarterLogger(__name__)
 """Logs whatever the waffle switches, for a journal entry that could not be saved."""
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=SAMJournal)
@@ -37,8 +36,7 @@ def samjournal_post_save(sender, instance: SAMJournal, created, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.samjournal_post_save() SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
-        logger_prefix,
+        "SAMJournal: %s, thing: %s, command: %s, status_code: %s, created: %s",
         instance.key,
         instance.thing,
         instance.command,
@@ -57,8 +55,7 @@ def samjournal_post_delete(sender, instance: SAMJournal, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.samjournal_post_delete() SAMJournal: %s",
-        logger_prefix,
+        "SAMJournal: %s",
         instance.key,
     )
 
@@ -73,8 +70,7 @@ def journal_entry_created_receiver(sender, journal: SAMJournal, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.journal_entry_created_receiver() sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
-        logger_prefix,
+        "sender: %s, journal: %s, thing: %s, command: %s, status_code: %s",
         sender,
         journal.key,
         journal.thing,
@@ -105,8 +101,7 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
     :param kwargs: Any other signal arguments.
     """
     error_logger.error(
-        "%s.journal_entry_failed_receiver() sender=%s, user=%s, thing=%s, command=%s, status=%s",
-        logger_prefix,
+        "sender=%s, user=%s, thing=%s, command=%s, status=%s",
         sender,
         user,
         thing,
@@ -114,8 +109,7 @@ def journal_entry_failed_receiver(sender, user, thing, command, status, request,
         status,
     )
     error_logger.error(
-        "%s.journal_entry_failed_receiver() could not create journal entry: %s",
-        logger_prefix,
+        "could not create journal entry: %s",
         error,
     )
 
@@ -131,8 +125,7 @@ def journal_entry_accessed_receiver(sender, journal: SAMJournal, user, **kwargs)
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.journal_entry_accessed_receiver() sender: %s, journal: %s, user: %s",
-        logger_prefix,
+        "sender: %s, journal: %s, user: %s",
         sender,
         journal.key,
         user,
@@ -150,8 +143,7 @@ def journal_entries_listed_receiver(sender, user, count, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.journal_entries_listed_receiver() sender: %s, user: %s, count: %s",
-        logger_prefix,
+        "sender: %s, user: %s, count: %s",
         sender,
         user,
         count,

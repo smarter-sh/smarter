@@ -16,13 +16,15 @@ This module uses only the standard library, so that it can run while Django's se
 are being loaded.
 """
 
-import logging
 import math
 import multiprocessing
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from smarter.common.helpers.processes import is_first_worker
+
+if TYPE_CHECKING:
+    from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 #: Memory, in GiB, to recommend for each uvicorn worker: about 420 MB at rest, plus the
 #: threads and buffers of the requests it has in flight.
@@ -139,7 +141,7 @@ def recommended_memory_gib(workers: int) -> float:
     return max(workers, 1) * MEMORY_GIB_PER_WORKER + MEMORY_HEADROOM_GIB
 
 
-def log_resource_limits(logger: logging.Logger, prefix: str) -> None:
+def log_resource_limits(logger: "WaffleSwitchedLoggerWrapper") -> None:
     """
     Log this container's CPU and memory limits, and warn when they are below what its server needs.
 
@@ -147,25 +149,23 @@ def log_resource_limits(logger: logging.Logger, prefix: str) -> None:
     worker per server (see :func:`~smarter.common.helpers.processes.is_first_worker`),
     since its workers share the container and would otherwise each log the same warning.
 
-    :param logger: The logger to write to.
-    :param prefix: The prefix that starts each message, e.g. the caller's ``logger_prefix``.
+    :param logger: The logger to write to, which starts each message with this function's name.
     """
     try:
         cpu = cpu_limit()
         memory = memory_limit_gib()
     except OSError as e:
-        logger.warning("%s.log_resource_limits() resource limits not available: %s", prefix, e)
+        logger.warning("resource limits not available: %s", e)
         return
     except (ValueError, IndexError) as e:
-        logger.error("%s.log_resource_limits() error parsing resource limits: %s", prefix, e)
+        logger.error("error parsing resource limits: %s", e)
         return
 
     workers = uvicorn_workers()
     min_cpu = recommended_cpu(workers)
     min_memory = recommended_memory_gib(workers)
     logger.debug(
-        "%s.log_resource_limits() CPU limit: %s cores, memory limit: %.2f GiB, uvicorn workers: %s",
-        prefix,
+        "CPU limit: %s cores, memory limit: %.2f GiB, uvicorn workers: %s",
         cpu,
         memory,
         workers,
@@ -174,17 +174,14 @@ def log_resource_limits(logger: logging.Logger, prefix: str) -> None:
         return
     if cpu < min_cpu:
         logger.warning(
-            "%s.log_resource_limits() recommended minimum CPU limit for %s uvicorn worker(s) is %s. Detected: %s cores",
-            prefix,
+            "recommended minimum CPU limit for %s uvicorn worker(s) is %s. Detected: %s cores",
             workers,
             min_cpu,
             cpu,
         )
     if memory < min_memory:
         logger.warning(
-            "%s.log_resource_limits() recommended minimum memory limit for %s uvicorn worker(s) is %.2f GiB. "
-            "Detected: %.2f GiB",
-            prefix,
+            "recommended minimum memory limit for %s uvicorn worker(s) is %.2f GiB. " "Detected: %.2f GiB",
             workers,
             min_memory,
             memory,

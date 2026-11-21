@@ -35,7 +35,7 @@ class InfrastructureResource(TimestampedModel):
         max_length=512, blank=True, default="", help_text="The provider's id of the resource, if any."
     )
     billable = models.BooleanField(default=False, help_text="Whether the provider bills for the resource.")
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(max_length=16, choices=Status, default=Status.ACTIVE)
     destroyed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

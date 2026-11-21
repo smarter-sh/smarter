@@ -31,7 +31,6 @@ def should_log(level: int) -> bool:
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=SmarterAuthToken)
@@ -48,8 +47,7 @@ def handle_auth_token_save(sender, instance, created, **kwargs):
     old_name = getattr(instance, "_loaded_name", None)
     invalidate_cached_auth_tokens(instance.user_id, names=(instance.name, old_name))
     logger.debug(
-        "%s.handle_auth_token_save() SmarterAuthToken: %s, created: %s",
-        logger_prefix,
+        "SmarterAuthToken: %s, created: %s",
         instance,
         created,
     )
@@ -66,8 +64,7 @@ def handle_smarter_auth_token_delete(sender, instance, **kwargs):
     """
     invalidate_cached_auth_tokens(instance.user_id, names=(instance.name,))
     logger.debug(
-        "%s.handle_smarter_auth_token_delete() SmarterAuthToken: %s",
-        logger_prefix,
+        "SmarterAuthToken: %s",
         instance,
     )
 
@@ -83,8 +80,7 @@ def handle_smarter_token_authentication_request(sender, token, url, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.handle_smarter_token_authentication_request() sender: %s, token: %s, url: %s",
-        logger_prefix,
+        "sender: %s, token: %s, url: %s",
         sender,
         token,
         url,
@@ -102,8 +98,7 @@ def handle_smarter_token_authentication_success(sender, user, token, **kwargs):
     :param kwargs: The rest of the signal's arguments.
     """
     logger.debug(
-        "%s.handle_smarter_token_authentication_success() sender: %s, user: %s, token: %s",
-        logger_prefix,
+        "sender: %s, user: %s, token: %s",
         sender,
         user,
         token,
@@ -122,8 +117,7 @@ def handle_smarter_token_authentication_failure(sender, user, token, error: Auth
     :param kwargs: The rest of the signal's arguments.
     """
     logger.warning(
-        "%s.handle_smarter_token_authentication_failure() sender: %s, user: %s, token: %s, error: %s",
-        logger_prefix,
+        "sender: %s, user: %s, token: %s, error: %s",
         sender,
         user,
         token,

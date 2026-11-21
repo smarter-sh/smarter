@@ -32,7 +32,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 TOOL_RESULT_CACHE_TTL = 60 * 60
 """Seconds to cache a tool call's result: one hour.
@@ -76,7 +75,7 @@ def invalidate_cached_tool_results() -> None:
     """
     generation = time.time_ns()
     lazy_cache.set(INDEX_GENERATION_KEY, generation, timeout=None)
-    logger.info("%s.invalidate_cached_tool_results() started a new index generation.", logger_prefix)
+    logger.info("started a new index generation.")
 
 
 __all__ = ["TOOL_CACHE_NAMESPACE", "TOOL_RESULT_CACHE_TTL", "index_generation", "invalidate_cached_tool_results"]

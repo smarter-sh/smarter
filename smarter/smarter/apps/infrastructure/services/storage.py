@@ -88,7 +88,10 @@ class StorageService(InfrastructureService):
         with self.operation("put_object"):
             self._put_object(key, content, content_type)
         logger.info(
-            "%s.put_object() saved %s (%s bytes) to %s", self.formatted_class_name, key, len(content), self.bucket
+            "saved %s (%s bytes) to %s",
+            key,
+            len(content),
+            self.bucket,
         )
 
     def presigned_url(self, key: str, expires_in: int, filename: Optional[str] = None) -> str:
@@ -112,8 +115,7 @@ class StorageService(InfrastructureService):
         with self.operation("presigned_url"):
             url = self._presigned_url(key, expires_in, filename)
         logger.info(
-            "%s.presigned_url() made a url for %s that expires in %s seconds",
-            self.formatted_class_name,
+            "made a url for %s that expires in %s seconds",
             key,
             expires_in,
         )
@@ -129,7 +131,7 @@ class StorageService(InfrastructureService):
         self.require_ready()
         with self.operation("delete_object"):
             self._delete_object(key)
-        logger.info("%s.delete_object() deleted %s from %s", self.formatted_class_name, key, self.bucket)
+        logger.info("deleted %s from %s", key, self.bucket)
 
 
 __all__ = ["MAX_PRESIGNED_URL_SECONDS", "StorageService"]

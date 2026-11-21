@@ -113,4 +113,4 @@ class TestHealthChecks(SmarterTestBase):
             )
 
     def test_module_logger(self):
-        self.assertTrue(platform.logger_prefix)
+        self.assertTrue(platform.logger)

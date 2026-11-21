@@ -63,7 +63,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 EXAMPLE_PROMPT = "hello world"
 """The prompt that the page's example ``/prompt/`` command sends, for an LLMClient without example prompts."""
@@ -353,7 +352,7 @@ def deployment_page(llmclient: LLMClient) -> LLMClientDeploymentPage:
         manifest = cached_manifest_yaml(llmclient.pk, llmclient.updated_at.isoformat())
     # the page, without the manifest, rather than an error. pylint: disable=W0718
     except Exception as e:
-        logger.warning("%s.deployment_page() could not build the manifest of %s: %s", logger_prefix, llmclient, e)
+        logger.warning("could not build the manifest of %s: %s", llmclient, e)
     return LLMClientDeploymentPage(
         mode="workbench",
         llmclient=DeploymentLLMClient(
@@ -426,12 +425,6 @@ class LLMClientEndpointsView(SmarterWebHtmlView):
 
     template_path = "llmclient/endpoints.html"
 
-    @property
-    def formatted_class_name(self) -> str:
-        """Returns the class name in a formatted string along with the name of this view."""
-        class_name = f"{__name__}.{LLMClientEndpointsView.__name__}[{id(self)}]"
-        return logging.SmarterFormattedText.text(class_name)
-
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         The page, for the LLMClient that serves the request's host.
@@ -444,12 +437,13 @@ class LLMClientEndpointsView(SmarterWebHtmlView):
         llmclient: Optional[LLMClient] = get_cached_llmclient_by_request(request=request)
         if llmclient is None or not llmclient.deployed:
             logger.debug(
-                "%s.get() no deployed LLMClient serves %s", self.formatted_class_name, request.build_absolute_uri()
+                "no deployed LLMClient serves %s",
+                request.build_absolute_uri(),
             )
             return SmarterHttpResponseNotFound(request=request, error_message="LLMClient not found.")
 
         page = deployment_page(llmclient).public()
-        logger.debug("%s.get() endpoints page for %s", self.formatted_class_name, llmclient)
+        logger.debug("endpoints page for %s", llmclient)
         context = {
             "deployment": page.to_json(),
             "deployment_root_id": DEPLOYMENT_ROOT_ID,

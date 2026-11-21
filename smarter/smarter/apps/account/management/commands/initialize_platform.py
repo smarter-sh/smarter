@@ -14,8 +14,7 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class Command(SmarterCommand):
@@ -49,7 +48,7 @@ class Command(SmarterCommand):
 
         :raises Exception: Whatever collectstatic raises; the caller decides what a failure means.
         """
-        logger.info("%s.upload_static_files() uploading the static files to the CDN's bucket", logger_prefix)
+        logger.info("uploading the static files to the CDN's bucket")
         started = time.monotonic()
         # an instance, not the command's name, so that its lists of files can be read afterwards.
         command = collectstatic.Command()
@@ -59,8 +58,7 @@ class Command(SmarterCommand):
         unchanged_count = len(command.unmodified_files)
         total_count = changed_count + unchanged_count
         logger.info(
-            "%s.upload_static_files() checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
-            logger_prefix,
+            "checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
             total_count,
             changed_count,
             seconds,
@@ -80,7 +78,7 @@ class Command(SmarterCommand):
         try:
             call_command("rename_stackademy_resources", username=username)
         except (Exception, SystemExit) as e:
-            logger.error("%s.rename_stackademy_resources() failed: %s", logger_prefix, e)
+            logger.error("failed: %s", e)
 
     # pylint: disable=broad-except
     def handle(self, *args, **options):

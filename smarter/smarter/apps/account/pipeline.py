@@ -16,11 +16,9 @@ from smarter.apps.account.utils import get_cached_avatar_url, smarter_cached_obj
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 logger.debug(
-    "%s is %s",
-    logging.SmarterFormattedText.text(__name__) + ".SmarterSocialAuthExceptionMiddleware",
+    "is %s",
     SmarterHelperMixin().formatted_state_ready,
 )
 
@@ -46,7 +44,7 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
 
-        logger.debug("%s.__acall__(): Request received: %s %s", self.formatted_class_name, request.method, request.path)
+        logger.debug("Request received: %s %s", request.method, request.path)
 
         get_response = cast(AsyncGetResponseCallable, self.get_response)
         return await get_response(request)
@@ -65,8 +63,7 @@ class SmarterSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware, Smarte
 
         if isinstance(exception, AuthAlreadyAssociated):
             logger.warning(
-                "%s SmarterSocialAuthExceptionMiddleware: AssociationAlreadyExists for request=%s, exception=%s",
-                logger_prefix,
+                "SmarterSocialAuthExceptionMiddleware: AssociationAlreadyExists for request=%s, exception=%s",
                 request,
                 exception,
             )
@@ -93,7 +90,7 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     }
     """
     if user:
-        logger.debug("%s.create_user() User already exists: %s", logger_prefix, user)
+        logger.debug("User already exists: %s", user)
         return {"is_new": False, "user": user}
 
     # a provider may leave out the user's names, e.g. GitHub, but the auth_user table's are not null.
@@ -105,8 +102,7 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
     }
     if not fields["username"]:
         logger.error(
-            "%s.create_user() No fields available to create user. Received the following: strategy=%s, details=%s, backend=%s, user=%s, kwargs keys=%s",
-            logger_prefix,
+            "No fields available to create user. Received the following: strategy=%s, details=%s, backend=%s, user=%s, kwargs keys=%s",
             strategy,
             details,
             backend,
@@ -118,7 +114,7 @@ def create_user(strategy, details, backend, *args, user=None, **kwargs):
 
     fields["is_active"] = False  # Ensure the user is inactive upon creation
     user = strategy.create_user(**fields)
-    logger.info("%s.create_user() Created new user: %s", logger_prefix, user)
+    logger.info("Created new user: %s", user)
     # the browser's language, as the web console chose it for this request, is the user's preferred language.
     UserProfile.objects.create(user=user, account=smarter_cached_objects.smarter_account, language=active_language())
     return {
@@ -134,7 +130,7 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     This allows for updating additional fields during user details update if needed.
     """
     if user is None:
-        logger.debug("%s.user_details() No user provided to update.", logger_prefix)
+        logger.debug("No user provided to update.")
         return
 
     user_profile: UserProfile
@@ -152,9 +148,9 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
 
     if changed:
         user.save()
-        logger.info("%s.user_details() Updated user details for: %s", logger_prefix, user)
+        logger.info("Updated user details for: %s", user)
     else:
-        logger.debug("%s.user_details() No changes detected for user: %s", logger_prefix, user)
+        logger.debug("No changes detected for user: %s", user)
 
     # Google and LinkedIn (OpenID Connect) send the image as `picture`, GitHub as `avatar_url`.
     # The user's own uploaded image, UserProfile.profile_image, takes precedence over this one.
@@ -163,24 +159,25 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
     if not profile_image_url:
         return None
 
-    logger.debug("%s.user_details() Found profile image URL: %s", logger_prefix, profile_image_url)
+    logger.debug("Found profile image URL: %s", profile_image_url)
 
     # Validate the profile image URL by making a HEAD request
     try:
         head = requests.head(profile_image_url, timeout=1)
         if head.status_code != 200:
             logger.error(
-                "%s.user_details() Failed to fetch profile image from URL: %s. Status code: %s",
-                logger_prefix,
+                "Failed to fetch profile image from URL: %s. Status code: %s",
                 profile_image_url,
                 head.status_code,
             )
             return None
-        logger.debug("%s.user_details() Successfully validated profile image URL: %s", logger_prefix, profile_image_url)
+        logger.debug(
+            "Successfully validated profile image URL: %s",
+            profile_image_url,
+        )
     except requests.RequestException as e:
         logger.error(
-            "%s.user_details() Exception occurred while fetching profile image from URL: %s. Exception: %s",
-            logger_prefix,
+            "Exception occurred while fetching profile image from URL: %s. Exception: %s",
             profile_image_url,
             e,
         )
@@ -192,13 +189,13 @@ def user_details(strategy, details, backend, *args, user=None, **kwargs):
         user_profile = UserProfile.objects.create(
             user=user, account=smarter_cached_objects.smarter_account, language=active_language()
         )
-        logger.error("%s.user_details() No UserProfile found for user: %s. This is a bug.", logger_prefix, user)
+        logger.error("No UserProfile found for user: %s. This is a bug.", user)
 
     if user_profile.profile_image_url is None or user_profile.profile_image_url != profile_image_url:
         user_profile.profile_image_url = profile_image_url
         user_profile.save()
         get_cached_avatar_url(user_id=user.id, invalidate=True)
-        logger.info("%s.user_details() Updated profile image URL for user: %s", logger_prefix, user)
+        logger.info("Updated profile image URL for user: %s", user)
 
 
 def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
@@ -214,8 +211,7 @@ def redirect_inactive_account(strategy, details, *args, user=None, **kwargs):
     2. when a user.is_active is False, redirect to a custom page.
     """
     logger.debug(
-        "%s.redirect_inactive_account() called with strategy=%s, details=%s, user=%s, kwargs keys=%s",
-        logger_prefix,
+        "called with strategy=%s, details=%s, user=%s, kwargs keys=%s",
         strategy,
         details,
         user,

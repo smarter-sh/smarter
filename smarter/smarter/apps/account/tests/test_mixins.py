@@ -188,7 +188,7 @@ class TestAccountMixinMethods(TestAccountMixin):
         self.assertIn("user_profile", s)
         self.assertIn("user_profile", r)
 
-    def test_accountmixin_logger_prefix_and_formatted_class_name(self):
+    def test_accountmixin_formatted_class_name(self):
         prefix = self.mixin._am_formatted_class_name
         name = self.mixin.formatted_class_name
         self.assertIsInstance(prefix, str)

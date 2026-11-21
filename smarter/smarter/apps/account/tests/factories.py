@@ -15,12 +15,10 @@ from smarter.apps.account.tests.cleanup import (
     MORTAL_ACCOUNT_NAME_PREFIX,
     MORTAL_USERNAME_PREFIX,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import hash_factory, to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-HERE = SmarterFormattedText.text(__name__)
 COMMON_VERSION = "0.0.1"
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
@@ -196,7 +194,7 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.debug("%s.factory_account_teardown() Deleted user profile for %s", HERE, lbl)
+            logger.debug("Deleted user profile for %s", lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -204,14 +202,14 @@ def factory_account_teardown(user: User, account: Optional[Account], user_profil
         if user:
             lbl = str(user)
             user.delete()
-            logger.debug("%s.factory_account_teardown() Deleted user: %s", HERE, lbl)
+            logger.debug("Deleted user: %s", lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.debug("%s.factory_account_teardown() Deleted account: %s", HERE, lbl)
+            logger.debug("Deleted account: %s", lbl)
     except Account.DoesNotExist:
         pass
 

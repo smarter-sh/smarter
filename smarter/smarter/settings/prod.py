@@ -8,11 +8,13 @@ from typing import TYPE_CHECKING
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.logging import getLogger
+from smarter.lib.logging import getSmarterLogger
 
+from .base import log_settings_diagnostics
 from .base_aws import *
+from .user import apply_user_settings
 
-logger = getLogger(__name__)
+logger = getSmarterLogger(__name__)
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")
@@ -30,6 +32,12 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 # see: https://python-social-auth.readthedocs.io/en/latest/configuration/settings.html
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+# The user's own Django settings supersede every setting above: the user settings file, then
+# DJANGO_* environment variables. No setting is assigned below this line, and the settings are
+# logged only below it, so that the log shows the values that Django runs with.
+apply_user_settings(globals())
+log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)
 if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
@@ -59,7 +67,7 @@ if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
     logger.debug("*" * 80)
     if not SESSION_COOKIE_SECURE:
         logger.warning(
-            "WARNING: SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
+            "SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
         )
         logger.debug("*" * 80)
 

@@ -82,7 +82,7 @@
   <link href="{% static 'assets/css/style.bundle.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
   <link href="{% static 'assets/css/file-drop-zone.css' %}?v={{ STATIC_VERSION }}" rel="stylesheet" type="text/css" />
   <!--end::Global Stylesheets Bundle-->
-  <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
+  <script nonce="{{ csp_nonce }}">// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
   {% endblock %}
   {% block head_extra %}
   {% endblock %}
@@ -107,7 +107,7 @@
   {% endblock %}
 
   <!--begin::Theme mode setup on page load-->
-  <script>var defaultThemeMode = "light"; var themeMode; if (document.documentElement) { if (document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if (localStorage.getItem("data-bs-theme") !== null) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
+  <script nonce="{{ csp_nonce }}">var defaultThemeMode = "light"; var themeMode; if (document.documentElement) { if (document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if (localStorage.getItem("data-bs-theme") !== null) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
   <!--end::Theme mode setup on page load-->
   <!--begin::App-->
   <!--begin::Root-->
@@ -129,12 +129,12 @@
   {% endblock %}
   {% block javascript %}
   <!--begin::Javascript-->
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.debugMode = "{{ dashboard.debug_mode|yesno:'true,false' }}";
   </script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());

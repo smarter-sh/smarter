@@ -11,8 +11,7 @@ from smarter.lib.django.models import MetaDataModel
 
 from .models import Annotation, get_cached_annotations
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @receiver(post_delete)
@@ -33,8 +32,7 @@ def delete_annotations(sender, instance, **kwargs):
     changes = Annotation.objects.delete_for_object(instance)
     if changes:
         logger.debug(
-            "%s.delete_annotations() deleted %s annotations of %s %s",
-            logger_prefix,
+            "deleted %s annotations of %s %s",
             len(changes),
             sender.__name__,
             instance.pk,
@@ -58,8 +56,7 @@ def invalidate_cached_annotations(sender, instance: Annotation, **kwargs):
     content_type_id = instance.content_type_id
     object_id = instance.object_id
     logger.debug(
-        "%s.invalidate_cached_annotations() content_type_id=%s object_id=%s",
-        logger_prefix,
+        "content_type_id=%s object_id=%s",
         content_type_id,
         object_id,
     )

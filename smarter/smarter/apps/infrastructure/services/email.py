@@ -142,20 +142,24 @@ class EmailService(InfrastructureService):
         elif isinstance(emails, list):
             mailto_list = emails
         else:
-            logger.warning("%s invalid email address list provided: %s", __name__, type(emails))
+            logger.warning(
+                "invalid email address list provided: %s",
+                type(emails),
+            )
             return None
 
         valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
         invalid_emails = set(mailto_list) - set(valid_emails)
         if invalid_emails and not quiet:
             logger.warning(
-                "%s invalid email addresses were found in send list: %s",
-                __name__,
+                "invalid email addresses were found in send list: %s",
                 masked_recipients(invalid_emails),
             )
         if not valid_emails:
             if not quiet:
-                logger.warning("%s no valid email addresses found in send list", __name__)
+                logger.warning(
+                    "no valid email addresses found in send list",
+                )
             return None
         return valid_emails
 
@@ -196,8 +200,7 @@ class EmailService(InfrastructureService):
         :param to: The email's recipients, which are logged masked.
         """
         logger.warning(
-            "%s %s is not configured. Would have sent '%s' to: %s",
-            self.formatted_class_name,
+            "%s is not configured. Would have sent '%s' to: %s",
             self,
             subject,
             masked_recipients(to),
@@ -264,7 +267,9 @@ class EmailService(InfrastructureService):
         logged_recipients = masked_recipients(recipients)
         if quiet:
             logger.debug(
-                "%s quiet mode. Would have sent '%s' to: %s", self.formatted_class_name, subject, logged_recipients
+                "quiet mode. Would have sent '%s' to: %s",
+                subject,
+                logged_recipients,
             )
             return False
 
@@ -277,16 +282,8 @@ class EmailService(InfrastructureService):
         # pylint: disable=broad-except
         except Exception as e:
             # never the sender's address: send_email() accepts any from_email.
-            logger.error(
-                "%s could not send '%s' to %s: %s",
-                self.formatted_class_name,
-                subject,
-                logged_recipients,
-                e,
-            )
             self.send(email_failed, subject=subject, recipients=recipients, error=str(e))
             return False
-        logger.info("%s sent '%s' to %s", self.formatted_class_name, subject, logged_recipients)
         self.send(email_sent, subject=subject, recipients=recipients)
         return True
 

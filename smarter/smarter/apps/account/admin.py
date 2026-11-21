@@ -31,7 +31,7 @@ from .models import (
     UserProfile,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def smarter_filter_queryset_for_user_profile(
@@ -52,10 +52,11 @@ def smarter_filter_queryset_for_user_profile(
         This function only works for models that inherit from
         smarter.apps.account.models.MetaDataWithOwnershipModel
     """
-    logger_prefix = f"{logging.SmarterFormattedText.text(__file__)}.smarter_filter_queryset_for_user_profile()"
     # 1.) no user_profile, no queryset. This is checked first: the logging below reads user_profile.user.
     if not user_profile:
-        logger.debug("%s: No user profile, returning empty queryset", logger_prefix)
+        logger.debug(
+            "No user profile, returning empty queryset",
+        )
         return qs.none()
     if user_profile.user.is_superuser:
         role = "superuser"
@@ -64,22 +65,23 @@ def smarter_filter_queryset_for_user_profile(
     else:
         role = "customer"
     logger.debug(
-        "%s: Filtering queryset for user %s with role %s",
-        logger_prefix,
+        "Filtering queryset for user %s with role %s",
         user_profile.user,
         role,
     )
 
     # 2.) if the user is a superuser, return all llmclients.
     if user_profile.user.is_superuser:
-        logger.debug("%s: User %s is superuser, returning unfiltered queryset", logger_prefix, user_profile.user)
+        logger.debug(
+            "User %s is superuser, returning unfiltered queryset",
+            user_profile.user,
+        )
         return qs
 
     # 3.) if user is staff then select all llmclients for the account of the user.
     if user_profile.user.is_staff:
         logger.debug(
-            "%s: User %s is staff, filtering queryset for account %s",
-            logger_prefix,
+            "User %s is staff, filtering queryset for account %s",
             user_profile.user,
             user_profile.account,
         )
@@ -97,7 +99,8 @@ def smarter_filter_queryset_for_user_profile(
     # user + all llmclients shared with the user which are llmclients owned
     # by an admin user of the account (could be more than one).
     logger.debug(
-        "%s: User %s is customer, filtering queryset for owned and shared objects", logger_prefix, user_profile.user
+        "User %s is customer, filtering queryset for owned and shared objects",
+        user_profile.user,
     )
     admin_user = UserProfile.admin_for_account(account=user_profile.account)
     admin_profile = UserProfile.get_cached_object(user=admin_user)  # type: ignore
@@ -105,7 +108,9 @@ def smarter_filter_queryset_for_user_profile(
         try:
             qs_owned = qs.filter(**{user_profile_filter: user_profile})
             logger.debug(
-                "%s: User %s owns %d objects in the queryset", logger_prefix, user_profile.user, qs_owned.count()
+                "User %s owns %d objects in the queryset",
+                user_profile.user,
+                qs_owned.count(),
             )
         except FieldError as e:
             logger.error("Error filtering queryset for owned objects for user %s: %s", user_profile.user, e)
@@ -114,15 +119,16 @@ def smarter_filter_queryset_for_user_profile(
         try:
             qs_shared = qs.filter(**{user_profile_filter: admin_profile})
             logger.debug(
-                "%s: User %s has %d shared objects in the queryset", logger_prefix, user_profile.user, qs_shared.count()
+                "User %s has %d shared objects in the queryset",
+                user_profile.user,
+                qs_shared.count(),
             )
         except FieldError as e:
             logger.error("Error filtering queryset for shared objects for user %s: %s", user_profile.user, e)
             qs_shared = qs.none()
     else:
         logger.debug(
-            "%s: No user_profile_filter provided, filtering queryset based on account affiliation for user %s",
-            logger_prefix,
+            "No user_profile_filter provided, filtering queryset based on account affiliation for user %s",
             user_profile.user,
         )
         return qs.filter(**{user_profile_filter: user_profile}) if user_profile_filter is not None else qs.none()
@@ -132,8 +138,7 @@ def smarter_filter_queryset_for_user_profile(
             qs_owned = qs_owned.filter(**{account_filter: user_profile.cached_account})  # type: ignore
             qs_shared = qs_shared.filter(**{account_filter: user_profile.cached_account})  # type: ignore
             logger.debug(
-                "%s: After applying account filter, user %s has %d owned and %d shared objects in the queryset",
-                logger_prefix,
+                "After applying account filter, user %s has %d owned and %d shared objects in the queryset",
                 user_profile.user,
                 qs_owned.count(),
                 qs_shared.count(),
@@ -143,8 +148,7 @@ def smarter_filter_queryset_for_user_profile(
             return qs.none()
 
     logger.debug(
-        "%s: Returning combined queryset with %d owned and %d shared objects for user %s",
-        logger_prefix,
+        "Returning combined queryset with %d owned and %d shared objects for user %s",
         qs_owned.count(),
         qs_shared.count(),
         user_profile.user,

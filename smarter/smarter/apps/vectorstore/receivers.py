@@ -20,7 +20,6 @@ from .signals import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
 )
-module_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(post_save, sender=VectorstoreMeta)
@@ -52,7 +51,7 @@ def vectorstore_deployed_receiver(sender, vectorstore: VectorstoreMeta, **kwargs
     :param sender: The sender's class.
     :param vectorstore: The vectorstore.
     """
-    logger.info("%s Vectorstore %s deployed.", module_prefix, vectorstore)
+    logger.info("Vectorstore %s deployed.", vectorstore)
 
 
 @receiver(vectorstore_destroyed)
@@ -63,7 +62,7 @@ def vectorstore_destroyed_receiver(sender, vectorstore: VectorstoreMeta, **kwarg
     :param sender: The sender's class.
     :param vectorstore: The vectorstore.
     """
-    logger.info("%s Vectorstore %s destroyed.", module_prefix, vectorstore)
+    logger.info("Vectorstore %s destroyed.", vectorstore)
 
 
 @receiver(vectorstore_status_changed)
@@ -78,7 +77,7 @@ def vectorstore_status_changed_receiver(sender, vectorstore: VectorstoreMeta, pr
     :param message: Why.
     """
     log = logger.warning if status == "failed" else logger.info
-    log("%s Vectorstore %s: %s -> %s %s", module_prefix, vectorstore, previous, status, message)
+    log("Vectorstore %s: %s -> %s %s", vectorstore, previous, status, message)
 
 
 @receiver(document_loaded)
@@ -89,7 +88,11 @@ def document_loaded_receiver(sender, document, **kwargs):
     :param sender: The sender's class.
     :param document: The document.
     """
-    logger.info("%s %s loaded, %s chunks.", module_prefix, document, document.chunk_count)
+    logger.info(
+        "%s loaded, %s chunks.",
+        document,
+        document.chunk_count,
+    )
 
 
 @receiver(document_load_failed)
@@ -101,7 +104,7 @@ def document_load_failed_receiver(sender, document, error, **kwargs):
     :param document: The document.
     :param error: Why.
     """
-    logger.warning("%s %s failed to load: %s", module_prefix, document, error)
+    logger.warning("%s failed to load: %s", document, error)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

@@ -18,7 +18,6 @@ from smarter.apps.connection.signals import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
@@ -28,7 +27,6 @@ from smarter.lib.typing import SmarterDictType
 from .connection_base import ConnectionBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class ApiConnection(ConnectionBase):
@@ -151,7 +149,7 @@ class ApiConnection(ConnectionBase):
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
-            logger.error("%s.test_proxy() proxy test connection failed: %s", self.formatted_class_name, e)
+            logger.error("proxy test connection failed: %s", e)
             return False
 
     def test_connection(self) -> bool:
@@ -163,8 +161,7 @@ class ApiConnection(ConnectionBase):
         """
         try:
             logger.debug(
-                "%s.test_connection() assumes that %s, with auth method %s, works: it is not tested.",
-                self.formatted_class_name,
+                "assumes that %s, with auth method %s, works: it is not tested.",
                 self.name,
                 self.auth_method,
             )
@@ -186,8 +183,7 @@ class ApiConnection(ConnectionBase):
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = to_snake_case(self.name)
             logger.warning(
-                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                self.formatted_class_name,
+                "name %s was not in snake_case. Converted to snake_case: %s",
                 self.name,
                 snake_case_name,
             )

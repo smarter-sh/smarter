@@ -92,8 +92,7 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not guardrail_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. guardrail_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. guardrail_id: %s, new_name: %s",
                 guardrail_id,
                 new_name,
             )
@@ -102,9 +101,7 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             guardrail = Guardrail.objects.with_read_permission_for(self.user_profile.user).get(id=guardrail_id)  # type: ignore
         except Guardrail.DoesNotExist:
-            logger.warning(
-                "%s.post() Guardrail with id %s not found for cloning.", self.formatted_class_name, guardrail_id
-            )
+            logger.warning("Guardrail with id %s not found for cloning.", guardrail_id)
             return JsonResponse({"error": f"Guardrail with id {guardrail_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -115,8 +112,7 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Guardrail with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Guardrail with id %s: %s",
                 guardrail_id,
                 e,
             )
@@ -125,8 +121,7 @@ class GuardrailListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Guardrail with id %s",
-                self.formatted_class_name,
+                "Error cloning Guardrail with id %s",
                 guardrail_id,
                 exc_info=True,
             )
@@ -166,15 +161,13 @@ class GuardrailListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         guardrail_id = kwargs.get("guardrail_id")
         if not guardrail_id:
-            logger.warning("%s.post() Missing required parameter guardrail_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter guardrail_id for deletion.")
             return JsonResponse({"error": "guardrail_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             guardrail = Guardrail.objects.with_ownership_permission_for(self.user_profile.user).get(id=guardrail_id)  # type: ignore
         except Guardrail.DoesNotExist:
-            logger.warning(
-                "%s.post() Guardrail with id %s not found for deletion.", self.formatted_class_name, guardrail_id
-            )
+            logger.warning("Guardrail with id %s not found for deletion.", guardrail_id)
             return JsonResponse({"error": f"Guardrail with id {guardrail_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -185,8 +178,7 @@ class GuardrailListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Guardrail with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Guardrail with id %s: %s",
                 guardrail_id,
                 e,
             )
@@ -195,8 +187,7 @@ class GuardrailListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Guardrail with id %s",
-                self.formatted_class_name,
+                "Error deleting Guardrail with id %s",
                 guardrail_id,
                 exc_info=True,
             )
@@ -239,8 +230,7 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not guardrail_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. guardrail_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. guardrail_id: %s, new_name: %s",
                 guardrail_id,
                 new_name,
             )
@@ -249,9 +239,7 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             guardrail = Guardrail.objects.with_ownership_permission_for(self.user_profile.user).get(id=guardrail_id)  # type: ignore
         except Guardrail.DoesNotExist:
-            logger.warning(
-                "%s.post() Guardrail with id %s not found for renaming.", self.formatted_class_name, guardrail_id
-            )
+            logger.warning("Guardrail with id %s not found for renaming.", guardrail_id)
             return JsonResponse({"error": f"Guardrail with id {guardrail_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -262,8 +250,7 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Guardrail with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Guardrail with id %s: %s",
                 guardrail_id,
                 e,
             )
@@ -272,8 +259,7 @@ class GuardrailListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Guardrail with id %s",
-                self.formatted_class_name,
+                "Error renaming Guardrail with id %s",
                 guardrail_id,
                 exc_info=True,
             )

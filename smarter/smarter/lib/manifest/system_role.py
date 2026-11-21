@@ -10,8 +10,7 @@ question of tokens, for the model, and is not decided here.
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SMARTER_MAX_SYSTEM_ROLE_LENGTH = 32768
 """The maximum length of a system role, in characters, about 8,000 tokens.
@@ -36,8 +35,7 @@ def warn_if_long_system_role(value: str, field: str) -> str:
     """
     if len(value) > SMARTER_LONG_SYSTEM_ROLE_LENGTH:
         logger.warning(
-            "%s.warn_if_long_system_role() %s is %s characters long, more than %s. It is sent with every prompt.",
-            logger_prefix,
+            "%s is %s characters long, more than %s. It is sent with every prompt.",
             field,
             len(value),
             SMARTER_LONG_SYSTEM_ROLE_LENGTH,

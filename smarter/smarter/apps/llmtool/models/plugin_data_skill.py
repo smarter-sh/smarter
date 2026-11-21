@@ -30,7 +30,6 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataSkill(PluginDataBase):
@@ -290,7 +289,7 @@ class PluginDataSkill(PluginDataBase):
         try:
             document = self.document
         except SkillDocumentError as e:
-            logger.error("%s.data: Failed to parse skill_document: %s", self.formatted_class_name, e)
+            logger.error("Failed to parse skill_document: %s", e)
             return None
         return {"frontmatter": document.frontmatter, "instructions": document.body, "resources": self.resources}
 
@@ -328,15 +327,13 @@ class PluginDataSkill(PluginDataBase):
             try:
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s.get_cached_data_by_plugin() fetched and cached PluginDataSkill for plugin_id: %s",
-                    logging.SmarterFormattedText.text(cls.__name__),
+                    "fetched and cached PluginDataSkill for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    logging.SmarterFormattedText.text(cls.__name__),
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataSkill with plugin_id {plugin_id} does not exist.") from e
@@ -380,10 +377,8 @@ class PluginDataSkill(PluginDataBase):
         :rtype: Optional[PluginDataSkill]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.{PluginDataSkill.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk: %s, plugin: %s",
-            logger_prefix,
+            "called with pk: %s, plugin: %s",
             pk,
             plugin,
         )
@@ -396,21 +391,18 @@ class PluginDataSkill(PluginDataBase):
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataSkill"]:
             try:
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
-                    logger_prefix,
+                    "cache miss for plugin_id: %s",
                     plugin_id,
                 )
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() fetched and cached PluginDataSkill for plugin_id: %s",
-                    logger_prefix,
+                    "fetched and cached PluginDataSkill for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataSkill with plugin_id {plugin_id} does not exist.") from e

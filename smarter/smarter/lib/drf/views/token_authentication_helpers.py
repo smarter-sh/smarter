@@ -96,8 +96,7 @@ class SmarterAuthenticatedAPIView(APIView, SmarterRequestMixin):
         # overwrite the request object with our smarter_request object
         if not self.smarter_request:
             logger.warning(
-                "%s.setup() - smarter_request is None after setting it to request: %s",
-                self.formatted_class_name,
+                "smarter_request is None after setting it to request: %s",
                 request,
             )
         # DRF's stubs declare APIView.request a Request, which dispatch() makes it. Until then, as
@@ -206,8 +205,7 @@ class SmarterAdminAPIMixin(SmarterRequestMixin):
         """
         if not is_authenticated_request(self.request):
             logger.warning(
-                "%s.is_superuser() - request user is not authenticated: %s",
-                self.formatted_class_name,
+                "request user is not authenticated: %s",
                 self.request.user,
             )
             return False
@@ -234,8 +232,7 @@ class SmarterAdminAPIMixin(SmarterRequestMixin):
         """
         if not is_authenticated_request(self.request):
             logger.warning(
-                "%s.is_staff() - request user is not authenticated: %s",
-                self.formatted_class_name,
+                "request user is not authenticated: %s",
                 self.request.user,
             )
             return False
@@ -451,8 +448,7 @@ class SmarterAdminListAPIView(ListAPIView, SmarterAdminAPIMixin):
             response = super().dispatch(request, *args, **kwargs)
         except AttributeError as e:
             logger.error(
-                "%s.dispatch() - encountered AttributeError: %s.",
-                self.formatted_class_name,
+                "encountered AttributeError: %s.",
                 str(e),
                 exc_info=True,
             )

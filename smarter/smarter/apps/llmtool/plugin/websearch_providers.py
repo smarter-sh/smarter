@@ -231,7 +231,7 @@ class SearchProvider(ABC):
         try:
             api_key = secret.get_secret() if secret else None
         except SmarterValueError as e:
-            logger.error("SearchProvider.api_key() the api key Secret could not be read: %s", e)
+            logger.error("the api key Secret could not be read: %s", e)
             api_key = None
         if not api_key:
             raise WebsearchError("the web search api key is unavailable.")

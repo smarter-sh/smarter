@@ -85,7 +85,9 @@ class Proxy(MetaDataWithOwnershipModel):
     class Meta:
         verbose_name = "Proxy"
         verbose_name_plural = "Proxies"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="proxy_proxy_unique"),
+        ]
 
     objects = MetaDataWithOwnershipModelManager()
 

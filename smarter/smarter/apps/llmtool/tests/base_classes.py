@@ -70,7 +70,7 @@ class TestPluginClassBase(TestAccountMixin):
     @property
     def manifest(self) -> Optional[SmarterDictType]:
         if not self._manifest and self.manifest_path:
-            logger.info("%s.manifest Loading manifest from %s", self.formatted_class_name, self.manifest_path)
+            logger.info("Loading manifest from %s", self.manifest_path)
             self._manifest = get_readonly_yaml_file(self.manifest_path)
             self.assertIsNotNone(self._manifest)
         return self._manifest
@@ -81,7 +81,7 @@ class TestPluginClassBase(TestAccountMixin):
         if not self._manifest_data:
             if not self.manifest:
                 raise SmarterValueError(f"{self.__class__.__name__}.manifest_data() called but manifest is None")
-            logger.info("%s.manifest_data copying the manifest", self.formatted_class_name)
+            logger.info("copying the manifest")
             self._manifest_data = parse_manifest(json.dumps(self.manifest))
             self.assertIsNotNone(self._manifest_data)
         return self._manifest_data
@@ -166,7 +166,7 @@ class PluginAppTestBase(TestAccountMixin):
             PluginMeta.objects.filter(user_profile__account=cls.account).delete()
         # pylint: disable=W0718
         except Exception as e:
-            logger.warning("%s.tearDownClass() cleanup failed: %s", cls.__name__, e)
+            logger.warning("cleanup failed: %s", e)
         finally:
             super().tearDownClass()
 

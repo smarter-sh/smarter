@@ -216,7 +216,7 @@ class Brokers:
                 kind = cls.get_broker_kind(this_slug)
                 if kind:
                     return kind
-        logger.warning("Brokers.from_url() could not extract manifest kind from URL: %s", url)
+        logger.warning("could not extract manifest kind from URL: %s", url)
         return None
 
 

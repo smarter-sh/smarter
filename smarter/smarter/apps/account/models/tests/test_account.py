@@ -8,7 +8,7 @@ from smarter.common.utils import hash_factory
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestAccount(SmarterTestBase):
@@ -17,13 +17,11 @@ class TestAccount(SmarterTestBase):
     user: User
     company_name: str
 
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestAccount()"
-
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
-        logger.debug("%s.setUpClass()", cls.logger_prefix)
+        logger.debug("called.")
         hashed_slug = hash_factory()
         username = cls.name
         email = f"test-{hashed_slug}@mail.com"
@@ -37,7 +35,7 @@ class TestAccount(SmarterTestBase):
     @classmethod
     def tearDownClass(cls):
         """Clean up test fixtures."""
-        logger.debug("%s.tearDownClass()", cls.logger_prefix)
+        logger.debug("called.")
         cls.user.delete()
         super().tearDownClass()
 

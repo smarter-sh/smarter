@@ -52,7 +52,7 @@ class OrchestrationRun(TimestampedModel):
     )
     status = models.CharField(
         max_length=32,
-        choices=OrchestrationRunStatus.choices,
+        choices=OrchestrationRunStatus,
         default=OrchestrationRunStatus.PENDING,
     )
     result = models.JSONField(

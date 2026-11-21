@@ -136,14 +136,14 @@ class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
                 secret.delete()
         except VectorstoreServiceError as e:
             # a refusal written for the user, e.g. deletionProtection, not a failure.
-            logger.warning("%s.post() refused to delete %s: %s", self.formatted_class_name, vectorstore, e.message)
+            logger.warning("refused to delete %s: %s", vectorstore, e.message)
             return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
         except CLIENT_ERROR_TYPES as e:
-            logger.warning("%s.post() could not delete %s: %s", self.formatted_class_name, vectorstore, e)
+            logger.warning("could not delete %s: %s", vectorstore, e)
             message = client_error_message(e, "An error occurred while deleting the Vectorstore.")
             return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST)
         except Exception:  # pylint: disable=broad-exception-caught
-            logger.error("%s.post() failed to delete %s", self.formatted_class_name, vectorstore, exc_info=True)
+            logger.error("failed to delete %s", vectorstore, exc_info=True)
             return JsonResponse(
                 {"error": "An unknown error occurred while deleting the Vectorstore."},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,

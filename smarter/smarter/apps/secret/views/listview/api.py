@@ -77,8 +77,7 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not secret_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. secret_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. secret_id: %s, new_name: %s",
                 secret_id,
                 new_name,
             )
@@ -87,7 +86,7 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             secret = Secret.objects.with_read_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for cloning.", self.formatted_class_name, secret_id)
+            logger.warning("Secret with id %s not found for cloning.", secret_id)
             return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -98,8 +97,7 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Secret with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Secret with id %s: %s",
                 secret_id,
                 e,
             )
@@ -108,8 +106,7 @@ class SecretListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Secret with id %s",
-                self.formatted_class_name,
+                "Error cloning Secret with id %s",
                 secret_id,
                 exc_info=True,
             )
@@ -143,13 +140,13 @@ class SecretListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         secret_id = kwargs.get("secret_id")
         if not secret_id:
-            logger.warning("%s.post() Missing required parameter secret_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter secret_id for deletion.")
             return JsonResponse({"error": "secret_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             secret = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for deletion.", self.formatted_class_name, secret_id)
+            logger.warning("Secret with id %s not found for deletion.", secret_id)
             return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -158,8 +155,7 @@ class SecretListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse({"message": f"Secret with id {secret_id} deleted successfully."}, status=HTTPStatus.OK)
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Secret with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Secret with id %s: %s",
                 secret_id,
                 e,
             )
@@ -168,8 +164,7 @@ class SecretListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Secret with id %s",
-                self.formatted_class_name,
+                "Error deleting Secret with id %s",
                 secret_id,
                 exc_info=True,
             )
@@ -206,8 +201,7 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not secret_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. secret_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. secret_id: %s, new_name: %s",
                 secret_id,
                 new_name,
             )
@@ -216,7 +210,7 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             secret = Secret.objects.with_ownership_permission_for(self.user_profile.user).get(id=secret_id)  # type: ignore
         except Secret.DoesNotExist:
-            logger.warning("%s.post() Secret with id %s not found for renaming.", self.formatted_class_name, secret_id)
+            logger.warning("Secret with id %s not found for renaming.", secret_id)
             return JsonResponse({"error": f"Secret with id {secret_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -227,8 +221,7 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Secret with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Secret with id %s: %s",
                 secret_id,
                 e,
             )
@@ -237,8 +230,7 @@ class SecretListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Secret with id %s",
-                self.formatted_class_name,
+                "Error renaming Secret with id %s",
                 secret_id,
                 exc_info=True,
             )

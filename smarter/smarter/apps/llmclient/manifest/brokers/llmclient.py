@@ -143,7 +143,10 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def raise_for_unknown_keys(self, manifest) -> None:
@@ -202,12 +205,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             return self._ready
         retval = super().ready
         if not retval:
-            logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
         retval = self.manifest is not None or self.account is not None
         logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
+            "manifest presence indicates ready=%s for %s",
             retval,
             self.kind,
         )
@@ -264,8 +266,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 .get(user_profile=self.user_profile, name=self.name)
             )
             logger.debug(
-                "%s.llmclient() retrieved existing LLMClient instance %s owned by %s from database.",
-                self.formatted_class_name,
+                "retrieved existing LLMClient instance %s owned by %s from database.",
                 self._llmclient,
                 self.user_profile,
             )
@@ -274,29 +275,26 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             self._llmclient = None
 
         logger.debug(
-            "%s.llmclient() LLMClient instance not found for user_profile %s. Attempting to create a new instance.",
-            self.formatted_class_name,
+            "LLMClient instance not found for user_profile %s. Attempting to create a new instance.",
             self.user_profile,
         )
         if self.manifest:
             data = self.manifest_to_django_orm()
             data["user_profile"] = self.user_profile
-            logger.debug("%s.llmclient() Creating new LLMClient with data: %s", self.formatted_class_name, data)
+            logger.debug("Creating new LLMClient with data: %s", data)
             tags = data.pop("tags", [])
             self._llmclient = LLMClient.objects.create(**data)
             if self._llmclient and tags:
                 self._llmclient.tags.set(tags)
             self._created = True
             logger.warning(
-                "%s.llmclient() lazily created new LLMClient instance %s owned by %s. This logic should be handled in apply().",
-                self.formatted_class_name,
+                "lazily created new LLMClient instance %s owned by %s. This logic should be handled in apply().",
                 self._llmclient,
                 self.user_profile,
             )
         else:
             logger.warning(
-                "%s.llmclient() %s not found for user_profile %s",
-                self.formatted_class_name,
+                "%s not found for user_profile %s",
                 self._llmclient,
                 self.user_profile,
             )
@@ -429,8 +427,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             **config_dump,
         }
         logger.debug(
-            "%s.manifest_to_django_orm() converted manifest to Django ORM dict: %s",
-            self.formatted_class_name,
+            "converted manifest to Django ORM dict: %s",
             retval,
         )
 
@@ -480,8 +477,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             )
         if not self.llmclient:
             logger.warning(
-                "%s.django_orm_to_manifest_dict() called without a LLMClient. This could affect broker operations.",
-                self.formatted_class_name,
+                "called without a LLMClient. This could affect broker operations.",
             )
             return None
         llmclient_dict = model_to_dict(self.llmclient)
@@ -564,8 +560,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         )
 
         logger.debug(
-            "%s.django_orm_to_manifest_dict() converted LLMClient %s to manifest dict: %s",
-            self.formatted_class_name,
+            "converted LLMClient %s to manifest dict: %s",
             self.llmclient.name,
             model.model_dump(),
         )
@@ -649,8 +644,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             return self._manifest
         if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from manifest data with name %s",
-                self.formatted_class_name,
+                "initializing %s from manifest data with name %s",
                 self.kind,
                 (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
@@ -663,16 +657,14 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from manifest data for existing LLMClient %s with name %s",
-                    self.formatted_class_name,
+                    "initialized from manifest data for existing LLMClient %s with name %s",
                     self._llmclient,
                     self._llmclient.name,
                 )
                 return self._manifest
         else:
             logger.debug(
-                "%s.manifest() could not initialize",
-                self.formatted_class_name,
+                "could not initialize",
             )
         return self._manifest
 
@@ -692,7 +684,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         .. returns: None
         .. rtype: None
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
 
         # 1.) invalidate the LLMClient cache itself.
         # -----------------------------
@@ -887,7 +879,9 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         llmclients = self.filter_by_annotation_selector(llmclients.filter(user_profile__in=valid_owners), kwargs)
         llmclients = llmclients.order_by("name")[:MAX_RESULTS]
         logger.debug(
-            "%s.get() found %s LLMClients for account %s", self.formatted_class_name, llmclients.count(), self.account
+            "found %s LLMClients for account %s",
+            llmclients.count(),
+            self.account,
         )
 
         # iterate over the QuerySet and use a serializer to create a model dump for each LLMClient
@@ -902,8 +896,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
+                    "failed to serialize %s %s",
                     self.kind,
                     llmclient.name,
                     exc_info=True,
@@ -968,8 +961,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             # 'my_client', so the llmclient is looked up by that name. Otherwise it is never
             # found, and every apply tries to create it again.
             logger.warning(
-                "%s.apply() %s name '%s' is stored as '%s'",
-                self.formatted_class_name,
+                "%s name '%s' is stored as '%s'",
                 self.kind,
                 self.name,
                 self.manifest.metadata.name,
@@ -1014,8 +1006,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 try:
                     if not isinstance(self.llmclient.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
-                            "%s.apply() llmclient.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the LLMClient model definition or the database state. Tags=%s",
-                            self.formatted_class_name,
+                            "llmclient.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the LLMClient model definition or the database state. Tags=%s",
                             self.kind,
                             self.manifest.metadata.name,
                             self.user_profile,
@@ -1026,8 +1017,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
-                        "%s.apply() failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
-                        self.formatted_class_name,
+                        "failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
                         self.kind,
                         self.manifest.metadata.name,
                         self.user_profile,
@@ -1038,8 +1028,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 self.llmclient.refresh_from_db()
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s owned by %s. Error: %s",
-                    self.formatted_class_name,
+                    "failed to save %s %s owned by %s. Error: %s",
                     self.kind,
                     self.manifest.metadata.name,
                     self.user_profile,
@@ -1063,8 +1052,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist as e:
                     logger.error(
-                        "%s.apply() failed to find SmarterAuthToken %s",
-                        self.formatted_class_name,
+                        "failed to find SmarterAuthToken %s",
                         self.manifest.spec.apiKey,
                         exc_info=True,
                     )
@@ -1074,12 +1062,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 for key in LLMClientAPIKey.objects.filter(llmclient=self.llmclient):
                     if key.api_key != api_key:
                         key.delete()
-                        logger.debug("%s.apply() Detached SmarterAuthToken %s from LLMClient %s", self.formatted_class_name, key.api_key.name, self.llmclient.name)  # type: ignore[union-attr]
+                        logger.debug("Detached SmarterAuthToken %s from LLMClient %s", key.api_key.name, self.llmclient.name)  # type: ignore[union-attr]
                 _, created = LLMClientAPIKey.objects.get_or_create(llmclient=self.llmclient, api_key=api_key)
                 if created:
                     logger.debug(
-                        "%s.apply() SmarterAuthToken %s attached to LLMClient %s",
-                        self.formatted_class_name,
+                        "SmarterAuthToken %s attached to LLMClient %s",
                         self.manifest.spec.apiKey,
                         self.llmclient.name,
                     )
@@ -1092,8 +1079,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 ):
                     plugin.delete()
                     logger.debug(
-                        "%s.apply() Detached Plugin %s from LLMClient %s",
-                        self.formatted_class_name,
+                        "Detached Plugin %s from LLMClient %s",
                         plugin.plugin_meta.name,
                         self.llmclient.name,
                     )
@@ -1104,8 +1090,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         plugin_meta = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
                     except PluginMeta.DoesNotExist as e:
                         logger.error(
-                            "%s.apply() did not find a Plugin named %s",
-                            self.formatted_class_name,
+                            "did not find a Plugin named %s",
                             plugin_name,
                             exc_info=True,
                         )
@@ -1119,8 +1104,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     )
                     if created:
                         logger.debug(
-                            "%s.apply() attached Plugin %s to LLMClient %s",
-                            self.formatted_class_name,
+                            "attached Plugin %s to LLMClient %s",
                             plugin_meta.name,
                             self.llmclient.name,
                         )
@@ -1134,8 +1118,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 if extension_link.extension.slug not in extension_slugs:
                     extension_link.delete()
                     logger.debug(
-                        "%s.apply() detached Extension %s from LLMClient %s",
-                        self.formatted_class_name,
+                        "detached Extension %s from LLMClient %s",
                         extension_link.extension.slug,
                         self.llmclient.name,
                     )
@@ -1150,8 +1133,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 _, created = LLMClientExtensions.objects.get_or_create(llmclient=self.llmclient, extension=extension)
                 if created:
                     logger.debug(
-                        "%s.apply() attached Extension %s to LLMClient %s",
-                        self.formatted_class_name,
+                        "attached Extension %s to LLMClient %s",
                         extension.slug,
                         self.llmclient.name,
                     )
@@ -1165,8 +1147,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 if guardrail_link.guardrail.name not in guardrail_names:
                     guardrail_link.delete()
                     logger.debug(
-                        "%s.apply() detached Guardrail %s from LLMClient %s",
-                        self.formatted_class_name,
+                        "detached Guardrail %s from LLMClient %s",
                         guardrail_link.guardrail.name,
                         self.llmclient.name,
                     )
@@ -1181,8 +1162,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 _, created = LLMClientGuardrails.objects.get_or_create(llmclient=self.llmclient, guardrail=guardrail)
                 if created:
                     logger.debug(
-                        "%s.apply() attached Guardrail %s to LLMClient %s",
-                        self.formatted_class_name,
+                        "attached Guardrail %s to LLMClient %s",
                         guardrail.name,
                         self.llmclient.name,
                     )
@@ -1196,8 +1176,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 if mcpclient_link.mcpclient.name not in mcpclient_names:
                     mcpclient_link.delete()
                     logger.debug(
-                        "%s.apply() detached MCPClient %s from LLMClient %s",
-                        self.formatted_class_name,
+                        "detached MCPClient %s from LLMClient %s",
                         mcpclient_link.mcpclient.name,
                         self.llmclient.name,
                     )
@@ -1212,8 +1191,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 _, created = LLMClientMCPClients.objects.get_or_create(llmclient=self.llmclient, mcpclient=mcpclient)
                 if created:
                     logger.debug(
-                        "%s.apply() attached MCPClient %s to LLMClient %s",
-                        self.formatted_class_name,
+                        "attached MCPClient %s to LLMClient %s",
                         mcpclient.name,
                         self.llmclient.name,
                     )
@@ -1317,8 +1295,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 logger.error(
-                    "%s.describe() failed to describe %s %s",
-                    self.formatted_class_name,
+                    "failed to describe %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,
@@ -1426,8 +1403,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
-                    "%s.delete() failed to delete %s %s",
-                    self.formatted_class_name,
+                    "failed to delete %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,
@@ -1463,8 +1439,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
-                    "%s.deploy() failed to deploy %s %s",
-                    self.formatted_class_name,
+                    "failed to deploy %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,
@@ -1500,8 +1475,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
-                    "%s.undeploy() failed to undeploy %s %s",
-                    self.formatted_class_name,
+                    "failed to undeploy %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,

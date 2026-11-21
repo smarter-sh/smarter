@@ -25,8 +25,7 @@ from smarter.apps.dashboard.models import (
 from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class OnboardingSeenRequest(BaseModel):
@@ -98,15 +97,14 @@ class OnboardingSeenView(SmarterAuthenticatedWebView):
         try:
             body = OnboardingSeenRequest.model_validate(json.loads(request.body or b"{}"))
         except (ValueError, ValidationError) as e:
-            logger.warning("%s.OnboardingSeenView.post() invalid body for user %s: %s", logger_prefix, user.pk, e)
+            logger.warning("invalid body for user %s: %s", user.pk, e)
             return JsonResponse({"error": "Invalid request body."}, status=HTTPStatus.BAD_REQUEST)
         _, created = OnboardingHint.objects.get_or_create(
             user=user, hint=body.hint.value, defaults={"outcome": body.outcome.value}
         )
         seen_onboarding_hints.invalidate(user.pk)
         logger.info(
-            "%s.OnboardingSeenView.post() user %s, hint %s, outcome %s, new: %s",
-            logger_prefix,
+            "user %s, hint %s, outcome %s, new: %s",
             user.pk,
             body.hint.value,
             body.outcome.value,

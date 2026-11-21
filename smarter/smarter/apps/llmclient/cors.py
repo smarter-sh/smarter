@@ -119,7 +119,11 @@ def allow_llmclient_origins(sender, request: HttpRequest, **kwargs) -> bool:
     llmclient = llmclient_for_cors(request)
     allowed = origin_allowed(origin, llmclient)
     if allowed:
-        logger.debug("%s allowed origin %s for llmclient %s", __name__, origin, llmclient)
+        logger.debug(
+            "allowed origin %s for llmclient %s",
+            origin,
+            llmclient,
+        )
     return allowed
 
 

@@ -32,7 +32,9 @@ class LLMClientExtensions(TimestampedModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Extensions"
-        unique_together = ("llmclient", "extension")
+        constraints = [
+            models.UniqueConstraint(fields=["llmclient", "extension"], name="llmclient_llmclientextensions_unique"),
+        ]
 
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)
     extension = models.ForeignKey(

@@ -59,7 +59,6 @@ from smarter.lib.drf.throttling import credentials_throttle_wait
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.VIEW_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 RequestModel = TypeVar("RequestModel", bound=ConsoleSessionModel)
 
@@ -296,7 +295,7 @@ class SignUpApiView(AccountApiView):
             sign_up(request, body.email, body.password)
         except RuntimeError:
             # the user exists, inactive, and can ask for a new link once the template is fixed.
-            logger.error("%s.SignUpApiView.post() could not render the activation email.", logger_prefix)
+            logger.error("could not render the activation email.")
             return unknown_error_response()
         return message_response(_("We have emailed you a link to activate your account. Follow it to sign in."))
 
@@ -352,7 +351,7 @@ class ActivationResendApiView(AccountApiView):
         try:
             resend_activation_email(request, body.email)
         except RuntimeError:
-            logger.error("%s.ActivationResendApiView.post() could not render the email.", logger_prefix)
+            logger.error("could not render the email.")
             return unknown_error_response()
         # the same answer whether or not the address has an inactive account, so that it isn't revealed.
         return message_response(
@@ -385,7 +384,7 @@ class PasswordResetRequestApiView(AccountApiView):
         try:
             send_password_reset_email(request, body.email)
         except RuntimeError:
-            logger.error("%s.PasswordResetRequestApiView.post() could not render the email.", logger_prefix)
+            logger.error("could not render the email.")
             return unknown_error_response()
         # the same answer whether or not a user has the address, so that it isn't revealed.
         return message_response(
@@ -444,5 +443,5 @@ class PasswordResetApiView(AccountApiView):
             return errors_response(_("Please correct the errors below."), {"password": invalid_password})
         user.set_password(body.password)
         user.save()
-        logger.info("%s.PasswordResetApiView.post() reset the password of user %s", logger_prefix, user.pk)
+        logger.info("reset the password of user %s", user.pk)
         return message_response(_("Your password has been changed. Sign in with it."))

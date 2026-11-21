@@ -92,8 +92,7 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not vectorsearch_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. vectorsearch_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. vectorsearch_id: %s, new_name: %s",
                 vectorsearch_id,
                 new_name,
             )
@@ -103,7 +102,8 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             vectorsearch = Vectorsearch.objects.with_read_permission_for(self.user_profile.user).get(id=vectorsearch_id)  # type: ignore
         except Vectorsearch.DoesNotExist:
             logger.warning(
-                "%s.post() Vectorsearch with id %s not found for cloning.", self.formatted_class_name, vectorsearch_id
+                "Vectorsearch with id %s not found for cloning.",
+                vectorsearch_id,
             )
             return JsonResponse(
                 {"error": f"Vectorsearch with id {vectorsearch_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -117,8 +117,7 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Vectorsearch with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Vectorsearch with id %s: %s",
                 vectorsearch_id,
                 e,
             )
@@ -127,8 +126,7 @@ class VectorsearchListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Vectorsearch with id %s",
-                self.formatted_class_name,
+                "Error cloning Vectorsearch with id %s",
                 vectorsearch_id,
                 exc_info=True,
             )
@@ -168,16 +166,15 @@ class VectorsearchListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         vectorsearch_id = kwargs.get("vectorsearch_id")
         if not vectorsearch_id:
-            logger.warning(
-                "%s.post() Missing required parameter vectorsearch_id for deletion.", self.formatted_class_name
-            )
+            logger.warning("Missing required parameter vectorsearch_id for deletion.")
             return JsonResponse({"error": "vectorsearch_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             vectorsearch = Vectorsearch.objects.with_ownership_permission_for(self.user_profile.user).get(id=vectorsearch_id)  # type: ignore
         except Vectorsearch.DoesNotExist:
             logger.warning(
-                "%s.post() Vectorsearch with id %s not found for deletion.", self.formatted_class_name, vectorsearch_id
+                "Vectorsearch with id %s not found for deletion.",
+                vectorsearch_id,
             )
             return JsonResponse(
                 {"error": f"Vectorsearch with id {vectorsearch_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -191,8 +188,7 @@ class VectorsearchListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Vectorsearch with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Vectorsearch with id %s: %s",
                 vectorsearch_id,
                 e,
             )
@@ -201,8 +197,7 @@ class VectorsearchListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Vectorsearch with id %s",
-                self.formatted_class_name,
+                "Error deleting Vectorsearch with id %s",
                 vectorsearch_id,
                 exc_info=True,
             )
@@ -245,8 +240,7 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not vectorsearch_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. vectorsearch_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. vectorsearch_id: %s, new_name: %s",
                 vectorsearch_id,
                 new_name,
             )
@@ -256,7 +250,8 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             vectorsearch = Vectorsearch.objects.with_ownership_permission_for(self.user_profile.user).get(id=vectorsearch_id)  # type: ignore
         except Vectorsearch.DoesNotExist:
             logger.warning(
-                "%s.post() Vectorsearch with id %s not found for renaming.", self.formatted_class_name, vectorsearch_id
+                "Vectorsearch with id %s not found for renaming.",
+                vectorsearch_id,
             )
             return JsonResponse(
                 {"error": f"Vectorsearch with id {vectorsearch_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -270,8 +265,7 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Vectorsearch with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Vectorsearch with id %s: %s",
                 vectorsearch_id,
                 e,
             )
@@ -280,8 +274,7 @@ class VectorsearchListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Vectorsearch with id %s",
-                self.formatted_class_name,
+                "Error renaming Vectorsearch with id %s",
                 vectorsearch_id,
                 exc_info=True,
             )

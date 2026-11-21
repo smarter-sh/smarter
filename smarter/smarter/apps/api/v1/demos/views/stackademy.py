@@ -27,8 +27,7 @@ from smarter.lib.typing import SmarterDictType
 
 from ..const import STACKADEMY_API_CONNECTION_NAME
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 STACKADEMY_COURSES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stackademy_courses.json")
 
@@ -53,9 +52,8 @@ def stackademy_password() -> Optional[str]:
     )
     if not connection or not connection.api_key:
         logger.error(
-            "%s.stackademy_password() the Smarter account has no ApiConnection %s with an apiKey. "
+            "the Smarter account has no ApiConnection %s with an apiKey. "
             "Run manage.py load_from_github --url https://github.com/smarter-sh/stackademy --account_number %s.",
-            logger_prefix,
             STACKADEMY_API_CONNECTION_NAME,
             smarter_cached_objects.smarter_account.account_number,
         )

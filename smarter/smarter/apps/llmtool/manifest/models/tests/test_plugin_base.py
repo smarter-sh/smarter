@@ -74,8 +74,7 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_called_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_called_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -83,8 +82,7 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_cloned_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_cloned_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -92,8 +90,7 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_created_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_created_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -101,23 +98,19 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_deleted_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_deleted_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
         self._plugin_deleted = True
 
     def plugin_ready_signal_handler(self, *args, **kwargs):
-        logger.info(
-            "%s.plugin_ready_signal_handler() called with args: %s, kwargs: %s", self.formatted_class_name, args, kwargs
-        )
+        logger.info("called with args: %s, kwargs: %s", args, kwargs)
         self._plugin_ready = True
 
     def plugin_selected_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_selected_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -125,8 +118,7 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_selected_called_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_selected_called_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -134,8 +126,7 @@ class TestPluginBase(TestAccountMixin):
 
     def plugin_updated_signal_handler(self, *args, **kwargs):
         logger.info(
-            "%s.plugin_updated_signal_handler() called with args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -239,8 +230,8 @@ class TestPluginBase(TestAccountMixin):
         if not isinstance(to_json, dict):
             self.fail("Expected JSON output to be a dict.")
 
-        logger.info("TestPluginBase().test_to_json() data: %s", self.data)
-        logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
+        logger.info("data: %s", self.data)
+        logger.info("to_json: %s", to_json)
 
         # verify that signal was sent
         self.assertTrue(self.signals["plugin_ready"])

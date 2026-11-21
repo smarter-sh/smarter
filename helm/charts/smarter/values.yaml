@@ -154,6 +154,41 @@ env:
 
 
 # -----------------------------------------------------------------------------
+## @param djangoSettings Your own Django settings, which supersede Smarter's.
+##
+## WARNING: each one is a hammer. It replaces Smarter's value outright, however
+## carefully that value was built per environment (the database, the caches,
+## storage, allowed hosts, CORS and CSRF origins, cookie security, the Content
+## Security Policy), and nothing derived from the old value is computed again.
+## Only the type is checked, never the meaning: a wrong value can stop every
+## pod, or quietly weaken the platform's security. Read how Smarter sets the
+## setting in smarter/smarter/settings/ first, prefer a SMARTER_* variable in
+## env where one exists, and try the change in alpha before prod.
+##
+## A map of Django setting names, in upper case, to values. Each one replaces
+## Smarter's value of that setting in every environment: whatever
+## smarter/settings/base.py, base_aws.py and the environment's module (e.g.
+## prod.py) set. A dictionary, such as LOGGING or CACHES, replaces Smarter's
+## whole dictionary: it is not merged. A DJANGO_<SETTING> variable in env above
+## supersedes the same setting here.
+##
+## The chart writes the map to the Secret <appName>-django-settings, and mounts
+## it read-only in the api, worker, beat, init and migrate pods, at
+## /home/smarter_user/user-settings/settings.yaml. A change rolls the api,
+## worker and beat pods. It is a Secret, so a value may be a password.
+##
+## Example:
+##   djangoSettings:
+##     SESSION_COOKIE_AGE: 3600
+##     ADMINS:
+##       - ops@example.com
+##
+## See https://docs.smarter.sh, Configuration, User-Defined Django Settings.
+# -----------------------------------------------------------------------------
+djangoSettings: {}
+
+
+# -----------------------------------------------------------------------------
 # Global Configuration
 # -----------------------------------------------------------------------------
 global:

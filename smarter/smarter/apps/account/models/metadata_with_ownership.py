@@ -152,42 +152,32 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         if not isinstance(user, User):
             logger.debug(
-                "%s.with_read_permission_for() user is not an instance of User: %s",
-                logging.SmarterFormattedText.text(
-                    __name__
-                    + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
-                ),
-                user,
+                "user is not an instance of User: %s, model: %s",
+                type(user).__name__,
+                self.model.__name__,
             )
             return self.none()
 
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + f".{self.__class__.__name__}.with_read_permission_for('{user}') - model: {self.model.__name__}"
-        )
         logger.debug(
-            "%s called for user: %s",
-            logger_prefix,
+            "called for user: %s",
             user,
         )
 
         def _get_for_user_profile(user_profile: UserProfile) -> models.QuerySet[_MT]:
             logger.debug(
-                "%s checking permissions for user_profile: %s",
-                logger_prefix,
+                "checking permissions for user_profile: %s",
                 user_profile,
             )
             if user_profile.user.is_superuser:
                 logger.debug(
-                    "%s user is superuser, returning all resources.",
-                    logger_prefix,
+                    "user is superuser, returning all resources.",
                 )
                 return self.all()
 
             account_ids = readable_account_ids(user_profile.account_id)  # type: ignore[attr-defined]
             retval = self.filter(user_profile__account_id__in=account_ids)
             logger.debug(
-                "%s user is not a superuser. Returning resources owned by account %s and the %s accounts that share with it.",
-                logger_prefix,
+                "user is not a superuser. Returning resources owned by account %s and the %s accounts that share with it.",
                 user_profile.account.account_number,
                 len(account_ids) - 1,
             )
@@ -196,15 +186,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         request_user_profiles = UserProfile.get_cached_objects(user=user)
         if not request_user_profiles.exists():
             logger.debug(
-                "%s no UserProfiles found for user: %s, returning empty queryset.",
-                logger_prefix,
+                "no UserProfiles found for user: %s, returning empty queryset.",
                 user,
             )
             return self.none()
 
         logger.debug(
-            "%s found %s UserProfiles for user: %s, checking permissions for each profile.",
-            logger_prefix,
+            "found %s UserProfiles for user: %s, checking permissions for each profile.",
             request_user_profiles.count(),
             user,
         )
@@ -217,8 +205,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         qs_distinct = qs.distinct()
         restricted = self.model.restrict_readable(qs_distinct, user)
         logger.debug(
-            "%s final queryset for user: %s",
-            logger_prefix,
+            "final queryset for user: %s",
             user,
         )
         return restricted
@@ -249,20 +236,14 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
         .. note::
             If the user has multiple UserProfiles, the result is the union of all resources they can manage for each profile.
         """
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__
-            + f".{self.__class__.__name__}.with_ownership_permission_for('{user}') - model: {self.model.__name__}"
-        )
         logger.debug(
-            "%s called for user: %s",
-            logger_prefix,
+            "called for user: %s",
             user,
         )
 
         if not isinstance(user, User):
             logger.debug(
-                "%s user is not an instance of User: %s",
-                logger_prefix,
+                "user is not an instance of User: %s",
                 user,
             )
             return self.none()
@@ -271,8 +252,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             # superusers have ownership permission for all resources
             if user_profile.user.is_superuser:
                 logger.debug(
-                    "%s user is superuser, returning all resources.",
-                    logger_prefix,
+                    "user is superuser, returning all resources.",
                 )
                 return self.all()
 
@@ -281,8 +261,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             if user_profile.administers_account:
                 retval = self.filter(user_profile__account=user_profile.account)
                 logger.debug(
-                    "%s called for an administrator of the account: %s, returning resources.",
-                    logger_prefix,
+                    "called for an administrator of the account: %s, returning resources.",
                     user_profile.user,
                 )
                 return retval
@@ -290,8 +269,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
             # regular authenticated users have ownership permission only for resources they own
             retval = self.filter(user_profile=user_profile)
             logger.debug(
-                "%s called for regular user: %s, returning resources.",
-                logger_prefix,
+                "called for regular user: %s, returning resources.",
                 user_profile.user,
             )
             return retval
@@ -300,15 +278,13 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         if not user_profiles.exists():
             logger.debug(
-                "%s no UserProfiles found for user: %s, returning empty queryset.",
-                logger_prefix,
+                "no UserProfiles found for user: %s, returning empty queryset.",
                 user,
             )
             return self.none()
 
         logger.debug(
-            "%s found %s UserProfiles for user: %s, checking ownership permissions for each profile.",
-            logger_prefix,
+            "found %s UserProfiles for user: %s, checking ownership permissions for each profile.",
             user_profiles.count(),
             user,
         )
@@ -319,8 +295,7 @@ class SmarterQuerySetWithPermissions(SmarterBaseQuerySetWithPermissions[_MT]):
 
         qs_distinct = qs.distinct()
         logger.debug(
-            "%s final queryset for user: %s",
-            logger_prefix,
+            "final queryset for user: %s",
             user,
         )
         return qs_distinct
@@ -511,10 +486,9 @@ class MetaDataWithOwnershipModel(MetaDataModel):
     # pylint: disable=missing-class-docstring
     class Meta:
         abstract = True
-        unique_together = (
-            "user_profile",
-            "name",
-        )
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="%(app_label)s_%(class)s_unique"),
+        ]
 
     objects: MetaDataWithOwnershipModelManager = MetaDataWithOwnershipModelManager()
 
@@ -610,15 +584,20 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: The model instance if found, otherwise raises :class:`DoesNotExist`.
         :rtype: models.Model
         """
-        logger_prefix = logging.SmarterFormattedText.text(cls.__name__) + ".get_cached_object()"
 
         if username and not user and not user_profile:
-            logger.debug("%s Resolving user_profile from username: %s", logger_prefix, username)
+            logger.debug(
+                "Resolving user_profile from username: %s",
+                username,
+            )
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, username=username)
             user = user_profile.cached_user if user_profile else None
 
         if user_profile is not None and (not user or not account):
-            logger.debug("%s Resolving user and account from user_profile: %s", logger_prefix, user_profile)
+            logger.debug(
+                "Resolving user and account from user_profile: %s",
+                user_profile,
+            )
             user = user or user_profile.cached_user
             account = account or user_profile.cached_account
 
@@ -638,8 +617,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: models.Model
             """
             logger.debug(
-                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
-                logger_prefix,
+                "called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
                 pk,
                 name,
                 user,
@@ -662,8 +640,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                     pk=pk
                 )
             logger.debug(
-                "%s._get_object_by_pk() fetched %s - %s",
-                logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                "fetched %s - %s",
                 type(retval).__name__,
                 str(retval),
             )
@@ -687,8 +664,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: models.Model
             """
             logger.debug(
-                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
-                logger_prefix,
+                "called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
                 pk,
                 name,
                 user,
@@ -708,8 +684,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(name=name, user_profile_id=user_profile_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_user_profile() fetched %s for name: %s and user_profile_id: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for name: %s and user_profile_id: %s",
                     type(retval).__class__.__name__,
                     name,
                     user_profile_id,
@@ -738,8 +713,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: models.Model
             """
             logger.debug(
-                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
-                logger_prefix,
+                "called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
                 pk,
                 name,
                 user,
@@ -759,8 +733,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(name=name, user_profile__account_id=account_id)
                 logger.debug(
-                    "%s._get_object_by_name_and_account() fetched %s for name: %s and account_id: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for name: %s and account_id: %s",
                     type(retval).__class__.__name__,
                     name,
                     account_id,
@@ -788,8 +761,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: models.Model
             """
             logger.debug(
-                "%s called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
-                logger_prefix,
+                "called with pk: %s, name: %s, user: %s, user_profile: %s, username: %s, account: %s",
                 pk,
                 name,
                 user,
@@ -813,8 +785,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                         "user_profile", "user_profile__account", "user_profile__user"
                     ).get(session_key=session_key)
                 logger.debug(
-                    "%s._get_object_by_session_key() fetched %s for session_key: %s",
-                    logging.SmarterFormattedText.text(MetaDataWithOwnershipModel.__name__) + ".get_cached_object()",
+                    "fetched %s for session_key: %s",
                     type(retval).__class__.__name__,
                     session_key,
                 )
@@ -858,8 +829,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
                 .first()
             )
             logger.warning(
-                "%s.get_cached_object() Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
-                logging.SmarterFormattedText.text(cls.__name__) + ".get_cached_object()",
+                "Multiple UserProfiles found for user %s and account %s. Defaulting to newest result: %s",
                 user,
                 account,
                 user_profile,
@@ -900,9 +870,6 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: A queryset of MetaDataWithOwnershipModel instances associated with the user profile.
         :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + f".{MetaDataWithOwnershipModel.__name__}.get_cached_objects()"
-        )
 
         # pylint: disable=W0613
         @cache_results(cls.cache_expiration)
@@ -918,8 +885,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
             :rtype: models.QuerySet["MetaDataWithOwnershipModel"]
             """
             logger.debug(
-                "%s called for %s with user_profile: %s invalidate: %s",
-                logger_prefix,
+                "called for %s with user_profile: %s invalidate: %s",
                 cls.__name__,
                 user_profile,
                 invalidate,
@@ -993,10 +959,8 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         :returns: A new instance of MetaDataWithOwnershipModel that is a clone of this instance with the specified changes.
         :rtype: MetaDataWithOwnershipModel
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + f".{self.__class__.__name__}.clone()")
         logger.debug(
-            "%s.clone() called with new_name: %s, new_version: %s, user_profile: %s",
-            logger_prefix,
+            "called with new_name: %s, new_version: %s, user_profile: %s",
             new_name,
             new_version,
             user_profile,
@@ -1029,8 +993,7 @@ class MetaDataWithOwnershipModel(MetaDataModel):
         )
         retval = self.__class__.objects.create(**clone_kwargs)
         logger.debug(
-            "%s.clone() created new instance: %s",
-            logger_prefix,
+            "created new instance: %s",
             retval,
         )
         return retval

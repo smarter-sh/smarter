@@ -28,7 +28,6 @@ from smarter.apps.connection.signals import (
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
@@ -38,7 +37,6 @@ from smarter.lib.typing import SmarterDictType
 from .connection_base import ConnectionBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class SqlConnection(ConnectionBase):
@@ -148,8 +146,7 @@ class SqlConnection(ConnectionBase):
                 self.sql_connection.ssh_known_hosts = new_entry
             self.sql_connection.save()
             logger.warning(
-                "%s. Unknown host key for %s. Key added to known_hosts.",
-                self.sql_connection.formatted_class_name,
+                "Unknown host key for %s. Key added to known_hosts.",
                 hostname,
             )
 
@@ -518,8 +515,7 @@ class SqlConnection(ConnectionBase):
             This method is a placeholder and does not implement actual port forwarding logic.
         """
         logger.info(
-            "%s.transport_handler() Transport handler called with channel: %s, src_addr: %s, dest_addr: %s",
-            self.formatted_class_name,
+            "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s",
             channel,
             src_addr,
             dest_addr,
@@ -578,13 +574,11 @@ class SqlConnection(ConnectionBase):
             return tcpip_ssh_connection
 
         except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
-            logger.error("%s.connect_tcpip_ssh() SSH connection failed: %s", self.formatted_class_name, e)
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
+            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
             return None
         # pylint: disable=W0718
         except Exception as e:
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error("%s.connect_tcpip_ssh() An unexpected error occurred: %s", self.formatted_class_name, e)
+            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
             return None
 
     def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
@@ -608,9 +602,8 @@ class SqlConnection(ConnectionBase):
             return ldap_user_pwd_connection
         # pylint: disable=W0718
         except Exception as e:
-            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
-            logger.error(
-                "%s.connect_ldap_user_pwd() LDAP User/Password connection failed: %s", self.formatted_class_name, e
+            sql_connection_failed.send(
+                sender=self.__class__, connection=self, stage="LDAP user/password connection", error=str(e)
             )
             return None
 
@@ -642,7 +635,7 @@ class SqlConnection(ConnectionBase):
             connection.close()
         # pylint: disable=W0718
         except Exception as e:
-            logger.error("%s.test_connection() Failed to close the test connection: %s", self.formatted_class_name, e)
+            logger.error("Failed to close the test connection: %s", e)
         return True
 
     def get_connection(self) -> Optional[BaseDatabaseWrapper]:
@@ -671,8 +664,7 @@ class SqlConnection(ConnectionBase):
             return retval
         else:
             logger.error(
-                "%s.get_connection() Failed to establish a database connection using method: %s. Got return type of %s",
-                self.formatted_class_name,
+                "Failed to establish a database connection using method: %s. Got return type of %s",
                 self.authentication_method,
                 type(retval),
             )
@@ -693,7 +685,7 @@ class SqlConnection(ConnectionBase):
                 self._connection.close()
             # pylint: disable=W0718
             except Exception as e:
-                logger.error("%s.close() Failed to close the database connection: %s", self.formatted_class_name, e)
+                logger.error("Failed to close the database connection: %s", e)
             self._connection = None
 
     def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[str, bool]:
@@ -745,7 +737,6 @@ class SqlConnection(ConnectionBase):
                 return json_str
         except (DatabaseError, ImproperlyConfigured) as e:
             sql_connection_query_failed.send(sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(e))
-            logger.error("%s.execute_query() SQL query execution failed: %s", self.formatted_class_name, e)
             return False
         finally:
             self.close()
@@ -771,7 +762,7 @@ class SqlConnection(ConnectionBase):
             response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
-            logger.error("%s.test_proxy() proxy test connection failed: %s", self.formatted_class_name, e)
+            logger.error("proxy test connection failed: %s", e)
             return False
 
     def get_connection_string(self, masked: bool = True) -> str:
@@ -840,8 +831,7 @@ class SqlConnection(ConnectionBase):
         if not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = to_snake_case(self.name)
             logger.warning(
-                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                self.formatted_class_name,
+                "name %s was not in snake_case. Converted to snake_case: %s",
                 self.name,
                 snake_case_name,
             )

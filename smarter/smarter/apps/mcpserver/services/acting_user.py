@@ -45,7 +45,6 @@ from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 ACTING_USER_HEADER = "X-Smarter-Acting-User"
 """The http header that carries the signed acting user.
@@ -196,12 +195,12 @@ def verify_acting_user(value: str) -> Optional[ActingUser]:
         payload = signer.unsign_object(value, max_age=MAX_AGE_SECONDS)
     except signing.BadSignature as e:
         # SignatureExpired is a BadSignature.
-        logger.warning("%s.verify_acting_user() refused a signed acting user: %s", logger_prefix, type(e).__name__)
+        logger.warning("refused a signed acting user: %s", type(e).__name__)
         return None
     try:
         verified = ActingUser.model_validate(payload)
     except ValidationError:
-        logger.warning("%s.verify_acting_user() refused a signed acting user that is not one.", logger_prefix)
+        logger.warning("refused a signed acting user that is not one.")
         return None
     return verified
 

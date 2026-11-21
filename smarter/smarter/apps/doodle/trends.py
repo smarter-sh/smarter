@@ -101,7 +101,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from .regions import DoodleRegion
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 PAGEVIEWS_URL = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/{project}/all-access/{year}/{month}/{day}"
 """The most viewed articles of a Wikipedia edition on a day."""
@@ -446,7 +445,7 @@ def region_trends(region: str, day: datetime.date, refuse) -> list[DoodleTrend]:
             titles = tuple(title for title, _ in articles)
             entities = article_entities(project, titles) if titles else {}
         except SafeHttpError as e:
-            logger.warning("%s.region_trends() the trends of %s failed: %s", logger_prefix, project, e)
+            logger.warning("the trends of %s failed: %s", project, e)
             continue
         language = project.split(".", 1)[0]
         for title, views in articles:

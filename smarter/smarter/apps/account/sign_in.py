@@ -27,7 +27,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.VIEW_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def sign_in_with_email(request: HttpRequest, email: str, password: str) -> Optional[User]:
@@ -53,7 +52,7 @@ def sign_in_with_email(request: HttpRequest, email: str, password: str) -> Optio
         log_login_failure(email, password_failure(user))
         return None
     login(request, authenticated_user)
-    logger.debug("%s.sign_in_with_email() signed in identity %s", logger_prefix, login_identity(email))
+    logger.debug("signed in identity %s", login_identity(email))
     return authenticated_user  # type: ignore[return-value]
 
 
@@ -100,6 +99,6 @@ def sign_up(request: HttpRequest, email: str, password: str) -> User:
     :raises RuntimeError: when the email's template can't be rendered.
     """
     user = User.objects.create_user(email, password=password, email=email, is_active=False)
-    logger.info("%s.sign_up() created identity %s", logger_prefix, login_identity(email))
+    logger.info("created identity %s", login_identity(email))
     send_activation_email(request, user)
     return user

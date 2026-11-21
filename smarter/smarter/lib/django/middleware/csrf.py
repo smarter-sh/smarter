@@ -142,7 +142,6 @@ from django.utils.functional import cached_property
 
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins.helper_mixin import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -160,14 +159,12 @@ LLMCLIENT_REQUEST_KIND_ATTRIBUTE = "_smarter_csrf_llmclient_request_kind"
 
 if waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_MIDDLEWARE_CSRF):
     logger.debug(
-        "%s is %s",
-        SmarterFormattedText.text(__name__) + ".SmarterCsrfViewMiddleware",
+        "is %s",
         SmarterHelperMixin().formatted_state_ready,
     )
 else:
     logger.debug(
-        "%s is %s. Enable with Django waffle in the admin console.",
-        SmarterFormattedText.text(__name__) + ".SmarterCsrfViewMiddleware",
+        "is %s. Enable with Django waffle in the admin console.",
         SmarterHelperMixin().formatted_state_not_ready,
     )
 
@@ -242,8 +239,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         # pylint: disable=broad-except
         except Exception as exc:
             logger.exception(
-                "%s.get_dynamic_trusted_origins() failed building dynamic CSRF origins: %s",
-                self.formatted_class_name,
+                "failed building dynamic CSRF origins: %s",
                 exc,
             )
 
@@ -269,8 +265,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
             # pylint: disable=broad-except
             except Exception as exc:
                 logger.warning(
-                    "%s.llmclient_request_kind() could not classify %s: %s",
-                    self.formatted_class_name,
+                    "could not classify %s: %s",
                     request.path,
                     exc,
                 )
@@ -415,8 +410,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         is_llmclient, _ = self.llmclient_request_kind(request)
         if is_llmclient and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_LLM_CLIENTS):
             logger.info(
-                "%s.process_view() llmclient CSRF bypass: %s",
-                self.formatted_class_name,
+                "llmclient CSRF bypass: %s",
                 request.path,
             )
             return None
@@ -449,7 +443,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
         if isinstance(response, HttpResponseForbidden):
             logger.error(
                 (
-                    "%s.process_view() CSRF validation failed "
+                    "CSRF validation failed "
                     "| path=%s "
                     "| method=%s "
                     "| origin=%s "
@@ -457,7 +451,6 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
                     "| remote_addr=%s "
                     "| user_agent=%s"
                 ),
-                self.formatted_class_name,
                 request.path,
                 request.method,
                 request.META.get("HTTP_ORIGIN"),

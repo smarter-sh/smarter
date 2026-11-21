@@ -18,7 +18,6 @@ from smarter.apps.llmtool.manifest.models.common import (
 )
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -28,7 +27,6 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataApi(PluginDataBase):
@@ -168,7 +166,7 @@ class PluginDataApi(PluginDataBase):
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error("%s.execute_request() API request failed: %s", self.formatted_class_name, e)
+            logger.error("API request failed: %s", e)
             return False
 
     def test(self) -> Union[SmarterDictType, bool]:
@@ -177,7 +175,7 @@ class PluginDataApi(PluginDataBase):
 
     def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Union[SmarterDictType, bool]:
         """Return a dict by executing the API request with the provided params."""
-        logger.info("%s.sanitized_return_data called. - %s", self.formatted_class_name, params)
+        logger.info("called. - %s", params)
         return self.execute_request(params)
 
     def validate_endpoint(self) -> None:
@@ -252,8 +250,7 @@ class PluginDataApi(PluginDataBase):
         parameters = self.parameters or {}
         properties = parameters.get("properties", {})
         logger.debug(
-            "%s.validate_all_placeholders_in_parameters() Validating the placeholders of the endpoint: %s\n properties: %s, placeholders: %s",
-            self.formatted_class_name,
+            "Validating the placeholders of the endpoint: %s\n properties: %s, placeholders: %s",
             self.endpoint,
             properties,
             placeholders,
@@ -307,15 +304,13 @@ class PluginDataApi(PluginDataBase):
             try:
                 retval = model.objects.select_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s.get_cached_data_by_plugin() fetched and cached PluginDataApi for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "fetched and cached PluginDataApi for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataApi not found for plugin_id: {plugin_id}") from e
@@ -359,10 +354,8 @@ class PluginDataApi(PluginDataBase):
         :rtype: Optional[PluginDataApi]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginDataApi.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk: %s, plugin: %s",
-            logger_prefix,
+            "called with pk: %s, plugin: %s",
             pk,
             plugin,
         )
@@ -375,21 +368,18 @@ class PluginDataApi(PluginDataBase):
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataApi"]:
             try:
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
-                    logger_prefix,
+                    "cache miss for plugin_id: %s",
                     plugin_id,
                 )
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() fetched and cached PluginDataBase for plugin_id: %s",
-                    logger_prefix,
+                    "fetched and cached PluginDataBase for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataApi not found for plugin_id: {plugin_id}") from e

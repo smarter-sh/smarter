@@ -29,7 +29,6 @@ from smarter.common.const import (
 
 # our stuff
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils.utils import (
     bool_environment_variable,
     generate_fernet_encryption_key,
@@ -37,10 +36,8 @@ from smarter.common.utils.utils import (
 
 from .const import DEFAULT_ROOT_DOMAIN
 from .env import get_env, is_missing_value
-from .services import Services
 
 logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__) + ".SettingsDefaults()"
 
 
 def optional_secret_env(var_name: str) -> Optional[SecretStr]:
@@ -75,13 +72,6 @@ def github_token_env() -> Optional[SecretStr]:
         if token is not None:
             return token
     return None
-
-
-class DjangoPermittedStorages:
-    """Django permitted storage backends."""
-
-    AWS_S3 = "storages.backends.s3boto3.S3Boto3Storage"
-    FILE_SYSTEM = "django.core.files.storage.FileSystemStorage"
 
 
 # pylint: disable=too-few-public-methods
@@ -192,6 +182,8 @@ class SettingsDefaults:
     )
     EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("EXTENSION_REGISTRY_PUBLIC_KEY", "")
     LOKI_URL: str = get_env("LOKI_URL", "")  # e.g. http://smarter-loki:3100. Empty: no pod log store
+    # the user's own Django settings: see smarter.settings.user, which reads the same variable.
+    USER_SETTINGS_FILE: str = get_env("USER_SETTINGS_FILE", "/home/smarter_user/user-settings/settings.yaml")
 
     SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),
@@ -208,13 +200,6 @@ class SettingsDefaults:
 
     DEBUG_MODE: bool = bool_environment_variable("DEBUG_MODE", False)
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
-
-    DJANGO_DEFAULT_FILE_STORAGE = get_env("DJANGO_DEFAULT_FILE_STORAGE", DjangoPermittedStorages.AWS_S3)
-    if DJANGO_DEFAULT_FILE_STORAGE == DjangoPermittedStorages.AWS_S3 and not Services.is_connected_to_aws():
-        DJANGO_DEFAULT_FILE_STORAGE = DjangoPermittedStorages.FILE_SYSTEM
-        logger.warning(
-            "AWS is not configured properly. Falling back to FileSystemStorage for Django default file storage."
-        )
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
     EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")

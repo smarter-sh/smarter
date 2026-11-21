@@ -51,29 +51,14 @@ class ApiV1TestBase(TestAccountMixin):
 
         headers = {"Authorization": f"Token {self.token_key}"}
 
-        logger.info(
-            "%s.get_response() with path: %s headers: %s manifest: %s, data: %s",
-            self.formatted_class_name,
-            path,
-            headers,
-            manifest,
-            data,
-        )
+        # never the headers: they hold the api key.
+        logger.info("with path: %s manifest: %s, data: %s", path, manifest, data)
 
         if manifest:
-            logger.info(
-                "%s.get_response() with path: %s, headers: %s, manifest: %s",
-                self.formatted_class_name,
-                path,
-                headers,
-                manifest,
-            )
             response = client.post(path=path, data=manifest, content_type="application/json", headers=headers)
         elif data:
-            logger.info("%s.get_response() with data: %s", self.formatted_class_name, data)
             response = client.post(path=path, data=data, content_type="application/json", headers=headers)
         else:
-            logger.info("%s.get_response() with no data or manifest. headers: %s", self.formatted_class_name, headers)
             response = client.post(path=path, content_type="application/json", data=None, headers=headers)
         response_content = response.content.decode("utf-8")
 
@@ -81,15 +66,14 @@ class ApiV1TestBase(TestAccountMixin):
             response_json = json.loads(response_content)
         except json.JSONDecodeError as e:
             logger.warning(
-                "ApiV1TestBase.get_response() could not decode JSON response for path: %s error: %s",
+                "could not decode JSON response for path: %s error: %s",
                 path,
                 str(e),
             )
             response_json = {"raw_response": response_content}
 
         logger.info(
-            "%s.get_response() %s with status code: %d response: %s",
-            self.formatted_class_name,
+            "%s with status code: %d response: %s",
             path,
             response.status_code,
             response_json,

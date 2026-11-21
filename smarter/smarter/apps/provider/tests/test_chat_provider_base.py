@@ -10,6 +10,7 @@ Test :class:`SmarterChatProviderBase`.
   no request leaves the test.
 """
 
+import logging
 import secrets
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -28,6 +29,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
 )
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 CREATE_PATCH = (
     "smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.openai.chat.completions.create"
@@ -163,11 +165,11 @@ class TestGetMessageThread(SmarterTestBase):
         self.assertEqual(messages[0]["content"], module.get_date_time_string())
 
     def test_an_overriding_system_message_is_logged_without_its_content(self):
-        with patch.object(module, "logger") as logger:
-            self.client.get_message_thread(injected_first_request())
-        logger.warning.assert_called_once()
-        logged = str(logger.warning.call_args)
-        self.assertIn("get_message_thread()", logged)
+        capture = WrappedLoggerCapture(self, module.logger)
+        self.client.get_message_thread(injected_first_request())
+        self.assertEqual(capture.count(logging.WARNING), 1)
+        logged = capture.text(logging.WARNING)
+        self.assertIn("log_dropped_client_messages()", logged)
         self.assertNotIn(INJECTED_SYSTEM_ROLE, logged)
         self.assertNotIn(INJECTED_USER_TURN, logged)
         self.assertNotIn(INJECTED_ASSISTANT_TURN, logged)

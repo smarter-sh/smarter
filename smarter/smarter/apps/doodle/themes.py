@@ -23,7 +23,6 @@ from .regions import ALL_REGIONS, DoodleRegion
 from .schedule import DoodleSchedule
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class DoodleThemeSpec(BaseModel):
@@ -151,7 +150,7 @@ def save_theme(spec: DoodleThemeSpec, props_svg: str) -> DoodleTheme:
         },
     )
     action = "created" if created else "updated"
-    logger.debug("%s.save_theme() %s the doodle theme %s.", logger_prefix, action, spec.slug)
+    logger.debug("%s the doodle theme %s.", action, spec.slug)
     return theme
 
 
@@ -182,7 +181,9 @@ def load_themes(folder: str = THEMES_PATH) -> list[DoodleTheme]:
     retired = DoodleTheme.objects.filter(is_active=True).exclude(slug__in=slugs)
     retired_count = retired.update(is_active=False)
     logger.info(
-        "%s.load_themes() loaded %s doodle themes, and deactivated %s.", logger_prefix, len(themes), retired_count
+        "loaded %s doodle themes, and deactivated %s.",
+        len(themes),
+        retired_count,
     )
     return themes
 

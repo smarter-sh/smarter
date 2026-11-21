@@ -132,7 +132,7 @@ class SAMJournalListView(SmarterAdminListAPIView):
             request, self.get_queryset(), search_fields=SEARCH_FIELDS, sort_fields=SORT_FIELDS
         )
         journal_entries_listed.send(sender=self.__class__, user=request.user, count=pagination["count"])
-        logger.debug("%s.list() - user: %s, pagination: %s", self.formatted_class_name, request.user, pagination)
+        logger.debug("user: %s, pagination: %s", request.user, pagination)
         summaries = [SAMJournalApiEntrySummary.from_model(journal) for journal in page]
         response = SAMJournalApiPage(
             objects=summaries,

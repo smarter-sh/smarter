@@ -104,7 +104,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         self.assertIsInstance(self.broker, SAMAccountBroker)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMAccountBroker)
-        logger.info("%s.test_setup() SAMAccountBroker initialized successfully for testing.", self.formatted_class_name)
+        logger.info("SAMAccountBroker initialized successfully for testing.")
 
     def test_is_valid(self):
         """Test that the is_valid property returns True."""
@@ -149,7 +149,7 @@ class TestSmarterAccountBroker(TestSAMBrokerBaseClass):
         metadata = {**manifest_metadata}
         manifest_spec = self.manifest_data["spec"]
         assert manifest_spec is not None
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
+        logger.info("loading manifest spec: %s", manifest_spec)
         spec = {
             "config": SAMAccountSpecConfig(**manifest_spec["config"]),
         }

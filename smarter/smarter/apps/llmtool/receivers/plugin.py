@@ -33,8 +33,6 @@ from .utils import response_characters
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = SmarterFormattedText.text(__name__)
-
 
 @receiver(plugin_created, dispatch_uid="plugin_created")
 def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
@@ -47,10 +45,9 @@ def handle_plugin_created(sender, plugin: PluginBase, **kwargs):
     :param plugin: The plugin.
     """
 
-    logger.info("%s.plugin_created() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
+    logger.info("%s for %s", plugin.name, plugin.user_profile)
     logger.debug(
-        "%s.plugin_created() %s data: %s",
-        logger_prefix,
+        "%s data: %s",
         plugin.name,
         SmarterFormattedText.json(plugin.data) if plugin.data else None,
     )
@@ -67,7 +64,7 @@ def handle_plugin_cloned(sender, plugin: PluginBase, **kwargs):
     :param plugin: The plugin.
     """
 
-    logger.info("%s.plugin_cloned() %s data: %s", logger_prefix, plugin.name, plugin.data)
+    logger.info("%s data: %s", plugin.name, plugin.data)
 
 
 @receiver(plugin_updated, dispatch_uid="plugin_updated")
@@ -81,10 +78,9 @@ def handle_plugin_updated(sender, plugin: PluginBase, **kwargs):
     :param plugin: The plugin.
     """
 
-    logger.info("%s.plugin_updated() %s for %s", logger_prefix, plugin.name, plugin.user_profile)
+    logger.info("%s for %s", plugin.name, plugin.user_profile)
     logger.debug(
-        "%s.plugin_updated() %s data: %s",
-        logger_prefix,
+        "%s data: %s",
         plugin.name,
         SmarterFormattedText.json(plugin.data) if plugin.data else None,
     )
@@ -102,8 +98,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     :param plugin_meta: The plugin's PluginMeta, whose name is logged.
     """
     logger.info(
-        "%s.plugin_deleting() %s is being deleted.",
-        logger_prefix,
+        "%s is being deleted.",
         plugin_meta.name,
     )
 
@@ -120,7 +115,7 @@ def handle_plugin_deleted(sender, plugin: PluginBase, plugin_name: str, **kwargs
     :param plugin_name: The deleted plugin's name.
     """
 
-    logger.info("%s.plugin_deleted() %s", logger_prefix, plugin_name)
+    logger.info("%s", plugin_name)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")
@@ -137,7 +132,7 @@ def handle_plugin_called(sender, plugin: PluginBase, **kwargs):
 
     inquiry_type: Optional[str] = kwargs.get("inquiry_type")
 
-    logger.info("%s.plugin_called() %s inquiry_type: %s", logger_prefix, plugin.name, inquiry_type)
+    logger.info("%s inquiry_type: %s", plugin.name, inquiry_type)
 
 
 @receiver(plugin_responded, dispatch_uid="plugin_responded")
@@ -159,8 +154,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
     characters = response_characters(inquiry_return)
 
     logger.info(
-        "%s.plugin_responded() %s inquiry_type: %s characters: %s",
-        logger_prefix,
+        "%s inquiry_type: %s characters: %s",
         plugin.name,
         inquiry_type,
         characters,
@@ -173,8 +167,7 @@ def handle_plugin_responded(sender, plugin: PluginBase, **kwargs):
 
     # DEBUG: the result can hold customer data, or a credential in a url.
     logger.debug(
-        "%s.plugin_responded() %s inquiry_return: %s",
-        logger_prefix,
+        "%s inquiry_return: %s",
         plugin.name,
         SmarterFormattedText.json(inquiry_return) if isinstance(inquiry_return, (dict, list)) else inquiry_return,
     )
@@ -189,7 +182,7 @@ def handle_plugin_ready(sender, plugin: PluginBase, **kwargs):
     happens several times for every prompt that uses the plugin.
     """
 
-    logger.debug("%s.plugin_ready() %s", logger_prefix, plugin.name)
+    logger.debug("%s", plugin.name)
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
@@ -205,17 +198,15 @@ def handle_plugin_selected(sender, *args, **kwargs):
 
     prompt = input_text if input_text else SmarterFormattedText.json(messages)
     logger.info(
-        "%s.plugin_selected() %s search_term: %s",
-        logger_prefix,
+        "%s search_term: %s",
         plugin.name if plugin else "Unknown Plugin",
         search_term,
     )
     # DEBUG: the prompt is the user's conversation.
-    logger.debug("%s.plugin_selected() prompt(s): %s", logger_prefix, prompt)
+    logger.debug("prompt(s): %s", prompt)
     if plugin is None or plugin.id is None:
         logger.warning(
-            "%s.plugin_selected() received without a plugin id. Plugin selector history is not recorded.",
-            logger_prefix,
+            "received without a plugin id. Plugin selector history is not recorded.",
         )
         return
 
@@ -242,14 +233,13 @@ def handle_search_term_matched(sender, prompt: str, search_term: str, method: st
     :param matched_text: The text of the prompt that matched, if any.
     """
     logger.info(
-        "%s.search_term_matched() search_term: %s method: %s matched_text: %s",
-        logger_prefix,
+        "search_term: %s method: %s matched_text: %s",
         search_term,
         method,
         matched_text,
     )
     # DEBUG: the prompt is the user's conversation.
-    logger.debug("%s.search_term_matched() prompt: %s", logger_prefix, prompt)
+    logger.debug("prompt: %s", prompt)
 
 
 @receiver(broker_ready, dispatch_uid="broker_ready")
@@ -257,14 +247,7 @@ def handle_broker_ready(sender, broker: AbstractBroker, **kwargs):
     """
     Log that a broker is ready.
 
-    Brokers of every kind send this signal, so the message names the broker's own class, e.g.
-    ``smarter.apps.guardrail.manifest.brokers.guardrail.SAMGuardrailBroker.broker_ready()``,
-    rather than this module.
+    Brokers of every kind send this signal, so the message names the broker's class, e.g.
+    ``SAMGuardrailBroker``.
     """
-    logger.debug(
-        "%s %s %s for %s is ready.",
-        f"{SmarterFormattedText.text(sender.__module__)}.{sender.__name__}.broker_ready()",
-        broker.kind,
-        str(broker),
-        broker.name,
-    )
+    logger.debug("%s %s for %s is ready.", sender.__name__, broker.kind, broker.name)

@@ -52,18 +52,20 @@ class VectorstoreDocument(TimestampedModel):
     class Meta:
         verbose_name = "Vectorstore Document"
         verbose_name_plural = "Vectorstore Documents"
-        unique_together = ("vectorstore", "sha256")
+        constraints = [
+            models.UniqueConstraint(fields=["vectorstore", "sha256"], name="vectorstore_vectorstoredocument_unique"),
+        ]
 
     vectorstore = models.ForeignKey(VectorstoreMeta, on_delete=models.CASCADE, related_name="documents")
     name = models.CharField(max_length=255, help_text="e.g. a file name, or a URL.")
-    source = models.CharField(max_length=10, choices=VectorstoreDocumentSource.choices)
+    source = models.CharField(max_length=10, choices=VectorstoreDocumentSource)
     content_type = models.CharField(max_length=100, blank=True, default="")
     content = models.TextField(help_text="The extracted text. Pages are separated by form feeds.")
     sha256 = models.CharField(max_length=64, help_text="Of the content, so that a document is not loaded twice.")
     size_bytes = models.PositiveBigIntegerField(default=0, help_text="Of the original file.")
     metadata = models.JSONField(default=dict, blank=True, help_text="Stored with each chunk, for filtered search.")
     status = models.CharField(
-        max_length=10, choices=VectorstoreDocumentStatus.choices, default=VectorstoreDocumentStatus.PENDING
+        max_length=10, choices=VectorstoreDocumentStatus, default=VectorstoreDocumentStatus.PENDING
     )
     status_message = models.TextField(blank=True, default="")
     chunk_count = models.PositiveIntegerField(default=0, help_text="The number of chunks in the vector database.")

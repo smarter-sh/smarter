@@ -32,8 +32,7 @@ from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 WEATHER_LLMCLIENT_NAME = "weather"
 """The example LLMClient that the welcome dialog suggests trying first.
@@ -231,7 +230,7 @@ class WelcomeDismissView(SmarterAuthenticatedWebView):
         try:
             body = WelcomeDismissRequest.model_validate(json.loads(data))
         except (ValueError, ValidationError) as e:
-            logger.warning("%s.WelcomeDismissView.post() invalid body for user %s: %s", logger_prefix, user.pk, e)
+            logger.warning("invalid body for user %s: %s", user.pk, e)
             return JsonResponse({"error": "Invalid request body."}, status=HTTPStatus.BAD_REQUEST)
         if body.show_at_startup:
             profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=False)
@@ -247,8 +246,7 @@ class WelcomeDismissView(SmarterAuthenticatedWebView):
         user_was_welcomed.invalidate(user.pk)
         request.session[WELCOME_SHOWN_SESSION_KEY] = True
         logger.info(
-            "%s.WelcomeDismissView.post() welcomed user %s, show at startup: %s",
-            logger_prefix,
+            "welcomed user %s, show at startup: %s",
             user.pk,
             body.show_at_startup,
         )

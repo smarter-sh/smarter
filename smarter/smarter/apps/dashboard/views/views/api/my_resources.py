@@ -103,8 +103,7 @@ from smarter.lib.django.views import (
     SmarterAuthenticatedWebView,
 )
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/smarter-platform/extensions.html"
 
@@ -130,19 +129,16 @@ def get_pending_deployments(invalidate: bool = False, user_profile: Optional[Use
     @cache_results()
     def _get_pending_deployments(user_profile_id: int) -> int:
         logger.debug(
-            "%s.get_pending_deployments() called with invalidate=%s for user_profile_id=%s",
-            logger_prefix,
+            "called with invalidate=%s for user_profile_id=%s",
             invalidate,
             user_profile,
         )
         retval = LLMClient.objects.filter(deployed=False).with_ownership_permission_for(user=user_profile.user).count() or 0  # type: ignore
-        logger.debug(
-            "%s.get_pending_deployments() retrieved and cached pending deployments count: %s", logger_prefix, retval
-        )
+        logger.debug("retrieved and cached pending deployments count: %s", retval)
         return retval
 
     if not user_profile:
-        logger.warning("%s.get_pending_deployments() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
     if invalidate and user_profile:
         _get_pending_deployments.invalidate(user_profile.id)  # type: ignore
@@ -169,7 +165,7 @@ def get_llmclients(invalidate: bool = False, user_profile: Optional[UserProfile]
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_llmclients() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
 
     llmclients = LLMClient.get_cached_objects(invalidate=invalidate, user_profile=user_profile)
@@ -194,7 +190,7 @@ def get_plugins(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_plugins() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
     retval = PluginMeta.get_cached_plugins_for_user_profile_id(invalidate=invalidate, user_profile_id=user_profile.id)  # type: ignore
     return len(retval)
@@ -221,17 +217,16 @@ def get_api_keys(invalidate: bool = False, user_profile: Optional[UserProfile] =
     @cache_results()
     def _get_api_keys(user_profile_id: int) -> int:
         logger.debug(
-            "%s.get_api_keys() called with invalidate=%s for user_profile_id=%s",
-            logger_prefix,
+            "called with invalidate=%s for user_profile_id=%s",
             invalidate,
             user_profile,
         )
         retval = LLMClientAPIKey.objects.filter(llmclient__user_profile__id=user_profile_id).count() or 0
-        logger.debug("%s.get_api_keys() retrieved and cached API keys count: %s", logger_prefix, retval)
+        logger.debug("retrieved and cached API keys count: %s", retval)
         return retval
 
     if not user_profile:
-        logger.warning("%s.get_api_keys() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
 
     if invalidate and user_profile:
@@ -261,17 +256,16 @@ def get_custom_domains(invalidate: bool = False, user_profile: Optional[UserProf
     @cache_results()
     def _get_custom_domains(user_profile_id: int) -> int:
         logger.debug(
-            "%s.get_custom_domains() called with invalidate=%s for user_profile_id=%s",
-            logger_prefix,
+            "called with invalidate=%s for user_profile_id=%s",
             invalidate,
             user_profile,
         )
         retval = LLMClientCustomDomain.objects.filter(user_profile__id=user_profile_id).count() or 0
-        logger.debug("%s.get_custom_domains() retrieved and cached custom domains count: %s", logger_prefix, retval)
+        logger.debug("retrieved and cached custom domains count: %s", retval)
         return retval
 
     if not user_profile:
-        logger.warning("%s.get_custom_domains() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
 
     if invalidate and user_profile:
@@ -298,13 +292,13 @@ def get_mcpclients(invalidate: bool = False, user_profile: Optional[UserProfile]
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_mcpclients() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     if invalidate:
         invalidate_cached_mcpclients_available_to_user_profile(user_profile=user_profile)
     retval = get_cached_mcpclients_available_to_user_profile(user_profile=user_profile).count()
-    logger.debug("%s.get_mcpclients() retrieved and cached MCPClients count: %s", logger_prefix, retval)
+    logger.debug("retrieved and cached MCPClients count: %s", retval)
     return retval
 
 
@@ -324,7 +318,7 @@ def get_secrets(invalidate: bool = False, user_profile: Optional[UserProfile] = 
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_secrets() called without user_profile. Returning None.", logger_prefix)
+        logger.warning("called without user_profile. Returning None.")
         return 0
 
     return Secret.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
@@ -345,7 +339,7 @@ def get_providers(invalidate: bool = False, user_profile: Optional[UserProfile] 
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_providers() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     retval = Provider.get_cached_providers_for_user(invalidate=invalidate, user=user_profile.user) or []
@@ -366,7 +360,7 @@ def get_guardrails(invalidate: bool = False, user_profile: Optional[UserProfile]
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_guardrails() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     return Guardrail.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
@@ -386,7 +380,7 @@ def get_vectorstores(invalidate: bool = False, user_profile: Optional[UserProfil
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_vectorstores() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     return VectorstoreMeta.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
@@ -406,7 +400,7 @@ def get_llmhosts(invalidate: bool = False, user_profile: Optional[UserProfile] =
     :rtype: int
     """
     if not user_profile:
-        logger.warning("%s.get_llmhosts() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     return LLMHost.get_cached_objects(invalidate=invalidate, user_profile=user_profile).count()
@@ -438,11 +432,11 @@ def get_extensions(invalidate: bool = False, user_profile: Optional[UserProfile]
             .distinct()
             .count()
         )
-        logger.debug("%s.get_extensions() retrieved and cached extensions count: %s", logger_prefix, retval)
+        logger.debug("retrieved and cached extensions count: %s", retval)
         return retval
 
     if not user_profile:
-        logger.warning("%s.get_extensions() called without user_profile. Returning 0.", logger_prefix)
+        logger.warning("called without user_profile. Returning 0.")
         return 0
 
     if invalidate:
@@ -515,11 +509,9 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                     else EXTENSIONS_DOCS_URL
                 ),
             }
-            logger.debug(
-                "%s.post() cached context %s", self.formatted_class_name, logging.SmarterFormattedText.json(retval)
-            )
+            logger.debug("cached context %s", logging.SmarterFormattedText.json(retval))
             return retval
 
         retval = _get_resources(user_profile.id)  # type: ignore[union-attr]
-        logger.debug("%s.post()", self.formatted_class_name)
+        logger.debug("called")
         return JsonResponse(retval, status=HTTPStatus.OK)

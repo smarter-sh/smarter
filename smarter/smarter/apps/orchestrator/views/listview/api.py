@@ -92,8 +92,7 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not orchestrator_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. orchestrator_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. orchestrator_id: %s, new_name: %s",
                 orchestrator_id,
                 new_name,
             )
@@ -103,7 +102,8 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             orchestrator = Orchestrator.objects.with_read_permission_for(self.user_profile.user).get(id=orchestrator_id)  # type: ignore
         except Orchestrator.DoesNotExist:
             logger.warning(
-                "%s.post() Orchestrator with id %s not found for cloning.", self.formatted_class_name, orchestrator_id
+                "Orchestrator with id %s not found for cloning.",
+                orchestrator_id,
             )
             return JsonResponse(
                 {"error": f"Orchestrator with id {orchestrator_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -117,8 +117,7 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Orchestrator with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Orchestrator with id %s: %s",
                 orchestrator_id,
                 e,
             )
@@ -127,8 +126,7 @@ class OrchestratorListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Orchestrator with id %s",
-                self.formatted_class_name,
+                "Error cloning Orchestrator with id %s",
                 orchestrator_id,
                 exc_info=True,
             )
@@ -168,16 +166,15 @@ class OrchestratorListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         orchestrator_id = kwargs.get("orchestrator_id")
         if not orchestrator_id:
-            logger.warning(
-                "%s.post() Missing required parameter orchestrator_id for deletion.", self.formatted_class_name
-            )
+            logger.warning("Missing required parameter orchestrator_id for deletion.")
             return JsonResponse({"error": "orchestrator_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             orchestrator = Orchestrator.objects.with_ownership_permission_for(self.user_profile.user).get(id=orchestrator_id)  # type: ignore
         except Orchestrator.DoesNotExist:
             logger.warning(
-                "%s.post() Orchestrator with id %s not found for deletion.", self.formatted_class_name, orchestrator_id
+                "Orchestrator with id %s not found for deletion.",
+                orchestrator_id,
             )
             return JsonResponse(
                 {"error": f"Orchestrator with id {orchestrator_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -191,8 +188,7 @@ class OrchestratorListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Orchestrator with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Orchestrator with id %s: %s",
                 orchestrator_id,
                 e,
             )
@@ -201,8 +197,7 @@ class OrchestratorListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Orchestrator with id %s",
-                self.formatted_class_name,
+                "Error deleting Orchestrator with id %s",
                 orchestrator_id,
                 exc_info=True,
             )
@@ -245,8 +240,7 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not orchestrator_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. orchestrator_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. orchestrator_id: %s, new_name: %s",
                 orchestrator_id,
                 new_name,
             )
@@ -256,7 +250,8 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             orchestrator = Orchestrator.objects.with_ownership_permission_for(self.user_profile.user).get(id=orchestrator_id)  # type: ignore
         except Orchestrator.DoesNotExist:
             logger.warning(
-                "%s.post() Orchestrator with id %s not found for renaming.", self.formatted_class_name, orchestrator_id
+                "Orchestrator with id %s not found for renaming.",
+                orchestrator_id,
             )
             return JsonResponse(
                 {"error": f"Orchestrator with id {orchestrator_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -270,8 +265,7 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Orchestrator with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Orchestrator with id %s: %s",
                 orchestrator_id,
                 e,
             )
@@ -280,8 +274,7 @@ class OrchestratorListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Orchestrator with id %s",
-                self.formatted_class_name,
+                "Error renaming Orchestrator with id %s",
                 orchestrator_id,
                 exc_info=True,
             )

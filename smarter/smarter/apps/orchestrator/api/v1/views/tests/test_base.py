@@ -111,4 +111,4 @@ class TestOrchestratorApiBaseViewSet(TestAccountMixin):
         # invoke dispatch method in order to set our class properties
         base_class.dispatch(request=self.request, name=self.broker.orchestrator.name)  # type: ignore
 
-        logger.debug("test_base_class_properties() request=%s name=%s", self.request, self.broker.orchestrator.name)  # type: ignore
+        logger.debug("request=%s name=%s", self.request, self.broker.orchestrator.name)  # type: ignore

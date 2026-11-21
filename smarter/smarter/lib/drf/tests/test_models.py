@@ -84,7 +84,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_has_permissions(self):
 
-        logger.debug("%s.test_has_permissions() testing permissions.", self.formatted_class_name)
+        logger.debug("testing permissions.")
         # object that is not a User should not have permissions
         user = object()
         self.assertFalse(
@@ -92,7 +92,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         )
 
         # superuser should have permissions to anything
-        logger.debug("%s.test_has_permissions() 1.) testing permissions for superuser.", self.formatted_class_name)
+        logger.debug("1.) testing permissions for superuser.")
         auth_token = (
             SmarterAuthToken.objects.filter(pk=self.auth_token.pk)
             .with_ownership_permission_for(self.admin_user)
@@ -104,8 +104,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
         other_admin_same_account, _, other_admin_same_account_user_profile = admin_user_factory(account=self.account)
         try:
             logger.debug(
-                "%s.test_has_permissions() 2.) testing permissions for non-staff user in same account.",
-                self.formatted_class_name,
+                "2.) testing permissions for non-staff user in same account.",
             )
             # non-staff user should not have permissions to anything
             auth_token = (
@@ -116,8 +115,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
             self.assertFalse(auth_token)
 
             logger.debug(
-                "%s.test_has_permissions() 3.) testing permissions for staff user in same account.",
-                self.formatted_class_name,
+                "3.) testing permissions for staff user in same account.",
             )
             # staff user in same account should have permissions to anything in the account
             auth_token = (
@@ -136,8 +134,7 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
         # staff user in different account should not have permissions
         logger.debug(
-            "%s.test_has_permissions() 4.) testing permissions for staff user in different account.",
-            self.formatted_class_name,
+            "4.) testing permissions for staff user in different account.",
         )
         staff_admin_different_account, different_account, staff_admin_different_account_user_profile = (
             admin_user_factory()

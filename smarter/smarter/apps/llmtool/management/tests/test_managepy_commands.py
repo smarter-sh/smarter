@@ -39,7 +39,7 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     def test_retrieve_plugin(self):
         """Test retrieving a plugin."""
 
-        logger.debug("test_retrieve_plugin() - creating plugin for account %s", self.account.account_number)
+        logger.debug("creating plugin for account %s", self.account.account_number)
         call_command(
             "create_plugin",
             "--account_number",
@@ -49,7 +49,7 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
             "--file_path",
             f"{self.file_path}",
         )
-        logger.debug("test_retrieve_plugin() - retrieving plugin...")
+        logger.debug("retrieving plugin...")
         call_command(
             "retrieve_plugin",
             "--account_number",

@@ -267,14 +267,12 @@ class SkillPlugin(PluginBase):
         try:
             self._plugin_data = PluginDataSkill.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
             logger.debug(
-                "%s.plugin_data() retrieved existing PluginDataSkill from database.",
-                self.formatted_class_name,
+                "retrieved existing PluginDataSkill from database.",
             )
             return self._plugin_data
         except PluginDataSkill.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataSkill found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataSkill found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -289,8 +287,7 @@ class SkillPlugin(PluginBase):
             self._plugin_data = PluginDataSkill(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
-                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
-                self.formatted_class_name,
+                "created new instance of %s from manifest and plugin metadata.",
                 self.plugin_data_class.__name__,
             )
         return self._plugin_data

@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 class TestUserProfile(TestAccountMixin):
     """Test UserProfile model."""
 
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestUserProfile()"
-
     def test_dunders(self):
         """Test all the dunder methods."""
 

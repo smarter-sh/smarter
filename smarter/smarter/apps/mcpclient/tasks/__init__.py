@@ -19,7 +19,6 @@ of the task, so the tasks do not retry.
 from typing import Optional
 
 from smarter.common.conf import smarter_settings
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -31,8 +30,6 @@ from ..models import MCPClient
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.MCPCLIENT_LOGGING]
 )
-
-module_prefix = "smarter.apps.mcpclient.tasks."
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
@@ -47,24 +44,21 @@ def refresh_mcpclient(mcpclient_id: int) -> Optional[str]:
     mcpclient = MCPClient.objects.select_related("credentials").filter(pk=mcpclient_id).first()
     if mcpclient is None:
         logger.warning(
-            "%s MCPClient %s does not exist.",
-            SmarterFormattedText.text(module_prefix + "refresh_mcpclient()"),
+            "MCPClient %s does not exist.",
             mcpclient_id,
         )
         return None
     try:
         catalog = get_cached_catalog(mcpclient, refresh=True)
         logger.info(
-            "%s %s is connected to %s, with %s tools.",
-            SmarterFormattedText.text(module_prefix + "refresh_mcpclient()"),
+            "%s is connected to %s, with %s tools.",
             mcpclient.name,
             catalog.server_name,
             len(mcpclient.tools or []),
         )
     except SmarterMCPClientException as e:
         logger.warning(
-            "%s %s could not connect: %s",
-            SmarterFormattedText.text(module_prefix + "refresh_mcpclient()"),
+            "%s could not connect: %s",
             mcpclient.name,
             e,
         )

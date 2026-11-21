@@ -14,7 +14,6 @@ logger = logging.getSmarterLogger(__name__)
 class DrfConfig(AppConfig):
     """Django rest framework lib app configuration."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.lib.drf"
     verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
 
@@ -24,8 +23,7 @@ class DrfConfig(AppConfig):
         from . import receivers, signals  # noqa: F401
 
         logger.debug(
-            "%s.DrfConfig.ready() %s app is %s",
-            logging.SmarterFormattedText.text(__name__),
+            "%s app is %s",
             f"{SMARTER_APP_NAME} {app_name.upper()}",
             SmarterReadyState.READY,
         )

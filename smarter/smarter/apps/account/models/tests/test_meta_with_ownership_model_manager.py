@@ -14,7 +14,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
@@ -32,8 +32,6 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
     queryset narrows it, because a Secret holds a credential. See
     ``smarter.apps.secret.tests.test_secret_orm.TestSecretQuerySetPermissions``.
     """
-
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModelManager()"
 
     other_non_admin_user: User
     other_account: Account
@@ -81,7 +79,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
             cls.secret_admin_user,
             cls.secret_smarter_admin_user,
         ]
-        logger.debug("%s Created secrets for testing: %s", cls.logger_prefix, [secret.name for secret in cls.secrets])
+        logger.debug("Created secrets for testing: %s", [secret.name for secret in cls.secrets])
 
     @classmethod
     def tearDownClass(cls):
@@ -90,7 +88,7 @@ class TestMetaDataWithOwnershipModelManager(TestAccountMixin):
                 secret.delete()
         # pylint: disable=W0718
         except Exception:
-            logger.exception("%s Failed to delete secrets during tearDownClass.", cls.logger_prefix)
+            logger.exception("Failed to delete secrets during tearDownClass.")
         finally:
             factory_account_teardown(
                 user=cls.other_non_admin_user, account=cls.other_account, user_profile=cls.other_non_admin_user_profile

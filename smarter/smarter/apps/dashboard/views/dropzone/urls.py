@@ -38,7 +38,7 @@ from .names import DropzoneReverseNames
 from .view import DropzoneView
 
 app_name = namespace
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 urlpatterns = []
@@ -48,15 +48,13 @@ if smarter_settings.enable_dropzone_manifest_apply:
         path("", DropzoneView.as_view(), name=DropzoneReverseNames.dropzone),
     ]
     logger.debug(
-        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         app_name,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
         app_name,
         SmarterReadyState.NOT_READY,
     )

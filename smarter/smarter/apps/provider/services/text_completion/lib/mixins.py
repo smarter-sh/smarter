@@ -153,11 +153,11 @@ class ChatDbMixin(AccountMixin):
             return True
         super_ready = bool(super().ready)
         if not super_ready:
-            logger.warning("%s.ready() is not ready because the superclass is not ready.", self.formatted_class_name)
+            logger.warning("is not ready because the superclass is not ready.")
             return False
         self._ready = isinstance(self.prompt, Prompt)
         if not self._ready:
-            logger.warning("%s.ready() is not ready because prompt is not set.", self.formatted_class_name)
+            logger.warning("is not ready because prompt is not set.")
         return self._ready
 
     @property
@@ -284,8 +284,7 @@ class ChatDbMixin(AccountMixin):
             self._message_history = newest_record.messages
             if not isinstance(self._message_history, list):
                 logger.warning(
-                    "%s.db_message_history expected messages to be a list but got %s.",
-                    self.formatted_class_name,
+                    "expected messages to be a list but got %s.",
                     type(self._message_history).__name__,
                 )
         return self._message_history
@@ -395,8 +394,7 @@ class ChatDbMixin(AccountMixin):
             self._provider = get_cached_active_provider_for_user(self._provider_name, self.user_profile.user.username)  # type: ignore[union-attr]
             if not self._provider:
                 logger.warning(
-                    "%s.provider property could not find an active provider with name '%s' for user %s.",
-                    self.formatted_class_name,
+                    "property could not find an active provider with name '%s' for user %s.",
                     self._provider_name,
                     self.user_profile.user.username if self.user_profile and self.user_profile.user else "Unknown",
                 )
@@ -496,8 +494,7 @@ class ChatDbMixin(AccountMixin):
         prompt = kwargs.get("prompt", None)
         if not prompt:
             logger.warning(
-                "%s.db_insert_chat_plugin_usage() Prompt is required to create a prompt plugin usage record.",
-                self.formatted_class_name,
+                "Prompt is required to create a prompt plugin usage record.",
             )
             return
         prompt_id = prompt.id  # type: ignore

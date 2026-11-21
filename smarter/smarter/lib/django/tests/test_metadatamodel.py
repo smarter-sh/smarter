@@ -7,7 +7,6 @@ from django.db.models.query import QuerySet
 
 from smarter.apps.account.models import Account
 from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 
 # our stuff
 from smarter.lib import logging
@@ -17,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 class TestMetaDataModel(TestAccountMixin):
     """Test MetaDataModel model."""
-
-    logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestMetaDataModel()"
 
     def test_tags_list(self):
         """Test that tags_list returns a list of tags from the comma-separated string."""

@@ -34,7 +34,6 @@ from .signals import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @receiver(mcpserver_called, dispatch_uid="mcpserver_called")
@@ -47,7 +46,7 @@ def handle_mcpserver_called(sender, server: str, method: str, **kwargs):
     :param method: The JSON-RPC method, e.g. ``tools/call``.
     :param kwargs: The signal's other arguments, which are ignored.
     """
-    logger.debug("%s.handle_mcpserver_called() %s %s", logger_prefix, server, method)
+    logger.debug("%s %s", server, method)
 
 
 @receiver(mcpserver_tool_called, dispatch_uid="mcpserver_tool_called")
@@ -75,8 +74,7 @@ def handle_mcpserver_tool_called(
     else:
         outcome = ""
     logger.info(
-        "%s.handle_mcpserver_tool_called() %s %s(%s) returned %s characters%s",
-        logger_prefix,
+        "%s %s(%s) returned %s characters%s",
         server,
         tool_name,
         argument_names,
@@ -85,8 +83,7 @@ def handle_mcpserver_tool_called(
     )
     formatted_arguments = logging.SmarterFormattedText.json(arguments)
     logger.debug(
-        "%s.handle_mcpserver_tool_called() %s %s arguments: %s",
-        logger_prefix,
+        "%s %s arguments: %s",
         server,
         tool_name,
         formatted_arguments,
@@ -108,8 +105,7 @@ def handle_mcpserver_repository_indexed(sender, index: RepositoryIndex, **kwargs
     """
     invalidate_cached_tool_results()
     logger.info(
-        "%s.handle_mcpserver_repository_indexed() %s indexed at %s: %s files, %s bytes",
-        logger_prefix,
+        "%s indexed at %s: %s files, %s bytes",
         index.repository,
         index.commit_sha,
         index.file_count,
@@ -130,8 +126,7 @@ def handle_mcpserver_repository_index_failed(sender, repository: str, error: str
     :param kwargs: The signal's other arguments, which are ignored.
     """
     logger.warning(
-        "%s.handle_mcpserver_repository_index_failed() %s could not be indexed: %s",
-        logger_prefix,
+        "%s could not be indexed: %s",
         repository,
         error,
     )

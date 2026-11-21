@@ -112,7 +112,9 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
                 error_message=f"Provider '{self.provider_name}' not found", request=request
             )
         logger.debug(
-            "%s.setup() provider_name: %s and handler: %s", self.formatted_class_name, self.provider_name, self.handler
+            "provider_name: %s and handler: %s",
+            self.provider_name,
+            self.handler,
         )
 
     def post(
@@ -133,14 +135,18 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(  # type: ignore[return-value]
                 data={"error": "budget_exceeded", "message": e.message}, status=HTTPStatus.PAYMENT_REQUIRED.value
             )
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{self.formatted_class_name}.post()"
         kwargs.pop("provider_name")
-        logger.debug("%s called with request: %s, args: %s, kwargs: %s", logger_prefix, request, args, kwargs)
+        logger.debug(
+            "called with request: %s, args: %s, kwargs: %s",
+            request,
+            args,
+            kwargs,
+        )
 
         # do we know who this is?
         try:
             user_profile = UserProfile.objects.get(user=request.user)
-            logger.debug("%s verified user_profile: %s", logger_prefix, user_profile)
+            logger.debug("verified user_profile: %s", user_profile)
         except UserProfile.DoesNotExist:
             return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
         except UserProfile.MultipleObjectsReturned:
@@ -148,8 +154,7 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             if not user_profile:
                 return SmarterHttpResponseForbidden(request=request, error_message="User profile not found")
             logger.warning(
-                "%s Multiple user profiles found for user: %s. Arbitrarily selecting the first one: %s",
-                logger_prefix,
+                "Multiple user profiles found for user: %s. Arbitrarily selecting the first one: %s",
                 request.user,
                 user_profile,
             )
@@ -160,21 +165,24 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
             # a client error, answered with 400. Never log the body: it holds the
             # system prompt and the user's messages.
             body_size = len(request.body)
-            logger.warning("%s JSON decode error: %s. Request body: %s bytes", logger_prefix, e, body_size)
+            logger.warning(
+                "JSON decode error: %s. Request body: %s bytes",
+                e,
+                body_size,
+            )
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
         # process the request using the appropriate handler for the specified provider.
         try:
             logger.debug(
-                "%s calling handler: %s with data: %s",
-                logger_prefix,
+                "calling handler: %s with data: %s",
                 self.handler,
                 SmarterFormattedText.json(data),
             )
             retval = self.handler(request, user_profile, data, *args, **kwargs)  # type: ignore
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s Error processing request: %s", logger_prefix, e)
+            logger.error("Error processing request: %s", e)
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
@@ -188,7 +196,8 @@ class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):
         # Pydantic model which we can directly serialize and return to the client.
         if isinstance(retval, ChatCompletion):
             logger.debug(
-                "%s received ChatCompletion response: %s", logger_prefix, SmarterFormattedText.json(retval.model_dump())
+                "received ChatCompletion response: %s",
+                SmarterFormattedText.json(retval.model_dump()),
             )
             return SmarterJournaledJsonResponse(
                 request=request,

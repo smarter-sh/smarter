@@ -37,7 +37,7 @@ class Orchestrator(MetaDataWithOwnershipModel):
 
     strategy = models.CharField(
         max_length=32,
-        choices=OrchestrationStrategy.choices,
+        choices=OrchestrationStrategy,
         default=OrchestrationStrategy.SEQUENTIAL,
         help_text="Coordination pattern used to sequence/parallelize member LLMClients.",
     )
@@ -57,7 +57,9 @@ class Orchestrator(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "Orchestrators"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="orchestrator_orchestrator_unique"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.name}"

@@ -84,11 +84,10 @@ class LLMClientAPIKey(TimestampedModel):
         :param invalidate: If True, discard the cached result and query the database again.
         :returns: True if an active ``SmarterAuthToken`` is linked to the LLMClient, otherwise False.
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + cls.__name__ + ".has_active_api_key()")
 
         @cache_results(cls.cache_expiration)
         def _has_active_api_key(llmclient_id: int, class_name: str) -> bool:
-            logger.debug("%s querying and caching results for llmclient=%s", logger_prefix, llmclient)
+            logger.debug("querying and caching results for llmclient=%s", llmclient)
             return cls.objects.filter(llmclient_id=llmclient_id, api_key__is_active=True).exists()
 
         if invalidate and llmclient:
@@ -122,15 +121,12 @@ class LLMClientAPIKey(TimestampedModel):
         :returns: A queryset of LLMClientAPIKey instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientAPIKey"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + "." + LLMClientAPIKey.__name__ + ".get_cached_objects()"
-        )
 
         @cache_results(cls.cache_expiration)
         def _get_api_keys_for_llmclient_id(
             llmclient_id: int, class_name: str = cls.__name__
         ) -> models.QuerySet["LLMClientAPIKey"]:
-            logger.debug("%s querying and caching results for llmclient=%s, ", logger_prefix, llmclient)
+            logger.debug("querying and caching results for llmclient=%s, ", llmclient)
             return cls.objects.filter(llmclient_id=llmclient_id).select_related(
                 "llmclient",
                 "llmclient__user_profile",
@@ -173,8 +169,7 @@ class LLMClientAPIKey(TimestampedModel):
         attachment, created = cls.objects.get_or_create(llmclient=llmclient, api_key=api_key)
         cls._attachments_changed(llmclient)
         logger.debug(
-            "%s.attach() %s api key %s to llmclient %s",
-            logging.SmarterFormattedText.text(__name__ + "." + cls.__name__),
+            "%s api key %s to llmclient %s",
             "attached" if created else "kept",
             api_key.name,
             llmclient.name,
@@ -194,8 +189,7 @@ class LLMClientAPIKey(TimestampedModel):
         count, _ = cls.objects.filter(llmclient=llmclient).delete()
         cls._attachments_changed(llmclient)
         logger.debug(
-            "%s.detach() detached %s api keys from llmclient %s",
-            logging.SmarterFormattedText.text(__name__ + "." + cls.__name__),
+            "detached %s api keys from llmclient %s",
             count,
             llmclient.name,
         )

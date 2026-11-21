@@ -88,7 +88,7 @@ class SAMOrchestratorSpecConfig(BaseModel):
         :returns: The harnesses, unchanged.
         :raises ValueError: when an ``llmClientName`` appears more than once.
         """
-        # Mirrors the model's unique_together on (orchestrator, llmclient) —
+        # Mirrors the model's unique constraint on (orchestrator, llmclient) —
         # the same LLMClient can't be attached to an Orchestrator twice.
         names = [harness.llmClientName for harness in v]
         duplicates = {name for name in names if names.count(name) > 1}

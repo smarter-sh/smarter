@@ -11,10 +11,51 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import LLMHost, LLMHostCompute
 from .models.compute import LLMHostComputeNodeGroupStatus
+from .signals import llmhost_destroyed, llmhost_launch_failed, llmhost_launched
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
-module_prefix = __name__
+
+@receiver(llmhost_launch_failed, dispatch_uid="llmhost_launch_failed")
+def llmhost_launch_failed_receiver(sender, llmhost: LLMHost, error: str = "", **kwargs):
+    """
+    Log that an LLMHost could not be launched, and why.
+
+    The error is one that :class:`~smarter.apps.llmhost.services.LLMHostService` also records as the
+    LLMHost's status message and event: a refused budget, or the cluster's or the cloud's error.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The LLMHost that was not launched.
+    :param error: Why.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.warning("could not launch %s: %s", llmhost, error)
+
+
+@receiver(llmhost_launched, dispatch_uid="llmhost_launched")
+def llmhost_launched_receiver(sender, llmhost: LLMHost, resources=None, **kwargs):
+    """
+    Log that an LLMHost was launched, and the resources it was launched with.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The launched LLMHost.
+    :param resources: A summary of the resources that were created or found.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.info("launched %s: %s", llmhost, resources)
+
+
+@receiver(llmhost_destroyed, dispatch_uid="llmhost_destroyed")
+def llmhost_destroyed_receiver(sender, llmhost: LLMHost, purge: bool = False, **kwargs):
+    """
+    Log that an LLMHost was destroyed.
+
+    :param sender: The class that sent the signal, the LLMHost service.
+    :param llmhost: The destroyed LLMHost.
+    :param purge: True if its model volume was deleted too.
+    :param kwargs: Other signal arguments (unused).
+    """
+    logger.info("destroyed %s, purge=%s", llmhost, purge)
 
 
 @receiver(post_save, sender=LLMHost)
@@ -30,11 +71,10 @@ def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
     :param created: Whether it was created, rather than updated.
     """
 
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_saved()"
     if created:
-        logger.info("%s created %s (id %s)", prefix, instance, instance.pk)
+        logger.info("created %s (id %s)", instance, instance.pk)
     else:
-        logger.info("%s updated %s (id %s)", prefix, instance, instance.pk)
+        logger.info("updated %s (id %s)", instance, instance.pk)
 
 
 @receiver(pre_delete, sender=LLMHost)
@@ -45,8 +85,7 @@ def llmhost_deleted(sender, instance: LLMHost, **kwargs):
     :param sender: The LLMHost model.
     :param instance: The LLMHost being deleted.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
 
 
 @receiver(pre_delete, sender=LLMHostCompute)
@@ -61,14 +100,13 @@ def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
     from .services.compute import ComputeProvisioner
     from .services.exceptions import LLMHostComputeError
 
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_compute_deleted()"
     if instance.nodegroup_status == LLMHostComputeNodeGroupStatus.ABSENT:
         return
     try:
         ComputeProvisioner().delete_nodegroup(instance)
-        logger.info("%s deleted the node group of %s", prefix, instance)
+        logger.info("deleted the node group of %s", instance)
     except LLMHostComputeError as e:
-        logger.error("%s the node group of %s was not deleted: %s", prefix, instance, e)
+        logger.error("the node group of %s was not deleted: %s", instance, e)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

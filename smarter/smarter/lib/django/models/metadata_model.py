@@ -2,7 +2,6 @@
 
 from collections.abc import Collection
 from functools import cached_property
-from logging import getLogger
 from typing import Any, Optional, Self
 
 from cache_results import cache_results
@@ -15,8 +14,8 @@ from taggit.managers import TaggableManager
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import rfc1034_compliant_str
+from smarter.lib import logging
 from smarter.lib.annotation.validation import (
     AnnotationsInput,
     AnnotationsMap,
@@ -27,8 +26,7 @@ from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .timestamped_model import TimestampedModel, should_log_verbose
 
-logger = getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
 
 
@@ -50,8 +48,7 @@ def _get_tags_by_model_and_pk(model_label: str, pk: int) -> list[str]:
     instance = model.objects.get(pk=pk)
     retval = [tag.name for tag in instance.tags.all()]
     verbose_logger.debug(
-        "%s._get_tags_by_model_and_pk() fetched and cached tags for %s with pk=%s from database",
-        logger_prefix,
+        "fetched and cached tags for %s with pk=%s from database",
         model_label,
         pk,
     )
@@ -325,7 +322,6 @@ class MetaDataModel(TimestampedModel):
         :raises ~django.core.exceptions.MultipleObjectsReturned: the model's
             ``MultipleObjectsReturned``, if several rows have the name.
         """
-        class_prefix = SmarterFormattedText.text(__name__ + "." + MetaDataModel.__name__)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -339,8 +335,7 @@ class MetaDataModel(TimestampedModel):
         def _get_object_by_name(name: str, class_name: str = cls.__name__) -> "MetaDataModel":
             try:
                 verbose_logger.debug(
-                    "%s._get_object_by_name() called with pk: %s, name: %s, invalidate: %s",
-                    class_prefix,
+                    "called with pk: %s, name: %s, invalidate: %s",
                     pk,
                     name,
                     invalidate,
@@ -348,24 +343,21 @@ class MetaDataModel(TimestampedModel):
                 # taggit has no type information, so django-stubs doesn't know that tags is a relation.
                 retval = cls._default_manager.prefetch_related("tags").get(name=name)  # type: ignore[misc]
                 verbose_logger.debug(
-                    "%s._get_object_by_name() fetched and cached %s name: %s",
-                    class_prefix,
+                    "fetched and cached %s name: %s",
                     class_name,
                     name,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 verbose_logger.debug(
-                    "%s._get_object_by_name() no %s object found for name: %s",
-                    class_prefix,
+                    "no %s object found for name: %s",
                     class_name,
                     name,
                 )
                 raise cls.DoesNotExist(f"{class_name} object with name '{name}' does not exist.") from e
             except cls.MultipleObjectsReturned as e:
                 logger.error(
-                    "%s._get_object_by_name() - Multiple %s objects found for name '%s'.",
-                    class_prefix,
+                    "Multiple %s objects found for name '%s'.",
                     class_name,
                     name,
                 )
@@ -402,10 +394,7 @@ class MetaDataModel(TimestampedModel):
         :returns: A queryset of all model instances.
         :raises NotImplementedError: if called on an abstract model class.
         """
-        class_prefix = SmarterFormattedText.text(__name__ + "." + cls.__name__)
-        verbose_logger.debug(
-            "%s.get_cached_objects() called for %s with invalidate=%s", class_prefix, cls.__name__, invalidate
-        )
+        verbose_logger.debug("called for %s with invalidate=%s", cls.__name__, invalidate)
 
         if cls._meta.abstract:
             raise NotImplementedError(

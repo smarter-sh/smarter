@@ -18,7 +18,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.VIEW_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 GOOGLE_OAUTH_BACKENDS = [
     "social_core.backends.google.GoogleOAuth2",
@@ -58,25 +57,22 @@ def oauth_provider_enabled(provider: str, key: SecretStr, secret: SecretStr, bac
     """
     if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_OAUTH2):
         logger.debug(
-            "%s.oauth_provider_enabled() %s: the %s switch is not active.",
-            logger_prefix,
+            "%s: the %s switch is not active.",
             provider,
             SmarterWaffleSwitches.ENABLE_OAUTH2,
         )
         return False
     if not is_credential_set(key):
-        logger.debug("%s.oauth_provider_enabled() %s: the key is not set.", logger_prefix, provider)
+        logger.debug("%s: the key is not set.", provider)
         return False
     if not is_credential_set(secret):
-        logger.debug("%s.oauth_provider_enabled() %s: the secret is not set.", logger_prefix, provider)
+        logger.debug("%s: the secret is not set.", provider)
         return False
     for backend in backends:
         if backend in settings.AUTHENTICATION_BACKENDS:
             return True
     logger.warning(
-        "%s.oauth_provider_enabled() %s credentials are set, but settings.AUTHENTICATION_BACKENDS has none of "
-        "its backends: %s",
-        logger_prefix,
+        "%s credentials are set, but settings.AUTHENTICATION_BACKENDS has none of " "its backends: %s",
         provider,
         backends,
     )

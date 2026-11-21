@@ -39,9 +39,6 @@ from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
-HERE = logging.SmarterFormattedText.text(__name__)
-
-
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
 )
@@ -117,8 +114,7 @@ class SmarterCachedObjects:
         def _requery_smarter_admin_user_profile(class_name=SmarterCachedObjects.__name__) -> None:
             if isinstance(self._smarter_admin_user_profile, UserProfile):
                 logger.debug(
-                    "%s re-queried %s",
-                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
+                    "re-queried %s",
                     self._smarter_admin_user_profile,
                 )
                 try:
@@ -134,8 +130,7 @@ class SmarterCachedObjects:
                 )
                 self._smarter_admin_user_profile = user_profile
                 logger.debug(
-                    "%s initialized %s",
-                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.smarter_admin_user_profile()",
+                    "initialized %s",
                     user_profile,
                 )
                 return self._smarter_admin_user_profile  # type: ignore[return-value]
@@ -164,8 +159,7 @@ class SmarterCachedObjects:
             if self._admin_user:
                 self._admin_user.refresh_from_db()
             logger.debug(
-                "%s re-queried %s",
-                f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
+                "re-queried %s",
                 self._admin_user,
             )
 
@@ -173,8 +167,7 @@ class SmarterCachedObjects:
             try:
                 self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
                 logger.debug(
-                    "%s initialized %s",
-                    f"{logging.SmarterFormattedText.text(__name__)}.{SmarterCachedObjects.__name__}.admin_user()",
+                    "initialized %s",
                     self._admin_user,
                 )
                 return self._admin_user
@@ -268,7 +261,7 @@ def get_cached_account_for_user(
         account = get_cached_account_for_user(user, invalidate=True)
     """
     if not isinstance(user, User):
-        logger.warning("%s.get_cached_account_for_user() invalid user type: %s", HERE, type(user))
+        logger.warning("invalid user type: %s", type(user))
         raise Account.DoesNotExist()
 
     username = getattr(user, "username")
@@ -277,7 +270,7 @@ def get_cached_account_for_user(
 
     user_id = getattr(user, "id", None)
     if not user_id:
-        logger.warning("%s.get_cached_account_for_user() user has no ID: %s", HERE, user)
+        logger.warning("user has no ID: %s", user)
         raise Account.DoesNotExist()
 
     # the account of the profile that the user chose in the web console's user menu, if any.
@@ -294,8 +287,7 @@ def get_cached_account_for_user(
                 raise SmarterConfigurationError(f"Expected UserProfile instance, got {type(user_profile)}")
             if user_profile.account.is_default_account:
                 logger.debug(
-                    "%s.get_cached_account_for_user() retrieving and caching default account %s for user %s",
-                    HERE,
+                    "retrieving and caching default account %s for user %s",
                     user_profile.cached_account,
                     user,
                 )
@@ -303,12 +295,11 @@ def get_cached_account_for_user(
         # If no default account is found, return the first account
         user_profile = user_profiles.first()
         if not user_profile:
-            logger.warning("%s.get_cached_account_for_user_by_id() no UserProfile found for user ID %s", HERE, user_id)
+            logger.warning("no UserProfile found for user ID %s", user_id)
             raise Account.DoesNotExist()
         account = user_profile.cached_account
         logger.debug(
-            "%s.get_cached_account_for_user_by_id() retrieving and caching default account %s for user ID %s",
-            HERE,
+            "retrieving and caching default account %s for user ID %s",
             account,
             user_id,
         )
@@ -350,10 +341,10 @@ def get_cached_user_for_user_id(invalidate: Optional[bool] = False, user_id: Opt
         """In-memory cache for user objects."""
         try:
             user = User.objects.get(id=user_id)
-            logger.debug("%s.get_cached_user_for_user_id() retrieving and caching user %s", HERE, user)
+            logger.debug("retrieving and caching user %s", user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist as e:
-            logger.error("%s.get_cached_user_for_user_id() user with ID %s does not exist", HERE, user_id)
+            logger.error("user with ID %s does not exist", user_id)
             raise e
 
     if invalidate:
@@ -432,10 +423,10 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
         """In-memory cache for user objects by username."""
         try:
             user = User.objects.get(username=username)
-            logger.debug("%s.get_cached_user_for_username() retrieving and caching user %s", HERE, user)
+            logger.debug("retrieving and caching user %s", user)
             return user  # type: ignore[return-value]
         except User.DoesNotExist as e:
-            logger.debug("%s.get_cached_user_for_username() user with username %s does not exist", HERE, username)
+            logger.debug("user with username %s does not exist", username)
             raise e
 
     if invalidate:
@@ -497,7 +488,10 @@ def delete_created_admin_user(account_number: str) -> bool:
     if UserProfile.objects.filter(user=created_admin).exists():
         return False
     created_admin.delete()
-    logger.info("%s.delete_created_admin_user() deleted the admin user of account %s", HERE, account_number)
+    logger.info(
+        "deleted the admin user of account %s",
+        account_number,
+    )
     return True
 
 
@@ -539,12 +533,10 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist as e:
             logger.error(
-                "%s.get_cached_admin_user_for_account() account with number %s does not exist",
-                HERE,
+                "account with number %s does not exist",
                 account_number,
             )
             raise e
-        console_prefix = f"{logging.SmarterFormattedText.text(__name__)}.get_cached_admin_user_for_account()"
         user_profile = (
             UserProfile.objects.filter(account=account)
             .filter(Q(user__is_staff=True) | Q(user__is_superuser=True) | Q(is_account_admin=True))
@@ -553,12 +545,10 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             .first()
         )
         if user_profile:
-            logger.debug(
-                "%s found and cached admin UserProfile %s for account %s", console_prefix, user_profile, account
-            )
+            logger.debug("found and cached admin UserProfile %s for account %s", user_profile, account)
             return user_profile.cached_user  # type: ignore[return-value]
         else:
-            logger.warning("%s no admin user found for account %s. Creating new admin user.", console_prefix, account)
+            logger.warning("no admin user found for account %s. Creating new admin user.", account)
             # an account whose every profile is a test profile is a test account, e.g. the end-to-end tests'
             # throwaway account. Its admin is a test profile too, so that its contact's welcome email is sent
             # quietly, rather than to <account>-admin@<root domain>, and the test teardown deletes it.
@@ -645,7 +635,7 @@ def account_number_from_url(url: Optional[str] = None, invalidate: Optional[bool
     if not url:
         return None
     if not isinstance(url, str):
-        logger.warning("%s.account_number_from_url() invalid URL type: %s", HERE, type(url))
+        logger.warning("invalid URL type: %s", type(url))
         return None
 
     @cache_results()
@@ -653,7 +643,7 @@ def account_number_from_url(url: Optional[str] = None, invalidate: Optional[bool
         match = SMARTER_ACCOUNT_NUMBER_PATTERN.search(url)
         retval = match.group(0) if match else None
         if retval is not None:
-            logger.debug("account_number_from_url() extracted and cached account number %s from URL %s", retval, url)
+            logger.debug("extracted and cached account number %s from URL %s", retval, url)
         return retval
 
     if invalidate:
@@ -746,7 +736,7 @@ def valid_resource_owners_for_user(user_profile: Optional[UserProfile]) -> list[
         owners = valid_resource_owners_for_user(user_profile)
         print("Valid resource owners:", [owner.user.username for owner in owners])
     """
-    logger.debug("%s.valid_resource_owners_for_user() called with user_profile: %s", HERE, user_profile)
+    logger.debug("called with user_profile: %s", user_profile)
 
     if not user_profile:
         return [smarter_cached_objects.smarter_admin_user_profile]

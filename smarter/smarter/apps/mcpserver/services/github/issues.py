@@ -55,7 +55,6 @@ from .client import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 IssueState = Literal["open", "closed", "all"]
@@ -212,12 +211,12 @@ def search_issues(
     }
     response = github_request("GET", "/search/issues", value, params=params)
     if response.status_code != 200:
-        logger.info("%s.search_issues() GitHub did not search: HTTP %s", logger_prefix, response.status_code)
+        logger.info("GitHub did not search: HTTP %s", response.status_code)
         raise SmarterMCPServerServiceError(explain_failure(response, repositories[0], "search the issues"))
     try:
         result = GitHubIssueSearchResult.model_validate(response.json())
     except (ValueError, ValidationError) as e:
-        logger.warning("%s.search_issues() GitHub's response is not a search result: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not a search result: %s", e)
         raise SmarterMCPServerServiceError("GitHub's search result could not be read. Try again later.") from e
     hits = [hit for hit in result.items if hit.repository in names]
     return hits[:limit]
@@ -336,8 +335,7 @@ def read_issue(repository: ProjectRepository, number: int, token: Optional[Secre
     response = github_request("GET", path, value)
     if response.status_code != 200:
         logger.info(
-            "%s.read_issue() GitHub did not return %s#%s: HTTP %s",
-            logger_prefix,
+            "GitHub did not return %s#%s: HTTP %s",
             repository.full_name,
             number,
             response.status_code,
@@ -347,7 +345,7 @@ def read_issue(repository: ProjectRepository, number: int, token: Optional[Secre
     try:
         issue = GitHubIssueDetail.model_validate(response.json())
     except (ValueError, ValidationError) as e:
-        logger.warning("%s.read_issue() GitHub's response is not an issue: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not an issue: %s", e)
         raise SmarterMCPServerServiceError(f"GitHub's issue #{number} could not be read. Try again later.") from e
     if not issue.comments:
         return GitHubIssueThread(issue=issue)
@@ -366,7 +364,7 @@ def read_issue(repository: ProjectRepository, number: int, token: Optional[Secre
         data = response.json()
         comments = [GitHubIssueComment.model_validate(comment) for comment in data]
     except (ValueError, TypeError, ValidationError) as e:
-        logger.warning("%s.read_issue() GitHub's response is not a list of comments: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not a list of comments: %s", e)
         raise SmarterMCPServerServiceError(
             f"The comments of issue #{number} could not be read. Try again later."
         ) from e
@@ -440,7 +438,7 @@ def created(response: requests.Response, repository: ProjectRepository, what: st
         description = {**data}
         description["author"] = author_login(data)
     except (ValueError, AttributeError) as e:
-        logger.warning("%s.created() GitHub's response is not JSON: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not JSON: %s", e)
         raise SmarterMCPServerServiceError(
             f"GitHub created {what} in {repository.full_name}, but its response could not be read. "
             f"See {repository.github_url}/issues."
@@ -490,8 +488,7 @@ def create_issue(
     response = github_request("POST", path, value, json=data)
     if response.status_code != 201:
         logger.info(
-            "%s.create_issue() GitHub did not open an issue in %s: HTTP %s",
-            logger_prefix,
+            "GitHub did not open an issue in %s: HTTP %s",
             repository.full_name,
             response.status_code,
         )
@@ -501,12 +498,12 @@ def create_issue(
     try:
         issue = GitHubIssue.model_validate(description)
     except ValidationError as e:
-        logger.warning("%s.create_issue() GitHub's response is not an issue: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not an issue: %s", e)
         raise SmarterMCPServerServiceError(
             f"GitHub opened an issue in {repository.full_name}, but its response could not be read. "
             f"See {repository.github_url}/issues."
         ) from e
-    logger.info("%s.create_issue() opened %s", logger_prefix, issue.html_url)
+    logger.info("opened %s", issue.html_url)
     return issue
 
 
@@ -540,8 +537,7 @@ def comment_on_issue(
     response = github_request("POST", path, value, json=data)
     if response.status_code != 201:
         logger.info(
-            "%s.comment_on_issue() GitHub did not comment on %s#%s: HTTP %s",
-            logger_prefix,
+            "GitHub did not comment on %s#%s: HTTP %s",
             repository.full_name,
             number,
             response.status_code,
@@ -553,12 +549,12 @@ def comment_on_issue(
     try:
         comment = GitHubComment.model_validate(description)
     except ValidationError as e:
-        logger.warning("%s.comment_on_issue() GitHub's response is not a comment: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not a comment: %s", e)
         raise SmarterMCPServerServiceError(
             f"GitHub added a comment to {repository.full_name}#{number}, but its response could not be read. "
             f"See {repository.github_url}/issues/{number}."
         ) from e
-    logger.info("%s.comment_on_issue() commented %s", logger_prefix, comment.html_url)
+    logger.info("commented %s", comment.html_url)
     return comment
 
 
@@ -642,7 +638,7 @@ def close_issue(
     try:
         pull_request = GitHubPullRequestState.model_validate(response.json())
     except (ValueError, ValidationError) as e:
-        logger.warning("%s.close_issue() GitHub's response is not a pull request: %s", logger_prefix, e)
+        logger.warning("GitHub's response is not a pull request: %s", e)
         raise SmarterMCPServerServiceError(
             f"Pull request #{pull_request_number} could not be read. Try again later."
         ) from e
@@ -657,8 +653,7 @@ def close_issue(
     response = github_request("PATCH", issue_path, value, json=closing)
     if response.status_code != 200:
         logger.info(
-            "%s.close_issue() GitHub did not close %s#%s: HTTP %s",
-            logger_prefix,
+            "GitHub did not close %s#%s: HTTP %s",
             repository.full_name,
             number,
             response.status_code,
@@ -669,8 +664,7 @@ def close_issue(
             "Do not add the comment again."
         )
     logger.info(
-        "%s.close_issue() closed %s#%s, resolved by #%s",
-        logger_prefix,
+        "closed %s#%s, resolved by #%s",
         repository.full_name,
         number,
         pull_request_number,
