@@ -26,7 +26,7 @@ from smarter.apps.connection import urls as connection_urls
 from smarter.apps.connection.const import namespace as connection_namespace
 from smarter.apps.dashboard import urls as dashboard_urls
 from smarter.apps.dashboard.admin import (
-    SmarterSuperUserOnlyModelAdmin,
+    smarter_auto_model_admin,
     smarter_restricted_admin_site,
 )
 from smarter.apps.dashboard.const import namespace as dashboard_namespace
@@ -72,7 +72,6 @@ from smarter.apps.vectorstore import urls as vectorstore_urls
 from smarter.apps.vectorstore.const import namespace as vectorstore_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.csp import CSP_REPORT_PATH, CspReportView
@@ -80,6 +79,11 @@ from smarter.lib.django.http import error_handlers
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
 from smarter.lib.drf.const import namespace as drf_namespace
+from smarter.lib.manifest.sam_apps import (
+    SamAppUrls,
+    get_sam_app,
+    sam_app_urlpatterns,
+)
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -149,8 +153,9 @@ for model in models:
     try:
         # for anything that didn't pass muster, we register with
         # our own "superuser only" model configuration that will
-        # limit visibility of the model to superusers only.
-        smarter_restricted_admin_site.register(model, SmarterSuperUserOnlyModelAdmin)
+        # limit visibility of the model to superusers only, and
+        # build its list, filters and search from the model's fields.
+        smarter_restricted_admin_site.register(model, smarter_auto_model_admin(model))
     except AlreadyRegistered:
         pass
 
@@ -186,36 +191,20 @@ urlpatterns = [
     path("api/", include(urls, namespace=api_namespace)),
     path("authtoken/", include(drf_urls, namespace=drf_namespace)),
     path("budget/", include(budget_urls, namespace=budget_namespace)),
-    path("connection/", include(connection_urls, namespace=connection_namespace)),
-    path("guardrail/", include(guardrail_urls, namespace=guardrail_namespace)),
     path("infrastructure/", include(infrastructure_urls, namespace=infrastructure_namespace)),
     path("dashboard/", include(dashboard_urls, namespace=dashboard_namespace)),
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     # the pages of the single-page console. See smarter.apps.dashboard.views.console_app.
     path("login/", ConsoleAppView.as_view(), name=ConsoleReverseNames.login_view),
-    path("llmclient/", include(llmclient_urls, namespace=llmclient_namespace)),
-    path("llmhost/", include(llmhost_urls, namespace=llmhost_namespace)),
-    path("mcpclient/", include(mcp_urls, namespace=mcp_namespace)),
-    path("orchestrator/", include(orchestrator_urls, namespace=orchestrator_namespace)),
-    path("llm-tools/", include(llmtool_urls, namespace=llmtool_namespace)),
+    # the SAM resource apps' pages are mounted below, by sam_app_urlpatterns().
     # the LLMTools pages were served under /plugin/. Bookmarks and published links still work.
     re_path(
         r"^plugin/(?P<rest>.*)$",
         RedirectView.as_view(url="/llm-tools/%(rest)s", permanent=True, query_string=True),
         name=f"{name_prefix}_plugin_redirect",
     ),
-    path("extensions/", include(extension_urls, namespace=extension_urls.namespace)),
-    path("provider/", include(provider_urls, namespace=provider_namespace)),
-    path("vectorsearch/", include(vectorsearch_urls, namespace=vectorsearch_namespace)),
     path("register/", ConsoleAppView.as_view(), name=ConsoleReverseNames.register_view),
-    path("secret/", include(secret_urls, namespace=secret_namespace)),
     path("workbench/", include(prompt_urls, namespace=prompt_workbench_namespace)),
-    # -----------------------------------
-    # LLMClients on their verified custom domains, which smarter.hosts doesn't match, so they are
-    # served by this urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.
-    # -----------------------------------
-    path("prompt/", browser_friendly(DefaultLLMClientApiView.as_view()), name=f"{name_prefix}_chat"),
-    path("config/", browser_friendly(PromptConfigView.as_view()), name=f"{name_prefix}_config"),
     # -----------------------------------
     # password management
     # -----------------------------------
@@ -266,26 +255,37 @@ urlpatterns = [
     path("social-auth/", include(social_django_urls, namespace="social_auth")),
 ]
 
-if smarter_settings.enable_proxy:
+SAM_APP_CONSOLE_URLS: list[SamAppUrls] = [
+    SamAppUrls("enable_connection", "Connection", "connection/", connection_urls, connection_namespace),
+    SamAppUrls("enable_guardrail", "Guardrail", "guardrail/", guardrail_urls, guardrail_namespace),
+    SamAppUrls("enable_llmclient", "LLMClient", "llmclient/", llmclient_urls, llmclient_namespace),
+    SamAppUrls("enable_llmhost", "LLMHost", "llmhost/", llmhost_urls, llmhost_namespace),
+    SamAppUrls("enable_llmtool", "LLMTool", "llm-tools/", llmtool_urls, llmtool_namespace),
+    SamAppUrls("enable_llmtool", "Extension", "extensions/", extension_urls, extension_urls.namespace),
+    SamAppUrls("enable_mcpclient", "MCPClient", "mcpclient/", mcp_urls, mcp_namespace),
+    SamAppUrls("enable_orchestrator", "Orchestrator", "orchestrator/", orchestrator_urls, orchestrator_namespace),
+    SamAppUrls("enable_provider", "Provider", "provider/", provider_urls, provider_namespace),
+    SamAppUrls("enable_proxy", "Proxy", "proxy/", proxy_urls, proxy_namespace),
+    SamAppUrls("enable_secret", "Secret", "secret/", secret_urls, secret_namespace),
+    SamAppUrls("enable_vectorsearch", "VectorSearch", "vectorsearch/", vectorsearch_urls, vectorsearch_namespace),
+    SamAppUrls("enable_vectorstore", "Vectorstore", "vectorstore/", vectorstore_urls, vectorstore_namespace),
+]
+"""
+The web console pages of the SAM resource apps.
+
+Each app's pages are mounted only if its ``smarter_settings.enable_<app>`` flag is true. See
+:mod:`smarter.lib.manifest.sam_apps`.
+"""
+
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_CONSOLE_URLS, "web console pages")
+
+# LLMClients on their verified custom domains, which smarter.hosts doesn't match, are served by this
+# urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.
+if get_sam_app("enable_llmclient").is_enabled(smarter_settings):
     urlpatterns += [
-        path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
+        path("prompt/", browser_friendly(DefaultLLMClientApiView.as_view()), name=f"{name_prefix}_chat"),
+        path("config/", browser_friendly(PromptConfigView.as_view()), name=f"{name_prefix}_config"),
     ]
-    logger.debug("Proxy web console access is %s.", SmarterReadyState.READY)
-else:
-    logger.info(
-        "Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        SmarterReadyState.NOT_READY,
-    )
-if smarter_settings.enable_vectorstore:
-    urlpatterns += [
-        path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
-    ]
-    logger.debug("Vectorstore web console access is %s.", SmarterReadyState.READY)
-else:
-    logger.info(
-        "Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        SmarterReadyState.NOT_READY,
-    )
 
 # mcdaniel 2026-01-20: converting static() to list(static(...)) to fix
 # Sphinx doc build error: 'TypeError: can only concatenate list (not "static") to list

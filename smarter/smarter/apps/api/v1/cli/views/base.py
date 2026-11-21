@@ -59,6 +59,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerReadOnlyError,
 )
 from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
+from smarter.lib.manifest.sam_apps import raise_if_kind_disabled
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
@@ -355,6 +356,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 raise APIV1CLIViewBadRequestError(
                     f"Could not find broker for {self.manifest_kind or '<-- Missing -->'} manifest."
                 )
+            # a kind whose SAM app is disabled, e.g. with SMARTER_ENABLE_GUARDRAIL=false, has no broker.
+            if self.manifest_kind:
+                raise_if_kind_disabled(self.manifest_kind)
         return self._BrokerClass
 
     @property
@@ -769,6 +773,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if not self._manifest_kind:
                 self._manifest_kind_url_parsed = True
                 raise SAMBadRequestError(f"Unsupported manifest kind: {kind}. should be one of {SAMKinds.all()}")
+            raise_if_kind_disabled(self._manifest_kind)
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request: HttpRequest, *args, **kwargs):

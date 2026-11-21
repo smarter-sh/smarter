@@ -20,6 +20,7 @@ class ChatAdmin(SmarterCustomerModelAdmin):
     """
 
     model = Prompt
+    search_fields = ("name", "session_key", "llmclient__name", "user_profile__user__username")
 
     readonly_fields = (
         "created_at",
@@ -50,6 +51,7 @@ class ChatHistoryAdmin(SmarterCustomerModelAdmin):
     """
 
     model = PromptHistory
+    search_fields = ("prompt__session_key", "prompt__llmclient__name")
 
     readonly_fields = (
         "created_at",
@@ -57,6 +59,7 @@ class ChatHistoryAdmin(SmarterCustomerModelAdmin):
         "prompt_history",
     )
     list_display = ["prompt", "prompt_history"]
+    date_hierarchy = "created_at"
 
     def get_queryset(self, request):
         """
@@ -77,6 +80,7 @@ class ChatPluginUsageAdmin(SmarterCustomerModelAdmin):
     """Plugin selection history model admin."""
 
     model = PromptPluginUsage
+    search_fields = ("prompt__session_key", "plugin__name")
 
     readonly_fields = (
         "created_at",
@@ -103,12 +107,14 @@ class ChatToolCallHistoryAdmin(SmarterCustomerModelAdmin):
     """Prompt tool call history model admin."""
 
     model = PromptToolCall
+    search_fields = ("function_name", "prompt__session_key", "plugin__name")
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
     list_display = [field.name for field in PromptToolCall._meta.fields]
+    date_hierarchy = "created_at"
 
     def get_queryset(self, request):
         """

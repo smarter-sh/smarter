@@ -1,27 +1,21 @@
 """Django app configuration of Smarter annotations."""
 
-from django.apps import AppConfig
+from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
+from smarter.lib.django.apps import SmarterAppConfig
 
-from .const import namespace as app_name
-
-logger = logging.getSmarterLogger(__name__)
+from .const import namespace, presentation_app_name
 
 
-class AnnotationConfig(AppConfig):
-    """Django app configuration of Smarter annotations."""
+class AnnotationConfig(SmarterAppConfig):
+    """Django app configuration of the Annotation app.
 
-    name = "smarter.lib.annotation"
+    See :class:`~smarter.lib.django.apps.SmarterAppConfig`.
+    """
+
+    name = f"smarter.lib.{namespace}"
     label = "annotation"
-    verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-
-    # pylint: disable=import-outside-toplevel,W0611
-    def ready(self):
-        """Connect the receivers."""
-        from . import receivers  # noqa: F401
-
-        app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-        logger.debug("%s app is %s", app_label, SmarterReadyState.READY)
+    verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _(presentation_app_name))
+    ready_modules = ("receivers",)

@@ -27,6 +27,7 @@ class InfrastructureResourceAdmin(SmarterSuperUserOnlyModelAdmin):
     list_filter = ["provider", "service", "resource_type", "billable", "status"]
     search_fields = ["resource_name", "resource_id"]
     readonly_fields = [field.name for field in InfrastructureResource._meta.fields]
+    date_hierarchy = "created_at"
 
     def has_add_permission(self, request, obj=None) -> bool:
         """
@@ -41,6 +42,16 @@ class InfrastructureResourceAdmin(SmarterSuperUserOnlyModelAdmin):
     def has_change_permission(self, request, obj=None) -> bool:
         """
         Never allow changing a ledger row in the admin: the ledger is read-only.
+
+        :param request: The admin request.
+        :param obj: The object, if any.
+        :returns: False.
+        """
+        return False
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        """
+        Never allow deleting a ledger row in the admin: the cloud resource would stay, with nothing to track it.
 
         :param request: The admin request.
         :param obj: The object, if any.

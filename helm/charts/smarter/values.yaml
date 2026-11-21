@@ -76,7 +76,18 @@ env:
   SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_ENABLE_DASHBOARD_SERVER_LOGS: true
   SMARTER_ENABLE_MANIFEST_DROPZONE: true
+  # one flag per SAM resource app: false turns its resource types off everywhere (pages, api, cli).
+  SMARTER_ENABLE_CONNECTION: true
+  SMARTER_ENABLE_GUARDRAIL: true
+  SMARTER_ENABLE_LLMCLIENT: true
+  SMARTER_ENABLE_LLMHOST: true
+  SMARTER_ENABLE_LLMTOOL: true
+  SMARTER_ENABLE_MCPCLIENT: true
+  SMARTER_ENABLE_ORCHESTRATOR: true
+  SMARTER_ENABLE_PROVIDER: true
   SMARTER_ENABLE_PROXY: true
+  SMARTER_ENABLE_SECRET: true
+  SMARTER_ENABLE_VECTORSEARCH: true
   SMARTER_ENABLE_VECTORSTORE: true
   # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
   # pages load them from its CDN, cdn.<platform>. It needs AWS. false: the server serves them.

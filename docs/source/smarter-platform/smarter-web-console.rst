@@ -92,6 +92,10 @@ Every Smarter AI resource type has a dedicated list page that provides a compreh
 of all resources of that type, along with their real-time state. Create, view, edit, clone, and delete
 any resource directly from the console.
 
+A platform operator can turn a resource type off, e.g. with ``SMARTER_ENABLE_GUARDRAIL=false``. Its list
+page, its sidebar link and its docs pages are then gone from the console, and the dashboard counts its
+resources without linking to them. See :ref:`Turning resource types off <sam-app-feature-flags>`.
+
 Choose a row, by clicking it or by pressing Enter on it, to open the resource's detail. Its tabs are:
 
 - **Details**: the resource's settings, grouped into sections, with its owner, dates, tags and

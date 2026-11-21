@@ -11,9 +11,10 @@ from django.http.request import HttpRequest
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
-    SmarterCustomerModelAdmin,
     SmarterStaffOnlyModelAdmin,
     SmarterSuperUserOnlyModelAdmin,
+    smarter_admin_account_ids,
+    smarter_admin_user,
     smarter_is_staff,
     smarter_restricted_admin_site,
 )
@@ -167,20 +168,22 @@ class AccountAdmin(SmarterStaffOnlyModelAdmin):
         "updated_at",
     )
     list_display = ("company_name", "account_number", "created_at", "updated_at")
+    search_fields = ("company_name", "account_number")
 
     def get_queryset(self, request: HttpRequest):
         """
-        Return the rows that the request's user may see in the admin.
+        Return every account for a superuser, and a staff user's own accounts for them.
 
         :param request: The admin request.
-        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        :returns: The accounts.
         """
-        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-        )
+        user = smarter_admin_user(request)
+        if user is None:
+            return qs.none()
+        if user.is_superuser:
+            return qs
+        return qs.filter(pk__in=smarter_admin_account_ids(user))
 
 
 # @admin.register(AccountContact)
@@ -188,6 +191,7 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
     """AccountContact model admin."""
 
     model = AccountContact
+    search_fields = ("first_name", "last_name", "email", "account__company_name")
 
     readonly_fields = (
         "created_at",
@@ -197,17 +201,18 @@ class AccountContactAdmin(SmarterStaffOnlyModelAdmin):
 
     def get_queryset(self, request: HttpRequest):
         """
-        Return the rows that the request's user may see in the admin.
+        Return every contact for a superuser, and the contacts of a staff user's own accounts for them.
 
         :param request: The admin request.
-        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
+        :returns: The contacts.
         """
-        user = get_resolved_user(request.user)  # type: ignore
         qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-        )
+        user = smarter_admin_user(request)
+        if user is None:
+            return qs.none()
+        if user.is_superuser:
+            return qs
+        return qs.filter(account_id__in=smarter_admin_account_ids(user))
 
 
 class ResourceConstraintInline(admin.TabularInline):
@@ -223,6 +228,7 @@ class BudgetAdmin(SmarterSuperUserOnlyModelAdmin):
     """Budget model admin."""
 
     model = Budget
+    search_fields = ("name", "description")
     inlines = [ResourceConstraintInline]
 
     readonly_fields = (
@@ -295,6 +301,7 @@ class DataExportAdmin(SmarterSuperUserOnlyModelAdmin):
     list_display = ("user", "status", "step", "manifest_count", "failed_count", "size_bytes", "created_at")
     list_filter = ("status",)
     search_fields = ("user__username", "user__email")
+    date_hierarchy = "created_at"
 
     def get_readonly_fields(self, request, obj=None):
         """
@@ -344,8 +351,13 @@ class ResourceLockAdmin(SmarterSuperUserOnlyModelAdmin):
         )
 
 
-class ChargeAdmin(SmarterCustomerModelAdmin):
-    """Charge model admin."""
+class ChargeAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    Charge model admin, read-only.
+
+    A charge has a resource locator, not an owner, so it can't be scoped to an account: only superusers see
+    charges here. An account's users see theirs in the web console.
+    """
 
     model = Charge
 
@@ -399,23 +411,13 @@ class ChargeAdmin(SmarterCustomerModelAdmin):
         "total_tokens",
     )
 
-    def get_queryset(self, request):
-        """
-        Return the rows that the request's user may see in the admin.
-
-        :param request: The admin request.
-        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile`.
-        """
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-        )
+    date_hierarchy = "created_at"
+    list_filter = ("charge_type",)
+    search_fields = ("resource_locator",)
 
 
-class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
-    """AggregatedCharges model admin."""
+class AggregatedChargesAdmin(SmarterSuperUserOnlyModelAdmin):
+    """AggregatedCharges model admin, read-only, for superusers, as :class:`ChargeAdmin` is."""
 
     model = AggregatedCharges
 
@@ -473,22 +475,8 @@ class AggregatedChargesAdmin(SmarterCustomerModelAdmin):
         "total_tokens",
         "total_cost",
     )
-
-    def get_queryset(self, request):
-        """
-        Return the aggregated charges of the request user's account, or all of them for a superuser.
-
-        :param request: The admin request.
-        :returns: The queryset, filtered by :func:`smarter_filter_queryset_for_user_profile` on ``account``.
-        """
-        user = get_resolved_user(request.user)  # type: ignore
-        qs = super().get_queryset(request)
-        return smarter_filter_queryset_for_user_profile(
-            user_profile=UserProfile.get_cached_object(user=user) if user else None,  # type: ignore
-            qs=qs,
-            account_filter="account",
-            user_profile_filter=None,
-        )
+    list_filter = ("charge_type", "year", "month")
+    search_fields = ("resource_locator",)
 
 
 class RestrictedUserAdmin(UserAdmin):
@@ -634,6 +622,7 @@ class RestrictedUserProfileAdmin(SmarterSuperUserOnlyModelAdmin):
     """
 
     model = UserProfile
+    search_fields = ("user__username", "user__email", "account__company_name", "account__account_number")
 
     list_display = ("user", "account", "created_at", "updated_at")
 

@@ -58,12 +58,16 @@ class TestAdminPages(TestAccountMixin):
         self.assertGreater(checked, 10)
 
     def test_changelist_search(self):
-        """Test each changelist's search, which runs its search_fields."""
+        """Test each changelist's search, which runs its search fields, of every model in the admin console."""
         site = smarter_restricted_admin_site
+        searched = 0
         for model, model_admin in site._registry.items():  # pylint: disable=protected-access
-            if not model.__module__.startswith("smarter.apps.") or not model_admin.search_fields:
+            if not model_admin.get_search_fields(self.request()):
                 continue
             info = (site.name, model._meta.app_label, model._meta.model_name)  # pylint: disable=protected-access
             with self.subTest(model=model.__name__):
                 response = self.client.get(reverse("%s:%s_%s_changelist" % info) + "?q=test")
-                self.assertIn(response.status_code, (HTTPStatus.OK, HTTPStatus.FORBIDDEN, HTTPStatus.FOUND))
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+                self.assertIn('id="searchbar"', response.content.decode())
+                searched += 1
+        self.assertGreater(searched, 60)

@@ -1,54 +1,19 @@
-"""
-Django app configuration for the dashboard app.
+"""Django app configuration for the dashboard app."""
 
-This module defines the :class:`WebPlatformConfig` ``AppConfig`` subclass
-that registers the dashboard application with Django. On startup it imports
-the app's signal receivers so that all signal handlers are connected before
-any requests are processed.
-
-Classes:
-    WebPlatformConfig: ``AppConfig`` for the ``smarter.apps.dashboard``
-        application.
-"""
-
-from django.apps import AppConfig
+from django.utils.text import format_lazy
+from django.utils.translation import gettext_lazy as _
 
 from smarter.common.const import SMARTER_APP_NAME
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
+from smarter.lib.django.apps import SmarterAppConfig
 
-from .const import namespace as app_name
-
-logger = logging.getLogger(__name__)
+from .const import namespace, presentation_app_name
 
 
-class WebPlatformConfig(AppConfig):
-    """
-    ``AppConfig`` for the ``smarter.apps.dashboard`` application.
+class WebPlatformConfig(SmarterAppConfig):
+    """Django app configuration of the Dashboard app.
 
-    Extends :class:`~django.apps.AppConfig`. It doesn't mix in
-    :class:`~smarter.common.mixins.SmarterHelperMixin`, whose ``ready`` property would conflict with
-    ``AppConfig.ready()``.
-
-    Attributes:
-        name (str): Fully qualified app name derived from
-            :data:`.const.namespace`, e.g. ``"smarter.apps.dashboard"``.
-        verbose_name (str): Human-readable name shown in the Django admin,
-            e.g. ``"Smarter Dashboard"``.
+    See :class:`~smarter.lib.django.apps.SmarterAppConfig`.
     """
 
-    name = f"smarter.apps.{app_name.lower()}"
-    verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-
-    # pylint: disable=import-outside-toplevel,W0611
-    def ready(self):
-        """
-        Perform app initialisation after the Django registry is fully populated.
-
-        Imports :mod:`.receivers` and :mod:`.signals` so that all signal
-        handlers are registered before any requests are processed. Called
-        automatically by Django during startup.
-        """
-        from . import receivers, signals  # noqa: F401
-
-        logger.debug("%s app is %s", f"{SMARTER_APP_NAME} {app_name.capitalize()}", SmarterReadyState.READY)
+    name = f"smarter.apps.{namespace}"
+    verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _(presentation_app_name))

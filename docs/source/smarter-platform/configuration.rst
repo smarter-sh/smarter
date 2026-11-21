@@ -112,6 +112,63 @@ derives other settings from it.
 See :doc:`user-defined-django-settings` for the full explanation: the steps for local development and for the Helm
 chart, how to write each kind of value, the rules, and how to check what applied.
 
+.. _sam-app-feature-flags:
+
+Turning resource types off
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each family of resources can be turned off with its own environment variable, e.g. so that a course's
+students see only the resources that it teaches. Every flag defaults to true.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Environment variable
+     - Resource kinds
+   * - ``SMARTER_ENABLE_CONNECTION``
+     - ApiConnection, SqlConnection
+   * - ``SMARTER_ENABLE_GUARDRAIL``
+     - Guardrail
+   * - ``SMARTER_ENABLE_LLMCLIENT``
+     - LLMClient, CustomDomain
+   * - ``SMARTER_ENABLE_LLMHOST``
+     - LLMHost, LLMHostCompute
+   * - ``SMARTER_ENABLE_LLMTOOL``
+     - Plugin, ApiPlugin, ImageSearchPlugin, SkillPlugin, SqlPlugin, WebsearchPlugin, and Extensions
+   * - ``SMARTER_ENABLE_MCPCLIENT``
+     - MCPClient
+   * - ``SMARTER_ENABLE_ORCHESTRATOR``
+     - Orchestrator
+   * - ``SMARTER_ENABLE_PROVIDER``
+     - Provider
+   * - ``SMARTER_ENABLE_PROXY``
+     - Proxy
+   * - ``SMARTER_ENABLE_SECRET``
+     - Secret
+   * - ``SMARTER_ENABLE_VECTORSEARCH``
+     - Vectorsearch
+   * - ``SMARTER_ENABLE_VECTORSTORE``
+     - Vectorstore
+
+A resource type that is off is off everywhere:
+
+- its web console pages, its web console api (``/api/web/``) and its REST api (``/api/v1/``) answer 404,
+  and the session api reports its flag as false, so the console leaves out its sidebar link;
+- the cli api refuses its manifests, e.g. ``smarter apply`` of a Guardrail answers 400, with the
+  environment variable that turns it on, and ``smarter validate`` reports a ``disabled_kind`` error;
+- ``initialize_platform`` skips its example manifests;
+- its app connects none of its signal receivers;
+- with ``SMARTER_ENABLE_LLMCLIENT=false``, deployed LLMClients answer 404.
+
+Accounts, users, budgets, API keys and prompts have no flag: the platform doesn't work without them.
+
+Resources that refer to each other need their types on together: an LLMClient's plugins need
+``SMARTER_ENABLE_LLMTOOL``, a Proxy's provider ``SMARTER_ENABLE_PROVIDER``. ``manage.py check`` warns
+about each such reference to a type that is off (``smarter.W003``), from the models' relations, and
+``manage.py check --database default`` about a type that is off and still has rows in the database
+(``smarter.W004``), which nothing can read or delete through Smarter until it is on again. See
+:mod:`smarter.lib.manifest.sam_apps` and :mod:`smarter.lib.manifest.checks`.
+
 4. Asynchronous Task Queue Configuration
 ----------------------------------------
 

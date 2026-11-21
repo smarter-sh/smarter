@@ -29,6 +29,7 @@ class SqlConnectionAdmin(SmarterCustomerModelAdmin):
     """
 
     model = SqlConnection
+    search_fields = ("name", "description", "hostname", "database", "user_profile__user__username")
 
     readonly_fields = (
         "created_at",
@@ -66,6 +67,7 @@ class ApiConnectionAdmin(SmarterCustomerModelAdmin):
     """
 
     model = ApiConnection
+    search_fields = ("name", "description", "base_url", "user_profile__user__username")
 
     readonly_fields = (
         "created_at",

@@ -45,6 +45,9 @@ class OperationsToolCallAdmin(SmarterSuperUserOnlyModelAdmin):
     #: The fields that the list's search box searches.
     search_fields = ["ticket", "tool", "username"]
 
+    #: Browse the tool calls by day.
+    date_hierarchy = "created_at"
+
     #: Every field of the model, so that a tool call can be read but not edited.
     readonly_fields = [field.name for field in OperationsToolCall._meta.fields]  # pylint: disable=W0212
 
