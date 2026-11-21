@@ -11,7 +11,7 @@ If not, it performs a test to verify the capability and updates the verification
 
 import io
 import wave
-from typing import Optional
+from typing import Callable, Optional
 
 import openai
 from openai import APIConnectionError, APIStatusError
@@ -45,6 +45,27 @@ logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 module_prefix = "smarter.apps.provider.verification.provider_model."
 
+
+def function_name(func: Callable) -> str:
+    """
+    Return the name of a function, for logging.
+
+    :param func: The function, e.g. :func:`verify_model_text_input`.
+    :returns: Its name followed by parentheses, e.g. ``verify_model_text_input()``.
+    """
+    return func.__name__ + "()"
+
+
+def formatted_log_prefix(func: Callable) -> str:
+    """
+    Return the prefix for logging a function, including the module and function name.
+
+    :param func: The function, e.g. :func:`verify_model_text_input`.
+    :returns: The module and function name followed by parentheses, e.g. ``smarter.apps.provider.verification.provider_model.verify_model_text_input()``.
+    """
+    return SmarterFormattedText.text(module_prefix + function_name(func))
+
+
 VERIFICATION_MAX_COMPLETION_TOKENS = 1024
 """
 The completion budget of the checks that read the model's answer.
@@ -58,6 +79,14 @@ INCONCLUSIVE_STATUS_CODES = (401, 402, 408, 429)
 
 BILLING_ERROR_MARKERS = ("credit balance", "billing", "insufficient_quota", "exceeded your current quota")
 """Text of a provider error that blames the account's credit or quota, whatever its status code."""
+
+ACCOUNT_POLICY_ERROR_MARKERS = ("third_party_data_sharing_blocked",)
+"""
+Error codes of a provider error that blames a setting of the account, not the model, whatever its status code.
+
+Together AI, for example, answers a 403 ``third_party_data_sharing_blocked`` for a model that it serves through
+a third party until the organization enables third-party data sharing. The model works once the setting is on.
+"""
 
 
 class ProviderModelVerificationInconclusive(Exception):
@@ -88,8 +117,31 @@ def raise_if_inconclusive(error: Exception) -> None:
             error.status_code in INCONCLUSIVE_STATUS_CODES
             or error.status_code >= 500
             or any(marker in message for marker in BILLING_ERROR_MARKERS)
+            or any(marker in message for marker in ACCOUNT_POLICY_ERROR_MARKERS)
         ):
             raise ProviderModelVerificationInconclusive(str(error)) from error
+
+
+def log_check_failure(check: Callable, provider_model: ProviderModel, error: Exception) -> None:
+    """
+    Log that one of a provider model's checks failed.
+
+    A provider's http error (an :class:`~openai.APIStatusError`, such as a 404 for a retired model) is an
+    expected answer, so it is logged with its message and without a traceback. Any other exception gets
+    the traceback, since it may be a bug in the check itself.
+
+    :param check: The check that failed, e.g. :func:`verify_model_text_input`.
+    :param provider_model: The model that failed the check.
+    :param error: The exception that the check's call to the provider raised.
+    """
+    prefix = formatted_log_prefix(log_check_failure)
+    check_name = function_name(check)
+    if isinstance(error, APIStatusError):
+        logger.error(
+            "%s provider model %s failed %s. The provider said: %s", prefix, provider_model.name, check_name, error
+        )
+        return
+    logger.error("%s error during %s for provider model %s", prefix, check_name, provider_model.name, exc_info=True)
 
 
 def provider_api_key(provider_model: ProviderModel) -> Optional[str]:
@@ -156,7 +208,7 @@ def completion_text(response) -> str:
 def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify streaming capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_steaming()")
+    prefix = formatted_log_prefix(verify_model_streaming)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -179,7 +231,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
         success = first_chunk is not None
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error("Error during verify_model_streaming() for provider model %s", provider_model.name, exc_info=True)
+        log_check_failure(verify_model_streaming, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -189,7 +241,7 @@ def verify_model_streaming(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify tools capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_tools()")
+    prefix = formatted_log_prefix(verify_model_tools)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -223,7 +275,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error("Error during verify_model_tools() for provider model %s", provider_model.name, exc_info=True)
+        log_check_failure(verify_model_tools, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -232,7 +284,7 @@ def verify_model_tools(provider_model: ProviderModel, **kwargs) -> bool:
 
 def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify text input capabilities of the provider model."""
-    prefix = SmarterFormattedText.text(module_prefix + "verify_text_input()")
+    prefix = formatted_log_prefix(verify_model_text_input)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -252,7 +304,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error("Error during verify_model_text_input() for provider model %s", provider_model.name, exc_info=True)
+        log_check_failure(verify_model_text_input, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -262,7 +314,7 @@ def verify_model_text_input(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify image input capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_image_input()")
+    prefix = formatted_log_prefix(verify_model_image_input)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -295,9 +347,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_image_input() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_image_input, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -307,7 +357,7 @@ def verify_model_image_input(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify audio input capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_audio_input()")
+    prefix = formatted_log_prefix(verify_model_audio_input)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -335,9 +385,7 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_audio_input() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_audio_input, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -347,7 +395,7 @@ def verify_model_audio_input(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify fine-tuning capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_fine_tuning()")
+    prefix = formatted_log_prefix(verify_model_fine_tuning)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -369,9 +417,7 @@ def verify_model_fine_tuning(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_fine_tuning() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_fine_tuning, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -385,7 +431,7 @@ def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
     DEPRECATED: OpenAI has deprecated the search endpoint.
     """
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_search()")
+    prefix = formatted_log_prefix(verify_model_search)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -399,7 +445,7 @@ def verify_model_search(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify code interpreter capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_code_interpreter()")
+    prefix = formatted_log_prefix(verify_model_code_interpreter)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -429,7 +475,7 @@ def verify_model_code_interpreter(provider_model: ProviderModel, **kwargs) -> bo
 def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify text to image capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_text_to_image()")
+    prefix = formatted_log_prefix(verify_model_text_to_image)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -447,9 +493,7 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_text_to_image() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_text_to_image, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -459,7 +503,7 @@ def verify_model_text_to_image(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify text to audio capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_text_to_audio()")
+    prefix = formatted_log_prefix(verify_model_text_to_audio)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -479,9 +523,7 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
         success = True
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_text_to_audio() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_text_to_audio, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -491,7 +533,7 @@ def verify_model_text_to_audio(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify text to text capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_text_to_text()")
+    prefix = formatted_log_prefix(verify_model_text_to_text)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -514,7 +556,7 @@ def verify_model_text_to_text(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify translation capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_translation()")
+    prefix = formatted_log_prefix(verify_model_translation)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -544,9 +586,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
             )
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_translation() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_translation, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -556,7 +596,7 @@ def verify_model_translation(provider_model: ProviderModel, **kwargs) -> bool:
 def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
     """Verify summarization capabilities of the provider model."""
     success = False
-    prefix = SmarterFormattedText.text(module_prefix + "verify_summarization()")
+    prefix = formatted_log_prefix(verify_model_summarization)
     logger.debug("%s for provider model: %s", prefix, provider_model)
 
     provider_model_verification = get_model_verification_for_type(
@@ -592,9 +632,7 @@ def verify_model_summarization(provider_model: ProviderModel, **kwargs) -> bool:
             )
     except Exception as e:
         raise_if_inconclusive(e)
-        logger.error(
-            "Error during verify_model_summarization() for provider model %s", provider_model.name, exc_info=True
-        )
+        log_check_failure(verify_model_summarization, provider_model, e)
         success = False
 
     set_model_verification(provider_model_verification=provider_model_verification, is_successful=success)
@@ -617,7 +655,7 @@ def verify_provider_model(provider_model_id, **kwargs):
     except ProviderModel.DoesNotExist:
         logger.error(
             "%s Provider model with id %s does not exist",
-            SmarterFormattedText.text(module_prefix + "verify_provider_model()"),
+            formatted_log_prefix(verify_provider_model),
             provider_model_id,
         )
         return
@@ -627,7 +665,7 @@ def verify_provider_model(provider_model_id, **kwargs):
         # models cannot be verified, and must not be deactivated, until it has one: see initialize_providers.
         logger.warning(
             "%s skipped provider model %s: its provider %s has no API key.",
-            SmarterFormattedText.text(module_prefix + "verify_provider_model()"),
+            formatted_log_prefix(verify_provider_model),
             provider_model.name,
             provider_model.provider.name,
         )
@@ -666,7 +704,7 @@ def verify_provider_model(provider_model_id, **kwargs):
     except ProviderModelVerificationInconclusive as e:
         logger.warning(
             "%s verification of provider model %s is inconclusive, so it remains %s. The provider said: %s",
-            SmarterFormattedText.text(module_prefix + "verify_provider_model()"),
+            formatted_log_prefix(verify_provider_model),
             provider_model.name,
             "active" if provider_model.is_active else "inactive",
             e,
@@ -682,4 +720,8 @@ def verify_provider_model(provider_model_id, **kwargs):
         provider_model.is_active = False
         provider_model.save(update_fields=["is_active"])
         model_verification_failure.send(sender=ProviderModel, provider_model=provider_model)
-        logger.error("One or more verification tests failed for provider model: %s", provider_model.name)
+        logger.error(
+            "%s one or more verification tests failed for provider model: %s",
+            formatted_log_prefix(verify_provider_model),
+            provider_model.name,
+        )
