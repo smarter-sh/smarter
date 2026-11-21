@@ -34,7 +34,6 @@ from .signals import (
     llm_tool_responded,
     prompt_config_invoked,
     prompt_finished,
-    prompt_handler_console_output,
     prompt_session_invoked,
     prompt_started,
 )
@@ -496,24 +495,6 @@ def handle_chat_provider_initialized(sender, **kwargs):
         "with name: %s, base_url: %s",
         sender.provider,
         sender.base_url,
-    )
-
-
-@receiver(prompt_handler_console_output, dispatch_uid="prompt_handler_console_output")
-def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
-    """
-    Log a message of the prompt handler's console output, with its JSON.
-
-    :param sender: The object that sent the signal.
-    :param message: The message.
-    :param json_obj: The JSON object to log with it.
-    :param kwargs: Other signal arguments, unused.
-    """
-
-    logger.info(
-        "console output: %s\n%s",
-        message,
-        SmarterFormattedText.json(json_obj),
     )
 
 
