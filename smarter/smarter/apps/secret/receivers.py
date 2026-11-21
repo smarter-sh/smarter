@@ -19,6 +19,7 @@ from .signals import (
     secret_accessed,
     secret_created,
     secret_deleted,
+    secret_edited,
     secret_initializing,
     secret_ready,
     secret_saved,
@@ -99,6 +100,23 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
 
     :param sender: The signal's sender.
     :param secret: The Secret that was created.
+    """
+    logger.info(
+        "from %s Secret: %s id: %s, user_profile: %s",
+        sender_name(sender),
+        secret.name,
+        secret.id,  # type: ignore
+        secret.user_profile,
+    )
+
+
+@receiver(secret_edited)
+def secret_edited_receiver(sender, secret: Secret, **kwargs):
+    """
+    Log the ``secret_edited`` signal, which the Secret model sends whenever an existing Secret is saved.
+
+    :param sender: The signal's sender.
+    :param secret: The Secret that was edited.
     """
     logger.info(
         "from %s Secret: %s id: %s, user_profile: %s",
@@ -220,7 +238,8 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
     json_data = json.dumps(secret_log_dict(secret.secret))
     tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
-    logger.info(
+    # DEBUG: secret_edited already logged this save at INFO.
+    logger.debug(
         "from %s Secret: %s, id: %s, user_profile: %s",
         sender_name(sender),
         secret.name,

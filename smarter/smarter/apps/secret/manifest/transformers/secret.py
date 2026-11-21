@@ -23,7 +23,6 @@ from smarter.apps.secret.manifest.models.secret.spec import (
 from smarter.apps.secret.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.secret.models import Secret
 from smarter.apps.secret.signals import (
-    secret_created,
     secret_deleted,
     secret_initializing,
     secret_ready,
@@ -601,9 +600,9 @@ class SecretTransformer(SmarterHelperMixin):
                 f"{self.formatted_class_name}.create() self.manifest_to_django_orm() returned None."
             )
 
+        # Secret.save() sends secret_created.
         secret = Secret.objects.create(**secret_data)
         self.id = secret.id  # type: ignore[assignment]
-        secret_created.send(sender=self.__class__, secret=self)
 
         return True
 

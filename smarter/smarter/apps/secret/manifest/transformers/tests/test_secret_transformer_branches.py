@@ -10,6 +10,7 @@ from smarter.apps.secret.manifest.transformers.secret import (
     SmarterSecretTransformerError,
 )
 from smarter.apps.secret.models import Secret
+from smarter.apps.secret.signals import secret_created
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType, required
 
@@ -47,6 +48,18 @@ class TestSecretTransformerBranches(TestAccountMixin):
         self.assertEqual(transformer.version, "0.1.0")
         self.assertIn(transformer.name, str(transformer))
         self.assertEqual(repr(transformer), str(transformer))
+
+    def test_creating_a_secret_sends_secret_created_once(self):
+        """The Secret model sends secret_created when the transformer creates it; the transformer doesn't send it again."""
+        senders = []
+
+        def received(sender, **kwargs):
+            senders.append(sender)
+
+        secret_created.connect(received, weak=False)
+        self.addCleanup(secret_created.disconnect, received)
+        self.create_secret("created_once")
+        self.assertEqual(senders, [Secret])
 
     def test_data_dict_of_the_wrong_kind(self):
         """A manifest dict of another kind is rejected."""
