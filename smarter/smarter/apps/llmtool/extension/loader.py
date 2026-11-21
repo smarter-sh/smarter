@@ -47,7 +47,6 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.models import ExtensionVersion
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NAMESPACE = "smarter_extensions"
 """The top-level module under which every extension's code is imported."""
@@ -157,7 +156,7 @@ def materialize(archive: ExtensionArchive) -> Path:
     finally:
         if staging.exists():
             shutil.rmtree(staging, ignore_errors=True)
-    logger.info("%s.materialize() extracted %s %s to %s", logger_prefix, manifest.slug, manifest.version, target)
+    logger.info("extracted %s %s to %s", manifest.slug, manifest.version, target)
     return target
 
 
@@ -257,8 +256,7 @@ def load_archive(archive: ExtensionArchive) -> LoadedExtension:
             forget_modules(module_name)
             detail = "".join(traceback.format_exception_only(type(e), e)).strip()
             logger.error(
-                "%s.load_archive() could not import %s %s: %s",
-                logger_prefix,
+                "could not import %s %s: %s",
                 manifest.slug,
                 manifest.version,
                 traceback.format_exc(),
@@ -268,8 +266,7 @@ def load_archive(archive: ExtensionArchive) -> LoadedExtension:
             ) from e
         _loaded[key] = loaded
         logger.info(
-            "%s.load_archive() loaded %s %s as %s with tools %s",
-            logger_prefix,
+            "loaded %s %s as %s with tools %s",
             manifest.slug,
             manifest.version,
             module_name,

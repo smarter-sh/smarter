@@ -31,7 +31,9 @@ class LLMClientGuardrails(TimestampedModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Guardrails"
-        unique_together = ("llmclient", "guardrail")
+        constraints = [
+            models.UniqueConstraint(fields=["llmclient", "guardrail"], name="llmclient_llmclientguardrails_unique"),
+        ]
 
     #: The LLMClient that the guardrail protects.
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)

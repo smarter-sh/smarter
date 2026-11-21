@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.models import Extension, ExtensionSetting
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 PYTHON_TYPES: dict[ExtensionSettingType, type] = {
     ExtensionSettingType.STRING: str,
@@ -82,7 +81,7 @@ def setting_value(spec: ExtensionSettingSpec, row: Optional["ExtensionSetting"])
         try:
             return spec.coerce(row.value)
         except ValueError as e:
-            logger.error("%s.setting_value() ignoring invalid value of %s: %s", logger_prefix, row, e)
+            logger.error("ignoring invalid value of %s: %s", row, e)
     return spec.default
 
 

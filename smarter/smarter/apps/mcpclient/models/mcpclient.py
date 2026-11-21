@@ -74,12 +74,12 @@ class MCPClient(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "MCPClients"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="mcpclient_mcpclient_unique"),
+        ]
 
     # --- connection ---
-    transport = models.CharField(
-        max_length=16, choices=MCPTransport.choices, default=MCPTransport.HTTP, blank=True, null=True
-    )
+    transport = models.CharField(max_length=16, choices=MCPTransport, default=MCPTransport.HTTP, blank=True, null=True)
     endpoint_url = models.URLField(
         max_length=2048,
         blank=True,
@@ -104,7 +104,7 @@ class MCPClient(MetaDataWithOwnershipModel):
     )
 
     # --- auth ---
-    auth_type = models.CharField(max_length=16, choices=MCPAuthType.choices, default=MCPAuthType.NONE)
+    auth_type = models.CharField(max_length=16, choices=MCPAuthType, default=MCPAuthType.NONE)
     credentials = models.ForeignKey(
         Secret,
         on_delete=models.SET_NULL,
@@ -144,7 +144,7 @@ class MCPClient(MetaDataWithOwnershipModel):
     is_active = models.BooleanField(default=True)
     status = models.CharField(
         max_length=16,
-        choices=MCPConnectionStatus.choices,
+        choices=MCPConnectionStatus,
         default=MCPConnectionStatus.UNCONFIGURED,
     )
     priority = models.PositiveSmallIntegerField(

@@ -23,8 +23,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -85,9 +84,14 @@ class Command(SmarterCommand):
         kind = example.model.__name__
         deleted, _ = example.model.objects.filter(user_profile=user_profile, name=example.name).delete()
         if not deleted:
-            logger.debug("%s.delete_retired_example() %s %s doesn't exist.", logger_prefix, kind, example.name)
+            logger.debug("%s %s doesn't exist.", kind, example.name)
             return False
-        logger.info("%s.delete_retired_example() deleted %s %s: %s", logger_prefix, kind, example.name, example.reason)
+        logger.info(
+            "deleted %s %s: %s",
+            kind,
+            example.name,
+            example.reason,
+        )
         self.stdout.write(self.style.SUCCESS(f"Deleted the retired example {kind} {example.name}: {example.reason}"))
         return True
 

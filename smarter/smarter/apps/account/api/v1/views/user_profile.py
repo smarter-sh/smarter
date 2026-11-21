@@ -76,8 +76,7 @@ class UserProfileView(AccountViewBase):
         :raises Http404: when the UserProfile does not exist.
         """
         logger.debug(
-            "%s.delete() called by %s with user_profile_id: %s",
-            self.formatted_class_name,
+            "called by %s with user_profile_id: %s",
             self.user_profile,
             user_profile_id,
         )
@@ -87,8 +86,7 @@ class UserProfileView(AccountViewBase):
             user_profile.delete()
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.delete() refused for user_profile_id %s: %s",
-                self.formatted_class_name,
+                "refused for user_profile_id %s: %s",
                 user_profile_id,
                 type(e).__name__,
             )
@@ -97,7 +95,9 @@ class UserProfileView(AccountViewBase):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.delete() failed for user_profile_id %s", self.formatted_class_name, user_profile_id, exc_info=True
+                "failed for user_profile_id %s",
+                user_profile_id,
+                exc_info=True,
             )
             return JsonResponse(
                 {"error": "An unknown error occurred while deleting the UserProfile."},

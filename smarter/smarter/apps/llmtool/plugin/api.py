@@ -244,14 +244,12 @@ class ApiPlugin(PluginBase):
         try:
             self._plugin_data = PluginDataApi.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
             logger.debug(
-                "%s.plugin_data() retrieved existing PluginDataApi from database.",
-                self.formatted_class_name,
+                "retrieved existing PluginDataApi from database.",
             )
             return self._plugin_data
         except PluginDataApi.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataApi found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataApi found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -266,16 +264,14 @@ class ApiPlugin(PluginBase):
             self._plugin_data = PluginDataApi(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
-                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
-                self.formatted_class_name,
+                "created new instance of %s from manifest and plugin metadata.",
                 self.plugin_data_class.__name__,
             )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
             logger.debug(
-                "%s.plugin_data() retrieving PluginDataApi from database using plugin metadata.",
-                self.formatted_class_name,
+                "retrieving PluginDataApi from database using plugin metadata.",
             )
             self._plugin_data = PluginDataApi.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
@@ -470,8 +466,7 @@ class ApiPlugin(PluginBase):
 
         if not isinstance(self.plugin_meta, PluginMeta):
             logger.debug(
-                "%s.plugin_data_django_model() plugin_meta is not set. plugin_meta: %s",
-                self.formatted_class_name,
+                "plugin_meta is not set. plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -523,7 +518,7 @@ class ApiPlugin(PluginBase):
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
             )
         if parameters:
-            logger.debug("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
+            logger.debug("recasting parameters")
             for parameter in parameters:
                 if not isinstance(parameter, Parameter):
                     raise SmarterConfigurationError(
@@ -533,8 +528,7 @@ class ApiPlugin(PluginBase):
                 # standard json dict.
                 parameter_json = parameter.model_dump()
                 logger.debug(
-                    "%s.plugin_data_django_model() processing parameter: %s",
-                    self.formatted_class_name,
+                    "processing parameter: %s",
                     parameter_json,
                 )
                 if not isinstance(parameter_json, dict):
@@ -716,7 +710,7 @@ class ApiPlugin(PluginBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.create() called.", self.formatted_class_name)
+        logger.debug("called.")
         super().create()
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -779,7 +773,7 @@ class ApiPlugin(PluginBase):
         with PluginRequest(
             API_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
         ) as plugin_request:
-            logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
+            logger.debug("called.")
 
             if not self.plugin_data:
                 raise SmarterApiPluginError(
@@ -858,8 +852,7 @@ class ApiPlugin(PluginBase):
             )
 
             logger.debug(
-                "%s.tool_call_fetch_plugin_response() sending remote API request: %s %s params=%s",
-                self.formatted_class_name,
+                "sending remote API request: %s %s params=%s",
                 method,
                 endpoint,
                 url_params,
@@ -906,8 +899,7 @@ class ApiPlugin(PluginBase):
             ) -> Union[SmarterDictType, list[Any]]:
                 retval = execute_request()
                 logger.debug(
-                    "%s.tool_call_fetch_plugin_response() fetched and cached API response for request: %s %s",
-                    self.formatted_class_name,
+                    "fetched and cached API response for request: %s %s",
                     method,
                     endpoint,
                 )
@@ -927,8 +919,7 @@ class ApiPlugin(PluginBase):
 
             if not retval:
                 logger.warning(
-                    "%s.tool_call_fetch_plugin_response() API request returned no results. Returning empty string.",
-                    self.formatted_class_name,
+                    "API request returned no results. Returning empty string.",
                 )
                 plugin_request.responded(response="", cached=not executed, method=method, endpoint=endpoint)
                 return ""

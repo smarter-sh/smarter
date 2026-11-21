@@ -75,6 +75,10 @@ web console.
 
 import atexit
 import json as std_json
+
+# The standard library's logging, not smarter.lib.logging: this module is imported while the
+# smarter.lib.logging package is still initializing, so importing the package here would be circular.
+import logging
 import os
 import queue
 import re
@@ -87,7 +91,8 @@ from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, TypedDict, Type
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
 
-from smarter.lib import logging
+from .utils import formatted_caller_name
+from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 if TYPE_CHECKING:
     from redis import Redis
@@ -124,8 +129,7 @@ GLOBAL_STREAM_TTL_SECONDS = (
     24 * 60 * 60
 )  # 24 hours for the global stream, which is more of a firehose and may be consumed by multiple clients with different latencies
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 
 
 class LogQueueItem(TypedDict):
@@ -351,8 +355,7 @@ def get_redis_cache() -> Optional["Redis"]:
             if not _redis_unconfigured_logged:
                 _redis_unconfigured_logged = True
                 logger.warning(
-                    "%s.get_redis_cache() Redis cache is not configured. Logs will not be published to Redis.",
-                    logger_prefix,
+                    "Redis cache is not configured. Logs will not be published to Redis.",
                 )
             return None
     return _redis_client
@@ -403,14 +406,13 @@ def flush(buffer: list[LogQueueItem]) -> None:
             # Redis being down is handled here, and Celery and Django report it with
             # their own tracebacks, so one line without a traceback is enough.
             logger.warning(
-                "%s.flush() Failed to execute Redis pipeline: %s. Dropping log records until Redis is available.",
-                logger_prefix,
+                "Failed to execute Redis pipeline: %s. Dropping log records until Redis is available.",
                 e,
             )
         return
     if _publish_state["failing"]:
         _publish_state["failing"] = False
-        logger.info("%s.flush() Redis is available again. Publishing log records.", logger_prefix)
+        logger.info("Redis is available again. Publishing log records.")
 
 
 def next_batch(timeout: float = LOG_QUEUE_TIMEOUT) -> tuple[list[LogQueueItem], bool]:
@@ -469,7 +471,7 @@ def redis_worker() -> None:
     process is exiting.
     """
 
-    logger.debug("%s.redis_worker() Starting Redis log worker thread.", logger_prefix)
+    logger.debug("Starting Redis log worker thread.")
 
     while True:
         buffer, stop = next_batch()
@@ -502,9 +504,7 @@ def shutdown() -> None:
     try:
         log_queue.put_nowait(None)
     except queue.Full:
-        logger.exception(
-            "%s.shutdown() Failed to signal Redis log worker thread for shutdown.", logger_prefix, exc_info=True
-        )
+        logger.exception("Failed to signal Redis log worker thread for shutdown.", exc_info=True)
     worker_thread.join(timeout=WORKER_QUEUE_TIMEOUT)
 
 
@@ -639,7 +639,7 @@ class RedisLogHandler(logging.Handler):
             if RedisLogHandler.dropped_logs % 100 == 0:
                 # not logged: this handler's own log record would be queued, or dropped, too.
                 print(
-                    f"{logger_prefix}.RedisLogHandler.emit() the log queue is full: "
+                    f"{formatted_caller_name(sys._getframe())} the log queue is full: "  # pylint: disable=protected-access
                     f"{RedisLogHandler.dropped_logs} log records were not published to Redis.",
                     file=sys.stderr,
                 )

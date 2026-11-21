@@ -20,7 +20,6 @@ from smarter.lib.journal.enum import (
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestApiCliV1Resources"
 
 # the exact keys that every resource dict returned by ApiV1CliResourcesApiView.dictionaryize()
 # is expected to contain.
@@ -46,7 +45,7 @@ class TestApiCliV1Resources(ApiV1CliTestBase):
 
     def validate_response(self, response: SmarterDictType) -> None:
 
-        logger.debug("validate_response(): %s", json.dumps(response))
+        logger.debug("%s", json.dumps(response))
 
         # validate the response and status are both good
         self.assertIsInstance(response, dict)

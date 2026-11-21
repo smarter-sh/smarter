@@ -20,7 +20,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 PASSWORD_RESET_LINK_NAME = "password_reset_link"
 """The url name of the link, which :mod:`smarter.urls.console` serves at ``/password-reset-link/<uidb64>/<token>/``."""
@@ -56,7 +55,7 @@ def send_password_reset_email(request: HttpRequest, email: str) -> bool:
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        logger.debug("%s.send_password_reset_email() no user has the address.", logger_prefix)
+        logger.debug("no user has the address.")
         return False
     context = {"password_reset": {"url": password_reset_link(request, user)}}
     body = render_email(request, EMAIL_TEMPLATE_PATH, context)

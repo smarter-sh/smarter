@@ -138,7 +138,10 @@ class SAMUserBroker(AbstractBroker[User, User]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property
@@ -173,21 +176,18 @@ class SAMUserBroker(AbstractBroker[User, User]):
             return self._brokered_user
         if self.name is None:
             logger.debug(
-                "%s.brokered_user() brokered user name is not set. Cannot retrieve User.",
-                self.formatted_class_name,
+                "brokered user name is not set. Cannot retrieve User.",
             )
             return None
         try:
             self._brokered_user = User.objects.get(username=self._name)
             logger.debug(
-                "%s.brokered_user() initialized existing User: %s",
-                self.formatted_class_name,
+                "initialized existing User: %s",
                 self.name,
             )
         except User.DoesNotExist:
             logger.debug(
-                "%s.brokered_user() User does not exist: %s",
-                self.formatted_class_name,
+                "User does not exist: %s",
                 self.name,
             )
         return self._brokered_user
@@ -209,8 +209,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         """
         self._brokered_user = value
         logger.debug(
-            "%s.brokered_user() set User: %s",
-            self.formatted_class_name,
+            "set User: %s",
             value,
         )
 
@@ -247,16 +246,14 @@ class SAMUserBroker(AbstractBroker[User, User]):
             return self._brokered_user_profile
         if not self._brokered_user:
             logger.debug(
-                "%s.brokered_user_profile() brokered user is not set. Cannot retrieve UserProfile.",
-                self.formatted_class_name,
+                "brokered user is not set. Cannot retrieve UserProfile.",
             )
             return None
 
         try:
             self._brokered_user_profile = UserProfile.get_cached_object(user=self.brokered_user, account=self.account)  # type: ignore
             logger.debug(
-                "%s.brokered_user_profile() initialized existing UserProfile: %s",
-                self.formatted_class_name,
+                "initialized existing UserProfile: %s",
                 self._brokered_user_profile,
             )
         except UserProfile.DoesNotExist:
@@ -267,8 +264,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
                 self._brokered_user_profile = profiles.first()
             if self._brokered_user_profile is None:
                 logger.warning(
-                    "%s.brokered_user_profile() UserProfile does not exist for user: %s and account: %s",
-                    self.formatted_class_name,
+                    "UserProfile does not exist for user: %s and account: %s",
                     self.brokered_user,
                     self.account,
                 )
@@ -293,14 +289,12 @@ class SAMUserBroker(AbstractBroker[User, User]):
         """
         self._brokered_user_profile = value
         logger.debug(
-            "%s.brokered_user_profile() set UserProfile: %s",
-            self.formatted_class_name,
+            "set UserProfile: %s",
             value,
         )
         self._brokered_user = value.user
         logger.debug(
-            "%s.brokered_user_profile() set brokered User: %s from UserProfile",
-            self.formatted_class_name,
+            "set brokered User: %s from UserProfile",
             value.user,
         )
 
@@ -424,8 +418,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             config_dump = json.loads(json.dumps(config_dump))
         retval = {**metadata, **config_dump}
         logger.debug(
-            "%s.manifest_to_django_orm() Converted manifest to Django ORM dictionary for %s: %s",
-            self.formatted_class_name,
+            "Converted manifest to Django ORM dictionary for %s: %s",
             self.kind,
             retval,
         )
@@ -466,8 +459,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
 
         retval = self.manifest.model_dump()
         logger.debug(
-            "%s.django_orm_to_manifest_dict() Converted Django ORM User instance to manifest dictionary for %s: %s",
-            self.formatted_class_name,
+            "Converted Django ORM User instance to manifest dictionary for %s: %s",
             self.kind,
             retval,
         )
@@ -556,7 +548,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             return self._manifest
         # an unauthenticated request, e.g. for the example manifest, has no account, but may have a brokered user.
         if not self.account and not self.brokered_user:
-            logger.warning("%s.manifest called with no account", self.formatted_class_name)
+            logger.warning("called with no account")
             return None
         # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
@@ -607,7 +599,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             )
             return self._manifest
         if not self._manifest:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     ###########################################################################
@@ -658,24 +650,21 @@ class SAMUserBroker(AbstractBroker[User, User]):
         # commands that do need one fail with their own error.
         if not self.name:
             logger.debug(
-                "%s.orm_instance() - no name, so there is no %s instance to retrieve",
-                self.formatted_class_name,
+                "no name, so there is no %s instance to retrieve",
                 User.__name__,
             )
             return None
 
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve %s instance for user=%s, name=%s",
-                self.formatted_class_name,
+                "attempting to retrieve %s instance for user=%s, name=%s",
                 User.__name__,
                 self.user,
                 self.name,
             )
             self._orm_instance = User.objects.get(username=self.name)
             logger.debug(
-                "%s.orm_instance() - retrieved %s instance: %s",
-                self.formatted_class_name,
+                "retrieved %s instance: %s",
                 User.__name__,
                 serializers.serialize("json", [self._orm_instance], fields=LOGGED_FIELDS),
             )
@@ -684,8 +673,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             # DEBUG: the caller decides whether a missing User is an error, e.g. describe
             # answers 404.
             logger.debug(
-                "%s.orm_instance() - %s instance does not exist for account=%s, name=%s",
-                self.formatted_class_name,
+                "%s instance does not exist for account=%s, name=%s",
                 User.__name__,
                 self.account,
                 self.name,
@@ -696,15 +684,13 @@ class SAMUserBroker(AbstractBroker[User, User]):
         """Override the base method to initialize the ORM meta model instance for the broker."""
         if self._orm_instance:
             logger.debug(
-                "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
-                self.formatted_class_name,
+                "ORM instance is already set. Setting ORM meta instance to ORM instance.",
             )
             self._orm_meta_instance = self._orm_instance  # type: ignore
             return
         if not self.name:
             logger.debug(
-                "%s.orm_meta_instance_setter() - name is not set. Cannot retrieve ORM meta instance for %s.",
-                self.formatted_class_name,
+                "name is not set. Cannot retrieve ORM meta instance for %s.",
                 User.__name__,
             )
             return
@@ -713,23 +699,20 @@ class SAMUserBroker(AbstractBroker[User, User]):
         try:
             self._orm_meta_instance = User.objects.get(username=self.name)  # type: ignore
             logger.debug(
-                "%s.orm_meta_instance_setter() - initialized %s meta: %s",
-                self.formatted_class_name,
+                "initialized %s meta: %s",
                 User.__name__,
                 serializers.serialize("json", [self.orm_meta_instance], fields=LOGGED_FIELDS),  # type: ignore
             )
         except User.DoesNotExist:
             logger.warning(
-                "%s.orm_meta_instance_setter() - %s meta instance does not exist for %s owned by %s",
-                self.formatted_class_name,
+                "%s meta instance does not exist for %s owned by %s",
                 User.__name__,
                 self.name,
                 self.account,
             )
         except Exception as e:
             logger.error(
-                "%s.orm_meta_instance_setter() - unexpected error retrieving %s meta instance for %s owned by %s: %s",
-                self.formatted_class_name,
+                "unexpected error retrieving %s meta instance for %s owned by %s: %s",
                 User.__name__,
                 self.name,
                 self.account,
@@ -753,7 +736,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         Invalidates the cached UserProfile of the brokered user in each account they belong to, which with
         ``spec.accounts`` need not include the current account.
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         accounts = [self.account]
         if isinstance(self.brokered_user, User) and self.brokered_user.pk:
             for profile in UserProfile.objects.filter(user=self.brokered_user).select_related("account"):
@@ -777,7 +760,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            - :meth:`django_orm_to_manifest_dict`
         """
         command = SmarterJournalCliCommands(self.example_manifest.__name__)
-        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+        logger.debug("called")
         # placeholder values, rather than a description of a real user, such as the smarter admin,
         # whose email and account number would otherwise be published in the example.
         manifest = SAMUser(
@@ -847,7 +830,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            - :class:`smarter.lib.manifest.enum.SCLIResponseGetData`
         """
         command = SmarterJournalCliCommands(self.get.__name__)
-        logger.debug("%s.get() called", self.formatted_class_name)
+        logger.debug("called")
         name: Optional[str] = kwargs.get(SAMMetadataKeys.NAME.value, None)
         items: list[SmarterDictType] = []
 
@@ -943,8 +926,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             user_profile.annotations = manifest.metadata.annotations
             user_profile.save()
             logger.debug(
-                "%s.apply_memberships() user id %s belongs to account %s, administrator: %s",
-                self.formatted_class_name,
+                "user id %s belongs to account %s, administrator: %s",
                 brokered_user.pk,
                 membership.accountNumber,
                 membership.isAccountAdmin,
@@ -967,8 +949,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             )
             self.brokered_user_profile = brokered_user_profile
             logger.debug(
-                "%s.apply_own_account_profile() Created new (unsaved) UserProfile instance for %s",
-                self.formatted_class_name,
+                "Created new (unsaved) UserProfile instance for %s",
                 self.kind,
             )
         brokered_user_profile.description = manifest.metadata.description
@@ -1018,7 +999,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         password_secret_name = data.pop("password_secret", None)
         for key, value in data.items():
             setattr(brokered_user, key, value)
-            logger.debug("%s.apply_user_fields() Setting %s to %s", self.formatted_class_name, key, value)
+            logger.debug("Setting %s to %s", key, value)
         if password_secret_name:
             self.set_password_from_secret(brokered_user, password_secret_name)
 
@@ -1052,8 +1033,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
             )
         brokered_user.set_password(password)
         logger.debug(
-            "%s.set_password_from_secret() set the password of user %s from Secret id %s",
-            self.formatted_class_name,
+            "set the password of user %s from Secret id %s",
             brokered_user.username,
             secret.pk,
         )
@@ -1144,7 +1124,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            - :class:`SAMUserBrokerError`
         """
         command = SmarterJournalCliCommands(self.apply.__name__)
-        logger.debug("%s.apply() called", self.formatted_class_name)
+        logger.debug("called")
 
         if not isinstance(self.user, User):
             raise SAMUserBrokerError(
@@ -1175,7 +1155,8 @@ class SAMUserBroker(AbstractBroker[User, User]):
                     )
                     self.brokered_user = brokered_user
                     logger.debug(
-                        "%s.apply() Created new (unsaved) User instance for %s", self.formatted_class_name, self.kind
+                        "Created new (unsaved) User instance for %s",
+                        self.kind,
                     )
 
                 self.apply_user_fields(brokered_user)
@@ -1191,8 +1172,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.apply() Failed to apply manifest to Django ORM for %s: %s",
-                self.formatted_class_name,
+                "Failed to apply manifest to Django ORM for %s: %s",
                 self.kind,
                 str(e),
                 exc_info=True,
@@ -1221,7 +1201,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         :returns: Never returns; always raises an exception.
         """
         command = SmarterJournalCliCommands(self.prompt.__name__)
-        logger.debug("%s.prompt() called", self.formatted_class_name)
+        logger.debug("called")
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
     def describe(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
@@ -1240,7 +1220,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            If serialization fails for the user.
         """
         command = SmarterJournalCliCommands(self.describe.__name__)
-        logger.debug("%s.describe() called", self.formatted_class_name)
+        logger.debug("called")
 
         if self.manifest is None:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
@@ -1370,7 +1350,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            If deletion fails for the user.
         """
         command = SmarterJournalCliCommands(self.delete.__name__)
-        logger.debug("%s.delete() called", self.formatted_class_name)
+        logger.debug("called")
 
         if not isinstance(self.user, User):
             raise SAMUserBrokerError(
@@ -1425,7 +1405,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         :returns: A `SmarterJournaledJsonResponse` indicating the result of the deploy operation.
         """
         command = SmarterJournalCliCommands(self.deploy.__name__)
-        logger.debug("%s.deploy() called", self.formatted_class_name)
+        logger.debug("called")
 
         if not isinstance(self.user, User):
             raise SAMUserBrokerError(
@@ -1465,7 +1445,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
            If undeployment fails for the user.
         """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
-        logger.debug("%s.undeploy() called", self.formatted_class_name)
+        logger.debug("called")
 
         if not isinstance(self.user, User):
             raise SAMUserBrokerError(
@@ -1504,7 +1484,7 @@ class SAMUserBroker(AbstractBroker[User, User]):
         :returns: A `SmarterJournaledJsonResponse` containing log data.
         """
         command = SmarterJournalCliCommands(self.logs.__name__)
-        logger.debug("%s.logs() called", self.formatted_class_name)
+        logger.debug("called")
 
         data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

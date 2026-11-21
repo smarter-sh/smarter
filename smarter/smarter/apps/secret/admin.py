@@ -11,13 +11,12 @@ from smarter.apps.dashboard.admin import (
     SmarterCustomerModelAdmin,
     smarter_restricted_admin_site,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 
 from .models import Secret
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class SecretAdminForm(forms.ModelForm):
@@ -31,14 +30,12 @@ class SecretAdminForm(forms.ModelForm):
 
     model = Secret
     list_display = ["name", "user_profile", "description", "expires_at", "value"]
-    logger_prefix = f"{SmarterFormattedText.text(__name__)}.SecretAdminForm()"
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)  # Expecting the user to be passed in via kwargs
         # args and kwargs hold the submitted form data, with the secret's value, so only their keys are logged.
         logger.debug(
-            "%s Initializing SecretAdminForm for user %s with %d args and kwargs keys: %s",
-            self.logger_prefix,
+            "Initializing SecretAdminForm for user %s with %d args and kwargs keys: %s",
             self.user,
             len(args),
             sorted(kwargs),
@@ -46,8 +43,7 @@ class SecretAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.user or not isinstance(self.user, User) or not self.user.is_authenticated:
             logger.error(
-                "%s SecretAdminForm initialized without an authenticated user. All fields will be read-only.",
-                self.logger_prefix,
+                "SecretAdminForm initialized without an authenticated user. All fields will be read-only.",
             )
             for field in self.fields.values():
                 field.disabled = True
@@ -57,23 +53,24 @@ class SecretAdminForm(forms.ModelForm):
             return False
 
         if self.instance and self.instance.pk:
-            logger.debug("%s Initializing SecretAdminForm for existing Secret: %s", self.logger_prefix, self.instance)
+            logger.debug(
+                "Initializing SecretAdminForm for existing Secret: %s",
+                self.instance,
+            )
             try:
                 if has_all_permission():
                     instance: Secret = self.instance
                     self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
                 else:
                     logger.debug(
-                        "%s User %s does not have permission to view the Secret value. Setting 'value' field to '********'.",
-                        self.logger_prefix,
+                        "User %s does not have permission to view the Secret value. Setting 'value' field to '********'.",
                         self.user,
                     )
                     self.fields["value"].initial = "********"
             # pylint: disable=broad-except
             except Exception as e:
                 logger.exception(
-                    "%s Failed to initialize 'value' field for Secret with id %s. Got the following error: %s",
-                    self.logger_prefix,
+                    "Failed to initialize 'value' field for Secret with id %s. Got the following error: %s",
                     self.instance.pk,
                     e,
                 )
@@ -109,7 +106,6 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
     determined by ownership and role.
     """
 
-    logger_prefix = f"{SmarterFormattedText.text(__name__)}.SecretAdmin()"
     request: HttpRequest
     user: User
     user_profile: UserProfile
@@ -172,19 +168,17 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
                 return True
             return False
 
-        logger.debug("%s.display_value() called for Secret: %s", self.logger_prefix, str(obj))
+        logger.debug("called for Secret: %s", str(obj))
         if not isinstance(obj, Secret):
             logger.error(
-                "%s.display_value() called with an object that is not a Secret instance: %s",
-                self.logger_prefix,
+                "called with an object that is not a Secret instance: %s",
                 obj,
             )
             return "********"
 
         if not hasattr(self.request, "user"):
             logger.error(
-                "%s.display_value() called without a request user. Cannot determine permissions to display Secret value.",
-                self.logger_prefix,
+                "called without a request user. Cannot determine permissions to display Secret value.",
             )
             return "********"
 
@@ -192,8 +186,7 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
         self.user_profile = UserProfile.get_cached_object(user=self.user)  # type: ignore
         retval = obj.get_secret(update_last_accessed=False)
         logger.debug(
-            "%s.display_value() Retrieved secret value for Secret %s. Checking permissions for user %s. Actual value: %s",
-            self.logger_prefix,
+            "Retrieved secret value for Secret %s. Checking permissions for user %s. Actual value: %s",
             str(obj),
             self.user,
             self.mask_string(retval),
@@ -201,15 +194,13 @@ class SecretAdmin(SmarterCustomerModelAdmin, SmarterHelperMixin):
 
         if has_all_permission():
             logger.debug(
-                "%s.display_value() User %s has permission to view the Secret value. Displaying actual value.",
-                self.logger_prefix,
+                "User %s has permission to view the Secret value. Displaying actual value.",
                 self.user,
             )
             return retval
 
         logger.debug(
-            "%s.display_value() User %s does not have permission to view the Secret value. Displaying masked value.",
-            self.logger_prefix,
+            "User %s does not have permission to view the Secret value. Displaying masked value.",
             self.user,
         )
 

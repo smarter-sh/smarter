@@ -74,7 +74,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
     def test_valid_url(self):
         """Test a url for the llmclient we created."""
         url = self.llmclient.url
-        logger.debug("test_valid_url() llmclient url: %s", url)
+        logger.debug("llmclient url: %s", url)
         parsed = urlparse(url)
         http_host = parsed.netloc
         settings.ALLOWED_HOSTS.append(http_host)
@@ -145,7 +145,7 @@ class TestLLMClientApiUrlHelper(TestAccountMixin):
 
         self.assertIsNotNone(self.custom_llmclient.id)
         url = self.custom_llmclient.url
-        logger.debug("test_custom_domain() custom llmclient url: %s", url)
+        logger.debug("custom llmclient url: %s", url)
         parsed = urlparse(url)
         http_host = parsed.netloc
         settings.ALLOWED_HOSTS.append(http_host)

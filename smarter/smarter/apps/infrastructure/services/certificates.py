@@ -244,7 +244,10 @@ class CertificateService(InfrastructureService):
                 return True
             if attempt < self.issue_wait_attempts:
                 self._sleep(self.issue_wait_seconds)
-        logger.error("%s certificate %s was not issued in time", self.formatted_class_name, certificate_id)
+        logger.error(
+            "certificate %s was not issued in time",
+            certificate_id,
+        )
         return False
 
     def delete_certificate(self, certificate_id: str) -> bool:

@@ -299,7 +299,7 @@ class SmarterHttpResponseServerError(SmarterHttpErrorResponse):
                 # ... some logic that may raise an exception ...
                 pass
             except Exception:
-                logger.exception("%s.my_view() failed", logger_prefix)
+                logger.exception("failed")
                 return SmarterHttpResponseServerError(
                     request,
                     error_message="An unexpected error occurred."

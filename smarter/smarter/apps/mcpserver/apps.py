@@ -36,7 +36,6 @@ class MCPServerConfig(AppConfig):
     """
 
     #: The type of the primary key of the app's models.
-    default_auto_field = "django.db.models.BigAutoField"
 
     #: The app's dotted path, ``smarter.apps.mcpserver``.
     name = f"smarter.apps.{app_name.lower()}"

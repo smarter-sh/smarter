@@ -191,7 +191,7 @@ class PluginDataWebsearch(PluginDataBase):
         try:
             return secret.get_secret()
         except SmarterValueError as e:
-            logger.error("%s.api_key() the api key Secret could not be read: %s", self.formatted_class_name, e)
+            logger.error("the api key Secret could not be read: %s", e)
             return None
 
     # pylint: disable=too-many-branches

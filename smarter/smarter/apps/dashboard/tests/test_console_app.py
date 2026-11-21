@@ -1,5 +1,6 @@
 """Tests of smarter.apps.dashboard.views.console_app: Django serving the single-page console's page."""
 
+import re
 import tempfile
 from http import HTTPStatus
 from pathlib import Path
@@ -16,6 +17,7 @@ from smarter.apps.dashboard.views.console_app import (
     console_on_cdn,
     console_script,
     mark_console_uploaded,
+    with_csp_nonce,
     with_silent_splash,
     with_static_url,
 )
@@ -29,6 +31,13 @@ INDEX_HTML = '<!doctype html><html><body><div id="smarter-console-root"></div></
 SPLASH_INDEX_HTML = (
     '<!doctype html><html><body><div id="smarter-splash" role="status"></div>'
     '<div id="smarter-console-root"></div></body></html>'
+)
+
+# a built page with an inline script and style, as the console's index.html has them.
+INLINE_INDEX_HTML = (
+    "<!doctype html><html><head><style>#smarter-splash{color:#fff}</style>"
+    '<script src="/jsi18n/"></script></head><body><div id="smarter-console-root"></div>'
+    "<script>window.smarterBoot = true;</script></body></html>"
 )
 
 # a built page's head, as Vite writes it: the theme's styles, the translations, the console's script and styles.
@@ -131,6 +140,44 @@ class TestConsoleAppSplash(SmarterTestBase):
         page = client.get("/login/").content.decode()
         self.assertIn('<div id="smarter-splash" role="status">', page)
         self.assertNotIn("smarter-splash-silent", page)
+
+
+class TestConsoleAppCspNonce(SmarterTestBase):
+    """The console's inline scripts and styles carry the nonce that the Content Security Policy names."""
+
+    def setUp(self):
+        super().setUp()
+        static_root = tempfile.TemporaryDirectory()
+        self.addCleanup(static_root.cleanup)
+        index_path = Path(static_root.name) / CONSOLE_INDEX_PATH
+        index_path.parent.mkdir(parents=True)
+        index_path.write_text(INLINE_INDEX_HTML, encoding="utf-8")
+        built = override_settings(STATIC_ROOT=static_root.name)
+        built.enable()
+        self.addCleanup(built.disable)
+
+    def test_with_csp_nonce(self):
+        """Each attribute-less inline element gets the nonce; scripts with a src keep their attributes."""
+        page = with_csp_nonce(INLINE_INDEX_HTML, "abc123")
+        self.assertEqual(page.count('<script nonce="abc123">'), 1)
+        self.assertEqual(page.count('<style nonce="abc123">'), 1)
+        self.assertIn('<script src="/jsi18n/">', page)
+
+    def test_without_a_nonce(self):
+        """Without the middleware there is no nonce, and the page is unchanged."""
+        self.assertEqual(with_csp_nonce(INLINE_INDEX_HTML, None), INLINE_INDEX_HTML)
+
+    def test_the_page_and_the_policy_share_the_nonce(self):
+        """The report-only policy's script-src names the nonce that the page's inline script carries."""
+        response = Client().get("/login/")
+        policy = response["Content-Security-Policy-Report-Only"]
+        match = re.search(r"'nonce-([^']+)'", policy)
+        self.assertIsNotNone(match)
+        assert match is not None
+        nonce = match.group(1)
+        self.assertIn(f'<script nonce="{nonce}">', response.content.decode())
+        self.assertIn("object-src 'none'", policy)
+        self.assertFalse(response.has_header("Content-Security-Policy"))
 
 
 class TestConsoleAppNotBuilt(SmarterTestBase):

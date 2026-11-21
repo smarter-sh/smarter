@@ -34,7 +34,8 @@ layers do the work:
    Django model, and implements each CLI verb. Unsupported verbs raise
    `SAMBrokerErrorNotImplemented`.
 3. **A Django model**, owned by a user: `MetaDataWithOwnershipModel`, with
-   `unique_together = ("user_profile", "name")`. Ownership is what makes a
+   a named `models.UniqueConstraint` on `user_profile` and `name`
+   (`"<app_label>_<model_name>_unique"`; never `unique_together`). Ownership is what makes a
    resource "mine", "shared with my account", or invisible. Every resource has
    it. Don't invent a different ownership scheme.
 4. **The web console**: a list page and a manifest detail page (Django views

@@ -52,7 +52,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 DATA_EXPORT_LINK_SECONDS = 24 * 60 * 60
 """How long the emailed link to a data export works: 24 hours."""
@@ -253,7 +252,7 @@ def start_data_export(user: User) -> tuple[DataExport, bool]:
 
     latest = latest_data_export(user)
     if latest is not None and latest.is_in_progress:
-        logger.info("%s.start_data_export() export %s of %s is in progress", logger_prefix, latest.pk, user)
+        logger.info("export %s of %s is in progress", latest.pk, user)
         return latest, False
     if not user.email:
         raise DataExportStartRefused(_("Your account has no email address to send the download link to."))
@@ -266,7 +265,7 @@ def start_data_export(user: User) -> tuple[DataExport, bool]:
     export = DataExport.objects.create(user=user)
     export_id = export.pk
     transaction.on_commit(lambda: create_data_export.delay(export_id))
-    logger.info("%s.start_data_export() started export %s for %s", logger_prefix, export_id, user)
+    logger.info("started export %s for %s", export_id, user)
     return export, True
 
 
@@ -312,7 +311,9 @@ def owned_resources(user: User) -> list[ExportResource]:
             kind = kind_of_instance(instance)
             if not kind:
                 logger.warning(
-                    "%s.owned_resources() %s %s has no kind, and is left out", logger_prefix, entry.label, instance.pk
+                    "%s %s has no kind, and is left out",
+                    entry.label,
+                    instance.pk,
                 )
                 continue
             user_profile = getattr(instance, "user_profile", None)
@@ -502,7 +503,7 @@ def run_data_export(export_id: int) -> DataExport:
     """
     export = DataExport.objects.select_related("user").get(pk=export_id)
     if export.is_finished:
-        logger.warning("%s.run_data_export() export %s already finished", logger_prefix, export_id)
+        logger.warning("export %s already finished", export_id)
         return export
     try:
         update_export(export, status=DataExportStatus.RUNNING, step=DataExportStep.INVENTORY)
@@ -528,14 +529,13 @@ def run_data_export(export_id: int) -> DataExport:
             raise RuntimeError(_("The email with your download link could not be sent."))
     # every failure ends the export, which the user sees in the dialog. pylint: disable=broad-exception-caught
     except Exception as e:
-        logger.error("%s.run_data_export() export %s of %s failed: %s", logger_prefix, export_id, export.user, e)
+        logger.error("export %s of %s failed: %s", export_id, export.user, e)
         update_export(export, status=DataExportStatus.FAILED, error=str(e), completed_at=timezone.now())
         return export
 
     update_export(export, status=DataExportStatus.SUCCEEDED, step=DataExportStep.DONE, completed_at=timezone.now())
     logger.info(
-        "%s.run_data_export() emailed export %s of %s: %s manifests, %s bytes",
-        logger_prefix,
+        "emailed export %s of %s: %s manifests, %s bytes",
         export_id,
         export.user,
         export.manifest_count,
@@ -563,7 +563,7 @@ def delete_expired_data_exports() -> int:
             infrastructure.storage.delete_object(export.object_key)
         # one failure must not keep the others' files. pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.error("%s.delete_expired_data_exports() export %s: %s", logger_prefix, export.pk, e)
+            logger.error("export %s: %s", export.pk, e)
             continue
         update_export(export, object_key="")
         deleted += 1

@@ -74,7 +74,7 @@ class DoodleTheme(TimestampedModel):
 
     slug = models.SlugField(max_length=64, unique=True, help_text="The theme's name, and its file's.")
     name = models.CharField(max_length=128, help_text="What the theme celebrates, e.g. Diwali.")
-    category = models.CharField(max_length=32, choices=DoodleCategory.choices)
+    category = models.CharField(max_length=32, choices=DoodleCategory)
     caption = models.CharField(max_length=128, blank=True, default="", help_text="e.g. Happy Diwali!")
     alt_text = models.CharField(max_length=255, help_text="The artwork's description, for screen readers.")
     link_url = models.URLField(blank=True, default="", help_text="Where the caption links to.")
@@ -134,11 +134,11 @@ class Doodle(TimestampedModel):
     """The doodle of one day in one region."""
 
     date = models.DateField(help_text="The local date on which it is shown.")
-    region = models.CharField(max_length=32, choices=DoodleRegion.choices)
+    region = models.CharField(max_length=32, choices=DoodleRegion)
     theme = models.ForeignKey(DoodleTheme, on_delete=models.CASCADE, related_name="doodles")
     artwork = models.ForeignKey(DoodleArtwork, on_delete=models.PROTECT, related_name="doodles")
-    status = models.CharField(max_length=16, choices=DoodleStatus.choices, default=DoodleStatus.APPROVED)
-    source = models.CharField(max_length=16, choices=DoodleSource.choices, default=DoodleSource.CALENDAR)
+    status = models.CharField(max_length=16, choices=DoodleStatus, default=DoodleStatus.APPROVED)
+    source = models.CharField(max_length=16, choices=DoodleSource, default=DoodleSource.CALENDAR)
     title = models.CharField(max_length=128, help_text="What it celebrates, e.g. Diwali.")
     caption = models.CharField(max_length=128, blank=True, default="")
     alt_text = models.CharField(max_length=255)
@@ -208,7 +208,7 @@ class DoodleEditorRun(TimestampedModel):
     """
 
     date = models.DateField(help_text="The day that the editor chose the doodles of.")
-    status = models.CharField(max_length=16, choices=DoodleEditorRunStatus.choices)
+    status = models.CharField(max_length=16, choices=DoodleEditorRunStatus)
     request = models.JSONField(default=dict, help_text="The prompt: the day's candidates, in each region.")
     response = models.TextField(blank=True, default="", help_text="The editor's answer.")
     error = models.TextField(blank=True, default="", help_text="Why the run failed.")

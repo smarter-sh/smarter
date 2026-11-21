@@ -138,5 +138,5 @@ class BudgetListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         if budget is None:
             return JsonResponse({"error": f"Budget with id {budget_id} not found."}, status=HTTPStatus.NOT_FOUND)
         budget.delete()
-        logger.info("%s.post() deleted budget %s.", self.formatted_class_name, budget)
+        logger.info("deleted budget %s.", budget)
         return JsonResponse({"message": f"Budget with id {budget_id} deleted successfully."}, status=HTTPStatus.OK)

@@ -47,6 +47,18 @@ class TestNewViolations(unittest.TestCase):
         current = [violation("f", 15, line=30)]
         self.assertEqual(checker.new_violations(current, base), [])
 
+    def test_moved_module_level_block_passes(self):
+        """A module-level block, which mccabe names by its line, is not new when it only moved."""
+        base = [violation("Loop 2086", 25, line=2086)]
+        current = [violation("Loop 2085", 25, line=2085)]
+        self.assertEqual(checker.new_violations(current, base), [])
+        self.assertEqual(checker.resolved_count(current, base), 0)
+
+    def test_more_complex_module_level_block_fails(self):
+        """A module-level block that the change made more complex fails, whatever its line."""
+        added = checker.new_violations([violation("Loop 9", 26, line=9)], [violation("Loop 8", 25, line=8)])
+        self.assertEqual(added, [checker.NewViolation(violation("Loop 9", 26, line=9), 25)])
+
     def test_simpler_backlog_passes(self):
         """A function of the backlog that the change made simpler, but not enough, passes."""
         self.assertEqual(checker.new_violations([violation("f", 12)], [violation("f", 15)]), [])

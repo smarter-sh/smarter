@@ -34,8 +34,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from rest_framework.request import Request
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 RequestType = Union["HttpRequest", "Request", "ASGIRequest"]
 
 
@@ -91,17 +90,16 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
         path = request.path if hasattr(request, "path") else "unknown_path"
         method = request.method if hasattr(request, "method") else "unknown_method"
         username = getattr(getattr(request, "user", None), "username", "unknown_user")
-        cache_key = f"{logger_prefix}.is_authenticated_request.{method}_{path}_{username}"
+        cache_key = f"{__name__}.is_authenticated_request.{method}_{path}_{username}"
     else:
-        cache_key = f"{logger_prefix}.is_authenticated_request.invalid_request_{random.randint(1, 1000000)}"
+        cache_key = f"{__name__}.is_authenticated_request.invalid_request_{random.randint(1, 1000000)}"
 
     @cache_results(cache_key=cache_key)
     def cached_is_authenticated_request() -> bool:
         try:
             if not isinstance(request, (HttpRequest, Request, ASGIRequest)):
                 logger.warning(
-                    "%s.is_authenticated_request() - Invalid request type: %s, expected HttpRequest, Request, or ASGIRequest",
-                    logger_prefix,
+                    "Invalid request type: %s, expected HttpRequest, Request, or ASGIRequest",
                     type(request),
                 )
                 return False
@@ -110,8 +108,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
             if not is_valid_request_object:
                 # suggests buggy code, hence the warning
                 logger.warning(
-                    "%s.is_authenticated_request() Invalid request object of type %s - returning False",
-                    logger_prefix,
+                    "Invalid request object of type %s - returning False",
                     type(request),
                 )
                 return False
@@ -119,8 +116,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
             has_user = hasattr(request, "user")
             if not has_user:
                 logger.debug(
-                    "%s.is_authenticated_request() Request does not have 'user' attribute - returning False",
-                    logger_prefix,
+                    "Request does not have 'user' attribute - returning False",
                 )
                 return False
 
@@ -128,8 +124,7 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
             if not has_is_authenticated:
                 # this should not happen in normal code, hence the warning
                 logger.warning(
-                    "%s.is_authenticated_request() Request.user of type %s does not have 'is_authenticated' attribute - returning False",
-                    logger_prefix,
+                    "Request.user of type %s does not have 'is_authenticated' attribute - returning False",
                     type(request.user),
                 )
                 return False
@@ -141,15 +136,13 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
                     return True
             else:
                 logger.debug(
-                    "%s.is_authenticated_request() Request is not authenticated - returning False URL: %s",
-                    logger_prefix,
+                    "Request is not authenticated - returning False URL: %s",
                     url,
                 )
                 return False
             if hasattr(request, SMARTER_IS_INTERNAL_API_REQUEST):
                 logger.debug(
-                    "%s.is_authenticated_request() Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
-                    logger_prefix,
+                    "Request has SMARTER_IS_INTERNAL_API_REQUEST=%s",
                     getattr(request, SMARTER_IS_INTERNAL_API_REQUEST, False),
                 )
 
@@ -158,23 +151,19 @@ def is_authenticated_request(request: Optional[RequestType]) -> bool:
                 auth_header = request.headers.get("Authorization")
                 if auth_header:
                     logger.debug(
-                        "%s.is_authenticated_request() Request has Authorization header (first 4 chars): %s",
-                        logger_prefix,
+                        "Request has Authorization header (first 4 chars): %s",
                         str(auth_header)[:4],
                     )
                 else:
                     logger.debug(
-                        "%s.is_authenticated_request() Request does not have Authorization header",
-                        logger_prefix,
+                        "Request does not have Authorization header",
                     )
                 return retval
             return False
 
         # pylint: disable=W0718
         except Exception as e:
-            logger.error(
-                "%s.is_authenticated_request() failed: %s", logger_prefix, logging.SmarterFormattedText.text(str(e))
-            )
+            logger.error("failed: %s", logging.SmarterFormattedText.text(str(e)))
             return False
 
     return cached_is_authenticated_request()

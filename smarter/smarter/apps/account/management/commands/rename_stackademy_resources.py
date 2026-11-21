@@ -35,8 +35,7 @@ from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -129,8 +128,7 @@ class Command(SmarterCommand):
             moved += 1
         if moved:
             logger.info(
-                "%s.repoint_plugins() moved %s plugins from %s %s to %s",
-                logger_prefix,
+                "moved %s plugins from %s %s to %s",
                 moved,
                 renamed.model.__name__,
                 renamed.old_name,
@@ -161,7 +159,7 @@ class Command(SmarterCommand):
             instance.delete()
             deleted += 1
         if deleted:
-            logger.info("%s.delete_unused() deleted %s old %s resources", logger_prefix, deleted, kind)
+            logger.info("deleted %s old %s resources", deleted, kind)
         return deleted
 
     def handle(self, *args, **options):

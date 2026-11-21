@@ -109,14 +109,16 @@ class Guardrail(MetaDataWithOwnershipModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "Guardrails"
-        unique_together = ("user_profile", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["user_profile", "name"], name="guardrail_guardrail_unique"),
+        ]
 
     # --- when and what ---
-    stage = models.CharField(max_length=16, choices=GuardrailStage.choices)
-    category = models.CharField(max_length=32, choices=GuardrailCategory.choices, default=GuardrailCategory.CUSTOM)
+    stage = models.CharField(max_length=16, choices=GuardrailStage)
+    category = models.CharField(max_length=32, choices=GuardrailCategory, default=GuardrailCategory.CUSTOM)
 
     # --- detection ---
-    strategy = models.CharField(max_length=16, choices=GuardrailStrategy.choices)
+    strategy = models.CharField(max_length=16, choices=GuardrailStrategy)
     pattern = models.TextField(blank=True, null=True, help_text="The regex strategy's regular expression.")
     config = models.JSONField(
         default=dict,
@@ -131,7 +133,7 @@ class Guardrail(MetaDataWithOwnershipModel):
     )
 
     # --- response ---
-    action = models.CharField(max_length=16, choices=GuardrailAction.choices)
+    action = models.CharField(max_length=16, choices=GuardrailAction)
     replacement = models.TextField(
         blank=True, null=True, help_text="What redact and transform replace each match with."
     )
@@ -139,7 +141,7 @@ class Guardrail(MetaDataWithOwnershipModel):
     severity = models.PositiveSmallIntegerField(default=DEFAULT_SEVERITY, help_text="1 (low) to 5 (critical).")
 
     # --- lifecycle ---
-    mode = models.CharField(max_length=16, choices=GuardrailMode.choices, default=GuardrailMode.ENFORCE)
+    mode = models.CharField(max_length=16, choices=GuardrailMode, default=GuardrailMode.ENFORCE)
     fail_closed = models.BooleanField(
         default=False, help_text="Block if the check itself fails, e.g. because the LLM provider is unavailable."
     )
@@ -193,12 +195,12 @@ class GuardrailEvent(TimestampedModel):
         related_name="guardrail_events",
     )
     session_key = models.CharField(max_length=255, blank=True, null=True, help_text="The prompt's session key.")
-    stage = models.CharField(max_length=16, choices=GuardrailStage.choices)
-    category = models.CharField(max_length=32, choices=GuardrailCategory.choices)
-    strategy = models.CharField(max_length=16, choices=GuardrailStrategy.choices)
-    action = models.CharField(max_length=16, choices=GuardrailAction.choices)
-    mode = models.CharField(max_length=16, choices=GuardrailMode.choices)
-    disposition = models.CharField(max_length=16, choices=GuardrailDisposition.choices)
+    stage = models.CharField(max_length=16, choices=GuardrailStage)
+    category = models.CharField(max_length=32, choices=GuardrailCategory)
+    strategy = models.CharField(max_length=16, choices=GuardrailStrategy)
+    action = models.CharField(max_length=16, choices=GuardrailAction)
+    mode = models.CharField(max_length=16, choices=GuardrailMode)
+    disposition = models.CharField(max_length=16, choices=GuardrailDisposition)
     severity = models.PositiveSmallIntegerField(default=DEFAULT_SEVERITY)
     confidence = models.FloatField(null=True, blank=True)
     excerpt = models.TextField(

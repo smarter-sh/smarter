@@ -61,7 +61,9 @@ class LLMClientPlugin(TimestampedModel):
     # pylint: disable=C0115
     class Meta:
         verbose_name_plural = "LLMClient Plugins"
-        unique_together = ("llmclient", "plugin_meta")
+        constraints = [
+            models.UniqueConstraint(fields=["llmclient", "plugin_meta"], name="llmclient_llmclientplugin_unique"),
+        ]
 
     #: The LLMClient instance associated with this plugin.
     llmclient = models.ForeignKey(LLMClient, on_delete=models.CASCADE)
@@ -114,8 +116,7 @@ class LLMClientPlugin(TimestampedModel):
                 plugin_meta=self.plugin_meta,
             )
             logger.debug(
-                "%s.get_cached_plugin_controller() fetched and cached plugin controller for llmclient_id: %s, plugin_meta_id: %s",
-                class_name,
+                "fetched and cached plugin controller for llmclient_id: %s, plugin_meta_id: %s",
                 self.llmclient.id,
                 self.plugin_meta.id,
             )
@@ -205,7 +206,7 @@ class LLMClientPlugin(TimestampedModel):
                 plugin = plugin_controller.plugin
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.error(
-                    "LLMClientPlugin.plugins() skipping plugin %s of llmclient %s, which failed to load",
+                    "skipping plugin %s of llmclient %s, which failed to load",
                     llmclient_plugin.plugin_meta.name,
                     llmclient.name,
                     exc_info=True,
@@ -213,7 +214,7 @@ class LLMClientPlugin(TimestampedModel):
                 continue
             if not plugin:
                 logger.error(
-                    "LLMClientPlugin.plugins() skipping plugin %s of llmclient %s, which did not load",
+                    "skipping plugin %s of llmclient %s, which did not load",
                     llmclient_plugin.plugin_meta.name,
                     llmclient.name,
                 )
@@ -238,9 +239,6 @@ class LLMClientPlugin(TimestampedModel):
         :returns: A queryset of LLMClientPlugin instances associated with the LLMClient.
         :rtype: models.QuerySet["LLMClientPlugin"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + "." + LLMClientPlugin.__name__ + ".get_cached_objects()"
-        )
 
         @cache_results()
         def _get_plugins_for_llmclient_id(
@@ -254,7 +252,7 @@ class LLMClientPlugin(TimestampedModel):
             :returns: A queryset of LLMClientPlugin instances associated with the LLMClient.
             :rtype: models.QuerySet["LLMClientPlugin"]
             """
-            logger.debug("%s called with llmclient=%s, invalidate=%s", logger_prefix, llmclient, invalidate)
+            logger.debug("called with llmclient=%s, invalidate=%s", llmclient, invalidate)
 
             retval = cls.objects.filter(llmclient_id=llmclient_id).select_related(
                 "plugin_meta",
@@ -266,8 +264,7 @@ class LLMClientPlugin(TimestampedModel):
                 "llmclient__user_profile__account",
             )
             logger.debug(
-                "%s._get_plugins_for_llmclient_id() fetched and cached %s plugins for llmclient_id: %s",
-                logger_prefix,
+                "fetched and cached %s plugins for llmclient_id: %s",
                 len(retval),
                 llmclient_id,
             )

@@ -39,7 +39,7 @@ from smarter.common.mixins import SmarterReadyState
 from smarter.lib import logging
 
 app_name = namespace
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 urlpatterns = []
@@ -50,13 +50,11 @@ if smarter_settings.enable_dashboard_server_logs:
     )
 
     logger.debug(
-        "%s Server logs app url endpoint is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Server logs app url endpoint is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=false` to disable.",
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s Server logs app is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /api/web/dashboard/logs/.",
-        logging.SmarterFormattedText.text(__name__),
+        "Server logs app is %s. Set env `SMARTER_ENABLE_DASHBOARD_SERVER_LOGS=true` to enable the server logs endpoint at /api/web/dashboard/logs/.",
         SmarterReadyState.NOT_READY,
     )

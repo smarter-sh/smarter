@@ -132,7 +132,10 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def init_secret(self):
@@ -167,7 +170,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         if self._secret_transformer:
             return self._secret_transformer
         if not self.user_profile:
-            logger.debug("%s.secret_transformer() called with no user_profile", self.formatted_class_name)
+            logger.debug("called with no user_profile")
             return None
         if self._name or self.manifest:
             self._secret_transformer = SecretTransformer(
@@ -221,7 +224,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
            :meth:`secret_transformer`
         """
         if not self.secret_transformer:
-            logger.warning("%s.secret() called with no secret_transformer", self.formatted_class_name)
+            logger.warning("called with no secret_transformer")
             return None
         return self.secret_transformer.secret
 
@@ -318,7 +321,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
            :class:`SAMKeys`
         """
         if not self.secret:
-            logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
+            logger.warning("called with no secret")
             return None
         secret_dict: SmarterDictType
 
@@ -416,7 +419,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         if not self._name:
             # debug, not warning: commands such as json-schema and example-manifest need no name, and
             # the commands that do (get, describe, delete, ...) fail with their own error (issue #965).
-            logger.debug("%s.name() could not determine name, returning None", self.formatted_class_name)
+            logger.debug("could not determine name, returning None")
         return self._name
 
     @property
@@ -456,20 +459,19 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
                     thing=self.kind,
                 )
             return self._manifest
-        logger.debug("%s.manifest() called", self.formatted_class_name)
+        logger.debug("called")
         if not self.account:
-            logger.warning("%s.manifest() called with no account", self.formatted_class_name)
+            logger.warning("called with no account")
             return None
         if not self.user_profile:
-            logger.warning("%s.manifest() called with no user_profile", self.formatted_class_name)
+            logger.warning("called with no user_profile")
             return None
         # 1.) prioritize the client's manifest data if available. if it was provided
         #     in the request body then this is the authoritative source.
         if self.manifest_data is not None:
             self._manifest = SAMSecret.model_validate(self.manifest_sections)
             logger.debug(
-                "%s.manifest() initialized %s from manifest data",
-                self.formatted_class_name,
+                "initialized %s from manifest data",
                 type(self._manifest).__name__,
             )
         # 2.) next, (and only if there is no manifest data) try to initialize
@@ -494,13 +496,12 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
                 status=self.secret_status(secret=self.secret, account=self.account, user_profile=self.user_profile),
             )
             logger.debug(
-                "%s.manifest() initialized %s from existing Secret model",
-                self.formatted_class_name,
+                "initialized %s from existing Secret model",
                 type(self._manifest).__name__,
             )
             return self._manifest
         if not self._manifest:
-            logger.debug("%s.manifest() could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     ###########################################################################
@@ -561,7 +562,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
             response = broker.example_manifest(request)
             print(response.data)
         """
-        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.example_manifest.__name__)
         current_date = datetime.now(timezone.utc)
         # fixed, because the api contract commits this example and it must be deterministic.
@@ -620,7 +621,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
             :class:`SCLIResponseGet`
             :class:`SCLIResponseGetData`
         """
-        logger.debug("%s.get() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.get.__name__)
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         items: list[SmarterDictType] = []
@@ -697,7 +698,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
            :meth:`manifest_to_django_orm`
            :meth:`django_orm_to_manifest_dict`
         """
-        logger.debug("%s.apply() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not isinstance(self.user, User):
@@ -774,7 +775,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :returns: SmarterJournaledJsonResponse
             This method does not return a response; it always raises an error.
         """
-        logger.debug("%s.prompt() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -795,7 +796,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :returns: SmarterJournaledJsonResponse
             A JSON response containing the manifest details.
         """
-        logger.debug("%s.describe() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.describe.__name__)
         if self.user_profile is None:
             raise SAMBrokerErrorNotFound(
@@ -923,7 +924,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :returns: SmarterJournaledJsonResponse
             A JSON response indicating success or error.
         """
-        logger.debug("%s.delete() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.delete.__name__)
 
         if not isinstance(self.user, User):
@@ -970,7 +971,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :raises SAMBrokerErrorNotImplemented:
             Always raised to indicate that deploy functionality is not available for this manifest type.
         """
-        logger.debug("%s.deploy() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
@@ -990,7 +991,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :raises SAMBrokerErrorNotImplemented:
             Always raised to indicate that undeploy functionality is not available for this manifest type.
         """
-        logger.debug("%s.undeploy() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
@@ -1010,6 +1011,6 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         :raises SAMBrokerErrorNotImplemented:
             Always raised to indicate that logs functionality is not available for this manifest type.
         """
-        logger.debug("%s.logs() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.logs.__name__)
         raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)

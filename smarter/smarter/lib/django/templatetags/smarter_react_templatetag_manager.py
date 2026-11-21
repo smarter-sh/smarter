@@ -87,7 +87,7 @@ from smarter.lib import logging
 
 from .smarter_react_contract import ReactAppAssets, ViteManifest
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 register = template.Library()
 
@@ -127,8 +127,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         self.templatetag_name = templatetag_name
         self.entry_key = self.find_entry_key()
         logger.debug(
-            "%s[%s].__init__() %s is registered to React app '%s'",
-            self.formatted_class_name,
+            "[%s] %s is registered to React app '%s'",
             id(self),
             self.templatetag_name,
             self.app_name,
@@ -159,8 +158,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
                 content = f.read()
         except FileNotFoundError:
             logger.error(
-                "%s.manifest manifest.json not found at expected path: %s. Ensure Vite build has been run and static files are collected.",
-                self.formatted_class_name,
+                "manifest.json not found at expected path: %s. Ensure Vite build has been run and static files are collected.",
                 self.manifest_path,
             )
             return None
@@ -168,16 +166,14 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             manifest = ViteManifest.model_validate_json(content)
         except ValidationError as e:
             logger.error(
-                "%s.manifest failed to parse manifest.json at %s: %s. content: %s",
-                self.formatted_class_name,
+                "failed to parse manifest.json at %s: %s. content: %s",
                 self.manifest_path,
                 e,
                 content,
             )
             return None
         logger.debug(
-            "%s.manifest loaded and cached manifest.json for %s: %s",
-            self.formatted_class_name,
+            "loaded and cached manifest.json for %s: %s",
             self.app_name,
             logging.SmarterFormattedText.json(manifest.model_dump(mode="json", by_alias=True, exclude_defaults=True)),
         )
@@ -242,8 +238,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
         """
         if not self.manifest or not self.entry_key:
             logger.error(
-                "%s.reactapp_build_assets() No manifest.json found for app '%s'. Cannot collect assets.",
-                self.formatted_class_name,
+                "No manifest.json found for app '%s'. Cannot collect assets.",
                 self.app_name,
             )
             return ReactAppAssets()
@@ -253,8 +248,7 @@ class SmarterReactTemplateTagManager(SmarterHelperMixin):
             css=self.manifest.collect_assets(key=self.entry_key, asset_type="css"),
         )
         logger.debug(
-            "%s[%s].reactapp_build_assets() caching build assets for React app %s: %s",
-            self.formatted_class_name,
+            "[%s].reactapp_build_assets() caching build assets for React app %s: %s",
             id(self),
             self.app_name,
             logging.SmarterFormattedText.json(assets.model_dump(mode="json")),

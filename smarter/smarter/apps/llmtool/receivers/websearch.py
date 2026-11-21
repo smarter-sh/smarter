@@ -3,7 +3,6 @@
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -15,8 +14,6 @@ from ..signals.websearch import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
-
-logger_prefix = SmarterFormattedText.text(__name__)
 
 
 @receiver(websearch_searched, dispatch_uid="websearch_searched")
@@ -34,8 +31,7 @@ def handle_websearch_searched(sender, plugin: PluginBase, query: str, provider: 
     :param kwargs: The signal's other arguments, of which ``cached`` are logged.
     """
     logger.info(
-        "%s.websearch_searched() %s query: %s provider: %s results: %s cached: %s",
-        logger_prefix,
+        "%s query: %s provider: %s results: %s cached: %s",
         plugin.name,
         query,
         provider,
@@ -57,8 +53,7 @@ def handle_websearch_fetched(sender, plugin: PluginBase, url: str, **kwargs):
     :param kwargs: The signal's other arguments, of which ``final_url``, ``characters``, ``truncated``, ``cached`` are logged.
     """
     logger.info(
-        "%s.websearch_fetched() %s url: %s final_url: %s characters: %s truncated: %s cached: %s",
-        logger_prefix,
+        "%s url: %s final_url: %s characters: %s truncated: %s cached: %s",
         plugin.name,
         url,
         kwargs.get("final_url"),
@@ -82,8 +77,7 @@ def handle_websearch_failed(sender, plugin: PluginBase, operation: str, target: 
     :param error: Why it failed.
     """
     logger.warning(
-        "%s.websearch_failed() %s %s %s failed: %s",
-        logger_prefix,
+        "%s %s %s failed: %s",
         plugin.name,
         operation,
         target,

@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 class InfrastructureConfig(AppConfig):
     """Django Config for the infrastructure app."""
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"
     verbose_name = f"{SMARTER_APP_NAME} {presentation_app_name}"
 

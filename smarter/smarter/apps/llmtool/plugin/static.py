@@ -208,14 +208,12 @@ class StaticPlugin(PluginBase):
         try:
             self._plugin_data = PluginDataStatic.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
             logger.debug(
-                "%s.plugin_data() retrieved existing PluginDataStatic from database.",
-                self.formatted_class_name,
+                "retrieved existing PluginDataStatic from database.",
             )
             return self._plugin_data
         except PluginDataStatic.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataStatic found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataStatic found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -230,16 +228,14 @@ class StaticPlugin(PluginBase):
             self._plugin_data = PluginDataStatic(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
-                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
-                self.formatted_class_name,
+                "created new instance of %s from manifest and plugin metadata.",
                 self.plugin_data_class.__name__,
             )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
             logger.debug(
-                "%s.plugin_data() retrieving PluginDataStatic from database using plugin metadata.",
-                self.formatted_class_name,
+                "retrieving PluginDataStatic from database using plugin metadata.",
             )
             self._plugin_data = PluginDataStatic.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
@@ -728,8 +724,7 @@ class StaticPlugin(PluginBase):
             )
         if value is None:
             logger.warning(
-                "%s.tool_call_fetch_plugin_response() plugin %s return value for inquiry_type %s is None. Returning empty string.",
-                self.formatted_class_name,
+                "plugin %s return value for inquiry_type %s is None. Returning empty string.",
                 self.name,
                 inquiry_type,
             )

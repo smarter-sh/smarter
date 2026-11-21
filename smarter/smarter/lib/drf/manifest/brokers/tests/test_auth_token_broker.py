@@ -114,9 +114,7 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMSmarterAuthTokenBroker)
-        logger.info(
-            "%s.test_setup() SAMSmarterAuthTokenBroker initialized successfully for testing.", self.formatted_class_name
-        )
+        logger.info("SAMSmarterAuthTokenBroker initialized successfully for testing.")
 
     def test_is_valid(self):
         """Test that the is_valid property returns True."""
@@ -154,7 +152,7 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         """Test that the SAMSmarterAuthTokenBroker initializes correctly."""
         # Verify that our SAM manifest is capable of initializing the SAM Model.
         metadata = {**required(self.manifest_data["metadata"], "manifest_metadata")}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, self.manifest_data["spec"])
+        logger.info("loading manifest spec: %s", self.manifest_data["spec"])
         spec = {
             "config": SAMSmarterAuthTokenSpecConfig(**required(self.manifest_data["spec"], "manifest_spec")["config"]),
         }
@@ -256,16 +254,16 @@ class TestSmarterAuthTokenBroker(TestSmarterAuthTokenBrokerBase):
         Verify that it returns a SmarterJournaledJsonResponse with expected structure
         (see user broker test for details)
         """
-        logger.debug("test_apply() request body: %s", self.request.body.decode() if self.request.body else None)
+        logger.debug("request body: %s", self.request.body.decode() if self.request.body else None)
         response = self.broker.apply(self.request, **self.kwargs)  # type: ignore
-        logger.debug("test_apply() response: %s", response.content.decode())
+        logger.debug("response: %s", response.content.decode())
 
         is_valid_response = self.validate_smarter_journaled_json_response_ok(response)
         self.assertTrue(is_valid_response)
         is_valid_response = self.validate_apply(response)
         self.assertTrue(is_valid_response)
 
-        logger.warning("%s.test_apply() skipping tag tests", self.formatted_class_name)
+        logger.warning("skipping tag tests")
         # self.broker.manifest.metadata.tags is a list of strings.
         # verify that smarter_auth_token.tags (TaggableManager) contains the same tags.
         # manifest_tags = set(self.broker.manifest.metadata.tags or [])

@@ -84,7 +84,6 @@ from .schedule import DoodleSchedule, holidays_on
 from .trends import DoodleTrend, region_trends
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 BLOCKED_WORDS = (
     "mourning",
@@ -558,7 +557,7 @@ def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: date
         is_active=False,
         is_generated=True,
     )
-    logger.info("%s.draw() the Smarter Doodle Artist drew %s for %s.", logger_prefix, subject.name, day)
+    logger.info("the Smarter Doodle Artist drew %s for %s.", subject.name, day)
     return theme
 
 
@@ -582,7 +581,8 @@ def apply_decision(
             theme = draw(decision, subject, day)  # type: ignore[arg-type]
         except (SmarterLLMClientPromptError, SmarterValueError) as e:
             logger.warning(
-                "%s.apply_decision() the artist failed, so the calendar's doodle stays: %s", logger_prefix, e
+                "the artist failed, so the calendar's doodle stays: %s",
+                e,
             )
             return None
         if not switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_AUTO_APPROVE):
@@ -681,8 +681,7 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
     editor = smarter_llmclient(EDITOR_LLMCLIENT)
     if editor is None:
         logger.info(
-            "%s.edit_day() the LLMClient %s doesn't exist, so the calendar chooses the doodles.",
-            logger_prefix,
+            "the LLMClient %s doesn't exist, so the calendar chooses the doodles.",
             EDITOR_LLMCLIENT,
         )
         return None
@@ -703,7 +702,7 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
         run.status = DoodleEditorRunStatus.FAILED
         run.error = str(e)
         run.save()
-        logger.warning("%s.edit_day() the editor failed for %s: %s", logger_prefix, day, e)
+        logger.warning("the editor failed for %s: %s", day, e)
         return run
 
     refused = []
@@ -721,8 +720,7 @@ def edit_day(day: datetime.date) -> Optional[DoodleEditorRun]:
     run.error = "\n".join(refused)
     run.save()
     logger.info(
-        "%s.edit_day() the editor chose the doodles of %s, and %s of its choices were refused.",
-        logger_prefix,
+        "the editor chose the doodles of %s, and %s of its choices were refused.",
         day,
         len(refused),
     )

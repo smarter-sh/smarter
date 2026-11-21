@@ -9,8 +9,7 @@ from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 OUTPUT_FOLDER = "/home/smarter_user/data/manifests/example_manifests"
 """Where the manifests are written.
@@ -42,7 +41,11 @@ class Command(SmarterCommand):
                 manifest = sam_example(kind)
             # pylint: disable=broad-except
             except Exception as exc:
-                logger.error("%s.handle() failed to make the example manifest of %s: %s", logger_prefix, kind, exc)
+                logger.error(
+                    "failed to make the example manifest of %s: %s",
+                    kind,
+                    exc,
+                )
                 continue
             file_name = to_snake_case(kind) + ".yaml"
             output_path = os.path.join(OUTPUT_FOLDER, file_name)

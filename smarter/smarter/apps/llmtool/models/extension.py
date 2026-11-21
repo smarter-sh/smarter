@@ -70,10 +70,8 @@ class Extension(TimestampedModel):
     publisher = models.CharField(
         max_length=255, blank=True, default="", help_text="The publisher's registry id, or the archive's authors."
     )
-    source = models.CharField(max_length=16, choices=ExtensionSource.choices, default=ExtensionSource.UPLOAD)
-    trust_badge = models.CharField(
-        max_length=16, choices=ExtensionTrustBadge.choices, default=ExtensionTrustBadge.UNVERIFIED
-    )
+    source = models.CharField(max_length=16, choices=ExtensionSource, default=ExtensionSource.UPLOAD)
+    trust_badge = models.CharField(max_length=16, choices=ExtensionTrustBadge, default=ExtensionTrustBadge.UNVERIFIED)
     enabled = models.BooleanField(default=False, help_text="Whether the extension's tools are offered to LLMs.")
     installed_version = models.ForeignKey(
         "ExtensionVersion",
@@ -142,7 +140,9 @@ class ExtensionVersion(TimestampedModel):
     class Meta:
         verbose_name = "Extension Version"
         verbose_name_plural = "Extension Versions"
-        unique_together = ("extension", "version")
+        constraints = [
+            models.UniqueConstraint(fields=["extension", "version"], name="llmtool_extensionversion_unique"),
+        ]
         ordering = ("extension", "-created_at")
 
     extension = models.ForeignKey(Extension, on_delete=models.CASCADE, related_name="versions")
@@ -164,9 +164,7 @@ class ExtensionVersion(TimestampedModel):
         try:
             return ExtensionManifest.model_validate(self.manifest)
         except ValidationError as e:
-            logger.error(
-                "%s.parsed_manifest() %s has an invalid stored manifest: %s", self.formatted_class_name, self, e
-            )
+            logger.error("%s has an invalid stored manifest: %s", self, e)
             raise
 
 
@@ -182,7 +180,9 @@ class ExtensionSetting(TimestampedModel):
     class Meta:
         verbose_name = "Extension Setting"
         verbose_name_plural = "Extension Settings"
-        unique_together = ("extension", "name")
+        constraints = [
+            models.UniqueConstraint(fields=["extension", "name"], name="llmtool_extensionsetting_unique"),
+        ]
 
     extension = models.ForeignKey(Extension, on_delete=models.CASCADE, related_name="settings")
     name = models.CharField(max_length=255, help_text="The setting's name, as declared in the manifest.")
@@ -213,7 +213,11 @@ class ExtensionResource(TimestampedModel):
     class Meta:
         verbose_name = "Extension Resource"
         verbose_name_plural = "Extension Resources"
-        unique_together = ("extension", "kind", "name", "user_profile")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["extension", "kind", "name", "user_profile"], name="llmtool_extensionresource_unique"
+            ),
+        ]
 
     extension = models.ForeignKey(Extension, on_delete=models.CASCADE, related_name="resources")
     kind = models.CharField(max_length=64, help_text="The resource's SAM kind, e.g. Secret.")

@@ -75,12 +75,13 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
+from smarter.lib.django.csp import CSP_REPORT_PATH, CspReportView
 from smarter.lib.django.http import error_handlers
 from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
 from smarter.lib.drf.const import namespace as drf_namespace
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
@@ -171,6 +172,7 @@ class ConsoleReverseNames:
     register_view = "account_register_view"
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
+    csp_report = to_snake_case(CspReportView.__name__)
 
 
 urlpatterns = [
@@ -235,6 +237,7 @@ urlpatterns = [
     path("sitemap.xml", SitemapXmlView.as_view(), name=ConsoleReverseNames.sitemap_xml),
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
+    path(CSP_REPORT_PATH.lstrip("/"), CspReportView.as_view(), name=ConsoleReverseNames.csp_report),
     re_path(
         r"^apple-touch-icon\.png$",
         serve,
@@ -267,26 +270,20 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
-    logger.debug(
-        "%s Proxy web console access is %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
-    )
+    logger.debug("Proxy web console access is %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
         SmarterReadyState.NOT_READY,
     )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     ]
-    logger.debug(
-        "%s Vectorstore web console access is %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
-    )
+    logger.debug("Vectorstore web console access is %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
         SmarterReadyState.NOT_READY,
     )
 
@@ -302,8 +299,7 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_setting
         path("__debug__/", include(debug_toolbar.urls)),
     ]
     logger.debug(
-        "%s added debug_toolbar URLs to urlpatterns.",
-        logging.SmarterFormattedText.text(__name__),
+        "added debug_toolbar URLs to urlpatterns.",
     )
 
 

@@ -16,7 +16,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 INGRESS_TEMPLATE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../k8s/ingress.yaml.tpl"))
 
@@ -38,18 +37,17 @@ retargeted by :func:`smarter.apps.llmclient.tasks.retarget_ingresses.retarget_ll
 
 def is_taskable() -> bool:
     """Whether the cloud's DNS and certificate services are ready for task processing."""
-    prefix = logger_prefix + f".{is_taskable.__name__}()"
     # verifies that the cloud credentials are available and valid.
     if not infrastructure.ready:
-        logger.info("%s the cloud provider is not ready. Request is not taskable.", prefix)
+        logger.info("the cloud provider is not ready. Request is not taskable.")
         return False
 
     if not infrastructure.dns.ready:
-        logger.info("%s the DNS service is not ready. Request is not taskable.", prefix)
+        logger.info("the DNS service is not ready. Request is not taskable.")
         return False
 
     if not infrastructure.certificates.ready:
-        logger.info("%s the certificate service is not ready. Request is not taskable.", prefix)
+        logger.info("the certificate service is not ready. Request is not taskable.")
         return False
 
     return True

@@ -29,7 +29,6 @@ from smarter.workers.celery import app
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.MCPSERVER_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
@@ -52,8 +51,7 @@ def index_repository(name: str, force: bool = False) -> str:
     """
     index = github.index_repository(name, force=force)
     logger.info(
-        "%s.index_repository() %s is %s at %s.",
-        logger_prefix,
+        "%s is %s at %s.",
         name,
         index.status,
         index.commit_sha,
@@ -79,8 +77,7 @@ def index_blog(force: bool = False) -> str:
     """
     index = blog.index_blog(force=force)
     logger.info(
-        "%s.index_blog() %s is %s: %s posts.",
-        logger_prefix,
+        "%s is %s: %s posts.",
         index.repository,
         index.status,
         index.file_count,

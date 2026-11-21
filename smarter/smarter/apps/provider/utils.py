@@ -10,7 +10,6 @@ from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
 from smarter.common.conf.env import get_env, is_missing_value
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -42,9 +41,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
-
-module_prefix = "smarter.apps.provider.utils."
 
 
 def initialize_secret(
@@ -84,12 +80,11 @@ def get_provider_verification_for_type(
     :param verification_type: The kind of verification.
     :returns: The existing or new ProviderVerification.
     """
-    prefix = SmarterFormattedText.text(module_prefix + "get_provider_verification_for_type()")
-    logger.debug("%s Getting provider verification for %s of type %s", prefix, provider.name, verification_type)
+    logger.debug("Getting provider verification for %s of type %s", provider.name, verification_type)
 
     instance, _ = ProviderVerification.objects.get_or_create(provider=provider, verification_type=verification_type)
     if instance.is_valid:
-        logger.debug("%s Provider verification for %s is still valid %s", prefix, provider, instance.updated_at)
+        logger.debug("Provider verification for %s is still valid %s", provider, instance.updated_at)
     return instance
 
 
@@ -103,14 +98,13 @@ def get_model_verification_for_type(
     :param verification_type: The kind of verification.
     :returns: The existing or new ProviderModelVerification.
     """
-    prefix = SmarterFormattedText.text(module_prefix + "get_model_verification_for_type()")
-    logger.debug("%s Getting model verification for %s of type %s", prefix, provider_model.name, verification_type)
+    logger.debug("Getting model verification for %s of type %s", provider_model.name, verification_type)
 
     instance, _ = ProviderModelVerification.objects.get_or_create(
         provider_model=provider_model, verification_type=verification_type
     )
     if instance.is_valid:
-        logger.debug("%s Streaming verification for %s is still valid %s", prefix, provider_model, instance.updated_at)
+        logger.debug("Streaming verification for %s is still valid %s", provider_model, instance.updated_at)
     return instance
 
 
@@ -126,10 +120,8 @@ def set_model_verification(
     :param is_successful: Whether the verification passed.
     :param kwargs: Not used.
     """
-    prefix = SmarterFormattedText.text(module_prefix + "set_model_verification()")
     logger.debug(
-        "%s Setting model verification for %s to %s",
-        prefix,
+        "Setting model verification for %s to %s",
         provider_model_verification.provider_model.name,
         is_successful,
     )
@@ -156,10 +148,8 @@ def set_provider_verification(provider_verification: ProviderVerification, is_su
     :param is_successful: Whether the verification passed.
     :param kwargs: Not used.
     """
-    prefix = SmarterFormattedText.text(module_prefix + "set_provider_verification()")
     logger.debug(
-        "%s Setting provider verification for %s to %s",
-        prefix,
+        "Setting provider verification for %s to %s",
         provider_verification.provider.name,
         is_successful,
     )
@@ -181,8 +171,7 @@ def test_web_page(url: str, test_str: str) -> bool:
     :returns: True if the page returns 200, is HTML and contains ``test_str``; False otherwise,
         including on a network error.
     """
-    prefix = SmarterFormattedText.text(module_prefix + "test_web_page()")
-    logger.debug("%s Testing web page %s", prefix, url)
+    logger.debug("Testing web page %s", url)
 
     try:
         response = requests.get(url, timeout=10)
@@ -191,13 +180,13 @@ def test_web_page(url: str, test_str: str) -> bool:
         is_html = "<html" in page_text or "<!doctype html" in page_text
         has_test_str = test_str.lower() in page_text
         if is_ok and is_html and has_test_str:
-            logger.debug("%s Web page test succeeded.", prefix)
+            logger.debug("Web page test succeeded.")
             return True
         else:
-            logger.error("%s Web page test failed: Non-200 status or missing documentation HTML.", prefix)
+            logger.error("Web page test failed: Non-200 status or missing documentation HTML.")
             return False
     except requests.RequestException as exc:
-        logger.error("%s Web page test failed: %s", prefix, exc)
+        logger.error("Web page test failed: %s", exc)
         return False
 
 
@@ -217,7 +206,7 @@ def get_google_service_account_bearer_token() -> str | None:
         )
     except Secret.DoesNotExist:
         logger.error(
-            "%s.get_google_service_account_bearer_token() google service account secret not found.", logger_prefix
+            "google service account secret not found.",
         )
         return None
 
@@ -225,7 +214,7 @@ def get_google_service_account_bearer_token() -> str | None:
         svc_account = secret.get_secret()
         if not svc_account:
             logger.error(
-                "%s.get_google_service_account_bearer_token() google service account secret is empty.", logger_prefix
+                "google service account secret is empty.",
             )
             return None
         svc_account_dict = json.loads(svc_account)
@@ -234,19 +223,19 @@ def get_google_service_account_bearer_token() -> str | None:
         auth_req = google.auth.transport.requests.Request()
     except json.JSONDecodeError as e:
         logger.error(
-            "%s.get_google_service_account_bearer_token() error decoding Google service account JSON: %s",
-            logger_prefix,
+            "error decoding Google service account JSON: %s",
             e,
         )
         return None
     except GoogleAuthError as e:
         logger.error(
-            "%s.get_google_service_account_bearer_token() error loading Google credentials: %s", logger_prefix, e
+            "error loading Google credentials: %s",
+            e,
         )
         return None
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("%s.get_google_service_account_bearer_token() unexpected error: %s", logger_prefix, e)
+        logger.error("unexpected error: %s", e)
         return None
     credentials.refresh(auth_req)
     bearer_token = credentials.token

@@ -34,7 +34,6 @@ from .signals import (
     llm_tool_responded,
     prompt_config_invoked,
     prompt_finished,
-    prompt_handler_console_output,
     prompt_session_invoked,
     prompt_started,
 )
@@ -51,7 +50,6 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 logger_level = logger.getEffectiveLevel()
 prefix = __name__
-logger_prefix = SmarterFormattedText.text(__name__)
 
 
 def get_sender_name(sender: Any) -> str:
@@ -100,8 +98,7 @@ def handle_plugin_deleting(sender, plugin, plugin_meta: PluginMeta, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
     logger.info(
-        "%s by %s %s is being deleted. Pruning its usage records.",
-        f"{logger_prefix}.handle_plugin_deleting()",
+        "by %s %s is being deleted. Pruning its usage records.",
         get_sender_name(sender),
         plugin_meta.name,
     )
@@ -128,7 +125,10 @@ def handle_chat_session_invoked(
 
     # DEBUG, not INFO: the session's string form includes its session_key.
     logger.debug(
-        "%s by %s %s - %s", f"{logger_prefix}.handle_chat_session_invoked()", get_sender_name(sender), instance, url
+        "by %s %s - %s",
+        get_sender_name(sender),
+        instance,
+        url,
     )
 
 
@@ -147,13 +147,11 @@ def handle_chat_config_invoked(
     url: Optional[str] = instance.url
     masked_url = mask_url_query(url)
 
-    logger.info(
-        "%s by %s url=%s", f"{logger_prefix}.handle_chat_config_invoked()", get_sender_name(sender), masked_url
-    )
+    logger.info("by %s url=%s", get_sender_name(sender), masked_url)
     # SmarterFormattedText.json() of the whole configuration is costly, and it is evaluated before the call, so only
     # when it will be logged.
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("%s data: %s", f"{logger_prefix}.handle_chat_config_invoked()", SmarterFormattedText.json(data))
+        logger.debug("data: %s", SmarterFormattedText.json(data))
 
 
 @receiver(prompt_started, dispatch_uid="prompt_started")
@@ -169,8 +167,7 @@ def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[
 
     sender_name = get_sender_name(sender)
     logger.info(
-        "%s by %s for prompt %s",
-        f"{logger_prefix}.handle_chat_started()",
+        "by %s for prompt %s",
         sender_name,
         prompt,
     )
@@ -191,18 +188,17 @@ def handle_chat_completion_request_sent(
     """
 
     sender_name = get_sender_name(sender)
-    this_prefix = f"{logger_prefix}.handle_chat_completion_request_sent() iteration {iteration}"
 
     logger.info(
-        "%s by %s for prompt %s",
-        this_prefix,
+        "iteration %s by %s for prompt %s",
+        iteration,
         sender_name,
         prompt,
     )
     if logger_level == logging.DEBUG:
         logger.debug(
-            "%s by %s for prompt %s, \nrequest: %s",
-            this_prefix,
+            "iteration %s by %s for prompt %s, \nrequest: %s",
+            iteration,
             sender_name,
             prompt,
             SmarterFormattedText.json(data) if data else None,
@@ -225,12 +221,11 @@ def handle_chat_completion_response_received(
     This is the primary
     source data for the web console dashboard server logs.
     """
-    this_prefix = f"{logger_prefix}.handle_chat_completion_response_received() iteration {iteration}"
     sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s from %s for prompt %s",
-        this_prefix,
+        "iteration %s from %s for prompt %s",
+        iteration,
         sender_name,
         prompt,
     )
@@ -251,8 +246,8 @@ def handle_chat_completion_response_received(
         # DEBUG: the request and response hold the system prompt and the user's conversation. The
         # dashboard's server logs stream DEBUG records, e.g. in Smarter Chat's Sandbox mode.
         logger.debug(
-            "%s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
-            this_prefix,
+            "iteration %s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
+            iteration,
             sender_name,
             prompt,
             formatted_request_data,
@@ -279,14 +274,13 @@ def handle_chat_completion_plugin_called(
     """
 
     logger.info(
-        "%s by %s for prompt %s, plugin: %s",
-        f"{logger_prefix}.handle_chat_completion_plugin_called()",
+        "by %s for prompt %s, plugin: %s",
         get_sender_name(sender),
         prompt,
         plugin,
     )
     # DEBUG: the input text is the user's prompt.
-    logger.debug("%s input_text: %s", f"{logger_prefix}.handle_chat_completion_plugin_called()", input_text)
+    logger.debug("input_text: %s", input_text)
 
 
 @receiver(chat_tool_called, dispatch_uid="chat_tool_called")
@@ -316,8 +310,7 @@ def handle_chat_completion_tool_called(
     chat_id = prompt.id if prompt else None  # type: ignore
 
     logger.info(
-        "%s by %s %s %s for prompt: %s",
-        f"{logger_prefix}.handle_chat_completion_tool_called()",
+        "by %s %s %s for prompt: %s",
         get_sender_name(sender),
         function_name,
         function_args,
@@ -351,8 +344,7 @@ def save_prompt_history(
     # pylint: disable=broad-exception-caught
     except Exception as e:
         logger.error(
-            "%s could not save the history of prompt %s now, and queued it: %s",
-            f"{logger_prefix}.save_prompt_history()",
+            "could not save the history of prompt %s now, and queued it: %s",
             prompt_id,
             type(e).__name__,
         )
@@ -388,8 +380,7 @@ def handle_chat_response_success(
         response_data = response
 
     logger.info(
-        "%s for prompt %s, sent by %s",
-        f"{logger_prefix}.handle_chat_response_success()",
+        "for prompt %s, sent by %s",
         prompt,
         get_sender_name(sender),
     )
@@ -399,8 +390,7 @@ def handle_chat_response_success(
         # DEBUG, not WARNING: expected for the passthrough api, whose OpenAIPassthroughClient
         # never has a Prompt.
         logger.debug(
-            "%s No prompt object provided, skipping prompt history creation",
-            f"{logger_prefix}.handle_chat_response_success()",
+            "No prompt object provided, skipping prompt history creation",
         )
 
     if logger_level == logging.DEBUG:
@@ -412,8 +402,7 @@ def handle_chat_response_success(
             formatted_request_data = str(request_data)
 
         logger.debug(
-            "%s for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
-            f"{logger_prefix}.handle_chat_response_success()",
+            "for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
             prompt,
             get_sender_name(sender),
             formatted_request_data,
@@ -464,8 +453,7 @@ def handle_chat_response_failure(
         if first_iteration:
             summary = iteration_summary(first_iteration)
         logger.warning(
-            "%s from %s during iteration %s: the provider rejected the request: %s, iteration: %s",
-            f"{logger_prefix}.handle_chat_response_failure()",
+            "from %s during iteration %s: the provider rejected the request: %s, iteration: %s",
             sender_name,
             iteration,
             exception,
@@ -474,8 +462,7 @@ def handle_chat_response_failure(
         return
 
     logger.error(
-        "%s from %s during iteration %s for prompt: %s, request_meta_data: %s, exception: %s %s",
-        f"{logger_prefix}.handle_chat_response_failure()",
+        "from %s during iteration %s for prompt: %s, request_meta_data: %s, exception: %s %s",
         sender_name,
         iteration,
         prompt if prompt else None,
@@ -485,15 +472,13 @@ def handle_chat_response_failure(
     )
     if iteration == 1 and first_iteration:
         logger.error(
-            "%s for prompt: %s, first_iteration: %s",
-            f"{logger_prefix}.handle_chat_response_failure()",
+            "for prompt: %s, first_iteration: %s",
             prompt if prompt else None,
             iteration_summary(first_iteration),
         )
     if isinstance(iteration, int) and iteration >= 2 and second_iteration:
         logger.error(
-            "%s for prompt: %s, second_iteration: %s",
-            f"{logger_prefix}.handle_chat_response_failure()",
+            "for prompt: %s, second_iteration: %s",
             prompt if prompt else None,
             iteration_summary(second_iteration),
         )
@@ -507,29 +492,9 @@ def handle_chat_provider_initialized(sender, **kwargs):
     """Handle prompt provider initialized signal."""
 
     logger.debug(
-        "%s with name: %s, base_url: %s",
-        f"{logger_prefix}.handle_chat_provider_initialized()",
+        "with name: %s, base_url: %s",
         sender.provider,
         sender.base_url,
-    )
-
-
-@receiver(prompt_handler_console_output, dispatch_uid="prompt_handler_console_output")
-def handle_chat_handler_console_output(sender, message, json_obj, **kwargs):
-    """
-    Log a message of the prompt handler's console output, with its JSON.
-
-    :param sender: The object that sent the signal.
-    :param message: The message.
-    :param json_obj: The JSON object to log with it.
-    :param kwargs: Other signal arguments, unused.
-    """
-
-    logger.info(
-        "%s: %s\n%s",
-        f"{logger_prefix}.handle_chat_handler_console_output() console output",
-        message,
-        SmarterFormattedText.json(json_obj),
     )
 
 
@@ -551,8 +516,7 @@ def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
     sender_name = sender.__name__
 
     logger.info(
-        "%s from %s: %s",
-        f"{logger_prefix}.handle_llm_tool_presented()",
+        "from %s: %s",
         sender_name,
         SmarterFormattedText.json(tool),
     )
@@ -572,8 +536,7 @@ def handle_tool_requested(sender, tool_call: SmarterDictType, **kwargs):
 
     # DEBUG: the tool call's arguments come from the user's conversation.
     logger.debug(
-        "%s from %s: %s",
-        f"{logger_prefix}.handle_tool_requested()",
+        "from %s: %s",
         sender_name,
         SmarterFormattedText.json(tool_call),
     )
@@ -593,8 +556,7 @@ def handle_llm_tool_responded(sender, tool_call: SmarterDictType, tool_response:
 
     # DEBUG: the tool's response is data that the conversation asked for.
     logger.debug(
-        "%s from %s, tool_call: %s, tool_response: %s",
-        f"{logger_prefix}.handle_llm_tool_responded()",
+        "from %s, tool_call: %s, tool_response: %s",
         sender_name,
         SmarterFormattedText.json(tool_call),
         SmarterFormattedText.json(tool_response),
@@ -615,9 +577,9 @@ def handle_chat_post_save(sender, instance, created, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
     if created:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_post_save() Prompt record created.")
+        logger.debug("Prompt record created.")
     else:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_post_save() Prompt record updated.")
+        logger.debug("Prompt record updated.")
 
 
 @receiver(post_save, sender=PromptHistory)
@@ -631,9 +593,9 @@ def handle_chat_history_post_save(sender, instance, created, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
     if created:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_history_post_save() PromptHistory record created.")
+        logger.debug("PromptHistory record created.")
     else:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_history_post_save() PromptHistory record updated.")
+        logger.debug("PromptHistory record updated.")
 
 
 @receiver(post_save, sender=PromptToolCall)
@@ -647,9 +609,9 @@ def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
     if created:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_tool_call_post_save() PromptToolCall record created.")
+        logger.debug("PromptToolCall record created.")
     else:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_tool_call_post_save() PromptToolCall record updated.")
+        logger.debug("PromptToolCall record updated.")
 
 
 @receiver(post_save, sender=PromptPluginUsage)
@@ -663,9 +625,9 @@ def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
     if created:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_plugin_usage_post_save() PromptPluginUsage record created.")
+        logger.debug("PromptPluginUsage record created.")
     else:
-        logger.debug("%s", f"{logger_prefix}.handle_chat_plugin_usage_post_save() PromptPluginUsage record updated.")
+        logger.debug("PromptPluginUsage record updated.")
 
 
 @receiver(pre_delete, sender=PromptToolCall)
@@ -677,9 +639,7 @@ def handle_chat_tool_call_post_delete(sender, instance, **kwargs):
     :param instance: The PromptToolCall being deleted.
     :param kwargs: Other signal arguments, unused.
     """
-    logger.info(
-        "%s %s deleting", f"{logger_prefix}.handle_chat_tool_call_post_delete() PromptToolCall record", instance
-    )
+    logger.info("PromptToolCall record %s deleting", instance)
 
 
 @receiver(pre_delete, sender=PromptPluginUsage)
@@ -691,6 +651,4 @@ def handle_chat_plugin_usage_post_delete(sender, instance, **kwargs):
     :param instance: The PromptPluginUsage being deleted.
     :param kwargs: Other signal arguments, unused.
     """
-    logger.info(
-        "%s %s deleting", f"{logger_prefix}.handle_chat_plugin_usage_post_delete() PromptPluginUsage record", instance
-    )
+    logger.info("PromptPluginUsage record %s deleting", instance)

@@ -83,7 +83,9 @@ class LLMClientArchitectureView(SmarterAuthenticatedNeverCachedWebView):
         llmclient = readable_llmclient(request, kwargs.get("hashed_id"))
         if llmclient is None:
             logger.debug(
-                "%s.get() no llmclient %s for %s", self.formatted_class_name, kwargs.get("hashed_id"), request.user
+                "no llmclient %s for %s",
+                kwargs.get("hashed_id"),
+                request.user,
             )
             return JsonResponse({"error": "LLMClient not found."}, status=HTTPStatus.NOT_FOUND)
         kind = SAMKinds.LLM_CLIENT.value
@@ -100,5 +102,5 @@ class LLMClientArchitectureView(SmarterAuthenticatedNeverCachedWebView):
                 api_keys_url=reverse(AuthTokenReverseNames.namespace, AuthTokenReverseNames.listview),
             ),
         )
-        logger.debug("%s.get() architecture of %s", self.formatted_class_name, llmclient)
+        logger.debug("architecture of %s", llmclient)
         return JsonResponse(architecture.to_json())

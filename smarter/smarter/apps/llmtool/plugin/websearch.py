@@ -239,8 +239,7 @@ class WebsearchPlugin(PluginBase):
             return self._plugin_data
         except PluginDataWebsearch.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataWebsearch found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataWebsearch found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
         if self._manifest:

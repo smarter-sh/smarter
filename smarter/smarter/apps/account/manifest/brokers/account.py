@@ -126,7 +126,10 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     ###########################################################################
@@ -149,20 +152,17 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             return self._brokered_account
 
         if not self.name:
-            logger.debug("%s.brokered_account() no name provided, cannot retrieve Account.", self.formatted_class_name)
+            logger.debug("no name provided, cannot retrieve Account.")
             return None
 
         try:
             self._brokered_account = Account.get_cached_object(name=self.name)
             logger.debug(
-                "%s.brokered_account() initialized existing Account: %s",
-                self.formatted_class_name,
+                "initialized existing Account: %s",
                 self._brokered_account,
             )
         except Account.DoesNotExist:
-            logger.debug(
-                "%s.brokered_account() no existing Account found with name: %s", self.formatted_class_name, self.name
-            )
+            logger.debug("no existing Account found with name: %s", self.name)
             self._brokered_account = None
         return self._brokered_account
 
@@ -175,7 +175,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :type value: Account
         """
         self._brokered_account = value
-        logger.debug("%s.brokered_account() set to Account: %s", self.formatted_class_name, self._brokered_account)
+        logger.debug("set to Account: %s", self._brokered_account)
 
     @property
     def formatted_class_name(self) -> str:
@@ -257,8 +257,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         if self.manifest_data is not None:
             self._manifest = SAMAccount.model_validate(self.manifest_sections)
             logger.debug(
-                "%s.manifest() initialized %s from manifest data: %s",
-                self.formatted_class_name,
+                "initialized %s from manifest data: %s",
                 type(self._manifest).__name__,
                 json.dumps(self._manifest.model_dump(), indent=4),
             )
@@ -304,15 +303,14 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
                 status=status,
             )
             logger.debug(
-                "%s.manifest() initialized %s from Account ORM model %s: %s",
-                self.formatted_class_name,
+                "initialized %s from Account ORM model %s: %s",
                 type(self._manifest).__name__,
                 self.brokered_account,
                 serializers.serialize("json", [self.brokered_account]),
             )
             return self._manifest
         else:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     @property
@@ -490,16 +488,14 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         # commands that do need one fail with their own error.
         if not self.name:
             logger.debug(
-                "%s.orm_instance() - no name, so there is no %s instance to retrieve",
-                self.formatted_class_name,
+                "no name, so there is no %s instance to retrieve",
                 Account.__name__,
             )
             return None
 
         try:
             logger.debug(
-                "%s.orm_instance() - attempting to retrieve %s instance for user=%s, name=%s",
-                self.formatted_class_name,
+                "attempting to retrieve %s instance for user=%s, name=%s",
                 Account.__name__,
                 self.user,
                 self.name,
@@ -507,15 +503,13 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             self._orm_instance = Account.get_cached_object(name=self.name)
             if self._orm_instance:
                 logger.debug(
-                    "%s.orm_instance() - retrieved %s instance: %s",
-                    self.formatted_class_name,
+                    "retrieved %s instance: %s",
                     Account.__name__,
                     serializers.serialize("json", [self._orm_instance]),  # type: ignore[list-item]
                 )
             else:
                 logger.debug(
-                    "%s.orm_instance() - no %s instance found for name: %s",
-                    self.formatted_class_name,
+                    "no %s instance found for name: %s",
                     Account.__name__,
                     self.name,
                 )
@@ -524,8 +518,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             # DEBUG: the caller decides whether a missing Account is an error, e.g. describe
             # answers 404.
             logger.debug(
-                "%s.orm_instance() - %s instance does not exist for account=%s, name=%s",
-                self.formatted_class_name,
+                "%s instance does not exist for account=%s, name=%s",
                 Account.__name__,
                 self.account,
                 self.name,
@@ -536,16 +529,14 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         """Override of parent method to initialize the Django ORM meta model instance for the broker."""
         if self._orm_instance:
             logger.debug(
-                "%s.orm_meta_instance_setter() ORM instance is already set. Setting ORM meta instance to ORM instance.",
-                self.formatted_class_name,
+                "ORM instance is already set. Setting ORM meta instance to ORM instance.",
             )
             self._orm_meta_instance = self._orm_instance  # type: ignore
             return
 
         if not self.name:
             logger.debug(
-                "%s.orm_meta_instance_setter() - name is not set. Cannot retrieve ORM meta instance for %s.",
-                self.formatted_class_name,
+                "name is not set. Cannot retrieve ORM meta instance for %s.",
                 Account.__name__,
             )
             return
@@ -555,15 +546,13 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             self._orm_meta_instance = Account.get_cached_object(name=self.name)
         except Account.DoesNotExist:
             logger.warning(
-                "%s.orm_meta_instance_setter() - ORM meta instance does not exist for account=%s, name=%s",
-                self.formatted_class_name,
+                "ORM meta instance does not exist for account=%s, name=%s",
                 self.account,
                 self.name,
             )
         except Exception as e:
             logger.error(
-                "%s.orm_meta_instance_setter() - unexpected error retrieving ORM meta instance for account=%s, name=%s: %s",
-                self.formatted_class_name,
+                "unexpected error retrieving ORM meta instance for account=%s, name=%s: %s",
                 self.account,
                 self.name,
                 e,
@@ -586,7 +575,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         Invalidates
         the cache for the `Account` and `UserProfile` models.
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         Account.get_cached_object(invalidate=True, pk=self.brokered_account.id)  # type: ignore
         # brokered_account is retrieved by name, which is cached separately from pk.
         Account.get_cached_object(invalidate=True, name=self.brokered_account.name)  # type: ignore
@@ -614,7 +603,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             - :class:`SAMAccountSpecKeys`
         """
         command = SmarterJournalCliCommands(self.example_manifest.__name__)
-        logger.debug("%s.example_manifest() called", self.formatted_class_name)
+        logger.debug("called")
 
         metadata = SAMAccountMetadata(
             name="example_account",
@@ -673,7 +662,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         """
         # name: str = None, all_objects: bool = False, tags: str = None
         command = SmarterJournalCliCommands(self.get.__name__)
-        logger.debug("%s.get() called", self.formatted_class_name)
+        logger.debug("called")
         items: list[SmarterDictType] = []
 
         if not isinstance(self.user, User):
@@ -712,7 +701,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
 
         for account in accounts.order_by("name")[:MAX_RESULTS]:
             try:
-                logger.debug("%s.get() processing Account: %s", self.formatted_class_name, account)
+                logger.debug("processing Account: %s", account)
                 model_dump = AccountSerializer(account).data
                 camel_cased_model_dump = self.to_camel_case(model_dump)
                 items.append(camel_cased_model_dump)
@@ -797,7 +786,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             - :meth:`manifest_to_django_orm`
             - :meth:`django_orm_to_manifest_dict`
         """
-        logger.debug("%s.apply() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.apply.__name__)
 
         if not isinstance(self.user, User):
@@ -832,18 +821,16 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             tags = data.get("tags", [])
             for field in readonly_fields:
                 logger.debug(
-                    "%s.apply() Removing readonly field %s from data for %s",
-                    self.formatted_class_name,
+                    "Removing readonly field %s from data for %s",
                     field,
                     self.kind,
                 )
                 data.pop(field, None)
             for key, value in data.items():
                 setattr(brokered_account, key, value)
-                logger.debug("%s.apply() Setting %s to %s", self.formatted_class_name, key, value)
+                logger.debug("Setting %s to %s", key, value)
             logger.debug(
-                "%s.apply() Saving %s: %s",
-                self.formatted_class_name,
+                "Saving %s: %s",
                 brokered_account,
                 serializers.serialize("json", [brokered_account]),
             )
@@ -853,8 +840,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
             brokered_account.tags.set(tags)
             brokered_account.refresh_from_db()
             logger.debug(
-                "%s.apply() Saved %s with ID %s: %s",
-                self.formatted_class_name,
+                "Saved %s with ID %s: %s",
                 brokered_account,
                 brokered_account.id,
                 serializers.serialize("json", [brokered_account]),
@@ -879,7 +865,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :returns: A JSON response indicating that prompt is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.prompt() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.prompt.__name__)
         raise SAMBrokerErrorNotImplemented(message="Prompt not implemented", thing=self.kind, command=command)
 
@@ -898,7 +884,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :rtype: SmarterJournaledJsonResponse
         """
         command = SmarterJournalCliCommands(self.describe.__name__)
-        logger.debug("%s.describe() called for %s", self.formatted_class_name, self.name)
+        logger.debug("called for %s", self.name)
 
         if not isinstance(self.user, User):
             raise SAMAccountBrokerError(
@@ -920,8 +906,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         try:
             data = self.django_orm_to_manifest_dict()
             logger.debug(
-                "%s.describe() returning manifest for %s: %s",
-                self.formatted_class_name,
+                "returning manifest for %s: %s",
                 self.name,
                 json.dumps(data, indent=4),
             )
@@ -995,7 +980,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :returns: A JSON response indicating that delete is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.delete() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.delete.__name__)
         raise SAMBrokerErrorNotImplemented(message="Delete not implemented", thing=self.kind, command=command)
 
@@ -1015,7 +1000,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :returns: A JSON response indicating that deploy is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.deploy() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.deploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
@@ -1035,7 +1020,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :returns: A JSON response indicating that undeploy is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.undeploy() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
@@ -1053,7 +1038,7 @@ class SAMAccountBroker(AbstractBroker[Account, Account]):
         :returns: A JSON response indicating that logs is not implemented.
         :rtype: SmarterJournaledJsonResponse
         """
-        logger.debug("%s.logs() called", self.formatted_class_name)
+        logger.debug("called")
         command = SmarterJournalCliCommands(self.logs.__name__)
         data: SmarterDictType = {}
         return self.json_response_ok(command=command, data=data)

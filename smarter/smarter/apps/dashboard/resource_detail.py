@@ -37,8 +37,7 @@ from smarter.lib.manifest.record_locator import (
 )
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ResourceDetail(BaseModel):
@@ -277,7 +276,7 @@ def manifest_data(kind: str, instance: models.Model, reader=None) -> tuple[Optio
         data = json.loads(response.content).get("data")
     # a broken resource must not break its detail: its other tabs still work. pylint: disable=W0718
     except Exception as e:
-        logger.warning("%s.manifest_yaml() could not describe %s %s: %s", logger_prefix, kind, name, e)
+        logger.warning("could not describe %s %s: %s", kind, name, e)
         return None, str(e)
     if not isinstance(data, dict):
         return None, f"The {kind} {name} has no manifest."
@@ -346,13 +345,13 @@ def resource_detail(request, kind: Optional[str], record_locator: str) -> Option
         kind = kind_of_instance(instance)
     broker_class = Brokers.get_broker(kind) if kind else None
     if broker_class is None or instance is None or not kind:
-        logger.debug("%s.resource_detail() no %s %s for %s", logger_prefix, kind, record_locator, request.user)
+        logger.debug("no %s %s for %s", kind, record_locator, request.user)
         return None
     name = getattr(instance, "name", None)
     broker = broker_class(request, name=name, kind=kind)
     instance = instance_of_kind(broker, kind, instance)
     if instance is None:
-        logger.warning("%s.resource_detail() %s is not a %s", logger_prefix, record_locator, kind)
+        logger.warning("%s is not a %s", record_locator, kind)
         return None
     record_locator = getattr(instance, "record_locator", record_locator)
     tree = broker.dependency_tree_node(kind, instance, ancestors=frozenset())

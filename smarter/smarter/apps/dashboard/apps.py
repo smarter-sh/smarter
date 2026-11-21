@@ -31,14 +31,12 @@ class WebPlatformConfig(AppConfig):
     ``AppConfig.ready()``.
 
     Attributes:
-        default_auto_field (str): ``"django.db.models.BigAutoField"``
         name (str): Fully qualified app name derived from
             :data:`.const.namespace`, e.g. ``"smarter.apps.dashboard"``.
         verbose_name (str): Human-readable name shown in the Django admin,
             e.g. ``"Smarter Dashboard"``.
     """
 
-    default_auto_field = "django.db.models.BigAutoField"
     name = f"smarter.apps.{app_name.lower()}"
     verbose_name = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
 

@@ -67,7 +67,6 @@ from .verify_custom_domain import verify_custom_domain
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -130,8 +129,7 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     domain_name = infrastructure.dns.resolve_domain(domain_name)
 
     logger.info(
-        "%s Account %s %s attempting to register custom domain %s task_id: %s",
-        logger_prefix + f".{register_custom_domain.__name__}() task_id: %s",
+        "Account %s %s attempting to register custom domain %s task_id: %s",
         account.company_name,
         account.account_number,
         domain_name,
@@ -151,22 +149,18 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
                 LLMClientCustomDomain.VerificationStatusChoices.VERIFYING, "Verification has started."
             )
             verify_custom_domain.delay(hosted_zone_id=existing.aws_hosted_zone_id)
-        logger.info(
-            "%s custom domain %s already exists for account %s and certificate is verified. Nothing to do. task_id: %s",
-            logger_prefix,
-            domain_name,
-            account.company_name,
-            task_id,
-        )
         post_register_custom_domain.send(
-            sender=register_custom_domain, account_id=account_id, domain_name=domain_name, task_id=task_id
+            sender=register_custom_domain,
+            account_id=account_id,
+            domain_name=domain_name,
+            outcome=f"it already exists for account {account.company_name}, and its certificate is verified. Nothing to do",
+            task_id=task_id,
         )
         return True
     except LLMClientCustomDomain.DoesNotExist:
         # the custom domain doesn't exist, so we need to create it
         logger.info(
-            "%s custom domain %s not found for account %s. Proceeding to create it. task_id: %s",
-            logger_prefix,
+            "custom domain %s not found for account %s. Proceeding to create it. task_id: %s",
             domain_name,
             account.company_name,
             task_id,
@@ -174,16 +168,14 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
     except CertificateNotFound:
         # the certificate was not found, so we need to create it
         logger.info(
-            "%s certificate for domain %s not found. Proceeding to create it. task_id: %s",
-            logger_prefix,
+            "certificate for domain %s not found. Proceeding to create it. task_id: %s",
             domain_name,
             task_id,
         )
     except CertificateNotIssued:
         # the certificate has not been verified, so we need to verify it
         logger.info(
-            "%s certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
-            logger_prefix,
+            "certificate for domain %s is not verified. Proceeding to verify it. task_id: %s",
             domain_name,
             task_id,
         )
@@ -194,10 +186,14 @@ def register_custom_domain(account_id: int, domain_name: str) -> bool:
         LLMClientCustomDomain.objects.filter(domain_name=domain_name).exclude(user_profile__account=account).first()
     )
     if domain_record is not None:
-        err = f"{logger_prefix}.register_custom_domain() - Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
+        err = f"Account {account.company_name} attempted to register {domain_name} but it is already registered to {domain_record.user_profile.account.company_name} task_id: {task_id}"
         logger.error(err)
         raise LLMClientCustomDomainExists(err)
-    logger.info("%s domain %s is available to register. task_id: %s", logger_prefix, domain_name, task_id)
+    logger.info(
+        "domain %s is available to register. task_id: %s",
+        domain_name,
+        task_id,
+    )
 
     # create a DNS zone for the custom domain
     zone, _ = infrastructure.dns.get_or_create_zone(domain_name)

@@ -23,7 +23,6 @@ from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 cache_prefix = f"{__name__}."
 
 
@@ -103,7 +102,7 @@ def list_of_dicts_to_list(data: list[SmarterDictType]) -> Optional[list[str]]:
     """
     if not data or not isinstance(data[0], dict):
         return None
-    logger.warning("%s.list_of_dicts_to_list() converting a list of dicts to a list of their values", logger_prefix)
+    logger.warning("converting a list of dicts to a list of their values")
     retval = []
     key = next(iter(data[0]))
     for d in data:

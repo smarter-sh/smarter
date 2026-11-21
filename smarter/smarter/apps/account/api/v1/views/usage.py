@@ -44,7 +44,7 @@ class TokenUsageView(SmarterAuthenticatedAPIView):
             return Response({"detail": str(e)}, status=HTTPStatus.BAD_REQUEST)
         user = get_resolved_user(request.user)
         user_profile = UserProfile.get_cached_object(user=user)  # type: ignore[arg-type]
-        logger.debug("%s.get() periodicity=%s", self.formatted_class_name, periodicity)
+        logger.debug("periodicity=%s", periodicity)
         series = token_usage_series(user_profile.record_locator, periodicity)  # type: ignore[union-attr]
         return Response(series, status=HTTPStatus.OK)
 

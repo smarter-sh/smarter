@@ -50,7 +50,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MAX_RESULT_CHARACTERS = 16000
 """
@@ -210,8 +209,7 @@ class StaffTool(MCPToolBase):
         else:
             outcome = ""
         logger.info(
-            "%s.audit() %s called %s for %s%s",
-            logger_prefix,
+            "%s called %s for %s%s",
             self.user,
             self.name,
             ticket,

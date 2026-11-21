@@ -71,7 +71,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
     ) -> tuple[SmarterDictType, int]:
         """Prepare and get a response from an api/v1/ endpoint."""
         logger.info(
-            "TestApiCliV1BaseClass.authentication_scenarios() testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",
+            "testing API endpoint: %s, wrong_key: %s, missing_key: %s, session_authentication: %s",
             path,
             wrong_key,
             missing_key,
@@ -123,22 +123,32 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
 
     def test_authentication_without_a_key_logs_a_warning(self):
         """A request without a key is the client's error: a WARNING with no instructions, and the 403 says how (#972)."""
-        with patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger:
+        # the view logs why authentication failed; the api_request_failed receiver logs the failed request.
+        with (
+            patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger,
+            patch("smarter.apps.api.receivers.logger") as receiver_logger,
+        ):
             response, status = self.authentication_scenarios(path=self.private_path, missing_key=True)
         self.assertEqual(status, HTTPStatus.FORBIDDEN)
         self.assertIn("Authorization: Token", json.dumps(response))
         mock_logger.error.assert_not_called()
-        logged = str(mock_logger.warning.call_args_list)
+        receiver_logger.error.assert_not_called()
+        receiver_logger.warning.assert_called_once()
+        logged = str(mock_logger.warning.call_args_list) + str(receiver_logger.warning.call_args_list)
         self.assertIn("no Authorization header", logged)
         self.assertNotIn(SMARTER_CUSTOMER_SUPPORT_EMAIL, logged)
         self.assertNotIn("Token ", logged)
 
     def test_authentication_with_a_wrong_key_logs_a_warning(self):
         """A request with a wrong key is the client's error: a WARNING, not an ERROR (#972)."""
-        with patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger:
+        with (
+            patch("smarter.apps.api.v1.cli.views.base.logger") as mock_logger,
+            patch("smarter.apps.api.receivers.logger") as receiver_logger,
+        ):
             _, status = self.authentication_scenarios(path=self.private_path, wrong_key=True)
         self.assertEqual(status, HTTPStatus.FORBIDDEN)
         mock_logger.error.assert_not_called()
+        receiver_logger.error.assert_not_called()
 
     def test_authentication_with_session(self):
         """Verify that session authentication also works api requests."""

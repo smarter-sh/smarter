@@ -39,12 +39,10 @@ from smarter.apps.account.const import namespace as account_namespace
 from smarter.apps.account.models import User
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 
-logger = logging.getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 USERNAME = "username"
 # the account app's url name, in its namespace: a url name alone isn't found.
@@ -124,8 +122,7 @@ def subscription_status_code(username: str, email: Optional[str] = None) -> int:
     response = requests.get(SUBSCRIPTION_STATUS_API_URL, headers=headers, timeout=5)
     status_code = response.status_code
     logger.info(
-        "%s.subscription_status_code() Subscription status API response for user %s: %s",
-        logger_prefix,
+        "Subscription status API response for user %s: %s",
         username,
         status_code,
     )
@@ -151,8 +148,7 @@ def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     # check to see if multitenant authentication is enabled
     if not switch_is_active(SmarterWaffleSwitches.ENABLE_MULTITENANT_AUTHENTICATION):
         logger.info(
-            "%s.verify_payment_status() Multitenant authentication is disabled; skipping payment status check for user %s. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
-            logger_prefix,
+            "Multitenant authentication is disabled; skipping payment status check for user %s. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
             username,
         )
         return True
@@ -161,7 +157,8 @@ def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     is_superuser = User.objects.filter(username=username, is_superuser=True, is_active=True).exists()
     if is_superuser:
         logger.info(
-            "%s.verify_payment_status() User %s is a superuser; skipping payment status check.", logger_prefix, username
+            "User %s is a superuser; skipping payment status check.",
+            username,
         )
         return True
 
@@ -192,8 +189,7 @@ def log_status_error(err_type: str, username: str, err: Exception, stack_info: b
     :param stack_info: Whether to log the stack.
     """
     logger.error(
-        "%s.verify_payment_status() %s error occurred while verifying payment status for user %s: %s",
-        logger_prefix,
+        "%s error occurred while verifying payment status for user %s: %s",
         err_type,
         username,
         err,
@@ -230,15 +226,14 @@ class PaymentVerifiedUserDetailsMixin:
         """
         # the backend that this mixin precedes in the MRO, e.g. GoogleOAuth2, defines get_user_details().
         details = super().get_user_details(response)  # type: ignore[misc]
-        logger.debug("%s.get_user_details() Retrieved user details: %s", logger_prefix, details)
+        logger.debug("Retrieved user details: %s", details)
         if details is None:
             # authentication failed, so no point in checking payment status
             return None
         if not isinstance(details, dict):
             # this should never happen, but log just in case
             logger.error(
-                "%s.get_user_details() could not verify payment status. Expected user details to be a dictionary, got %s.",
-                logger_prefix,
+                "could not verify payment status. Expected user details to be a dictionary, got %s.",
                 type(details),
             )
             return details
@@ -246,8 +241,7 @@ class PaymentVerifiedUserDetailsMixin:
         if not isinstance(username, str) or not username:
             # without a username there is nothing to check; verify_payment_status() fails open, and so does this.
             logger.warning(
-                "%s.get_user_details() the user details have no username, so the payment status is not checked.",
-                logger_prefix,
+                "the user details have no username, so the payment status is not checked.",
             )
             return details
         email = email_or_none(details.get("email"))
@@ -282,8 +276,7 @@ class GithubOAuth2Multitenant(PaymentVerifiedUserDetailsMixin, GithubOAuth2):
         """
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
             logger.warning(
-                "%s.get_user_details() Skipping payment status check for user %s in local environment.",
-                logger_prefix,
+                "Skipping payment status check for user %s in local environment.",
                 details.get(USERNAME),
             )
             return True

@@ -233,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
     Returns the exit code.
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--shards", type=int, default=8, help="how many shards, each in its own stack (default 8)")
+    parser.add_argument("--shards", type=int, default=10, help="how many shards, each in its own stack (default 10)")
     parser.add_argument("--labels", nargs="+", default=["smarter"], help="what to test (default: smarter)")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="where the logs go (default .test-shards/)")
     parser.add_argument("--keep", action="store_true", help="leave the stacks running afterwards")

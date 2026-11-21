@@ -15,7 +15,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class DashboardReverseNames:
@@ -34,15 +34,13 @@ urlpatterns = [
 
 if smarter_settings.enable_dropzone_manifest_apply:
     logger.debug(
-        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
         namespace,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s %s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
         namespace,
         SmarterReadyState.NOT_READY,
     )

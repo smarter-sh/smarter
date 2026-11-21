@@ -15,7 +15,6 @@ from rest_framework.request import Request
 
 from smarter.apps.account.models import User
 from smarter.common.exceptions import SmarterException
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
@@ -106,8 +105,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         """
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() called args: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called args: %s, kwargs: %s",
             args,
             kwargs,
         )
@@ -213,24 +211,20 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         :raises AuthenticationFailed: If the token is not bytes, if knox can't authenticate it, or
             if the token is not active.
         """
-        logger.debug(
-            "%s.authenticate_credentials() called with token: %s", self.formatted_class_name, mask_string(token)
-        )
+        logger.debug("called with token: %s", mask_string(token))
         if not isinstance(token, bytes):
             logger.warning(
-                "%s.authenticate_credentials() - invalid token type: %s. Expected bytes.",
-                self.formatted_class_name,
+                "invalid token type: %s. Expected bytes.",
                 type(token),
             )
             raise AuthenticationFailed("Invalid token type. Expected bytes")
         masked_token = mask_string(string=token.decode())
         smarter_token_authentication_request.send(sender=self.__class__, token=masked_token, url=None)
-        logger.debug("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
+        logger.debug("%s", masked_token)
         try:
             user, auth_token = super().authenticate_credentials(token)
             logger.debug(
-                "%s.authenticate_credentials() - retrieved user %s of type %s for token: %s",
-                self.formatted_class_name,
+                "retrieved user %s of type %s for token: %s",
                 user,
                 type(user),
                 masked_token,
@@ -255,8 +249,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
                 error=error,
             )
             logger.warning(
-                "%s.authenticate_credentials() - token is not active for user %s, token: %s",
-                self.formatted_class_name,
+                "token is not active for user %s, token: %s",
                 user,
                 masked_token,
             )
@@ -277,7 +270,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             user=user,
             token=masked_token,
         )
-        logger.info("%s.authenticate_credentials() authenticated user %s", self.formatted_class_name, user)
+        logger.info("authenticated user %s", user)
         return (user, smarter_auth_token)
 
     @classmethod
@@ -292,16 +285,12 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         :returns: The token's user if the token is valid and active, otherwise a
             :class:`SmarterAnonymousUser`.
         """
-        logger_prefix = (
-            f"{SmarterFormattedText.text(__name__)}.{SmarterTokenAuthentication.__name__}.get_user_from_request()"
-        )
-        logger.debug("%s called with request: %s", logger_prefix, request)
+        logger.debug("called with request: %s", request)
 
         auth_header = request.META.get("HTTP_AUTHORIZATION")
         if not auth_header or not auth_header.startswith("Token "):
             logger.warning(
-                "%s no valid Token authorization header found. Returning SmarterAnonymousUser.",
-                logger_prefix,
+                "no valid Token authorization header found. Returning SmarterAnonymousUser.",
             )
             return SmarterAnonymousUser()
         token = auth_header.split("Token ")[1].strip()
@@ -312,12 +301,13 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
             if compare_digest(digest, auth_token.digest) and auth_token.is_active:
                 # never log token_key: it is the first characters of the token itself.
                 logger.debug(
-                    "%s retrieved user %s for token: %s", logger_prefix, auth_token.user, auth_token.identifier
+                    "retrieved user %s for token: %s",
+                    auth_token.user,
+                    auth_token.identifier,
                 )
                 return auth_token.user
         logger.warning(
-            "%s failed to retrieve an active token for token: %s. Returning SmarterAnonymousUser.",
-            logger_prefix,
+            "failed to retrieve an active token for token: %s. Returning SmarterAnonymousUser.",
             mask_string(token),
         )
         return SmarterAnonymousUser()

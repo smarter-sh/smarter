@@ -93,8 +93,7 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
         if not provider_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters. provider_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters. provider_id: %s, new_name: %s",
                 provider_id,
                 new_name,
             )
@@ -103,9 +102,7 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         try:
             provider = Provider.objects.with_read_permission_for(self.user_profile.user).get(id=provider_id)  # type: ignore
         except Provider.DoesNotExist:
-            logger.warning(
-                "%s.post() Provider with id %s not found for cloning.", self.formatted_class_name, provider_id
-            )
+            logger.warning("Provider with id %s not found for cloning.", provider_id)
             return JsonResponse({"error": f"Provider with id {provider_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -116,8 +113,7 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning Provider with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning Provider with id %s: %s",
                 provider_id,
                 e,
             )
@@ -126,8 +122,7 @@ class ProviderListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning Provider with id %s",
-                self.formatted_class_name,
+                "Error cloning Provider with id %s",
                 provider_id,
                 exc_info=True,
             )
@@ -167,15 +162,13 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         """
         provider_id = kwargs.get("provider_id")
         if not provider_id:
-            logger.warning("%s.post() Missing required parameter provider_id for deletion.", self.formatted_class_name)
+            logger.warning("Missing required parameter provider_id for deletion.")
             return JsonResponse({"error": "provider_id is required."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             provider = Provider.objects.with_ownership_permission_for(self.user_profile.user).get(id=provider_id)  # type: ignore
         except Provider.DoesNotExist:
-            logger.warning(
-                "%s.post() Provider with id %s not found for deletion.", self.formatted_class_name, provider_id
-            )
+            logger.warning("Provider with id %s not found for deletion.", provider_id)
             return JsonResponse({"error": f"Provider with id {provider_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -186,8 +179,7 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting Provider with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting Provider with id %s: %s",
                 provider_id,
                 e,
             )
@@ -196,8 +188,7 @@ class ProviderListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting Provider with id %s",
-                self.formatted_class_name,
+                "Error deleting Provider with id %s",
                 provider_id,
                 exc_info=True,
             )
@@ -240,8 +231,7 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         new_name = kwargs.get("new_name")
         if not provider_id or not new_name:
             logger.warning(
-                "%s.post() Missing required parameters for renaming. provider_id: %s, new_name: %s",
-                self.formatted_class_name,
+                "Missing required parameters for renaming. provider_id: %s, new_name: %s",
                 provider_id,
                 new_name,
             )
@@ -250,9 +240,7 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         try:
             provider = Provider.objects.with_ownership_permission_for(self.user_profile.user).get(id=provider_id)  # type: ignore
         except Provider.DoesNotExist:
-            logger.warning(
-                "%s.post() Provider with id %s not found for renaming.", self.formatted_class_name, provider_id
-            )
+            logger.warning("Provider with id %s not found for renaming.", provider_id)
             return JsonResponse({"error": f"Provider with id {provider_id} not found."}, status=HTTPStatus.NOT_FOUND)
 
         try:
@@ -263,8 +251,7 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming Provider with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming Provider with id %s: %s",
                 provider_id,
                 e,
             )
@@ -273,8 +260,7 @@ class ProviderListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming Provider with id %s",
-                self.formatted_class_name,
+                "Error renaming Provider with id %s",
                 provider_id,
                 exc_info=True,
             )

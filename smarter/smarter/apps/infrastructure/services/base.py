@@ -256,7 +256,6 @@ class InfrastructureService(ABC, SmarterHelperMixin):
             self.send(infrastructure_operation_failed, operation=name, error=str(e))
             raise
         except Exception as e:
-            logger.error("%s.%s() failed: %s", self.formatted_class_name, name, e)
             self.send(infrastructure_operation_failed, operation=name, error=str(e))
             raise self.error_class(f"{self} {name} failed: {e}") from e
 

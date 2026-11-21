@@ -34,7 +34,6 @@ class SmarterCamelCaseSerializer(serializers.ModelSerializer):
         :param kwargs: Passed to DRF's ``ModelSerializer``.
         """
         super().__init__(*args, **kwargs)
-        self.logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + self.__class__.__name__)
 
         # Get the request from the context if available, while
         # guarding against Sphinx autodoc generation issues.

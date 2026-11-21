@@ -57,7 +57,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -104,22 +103,19 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str, task_id: Option
         sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )
 
-    fn_name = logger_prefix + ".destroy_domain_A_record()"
     dns = infrastructure.dns
     hostname = dns.resolve_domain(hostname)
     api_host_domain = dns.resolve_domain(api_host_domain)
-    logger.info("%s %s task_id: %s", fn_name, hostname, task_id)
+    logger.info("%s task_id: %s", hostname, task_id)
 
     # locate the DNS zone of the customer API domain. If it doesn't exist, neither does the record.
     zone = dns.get_zone(api_host_domain)
     if zone is None:
-        logger.error(
-            "%s DNS zone not found for %s. Nothing to do, returning. task_id: %s", fn_name, api_host_domain, task_id
-        )
+        logger.error("DNS zone not found for %s. Nothing to do, returning. task_id: %s", api_host_domain, task_id)
     elif dns.delete_record(zone.id, hostname, "A"):
-        logger.info("%s deleted the A record of %s from zone %s task_id: %s", fn_name, hostname, zone.id, task_id)
+        logger.info("deleted the A record of %s from zone %s task_id: %s", hostname, zone.id, task_id)
     else:
-        logger.error("%s A record not found for %s. Nothing to do, returning. task_id: %s", fn_name, hostname, task_id)
+        logger.error("A record not found for %s. Nothing to do, returning. task_id: %s", hostname, task_id)
     post_destroy_domain_A_record.send(
         sender=destroy_domain_A_record, hostname=hostname, api_host_domain=api_host_domain, task_id=task_id
     )

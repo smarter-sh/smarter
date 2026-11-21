@@ -18,7 +18,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.EXTENSION_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SAFE_DOCUTILS_SETTINGS = {
     "raw_enabled": False,
@@ -47,7 +46,7 @@ def render_rst(text: str) -> str:
     # docutils raises many kinds of exceptions for malformed input.
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        logger.warning("%s.render_rst() could not render reStructuredText: %s", logger_prefix, e)
+        logger.warning("could not render reStructuredText: %s", e)
         return f"<pre>{html.escape(text)}</pre>"
 
 

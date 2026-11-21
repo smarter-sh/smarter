@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 from pydantic import SecretStr
 
+from smarter.apps.infrastructure import receivers
 from smarter.apps.infrastructure.services import (
     EmailAttachment,
     InMemoryEmailService,
@@ -19,6 +20,7 @@ from smarter.apps.infrastructure.services import (
 )
 from smarter.apps.infrastructure.services.email import EmailService, masked_recipients
 from smarter.apps.infrastructure.signals import email_failed, email_sent
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base import InfrastructureTestBase
 
@@ -90,20 +92,20 @@ class TestInMemoryEmailService(InfrastructureTestBase):
         self.assertEqual(self.sent(events, email_sent)[0]["recipients"], ["a@example.com"])
 
     def test_sent_email_is_logged_masked(self):
-        """The recipients' addresses are logged masked, and the signal still carries them in full."""
+        """The recipients' addresses are logged masked, by the email_sent receiver, and the signal still carries them in full."""
         events = self.capture(email_sent)
-        with patch(f"{MODULE}.logger") as logger:
-            self.assertTrue(self.email.send_email("Hello", "Hi", "jane@example.com"))
-        logged = str(logger.info.call_args_list)
+        logs = WrappedLoggerCapture(self, receivers.logger)
+        self.assertTrue(self.email.send_email("Hello", "Hi", "jane@example.com"))
+        logged = logs.text()
         self.assertIn("j****@example.com", logged)
         self.assertNotIn("jane@example.com", logged)
         self.assertEqual(self.sent(events, email_sent)[0]["recipients"], ["jane@example.com"])
 
     def test_failed_email_is_logged_masked(self):
         self.email.fail = "mailbox full"
-        with patch(f"{MODULE}.logger") as logger:
-            self.assertFalse(self.email.send_email("Hello", "Hi", "jane@example.com", from_email="sender@example.com"))
-        logged = str(logger.mock_calls)
+        logs = WrappedLoggerCapture(self, receivers.logger)
+        self.assertFalse(self.email.send_email("Hello", "Hi", "jane@example.com", from_email="sender@example.com"))
+        logged = logs.text()
         self.assertIn("j****@example.com", logged)
         self.assertNotIn("jane@example.com", logged)
         # the sender's address isn't logged either (#973)

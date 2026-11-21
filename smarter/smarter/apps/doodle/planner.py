@@ -31,7 +31,6 @@ from .models import (
 from .regions import ALL_REGIONS, DoodleRegion, theme_applies_to
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def candidate_order(theme: DoodleTheme) -> tuple[int, int, str]:
@@ -132,7 +131,11 @@ def plan_doodle(day: datetime.date, region: str, due: Optional[list[DoodleTheme]
     """
     existing = Doodle.objects.filter(date=day, region=region).first()
     if existing is not None and existing.source in (DoodleSource.HUMAN, DoodleSource.LLM):
-        logger.debug("%s.plan_doodle() keeps the doodle that %s chose: %s.", logger_prefix, existing.source, existing)
+        logger.debug(
+            "keeps the doodle that %s chose: %s.",
+            existing.source,
+            existing,
+        )
         return existing
 
     due = candidates(day, region, due=due)
@@ -148,7 +151,7 @@ def plan_doodle(day: datetime.date, region: str, due: Optional[list[DoodleTheme]
         reason = "Nothing is due."
     if theme is None:
         logger.warning(
-            "%s.plan_doodle() found no default doodle theme. Run manage.py load_doodle_themes.", logger_prefix
+            "found no default doodle theme. Run manage.py load_doodle_themes.",
         )
         return None
 
@@ -232,8 +235,7 @@ def plan_doodles(days: int = PLANNING_DAYS, today: Optional[datetime.date] = Non
                 planned += 1
     deleted = purge(today=today)
     logger.info(
-        "%s.plan_doodles() planned %s doodles, %s days ahead, and deleted %s old ones.",
-        logger_prefix,
+        "planned %s doodles, %s days ahead, and deleted %s old ones.",
         planned,
         days,
         deleted,

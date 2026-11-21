@@ -242,15 +242,12 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             )
         if self._llmclient_helper is not None:
             logger.debug(
-                "%s.llmclient_helper property - instantiated LLMClientHelper with llmclient=%s, name=%s",
-                self.formatted_class_name,
+                "property - instantiated LLMClientHelper with llmclient=%s, name=%s",
                 self._llmclient_helper.llmclient,
                 self._llmclient_helper.name,
             )
         else:
-            logger.warning(
-                "%s.llmclient_helper property - could not instantiate LLMClientHelper", self.formatted_class_name
-            )
+            logger.warning("property - could not instantiate LLMClientHelper")
         return self._llmclient_helper
 
     @llmclient_helper.setter
@@ -266,10 +263,10 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             self.account = self._llmclient_helper.account
             self.user = self._llmclient_helper.user
             self.user_profile = self._llmclient_helper.user_profile
-            verbose_logger.debug("%s llmclient_helper() setter llmclient=%s", self.formatted_class_name, self.llmclient)
+            verbose_logger.debug("setter llmclient=%s", self.llmclient)
         else:
             self._llmclient = None
-            verbose_logger.debug("%s llmclient_helper() setter llmclient is unset", self.formatted_class_name)
+            verbose_logger.debug("setter llmclient is unset")
 
     def clean_url(self, url: str) -> str:
         """Clean the url of any query strings and trailing '/config/' strings."""
@@ -381,13 +378,12 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         # these have to be added here due to circular import issues.
         if self.session is None:
             logger.error(
-                "%s.config() - session is None. Cannot retrieve llmclient request history.", self.formatted_class_name
+                "session is None. Cannot retrieve llmclient request history.",
             )
             return None
         if self.llmclient_helper is None:
             logger.error(
-                "%s.config() - LLMClientHelper is None. Cannot retrieve llmclient request history.",
-                self.formatted_class_name,
+                "LLMClientHelper is None. Cannot retrieve llmclient request history.",
             )
             return None
 
@@ -644,8 +640,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 self.resolved_by_id = True
                 self.llmclient_name = self._llmclient.name
                 verbose_logger.debug(
-                    "%s.dispatch() - set llmclient=%s from llmclient_id=%s",
-                    self.formatted_class_name,
+                    "set llmclient=%s from llmclient_id=%s",
                     self._llmclient,
                     llmclient_id,
                 )
@@ -653,8 +648,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 # the client's error, e.g. a chat still configured for a deleted LLMClient, not the platform's.
                 # The journaled error response logs the 404 at WARNING.
                 verbose_logger.info(
-                    "%s.dispatch() - LLMClient with id=%s does not exist. Returning 404.",
-                    self.formatted_class_name,
+                    "LLMClient with id=%s does not exist. Returning 404.",
                     llmclient_id,
                 )
                 return self.error_response(request, PromptChatApiErrorNotFound("LLMClient not found."))
@@ -664,8 +658,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
                 self._llmclient = get_cached_llmclient_by_request(request=request)
                 if not self._llmclient:
                     verbose_logger.debug(
-                        "%s.dispatch() - get_cached_llmclient_by_request() returned None. Attempting to instantiate LLMClientHelper with additional info",
-                        self.formatted_class_name,
+                        "get_cached_llmclient_by_request() returned None. Attempting to instantiate LLMClientHelper with additional info",
                     )
                     self.llmclient_helper = LLMClientHelper(
                         request=self.smarter_request,
@@ -717,8 +710,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
             )
 
         verbose_logger.debug(
-            "%s llmclient=%s - llmclient_helper=%s",
-            self.formatted_class_name,
+            "llmclient=%s - llmclient_helper=%s",
             self.llmclient,
             self.llmclient_helper,
         )
@@ -730,8 +722,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         # the session key is a credential for the chat, so only its masked form is logged.
         masked_session_key = mask_identifier(self.session.session_key) if self.session else "(Missing session)"
         verbose_logger.debug(
-            "%s.dispatch() completed with llmclient=%s, session_key=%s",
-            self.formatted_class_name,
+            "completed with llmclient=%s, session_key=%s",
             self.llmclient,
             masked_session_key,
         )
@@ -745,7 +736,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         self, request: HttpRequest, *args, **kwargs
     ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse]:
         """Get the llmclient configuration."""
-        logger.debug("%s post()", self.formatted_class_name)
+        logger.debug("called")
         return self.config_response(request)
 
     def config_response(
@@ -762,7 +753,7 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         try:
             data = self.config()
         except ValidationError as e:
-            logger.error("%s.config_response() the configuration breaks the contract: %s", self.formatted_class_name, e)
+            logger.error("the configuration breaks the contract: %s", e)
             return self.error_response(
                 request, PromptChatApiErrorInternal("The LLMClient's configuration could not be built.")
             )
@@ -784,14 +775,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         self, request: HttpRequest, *args, **kwargs
     ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse, HttpResponseNotAllowed]:
         """Get the llmclient configuration."""
-        logger.warning(
-            "%s get() %s should be invoked via POST instead of GET.", self.formatted_class_name, request.path
-        )
+        logger.warning("%s should be invoked via POST instead of GET.", request.path)
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             # the client's error, not the platform's.
             logger.warning(
-                "%s.get() %s is not allowed because %s switch is inactive.",
-                self.formatted_class_name,
+                "%s is not allowed because %s switch is inactive.",
                 request.path,
                 SmarterWaffleSwitches.ALLOW_API_GET,
             )

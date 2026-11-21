@@ -195,8 +195,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 )
 
             logger.debug(
-                "%s.get_client_orm_by_provider_name_and_user() fetched and cached provider ORM for provider_name: %s, username: %s: %s",
-                self.formatted_class_name + ".get_client_orm_by_provider_name_and_user()",
+                "fetched and cached provider ORM for provider_name: %s, username: %s: %s",
                 provider_name,
                 username,
                 provider_orm,
@@ -228,8 +227,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 api_key=api_key.get_secret_value() if api_key else "",
             )
             logger.debug(
-                "%s.get_openai_client_for_provider() instantiated and cached OpenAIPassthroughClient for provider_name: %s, username: %s: %s",
-                self.formatted_class_name + ".get_openai_client_for_provider()",
+                "instantiated and cached OpenAIPassthroughClient for provider_name: %s, username: %s: %s",
                 provider_name,
                 username,
                 retval,

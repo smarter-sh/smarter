@@ -41,9 +41,7 @@ class TestApiCliV1User(ApiV1CliTestBase):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.non_admin_user.username, "username": self.non_admin_user.username})
-        logger.debug(
-            "TestApiCliV1User.setUp() complete with kwargs %s, query_params: %s", self.kwargs, self.query_params
-        )
+        logger.debug("complete with kwargs %s, query_params: %s", self.kwargs, self.query_params)
 
     def validate_response(self, response: SmarterDictType) -> None:
         # validate the response and status are both good

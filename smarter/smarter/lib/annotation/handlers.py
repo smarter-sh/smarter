@@ -53,8 +53,7 @@ from .validation import (
     split_annotation_key,
 )
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -116,7 +115,7 @@ def register_annotation_handler(prefix: str, handler: AnnotationHandler) -> Anno
     handlers = _handlers.setdefault(prefix, [])
     if handler not in handlers:
         handlers.append(handler)
-    logger.debug("%s.register_annotation_handler() %s handles %s", logger_prefix, handler, prefix)
+    logger.debug("%s handles %s", handler, prefix)
     return handler
 
 
@@ -188,8 +187,7 @@ def _send(
     for receiver, response in responses:
         if isinstance(response, Exception):
             logger.error(
-                "%s._send() annotations_changed receiver %s failed for %s %s: %s",
-                logger_prefix,
+                "annotations_changed receiver %s failed for %s %s: %s",
                 receiver,
                 model_label,
                 object_id,
@@ -209,8 +207,7 @@ def _send(
             # pylint: disable=broad-exception-caught
             except Exception:
                 logger.exception(
-                    "%s._send() annotation handler %s failed for %s %s, key %s",
-                    logger_prefix,
+                    "annotation handler %s failed for %s %s, key %s",
                     handler,
                     model_label,
                     object_id,

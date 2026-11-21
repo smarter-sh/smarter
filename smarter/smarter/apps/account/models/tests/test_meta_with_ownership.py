@@ -7,13 +7,11 @@ from smarter.apps.secret.models import Secret
 # our stuff
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestMetaDataWithOwnershipModel(TestAccountMixin):
     """Test MetaDataWithOwnershipModel model."""
-
-    logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.TestMetaDataWithOwnershipModel()"
 
     secret1: Secret
     secret2: Secret
@@ -33,17 +31,17 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
             user_profile=cls.user_profile,
         )
         cls.secrets = [cls.secret1, cls.secret2]
-        logger.debug("%s Created secrets for testing: %s", cls.logger_prefix, [secret.name for secret in cls.secrets])
+        logger.debug("Created secrets for testing: %s", [secret.name for secret in cls.secrets])
 
     @classmethod
     def tearDownClass(cls):
         try:
             for secret in cls.secrets:
-                logger.debug("%s Deleting secret: %s", cls.logger_prefix, secret.name)
+                logger.debug("Deleting secret: %s", secret.name)
                 secret.delete()
         # pylint: disable=W0718
         except Exception:
-            logger.exception("%s Failed to delete secrets during tearDownClass.", cls.logger_prefix)
+            logger.exception("Failed to delete secrets during tearDownClass.")
         finally:
             super().tearDownClass()
 
@@ -88,9 +86,7 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
 
         # update the secret and check that the cache is invalidated and updated correctly
         if not isinstance(secret, Secret):
-            self.fail(
-                f"{self.logger_prefix}.test_get_cached_object_invalidate_cache() - Expected a Secret instance, got {type(secret)}"
-            )
+            self.fail(f"Expected a Secret instance, got {type(secret)}")
         secret.name = "Updated Secret Name"
 
         # save the secret, which should trigger cache invalidation for this object.
@@ -103,7 +99,5 @@ class TestMetaDataWithOwnershipModel(TestAccountMixin):
         # This should return the updated secret, not the old cached version.
         secret = Secret.get_cached_object(pk=self.secret1.pk)
         if not isinstance(secret, Secret):
-            self.fail(
-                f"{self.logger_prefix}.test_get_cached_object_invalidate_cache() - Expected a Secret instance after update, got {type(secret)}"
-            )
+            self.fail(f"Expected a Secret instance after update, got {type(secret)}")
         self.assertEqual(secret.name, "Updated Secret Name")

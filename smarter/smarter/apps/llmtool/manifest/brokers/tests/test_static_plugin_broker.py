@@ -82,9 +82,7 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
         self.assertIsInstance(self.broker, SAMStaticPluginBroker)
         self._broker = self.SAMBrokerClass(self.request, manifest=self.manifest_data)
         self.assertIsInstance(self.broker, SAMStaticPluginBroker)
-        logger.info(
-            "%s.test_setup() SAMStaticPluginBroker initialized successfully for testing.", self.formatted_class_name
-        )
+        logger.info("SAMStaticPluginBroker initialized successfully for testing.")
 
     def test_is_valid(self):
         """Test that the is_valid property returns True."""
@@ -118,7 +116,7 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
         assert manifest_metadata is not None
         assert manifest_spec is not None
         metadata = {**manifest_metadata}
-        logger.info("%s.setUp() loading manifest spec: %s", self.formatted_class_name, manifest_spec)
+        logger.info("loading manifest spec: %s", manifest_spec)
         SAMStaticPlugin(
             apiVersion=self.manifest_data["apiVersion"],
             kind=self.manifest_data["kind"],

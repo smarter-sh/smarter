@@ -70,7 +70,10 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         """Handles POST requests to apply a Smarter manifest."""
 
         logger.debug(
-            "%s.post() called with request=%s, args=%s, kwargs=%s", self.formatted_class_name, request, args, kwargs
+            "called with request=%s, args=%s, kwargs=%s",
+            request,
+            args,
+            kwargs,
         )
 
         if not self.manifest_data:
@@ -88,8 +91,7 @@ class ApiV1CliApplyApiView(CliBaseApiView):
         )
         if response and response.status_code == HTTPStatus.OK:
             logger.debug(
-                "%s.post(): Applied %s manifest for %s",
-                self.formatted_class_name,
+                "Applied %s manifest for %s",
                 self.manifest_kind,
                 self.manifest_name,
             )

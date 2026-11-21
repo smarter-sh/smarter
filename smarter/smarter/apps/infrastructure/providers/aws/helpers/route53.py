@@ -17,7 +17,7 @@ from smarter.lib.typing import SmarterDictType
 from .base import AWSBase
 from .exceptions import AWSNotReadyError
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HOSTED_ZONE_PREFIX = "/hostedzone/"
 
@@ -113,7 +113,7 @@ class AWSRoute53(AWSBase):
         :param action: ``CREATE``, ``UPSERT`` or ``DELETE``.
         :param record_set: The ``ResourceRecordSet``. To delete one, it must match the existing one.
         """
-        logger.debug("%s.change_record_set() %s %s %s", self.formatted_class_name, zone_id, action, record_set)
+        logger.debug("%s %s %s", zone_id, action, record_set)
         self.route53.change_resource_record_sets(
             HostedZoneId=hosted_zone_id(zone_id),
             ChangeBatch={"Changes": [{"Action": action, "ResourceRecordSet": record_set}]},

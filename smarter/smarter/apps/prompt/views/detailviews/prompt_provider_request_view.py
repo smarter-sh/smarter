@@ -43,7 +43,7 @@ from smarter.lib.journal.http import (
 from smarter.lib.openai.model_quirks import apply_model_quirks
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 PROVIDER_REQUEST_FIELDS = (
     _InternalKeys.MODEL_KEY,
@@ -107,8 +107,7 @@ def llmclient_request_settings(llmclient: LLMClient) -> SmarterDictType:
             model = provider.default_model
         except SmarterValueError as e:
             logger.warning(
-                "%s.llmclient_request_settings() no default model for %s: %s",
-                logging.SmarterFormattedText.text(__name__),
+                "no default model for %s: %s",
                 llmclient,
                 e,
             )
@@ -214,9 +213,7 @@ class PromptProviderRequestView(PromptConfigView):
         try:
             body = self.provider_request()
         except ValidationError as e:
-            logger.error(
-                "%s.config_response() the provider request breaks the contract: %s", self.formatted_class_name, e
-            )
+            logger.error("the provider request breaks the contract: %s", e)
             return self.error_response(
                 request, PromptChatApiErrorInternal("The chat's provider request could not be built.")
             )

@@ -5,7 +5,6 @@ from django.urls import path
 from smarter.apps.dashboard.views.console_app import ConsoleAppView
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
@@ -14,7 +13,7 @@ from .password_reset import PASSWORD_RESET_LINK_NAME
 from .views.email import EmailSlackInvitationView, EmailWelcomeView
 from .views.unsubscribe import AccountUnsubscribeView
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class AccountReverseNames:
@@ -67,5 +66,4 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL:
             name=AccountReverseNames.email_slack_invitation,
         ),
     ]
-    logger_prefix = SmarterFormattedText.text(__name__)
-    logger.debug("%s added the email preview URL patterns to Account app URLs.", logger_prefix)
+    logger.debug("added the email preview URL patterns to Account app URLs.")

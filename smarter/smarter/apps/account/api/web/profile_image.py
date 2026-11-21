@@ -99,8 +99,7 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         form = ProfileImageForm(request.POST, request.FILES, instance=user_profile)
         if not form.is_valid():
             logger.warning(
-                "%s.post() rejected a profile image from user %s: %s",
-                self.formatted_class_name,
+                "rejected a profile image from user %s: %s",
                 request.user,
                 form.errors.as_json(),
             )
@@ -108,7 +107,7 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         form.save()
         if previous:
             user_profile.profile_image.storage.delete(previous)
-        logger.info("%s.post() saved a profile image for user %s", self.formatted_class_name, request.user)
+        logger.info("saved a profile image for user %s", request.user)
         return self._response(request, user_profile)
 
     def delete(self, request, *args, **kwargs):
@@ -121,5 +120,5 @@ class ProfileImageView(SmarterAuthenticatedNeverCachedWebView):
         user_profile = self.own_user_profile(request)
         if user_profile.profile_image:
             user_profile.profile_image.delete(save=True)
-            logger.info("%s.delete() removed the profile image of user %s", self.formatted_class_name, request.user)
+            logger.info("removed the profile image of user %s", request.user)
         return self._response(request, user_profile)

@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class SmarterCommand(BaseCommand):
@@ -115,26 +115,24 @@ class SmarterCommand(BaseCommand):
         hundreds of ``apply_manifest`` commands, and their banners would be most of its log.
         """
         if self.is_nested:
-            logger.debug("%s started.", self.__module__)
+            logger.debug("started.")
             return
         logger.info("%s manage.py %s", "-" * 35, "-" * 34)
-        logger.info("%s started.", self.__module__)
+        logger.info("started.")
 
     def handle_completed_success(self, msg: Optional[str] = None):
         """
         Log the command's success, and close its banner.
 
-        :param msg: The message to log, instead of ``<module> completed successfully.``
+        :param msg: The message to log, instead of ``completed successfully.``
         """
         if self.is_nested:
-            if not msg:
-                msg = f"{self.__module__} completed successfully."
-            logger.debug("%s", msg)
+            logger.debug("%s", msg or "completed successfully.")
             return
         if msg:
             logger.info("%s", msg)
         else:
-            logger.info("%s completed successfully.", self.__module__)
+            logger.info("completed successfully.")
         logger.info("-" * 80)
 
     def handle_completed_failure(
@@ -155,10 +153,9 @@ class SmarterCommand(BaseCommand):
         if msg:
             logger.error("%s", msg)
         if err:
-            msg = f"{self.__module__} failed with error: {err}"
+            logger.error("failed with error: %s", err)
         else:
-            msg = f"{self.__module__} failed."
-        logger.error("%s", msg)
+            logger.error("failed.")
         if err:
             tb = traceback.format_exc()
             logger.error("%s", tb)
@@ -187,7 +184,7 @@ class SmarterCommand(BaseCommand):
         except Exception as e:
             if "--traceback" in argv:
                 raise
-            logger.debug("%s.run_from_argv() %s", self.__module__, traceback.format_exc())
+            logger.debug("%s", traceback.format_exc())
             self.stderr.write(f"{type(e).__name__}: {e}")
             self.stderr.write("Run the command again with --traceback to see the stack trace.")
             sys.exit(1)

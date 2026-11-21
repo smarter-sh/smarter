@@ -6,11 +6,13 @@ arguments that the signals send. The Celery tasks that some receivers queue are 
 """
 
 import inspect
+import logging
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.llmclient import receivers
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 TASKS = ("create_llmclient_request", "delete_default_api", "deploy_default_api", "undeploy_default_api")
 
@@ -137,3 +139,87 @@ class TestLLMClientReceivers(SmarterTestBase):
         self.assertNotIn("a private question", " ".join(str(arg) for arg in logger.info.call_args.args))
         # the original request data is not changed by masking it for the log.
         self.assertEqual(request_data["session_key"], session_key)
+
+
+class TestLLMClientTaskLogging(SmarterTestBase):
+    """Test the lines that the task receivers log for the llmclient tasks: one per signal, at the task's level."""
+
+    def setUp(self):
+        super().setUp()
+        self.capture = WrappedLoggerCapture(self, receivers.logger)
+        self.tasks = {}
+        for name in TASKS + ("deploy_custom_api",):
+            patcher = patch.object(receivers, name)
+            self.tasks[name] = patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_deploy_failed_logs_why_at_error(self):
+        receivers.handle_llmclient_deploy_failed(sender=None, llmclient_id=7, reason="it was not found", task_id="t")
+        error = self.capture.text(logging.ERROR)
+        self.assertIn("cannot deploy llmclient 7: it was not found", error)
+        receivers.handle_llmclient_deploy_failed(sender=None, llmclient_id=7, name="sales", reason="DNS down")
+        self.assertIn("cannot deploy llmclient sales: DNS down", self.capture.text(logging.ERROR))
+
+    def test_post_deploy_and_undeploy_log_the_outcome(self):
+        receivers.handle_post_deploy_default_api(sender=None, llmclient_id=7, outcome="nothing to do", task_id="t")
+        self.assertIn("llmclient 7: nothing to do", self.capture.text(logging.INFO))
+        receivers.handle_post_undeploy_default_api(sender=None, llmclient_id=7, task_id="t")
+        self.assertIn("llmclient 7: undeployed", self.capture.text(logging.INFO))
+        receivers.handle_post_undeploy_default_api(
+            sender=None, llmclient_id=7, success=False, outcome="it was not found"
+        )
+        self.assertIn("cannot undeploy llmclient 7: it was not found", self.capture.text(logging.ERROR))
+
+    def test_certificate_verification(self):
+        receivers.handle_post_verify_certificate(sender=None, certificate_arn="arn", verified=True)
+        self.assertIn("certificate arn verified", self.capture.text(logging.INFO))
+        receivers.handle_post_verify_certificate(sender=None, certificate_arn="arn", verified=False)
+        self.assertIn("certificate arn verification failed", self.capture.text(logging.ERROR))
+
+    def test_custom_domain_verification(self):
+        receivers.handle_post_verify_custom_domain(sender=None, domain_name="example.com", verified=True)
+        self.assertIn("example.com is verified", self.capture.text(logging.INFO))
+        receivers.handle_post_verify_custom_domain(
+            sender=None, domain_name="example.com", verified=False, blocker="its NS records are wrong"
+        )
+        self.assertIn("example.com: its NS records are wrong", self.capture.text(logging.ERROR))
+
+    def test_domain_verification(self):
+        receivers.handle_post_verify_domain(sender=None, domain_name="example.com", record_type="A", verified=True)
+        self.assertIn("verified domain example.com", self.capture.text(logging.INFO))
+        receivers.handle_post_verify_domain(sender=None, domain_name="example.com", verified=False, attempts=3)
+        self.assertIn("unable to verify domain example.com after 3 attempts", self.capture.text(logging.ERROR))
+        self.capture.clear()
+        receivers.handle_post_verify_domain(sender=None, domain_name="example.com", verified=False)
+        self.assertIn("unable to verify domain example.com", self.capture.text(logging.ERROR))
+
+    def test_dns_checks(self):
+        receivers.handle_llmclient_dns_failed(sender=None, domain_name="example.com", reason="the DNS query timed out")
+        self.assertIn(
+            "unable to verify domain example.com: the DNS query timed out", self.capture.text(logging.WARNING)
+        )
+        receivers.handle_llmclient_dns_verified(
+            sender=None, domain_name="example.com", record_type="A", addresses=["127.0.0.1"]
+        )
+        self.assertIn("resolved domain example.com to A records ['127.0.0.1']", self.capture.text(logging.INFO))
+
+    def test_deploy_and_undeploy_without_an_llmclient_warn(self):
+        receivers.handle_llmclient_deploy(sender=None)
+        receivers.handle_llmclient_undeploy(sender=None)
+        receivers.handle_llmclient_deployed(sender=None)
+        self.assertEqual(self.capture.count(logging.WARNING), 3)
+
+    def test_deployed_logs_the_default_host_and_deploys_the_custom_host(self):
+        llmclient = MagicMock(id=1, default_host="sales.example.com", custom_host="chat.example.org")
+        llmclient.name = "sales"
+        receivers.handle_llmclient_deployed(sender=None, llmclient=llmclient, task_id="t")
+        info = self.capture.text(logging.INFO)
+        self.assertIn("LLMClient sales has been deployed to sales.example.com task_id: t", info)
+        self.assertIn("deploying llmclient sales on chat.example.org", info)
+        self.tasks["deploy_custom_api"].delay.assert_called_once_with(llmclient_id=1)
+
+    def test_pre_deploy_custom_api_names_the_custom_host(self):
+        receivers.handle_pre_deploy_custom_api(
+            sender=None, llmclient_id=1, name="sales", custom_host="chat.example.org"
+        )
+        self.assertIn("deploying llmclient sales on chat.example.org", self.capture.text(logging.INFO))

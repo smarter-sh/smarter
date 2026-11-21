@@ -30,7 +30,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 ADMIN_ACCOUNT_NAME_PREFIX = "test_account_admin_user_"
 """The name of each account that ``admin_user_factory()`` creates starts with this."""
@@ -179,15 +178,14 @@ def purge_test_artifacts() -> PurgeReport:
 
     if report.deleted:
         logger.warning(
-            "%s.purge_test_artifacts() deleted %s test profiles, %s accounts, %s users and %s contacts that tests left behind.",
-            logger_prefix,
+            "deleted %s test profiles, %s accounts, %s users and %s contacts that tests left behind.",
             report.profiles,
             report.accounts,
             report.users,
             report.contacts,
         )
     for failure in report.failures:
-        logger.error("%s.purge_test_artifacts() could not delete %s", logger_prefix, failure)
+        logger.error("could not delete %s", failure)
     return report
 
 

@@ -321,16 +321,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             self, request=request, user=user, account=account, user_profile=user_profile, *args, **kwargs
         )
 
-    @cached_property
-    def logger_prefix(self) -> str:
-        """
-        Get the logger prefix for this class.
-
-        :return: Logger prefix string
-        :rtype: str
-        """
-        return f"{logging.SmarterFormattedText.text(__name__)}.{CliBaseApiView.__name__}[{id(self)}]"
-
     @property
     def formatted_class_name(self) -> str:
         """
@@ -358,8 +348,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             if self.manifest_kind:
                 self._BrokerClass = Brokers.get_broker(self.manifest_kind)
                 logger.debug(
-                    "%s.BrokerClass() - set to: %s",
-                    self.logger_prefix,
+                    "set to: %s",
                     self._BrokerClass.__name__ if self._BrokerClass else "<None>",
                 )
             if not self._BrokerClass:
@@ -397,23 +386,20 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 )
                 if self._broker:
                     logger.debug(
-                        "%s.broker() - broker %s %s is instantiated and ready.",
-                        self.logger_prefix,
+                        "broker %s %s is instantiated and ready.",
                         self._broker.kind,
                         self._broker.name,
                     )
                 else:
                     logger.debug(
-                        "%s.broker() - broker %s %s is instantiated but is not in a ready state.",
-                        self.logger_prefix,
+                        "broker %s %s is instantiated but is not in a ready state.",
                         self._broker.kind,
                         self._broker.name,
                     )
                 return self._broker
             except APIV1CLIViewError as e:
                 logger.error(
-                    "%s.broker() - failed to instantiate broker: %s",
-                    self.logger_prefix,
+                    "failed to instantiate broker: %s",
                     e,
                     exc_info=True,
                 )
@@ -421,8 +407,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 # the manifest is not valid, e.g. a Pydantic validation error. This is the
                 # client's error, which must be returned to the client rather than swallowed.
                 logger.warning(
-                    "%s.broker() - the %s manifest is not valid: %s",
-                    self.logger_prefix,
+                    "the %s manifest is not valid: %s",
                     self.manifest_kind,
                     e,
                 )
@@ -430,8 +415,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             # pylint: disable=broad-except
             except Exception as e:
                 logger.error(
-                    "%s.broker() - unexpected error instantiating broker: %s: %s",
-                    self.logger_prefix,
+                    "unexpected error instantiating broker: %s: %s",
                     type(e),
                     e,
                     exc_info=True,
@@ -512,8 +496,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self._manifest_kind_url_parsed = True
             if self._manifest_kind:
                 logger.warning(
-                    "%s.manifest_kind() setting manifest kind to %s from analysis of url %s",
-                    self.logger_prefix,
+                    "setting manifest kind to %s from analysis of url %s",
                     self._manifest_kind,
                     self.smarter_request,
                 )
@@ -579,7 +562,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         :rtype: bool
         """
         if not self.srm_ready:
-            logger.debug("%s.ready() - returning False because SmarterRequestMixin is not ready", self.logger_prefix)
+            logger.debug("returning False because SmarterRequestMixin is not ready")
             return False
         return self.cba_ready
 
@@ -665,8 +648,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             self.smarter_request = request
         except Exception as e:
             logger.error(
-                "%s.initial() - error setting smarter_request: %s: %s",
-                self.logger_prefix,
+                "error setting smarter_request: %s: %s",
                 type(e),
                 e,
                 exc_info=True,
@@ -700,8 +682,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 self.smarter_request = request
         except NotAuthenticated as e:
             logger.warning(
-                "%s.initial() - authenticated failed for url: %s, user: %s, self.user: %s is_authenticated: %s",
-                self.logger_prefix,
+                "authenticated failed for url: %s, user: %s, self.user: %s is_authenticated: %s",
                 request,
                 request.user.username if request.user else "Anonymous",  # type: ignore[assignment]
                 self.user_profile,
@@ -709,8 +690,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             )
             if self.is_internal_api_request(request):
                 logger.debug(
-                    "%s.initial() - internal api request. Skipping authentication: %s",
-                    self.logger_prefix,
+                    "internal api request. Skipping authentication: %s",
                     request,
                 )
             else:
@@ -723,8 +703,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     # a signed-in browser session, e.g. a web console React app, that failed only
                     # the CSRF check: say so, rather than blame a missing api key.
                     logger.warning(
-                        "%s.initial() - the session is signed in, but the request failed the CSRF check: %s",
-                        self.formatted_class_name,
+                        "the session is signed in, but the request failed the CSRF check: %s",
                         csrf_failure,
                     )
                     raise SmarterAPIV1CLIViewErrorNotAuthenticated(
@@ -734,8 +713,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 # and the guidance for the client goes in the response, not the log.
                 if auth_header:
                     logger.warning(
-                        "%s.initial() - Authorization header '%s' seems to be invalid. The following exception was raised: %s",
-                        self.logger_prefix,
+                        "Authorization header '%s' seems to be invalid. The following exception was raised: %s",
                         mask_string(auth_header),
                         e,
                     )
@@ -743,8 +721,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         "Smarter api v1 command-line interface error: authentication failed"
                     ) from e
                 logger.warning(
-                    "%s.initial() - the request has no Authorization header: %s",
-                    self.formatted_class_name,
+                    "the request has no Authorization header: %s",
                     e,
                 )
                 raise SmarterAPIV1CLIViewErrorNotAuthenticated(
@@ -753,8 +730,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 ) from e
         except Exception as e:
             logger.error(
-                "%s.initial() - unexpected error during authentication: %s: %s",
-                self.formatted_class_name,
+                "unexpected error during authentication: %s: %s",
                 type(e),
                 e,
                 exc_info=True,
@@ -856,13 +832,18 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return response
         # pylint: disable=broad-except
         except Exception as e:
-            api_request_failed.send(sender=self.__class__, instance=self, request=request, response=response)
             status = http_status_for_exception(e)
             description = describe_exception(e, status)
-            if status == HTTPStatus.INTERNAL_SERVER_ERROR.value:
-                logger.error("%s.dispatch() - %s: %s", self.formatted_class_name, type(e), str(e), exc_info=True)
-            else:
-                logger.warning("%s.dispatch() - %s %s: %s", self.formatted_class_name, status, type(e), description)
+            # its receiver logs the failure, with the traceback of a 500: it runs inside this except block.
+            api_request_failed.send(
+                sender=self.__class__,
+                instance=self,
+                request=request,
+                response=response,
+                exception=e,
+                status=status,
+                description=description,
+            )
 
             return SmarterJournaledJsonErrorResponse(
                 request=request,
