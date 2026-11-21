@@ -14,24 +14,27 @@
 whitenoise                              # general asset compression for both asgi and wsgi, and static file serving for wsgi
 boto3                                   # AWS CLI SDK
 botocore                                # AWS CLI SDK core
-cachetools                              # Python object caching library
 celery                                  # asynchronous task queue. works with redis.
 celery-redbeat                          # scheduled asynchronous tasks
+cryptography                            # Fernet encryption of Secret values
+defusedxml                              # safe XML parsing, for the sign-in page's Doodle artwork
 channels                                # web socket support for Django ASGI
-channels-redis                          # Redis ASGI support
 dnspython                               # DNS toolkit for Python
 pymysql                                 # for Django mysql compatibility
+pynacl                                  # Ed25519 signature checks of the Smarter Extension registry
+redis                                   # Redis client, used directly by the log stream and waffle switches
 paramiko                                # SSH2 protocol library
 psutil                                  # a cross-platform library for retrieving information on running processes and system utilization
 python-hcl2                             # Terraform hcl parser for reading Terraform tfvars files
 python-dotenv                           # for reading environment variables from .env files
 requests                                # HTTP requests library
-requests-cache                          # HTTP requests caching
-retry-requests                          # HTTP requests retry
+httpx                                   # HTTP client, used directly by the proxy app and the api utilities
+httpx2                                  # HTTP client of the mcp SDK, used directly by MCPClient connections
 tldextract                              # Extracts the top-level domain from a URL
 validators                              # Data validation library
 pycountry                               # ISO country, subdivision, language, currency and their translations
 holidays                                # public holidays of about 150 countries, for the sign-in page's Doodle
+tzdata                                  # IANA time zones for zoneinfo, e.g. Account time zones and the Doodle, without relying on the OS image
 
 # Django
 # ------------
@@ -39,9 +42,7 @@ Django
 django-debug-toolbar                    # a configurable set of panels that display various debug information about the current request/response.
                                         # We need this in base so that we can toggle DEBUG_MODE.
 django-redis                            # object caching
-django-celery-beat                      # scheduled asynchronous tasks
 djangorestframework                     # for creating REST APIs on top of Django
-django-filter                           # REST API filtering
 django-hosts                            # Dynamic and static host resolving for Django. Maps hostnames to URLconfs.
 django-taggit                           # Smarter Plugin tagging
 django-rest-knox                        # Token authentication for REST APIs
@@ -65,33 +66,38 @@ pint                                    # Define, operate and manipulate physica
 
 # LLM support
 # ------------
-langchain~=1.2.0                        # -----------------------------
+langchain                               # -----------------------------
 langchain_openai                        #
-langchain-text-splitters                # -----------------------------
-openai~=2.31                            # OpenAI API
-mcp~=2.2                                # Model Context Protocol SDK, for the MCPClient resource
+langchain-text-splitters                #
+langchain-core                          # -----------------------------
+openai                                  # OpenAI API
+mcp                                     # Model Context Protocol SDK, for the MCPClient resource
 pinecone                                # Pinecone vector database support
 qdrant-client                           # Qdrant vector database support: self-hosted, and Qdrant Cloud
 langchain-qdrant                        # LangChain QdrantVectorStore
 pypdf                                   # PDF text extraction, for vectorstore documents
+numpy                                   # vectors for the Pinecone vectorstore backend, and the weather extension
 google-genai                            # Google Generative AI API
 llamaai                                 # Llama AI API
-googlemaps                              # Google Maps API for weather function calling feature
-openmeteo-requests                      # OpenMeteo API for weather data for weather function calling feature
+
+# Smarter Extensions' dependencies. An extension can't install packages: the platform must have
+# every package that an extension's pyproject.toml lists, or the extension is incompatible.
+# ------------
+googlemaps                              # smarter-extension-weather
+openmeteo-requests                      # smarter-extension-weather
+python-dateutil                         # smarter-extension-date-calculator
 
 # Natural language processing
 # ------------
 pyyaml                                  # YAML parser
 python-Levenshtein                      # Levenshtein distance calculation for LLMs
-nltk~=3.0                               # Natural Language Toolkit
-textblob                                # Text processing library
+nltk                                    # Natural Language Toolkit
 inflect                                 # Pluralization and singularization
-inflection                              # String transformation library (pluralize/singularize/camelize)
 
 # CMS and web publishing tools
 # ------------
-beautifulsoup4                          # HTML parser for Wagtail page compression
+beautifulsoup4                          # HTML parser: web search page text, blog indexing, HTML minification
 docutils                                # required by Django for django.contrib.admindocs
-lxml                                    # parser for Wagtail page compression
+lxml                                    # beautifulsoup4's parser
 markdown                                # Markdown reader/parser
 pillow                                  # for provider.Provider.logo:
