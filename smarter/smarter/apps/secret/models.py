@@ -24,7 +24,6 @@ from smarter.apps.secret.signals import (
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -405,10 +404,8 @@ class Secret(MetaDataWithOwnershipModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Secret
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + Secret.__name__ + ".get_cached_object()")
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, invalidate: %s",
-            logger_prefix,
+            "called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, invalidate: %s",
             pk,
             name,
             user,
@@ -430,8 +427,7 @@ class Secret(MetaDataWithOwnershipModel):
         if isinstance(retval, Secret):
             return retval
         logger.debug(
-            "%s super().get_cached_object() did not return a Secret instance. Got: %s. Raising DoesNotExist.",
-            logger_prefix,
+            "did not return a Secret instance. Got: %s. Raising DoesNotExist.",
             type(retval),
         )
         raise Secret.DoesNotExist(

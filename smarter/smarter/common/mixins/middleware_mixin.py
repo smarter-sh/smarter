@@ -122,8 +122,7 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
             # Validate it's not a private IP (load balancer/proxy IP)
             if not self._is_private_ip(client_ip):
                 logger.debug(
-                    "%s.get_client_ip() - Using X-Forwarded-For: %s",
-                    self.formatted_class_name,
+                    "Using X-Forwarded-For: %s",
                     client_ip,
                 )
                 return client_ip
@@ -132,8 +131,7 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
         real_ip = request.META.get("HTTP_X_REAL_IP")
         if real_ip and not self._is_private_ip(real_ip.strip()):
             logger.debug(
-                "%s.get_client_ip() - Using X-Real-IP: %s",
-                self.formatted_class_name,
+                "Using X-Real-IP: %s",
                 real_ip.strip(),
             )
             return real_ip.strip()
@@ -142,8 +140,7 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
         cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
         if cf_ip and not self._is_private_ip(cf_ip.strip()):
             logger.debug(
-                "%s.get_client_ip() - Using CF-Connecting-IP: %s",
-                self.formatted_class_name,
+                "Using CF-Connecting-IP: %s",
                 cf_ip.strip(),
             )
             return cf_ip.strip()
@@ -151,15 +148,13 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
         # Fallback to REMOTE_ADDR (will be load balancer IP in AWS)
         remote_addr = request.META.get("REMOTE_ADDR", "127.0.0.1")
         logger.debug(
-            "%s.get_client_ip() - Falling back to REMOTE_ADDR: %s",
-            self.formatted_class_name,
+            "Falling back to REMOTE_ADDR: %s",
             remote_addr,
         )
 
         if not self._is_private_ip(remote_addr):
             logger.debug(
-                "%s.get_client_ip() - Using REMOTE_ADDR: %s",
-                self.formatted_class_name,
+                "Using REMOTE_ADDR: %s",
                 remote_addr,
             )
             return remote_addr
@@ -171,8 +166,7 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
             for header in CLIENT_IP_META_KEYS:
                 ip_headers[header] = request.META.get(header)
             logger.warning(
-                "%s.get_client_ip() - Could not determine client IP: %s, ip headers: %s",
-                self.formatted_class_name,
+                "Could not determine client IP: %s, ip headers: %s",
                 self.smarter_build_absolute_uri(request=request),
                 ip_headers,
             )
@@ -188,12 +182,12 @@ class SmarterMiddlewareMixin(SmarterHelperMixin):
             ip_str = str(ip)
             class_name = getattr(ip, "__class__", type(ip)).__name__
             if MOCK_REGEX.search(ip_str) or "Mock" in class_name:
-                logger.warning(
-                    "%s._is_private_ip() - Mock object detected as IP: %s", self.formatted_class_name, ip_str
-                )
+                logger.warning("Mock object detected as IP: %s", ip_str)
             else:
                 logger.warning(
-                    "%s._is_private_ip() - Invalid IP address: %s, error: %s", self.formatted_class_name, ip_str, e
+                    "Invalid IP address: %s, error: %s",
+                    ip_str,
+                    e,
                 )
             return True
 

@@ -60,7 +60,7 @@ from .redis_log_handler import (
     user_id_context,
 )
 from .streaming_file_handler import StreamingFileHandler
-from .utils import formatted_log_prefix, function_name
+from .utils import caller_name, formatted_caller_name
 from .waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 __all__ = [
@@ -82,8 +82,8 @@ __all__ = [
     "FileHandler",
     "Filter",
     "Formatter",
-    "formatted_log_prefix",
-    "function_name",
+    "caller_name",
+    "formatted_caller_name",
     "Handler",
     "INFO",
     "LogRecord",

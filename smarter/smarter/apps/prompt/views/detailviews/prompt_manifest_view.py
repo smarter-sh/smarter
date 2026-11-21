@@ -74,12 +74,14 @@ class LLMClientManifestEditorView(SmarterAuthenticatedNeverCachedWebView):
         llmclient = readable_llmclient(request, kwargs.get("hashed_id"))
         if llmclient is None:
             logger.debug(
-                "%s.get() no llmclient %s for %s", self.formatted_class_name, kwargs.get("hashed_id"), request.user
+                "no llmclient %s for %s",
+                kwargs.get("hashed_id"),
+                request.user,
             )
             return JsonResponse({"error": "LLMClient not found."}, status=HTTPStatus.NOT_FOUND)
         manifest, error = manifest_yaml(SAMKinds.LLM_CLIENT.value, llmclient)
         if manifest is None:
-            logger.error("%s.get() could not describe %s: %s", self.formatted_class_name, llmclient, error)
+            logger.error("could not describe %s: %s", llmclient, error)
             return JsonResponse({"error": error}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
         return JsonResponse({"manifest": manifest})
 

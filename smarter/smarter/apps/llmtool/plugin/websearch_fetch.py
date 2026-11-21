@@ -200,7 +200,7 @@ def robots_rules(url: str, timeout: float) -> Optional[RobotFileParser]:
     try:
         text = get_cached_robots_txt(parsed.netloc.lower())
     except safe_http.SafeHttpError as e:
-        logger.info("robots_rules() robots.txt of %s is unreachable: %s", parsed.netloc, e)
+        logger.info("robots.txt of %s is unreachable: %s", parsed.netloc, e)
         return None
     parser = RobotFileParser()
     parser.parse(text.splitlines())

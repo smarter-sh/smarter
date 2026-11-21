@@ -126,7 +126,7 @@ so that a long chat grows slower and more expensive with each prompt. The oldest
 of the request first, never the system prompt or the current turn. See
 :func:`~smarter.apps.provider.services.text_completion.utils.cap_message_history`.
 """
-base_logger = logging.getLogger(__name__)
+base_logger = logging.getSmarterLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
@@ -402,7 +402,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.prep_first_request()", self.formatted_class_name)
+        logger.debug("called")
         # ensure that all message history is marked as not new
         if isinstance(self.messages, list):
             self.messages = self.messages_set_is_new(self.messages, is_new=False)
@@ -442,8 +442,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 tool_type = tool.get("type")
                 if not tool_type:
                     logger.warning(
-                        "%s: tool type is required in tool definition: %s. This is a bug",
-                        self.formatted_class_name,
+                        "tool type is required in tool definition: %s. This is a bug",
                         tool,
                     )
                 this_tool = tool.get(tool_type) if tool_type else {}
@@ -454,15 +453,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 tool_name = this_tool.get("name")
                 if not tool_name:
                     logger.warning(
-                        "%s: tool name is required in tool definition: %s. This is a bug",
-                        self.formatted_class_name,
+                        "tool name is required in tool definition: %s. This is a bug",
                         tool,
                     )
                 tool_description = this_tool.get("description")
                 if not tool_description:
                     logger.warning(
-                        "%s: tool description is required in tool definition: %s. This is a bug",
-                        self.formatted_class_name,
+                        "tool description is required in tool definition: %s. This is a bug",
                         tool,
                     )
                 tool_parameters = this_tool.get("parameters", {}).get("properties", {})
@@ -500,7 +497,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.prep_second_request() called.", self.formatted_class_name)
+        logger.debug("called.")
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
@@ -531,7 +528,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.append_openai_response() called.", self.formatted_class_name)
+        logger.debug("called.")
         response_message = response.choices[0].message
         message_json = json.loads(response_message.model_dump_json())
         if not isinstance(response_message, ChatCompletionMessage):
@@ -576,8 +573,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             for candidate in candidates:
                 try:
                     logger.debug(
-                        "%s.extract_json_objects() trying ast to parse candidate: %s",
-                        self.formatted_class_name,
+                        "trying ast to parse candidate: %s",
                         candidate,
                     )
                     obj = ast.literal_eval(candidate)
@@ -586,14 +582,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 # pylint: disable=broad-except
                 except Exception:
                     logger.debug(
-                        "%s.extract_json_objects() ast failed to parse candidate: %s",
-                        self.formatted_class_name,
+                        "ast failed to parse candidate: %s",
                         candidate,
                     )
                     continue
             return None
 
-        logger.debug("%s.append_openai_error_response() called.", self.formatted_class_name)
+        logger.debug("called.")
         response_message = response.choices[0].message
         if not isinstance(response_message, ChatCompletionMessage):
             raise SmarterConfigurationError(
@@ -659,7 +654,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.handle_response() iteration: %s", self.formatted_class_name, self.iteration)
+        logger.debug("iteration: %s", self.iteration)
 
         response = self.second_response if self.iteration >= 2 else self.first_response
         if not response:
@@ -740,7 +735,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.handle_tool_called() - %s", self.formatted_class_name, function_name)
+        logger.debug("%s", function_name)
         request = (self.first_iteration[_InternalKeys.REQUEST_KEY],)
         response = (self.first_iteration[_InternalKeys.RESPONSE_KEY],)
         chat_tool_called.send(
@@ -773,7 +768,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.handle_plugin_called() - %s", self.formatted_class_name, plugin.name)
+        logger.debug("%s", plugin.name)
         chat_plugin_called.send(
             sender=self.handler,
             prompt=self.prompt,
@@ -802,7 +797,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.process_tool_call() called", self.formatted_class_name)
+        logger.debug("called")
         if not isinstance(tool_call, ChatCompletionMessageToolCall):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: tool_call must be a ChatCompletionMessageToolCall, got {type(tool_call)}. This is a bug."
@@ -1108,7 +1103,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.handle_plugin_selected() called.", self.formatted_class_name)
+        logger.debug("called.")
         if not isinstance(self.messages, list):
             raise SmarterValueError(f"{self.formatted_class_name}: messages must be a list, got {type(self.messages)}")
         if not isinstance(plugin.plugin_prompt, PluginPrompt):
@@ -1238,8 +1233,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if not mcpclients:
             return
         logger.debug(
-            "%s.handle_mcp_clients() loading MCPClients: %s",
-            self.formatted_class_name,
+            "loading MCPClients: %s",
             [mcpclient.name for mcpclient in mcpclients],
         )
         self.mcp_toolkit = MCPToolkit(mcpclients).load()
@@ -1310,8 +1304,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if not extensions:
             return
         logger.debug(
-            "%s.handle_extensions() loading extensions: %s",
-            self.formatted_class_name,
+            "loading extensions: %s",
             [extension.slug for extension in extensions],
         )
         self.extension_toolkit = ExtensionToolkit(
@@ -1350,7 +1343,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: A dictionary representing the final prompt completion response.
         :rtype: dict
         """
-        logger.debug("%s.handle_completion() called", self.formatted_class_name)
+        logger.debug("called")
         if not isinstance(self.second_iteration, dict):
             raise SmarterValueError(
                 f"{self.formatted_class_name}: second_iteration must be a dictionary, got {type(self.second_iteration)}"
@@ -1383,7 +1376,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: A dictionary of request meta data.
         :rtype: dict
         """
-        logger.debug("%s.request_meta_data_factory() called.", self.formatted_class_name)
+        logger.debug("called.")
         return {
             _InternalKeys.MODEL_KEY: self.model,
             _InternalKeys.TEMPERATURE_KEY: self.temperature,
@@ -1461,8 +1454,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         sends_temperature = _InternalKeys.TEMPERATURE_KEY in completions_kwargs
         if parameter == _InternalKeys.TEMPERATURE_KEY and sends_temperature:
             base_logger.warning(
-                "%s %s - model %s rejected temperature=%s. Retrying with its default temperature.",
-                self.formatted_class_name,
+                "%s - model %s rejected temperature=%s. Retrying with its default temperature.",
                 SmarterFormattedText.text("learn_from_rejection()"),
                 model,
                 completions_kwargs[_InternalKeys.TEMPERATURE_KEY],
@@ -1481,8 +1473,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if supported is None:
             return False
         base_logger.warning(
-            "%s %s - model %s rejected reasoning_effort=%s. It supports: %s.",
-            self.formatted_class_name,
+            "%s - model %s rejected reasoning_effort=%s. It supports: %s.",
             SmarterFormattedText.text("learn_from_rejection()"),
             model,
             reasoning_effort,
@@ -1572,8 +1563,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if supported is not None and REASONING_EFFORT_NONE not in supported:
             return self.retry_without_tools(completions_kwargs, offered_tools)
         base_logger.warning(
-            "%s %s - model %s rejected function tools at reasoning_effort=%s. Retrying with reasoning_effort='%s'.",
-            self.formatted_class_name,
+            "%s - model %s rejected function tools at reasoning_effort=%s. Retrying with reasoning_effort='%s'.",
             SmarterFormattedText.text("retry_with_no_reasoning()"),
             model,
             rejected_effort,
@@ -1610,8 +1600,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :raises openai.BadRequestError: When the provider rejects the request without tools too.
         """
         base_logger.warning(
-            "%s %s - model %s can't use function tools in /v1/chat/completions. Sending the request without its tools.",
-            self.formatted_class_name,
+            "%s - model %s can't use function tools in /v1/chat/completions. Sending the request without its tools.",
             SmarterFormattedText.text("retry_without_tools()"),
             self.model,
         )
@@ -1661,8 +1650,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if temperature is not None and not sent_temperature:
             if self.temperature_was_used(temperature):
                 logger.debug(
-                    "%s.warn_about_llmclient_settings() model %s ran at its default temperature %s, the LLMClient's",
-                    self.formatted_class_name,
+                    "model %s ran at its default temperature %s, the LLMClient's",
                     self.model,
                     temperature,
                 )
@@ -1812,8 +1800,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return
         warnings.add(content)
         base_logger.warning(
-            "%s %s - %s",
-            self.formatted_class_name,
+            "%s - %s",
             SmarterFormattedText.text("append_model_warning()"),
             content,
         )
@@ -1898,8 +1885,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         plugins_list = [plugin.name for plugin in plugins] if plugins else []
         logger.debug(
-            "%s.handler() called with user_profile=%s, prompt=%s, plugins=%s",
-            self.formatted_class_name,
+            "called with user_profile=%s, prompt=%s, plugins=%s",
             user_profile,
             prompt,
             plugins_list,
@@ -1911,8 +1897,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             self._account = prompt.user_profile.account
             self._user = prompt.user_profile.user
             logger.debug(
-                "%s.handler() - reinitialized user_profile from prompt: %s, user_profile: %s",
-                self.formatted_class_name,
+                "reinitialized user_profile from prompt: %s, user_profile: %s",
                 prompt,
                 self._user_profile,
             )
@@ -2005,8 +1990,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             completions_kwargs = self.prune_empty_values(completions_kwargs)
 
             logger.debug(
-                "%s %s - openai.chat.completions.create() completions_kwargs: %s",
-                self.formatted_class_name,
+                "%s - openai.chat.completions.create() completions_kwargs: %s",
                 SmarterFormattedText.text("handler()"),
                 completions_kwargs,
             )
@@ -2031,8 +2015,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if response_message.tool_calls is not None:
                 tool_calls: list[ChatCompletionMessageToolCallUnion] = response_message.tool_calls
                 logger.debug(
-                    "%s %s - %s tool calls detected, preparing second request",
-                    self.formatted_class_name,
+                    "%s - %s tool calls detected, preparing second request",
                     SmarterFormattedText.text("handler()"),
                     len(tool_calls),
                 )
@@ -2094,8 +2077,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                         tool_rounds += 1
                         self.iteration += 1
                         logger.debug(
-                            "%s %s - %s more tool calls in round %s",
-                            self.formatted_class_name,
+                            "%s - %s more tool calls in round %s",
                             SmarterFormattedText.text("handler()"),
                             len(tool_calls),
                             tool_rounds,

@@ -8,12 +8,11 @@ Test :mod:`smarter.apps.guardrail.receivers` and :mod:`smarter.apps.guardrail.si
     be documented.
 """
 
-from unittest import mock
-
 from django.dispatch import Signal
 
 from smarter.apps.guardrail import receivers, signals
 from smarter.apps.guardrail.services import GuardrailPipeline
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import GuardrailTestBase, input_payload
 
@@ -25,15 +24,7 @@ class TestGuardrailReceivers(GuardrailTestBase):
 
     def setUp(self):
         super().setUp()
-        patcher = mock.patch.object(receivers, "logger")
-        self.logger = patcher.start()
-        self.addCleanup(patcher.stop)
-        self.messages: list[str] = []
-        for level in ("info", "warning", "error"):
-            getattr(self.logger, level).side_effect = self.log
-
-    def log(self, msg, *args, **kwargs):  # pylint: disable=W0613
-        self.messages.append(msg % args if args else msg)
+        self.capture = WrappedLoggerCapture(self, receivers.logger)
 
     def test_signals(self):
         """Test that each signal is a Django Signal, with a receiver."""
@@ -46,7 +37,7 @@ class TestGuardrailReceivers(GuardrailTestBase):
         """Test that creating and deleting a Guardrail is logged."""
         g = self.create_guardrail("test_receivers_model")
         g.delete()
-        logged = "\n".join(self.messages)
+        logged = self.capture.text()
         self.assertIn("created", logged)
         self.assertIn("guardrail_deleted", logged)
 
@@ -55,7 +46,7 @@ class TestGuardrailReceivers(GuardrailTestBase):
         block = self.new_guardrail("test_receivers_block", priority=2, message="Blocked.")
         escalate = self.new_guardrail("test_receivers_escalate", action="escalate", priority=1, severity=5)
         GuardrailPipeline([block, escalate]).run_pre(input_payload("a forbidden secret"))
-        logged = "\n".join(self.messages)
+        logged = self.capture.text()
         self.assertIn("escalated the input to human review, severity 5", logged)
         self.assertIn("blocked the input: Blocked.", logged)
         self.assertNotIn("a forbidden secret", logged)
@@ -69,4 +60,4 @@ class TestGuardrailReceivers(GuardrailTestBase):
             error="provider down",
             fail_closed=True,
         )
-        self.assertIn("failed on the output, and blocked it: provider down", "\n".join(self.messages))
+        self.assertIn("failed on the output, and blocked it: provider down", self.capture.text())

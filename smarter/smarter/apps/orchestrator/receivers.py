@@ -13,8 +13,6 @@ from .models import Orchestrator
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
 
-module_prefix = __name__
-
 
 @receiver(post_save, sender=Orchestrator)
 def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
@@ -28,11 +26,10 @@ def orchestrator_saved(sender, instance: Orchestrator, created: bool, **kwargs):
     :param instance: The Orchestrator that was saved.
     :param created: True if the Orchestrator was created, False if it was updated.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_saved()"
     if created:
-        logger.info("%s created %s (id %s)", prefix, instance, instance.pk)
+        logger.info("created %s (id %s)", instance, instance.pk)
     else:
-        logger.info("%s updated %s (id %s)", prefix, instance, instance.pk)
+        logger.info("updated %s (id %s)", instance, instance.pk)
 
 
 @receiver(pre_delete, sender=Orchestrator)
@@ -43,8 +40,7 @@ def orchestrator_deleted(sender, instance: Orchestrator, **kwargs):
     :param sender: The model class.
     :param instance: The Orchestrator being deleted.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.orchestrator_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

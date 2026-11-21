@@ -12,12 +12,10 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class ConnectionBase(MetaDataWithOwnershipModel):
@@ -125,8 +123,7 @@ class ConnectionBase(MetaDataWithOwnershipModel):
             )
         else:
             logger.error(
-                "%s.manifest_url: Unsupported connection kind '%s' for connection '%s'. Cannot construct manifest URL.",
-                self.formatted_class_name,
+                "Unsupported connection kind '%s' for connection '%s'. Cannot construct manifest URL.",
                 self.kind,
                 self.name,
             )
@@ -167,7 +164,7 @@ class ConnectionBase(MetaDataWithOwnershipModel):
         """
 
         if user is None:
-            logger.warning("%s.get_cached_connections_for_user: user is None", cls.formatted_class_name)
+            logger.warning("user is None")
             return []
 
         # pylint: disable=W0613

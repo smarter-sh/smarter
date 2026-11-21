@@ -32,8 +32,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from smarter.lib import logging
 from smarter.lib.django.static_storage import is_uploaded, mark_uploaded
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 CONSOLE_INDEX_PATH = Path("react") / "@smarter" / "console" / "index.html"
 """The console's page, relative to ``STATIC_ROOT``."""
@@ -175,8 +174,7 @@ class ConsoleAppView(View):
         html = console_index_html()
         if html is None:
             logger.error(
-                "%s.ConsoleAppView.get() %s is missing. Run make react-build.",
-                logger_prefix,
+                "%s is missing. Run make react-build.",
                 Path(settings.STATIC_ROOT) / CONSOLE_INDEX_PATH,
             )
             return HttpResponse(

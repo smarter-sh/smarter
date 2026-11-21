@@ -66,8 +66,7 @@ from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
 from smarter.lib.typing import required
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 LOGO_PATH = "images/logo/smarter-crop.png"
 """The logo's path on the project's CDN."""
@@ -373,8 +372,7 @@ class ConsoleSessionView(View):
         """
         session = console_session(request)
         logger.debug(
-            "%s.ConsoleSessionView.get() authenticated: %s",
-            logger_prefix,
+            "authenticated: %s",
             session.is_authenticated,
         )
         return JsonResponse(session.to_json(), status=HTTPStatus.OK)

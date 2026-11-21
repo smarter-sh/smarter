@@ -115,8 +115,7 @@ def is_authenticated_user(user: object) -> bool:
     :returns: True if the object is an authenticated user, False otherwise.
     """
     verbose_logger.debug(
-        "%s called for user type: %s",
-        logging.SmarterFormattedText.text(__name__) + ".is_authenticated_user()",
+        "called for user type: %s",
         type(user),
     )
     if hasattr(user, "is_authenticated"):
@@ -158,17 +157,14 @@ def get_resolved_user(
             :class:`django.contrib.auth.models.User`
             :class:`django.utils.functional.SimpleLazyObject`
     """
-    verbose_logger.debug(
-        "%s called for user type: %s", logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()", type(user)
-    )
+    verbose_logger.debug("called for user type: %s", type(user))
     if user is None:
         return None
 
     # this is the expected case
     if isinstance(user, (User, AnonymousUser, AbstractUser)):
         verbose_logger.debug(
-            "%s user[%s] %s is instance of expected type: %s",
-            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
+            "user[%s] %s is instance of expected type: %s",
             id(user),
             user,
             type(user),
@@ -181,8 +177,7 @@ def get_resolved_user(
     # pylint: disable=W0212
     if isinstance(user, SimpleLazyObject):
         verbose_logger.debug(
-            "%s user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
-            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
+            "user[%s] %s is instance of SimpleLazyObject, returning wrapped user: %s",
             id(user),
             user,
             type(user._wrapped),
@@ -191,8 +186,7 @@ def get_resolved_user(
     # Allow unittest.mock.MagicMock or Mock for testing
     if hasattr(user, "__class__") and user.__class__.__name__ in ("MagicMock", "Mock"):
         verbose_logger.debug(
-            "%s user[%s] %s is instance of test mock: %s",
-            logging.SmarterFormattedText.text(__name__) + ".get_resolved_user()",
+            "user[%s] %s is instance of test mock: %s",
             id(user),
             user,
             type(user),
@@ -356,20 +350,17 @@ class Account(MetaDataModel):
         except Account.DoesNotExist:
             if orig and orig.is_default_account:
                 logger.warning(
-                    "%s.save() this save operation will leave the platform with no default account. You should ensure that exactly one account is marked as default.",
-                    self.formatted_class_name,
+                    "this save operation will leave the platform with no default account. You should ensure that exactly one account is marked as default.",
                 )
             else:
                 logger.warning(
-                    "%s.save() No default account found when saving Account instance. Ensure that one account is marked as default.",
-                    self.formatted_class_name,
+                    "No default account found when saving Account instance. Ensure that one account is marked as default.",
                 )
 
         except Account.MultipleObjectsReturned as e:
             accounts = Account.objects.filter(is_default_account=True)
             logger.error(
-                "%s.save() Multiple accounts marked as default: %s. Account IDs: %s. Ensure that only one account is marked as default.",
-                self.formatted_class_name,
+                "Multiple accounts marked as default: %s. Account IDs: %s. Ensure that only one account is marked as default.",
                 accounts,
                 [*accounts],
             )
@@ -439,7 +430,7 @@ class Account(MetaDataModel):
         # pylint: disable=C0415
         from smarter.apps.account.hierarchy import invalidate_readable_account_ids
 
-        logger.debug("%s.invalidate_hierarchy() account %s changed the account tree.", self.formatted_class_name, self)
+        logger.debug("account %s changed the account tree.", self)
         invalidate_readable_account_ids()
 
     def validate_hierarchy(self) -> None:
@@ -541,10 +532,8 @@ class Account(MetaDataModel):
             if account:
                 print(account.company_name)
         """
-        logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.{cls.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
-            logger_prefix,
+            "called with pk=%s, name=%s, account_number=%s, company_name=%s, invalidate=%s",
             pk,
             name,
             account_number,
@@ -555,27 +544,20 @@ class Account(MetaDataModel):
         @cache_results(cls.cache_expiration)
         def _get_account_by_number(account_number: Optional[str], class_name: str) -> "Account":
             try:
-                logger.debug(
-                    "%s._get_account_by_number() cache miss for account_number=%s", logger_prefix, account_number
-                )
+                logger.debug("cache miss for account_number=%s", account_number)
                 return cls.objects.get(account_number=account_number)
             except cls.DoesNotExist as e:
-                logger.debug(
-                    "%s._get_account_by_number() no Account found for account_number=%s", logger_prefix, account_number
-                )
+                logger.debug("no Account found for account_number=%s", account_number)
                 raise cls.DoesNotExist(f"No Account found with account_number={account_number}") from e
 
         @cache_results(cls.cache_expiration)
         def _get_account_by_company_name(company_name: Optional[str], class_name: str) -> "Account":
             try:
-                logger.debug(
-                    "%s._get_account_by_company_name() cache miss for company_name=%s", logger_prefix, company_name
-                )
+                logger.debug("cache miss for company_name=%s", company_name)
                 return cls.objects.get(company_name=company_name)
             except cls.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_account_by_company_name() no Account found for company_name=%s",
-                    logger_prefix,
+                    "no Account found for company_name=%s",
                     company_name,
                 )
                 raise cls.DoesNotExist(f"No Account found with company_name={company_name}") from e

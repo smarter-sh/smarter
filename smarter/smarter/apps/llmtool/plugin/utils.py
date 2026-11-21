@@ -112,7 +112,7 @@ class Plugins:
         # pylint: disable=W0718
         except Exception as e:
             base_logger.warning(
-                "Plugins.load_plugin() skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
+                "skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
                 plugin_meta.name,
                 plugin_meta.id,  # type: ignore[reportAttributeAccessIssue]
                 user_profile,

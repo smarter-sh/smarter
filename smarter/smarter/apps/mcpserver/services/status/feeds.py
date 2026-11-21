@@ -45,7 +45,6 @@ from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 FEED_CACHE_TTL = 60
 """Seconds that a status feed is cached: long enough for one help desk conversation's tool calls, short enough to stay current."""
@@ -201,7 +200,7 @@ def provider_statuses() -> list[ProviderStatus]:
         try:
             page = fetch_statuspage(url)
         except (SafeHttpError, ValidationError, ValueError) as e:
-            logger.warning("%s.provider_statuses() could not read %s: %s", logger_prefix, url, e)
+            logger.warning("could not read %s: %s", url, e)
             statuses.append(status)
             continue
         status.indicator = page.status.indicator
@@ -278,7 +277,7 @@ def aws_service_events(region: str, now: Optional[datetime] = None) -> tuple[lis
         try:
             items = fetch_aws_feed(service, region)
         except (SafeHttpError, ElementTree.ParseError, DefusedXmlException) as e:
-            logger.warning("%s.aws_service_events() could not read %s in %s: %s", logger_prefix, name, region, e)
+            logger.warning("could not read %s in %s: %s", name, region, e)
             unread.append(name)
             continue
         for published, title, description in items:

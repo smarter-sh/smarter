@@ -54,7 +54,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -96,12 +95,11 @@ def verify_certificate(certificate_arn: str):
     task_id = verify_certificate.request.id
 
     pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)
-    prefix = logger_prefix + ".verify_certificate()"
-    logger.info("%s %s task_id: %s", prefix, certificate_arn, task_id)
+    logger.info("%s task_id: %s", certificate_arn, task_id)
 
     verified = infrastructure.certificates.wait_until_issued(certificate_arn)
     if verified:
-        logger.info("%s certificate %s verified. task_id: %s", prefix, certificate_arn, task_id)
+        logger.info("certificate %s verified. task_id: %s", certificate_arn, task_id)
     else:
-        logger.error("%s certificate %s verification failed. task_id: %s", prefix, certificate_arn, task_id)
+        logger.error("certificate %s verification failed. task_id: %s", certificate_arn, task_id)
     post_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn, task_id=task_id)

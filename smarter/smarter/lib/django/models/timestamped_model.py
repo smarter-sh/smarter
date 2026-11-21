@@ -16,14 +16,13 @@ from django.utils.timezone import is_aware, make_aware
 
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.json import to_jsonable
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 cache_prefix = f"{__name__}."
 
 
@@ -241,12 +240,10 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :param hashed_id: The hashed ID string to decode (URL-safe, no padding).
         :returns: The original object ID if decoding is successful, otherwise None.
         """
-        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.id_from_hashed_id()"
         try:
             if not hashed_id.startswith(cls.HASH_PREFIX) or not hashed_id.endswith(cls.HASH_SUFFIX):
                 logger.warning(
-                    "%s Hashed ID '%s' does not start with '%s' or end with '%s'.",
-                    logger_prefix,
+                    "Hashed ID '%s' does not start with '%s' or end with '%s'.",
                     hashed_id,
                     cls.HASH_PREFIX,
                     cls.HASH_SUFFIX,
@@ -254,8 +251,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
                 return None
             retval = cls._decode_hashed_id(hashed_id)
             verbose_logger.debug(
-                "%s decoded %s.hashed_id: %s to id: %d",
-                logger_prefix,
+                "decoded %s.hashed_id: %s to id: %d",
                 cls.__name__,
                 hashed_id,
                 retval,
@@ -264,8 +260,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         except (binascii.Error, ValueError) as e:
             # The hashed id comes from a url, i.e. from the client, and every caller handles None.
             logger.warning(
-                "%s Failed to decode %s.hashed_id '%s': %s",
-                logger_prefix,
+                "Failed to decode %s.hashed_id '%s': %s",
                 cls.__name__,
                 hashed_id,
                 e,
@@ -274,8 +269,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.exception(
-                "%s Unexpected error while decoding %s.hashed_id '%s': %s",
-                logger_prefix,
+                "Unexpected error while decoding %s.hashed_id '%s': %s",
                 cls.__name__,
                 hashed_id,
                 e,
@@ -301,10 +295,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :param value: The string to search for a hashed ID, usually a url path.
         :returns: The first hashed ID found, otherwise None.
         """
-        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.find_hash()"
         verbose_logger.debug(
-            "%s - Searching for hashed ID in value: %s",
-            logger_prefix,
+            "Searching for hashed ID in value: %s",
             value,
         )
         pattern = cls.hash_regex()
@@ -316,8 +308,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             except ValueError:
                 # binascii.Error and UnicodeDecodeError are both ValueErrors.
                 verbose_logger.debug(
-                    "%s - Skipping '%s', which looks like a hashed ID but doesn't decode.",
-                    logger_prefix,
+                    "Skipping '%s', which looks like a hashed ID but doesn't decode.",
                     candidate,
                 )
                 continue
@@ -325,14 +316,12 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             break
         if retval:
             verbose_logger.debug(
-                "%s - Found hashed ID: %s",
-                logger_prefix,
+                "Found hashed ID: %s",
                 retval,
             )
         else:
             verbose_logger.debug(
-                "%s - No hashed ID found in value: %s",
-                logger_prefix,
+                "No hashed ID found in value: %s",
                 value,
             )
         return retval
@@ -436,18 +425,15 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             object is logged, and returns None. A locator comes from the client, so a locator
             that doesn't decode, or whose row doesn't exist, is a WARNING, not an ERROR.
         """
-        logger_prefix = f"{logging.SmarterFormattedText.text(cls.__name__)}.get_object_by_locator()"
         verbose_logger.debug(
-            "%s Attempting to retrieve object with locator: %s",
-            logger_prefix,
+            "Attempting to retrieve object with locator: %s",
             locator,
         )
         try:
             prefix = str(cls.__name__).lower()
             if not locator.startswith(f"{prefix}-"):
                 logger.warning(
-                    "%s Locator '%s' does not start with expected prefix '%s-'.",
-                    logger_prefix,
+                    "Locator '%s' does not start with expected prefix '%s-'.",
                     locator,
                     prefix,
                 )
@@ -456,8 +442,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             id_value = cls.id_from_hashed_id(hashed_part)
             if id_value is None:
                 logger.warning(
-                    "%s Failed to decode hashed part '%s' from locator '%s'.",
-                    logger_prefix,
+                    "Failed to decode hashed part '%s' from locator '%s'.",
                     hashed_part,
                     locator,
                 )
@@ -465,15 +450,13 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             obj = cls.get_cached_object(pk=id_value)
             if obj is None:
                 logger.warning(
-                    "%s No object found with ID %d decoded from locator '%s'.",
-                    logger_prefix,
+                    "No object found with ID %d decoded from locator '%s'.",
                     id_value,
                     locator,
                 )
             else:
                 verbose_logger.debug(
-                    "%s Successfully retrieved object with ID %d from locator '%s'.",
-                    logger_prefix,
+                    "Successfully retrieved object with ID %d from locator '%s'.",
                     id_value,
                     locator,
                 )
@@ -482,8 +465,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             # get_cached_object() raises the model's DoesNotExist. The locator comes from the
             # client, so a row that doesn't exist is the client's error, e.g. a 404.
             logger.warning(
-                "%s No %s found for locator '%s'.",
-                logger_prefix,
+                "No %s found for locator '%s'.",
                 cls.__name__,
                 locator,
             )
@@ -491,8 +473,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.exception(
-                "%s Unexpected error while retrieving object with locator '%s': %s",
-                logger_prefix,
+                "Unexpected error while retrieving object with locator '%s': %s",
                 locator,
                 e,
             )
@@ -553,8 +534,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             return to_jsonable(data)
         except Exception as e:
             logger.exception(
-                "%s.to_json() - Error serializing model to JSON. model=%s, pk=%s, exception: %s",
-                self.formatted_class_name,
+                "Error serializing model to JSON. model=%s, pk=%s, exception: %s",
                 self.__class__.__name__,
                 self.pk,
                 e,
@@ -586,7 +566,6 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
         :raises ~django.core.exceptions.ObjectDoesNotExist: the model's ``DoesNotExist``, if ``pk``
             is missing or no row has it.
         """
-        logger_prefix = SmarterFormattedText.text(__name__ + "." + TimestampedModel.__name__)
 
         if cls._meta.abstract:
             raise NotImplementedError(
@@ -598,24 +577,21 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
 
             try:
                 verbose_logger.debug(
-                    "%s._get_model_by_pk() %s called with pk: %s, invalidate=%s",
-                    logger_prefix,
+                    "%s called with pk: %s, invalidate=%s",
                     class_name,
                     pk,
                     invalidate,
                 )
                 retval = cls._default_manager.get(pk=pk)
                 verbose_logger.debug(
-                    "%s._get_model_by_pk() fetched and cached %s pk: %s",
-                    logger_prefix,
+                    "fetched and cached %s pk: %s",
                     class_name,
                     pk,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 verbose_logger.debug(
-                    "%s._get_model_by_pk() no object found for %s pk: %s",
-                    logger_prefix,
+                    "no object found for %s pk: %s",
                     class_name,
                     pk,
                 )
@@ -626,7 +602,7 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
             _get_model_by_pk.invalidate(pk, cls.__name__)
 
         if not pk:
-            verbose_logger.debug("%s.get_cached_object() called with no pk", logger_prefix)
+            verbose_logger.debug("called with no pk")
             raise cls.DoesNotExist(f"Must provide a 'pk' to retrieve a {cls.__name__} object.")
 
         # same args as invalidate() above, so that both produce the same cache key

@@ -104,8 +104,7 @@ class SecretTransformer(SmarterHelperMixin):
         # manifest and data hold the secret's unencrypted value, so only whether they were passed is logged.
         # A Pydantic model's str() doesn't use the spec's field_serializer, which masks the value.
         logger.debug(
-            "%s.__init__() called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs keys=%s",
-            self.formatted_class_name,
+            "called with args=%s, user_profile=%s, name=%s, api_version=%s, manifest=%s, secret_id=%s, secret=%s, data=%s, kwargs keys=%s",
             args,
             user_profile,
             name,
@@ -141,12 +140,14 @@ class SecretTransformer(SmarterHelperMixin):
         #######################################################################
         if secret_id:
             logger.debug(
-                "%s.__init__() Initializing secret transformer with secret_id: %s", self.formatted_class_name, secret_id
+                "Initializing secret transformer with secret_id: %s",
+                secret_id,
             )
             self.id = secret_id
         if secret:
             logger.debug(
-                "%s.__init__() Initializing secret transformer with secret: %s", self.formatted_class_name, secret
+                "Initializing secret transformer with secret: %s",
+                secret,
             )
             self.id = secret.id  # type: ignore[union-attr]
 
@@ -157,15 +158,13 @@ class SecretTransformer(SmarterHelperMixin):
             raise SmarterSecretTransformerError(f"API version {api_version} is not compatible.")
         if api_version:
             logger.debug(
-                "%s.__init__() Initializing secret transformer with api_version: %s",
-                self.formatted_class_name,
+                "Initializing secret transformer with api_version: %s",
                 api_version,
             )
             self._api_version = api_version
         if manifest:
             logger.debug(
-                "%s.__init__() Initializing secret transformer with a %s manifest",
-                self.formatted_class_name,
+                "Initializing secret transformer with a %s manifest",
                 type(manifest).__name__,
             )
             if not isinstance(manifest, SAMSecret):
@@ -176,8 +175,7 @@ class SecretTransformer(SmarterHelperMixin):
 
         if isinstance(data, dict):
             logger.debug(
-                "%s.__init__() Initializing secret transformer with data keys: %s",
-                self.formatted_class_name,
+                "Initializing secret transformer with data keys: %s",
                 sorted(data),
             )
             # we received a manifest, parsed into a dict.
@@ -423,10 +421,10 @@ class SecretTransformer(SmarterHelperMixin):
         if self._secret:
             return self._secret
         if not self.name:
-            logger.warning("%s.secret() Secret name is not set.", self.formatted_class_name)
+            logger.warning("Secret name is not set.")
             return None
         if not self.user_profile:
-            logger.warning("%s.secret() User profile is not set.", self.formatted_class_name)
+            logger.warning("User profile is not set.")
             return None
 
         # Only the user_profile's own Secret. A read-permission lookup would also
@@ -435,8 +433,7 @@ class SecretTransformer(SmarterHelperMixin):
         self._secret = Secret.objects.filter(name=self.name, user_profile=self.user_profile).first()
         if self._secret:
             logger.debug(
-                "%s.secret() initialized Django ORM Secret %s for user profile %s.",
-                self.formatted_class_name,
+                "initialized Django ORM Secret %s for user profile %s.",
                 self._secret.name,
                 self._secret.user_profile,
             )
@@ -526,7 +523,7 @@ class SecretTransformer(SmarterHelperMixin):
         """Return whether SecretTransformer is ready."""
 
         if not self.user_profile:
-            logger.warning("%s.ready() User profile is not set.", self.formatted_class_name)
+            logger.warning("User profile is not set.")
             return False
 
         # ---------------------------------------------------------------------
@@ -534,16 +531,14 @@ class SecretTransformer(SmarterHelperMixin):
         # ---------------------------------------------------------------------
         if self._manifest:
             if not self._manifest.model_validate(self._manifest.model_dump()):
-                logger.warning("%s.ready() Pydantic model is not valid.", self.formatted_class_name)
+                logger.warning("Pydantic model is not valid.")
                 return False
             return True
         else:
             if self.secret:
                 return True
 
-        logger.warning(
-            "%s.ready() Not in a ready state: No manifest nor secret instance found. ", self.formatted_class_name
-        )
+        logger.warning("Not in a ready state: No manifest nor secret instance found. ")
         return False
 
     @property
@@ -586,7 +581,7 @@ class SecretTransformer(SmarterHelperMixin):
         """Create a secret from either yaml or a dictionary."""
 
         if not self._manifest:
-            logger.warning("%s.create() Secret manifest is not set. Cannot create secret.", self.formatted_class_name)
+            logger.warning("Secret manifest is not set. Cannot create secret.")
             return False
 
         # self.secret, rather than self._secret, so that a Secret that exists, but
@@ -594,8 +589,7 @@ class SecretTransformer(SmarterHelperMixin):
         if self.secret and self.secret.id:  # type: ignore[union-attr]
             self.id = self.secret.id  # type: ignore[assignment]
             logger.debug(
-                "%s.create() Secret %s already exists. Updating secret %s instead.",
-                self.formatted_class_name,
+                "Secret %s already exists. Updating secret %s instead.",
                 self.name,
                 self.secret.id,  # type: ignore[union-attr]
             )
@@ -617,16 +611,16 @@ class SecretTransformer(SmarterHelperMixin):
         """Update a secret."""
 
         if not self._manifest:
-            logger.warning("%s.update() Secret manifest is not set.", self.formatted_class_name)
+            logger.warning("Secret manifest is not set.")
             return False
 
         if not self.secret:
-            logger.warning("%s.update() Secret does not exist.", self.formatted_class_name)
+            logger.warning("Secret does not exist.")
             return False
 
         manifest_to_django_orm = self.manifest_to_django_orm()
         if not manifest_to_django_orm:
-            logger.warning("%s.update() Secret Django model is not set.", self.formatted_class_name)
+            logger.warning("Secret Django model is not set.")
             return False
 
         for attr, value in manifest_to_django_orm.items():
@@ -634,7 +628,7 @@ class SecretTransformer(SmarterHelperMixin):
                 setattr(self._secret, attr, value)
         self.secret.save()
         self.secret.tags.set(self.tags)
-        logger.debug("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
+        logger.debug("secret %s: %s.", self.name, self.id)
         secret_updated.send(sender=self.__class__, secret=self, user_profile=self.user_profile)
 
         return True
@@ -666,7 +660,7 @@ class SecretTransformer(SmarterHelperMixin):
         self._secret = None
         self._secret_serializer = None
         secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
-        logger.debug("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
+        logger.debug("secret %s: %s.", secret_id, secret_name)
         return True
 
     def to_json(self, version: str = "v1") -> Optional[SmarterDictType]:

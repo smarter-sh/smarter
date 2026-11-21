@@ -164,9 +164,7 @@ class ExtensionVersion(TimestampedModel):
         try:
             return ExtensionManifest.model_validate(self.manifest)
         except ValidationError as e:
-            logger.error(
-                "%s.parsed_manifest() %s has an invalid stored manifest: %s", self.formatted_class_name, self, e
-            )
+            logger.error("%s has an invalid stored manifest: %s", self, e)
             raise
 
 

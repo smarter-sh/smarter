@@ -98,7 +98,10 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     # override the base abstract manifest model with the SqlConnection model
@@ -283,8 +286,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 )
             return self._manifest
         logger.debug(
-            "%s.manifest property called for %s %s %s",
-            self.formatted_class_name,
+            "property called for %s %s %s",
             self.kind,
             self._name,
             self.user_profile,
@@ -363,7 +365,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             )
             return self._manifest
         else:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     def manifest_to_django_orm(self) -> SmarterDictType:
@@ -401,8 +403,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 connection.save()
         """
         logger.debug(
-            "%s.manifest_to_django_orm() called for %s %s %s",
-            self.formatted_class_name,
+            "called for %s %s %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -418,8 +419,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         connection = self.to_snake_case(connection)
         if not isinstance(connection, dict):
             logger.debug(
-                "%s.manifest_to_django_orm() recasting connection: %s (%s)",
-                self.formatted_class_name,
+                "recasting connection: %s (%s)",
                 connection,
                 type(connection),
             )
@@ -505,8 +505,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             return self._password_secret
         except Secret.DoesNotExist:
             logger.warning(
-                "%s password Secret %s not found for %s",
-                self.formatted_class_name,
+                "password Secret %s not found for %s",
                 name or "(name is missing)",
                 self.user_profile,
             )
@@ -566,8 +565,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
-                "%s proxy password Secret %s not found for %s",
-                self.formatted_class_name,
+                "proxy password Secret %s not found for %s",
                 name or "(name is missing)",
                 self.user_profile,
             )
@@ -616,16 +614,14 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         name = self.to_snake_case(self.name)  # type: ignore
         if not name:
             logger.warning(
-                "%s.connection() name is missing. Cannot retrieve or create connection.",
-                self.formatted_class_name,
+                "name is missing. Cannot retrieve or create connection.",
             )
             return None
 
         self._connection = SqlConnection.objects.filter(name=name).with_read_permission_for(self.user).first()  # type: ignore
         if self._connection:
             logger.debug(
-                "%s.connection() %s found for %s",
-                self.formatted_class_name,
+                "%s found for %s",
                 self._connection.name,
                 self._connection.user_profile,
             )
@@ -633,22 +629,19 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
 
         if not self._connection:
             logger.warning(
-                "%s.connection() %s not found for %s",
-                self.formatted_class_name,
+                "%s not found for %s",
                 self.name or "(name is missing)",
                 self.user_profile or "(user_profile is missing)",
             )
             if self._manifest is None:
                 logger.error(
-                    "%s manifest is not set, cannot create SqlConnection",
-                    self.formatted_class_name,
+                    "manifest is not set, cannot create SqlConnection",
                 )
                 return None
             model_dump = self._manifest.spec.connection.model_dump()
             model_dump = self.to_snake_case(model_dump)
             logger.debug(
-                "%s.connection() model_dump for %s: %s",
-                self.formatted_class_name,
+                "model_dump for %s: %s",
                 self.name or "(name is missing)",
                 self.formatted_json(model_dump),
             )
@@ -664,8 +657,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             self._connection = SqlConnection(**model_dump)
 
             logger.info(
-                "%s creating SqlConnection %s for account %s: %s",
-                self.formatted_class_name,
+                "creating SqlConnection %s for account %s: %s",
                 self.name,
                 self.account,
                 model_dump,
@@ -674,8 +666,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             self._connection.save()
             self._created = True
             logger.info(
-                "%s created SqlConnection %s for account %s",
-                self.formatted_class_name,
+                "created SqlConnection %s for account %s",
                 self.name or "(name is missing)",
                 self.account or "(account is missing)",
             )
@@ -713,8 +704,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         """
         if self.connection is None:
             logger.warning(
-                "%s is_valid() failed: connection is None for %s %s",
-                self.formatted_class_name,
+                "failed: connection is None for %s %s",
                 self.kind,
                 self.name or "(name is missing)",
             )
@@ -722,22 +712,20 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         try:
             if self.connection.validate():
                 logger.info(
-                    "%s is_valid() succeeded for %s %s",
-                    self.formatted_class_name,
+                    "succeeded for %s %s",
                     self.kind,
                     self.name or "(name is missing)",
                 )
                 if self.manifest is not None:
                     return True
                 logger.warning(
-                    "%s is_valid() failed for %s %s: manifest is missing",
-                    self.formatted_class_name,
+                    "failed for %s %s: manifest is missing",
                     self.kind,
                     self.name or "(name is missing)",
                 )
 
         except Exception as e:
-            logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
+            logger.warning("failed for %s %s", self.kind, str(e))
         return False
 
     ###########################################################################
@@ -745,7 +733,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Invalidate any relevant caches when the manifest or connection data changes."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         if self.connection:
             SqlConnection.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
         super().cache_invalidations()
@@ -781,8 +769,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 print(response.data)
         """
         logger.debug(
-            "%s.example_manifest() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -871,8 +858,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
             - :class:`SCLIResponseGetData`
         """
         logger.debug(
-            "%s.get() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -960,8 +946,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 print(response.data)
         """
         logger.debug(
-            "%s.apply() called for %s %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1019,8 +1004,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.prompt() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1066,8 +1050,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                 print(response.data)
         """
         logger.debug(
-            "%s.describe() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1168,8 +1151,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                     print("Delete failed:", response.data)
         """
         logger.debug(
-            "%s.delete() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1203,8 +1185,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.deploy() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1231,8 +1212,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.undeploy() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,
@@ -1259,8 +1239,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.logs() called for %s %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             self.user_profile,

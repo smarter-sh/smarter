@@ -67,7 +67,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 POSTS_PER_PAGE = 100
 """The most posts that the WordPress REST api returns in one request."""
@@ -526,7 +525,7 @@ def index_blog(force: bool = False, blog: Optional[ProjectBlog] = None) -> Repos
         fingerprint = posts_fingerprint(posts)
         is_up_to_date = index.is_ready and index.commit_sha == fingerprint
         if is_up_to_date and not force:
-            logger.info("%s.index_blog() %s is up to date: %s posts.", logger_prefix, blog.name, len(posts))
+            logger.info("%s is up to date: %s posts.", blog.name, len(posts))
             if index.error:
                 RepositoryIndex.objects.filter(pk=index.pk).update(error=None)
                 index.error = None

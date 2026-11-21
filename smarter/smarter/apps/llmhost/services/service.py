@@ -90,7 +90,6 @@ from .renderer import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
-logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.LLMHostService"
 
 Status = SAMLLMHostStatusEnum
 EventType = SAMLLMHostEventType
@@ -314,7 +313,7 @@ class LLMHostService:
                     encrypted_value=Secret.encrypt(secrets.token_urlsafe(API_KEY_BYTES)),
                 )
                 secret.save()
-                logger.info("%s.ensure_api_key() created Secret %s", logger_prefix, name)
+                logger.info("created Secret %s", name)
         value = secret.get_secret()
         if not value:
             raise LLMHostConfigurationError(f"Secret {secret.name} of LLMHost {llmhost.name} is empty or expired.")
@@ -422,7 +421,7 @@ class LLMHostService:
             llmhost.status_message = f"Compute {compute}: {state.message}"
             llmhost.save(update_fields=["status", "status_message", "updated_at"])
         llmhost_launched.send(sender=self.__class__, llmhost=llmhost, resources=summary)
-        logger.info("%s.launch() launched %s: %s", logger_prefix, llmhost, summary)
+        logger.info("launched %s: %s", llmhost, summary)
         return LLMHostObservation(
             status=llmhost.status,
             message=llmhost.status_message,
@@ -600,7 +599,7 @@ class LLMHostService:
         llmhost.save()
         llmhost.record_event(EventType.DESTROYED.value, llmhost.status_message, details)
         llmhost_destroyed.send(sender=self.__class__, llmhost=llmhost, purge=delete_volume)
-        logger.info("%s.destroy() destroyed %s, purge=%s", logger_prefix, llmhost, delete_volume)
+        logger.info("destroyed %s, purge=%s", llmhost, delete_volume)
         self.release_compute(llmhost)
 
     def release_compute(self, llmhost: LLMHost) -> Optional[ComputeState]:
@@ -614,7 +613,7 @@ class LLMHostService:
         try:
             state = self.provisioner.reconcile(llmhost.compute)
         except LLMHostComputeError as e:
-            logger.error("%s.release_compute() %s: %s", logger_prefix, llmhost.compute, e)
+            logger.error("%s: %s", llmhost.compute, e)
             return None
         if state.actions:
             llmhost.record_event(

@@ -17,7 +17,6 @@ from .const import PLANNING_DAYS
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.DOODLE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
@@ -29,11 +28,11 @@ def plan_doodles(days: int = PLANNING_DAYS) -> int:
     :returns: The number of doodles planned.
     :rtype: int
     """
-    logger.info("%s.plan_doodles() planning the doodles %s days ahead.", logger_prefix, days)
+    logger.info("planning the doodles %s days ahead.", days)
     planned = planner.plan_doodles(days=days)
     window = planner.planning_window(days=days)
     edited = editor.edit_days(window)
-    logger.info("%s.plan_doodles() the Smarter Doodle Editor chose the doodles of %s days.", logger_prefix, edited)
+    logger.info("the Smarter Doodle Editor chose the doodles of %s days.", edited)
     return planned
 
 

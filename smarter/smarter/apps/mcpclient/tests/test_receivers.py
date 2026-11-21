@@ -21,6 +21,7 @@ from smarter.apps.mcpclient.signals import (
     mcpclient_tool_failed,
     mcpclient_tool_responded,
 )
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import MCPClientTestBase
 
@@ -32,20 +33,11 @@ class TestMCPClientReceivers(MCPClientTestBase):
 
     def setUp(self):
         super().setUp()
-        patcher = mock.patch.object(receivers, "logger")
-        self.logger = patcher.start()
-        self.addCleanup(patcher.stop)
-        self.messages: list[str] = []
-        self.logger.info.side_effect = self.log
-        self.logger.warning.side_effect = self.log
-
-    def log(self, msg, *args, **kwargs):  # pylint: disable=W0613
-        """Record a formatted log message."""
-        self.messages.append(msg % args if args else msg)
+        self.capture = WrappedLoggerCapture(self, receivers.logger)
 
     def logged(self) -> str:
         """Return everything the receivers logged, as one string."""
-        return "\n".join(self.messages)
+        return self.capture.text()
 
     def test_saved_queues_refresh(self):
         """Test that saving an active MCPClient queues a refresh of its catalog."""

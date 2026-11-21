@@ -9,7 +9,6 @@ from smarter.lib import logging
 from .const import namespace as app_name
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 class AnnotationConfig(AppConfig):
@@ -26,4 +25,4 @@ class AnnotationConfig(AppConfig):
         from . import receivers  # noqa: F401
 
         app_label = f"{SMARTER_APP_NAME} {app_name.capitalize()}"
-        logger.debug("%s.ready() %s app is %s", logger_prefix, app_label, SmarterReadyState.READY)
+        logger.debug("%s app is %s", app_label, SmarterReadyState.READY)

@@ -124,7 +124,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
             return super().__call__(request)
 
         context = self.get_sync_context(request)
-        logger.debug("%s.__call__() called. Setting context=%s", self.formatted_class_name, context)
+        logger.debug("called. Setting context=%s", context)
         token = self.set_logging_context(context)
         request_token = request_id_context.set(self.get_request_id(request))
         session_token = session_key_context.set(self.get_session_key(request))
@@ -136,7 +136,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
             session_key_context.reset(session_token)
             request_id_context.reset(request_token)
             self.reset_logging_context(token)
-            logger.debug("%s.__call__() reset logging context=%s", self.formatted_class_name, context)
+            logger.debug("reset logging context=%s", context)
 
     async def __acall__(self, request: HttpRequest) -> HttpResponseBase:
         """
@@ -156,7 +156,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
 
         context = await self.get_async_context(request)
 
-        logger.debug("%s.__acall__() setting async logging context=%s", self.formatted_class_name, context)
+        logger.debug("setting async logging context=%s", context)
         token = self.set_logging_context(context)
         request_token = request_id_context.set(self.get_request_id(request))
         session_token = session_key_context.set(self.get_session_key(request))
@@ -167,7 +167,7 @@ class SmarterRequestLogContextMiddleware(SmarterMiddlewareMixin):
             session_key_context.reset(session_token)
             request_id_context.reset(request_token)
             self.reset_logging_context(token)
-            logger.debug("%s.__acall__() reset async logging context=%s", self.formatted_class_name, context)
+            logger.debug("reset async logging context=%s", context)
 
     @property
     def formatted_class_name(self) -> str:

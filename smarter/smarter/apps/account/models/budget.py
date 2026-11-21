@@ -699,7 +699,7 @@ def evaluate_resource_constraints(resource_locator: str, now: Optional[datetime]
             if lock:
                 retval.append(lock)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("evaluate_resource_constraints() failed for %s: %s", constraint, e)
+            logger.error("failed for %s: %s", constraint, e)
     return retval
 
 
@@ -722,7 +722,7 @@ def evaluate_budgets(now: Optional[datetime] = None) -> int:
             if constraint.evaluate(now):
                 retval += 1
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("evaluate_budgets() failed for %s: %s", constraint, e)
+            logger.error("failed for %s: %s", constraint, e)
     return retval
 
 

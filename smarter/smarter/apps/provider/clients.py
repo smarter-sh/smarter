@@ -176,11 +176,10 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             if not self.requires_reasoning_effort_none(self.provider, data, e):
                 raise
             logger.warning(
-                "%s %s rejected function tools with model %s at its default reasoning effort: %s. "
+                "%s rejected function tools with model %s at its default reasoning effort: %s. "
                 "Retrying with reasoning_effort='none', which this model requires for function tools "
                 "in /v1/chat/completions. Set reasoning_effort explicitly in the request, or use "
                 "/v1/responses, to avoid this retry.",
-                logger_prefix,
                 self.provider,
                 data.get("model"),
                 e,
@@ -239,8 +238,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             )
 
         logger.debug(
-            "%s called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s",
-            logger_prefix,
+            "called with request: %s, user_profile: %s, api_key: %s, base_url: %s, provider_name: %s",
             request,
             user_profile,
             self.mask_string(self.api_key) if self.api_key else None,
@@ -251,12 +249,12 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             provider = Provider.objects.filter(name=self.provider).with_read_permission_for(request.user).first()  # type: ignore
             if not provider:
                 raise Provider.DoesNotExist
-            logger.debug("%s found provider: %s", logger_prefix, provider)
+            logger.debug("found provider: %s", provider)
             if provider.api_key:
                 openai.api_key = provider.api_key.get_secret()
             openai.base_url = provider.base_url
         except Provider.DoesNotExist:
-            logger.error("%s provider not found: %s", logger_prefix, self.provider)
+            logger.error("provider not found: %s", self.provider)
             return SmarterHttpResponseNotFound(request=request, error_message="Provider not found")
         if self.api_key:
             openai.api_key = self.api_key
@@ -269,13 +267,19 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             # a client error, answered with 400. Never log the body: it holds the
             # system prompt and the user's messages.
             body_size = len(request.body)
-            logger.warning("%s JSON decode error: %s. Request body: %s bytes", logger_prefix, e, body_size)
+            logger.warning(
+                "JSON decode error: %s. Request body: %s bytes",
+                e,
+                body_size,
+            )
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
         # pylint: disable=broad-except
         except Exception as e:
             body_size = len(request.body)
             logger.warning(
-                "%s Unexpected error decoding JSON body: %s. Request body: %s bytes", logger_prefix, e, body_size
+                "Unexpected error decoding JSON body: %s. Request body: %s bytes",
+                e,
+                body_size,
             )
             return SmarterHttpResponseBadRequest(request=request, error_message="Invalid JSON body")
 
@@ -288,8 +292,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
             # never the data itself: it holds the system prompt and the user's messages.
             request_summary = iteration_summary(data)
             logger.debug(
-                "%s sending request to %s: %s",
-                logger_prefix,
+                "sending request to %s: %s",
                 openai.base_url,
                 request_summary,
             )
@@ -315,7 +318,12 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
                 status = client_error_status
             else:
                 status = self.server_error_status(e)
-                logger.error("%s error calling %s: %s", logger_prefix, openai.base_url, str(e), exc_info=True)
+                logger.error(
+                    "error calling %s: %s",
+                    openai.base_url,
+                    str(e),
+                    exc_info=True,
+                )
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=e,
@@ -336,7 +344,7 @@ class OpenAIPassthroughClient(SmarterHelperMixin):
 
         # never the response itself: its choices hold the LLM's reply.
         response_id = response_dict.get("id")
-        logger.debug("%s returning response: %s", logger_prefix, response_id)
+        logger.debug("returning response: %s", response_id)
         return SmarterJournaledJsonResponse(
             request=request,
             data=response_dict,

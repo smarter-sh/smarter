@@ -386,7 +386,7 @@ class MCPEndpointBase(ABC):
             return self.error(request.id, mcp_types.METHOD_NOT_FOUND, str(e))
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.error("%s %s failed: %s", self.formatted_class_name, request.method, e, exc_info=True)
+            logger.error("%s failed: %s", request.method, e, exc_info=True)
             return self.error(request.id, mcp_types.INTERNAL_ERROR, f"{request.method} failed.")
 
         result_json = result.model_dump(mode="json", by_alias=True, exclude_none=True)

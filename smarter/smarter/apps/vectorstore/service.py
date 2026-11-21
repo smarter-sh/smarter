@@ -72,7 +72,6 @@ from .signals import (
 )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 API_KEY_SECRET_NAME = "vectorstore_{name}_api_key"
 API_KEY_BYTES = 32
@@ -144,7 +143,13 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         vectorstore.status_message = message
         vectorstore.save(update_fields=["status", "status_message", "updated_at"])
         if previous != status:
-            logger.info("%s %s: %s -> %s %s", logger_prefix, vectorstore, previous, status, message)
+            logger.info(
+                "%s: %s -> %s %s",
+                vectorstore,
+                previous,
+                status,
+                message,
+            )
             vectorstore_status_changed.send(
                 sender=self.__class__, vectorstore=vectorstore, previous=previous, status=status, message=message
             )
@@ -225,11 +230,15 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
                 return vectorstore.status
             if not self.backend.exists():
                 self.backend.create()
-                logger.info("%s created %s of %s", logger_prefix, vectorstore.index_name, vectorstore)
+                logger.info(
+                    "created %s of %s",
+                    vectorstore.index_name,
+                    vectorstore,
+                )
             self.refresh_stats()
             self.set_status(VectorstoreStatus.READY, "")
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.warning("%s.reconcile() %s: %s", logger_prefix, vectorstore, e)
+            logger.warning("%s: %s", vectorstore, e)
             self.set_status(VectorstoreStatus.FAILED, str(e))
         finally:
             vectorstore.last_checked_at = timezone.now()
@@ -486,7 +495,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             try:
                 self.backend.delete_snapshot(snapshot.name)
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.warning("%s.prune_snapshots() %s: %s", logger_prefix, snapshot, e)
+                logger.warning("%s: %s", snapshot, e)
                 continue
             snapshot.delete()
             removed += 1
@@ -555,7 +564,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             try:
                 result["snapshot"] = self.snapshot(scheduled=True).name
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.warning("%s.maintain() snapshot of %s failed: %s", logger_prefix, self.vectorstore, e)
+                logger.warning("snapshot of %s failed: %s", self.vectorstore, e)
         result["pruned"] = self.prune_snapshots()
         result["retry"] = list(self.stuck_documents(now).values_list("pk", flat=True))
         with transaction.atomic():

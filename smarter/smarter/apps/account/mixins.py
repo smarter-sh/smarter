@@ -289,8 +289,7 @@ class AccountMixin(SmarterHelperMixin):
                     self._account = get_cached_account_for_user(invalidate=False, user=self._user)
                 except Account.DoesNotExist as e:
                     logger.error(
-                        "%s.account() could not find an account for user %s during lazy loading. This should not happen.",
-                        self._am_formatted_class_name,
+                        "could not find an account for user %s during lazy loading. This should not happen.",
                         self._user,
                     )
                     raise SmarterBusinessRuleViolation(
@@ -298,8 +297,7 @@ class AccountMixin(SmarterHelperMixin):
                     ) from e
                 except Account.MultipleObjectsReturned:
                     logger.info(
-                        "%s.account() found multiple accounts for user %s during lazy loading. Cannot lazily initialize account from UserProfile.",
-                        self._am_formatted_class_name,
+                        "found multiple accounts for user %s during lazy loading. Cannot lazily initialize account from UserProfile.",
                         self._user,
                     )
                     return (
@@ -314,8 +312,7 @@ class AccountMixin(SmarterHelperMixin):
                         self._am_log_ready_status()
                     except UserProfile.DoesNotExist as e:
                         logger.error(
-                            "%s.account() could not find a user_profile for user %s and account %s during lazy loading. This should not happen.",
-                            self._am_formatted_class_name,
+                            "could not find a user_profile for user %s and account %s during lazy loading. This should not happen.",
                             self._user,
                             self._account,
                         )
@@ -326,8 +323,7 @@ class AccountMixin(SmarterHelperMixin):
             return None
         except AttributeError as e:
             logger.error(
-                "%s.account() AccountMixin appears to be only partially initialized: %s",
-                self._am_formatted_class_name,
+                "AccountMixin appears to be only partially initialized: %s",
                 e,
                 exc_info=True,
             )
@@ -335,8 +331,7 @@ class AccountMixin(SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.account() encountered an error while trying to resolve account: %s",
-                self._am_formatted_class_name,
+                "encountered an error while trying to resolve account: %s",
                 e,
                 exc_info=True,
             )
@@ -423,8 +418,7 @@ class AccountMixin(SmarterHelperMixin):
             return self._user
         except AttributeError as e:
             logger.error(
-                "%s.account() AccountMixin appears to be only partially initialized: %s",
-                self._am_formatted_class_name,
+                "AccountMixin appears to be only partially initialized: %s",
                 e,
                 exc_info=True,
             )
@@ -432,8 +426,7 @@ class AccountMixin(SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.user() encountered an error while trying to resolve user: %s",
-                self._am_formatted_class_name,
+                "encountered an error while trying to resolve user: %s",
                 e,
                 exc_info=True,
             )
@@ -467,8 +460,7 @@ class AccountMixin(SmarterHelperMixin):
             raise SmarterBusinessRuleViolation(f"User {self._user} does not belong to any account.") from e
         except UserProfile.MultipleObjectsReturned:
             logger.info(
-                "%s.user.setter: found multiple user_profiles for user %s during lazy loading. Cannot lazily initialize user_profile from User.",
-                self._am_formatted_class_name,
+                "found multiple user_profiles for user %s during lazy loading. Cannot lazily initialize user_profile from User.",
                 self._user,
             )
 
@@ -509,8 +501,7 @@ class AccountMixin(SmarterHelperMixin):
             return self._user_profile
         except AttributeError as e:
             logger.error(
-                "%s.account() AccountMixin appears to be only partially initialized: %s",
-                self._am_formatted_class_name,
+                "AccountMixin appears to be only partially initialized: %s",
                 e,
                 exc_info=True,
             )
@@ -518,8 +509,7 @@ class AccountMixin(SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.user_profile() encountered an error while trying to resolve user_profile: %s",
-                self._am_formatted_class_name,
+                "encountered an error while trying to resolve user_profile: %s",
                 e,
                 exc_info=True,
             )
@@ -598,8 +588,7 @@ class AccountMixin(SmarterHelperMixin):
             return self._am_ready
         except AttributeError as e:
             logger.error(
-                "%s.account() AccountMixin appears to be only partially initialized. This is a bug: %s",
-                self._am_formatted_class_name,
+                "AccountMixin appears to be only partially initialized. This is a bug: %s",
                 e,
                 exc_info=True,
             )
@@ -607,8 +596,7 @@ class AccountMixin(SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception as e:
             logger.error(
-                "%s.am_ready() encountered an error while checking am_ready state. This is a bug: %s",
-                self._am_formatted_class_name,
+                "encountered an error while checking am_ready state. This is a bug: %s",
                 e,
                 exc_info=True,
             )
@@ -675,8 +663,7 @@ class AccountMixin(SmarterHelperMixin):
             return True
         if not isinstance(api_token, bytes):
             logger.warning(
-                "%s.authenticate(): invalid api_token type: %s. Expected bytes.",
-                self._am_formatted_class_name,
+                "invalid api_token type: %s. Expected bytes.",
                 type(api_token),
             )
             return False
@@ -690,15 +677,13 @@ class AccountMixin(SmarterHelperMixin):
             self._user = SmarterAnonymousUser()
             self._account = None
             self._user_profile = None
-            logger.warning(
-                "%s.authenticate(): failed to authenticate user from API token", self._am_formatted_class_name
-            )
+            logger.warning("failed to authenticate user from API token")
         return False
 
     def log_ready_status(self):
         """Logs the ready status of the view, building the message only when it will be logged."""
         if logger.should_log(logging.INFO):
-            logger.info("%s is %s", self.formatted_class_name, self.ready_state)
+            logger.info("is %s", self.ready_state)
 
     def _am_log_ready_status(self):
         """
@@ -708,4 +693,4 @@ class AccountMixin(SmarterHelperMixin):
         the ready state, is only built when it will be logged.
         """
         if logger.should_log(logging.INFO):
-            logger.info("%s is %s", self._am_formatted_class_name, self._am_ready_state)
+            logger.info("is %s", self._am_ready_state)

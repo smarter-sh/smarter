@@ -29,8 +29,7 @@ from functools import lru_cache
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 
@@ -139,7 +138,7 @@ def rfc1034_compliant_to_snake(val) -> str:
             print(e)
         # Output: Could not convert RFC 1034 compliant name from <class 'int'>
     """
-    logger.debug("%s.rfc1034_compliant_to_snake()", logger_prefix)
+    logger.debug("called")
     if not isinstance(val, str):
         raise SmarterValueError(f"Could not convert RFC 1034 compliant name from {type(val)}")
     # Replace hyphens with underscores

@@ -166,7 +166,7 @@ class InfrastructureResourceListApiView(SmarterAuthenticatedNeverCachedWebView):
             },
             "choices": choices(),
         }
-        logger.debug("%s.post() returning %s resources", self.formatted_class_name, len(retval["objects"]))
+        logger.debug("returning %s resources", len(retval["objects"]))
         return JsonResponse(retval)
 
 

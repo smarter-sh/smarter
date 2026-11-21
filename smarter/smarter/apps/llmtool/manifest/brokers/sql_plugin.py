@@ -84,7 +84,10 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     def plugin_init(self) -> None:
@@ -261,7 +264,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             )
             return self._manifest
         else:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     @property
@@ -334,16 +337,14 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
 
         if self.plugin_meta is None:
             logger.warning(
-                "%s.plugin_data could not be retrieved because plugin_meta is None",
-                self.formatted_class_name,
+                "could not be retrieved because plugin_meta is None",
             )
             return None
 
         self._plugin_data = PluginDataSql.get_cached_data_by_plugin(plugin=self.plugin_meta)
         if not self._plugin_data:
             logger.warning(
-                "%s.plugin_data could not be found for %s %s",
-                self.formatted_class_name,
+                "could not be found for %s %s",
                 self.kind,
                 self.plugin_meta.name,
             )
@@ -382,8 +383,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             return self._sql_plugin_spec
         if not self.plugin_meta:
             logger.warning(
-                "%s.plugin_sql_spec_orm2pydantic could not be built for %s %s because plugin_meta is None",
-                self.formatted_class_name,
+                "could not be built for %s %s because plugin_meta is None",
                 self.kind,
                 self.manifest.metadata.name if self.manifest and self.manifest.metadata else "<-- Missing Name -->",
             )
@@ -494,9 +494,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
             )
         for test_value in orm_test_values:
-            logger.info(
-                "%s.plugin_data_orm2pydantic() processing test_value: %s", self.formatted_class_name, test_value
-            )
+            logger.info("processing test_value: %s", test_value)
             # example:  {'name': 'username', 'value': 'admin'}
             if not isinstance(test_value, dict):
                 raise SAMPluginBrokerError(
@@ -527,7 +525,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Invalidate any relevant caches when the manifest or plugin data changes."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         if self.plugin:
             PluginDataSql.get_cached_object(invalidate=True, plugin=self.plugin)  # type: ignore
         return super().cache_invalidations()
@@ -561,8 +559,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournaledJsonResponse`
         """
         logger.debug(
-            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -612,8 +609,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMPluginMeta`
         """
         logger.debug(
-            "%s.describe() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -662,8 +658,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SAMBrokerErrorNotReady`
         """
         logger.debug(
-            "%s.apply() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -723,8 +718,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.prompt() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -760,8 +754,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SmarterJournalCliCommands`
         """
         logger.debug(
-            "%s.delete() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -824,8 +817,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.deploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -850,8 +842,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.undeploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -875,8 +866,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.logs() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,

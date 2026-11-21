@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from smarter.apps.llmtool.plugin.base import PluginBase
     from smarter.apps.mcpclient.models import MCPClient
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 EVENT_STREAM_CONTENT_TYPE = "text/event-stream"
 KEEPALIVE_SECONDS = 15.0
@@ -155,7 +155,7 @@ def emit(event_type: str, message: str, **detail: Any) -> None:
         sink({"type": event_type, "message": message, **detail})
     # pylint: disable=broad-exception-caught
     except Exception:
-        logger.exception("%s.emit() failed to send a progress event.", __name__)
+        logger.exception("failed to send a progress event.")
 
 
 def wants_event_stream(request: HttpRequest) -> bool:
@@ -382,7 +382,7 @@ async def prompt_event_stream(
                     return complete()
                 # pylint: disable=broad-exception-caught
                 except Exception as e:
-                    logger.exception("%s.prompt_event_stream() the prompt failed.", __name__)
+                    logger.exception("the prompt failed.")
                     return on_error(e)
         finally:
             # the worker thread's database connection is its own.
@@ -406,7 +406,9 @@ async def prompt_event_stream(
         # a client that disconnects doesn't stop the prompt, which finishes in its thread,
         # and is saved in the chat session's history.
         if not task.done():
-            logger.info("%s.prompt_event_stream() the client disconnected before the prompt finished.", __name__)
+            logger.info(
+                "the client disconnected before the prompt finished.",
+            )
 
 
 def prompt_event_stream_response(

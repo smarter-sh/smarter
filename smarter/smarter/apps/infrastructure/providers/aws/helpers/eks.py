@@ -29,7 +29,7 @@ from smarter.lib.typing import SmarterDictType
 from .base import AWSBase
 from .exceptions import AWSNotReadyError, SmarterAWSError
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 EKS_TOKEN_PREFIX = "k8s-aws-v1."
 EKS_TOKEN_CLUSTER_HEADER = "x-k8s-aws-id"
@@ -127,7 +127,7 @@ class AWSEks(AWSBase):
 
         :returns: The cluster's health, platformVersion, status and Kubernetes version.
         """
-        logger.debug("%s.get_kubernetes_info() called", self.formatted_class_name)
+        logger.debug("called")
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         if not self.cluster_name_is_set():
@@ -147,7 +147,7 @@ class AWSEks(AWSBase):
         :returns: The ``name`` and ``arn`` of each, by ``cluster``, ``addons`` and ``nodegroups``.
         :raises AWSNotReadyError: If AWS is not ready, or the cluster's name is not set.
         """
-        logger.debug("%s.get_cluster_resources() called", self.formatted_class_name)
+        logger.debug("called")
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         if not self.cluster_name_is_set():
@@ -237,7 +237,7 @@ class AWSEks(AWSBase):
         """
         details = error.response.get("Error", {})
         code = details.get("Code", "ClientError")
-        logger.warning("%s.get_cluster_health() could not read %s: %s", self.formatted_class_name, part, code)
+        logger.warning("could not read %s: %s", part, code)
         return f"{part}: {code}"
 
     def _nodegroups(self, cluster_name: str) -> list[NodeGroupHealth]:
@@ -320,7 +320,11 @@ class AWSEks(AWSBase):
         try:
             response = self.eks.describe_addon_versions(addonName=name, kubernetesVersion=kubernetes_version)
         except ClientError as e:
-            logger.debug("%s could not read the versions of %s: %s", self.formatted_class_name, name, e)
+            logger.debug(
+                "could not read the versions of %s: %s",
+                name,
+                e,
+            )
             return None
         versions = []
         for addon in response.get("addons", []):
@@ -372,8 +376,7 @@ class AWSEks(AWSBase):
         region = smarter_settings.aws_region
         if not cluster_name or not region:
             logger.error(
-                "%s.update_kubeconfig() aws_eks_cluster_name and aws_region must be set to update the kubeconfig.",
-                self.formatted_class_name,
+                "aws_eks_cluster_name and aws_region must be set to update the kubeconfig.",
             )
             return False
         command = ["aws", "eks", "update-kubeconfig", "--region", region, "--name", cluster_name]
@@ -382,9 +385,9 @@ class AWSEks(AWSBase):
             # account id, which the rest of the log masks. Errors still go to stderr.
             subprocess.check_call(command, stdout=subprocess.DEVNULL)  # nosec B603 B607
         except (subprocess.CalledProcessError, OSError) as e:
-            logger.error("%s.update_kubeconfig() failed to update the kubeconfig: %s", self.formatted_class_name, e)
+            logger.error("failed to update the kubeconfig: %s", e)
             return False
-        logger.debug("%s.update_kubeconfig() updated the kubeconfig of %s", self.formatted_class_name, cluster_name)
+        logger.debug("updated the kubeconfig of %s", cluster_name)
         return True
 
     def get_token(self) -> tuple[str, float]:

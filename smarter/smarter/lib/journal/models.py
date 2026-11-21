@@ -34,7 +34,6 @@ from .storage import (
 )
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 DOCUMENT_FIELDS = ("request_document", "response_document")
 """The columns of :class:`SAMJournal` that hold its documents: a query that lists entries defers them."""
@@ -163,7 +162,6 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
         :param visited: The blobs already marked, which this extends.
         :param reachable: The digests of the blobs already marked, which this extends.
         """
-        prefix = f"{logger_prefix}.{self.__class__.__name__}.mark()"
         while pending:
             batch: list[BlobReference] = []
             while pending and len(batch) < PRUNE_BATCH_SIZE:
@@ -178,7 +176,7 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
             for digest, is_node in batch:
                 data = loaded.get(digest)
                 if data is None:
-                    logger.error("%s an entry references the missing journal blob %s", prefix, digest)
+                    logger.error("an entry references the missing journal blob %s", digest)
                     continue
                 value = unpack(data)
                 if is_node:
@@ -200,7 +198,6 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
         :returns: The number of blobs deleted, or that would be.
         :raises ValueError: If ``grace`` isn't longer than :data:`BLOB_TOUCH_INTERVAL`.
         """
-        prefix = f"{logger_prefix}.{self.__class__.__name__}.prune()"
         if grace <= BLOB_TOUCH_INTERVAL:
             raise ValueError(f"grace must be longer than {BLOB_TOUCH_INTERVAL}, which is {grace}.")
         cutoff = timezone.now() - grace
@@ -217,14 +214,14 @@ class SAMJournalBlobManager(models.Manager["SAMJournalBlob"]):
                 if digest not in reachable:
                     unreferenced.append(digest)
         if dry_run:
-            logger.info("%s %s unreferenced journal blobs would be deleted", prefix, len(unreferenced))
+            logger.info("%s unreferenced journal blobs would be deleted", len(unreferenced))
             return len(unreferenced)
         deleted = 0
         for start in range(0, len(unreferenced), PRUNE_BATCH_SIZE):
             batch = unreferenced[start : start + PRUNE_BATCH_SIZE]
             count, _ = self.filter(digest__in=batch, last_used_at__lt=cutoff).delete()
             deleted += count
-        logger.info("%s deleted %s unreferenced journal blobs, of %s reachable", prefix, deleted, len(reachable))
+        logger.info("deleted %s unreferenced journal blobs, of %s reachable", deleted, len(reachable))
         return deleted
 
 

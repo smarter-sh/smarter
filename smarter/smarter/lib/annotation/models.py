@@ -26,8 +26,7 @@ from .const import ANNOTATION_KEY_MAX_LENGTH, ANNOTATION_KEY_PREFIX_MAX_LENGTH
 from .contract import AnnotationChange
 from .validation import AnnotationsMap, split_annotation_key
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 ModelOrInstance = Union[type[models.Model], models.Model]
 """A Django model class, or one of its instances."""
@@ -265,8 +264,7 @@ class AnnotationQuerySet(QuerySet["Annotation"]):
                     row.save(update_fields=["value", "updated_at"])
         if changes:
             logger.debug(
-                "%s.sync() %s changes to the annotations of %s %s",
-                logger_prefix,
+                "%s changes to the annotations of %s %s",
                 len(changes),
                 content_type.model,
                 instance.pk,

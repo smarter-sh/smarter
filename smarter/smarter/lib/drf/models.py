@@ -4,7 +4,6 @@ import hmac
 import uuid
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from logging import getLogger
 from typing import Optional
 
 from cache_results import cache_results
@@ -23,12 +22,11 @@ from smarter.apps.account.models import (
     user_administers_account,
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.utils import to_snake_case
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 
-logger = getLogger(__name__)
-logger_prefix = SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 ###############################################################################
 # API Key Management
@@ -102,8 +100,7 @@ class SmarterAuthTokenManager(MetaDataWithOwnershipModelManager["SmarterAuthToke
         auth_token.save()
         # never log token_key: it is the first characters of the token itself.
         logger.info(
-            "%s.SmarterAuthTokenManager.create() created API key %s (%s) for user %s, expiring %s",
-            logger_prefix,
+            "created API key %s (%s) for user %s, expiring %s",
             auth_token.name,
             auth_token.key_id,
             user,
@@ -329,8 +326,7 @@ class SmarterAuthToken(AuthToken, MetaDataWithOwnershipModel):
         if isinstance(self.name, str) and self.name and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = to_snake_case(self.name)
             logger.warning(
-                "%s.%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                logger_prefix,
+                ".%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
                 self.__class__.__name__,
                 self.name,
                 snake_case_name,

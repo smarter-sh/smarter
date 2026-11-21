@@ -118,7 +118,10 @@ class SAMMCPClientBroker(AbstractBroker[MCPClient, MCPClient]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property
@@ -139,7 +142,7 @@ class SAMMCPClientBroker(AbstractBroker[MCPClient, MCPClient]):
         if self._ready:
             return self._ready
         if not super().ready:
-            logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
         if self.manifest is not None or self.account is not None:
             self._ready = True
@@ -451,8 +454,7 @@ class SAMMCPClientBroker(AbstractBroker[MCPClient, MCPClient]):
                     mcpclient.tags.set(tags)
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s: %s",
-                    self.formatted_class_name,
+                    "failed to save %s %s: %s",
                     self.kind,
                     self.manifest.metadata.name,
                     e,

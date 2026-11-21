@@ -14,8 +14,6 @@ from .models.compute import LLMHostComputeNodeGroupStatus
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_HOST_LOGGING])
 
-module_prefix = __name__
-
 
 @receiver(post_save, sender=LLMHost)
 def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
@@ -30,11 +28,10 @@ def llmhost_saved(sender, instance: LLMHost, created: bool, **kwargs):
     :param created: Whether it was created, rather than updated.
     """
 
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_saved()"
     if created:
-        logger.info("%s created %s (id %s)", prefix, instance, instance.pk)
+        logger.info("created %s (id %s)", instance, instance.pk)
     else:
-        logger.info("%s updated %s (id %s)", prefix, instance, instance.pk)
+        logger.info("updated %s (id %s)", instance, instance.pk)
 
 
 @receiver(pre_delete, sender=LLMHost)
@@ -45,8 +42,7 @@ def llmhost_deleted(sender, instance: LLMHost, **kwargs):
     :param sender: The LLMHost model.
     :param instance: The LLMHost being deleted.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
 
 
 @receiver(pre_delete, sender=LLMHostCompute)
@@ -61,14 +57,13 @@ def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
     from .services.compute import ComputeProvisioner
     from .services.exceptions import LLMHostComputeError
 
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.llmhost_compute_deleted()"
     if instance.nodegroup_status == LLMHostComputeNodeGroupStatus.ABSENT:
         return
     try:
         ComputeProvisioner().delete_nodegroup(instance)
-        logger.info("%s deleted the node group of %s", prefix, instance)
+        logger.info("deleted the node group of %s", instance)
     except LLMHostComputeError as e:
-        logger.error("%s the node group of %s was not deleted: %s", prefix, instance, e)
+        logger.error("the node group of %s was not deleted: %s", instance, e)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

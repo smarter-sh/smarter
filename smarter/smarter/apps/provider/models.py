@@ -354,31 +354,30 @@ class Provider(MetaDataWithOwnershipModel):
         try:
             if self.api_key is not None:
                 logger.info(
-                    "%s verifying API connectivity and key for %s with URL: %s",
-                    self.formatted_class_name,
+                    "verifying API connectivity and key for %s with URL: %s",
                     self.name,
                     url,
                 )
                 response = requests.get(url, headers=self.authorization_header, timeout=10)
             else:
                 logger.info(
-                    "%s verifying API connectivity for %s with URL: %s", self.formatted_class_name, self.name, url
+                    "verifying API connectivity for %s with URL: %s",
+                    self.name,
+                    url,
                 )
                 response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 return True
             else:
                 logger.error(
-                    "%s API URL and key verification for %s failed with status code: %s",
-                    self.formatted_class_name,
+                    "API URL and key verification for %s failed with status code: %s",
                     self.name,
                     response.status_code,
                 )
                 return False
         except requests.RequestException as exc:
             logger.error(
-                "%s Got an unexpected error testing API URL and key verification for %s failed: %s",
-                self.formatted_class_name,
+                "Got an unexpected error testing API URL and key verification for %s failed: %s",
                 self.name,
                 exc,
             )
@@ -519,31 +518,24 @@ class Provider(MetaDataWithOwnershipModel):
         :returns: The provider, or None if the account has no provider with this name.
         """
 
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + "." + Provider.__name__ + ".get_cached_provider_by_account_id_and_name()"
-        )
-
         @cache_results()
         def cached_provider_by_account_id_and_name(account_id: int, name: str) -> Optional["Provider"]:
             try:
                 logger.debug(
-                    "%s.cached_provider_by_account_id_and_name() cache miss for account_id: %s, name: %s",
-                    logger_prefix,
+                    "cache miss for account_id: %s, name: %s",
                     account_id,
                     name,
                 )
                 retval = cls.objects.get(user_profile__account__id=account_id, name=name)
                 logger.debug(
-                    "%s.cached_provider_by_account_id_and_name() fetched and cached provider for account_id: %s, name: %s",
-                    logger_prefix,
+                    "fetched and cached provider for account_id: %s, name: %s",
                     account_id,
                     name,
                 )
                 return retval
             except cls.DoesNotExist:
                 logger.debug(
-                    "%s.cached_provider_by_account_id_and_name() no provider found for account_id: %s, name: %s",
-                    logger_prefix,
+                    "no provider found for account_id: %s, name: %s",
                     account_id,
                     name,
                 )
@@ -572,25 +564,19 @@ class Provider(MetaDataWithOwnershipModel):
         :returns: The providers the user has read permission for, or an empty list if the user has
             no UserProfile.
         """
-        logger_prefix = logging.SmarterFormattedText.text(
-            __name__ + "." + Provider.__name__ + ".get_cached_providers_for_user()"
-        )
 
         @cache_results()
         def cached_providers_by_user_id(user_id: int) -> Sequence["Provider"]:
-            logger.debug("%s cache miss for user_id: %s", logger_prefix, user_id)
+            logger.debug("cache miss for user_id: %s", user_id)
             retval = Provider.objects.with_read_permission_for(user_profile.user)
-            logger.debug(
-                "%s.cached_providers_by_user_id() fetched and cached providers for user_id: %s", logger_prefix, user_id
-            )
+            logger.debug("fetched and cached providers for user_id: %s", user_id)
             return list(retval) if retval else []
 
         try:
             user_profile = UserProfile.get_cached_object(invalidate=invalidate, user=user)
         except UserProfile.DoesNotExist:
             logger.error(
-                "%s UserProfile does not exist for user: %s. This is a bug.",
-                logger_prefix,
+                "UserProfile does not exist for user: %s. This is a bug.",
                 user,
             )
             return []

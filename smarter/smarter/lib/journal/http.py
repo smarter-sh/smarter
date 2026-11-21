@@ -41,8 +41,7 @@ from .signals import journal_entry_failed
 from .sources import SAMJournalSource
 from .tasks import SAMJournalEntryRecord, queue_journal_entry
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 JSON_RESPONSE_KWARGS = frozenset({"content_type", "status", "headers", "reason"})
 """The keyword arguments of a journaled response that are passed on to :class:`django.http.JsonResponse`."""
@@ -262,7 +261,6 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
         :returns: The serialized request, or an empty dict if it could not be serialized, e.g. an
             ``ASGIRequest`` without ``GET``.
         """
-        prefix = f"{logger_prefix}.{self.formatted_class_name}.serialized_request()"
         serializer_class: type[HttpAnonymousRequestSerializer] = HttpAnonymousRequestSerializer
         if is_authenticated:
             serializer_class = HttpAuthenticatedRequestSerializer
@@ -270,7 +268,7 @@ class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
             serialized: SmarterDictType = serializer_class(request).data
         except AttributeError:
             url = self.smarter_build_absolute_uri(request) or "Unknown URL"
-            logger.error("%s %s could not serialize the request for %s", prefix, serializer_class.__name__, url)
+            logger.error("%s could not serialize the request for %s", serializer_class.__name__, url)
             return {}
         return serialized
 
@@ -372,17 +370,14 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 command=str(command),
             )
         )
-        init_prefix = f"{logger_prefix}.{self.formatted_class_name}.__init__()"
         if int(status) >= HTTPStatus.INTERNAL_SERVER_ERROR:
             # the server failed: log it with its stack trace, which, when include_stack_trace is
             # False, is never sent to the client.
-            logger.error("%s %s", init_prefix, SmarterFormattedText.json(error_response.dump()))
+            logger.error("%s", SmarterFormattedText.json(error_response.dump()))
         else:
             # the client's request was rejected, e.g. an invalid api key (401) or manifest (400):
             # expected, so a warning, and its stack trace is noise.
-            logger.warning(
-                "%s %s", init_prefix, SmarterFormattedText.json(error_response.dump(include_stack_trace=False))
-            )
+            logger.warning("%s", SmarterFormattedText.json(error_response.dump(include_stack_trace=False)))
         data = error_response.dump(include_stack_trace=include_stack_trace)
 
         super().__init__(

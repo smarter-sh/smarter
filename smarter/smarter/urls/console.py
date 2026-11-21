@@ -80,7 +80,7 @@ from smarter.lib.django.waffle import SmarterSwitchAdmin
 from smarter.lib.drf import urls as drf_urls
 from smarter.lib.drf.const import namespace as drf_namespace
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
@@ -267,26 +267,20 @@ if smarter_settings.enable_proxy:
     urlpatterns += [
         path("proxy/", include(proxy_urls, namespace=proxy_namespace)),
     ]
-    logger.debug(
-        "%s Proxy web console access is %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
-    )
+    logger.debug("Proxy web console access is %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Proxy web console access is %s. Set env `SMARTER_ENABLE_PROXY=true` to enable.",
         SmarterReadyState.NOT_READY,
     )
 if smarter_settings.enable_vectorstore:
     urlpatterns += [
         path("vectorstore/", include(vectorstore_urls, namespace=vectorstore_namespace)),
     ]
-    logger.debug(
-        "%s Vectorstore web console access is %s.", logging.SmarterFormattedText.text(__name__), SmarterReadyState.READY
-    )
+    logger.debug("Vectorstore web console access is %s.", SmarterReadyState.READY)
 else:
     logger.info(
-        "%s Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "Vectorstore web console access is %s. Set env `SMARTER_ENABLE_VECTORSTORE=true` to enable.",
         SmarterReadyState.NOT_READY,
     )
 
@@ -302,8 +296,7 @@ if smarter_settings.environment == SmarterEnvironments.LOCAL and smarter_setting
         path("__debug__/", include(debug_toolbar.urls)),
     ]
     logger.debug(
-        "%s added debug_toolbar URLs to urlpatterns.",
-        logging.SmarterFormattedText.text(__name__),
+        "added debug_toolbar URLs to urlpatterns.",
     )
 
 

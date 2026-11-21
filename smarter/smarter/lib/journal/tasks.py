@@ -41,7 +41,6 @@ from .sources import (
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING])
 error_logger = logging.getSmarterLogger(__name__)
 """Logs whatever the waffle switches, for a journal entry that could not be saved."""
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NOT_RETRYABLE = (DataError,)
 """Errors that fail the same way on every retry, e.g. a value too long for its column."""
@@ -98,9 +97,8 @@ def write_journal_entry(record: SAMJournalEntryRecord) -> Optional[SAMJournal]:
     :returns: The new entry, or None if an entry with its key existed.
     :raises JournalSourceNotReady: If a source's row is not written yet.
     """
-    prefix = f"{logger_prefix}.write_journal_entry()"
     if SAMJournal.objects.filter(key=record.key).exists():
-        logger.debug("%s journal entry %s exists already", prefix, record.key)
+        logger.debug("journal entry %s exists already", record.key)
         return None
     response = attach_sources(record.response, record.sources)
     journal = SAMJournal.objects.create_entry(
@@ -143,8 +141,7 @@ def create_journal_entry(self, record: dict[str, JsonValue]) -> None:
         retries = self.request.retries
         countdown = source_retry_countdown(retries)
         logger.debug(
-            "%s journal entry %s waits %ss for its source: %s",
-            f"{logger_prefix}.create_journal_entry()",
+            "journal entry %s waits %ss for its source: %s",
             entry.key,
             countdown,
             e,
@@ -180,7 +177,6 @@ def queue_journal_entry(record: SAMJournalEntryRecord, sources: Sequence[SAMJour
     :param sources: The parts of the response that the worker reads from the database.
     :raises Exception: Whatever saving the entry raised, if it couldn't be queued nor saved.
     """
-    prefix = f"{logger_prefix}.queue_journal_entry()"
     response, references = detach_sources(record.response, sources)
     queued = record.model_copy(update={"response": response, "sources": references})
     payload = queued.model_dump(mode="json")
@@ -188,14 +184,13 @@ def queue_journal_entry(record: SAMJournalEntryRecord, sources: Sequence[SAMJour
         create_journal_entry.delay(payload)
     except Exception as e:  # pylint: disable=broad-exception-caught
         error_logger.warning(
-            "%s could not queue journal entry %s, and is saving it now: %s",
-            prefix,
+            "could not queue journal entry %s, and is saving it now: %s",
             record.key,
             type(e).__name__,
         )
         write_journal_entry(record)
         return
-    logger.debug("%s queued journal entry %s", prefix, record.key)
+    logger.debug("queued journal entry %s", record.key)
 
 
 @app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)

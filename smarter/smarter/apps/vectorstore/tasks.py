@@ -31,7 +31,6 @@ from .service import VectorstoreService
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 QUEUE = smarter_settings.llmclient_tasks_celery_task_queue
 # snapshots and reconciliation manage vector databases, which can take minutes, so they run
 # in the infrastructure queue, and never block the operational tasks of QUEUE.
@@ -51,7 +50,7 @@ def load_vectorstore_document(document_id: int) -> Optional[int]:
     try:
         return VectorstoreService(document.vectorstore).load_document(document)
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.warning("%s.load_vectorstore_document() %s: %s", logger_prefix, document, e)
+        logger.warning("%s: %s", document, e)
         return None
 
 
@@ -117,7 +116,7 @@ def maintain_vectorstores() -> SmarterDictType:
             _requeue(result["retry"])
             results[str(vectorstore)] = result
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("%s.maintain_vectorstores() %s: %s", logger_prefix, vectorstore, e)
+            logger.error("%s: %s", vectorstore, e)
             results[str(vectorstore)] = {"error": str(e)}
     return results
 

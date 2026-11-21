@@ -425,7 +425,7 @@ class MCPServerConnection:
                 message = f"HTTP {cause.response.status_code} from {cause.request.url}"
             else:
                 message = str(cause) or type(cause).__name__
-            logger.warning("%s %s failed: %s", self.formatted_class_name, description, message)
+            logger.warning("%s failed: %s", description, message)
             raise SmarterMCPClientConnectionError(
                 f"MCPClient {self.mcpclient.name} could not {description}: {message}"
             ) from cause

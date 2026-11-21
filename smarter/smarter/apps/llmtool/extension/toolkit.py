@@ -152,7 +152,7 @@ class ExtensionToolkit:
                 loaded = load_version(extension.installed_version)
             except SmarterExtensionLoadError as e:
                 self.errors[extension.slug] = e.message
-                logger.warning("%s.load() skipping extension %s: %s", self.formatted_class_name, extension.slug, e)
+                logger.warning("skipping extension %s: %s", extension.slug, e)
                 continue
             self.loaded.append(extension)
             for tool in loaded.tools.values():
@@ -305,7 +305,7 @@ class ExtensionToolkit:
         # a tool is the extension's code, which can fail in any way at all.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.exception("%s.execute() %s %s %s raised: %s", self.formatted_class_name, slug, version, tool_name, e)
+            logger.exception("%s %s %s raised: %s", slug, version, tool_name, e)
             raise ExtensionToolCallError(f"The tool failed: {type(e).__name__}: {e}") from e
         finally:
             executor.shutdown(wait=False)
@@ -332,8 +332,7 @@ class ExtensionToolkit:
             error=error,
         )
         logger.warning(
-            "%s.call() %s %s failed in thread %s: %s",
-            self.formatted_class_name,
+            "%s %s failed in thread %s: %s",
             function.extension.slug,
             function.tool.name,
             threading.current_thread().name,

@@ -253,10 +253,9 @@ class TestInitializePlatform(CommandTestBase):
 
         with patch(f"{MODULE}.logger") as logger:
             self.run_with_static_files_on_cdn(True, call)
-        logger.info.assert_any_call("%s.upload_static_files() uploading the static files to the CDN's bucket", ANY)
+        logger.info.assert_any_call("uploading the static files to the CDN's bucket")
         logger.info.assert_any_call(
-            "%s.upload_static_files() checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
-            ANY,
+            "checked %s static files, and uploaded the %s that were new or changed, in %.0fs",
             5,
             2,
             ANY,

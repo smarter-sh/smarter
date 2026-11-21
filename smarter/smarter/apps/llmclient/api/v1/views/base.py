@@ -292,7 +292,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         :param message: The message to log.
         :type message: str
         """
-        logger.debug("%s: %s", self.formatted_class_name, message)
+        logger.debug("%s", message)
 
     def setup(self, request: HttpRequest, *args, **kwargs):
         """
@@ -541,8 +541,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
 
         if not self.llmclient:
             logger.error(
-                "%s.post() LLMClient not found. name=%s, llmclient_id=%s, session_key=%s",
-                self.formatted_class_name,
+                "LLMClient not found. name=%s, llmclient_id=%s, session_key=%s",
                 self.name,
                 self.llmclient_id,
                 self.session_key,
@@ -553,8 +552,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         )
         if self.chat_helper is None:
             logger.error(
-                "%s.post() PromptHelper not found. name=%s, llmclient_id=%s, session_key=%s",
-                self.formatted_class_name,
+                "PromptHelper not found. name=%s, llmclient_id=%s, session_key=%s",
                 self.name,
                 self.llmclient_id,
                 self.session_key,
@@ -570,8 +568,7 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         prompt_data = self.data
         if not prompt_data or not isinstance(prompt_data, (dict, list)):
             logger.warning(
-                "%s.post() rejected a prompt whose body is empty or not JSON. name=%s, llmclient_id=%s, data_type=%s",
-                self.formatted_class_name,
+                "rejected a prompt whose body is empty or not JSON. name=%s, llmclient_id=%s, data_type=%s",
                 self.name,
                 self.llmclient_id,
                 type(prompt_data).__name__,

@@ -24,8 +24,7 @@ class DrfConfig(AppConfig):
         from . import receivers, signals  # noqa: F401
 
         logger.debug(
-            "%s.DrfConfig.ready() %s app is %s",
-            logging.SmarterFormattedText.text(__name__),
+            "%s app is %s",
             f"{SMARTER_APP_NAME} {app_name.upper()}",
             SmarterReadyState.READY,
         )

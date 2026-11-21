@@ -13,8 +13,6 @@ from .models import Vectorsearch
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSEARCH_LOGGING])
 
-module_prefix = __name__
-
 
 @receiver(post_save, sender=Vectorsearch)
 def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
@@ -28,11 +26,10 @@ def vectorsearch_saved(sender, instance: Vectorsearch, created: bool, **kwargs):
     :param instance: The Vectorsearch that was saved.
     :param created: True if the Vectorsearch was created, False if it was updated.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_saved()"
     if created:
-        logger.info("%s created %s (id %s)", prefix, instance, instance.pk)
+        logger.info("created %s (id %s)", instance, instance.pk)
     else:
-        logger.info("%s updated %s (id %s)", prefix, instance, instance.pk)
+        logger.info("updated %s (id %s)", instance, instance.pk)
 
 
 @receiver(pre_delete, sender=Vectorsearch)
@@ -43,8 +40,7 @@ def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
     :param sender: The model class.
     :param instance: The Vectorsearch being deleted.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.vectorsearch_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

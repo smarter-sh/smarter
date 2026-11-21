@@ -57,7 +57,6 @@ from .utils import apply_ingress_manifest, is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -75,28 +74,26 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
         was not deployed on its custom domain, because it does not exist, is not deployed, or its
         custom domain is missing or not verified.
     """
-    prefix = logger_prefix + f".{deploy_custom_api.__name__}()"
     task_id = deploy_custom_api.request.id
     if not is_taskable():
         return None
     llmclient = LLMClient.objects.filter(id=llmclient_id).select_related("custom_domain").first()
     if llmclient is None:
-        logger.warning("%s LLMClient %s not found. Nothing to do. task_id: %s", prefix, llmclient_id, task_id)
+        logger.warning("LLMClient %s not found. Nothing to do. task_id: %s", llmclient_id, task_id)
         return None
     custom_domain = llmclient.custom_domain
     # custom_host is None unless the llmclient has a verified custom domain.
     custom_host = llmclient.custom_host
     if not llmclient.deployed or not custom_domain or not custom_host:
         logger.info(
-            "%s LLMClient %s is not deployed, or has no verified custom domain. Nothing to do. task_id: %s",
-            prefix,
+            "LLMClient %s is not deployed, or has no verified custom domain. Nothing to do. task_id: %s",
             llmclient.name,
             task_id,
         )
         return None
 
     pre_deploy_custom_api.send(sender=deploy_custom_api, llmclient_id=llmclient_id)
-    logger.info("%s deploying llmclient %s on %s task_id: %s", prefix, llmclient.name, custom_host, task_id)
+    logger.info("deploying llmclient %s on %s task_id: %s", llmclient.name, custom_host, task_id)
 
     if smarter_settings.llmclient_tasks_create_dns_record:
         # the custom host's A record is a copy of the platform API domain's A record, in the
@@ -106,13 +103,11 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
             api_host_domain=llmclient.base_api_domain,
             zone_id=custom_domain.aws_hosted_zone_id,
         )
-        logger.info(
-            "%s %s the A record of %s task_id: %s", prefix, "created" if created else "verified", custom_host, task_id
-        )
+        logger.info("%s the A record of %s task_id: %s", "created" if created else "verified", custom_host, task_id)
     if smarter_settings.llmclient_tasks_create_ingress_manifest:
         # cert-manager issues the custom host's own TLS certificate for its ingress.
         apply_ingress_manifest(custom_host)
-        logger.info("%s applied the ingress of %s task_id: %s", prefix, custom_host, task_id)
+        logger.info("applied the ingress of %s task_id: %s", custom_host, task_id)
 
     post_deploy_custom_api.send(sender=deploy_custom_api, llmclient_id=llmclient_id, task_id=task_id)
     return custom_host

@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 MAX_ACCOUNT_TREE_DEPTH = 32
 """
@@ -142,8 +141,7 @@ def readable_account_ids(account_id: int) -> tuple[int, ...]:
         retval.append(sharing_account_id)
 
     logger.debug(
-        "%s.readable_account_ids() account id %s may read the resources of %s accounts.",
-        logger_prefix,
+        "account id %s may read the resources of %s accounts.",
         account_id,
         len(retval),
     )
@@ -164,8 +162,7 @@ def invalidate_readable_account_ids() -> None:
     for account_id in account_ids:
         readable_account_ids.invalidate(account_id)  # type: ignore
     logger.debug(
-        "%s.invalidate_readable_account_ids() invalidated %s accounts.",
-        logger_prefix,
+        "invalidated %s accounts.",
         len(account_ids),
     )
 
@@ -210,8 +207,7 @@ def resolve_by_name(queryset: "SmarterQuerySetWithPermissions[_RT]", name: str, 
 
     retval = min(matches, key=precedence)
     logger.debug(
-        "%s.resolve_by_name() %s %s resolved to id %s, owned by account id %s.",
-        logger_prefix,
+        "%s %s resolved to id %s, owned by account id %s.",
         model.__name__,
         name,
         retval.pk,

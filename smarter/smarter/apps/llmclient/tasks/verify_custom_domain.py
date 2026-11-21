@@ -76,7 +76,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 CERTIFICATE_ISSUED = CertificateStatus.ISSUED
 
@@ -126,14 +125,13 @@ def verify_custom_domain(
         True if the domain is verified, False if it is not after max_attempts checks, and None
         if it will be checked again.
     """
-    fn_name = logger_prefix + ".verify_custom_domain()"
     task_id = task_id or verify_custom_domain.request.id
     if not hosted_zone_id:
         custom_domain = None
         if custom_domain_id is not None:
             custom_domain = LLMClientCustomDomain.objects.filter(pk=custom_domain_id).first()
         if custom_domain is None:
-            logger.error("%s custom domain %s not found. task_id: %s", fn_name, custom_domain_id, task_id)
+            logger.error("custom domain %s not found. task_id: %s", custom_domain_id, task_id)
             return False
         if not custom_domain.aws_hosted_zone_id:
             # nothing can be verified, and nothing will change, until the domain is registered.
@@ -141,7 +139,7 @@ def verify_custom_domain(
                 f"{custom_domain.domain_name} has no DNS zone, because it is not registered. "
                 "Run smarter deploy to register it."
             )
-            logger.warning("%s %s task_id: %s", fn_name, message, task_id)
+            logger.warning("%s task_id: %s", message, task_id)
             custom_domain.set_verification_status(Status.FAILED, message)
             return False
         hosted_zone_id = custom_domain.aws_hosted_zone_id
@@ -158,13 +156,12 @@ def verify_custom_domain(
     custom_domain = LLMClientCustomDomain.objects.filter(aws_hosted_zone_id=hosted_zone_id).first()
 
     if attempt == 0:
-        logger.info("%s verifying %s, DNS zone %s task_id: %s", fn_name, domain_name, hosted_zone_id, task_id)
+        logger.info("verifying %s, DNS zone %s task_id: %s", domain_name, hosted_zone_id, task_id)
         pre_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
         if custom_domain and not custom_domain.is_verified:
             custom_domain.set_verification_status(Status.VERIFYING, "Verification has started.")
     logger.info(
-        "%s %s %s Attempt: %s of %s task_id: %s",
-        fn_name,
+        "%s %s Attempt: %s of %s task_id: %s",
         hosted_zone_id,
         domain_name,
         attempt + 1,
@@ -174,7 +171,7 @@ def verify_custom_domain(
 
     blocker = _verification_blocker(hosted_zone_id, domain_name, task_id)
     if blocker is None:
-        logger.info("%s %s is verified: its certificate is issued. task_id %s", fn_name, domain_name, task_id)
+        logger.info("%s is verified: its certificate is issued. task_id %s", domain_name, task_id)
         if custom_domain:
             custom_domain.set_verification_status(Status.VERIFIED)
             _deploy_llmclient_on(custom_domain)
@@ -189,11 +186,11 @@ def verify_custom_domain(
                 ),
             )
         else:
-            logger.info("%s domain %s is not a LLMClient custom domain.", fn_name, domain_name)
+            logger.info("domain %s is not a LLMClient custom domain.", domain_name)
         post_verify_custom_domain.send(sender=verify_custom_domain, hosted_zone_id=hosted_zone_id, task_id=task_id)
         return True
 
-    logger.info("%s %s is not verified yet: %s task_id %s", fn_name, domain_name, blocker, task_id)
+    logger.info("%s is not verified yet: %s task_id %s", domain_name, blocker, task_id)
     if attempt + 1 < max_attempts:
         if custom_domain and not custom_domain.is_verified:
             custom_domain.set_verification_status(Status.VERIFYING, blocker)
@@ -210,7 +207,7 @@ def verify_custom_domain(
         )
         return None
 
-    logger.error("%s Domain verification failed for domain %s: %s task_id: %s", fn_name, domain_name, blocker, task_id)
+    logger.error("Domain verification failed for domain %s: %s task_id: %s", domain_name, blocker, task_id)
     if custom_domain:
         custom_domain.set_verification_status(Status.FAILED, blocker)
         _notify(
@@ -246,25 +243,23 @@ def _verification_blocker(hosted_zone_id: str, domain_name: str, task_id: Option
 
 def _ns_records_verified(hosted_zone_id: str, domain_name: str, task_id: Optional[str]) -> bool:
     """Check once whether the domain's public NS records include one of its DNS zone's name servers."""
-    fn_name = logger_prefix + "._ns_records_verified()"
     try:
         dns_ns_records = {normalize_name(rdata.to_text()) for rdata in dns.resolver.query(domain_name, "NS")}
     except dns.resolver.NXDOMAIN:
-        logger.warning("%s domain %s does not exist.", fn_name, domain_name)
+        logger.warning("domain %s does not exist.", domain_name)
         return False
     except dns.resolver.Timeout:
-        logger.warning("%s timeout exceeded while querying the domain %s.", fn_name, domain_name)
+        logger.warning("timeout exceeded while querying the domain %s.", domain_name)
         return False
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("%s unexpected error while querying domain %s: %s", fn_name, domain_name, str(e))
+        logger.error("unexpected error while querying domain %s: %s", domain_name, str(e))
         return False
 
     name_servers = infrastructure.dns.get_name_servers(hosted_zone_id)
     for i, name_server in enumerate(name_servers, start=1):
         logger.info(
-            "%s checking name server %s (%s of %s) against DNS NS records %s task_id: %s",
-            fn_name,
+            "checking name server %s (%s of %s) against DNS NS records %s task_id: %s",
             name_server,
             i,
             len(name_servers),

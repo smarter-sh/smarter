@@ -37,8 +37,7 @@ from smarter.lib.django.listview import (
 )
 from smarter.lib.django.pagination import MAX_SEARCH_LENGTH, has_field, tag_condition
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 TAG_PREFIX = "tag:"
 """The prefix of a query that finds the resources with a tag, e.g. ``tag:production``."""
@@ -239,7 +238,7 @@ def global_search(user, query: str, entries: Optional[tuple[ListviewEntry, ...]]
         # one list's failure must not hide the others' results.
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            logger.error("%s.global_search() searching %s failed: %s", logger_prefix, entry.label, e)
+            logger.error("searching %s failed: %s", entry.label, e)
             continue
         url = list_url(entry, mode, value)
         response.groups.append(

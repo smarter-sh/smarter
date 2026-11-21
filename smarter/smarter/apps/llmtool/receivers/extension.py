@@ -3,7 +3,6 @@
 
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -21,8 +20,6 @@ from ..signals.extension import (
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
-logger_prefix = SmarterFormattedText.text(__name__)
-
 
 @receiver(extension_installed, dispatch_uid="extension_installed")
 def handle_extension_installed(sender, extension, version, **kwargs):
@@ -35,7 +32,7 @@ def handle_extension_installed(sender, extension, version, **kwargs):
     :param extension: The extension.
     :param version: The installed ExtensionVersion.
     """
-    logger.info("%s.extension_installed() %s version: %s", logger_prefix, extension.slug, version.version)
+    logger.info("%s version: %s", extension.slug, version.version)
 
 
 @receiver(extension_upgraded, dispatch_uid="extension_upgraded")
@@ -51,8 +48,7 @@ def handle_extension_upgraded(sender, extension, version, previous_version: str,
     :param previous_version: The version that was installed before.
     """
     logger.info(
-        "%s.extension_upgraded() %s version: %s previous_version: %s",
-        logger_prefix,
+        "%s version: %s previous_version: %s",
         extension.slug,
         version.version,
         previous_version,
@@ -69,7 +65,7 @@ def handle_extension_uninstalled(sender, slug: str, **kwargs):
     :param sender: The class that sent the signal.
     :param slug: The extension's slug.
     """
-    logger.info("%s.extension_uninstalled() %s", logger_prefix, slug)
+    logger.info("%s", slug)
 
 
 @receiver(extension_enabled, dispatch_uid="extension_enabled")
@@ -82,7 +78,7 @@ def handle_extension_enabled(sender, extension, **kwargs):
     :param sender: The class that sent the signal.
     :param extension: The extension.
     """
-    logger.info("%s.extension_enabled() %s", logger_prefix, extension.slug)
+    logger.info("%s", extension.slug)
 
 
 @receiver(extension_disabled, dispatch_uid="extension_disabled")
@@ -96,7 +92,7 @@ def handle_extension_disabled(sender, extension, reason: str = "", **kwargs):
     :param extension: The extension.
     :param reason: Why it was disabled.
     """
-    logger.warning("%s.extension_disabled() %s reason: %s", logger_prefix, extension.slug, reason)
+    logger.warning("%s reason: %s", extension.slug, reason)
 
 
 @receiver(extension_tool_called, dispatch_uid="extension_tool_called")
@@ -113,8 +109,7 @@ def handle_extension_tool_called(sender, slug: str, version: str, tool_name: str
     :param arguments: The arguments that the LLM called the tool with.
     """
     logger.info(
-        "%s.extension_tool_called() %s %s %s arguments: %s",
-        logger_prefix,
+        "%s %s %s arguments: %s",
         slug,
         version,
         tool_name,
@@ -139,8 +134,7 @@ def handle_extension_tool_responded(
     :param cached: Whether the response was served from the cache.
     """
     logger.info(
-        "%s.extension_tool_responded() %s %s %s characters: %s cached: %s",
-        logger_prefix,
+        "%s %s %s characters: %s cached: %s",
         slug,
         version,
         tool_name,
@@ -163,8 +157,7 @@ def handle_extension_tool_failed(sender, slug: str, version: str, tool_name: str
     :param error: Why it failed.
     """
     logger.warning(
-        "%s.extension_tool_failed() %s %s %s failed: %s",
-        logger_prefix,
+        "%s %s %s failed: %s",
         slug,
         version,
         tool_name,
@@ -189,8 +182,7 @@ def handle_extension_tool_completed(
     :param duration: Seconds that the request took.
     """
     logger.info(
-        "%s.extension_tool_completed() %s %s %s success: %s duration: %.3fs",
-        logger_prefix,
+        "%s %s %s success: %s duration: %.3fs",
         slug,
         version,
         tool_name,

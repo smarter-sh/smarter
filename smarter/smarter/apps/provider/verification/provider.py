@@ -21,7 +21,6 @@ from smarter.apps.provider.utils import (
     test_web_page,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -37,8 +36,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-
-module_prefix = "smarter.apps.provider.verification.provider."
 
 
 def verify_provider_api_connectivity(provider: Provider, **kwargs) -> bool:
@@ -184,30 +181,29 @@ def verify_provider_production_api_key(provider: Provider, **kwargs) -> bool:
 
 def verify_provider(provider_id, **kwargs):
     """Run test bank on provider."""
-    prefix = SmarterFormattedText.text(module_prefix + "verify_provider()")
     try:
         provider = Provider.objects.get(id=provider_id)
     except Provider.DoesNotExist:
-        logger.error("%s Provider with id %s does not exist", prefix, provider_id)
+        logger.error("Provider with id %s does not exist", provider_id)
         return
 
-    logger.info("%s Testing provider: %s", prefix, provider.name)
+    logger.info("Testing provider: %s", provider.name)
     if provider.is_active:
-        logger.warning("%s Provider %s is already active.", prefix, provider.name)
+        logger.warning("Provider %s is already active.", provider.name)
 
     # blackball method
     success = True
 
     if provider.is_deprecated:
-        logger.warning("%s Provider %s is deprecated, cannot verify.", prefix, provider.name)
+        logger.warning("Provider %s is deprecated, cannot verify.", provider.name)
         success = False
 
     if provider.is_suspended:
-        logger.warning("%s Provider %s is suspended, cannot verify.", prefix, provider.name)
+        logger.warning("Provider %s is suspended, cannot verify.", provider.name)
         success = False
 
     if provider.is_flagged:
-        logger.warning("%s Provider %s is flagged, cannot verify.", prefix, provider.name)
+        logger.warning("Provider %s is flagged, cannot verify.", provider.name)
         success = False
 
     # verify base_url with api_key
@@ -232,11 +228,11 @@ def verify_provider(provider_id, **kwargs):
             # activate() sends provider_activated.
             provider.activate()
         except SmarterValueError as exc:
-            logger.error("%s Activation failed for provider: %s, error: %s", prefix, provider.name, exc)
+            logger.error("Activation failed for provider: %s, error: %s", provider.name, exc)
     else:
         provider.status = ProviderStatus.FAILED
         provider.is_verified = False
         provider.is_active = False
         provider.save(update_fields=["status", "is_active", "is_verified"])
-        logger.error("%s Verification failed for provider: %s", prefix, provider.name)
+        logger.error("Verification failed for provider: %s", provider.name)
         provider_verification_failure.send(sender=Provider, provider=provider)

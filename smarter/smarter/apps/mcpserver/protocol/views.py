@@ -225,7 +225,7 @@ class StaffEndpointView(SmarterView):
             user, status = staff_user(request)
         if status != HTTPStatus.OK:
             # the status, not the client's IP address, which is personal data.
-            logger.warning("%s refused a request: %s", self.formatted_class_name, status)
+            logger.warning("refused a request: %s", status)
             if status == HTTPStatus.UNAUTHORIZED:
                 message = "this server requires the api key of a staff user, in an Authorization: Token <key> header."
             else:

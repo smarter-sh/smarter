@@ -73,7 +73,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 # a check every 5 minutes, for up to 4 hours.
 VERIFY_DOMAIN_INTERVAL = 300
@@ -115,41 +114,37 @@ def check_domain(
     :param task_id: The Celery task id, for logging and signals.
     :param llmclient: The LLMClient that the domain serves, if any, which is sent with the signals.
     """
-    fn_name = f"{logger_prefix}.check_domain()"
     if not hosted_zone_id:
         zone = infrastructure.dns.get_zone(smarter_settings.environment_api_domain)
         if zone is None:
-            logger.warning(
-                "%s DNS zone of %s not found. task_id: %s", fn_name, smarter_settings.environment_api_domain, task_id
-            )
+            logger.warning("DNS zone of %s not found. task_id: %s", smarter_settings.environment_api_domain, task_id)
             return DomainCheck.MISSING
         hosted_zone_id = zone.id
 
     # 1. verify that the DNS record actually exists. If it doesn't then there's no point in checking again.
     dns_record = infrastructure.dns.get_record(hosted_zone_id, domain_name, record_type)
     if not dns_record:
-        logger.warning("%s DNS record for domain %s not found. task_id: %s", fn_name, domain_name, task_id)
+        logger.warning("DNS record for domain %s not found. task_id: %s", domain_name, task_id)
         return DomainCheck.MISSING
 
     # 2. verify that the domain resolves
     try:
         addresses = {rdata.to_text() for rdata in dns.resolver.query(domain_name, record_type)}
     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-        logger.warning("%s unable to resolve domain %s task_id: %s", fn_name, domain_name, task_id)
+        logger.warning("unable to resolve domain %s task_id: %s", domain_name, task_id)
         llmclient_dns_failed.send(
             sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
         return DomainCheck.PENDING
     except dns.resolver.Timeout:
-        logger.warning("%s timeout exceeded while querying the domain %s task_id: %s", fn_name, domain_name, task_id)
+        logger.warning("timeout exceeded while querying the domain %s task_id: %s", domain_name, task_id)
         llmclient_dns_failed.send(
             sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
         return DomainCheck.PENDING
 
     logger.info(
-        "%s successfully resolved domain %s to %s records %s task_id: %s",
-        fn_name,
+        "successfully resolved domain %s to %s records %s task_id: %s",
         domain_name,
         record_type,
         addresses,
@@ -226,18 +221,16 @@ def verify_domain(
     """
     if not is_taskable():
         return False
-    fn_name = f"{logger_prefix}.verify_domain()"
     task_id = task_id or verify_domain.request.id
     llmclient = LLMClient.objects.filter(pk=llmclient_id).first() if llmclient_id else None
     if attempt == 0:
-        logger.info("%s verifying domain %s task_id: %s", fn_name, domain_name, task_id)
+        logger.info("verifying domain %s task_id: %s", domain_name, task_id)
         pre_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
         llmclient_dns_verification_initiated.send(
             sender=verify_domain, llmclient=llmclient, domain_name=domain_name, record_type=record_type, task_id=task_id
         )
     logger.info(
-        "%s Attempt %s of %s to verify domain %s task_id: %s",
-        fn_name,
+        "Attempt %s of %s to verify domain %s task_id: %s",
         attempt + 1,
         VERIFY_DOMAIN_MAX_ATTEMPTS,
         domain_name,
@@ -270,9 +263,7 @@ def verify_domain(
         return None
 
     if result != DomainCheck.VERIFIED:
-        logger.error(
-            "%s unable to verify domain %s after %s attempts task_id: %s", fn_name, domain_name, attempt + 1, task_id
-        )
+        logger.error("unable to verify domain %s after %s attempts task_id: %s", domain_name, attempt + 1, task_id)
         if llmclient:
             llmclient_dns_failed.send(
                 sender=verify_domain,
@@ -290,9 +281,7 @@ def verify_domain(
     if activate_llmclient and llmclient and not llmclient.deployed:
         llmclient.deployed = True
         llmclient.save(asynchronous=True)
-        logger.info(
-            "%s LLMClient %s has been deployed to %s task_id: %s", fn_name, llmclient.name, domain_name, task_id
-        )
+        logger.info("LLMClient %s has been deployed to %s task_id: %s", llmclient.name, domain_name, task_id)
 
     post_verify_domain.send(sender=verify_domain, domain_name=domain_name, record_type=record_type, task_id=task_id)
     return True

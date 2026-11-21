@@ -14,7 +14,7 @@ from smarter.apps.dashboard.resource_detail import resource_detail
 from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedNeverCachedWebView
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
@@ -67,5 +67,5 @@ class ResourceDetailView(SmarterAuthenticatedNeverCachedWebView):
         detail = resource_detail(request, kind, record_locator)
         if detail is None:
             return JsonResponse({"error": f"{kind or record_locator} not found."}, status=HTTPStatus.NOT_FOUND)
-        logger.debug("%s.post() detail of %s %s", self.formatted_class_name, kind, record_locator)
+        logger.debug("detail of %s %s", kind, record_locator)
         return JsonResponse(detail.model_dump(mode="json"), status=HTTPStatus.OK)

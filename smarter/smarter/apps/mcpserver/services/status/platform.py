@@ -39,7 +39,6 @@ if TYPE_CHECKING:
     from kombu.transport.virtual import Channel
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 NOT_FOUND = "404"
 """
@@ -102,7 +101,7 @@ def queue_depths() -> dict[str, Optional[int]]:
                 depths[queue] = queue_depth(channel, queue)  # type: ignore[arg-type]
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.queue_depths() could not reach the broker: %s", logger_prefix, e)
+        logger.warning("could not reach the broker: %s", e)
         for queue in queues:
             depths[queue] = None
     return depths
@@ -127,11 +126,11 @@ def queue_depth(channel: "Channel", queue: str) -> Optional[int]:
     except ChannelError as e:
         if str(e.reply_code) == NOT_FOUND:
             return 0
-        logger.warning("%s.queue_depth() could not read %s: %s", logger_prefix, queue, e)
+        logger.warning("could not read %s: %s", queue, e)
         return None
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.queue_depth() could not read %s: %s", logger_prefix, queue, e)
+        logger.warning("could not read %s: %s", queue, e)
         return None
     return int(declared.message_count)
 

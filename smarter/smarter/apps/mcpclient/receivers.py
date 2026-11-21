@@ -33,8 +33,6 @@ from .tasks import refresh_mcpclient
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPCLIENT_LOGGING])
 
-module_prefix = __name__
-
 
 @receiver(post_save, sender=MCPClient)
 def mcpclient_saved(sender, instance: MCPClient, created: bool, **kwargs):
@@ -45,9 +43,8 @@ def mcpclient_saved(sender, instance: MCPClient, created: bool, **kwargs):
     email address is personal data. Status updates are made with queryset updates, which
     do not send ``post_save``, so this runs only when the MCPClient's configuration is saved.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_saved()"
     action = "created" if created else "updated"
-    logger.info("%s %s %s (id %s)", prefix, action, instance, instance.pk)
+    logger.info("%s %s (id %s)", action, instance, instance.pk)
     if instance.is_active and instance.endpoint_url:
         mcpclient_id = instance.pk
         transaction.on_commit(lambda: refresh_mcpclient.delay(mcpclient_id))
@@ -61,8 +58,7 @@ def mcpclient_deleted(sender, instance: MCPClient, **kwargs):
     :param sender: The model class.
     :param instance: The MCPClient being deleted.
     """
-    prefix = f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_deleted()"
-    logger.info("%s %s", prefix, instance)
+    logger.info("%s", instance)
     invalidate_cached_catalog(instance)
 
 
@@ -76,8 +72,7 @@ def handle_mcpclient_connected(sender, mcpclient: MCPClient, catalog, **kwargs):
     :param catalog: The server's catalog: its name, version, protocol version and tools.
     """
     logger.info(
-        "%s %s connected to %s %s, protocol %s, %s tools",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_connected",
+        "%s connected to %s %s, protocol %s, %s tools",
         mcpclient.name,
         catalog.server_name,
         catalog.server_version,
@@ -96,8 +91,7 @@ def handle_mcpclient_connection_failed(sender, mcpclient: MCPClient, error: str,
     :param error: The error.
     """
     logger.warning(
-        "%s %s: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_connection_failed",
+        "%s: %s",
         mcpclient.name,
         error,
     )
@@ -110,8 +104,7 @@ def handle_mcpclient_tool_called(sender, mcpclient: MCPClient, tool_name: str, a
     The arguments are not logged, because they may contain user data.
     """
     logger.info(
-        "%s %s %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_called",
+        "%s %s",
         mcpclient.name,
         tool_name,
     )
@@ -132,8 +125,7 @@ def handle_mcpclient_tool_responded(
     :param cached: True if the result came from the cache.
     """
     logger.info(
-        "%s %s %s is_error: %s characters: %s cached: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_responded",
+        "%s %s is_error: %s characters: %s cached: %s",
         mcpclient.name,
         tool_name,
         is_error,
@@ -153,8 +145,7 @@ def handle_mcpclient_tool_failed(sender, mcpclient: MCPClient, tool_name: str, e
     :param error: The error.
     """
     logger.warning(
-        "%s %s %s failed: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_tool_failed",
+        "%s %s failed: %s",
         mcpclient.name,
         tool_name,
         error,
@@ -175,8 +166,7 @@ def handle_mcpclient_resource_read(
     :param cached: True if the content came from the cache.
     """
     logger.info(
-        "%s %s %s characters: %s cached: %s",
-        f"{logging.SmarterFormattedText.text(module_prefix)}.mcpclient_resource_read",
+        "%s %s characters: %s cached: %s",
         mcpclient.name,
         uri,
         characters,

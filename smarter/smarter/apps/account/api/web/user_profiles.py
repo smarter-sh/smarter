@@ -186,17 +186,16 @@ class UserProfileSelectView(SmarterAuthenticatedNeverCachedWebView):
         try:
             body = UserProfileSelectRequest.model_validate(json.loads(request.body or b"{}"))
         except (ValueError, ValidationError) as e:
-            logger.warning("%s.post() invalid body from user %s: %s", self.formatted_class_name, user.pk, e)
+            logger.warning("invalid body from user %s: %s", user.pk, e)
             return http.JsonResponse({"error": "Invalid request body."}, status=HTTPStatus.BAD_REQUEST)
         if not UserProfile.objects.filter(pk=body.user_profile_id, user=user).exists():
             logger.warning(
-                "%s.post() user %s chose UserProfile %s, which isn't theirs",
-                self.formatted_class_name,
+                "user %s chose UserProfile %s, which isn't theirs",
                 user.pk,
                 body.user_profile_id,
             )
             return http.JsonResponse({"error": "Not one of your profiles."}, status=HTTPStatus.NOT_FOUND)
         request.session[SELECTED_USER_PROFILE_SESSION_KEY] = body.user_profile_id
-        logger.info("%s.post() user %s chose UserProfile %s", self.formatted_class_name, user.pk, body.user_profile_id)
+        logger.info("user %s chose UserProfile %s", user.pk, body.user_profile_id)
         response = UserProfilesApiResponse.for_user(user, body.user_profile_id)
         return http.JsonResponse(response.model_dump(mode="json"), status=HTTPStatus.OK)

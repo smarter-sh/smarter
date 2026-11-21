@@ -18,7 +18,6 @@ from smarter.apps.vectorstore.enum import (
     VectorstoreHosting,
     VectorstoreMetric,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType, required
@@ -238,7 +237,7 @@ class VectorstoreMeta(MetaDataWithOwnershipModel):
 
         if invalidate:
             get_cached_vectorstores_for_user_id.invalidate(user_id=user.id)  # type: ignore
-        logger.debug("%s for %s", f"{SmarterFormattedText.text(__name__)}.get_cached_vectorstores_for_user()", user)
+        logger.debug("for %s", user)
         return get_cached_vectorstores_for_user_id(user_id=user.id)  # type: ignore
 
     def __str__(self) -> str:

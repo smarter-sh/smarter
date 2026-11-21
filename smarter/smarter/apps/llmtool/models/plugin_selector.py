@@ -107,15 +107,13 @@ class PluginSelector(TimestampedModel):
             try:
                 retval = cls.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s.get_cached_selector_by_plugin() fetched and cached PluginSelector for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "fetched and cached PluginSelector for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_selector_by_plugin: Selector not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Selector not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginSelector with plugin_id {plugin_id} does not exist.") from e

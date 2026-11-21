@@ -16,8 +16,7 @@ from social_core.exceptions import AuthCanceled, AuthTokenError
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class LinkedinOpenIdConnect(OpenIdConnectAuth):
@@ -209,7 +208,7 @@ class LinkedinOAuth2(BaseOAuth2):
             "email": email,
         }
         # The details are personal data (name, email), so only the username is logged.
-        logger.debug("%s.LinkedinOAuth2.get_user_details() username=%s", logger_prefix, retval["username"])
+        logger.debug("username=%s", retval["username"])
         return retval
 
     def user_data_headers(self, access_token: str) -> dict:

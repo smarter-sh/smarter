@@ -33,7 +33,6 @@ from .utils import LEGACY_API_SERVICE_NAME, apply_ingress_manifest
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def deployed_hosts() -> list[str]:
@@ -78,12 +77,11 @@ def retarget_llmclient_ingresses(dry_run: bool = False) -> list[str]:
     :param dry_run: Find the ingresses, and log them, but change nothing.
     :returns: The hosts whose ingresses were rewritten, or that a dry run would rewrite.
     """
-    fn_name = logger_prefix + ".retarget_llmclient_ingresses()"
     if not smarter_settings.llmclient_tasks_create_ingress_manifest:
-        logger.info("%s skipped: this platform doesn't create LLMClient ingresses.", fn_name)
+        logger.info("skipped: this platform doesn't create LLMClient ingresses.")
         return []
     if not infrastructure.kubernetes.ready:
-        logger.info("%s skipped: Kubernetes isn't configured.", fn_name)
+        logger.info("skipped: Kubernetes isn't configured.")
         return []
 
     namespace = smarter_settings.environment_namespace
@@ -97,6 +95,6 @@ def retarget_llmclient_ingresses(dry_run: bool = False) -> list[str]:
         if not dry_run:
             apply_ingress_manifest(host)
         retargeted.append(host)
-        logger.info("%s %s the ingress of %s", fn_name, "would retarget" if dry_run else "retargeted", host)
-    logger.info("%s %d ingresses %s.", fn_name, len(retargeted), "would be retargeted" if dry_run else "retargeted")
+        logger.info("%s the ingress of %s", "would retarget" if dry_run else "retargeted", host)
+    logger.info("%d ingresses %s.", len(retargeted), "would be retargeted" if dry_run else "retargeted")
     return retargeted

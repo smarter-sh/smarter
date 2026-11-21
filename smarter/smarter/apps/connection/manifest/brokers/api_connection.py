@@ -89,7 +89,10 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     # override the base abstract manifest model with the ApiConnection model
@@ -260,7 +263,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             sections = self.manifest_sections
             sections[SAMKeys.STATUS.value] = self.manifest_status or None
             self._manifest = SAMApiConnection.model_validate(sections)
-            logger.debug("%s.manifest() initialized manifest from manifest data", self.formatted_class_name)
+            logger.debug("initialized manifest from manifest data")
         # 2.) next, (and only if there is no manifest data) try to initialize
         #     from existing ApiConnection model if available
         elif self.connection:
@@ -307,12 +310,11 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             return self._manifest
         else:
             logger.debug(
-                "%s.manifest() could not initialize the %s manifest: there is no manifest data or connection.",
-                self.formatted_class_name,
+                "could not initialize the %s manifest: there is no manifest data or connection.",
                 self.kind,
             )
         if not self._manifest:
-            logger.debug("%s.manifest could not be initialized", self.formatted_class_name)
+            logger.debug("could not be initialized")
         return self._manifest
 
     def manifest_to_django_orm(self) -> SmarterDictType:
@@ -422,8 +424,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             return self._api_key_secret
         except Secret.DoesNotExist:
             logger.warning(
-                "%s api_key Secret %s not found for account %s",
-                self.formatted_class_name,
+                "api_key Secret %s not found for account %s",
                 name or "(name is missing)",
                 self.account,
             )
@@ -475,8 +476,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
-                "%s proxy password Secret %s not found for account %s",
-                self.formatted_class_name,
+                "proxy password Secret %s not found for account %s",
                 name or "(name is missing)",
                 self.account,
             )
@@ -518,15 +518,13 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         name = str(self.to_snake_case(self.name))  # type: ignore
         if not name:
             logger.warning(
-                "%s.connection() name is missing. Cannot retrieve or create ApiConnection.",
-                self.formatted_class_name,
+                "name is missing. Cannot retrieve or create ApiConnection.",
             )
             return None
         self._connection = ApiConnection.objects.filter(name=name).with_read_permission_for(user=self.user).first()  # type: ignore
         if self._connection:
             logger.debug(
-                "%s.connection() %s found for %s",
-                self.formatted_class_name,
+                "%s found for %s",
                 self._connection.name,
                 self._connection.user_profile,
             )
@@ -561,22 +559,19 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                 self._connection.save()
                 self._created = True
                 logger.info(
-                    "%s.connection() created ApiConnection %s for account %s",
-                    self.formatted_class_name,
+                    "created ApiConnection %s for account %s",
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
                 )
             else:
                 logger.error(
-                    "%s.connection() ApiConnection %s not found for account %s",
-                    self.formatted_class_name,
+                    "ApiConnection %s not found for account %s",
                     self.name or "(name is missing)",
                     self.account or "(account is missing)",
                 )
         if not self._connection:
             logger.warning(
-                "%s.connection() could not retrieve or create ApiConnection %s for account %s",
-                self.formatted_class_name,
+                "could not retrieve or create ApiConnection %s for account %s",
                 self.name or "(name is missing)",
                 self.user_profile or "(user profile is missing)",
             )
@@ -612,8 +607,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             print(response.data)
         """
         logger.debug(
-            "%s.example_manifest() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -669,7 +663,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
     ###########################################################################
     def cache_invalidations(self) -> None:
         """Invalidate any relevant caches when the manifest or connection data changes."""
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
 
         if self.connection:
             ApiConnection.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
@@ -706,8 +700,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             print(response.data)
         """
         logger.debug(
-            "%s.get() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -811,8 +804,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :raises SAMConnectionBrokerError: If an error occurs during update or save.
         """
         logger.debug(
-            "%s.apply() called for %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s. Manifest data: %s, Manifest: %s",
             self.kind,
             self.name,
             args,
@@ -853,7 +845,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                 if key == api_key_name:
                     if self.api_key_secret and self.connection.api_key_id != self.api_key_secret.id:  # type: ignore[union-attr]
                         setattr(self.connection, key, self.api_key_secret)
-                        logger.info("%s.apply() setting api_key Secret <Fk> to %s", self.formatted_class_name, value)
+                        logger.info("setting api_key Secret <Fk> to %s", value)
                         updated = True
                 elif key == proxy_password_name:
                     if (
@@ -862,20 +854,19 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                     ):
                         setattr(self.connection, key, self.proxy_password_secret)
                         logger.info(
-                            "%s.apply() setting proxy_password Secret <Fk> to %s",
-                            self.formatted_class_name,
+                            "setting proxy_password Secret <Fk> to %s",
                             value,
                         )
                         updated = True
                 elif getattr(self.connection, key, None) != value:
                     setattr(self.connection, key, value)
-                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
+                    logger.info("updating %s to %s", key, value)
                     updated = True
 
             if isinstance(self.connection, ApiConnection):
                 if updated:
                     self.connection.save()
-                    logger.info("%s.apply() updated ApiConnection %s", self.formatted_class_name, self.connection.name)
+                    logger.info("updated ApiConnection %s", self.connection.name)
                 self.connection.tags.set(tags)
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
@@ -910,8 +901,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                 print("Prompt not implemented:", e)
         """
         logger.debug(
-            "%s.prompt() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -952,8 +942,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             print(response.data)
         """
         logger.debug(
-            "%s.describeº() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -1051,8 +1040,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
             print(response.data)
         """
         logger.debug(
-            "%s.delete() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -1090,8 +1078,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.deploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -1114,8 +1101,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.undeploy() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,
@@ -1138,8 +1124,7 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
         :rtype: SmarterJournaledJsonResponse
         """
         logger.debug(
-            "%s.logs() called for %s %s args: %s kwargs: %s",
-            self.formatted_class_name,
+            "called for %s %s args: %s kwargs: %s",
             self.kind,
             self.name,
             args,

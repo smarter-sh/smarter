@@ -54,14 +54,14 @@ class DefaultOrchestratorApiView(OrchestratorApiBaseViewSet):
         else:
             self._orchestrator_id = kwargs.pop("orchestrator_id", None)
         self._name = kwargs.pop("name", None)
-        logger.info("%s.dispatch() %s %s", self.formatted_class_name, self.orchestrator, self.user_profile)
+        logger.info("%s %s", self.orchestrator, self.user_profile)
 
         try:
             retval = super().dispatch(request, *args, **kwargs)
         # pylint: disable=broad-except
         except Exception:
             # the stack trace is logged, never sent to the client.
-            logger.error("%s.dispatch() failed", self.formatted_class_name, exc_info=True)
+            logger.error("failed", exc_info=True)
             retval = JsonResponse(
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 data={"error": "An unknown error occurred while processing your request."},

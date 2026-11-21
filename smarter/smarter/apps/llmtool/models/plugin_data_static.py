@@ -20,7 +20,6 @@ from .plugin_data_base import PluginDataBase
 from .plugin_meta import PluginMeta
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginDataStatic(PluginDataBase):
@@ -86,8 +85,7 @@ class PluginDataStatic(PluginDataBase):
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
-                        "%s.sanitized_return_data: Truncating static_data to %s items.",
-                        self.formatted_class_name,
+                        "Truncating static_data to %s items.",
                         {smarter_settings.plugin_max_data_results},
                     )
                 retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
@@ -134,8 +132,7 @@ class PluginDataStatic(PluginDataBase):
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > smarter_settings.plugin_max_data_results:
                     logger.warning(
-                        "%s.return_data_keys: Truncating static_data to %s items.",
-                        self.formatted_class_name,
+                        "Truncating static_data to %s items.",
                         {smarter_settings.plugin_max_data_results},
                     )
                 retval = retval[: smarter_settings.plugin_max_data_results]  # pylint: disable=E1136
@@ -159,11 +156,11 @@ class PluginDataStatic(PluginDataBase):
         try:
             data = json.loads(self.static_data)
             if not isinstance(data, dict):
-                logger.warning("%s.data: static_data is not a dict, returning None.", self.formatted_class_name)
+                logger.warning("static_data is not a dict, returning None.")
                 return None
             return data
         except (json.JSONDecodeError, TypeError) as e:
-            logger.error("%s.data: Failed to decode static_data JSON: %s", self.formatted_class_name, e)
+            logger.error("Failed to decode static_data JSON: %s", e)
             return None
 
     @classmethod
@@ -240,10 +237,8 @@ class PluginDataStatic(PluginDataBase):
         :rtype: Optional[PluginDataStatic]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{logging.SmarterFormattedText.text(__name__)}.{PluginDataStatic.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk: %s, plugin: %s",
-            logger_prefix,
+            "called with pk: %s, plugin: %s",
             pk,
             plugin,
         )
@@ -256,21 +251,18 @@ class PluginDataStatic(PluginDataBase):
         def _get_model_by_plugin_meta(plugin_id: int) -> Optional["PluginDataStatic"]:
             try:
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() cache miss for plugin_id: %s",
-                    logger_prefix,
+                    "cache miss for plugin_id: %s",
                     plugin_id,
                 )
                 retval = model.objects.prefetch_related("plugin").get(plugin_id=plugin_id)
                 logger.debug(
-                    "%s._get_model_by_plugin_meta() fetched and cached PluginDataStatic for plugin_id: %s",
-                    logger_prefix,
+                    "fetched and cached PluginDataStatic for plugin_id: %s",
                     plugin_id,
                 )
                 return retval
             except cls.DoesNotExist as e:
                 logger.warning(
-                    "%s.get_cached_data_by_plugin() - Data not found for plugin_id: %s",
-                    cls.formatted_class_name,
+                    "Data not found for plugin_id: %s",
                     plugin_id,
                 )
                 raise cls.DoesNotExist(f"PluginDataStatic with plugin_id {plugin_id} does not exist.") from e

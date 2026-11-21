@@ -24,7 +24,6 @@ from smarter.apps.llmtool.manifest.enum import (
     SAMPluginCommonMetadataClassValues,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins import SmarterHelperMixin
 from smarter.common.utils import rfc1034_compliant_str, to_snake_case
 from smarter.lib import logging
@@ -33,7 +32,6 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
-logger_prefix = SmarterFormattedText.text(f"{__name__}")
 
 
 class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
@@ -100,8 +98,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         if isinstance(self.name, str) and not SmarterValidator.is_valid_snake_case(self.name):
             snake_case_name = to_snake_case(self.name)
             logger.warning(
-                "%s.save(): name %s was not in snake_case. Converted to snake_case: %s",
-                self.formatted_class_name,
+                "name %s was not in snake_case. Converted to snake_case: %s",
                 self.name,
                 snake_case_name,
             )
@@ -259,10 +256,8 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         :rtype: Optional[PluginMeta]
         """
         # pylint: disable=W0621
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.{PluginMeta.__name__}.get_cached_object()"
         logger.debug(
-            "%s called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
-            logger_prefix,
+            "called with pk: %s, name: %s, user: %s, user_profile: %s, account: %s, plugin_class: %s",
             pk,
             name,
             user.username if user else None,
@@ -277,8 +272,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         ) -> Optional["PluginMeta"]:
             try:
                 logger.debug(
-                    "%s._get_model_by_name_and_userprofile_and_plugin_class() cache miss for name: %s, user_profile_id: %s, plugin_class: %s",
-                    logger_prefix,
+                    "cache miss for name: %s, user_profile_id: %s, plugin_class: %s",
                     name,
                     user_profile_id,
                     plugin_class,
@@ -289,8 +283,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     .get(name=name, user_profile_id=user_profile_id, plugin_class=plugin_class)
                 )
                 logger.debug(
-                    "%s._get_model_by_name_and_userprofile_and_plugin_class() fetched and cached PluginMeta for name: %s, user_profile_id: %s, plugin_class: %s",
-                    logger_prefix,
+                    "fetched and cached PluginMeta for name: %s, user_profile_id: %s, plugin_class: %s",
                     name,
                     user_profile_id,
                     plugin_class,
@@ -298,8 +291,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 return retval
             except cls.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_model_by_name_and_userprofile_and_plugin_class() no PluginMeta found for name: %s, user_profile_id: %s, plugin_class: %s",
-                    logger_prefix,
+                    "no PluginMeta found for name: %s, user_profile_id: %s, plugin_class: %s",
                     name,
                     user_profile_id,
                     plugin_class,
@@ -314,8 +306,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             # the lookup by username raises User.DoesNotExist for an unknown username.
             except (UserProfile.DoesNotExist, User.DoesNotExist):
                 logger.debug(
-                    "%s.get_cached_object() - No UserProfile found for username: %s, account: %s",
-                    logger_prefix,
+                    "No UserProfile found for username: %s, account: %s",
                     username,
                     account.id if account else None,  # type: ignore[attr-defined]
                 )
@@ -383,8 +374,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
             retval = UserProfile.get_cached_object(invalidate=invalidate, user=user, account=account)  # type: ignore[arg-type]
         except (UserProfile.DoesNotExist, User.DoesNotExist):
             logger.debug(
-                "%s.user_profile_of() - No UserProfile found for user: %s, account: %s",
-                f"{SmarterFormattedText.text(__name__)}.{PluginMeta.__name__}",
+                "- No UserProfile found for user: %s, account: %s",
                 user.username,
                 account.id if account else None,  # type: ignore[attr-defined]
             )
@@ -442,8 +432,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                 user_profile = UserProfile.get_cached_object(pk=user_profile_id)
             except UserProfile.DoesNotExist:
                 logger.debug(
-                    "%s.get_cached_plugins_for_user_profile_id() - No UserProfile found for id: %s",
-                    logger_prefix,
+                    "No UserProfile found for id: %s",
                     user_profile_id,
                 )
                 user_profile = None
@@ -468,7 +457,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
 
             def was_already_added(plugin_meta: PluginMeta) -> bool:
                 if not plugin_meta:
-                    logger.error("%s.dispatch() - plugin_meta is None. This is a bug.", logger_prefix)
+                    logger.error("plugin_meta is None. This is a bug.")
                     return False
                 for b in retval:
                     if b.id == plugin_meta.id:  # type: ignore[union-attr]
@@ -480,8 +469,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     user_plugins = plugins_of(user_profile)
                 except PluginMeta.DoesNotExist as e:
                     logger.error(
-                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving user plugins for %s: %s",
-                        logger_prefix,
+                        "Error retrieving user plugins for %s: %s",
                         user_profile,
                         str(e),
                     )
@@ -491,8 +479,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     admin_plugins = plugins_of(admin_user_profile)  # type: ignore[assignment]
                 except PluginMeta.DoesNotExist as e:
                     logger.error(
-                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving admin plugins for %s: %s",
-                        logger_prefix,
+                        "Error retrieving admin plugins for %s: %s",
                         admin_user_profile,
                         str(e),
                     )
@@ -502,8 +489,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                     smarter_plugins = plugins_of(smarter_cached_objects.smarter_admin_user_profile)
                 except PluginMeta.DoesNotExist as e:
                     logger.error(
-                        "%s.get_cached_plugins_for_user_profile_id() - Error retrieving smarter plugins for %s: %s",
-                        logger_prefix,
+                        "Error retrieving smarter plugins for %s: %s",
                         smarter_cached_objects.smarter_admin_user_profile,
                         str(e),
                     )
@@ -525,8 +511,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
                         .order_by("name")
                     )
                     logger.debug(
-                        "%s._combined_plugins_list() fetched and cached combined plugins list for user_profile_id=%s: %d plugins",
-                        logger_prefix,
+                        "fetched and cached combined plugins list for user_profile_id=%s: %d plugins",
                         use_profile_id,
                         len(combined_plugins),
                     )
@@ -547,8 +532,7 @@ class PluginMeta(MetaDataWithOwnershipModel, SmarterHelperMixin):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.dispatch() - Exception occurred while getting plugins for user_profile %s.",
-                logger_prefix,
+                "Exception occurred while getting plugins for user_profile %s.",
                 user_profile,
             )
             return []

@@ -37,7 +37,6 @@ def should_log(level):
 
 base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, SmarterDictType]:
@@ -253,7 +252,7 @@ def ensure_system_role_present(
 
     if not any(d[OpenAIMessageKeys.MESSAGE_ROLE_KEY] == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY for d in messages):
         # expected for the first prompt of a session, whose messages have no system role yet.
-        logger.debug("%s.ensure_system_role_present() adding the default system role", logger_prefix)
+        logger.debug("adding the default system role")
         messages.insert(
             0,
             {
@@ -290,9 +289,7 @@ def pair_tool_messages(messages: list[SmarterDictType]) -> list[SmarterDictType]
         role = message.get(role_key)
         if role == OpenAIMessageKeys.TOOL_MESSAGE_KEY:
             # an orphan: it does not follow an assistant message with tool calls.
-            logger.warning(
-                "pair_tool_messages() removed a tool message without a tool call: %s", message.get("tool_call_id")
-            )
+            logger.warning("removed a tool message without a tool call: %s", message.get("tool_call_id"))
             i += 1
             continue
         tool_calls = message.get(tool_calls_key) if role == OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY else None
@@ -312,9 +309,7 @@ def pair_tool_messages(messages: list[SmarterDictType]) -> list[SmarterDictType]
         answered = {reply.get("tool_call_id") for reply in replies}
         paired_calls = [call for call in tool_calls if isinstance(call, dict) and call.get("id") in answered]
         if len(paired_calls) != len(tool_calls):
-            logger.warning(
-                "pair_tool_messages() removed %s tool calls without a tool message", len(tool_calls) - len(paired_calls)
-            )
+            logger.warning("removed %s tool calls without a tool message", len(tool_calls) - len(paired_calls))
             message = dict(message)
             if paired_calls:
                 message[tool_calls_key] = paired_calls
@@ -391,7 +386,7 @@ def cap_message_history(messages: list[SmarterDictType], max_characters: int) ->
         if i >= cut or message.get(role_key) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY
     ]
     logger.info(
-        "cap_message_history() left out %s of %s messages, %s of %s characters, to fit in %s characters",
+        "left out %s of %s messages, %s of %s characters, to fit in %s characters",
         len(messages) - len(retval),
         len(messages),
         dropped,

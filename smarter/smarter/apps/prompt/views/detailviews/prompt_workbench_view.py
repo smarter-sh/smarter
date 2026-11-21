@@ -77,12 +77,13 @@ class SmarterPromptSession(SmarterHelperMixin):
 
     def __init__(self, request: HttpRequest, session_key: str, *args, llmclient: Optional[LLMClient] = None, **kwargs):
         super().__init__()
-        verbose_logger.debug(
-            "SmarterPromptSession().__init__() called with session_key=%s, llmclient=%s", session_key, llmclient
-        )
+        verbose_logger.debug("called with session_key=%s, llmclient=%s", session_key, llmclient)
         self.request = request
         if not isinstance(session_key, str):
-            logger.error("%s session_key is not a string: %s", self.formatted_class_name, type(session_key))
+            logger.error(
+                "session_key is not a string: %s",
+                type(session_key),
+            )
         self._session_key = session_key
 
         if llmclient:
@@ -91,14 +92,16 @@ class SmarterPromptSession(SmarterHelperMixin):
 
         # leaving this in place as a reminder that we need one or the other
         if not self.session_key and not self.llmclient:
-            logger.error("%s either session_key or llmclient must be provided", self.formatted_class_name)
+            logger.error(
+                "either session_key or llmclient must be provided",
+            )
 
         self._chat_helper = PromptHelper(request, self.session_key, *args, llmclient=self.llmclient, **kwargs)
         self._chat = self._chat_helper.prompt
         # PromptHelper starts a new session when the key belongs to another llmclient's session.
         self._session_key = self._chat_helper.session_key
 
-        verbose_logger.debug("%s session established: %s", self.formatted_class_name, self.session_key)
+        verbose_logger.debug("session established: %s", self.session_key)
 
         prompt_session_invoked.send(sender=self.__class__, instance=self, request=request)
 
@@ -153,8 +156,7 @@ class SmarterPromptSession(SmarterHelperMixin):
         """
         if self._session_key is None:
             logger.error(
-                "%s session_key is None. This should not happen. Please report this issue to the Smarter team.",
-                self.formatted_class_name,
+                "session_key is None. This should not happen. Please report this issue to the Smarter team.",
             )
         return self._session_key
 

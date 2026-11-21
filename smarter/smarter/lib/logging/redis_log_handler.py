@@ -75,6 +75,10 @@ web console.
 
 import atexit
 import json as std_json
+
+# The standard library's logging, not smarter.lib.logging: this module is imported while the
+# smarter.lib.logging package is still initializing, so importing the package here would be circular.
+import logging
 import os
 import queue
 import re
@@ -87,7 +91,7 @@ from typing import TYPE_CHECKING, Callable, Optional, ParamSpec, TypedDict, Type
 from django.core.exceptions import ImproperlyConfigured
 from django_redis import get_redis_connection
 
-from smarter.lib import logging
+from smarter.common.helpers.console_helpers import SmarterFormattedText
 
 if TYPE_CHECKING:
     from redis import Redis
@@ -125,7 +129,7 @@ GLOBAL_STREAM_TTL_SECONDS = (
 )  # 24 hours for the global stream, which is more of a firehose and may be consumed by multiple clients with different latencies
 
 logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger_prefix = SmarterFormattedText.text(__name__)
 
 
 class LogQueueItem(TypedDict):

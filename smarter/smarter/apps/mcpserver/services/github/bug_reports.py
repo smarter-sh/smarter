@@ -39,7 +39,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.MCPSERVER_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 BUG_REPORT_RULE_NAMES = ("node_name", "account_id")
 """The rules of :data:`~smarter.apps.mcpserver.services.helpdesk.replies.REPLY_RULES` that a bug report must follow too.
@@ -146,12 +145,12 @@ def create_bug_report(
     """
     token = smarter_settings.github_token
     if token is None:
-        logger.info("%s.create_bug_report() GITHUB_TOKEN is not set", logger_prefix)
+        logger.info("GITHUB_TOKEN is not set")
         raise SmarterMCPServerServiceError(NOT_CONFIGURED)
     refuse_private_data(title, body)
     body_with_footer = body + bug_report_footer()
     issue = issues.create_issue(repository, title, body_with_footer, token, labels=labels)
-    logger.info("%s.create_bug_report() opened %s", logger_prefix, issue.html_url)
+    logger.info("opened %s", issue.html_url)
     return issue
 
 

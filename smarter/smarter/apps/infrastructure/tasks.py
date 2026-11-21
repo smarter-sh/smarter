@@ -17,7 +17,6 @@ from .services.inventory import sync_inventory
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.INFRASTRUCTURE_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
@@ -28,7 +27,7 @@ def sync_infrastructure_inventory() -> dict[str, dict[str, int]]:
     :returns: For each resource type that could be listed, the number of resources that exist,
         and of those recorded as created and destroyed.
     """
-    logger.debug("%s.sync_infrastructure_inventory() called", logger_prefix)
+    logger.debug("called")
     return sync_inventory()
 
 

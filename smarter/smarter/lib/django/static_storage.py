@@ -22,8 +22,7 @@ from storages.backends.s3 import S3Storage
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 UPLOADED_CACHE_KEY_PREFIX = "smarter.lib.django.static_storage.uploaded:"
 """The cache's record that a static file is on the CDN's bucket, followed by the file's name."""
@@ -96,7 +95,7 @@ def is_uploaded(name: str) -> bool:
         found = staticfiles_storage.exists(name)
     # pylint: disable=broad-except
     except Exception as e:
-        logger.warning("%s.is_uploaded() could not ask the bucket for %s: %s", logger_prefix, name, e)
+        logger.warning("could not ask the bucket for %s: %s", name, e)
         return False
     if found:
         mark_uploaded(name)

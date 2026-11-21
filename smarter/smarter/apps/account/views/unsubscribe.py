@@ -58,7 +58,7 @@ class AccountUnsubscribeView(SmarterNeverCachedWebView):
         try:
             return unsubscribe_email_address(token)
         except signing.BadSignature:
-            logger.warning("%s.email_address() received an invalid unsubscribe token.", self.formatted_class_name)
+            logger.warning("received an invalid unsubscribe token.")
             return None
 
     def render(self, request: HttpRequest, email: str, unsubscribed: bool) -> HttpResponse:

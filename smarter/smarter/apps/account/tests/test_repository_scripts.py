@@ -175,12 +175,12 @@ class TestRepositoryScripts(SmarterTestBase):
         self.assertIn(f"{SCRIPTS_FOLDER}/a.sh", info[0])
         self.assertIn("post", info[0])
         self.assertEqual(
-            [args[2:] for args in info[1:3]], [(f"{SCRIPTS_FOLDER}/a.sh", "one"), (f"{SCRIPTS_FOLDER}/a.sh", "two")]
+            [args[1:] for args in info[1:3]], [(f"{SCRIPTS_FOLDER}/a.sh", "one"), (f"{SCRIPTS_FOLDER}/a.sh", "two")]
         )
         self.assertIn("finished in", info[-1][0])
         self.assertEqual(len(info), 4)  # the empty line is not logged
         logger.warning.assert_called_once()
-        self.assertEqual(logger.warning.call_args.args[2:], (f"{SCRIPTS_FOLDER}/a.sh", "careful"))
+        self.assertEqual(logger.warning.call_args.args[1:], (f"{SCRIPTS_FOLDER}/a.sh", "careful"))
 
     def test_run_script_failures(self):
         """A non-zero exit, a timeout, and a script that can't start are errors."""

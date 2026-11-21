@@ -35,9 +35,6 @@ base_logger = logging.getLogger(__name__)
 logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
 
 
-logger_prefix = logging.SmarterFormattedText.text(__name__)
-
-
 def sender_name(sender) -> str:
     """
     The name of a signal's sender, which is a class, e.g. ``SecretTransformer``.
@@ -72,8 +69,7 @@ def secret_post_save(sender: Secret, instance: Secret, created, **kwargs):
     """
     secret_json = json.dumps(secret_log_dict(instance))
     logger.debug(
-        "%s.secret_post_save() Secret: %s, id: %s created: %s, user_profile: %s",
-        logger_prefix,
+        "Secret: %s, id: %s created: %s, user_profile: %s",
         secret_json,
         instance.id,  # type: ignore
         created,
@@ -90,8 +86,7 @@ def secret_post_delete(sender: Secret, instance: Secret, **kwargs):
     :param instance: The Secret that was deleted.
     """
     logger.info(
-        "%s.secret_post_delete() Secret: %s, id: %s",
-        logger_prefix,
+        "Secret: %s, id: %s",
         instance,
         instance.id,  # type: ignore
     )
@@ -106,8 +101,7 @@ def secret_created_receiver(sender, secret: Secret, **kwargs):
     :param secret: The Secret that was created.
     """
     logger.info(
-        "%s.secret_created() from %s Secret: %s id: %s, user_profile: %s",
-        logger_prefix,
+        "from %s Secret: %s id: %s, user_profile: %s",
         sender_name(sender),
         secret.name,
         secret.id,  # type: ignore
@@ -125,8 +119,7 @@ def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
     :param secret_name: The deleted Secret's name.
     """
     logger.info(
-        "%s.secret_deleted() from %s Secret: %s, name: %s",
-        logger_prefix,
+        "from %s Secret: %s, name: %s",
         sender_name(sender),
         secret_id,
         secret_name,
@@ -140,8 +133,7 @@ def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
     DEBUG: it fires on every load of a Secret.
     """
     logger.debug(
-        "%s.secret_ready() from %s Secret: %s, id: %s, user_profile: %s",
-        logger_prefix,
+        "from %s Secret: %s, id: %s, user_profile: %s",
         sender_name(sender),
         secret.name,
         secret.id,
@@ -163,8 +155,7 @@ def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, 
     :param user_profile: The user profile that read it.
     """
     logger.info(
-        "%s.secret_accessed() from %s, Secret %s, id: %s, user_profile: %s",
-        logger_prefix,
+        "from %s, Secret %s, id: %s, user_profile: %s",
         sender_name(sender),
         str(secret),
         secret.id,  # type: ignore
@@ -179,8 +170,7 @@ def secret_initializing_receiver(sender, secret_name: str, user_profile: UserPro
     DEBUG: it fires on every load of a Secret.
     """
     logger.debug(
-        "%s.secret_initializing() from %s name: %s, user_profile: %s",
-        logger_prefix,
+        "from %s name: %s, user_profile: %s",
         sender_name(sender),
         secret_name,
         user_profile,
@@ -205,14 +195,13 @@ def secret_saved_receiver(sender, secret: SecretTransformer, user_profile: UserP
 
     # DEBUG: secret_created or secret_updated already logged this save at INFO.
     logger.debug(
-        "%s.secret_saved() from %s Secret: %s, id: %s, user_profile: %s",
-        logger_prefix,
+        "from %s Secret: %s, id: %s, user_profile: %s",
         sender_name(sender),
         secret.name,
         secret.id,
         user_profile,
     )
-    logger.debug("%s.secret_saved() dump: %s, tags: %s", logger_prefix, json_data, tags)
+    logger.debug("dump: %s, tags: %s", json_data, tags)
 
 
 @receiver(secret_updated)
@@ -232,14 +221,13 @@ def secret_updated_receiver(sender, secret: SecretTransformer, user_profile: Use
     tags = list(secret.secret.tags_list) if secret and hasattr(secret.secret, "tags") else []
 
     logger.info(
-        "%s.secret_updated() from %s Secret: %s, id: %s, user_profile: %s",
-        logger_prefix,
+        "from %s Secret: %s, id: %s, user_profile: %s",
         sender_name(sender),
         secret.name,
         secret.id,
         user_profile,
     )
-    logger.debug("%s.secret_updated() dump: %s, tags: %s", logger_prefix, json_data, tags)
+    logger.debug("dump: %s, tags: %s", json_data, tags)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

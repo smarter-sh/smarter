@@ -168,7 +168,7 @@ class SAMConnectionBaseBroker(AbstractBroker[ConnectionT, ConnectionT]):
              :class:`SAMConnectionBaseBroker`
              :meth:`SAMConnectionBaseBroker.apply`
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name_cache_invalidations)
+        logger.debug("called.", prefix_format=logging.SmarterFormattedText.BOLD_DARK_BLUE)
         if self.connection:
             ModelClass = self.ORMMetaModelClass
             ModelClass.get_cached_object(invalidate=True, pk=self.connection.id)  # type: ignore
@@ -211,7 +211,8 @@ class SAMConnectionBaseBroker(AbstractBroker[ConnectionT, ConnectionT]):
             broker.apply(request, manifest_data=manifest_dict)
         """
         logger.info(
-            "%s.apply() called with request: %s", self.formatted_class_name, smarter_build_absolute_uri(request=request)
+            "called with request: %s",
+            smarter_build_absolute_uri(request=request),
         )
         if not self.user:
             raise SAMBrokerErrorNotReady(
@@ -258,7 +259,7 @@ class SAMConnectionBaseBroker(AbstractBroker[ConnectionT, ConnectionT]):
             if hasattr(self.connection, key):
                 if getattr(self.connection, key) != value:
                     setattr(self.connection, key, value)
-                    logger.info("%s.apply() updating %s to %s", self.formatted_class_name, key, value)
+                    logger.info("updating %s to %s", key, value)
                     updated = True
         if updated:
             self.connection.save()

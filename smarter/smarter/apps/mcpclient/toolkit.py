@@ -182,7 +182,7 @@ class MCPToolkit:
                 catalog = get_cached_catalog(mcpclient)
             except SmarterMCPClientException as e:
                 self.errors[mcpclient.name] = e.message
-                logger.warning("%s.load() skipping MCPClient %s: %s", self.formatted_class_name, mcpclient.name, e)
+                logger.warning("skipping MCPClient %s: %s", mcpclient.name, e)
                 continue
             self.connected.append(mcpclient)
             acts_for_user = is_staff_endpoint_url(mcpclient.endpoint_url)

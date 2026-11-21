@@ -61,12 +61,11 @@ from smarter.apps.account.models import (
     UserProfile,
     get_resolved_user,
 )
-from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import logging
 
 from .models import EmailContactList
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def smarter_is_staff(request: HttpRequest) -> bool:
@@ -96,13 +95,12 @@ def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
     rtype: bool
     return: True if the user has update/delete permission for the object, False otherwise
     """
-    logger_prefix = f"{SmarterFormattedText.text(__file__)}.smarter_has_ud_permission()"
     # First check if the user is authenticated
     if not hasattr(request, "user") or not request.user.is_authenticated:
         return False
     user = request.user
     if not isinstance(user, User):
-        logger.warning("%s Unexpected user: %s", logger_prefix, type(user))
+        logger.warning("Unexpected user: %s", type(user))
         return False
     if user.is_superuser:
         return True
@@ -116,7 +114,7 @@ def smarter_has_ud_permission(request: HttpRequest, obj=None) -> bool:
         return False
     # pylint: disable=broad-except
     except Exception as e:
-        logger.error("%s Error checking ownership permission: %s", logger_prefix, e)
+        logger.error("Error checking ownership permission: %s", e)
     return False
 
 
@@ -136,9 +134,8 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         user = get_resolved_user(request.user)  # type: ignore
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_module_permission()"
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return True
 
@@ -148,12 +145,11 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
 
         View permission is effectively granted to anyone who is authenticated, barring cases where obj is passed.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_view_permission()"
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         user = request.user
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         if user.is_superuser:
             return True
@@ -167,7 +163,7 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
             return False
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("%s Error checking read permission: %s", logger_prefix, e)
+            logger.error("Error checking read permission: %s", e)
             return False
 
     def has_add_permission(self, request: HttpRequest, obj=None) -> bool:
@@ -180,9 +176,8 @@ class SmarterCustomerModelAdmin(admin.ModelAdmin):
         if not hasattr(request, "user") or not request.user.is_authenticated:
             return False
         user = get_resolved_user(request.user)  # type: ignore
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterCustomerModelAdmin.has_add_permission()"
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -230,10 +225,9 @@ class SmarterStaffOnlyModelAdmin(admin.ModelAdmin):
         :param obj: The object, or None for the model as a whole.
         :returns: True if the user has the permission.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterStaffOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -279,10 +273,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         :param obj: The object, or None for the model as a whole.
         :returns: True if the user has the permission.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_view_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -294,10 +287,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         :param obj: The object, or None for the model as a whole.
         :returns: True if the user has the permission.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_add_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -309,10 +301,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         :param obj: The object, or None for the model as a whole.
         :returns: True if the user has the permission.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_change_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -324,10 +315,9 @@ class SmarterSuperUserOnlyModelAdmin(admin.ModelAdmin):
         :param obj: The object, or None for the model as a whole.
         :returns: True if the user has the permission.
         """
-        logger_prefix = f"{SmarterFormattedText.text(__name__)}.SmarterSuperUserOnlyModelAdmin.has_delete_permission()"
         user = get_resolved_user(request.user)  # type: ignore
         if not isinstance(user, User):
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             return False
         return user.is_superuser
 
@@ -362,8 +352,7 @@ class RestrictedAdminSite(admin.AdminSite):
             self.role = "guest"
             return super().each_context(request)
         if not isinstance(user, User):
-            logger_prefix = f"{SmarterFormattedText.text(__name__)}.RestrictedAdminSite.each_context()"
-            logger.warning("%s Unexpected user type: %s", logger_prefix, type(user))
+            logger.warning("Unexpected user type: %s", type(user))
             self.role = "unknown"
             return super().each_context(request)
         if user.is_superuser:

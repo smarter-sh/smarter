@@ -54,7 +54,6 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import required
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ORCHESTRATOR])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 SUPPORTED_STRATEGIES = (
     OrchestrationStrategy.SEQUENTIAL,
@@ -216,7 +215,7 @@ def start_run(orchestrator: Orchestrator, user_profile: UserProfile, objective: 
     run = OrchestrationRun.objects.create(orchestrator=orchestrator, objective=objective, started_by=user_profile)
     run_id = run.pk
     transaction.on_commit(lambda: execute_orchestration_run.delay(run_id))
-    logger.info("%s.start_run() queued run %s of orchestrator %s", logger_prefix, run_id, orchestrator.pk)
+    logger.info("queued run %s of orchestrator %s", run_id, orchestrator.pk)
     return run
 
 
@@ -345,7 +344,10 @@ class RunContext:
         # a step's failure is recorded, and its message kept from the log: it may quote the LLM provider.
         except Exception as e:  # pylint: disable=broad-except
             logger.error(
-                "%s.step() step %s of run %s failed: %s", logger_prefix, run.iteration_count, run.pk, type(e).__name__
+                "step %s of run %s failed: %s",
+                run.iteration_count,
+                run.pk,
+                type(e).__name__,
             )
             text, error = "", "The step failed."
         status = OrchestrationStep.StepStatus.SUCCEEDED
@@ -556,7 +558,7 @@ def finish(run: OrchestrationRun, status: str, result: Optional[str] = None, err
     if result is not None:
         run.result = {"text": result}
     run.save()
-    logger.info("%s.finish() run %s %s after %s steps", logger_prefix, run.pk, status, run.iteration_count)
+    logger.info("run %s %s after %s steps", run.pk, status, run.iteration_count)
 
 
 def execute_run(run_id: int) -> None:
@@ -569,7 +571,7 @@ def execute_run(run_id: int) -> None:
     """
     run = OrchestrationRun.objects.select_related("orchestrator", "started_by__user").filter(pk=run_id).first()
     if run is None or run.status != OrchestrationRunStatus.PENDING:
-        logger.warning("%s.execute_run() run %s is not pending", logger_prefix, run_id)
+        logger.warning("run %s is not pending", run_id)
         return
     run.status = OrchestrationRunStatus.RUNNING
     run.started_at = timezone.now()
@@ -583,7 +585,7 @@ def execute_run(run_id: int) -> None:
         finish(run, OrchestrationRunStatus.MAX_ITERATIONS_EXCEEDED, error=str(e))
         return
     except Exception as e:  # pylint: disable=broad-except
-        logger.error("%s.execute_run() run %s failed: %s", logger_prefix, run_id, type(e).__name__)
+        logger.error("run %s failed: %s", run_id, type(e).__name__)
         finish(run, OrchestrationRunStatus.FAILED, error="The run failed.")
         return
     finish(run, OrchestrationRunStatus.SUCCEEDED, result=result)

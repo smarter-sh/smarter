@@ -39,7 +39,7 @@ from .const import namespace
 from .view import PromptPassthroughView
 
 app_name = namespace
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class PassthroughReverseNames:
@@ -57,15 +57,13 @@ if smarter_settings.enable_dashboard_passthrough_prompt:
         path("", PromptPassthroughView.as_view(), name=PassthroughReverseNames.view),
     ]
     logger.debug(
-        "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
         app_name,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s %s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
-        logging.SmarterFormattedText.text(__name__),
+        "%s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
         app_name,
         SmarterReadyState.NOT_READY,
     )

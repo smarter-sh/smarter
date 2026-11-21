@@ -102,14 +102,12 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
             if not.
         """
         logger.debug(
-            "%s.with_read_permission_for() called for user: %s",
-            logging.SmarterFormattedText.text(__name__) + ".SmarterBaseQuerySetWithPermissions",
+            "called for user: %s",
             user,
         )
         if user.is_superuser:
             logger.debug(
-                "%s.with_read_permission_for() user is superuser, returning all resources.",
-                logging.SmarterFormattedText.text(__name__) + ".SmarterBaseQuerySetWithPermissions",
+                "user is superuser, returning all resources.",
             )
             return self.all()
         return self.none()
@@ -126,22 +124,19 @@ class SmarterBaseQuerySetWithPermissions(QuerySet[_GenericTypeVar]):
             A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
         """
         logger.debug(
-            "%s.with_ownership_permission_for() called for user: %s",
-            logging.SmarterFormattedText.text(__name__) + ".SmarterBaseQuerySetWithPermissions",
+            "called for user: %s",
             user,
         )
         if not isinstance(user, User):
             logger.debug(
-                "%s.with_ownership_permission_for() user is not an instance of User: %s",
-                logging.SmarterFormattedText.text(__name__) + ".SmarterBaseQuerySetWithPermissions",
+                "user is not an instance of User: %s",
                 user,
             )
             return self.none()
 
         if user.is_superuser:
             logger.debug(
-                "%s.with_ownership_permission_for() user is superuser, returning all resources.",
-                logging.SmarterFormattedText.text(__name__) + ".SmarterBaseQuerySetWithPermissions",
+                "user is superuser, returning all resources.",
             )
             return self.all()
         return self.none()
@@ -264,8 +259,7 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
             if not.
         """
         logger.debug(
-            "%s.with_read_permission_for() called for user: %s",
-            logging.SmarterFormattedText.text(__name__) + ".SmarterBaseModelManager",
+            "called for user: %s",
             user,
         )
         return self.get_queryset().with_read_permission_for(user)
@@ -289,8 +283,7 @@ class SmarterBaseModelManager(Manager[_GenericTypeVar]):
             A queryset of this resource if the user has permission to fully manage it, or an empty queryset if not.
         """
         logger.debug(
-            "%s.with_ownership_permission_for() called for user: %s",
-            logging.SmarterFormattedText.text(__name__) + ".SmarterBaseModelManager",
+            "called for user: %s",
             user,
         )
         return self.get_queryset().with_ownership_permission_for(user)
@@ -564,10 +557,8 @@ class UserProfile(MetaDataModel):
 
             profile.save()
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + "." + UserProfile.__name__ + ".save()")
         logger.debug(
-            "%s.save() called for UserProfile with user: %s and account: %s",
-            logger_prefix,
+            "called for UserProfile with user: %s and account: %s",
             self.user,
             self.account,
         )
@@ -629,8 +620,7 @@ class UserProfile(MetaDataModel):
                 return first_admin.user
 
             logger.error(
-                "%s.admin_for_account() No admin found for account %s",
-                logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
+                "No admin found for account %s",
                 account,
             )
 
@@ -640,8 +630,7 @@ class UserProfile(MetaDataModel):
                 return first_user.user
 
             logger.error(
-                "%s.admin_for_account() No user for account %s",
-                logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
+                "No user for account %s",
                 account,
             )
             # an account without members gets an administrator of its own, never the platform's admin, who would
@@ -651,8 +640,7 @@ class UserProfile(MetaDataModel):
 
             admin_user = get_cached_admin_user_for_account(account=account)  # type: ignore[arg-type]
             logger.warning(
-                "%s.admin_for_account() Created an administrator for account %s.",
-                logging.SmarterFormattedText.text(__name__) + ".UserProfile()",
+                "Created an administrator for account %s.",
                 account,
             )
             return admin_user
@@ -686,8 +674,7 @@ class UserProfile(MetaDataModel):
             user_profile = cls.get_cached_object(pk=profile_id)
         except cls.DoesNotExist:
             logger.debug(
-                "%s.get_selected_object() the chosen UserProfile %s no longer exists",
-                logging.SmarterFormattedText.text(__name__) + ".UserProfile",
+                "the chosen UserProfile %s no longer exists",
                 profile_id,
             )
             return None
@@ -731,7 +718,6 @@ class UserProfile(MetaDataModel):
         :returns: The model instance if found, otherwise None.
         :rtype: Optional["UserProfile"]
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()"
 
         # the cached functions take ids, not model instances: an argument is part of the cache key,
         # and a key must be built from plain values.
@@ -740,8 +726,7 @@ class UserProfile(MetaDataModel):
             user_id: Optional[int], account_id: Optional[int], class_name: str = cls.__name__
         ) -> "UserProfile":
             logger.debug(
-                "%s called with pk: %s, name: %s, user_id: %s, username: %s, account_id: %s, invalidate: %s",
-                logger_prefix,
+                "called with pk: %s, name: %s, user_id: %s, username: %s, account_id: %s, invalidate: %s",
                 pk,
                 name,
                 user_id,
@@ -756,8 +741,7 @@ class UserProfile(MetaDataModel):
                     .get(user_id=user_id, account_id=account_id)
                 )
                 logger.debug(
-                    "%s._get_object_by_user_and_account() fetched %s for user_id: %s and account_id: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "fetched %s for user_id: %s and account_id: %s",
                     cls.__name__,
                     user_id,
                     account_id,
@@ -767,8 +751,7 @@ class UserProfile(MetaDataModel):
                 return retval
             except UserProfile.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_object_by_user_and_account() no %s found for user_id: %s, account_id: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "no %s found for user_id: %s, account_id: %s",
                     UserProfile.__name__,
                     user_id,
                     account_id,
@@ -782,8 +765,7 @@ class UserProfile(MetaDataModel):
                     UserProfile.objects.prefetch_related("tags").select_related("user", "account").get(user_id=user_id)
                 )
                 logger.debug(
-                    "%s._get_object_by_user() fetched %s for user_id: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "fetched %s for user_id: %s",
                     cls.__name__,
                     user_id,
                 )
@@ -792,8 +774,7 @@ class UserProfile(MetaDataModel):
                 return retval
             except UserProfile.DoesNotExist as e:
                 logger.debug(
-                    "%s._get_object_by_user() no %s found for user_id: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "no %s found for user_id: %s",
                     UserProfile.__name__,
                     user_id,
                 )
@@ -809,8 +790,7 @@ class UserProfile(MetaDataModel):
                 # A user has one UserProfile per account, so this is expected:
                 # without an account, the newest profile is the user's default.
                 logger.debug(
-                    "%s._get_object_by_user() user_id %s has more than one UserProfile. Defaulting to the newest: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "user_id %s has more than one UserProfile. Defaulting to the newest: %s",
                     user_id,
                     retval,
                 )
@@ -834,8 +814,7 @@ class UserProfile(MetaDataModel):
                     .get(account_id=account_id, user=admin_user)
                 )
                 logger.debug(
-                    "%s._get_object_by_account() fetched %s for account admin %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "fetched %s for account admin %s",
                     UserProfile.__name__,
                     retval,
                 )
@@ -844,16 +823,14 @@ class UserProfile(MetaDataModel):
                 return retval
             except UserProfile.DoesNotExist:
                 logger.debug(
-                    "%s._get_object_by_account() no %s found for account admin %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "no %s found for account admin %s",
                     UserProfile.__name__,
                     admin_user,
                 )
                 return None
             except UserProfile.MultipleObjectsReturned:
                 logger.error(
-                    "%s.get_cached_object() Multiple UserProfiles found for account_id %s. Defaulting to first result.",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "Multiple UserProfiles found for account_id %s. Defaulting to first result.",
                     account_id,
                 )
                 return (
@@ -867,14 +844,12 @@ class UserProfile(MetaDataModel):
             try:
                 user = User.objects.get(username=username)
                 logger.debug(
-                    "%s.get_cached_object() fetched user by username: %s",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "fetched user by username: %s",
                     username,
                 )
             except User.DoesNotExist as e:
                 logger.error(
-                    "%s.get_cached_object() No user found with username %s.",
-                    logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_object()",
+                    "No user found with username %s.",
                     username,
                 )
                 raise User.DoesNotExist(f"No user found with username {username}") from e
@@ -920,21 +895,18 @@ class UserProfile(MetaDataModel):
             given user, or all profiles if no user is specified.
         :rtype: QuerySet[UserProfile]
         """
-        logger_prefix = logging.SmarterFormattedText.text(__name__ + f".{UserProfile.__name__}.get_cached_objects()")
 
         @cache_results(cls.cache_expiration)
         def _get_objects_by_user(user_id: int, class_name: str = cls.__name__) -> QuerySet["UserProfile"]:
             logger.debug(
-                "%s called with invalidate: %s,  user: %s, kwargs: %s",
-                logger_prefix,
+                "called with invalidate: %s,  user: %s, kwargs: %s",
                 invalidate,
                 user,
                 kwargs,
             )
             retval = UserProfile.objects.prefetch_related("tags").select_related("user", "account").filter(user=user)
             logger.debug(
-                "%s._get_objects_by_user() fetched %s objects for user_id: %s. count: %s",
-                logging.SmarterFormattedText.text(__name__) + ".UserProfile.get_cached_objects()",
+                "fetched %s objects for user_id: %s. count: %s",
                 cls.__name__,
                 user_id,
                 len(retval),

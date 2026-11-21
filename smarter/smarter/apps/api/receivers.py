@@ -24,8 +24,7 @@ def handle_api_request_initiated(sender, instance, request: Request, **kwargs):
     :param request: The request.
     """
     logger.info(
-        "%s %s - %s - %s - user: %s",
-        f"{logging.SmarterFormattedText.text(__name__)}.api_request_initiated()",
+        "%s - %s - %s - user: %s",
         instance.__class__.__name__,
         request.path,
         request.method,
@@ -45,8 +44,7 @@ def handle_api_request_completed(sender, instance, request: Request, response, *
     """
 
     logger.info(
-        "%s %s - %s - %s - user: %s",
-        f"{logging.SmarterFormattedText.text(__name__)}.api_request_completed()",
+        "%s - %s - %s - user: %s",
         instance.__class__.__name__,
         request.path,
         request.method,

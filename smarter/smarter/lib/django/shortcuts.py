@@ -7,7 +7,6 @@ from django.urls import reverse as django_reverse
 from smarter.lib import logging
 
 logger = logging.getSmarterLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
@@ -66,8 +65,7 @@ def reverse(*args, urlconf: Optional[str] = None, **kwargs) -> str:
     reverse_path = ":".join(args)
     retval = django_reverse(reverse_path, urlconf=urlconf)
     logger.debug(
-        "%s.reverse() view name %s resolved to path %s",
-        logger_prefix,
+        "view name %s resolved to path %s",
         reverse_path,
         retval,
     )

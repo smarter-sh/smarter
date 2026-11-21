@@ -200,15 +200,13 @@ def send_contact_email(
     :returns: True if the email was sent.
     :raises SmarterValueError: If the language is not one of ``settings.LANGUAGES``.
     """
-    prefix = logging.SmarterFormattedText.text(__name__) + ".send_contact_email()"
     language = language or settings.LANGUAGE_CODE
     if language not in welcome_email_languages():
         raise SmarterValueError(f"Unknown language {language}. Choose one of {', '.join(welcome_email_languages())}.")
     unsubscribed_at = AccountContact.unsubscribed_at_of(email)
     if unsubscribed_at:
         logger.info(
-            "%s Not sending the %s email to %s, who unsubscribed on %s",
-            prefix,
+            "Not sending the %s email to %s, who unsubscribed on %s",
             contact_email.name,
             email,
             unsubscribed_at.isoformat(),
@@ -218,7 +216,7 @@ def send_contact_email(
         context = contact_email_context(first_name=first_name, email=email)
         body = render_to_string(contact_email.template_name, context)
         subject = str(contact_email.subject)
-    logger.debug("%s Sending the %s %s email to %s", prefix, language, contact_email.name, email)
+    logger.debug("Sending the %s %s email to %s", language, contact_email.name, email)
     return infrastructure.email.send_email(
         subject=subject,
         to=email,
@@ -475,7 +473,6 @@ class AccountContact(TimestampedModel):
 
         :returns: The number of emails sent.
         """
-        prefix = logging.SmarterFormattedText.text(__name__) + ".AccountContact.send_slack_invitation_emails()"
         now = timezone.now()
         sent_count = 0
         addresses: set[str] = set()
@@ -497,7 +494,7 @@ class AccountContact(TimestampedModel):
                     cls.objects.filter(email__iexact=address, slack_invited_at=now).update(slack_invited_at=None)
             if sent:
                 sent_count += 1
-        logger.info("%s sent %s Slack invitation emails.", prefix, sent_count)
+        logger.info("sent %s Slack invitation emails.", sent_count)
         return sent_count
 
     @classmethod
@@ -531,8 +528,7 @@ class AccountContact(TimestampedModel):
             unsubscribed_at=timezone.now()
         )
         logger.info(
-            "%s unsubscribed %s contacts with the email address %s.",
-            logging.SmarterFormattedText.text(__name__) + ".AccountContact.unsubscribe()",
+            "unsubscribed %s contacts with the email address %s.",
             count,
             email,
         )
@@ -633,11 +629,9 @@ class AccountContact(TimestampedModel):
                 html=True
             )
         """
-        prefix = logging.SmarterFormattedText.text(__name__) + ".AccountContact.send_email_to_primary_contact()"
         contact = cls.get_primary_contact(account)
         logger.debug(
-            "%s.send_email_to_primary_contact() Attempting to send email to primary contact for account %s. Found contact: %s, subject: %s, body: %s, html: %s, from_email: %s",
-            prefix,
+            "Attempting to send email to primary contact for account %s. Found contact: %s, subject: %s, body: %s, html: %s, from_email: %s",
             account,
             contact,
             subject,
@@ -649,8 +643,7 @@ class AccountContact(TimestampedModel):
             contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
         else:
             logger.error(
-                "%s.send_email_to_primary_contact() No primary contact found for account %s",
-                prefix,
+                "No primary contact found for account %s",
                 account,
             )
 
@@ -682,8 +675,7 @@ class AccountContact(TimestampedModel):
             contact = AccountContact(account=account, email="jane@example.com", is_primary=True)
             contact.save()  # Ensures uniqueness and sends welcome email if needed
         """
-        prefix = logging.SmarterFormattedText.text(__name__) + ".AccountContact.save()"
-        logger.debug("%s called with args: %s, kwargs: %s", prefix, args, kwargs)
+        logger.debug("called with args: %s, kwargs: %s", args, kwargs)
         if self.is_primary:
             # Check for another primary contact for this account (excluding self if updating)
             qs = AccountContact.objects.filter(account=self.account, is_primary=True)

@@ -63,8 +63,7 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
         :raises APIV1CLIViewError: when the response is not a JSON object whose ``data`` is an object.
         """
         logger.debug(
-            "%s.post() called for prompt %s with %s, args %s, kwargs %s",
-            self.formatted_class_name,
+            "called for prompt %s with %s, args %s, kwargs %s",
             name,
             request.GET,
             args,
@@ -74,8 +73,7 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
         uid: Optional[str] = self.uid
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME)
         logger.debug(
-            "%s.post() view for prompt %s and client %s and session_key %s request user %s self.user %s account %s",
-            self.formatted_class_name,
+            "view for prompt %s and client %s and session_key %s request user %s self.user %s account %s",
             name,
             uid,
             session_key,
@@ -102,12 +100,11 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
             session_key = content.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
             logger.debug(
-                "%s.post() cached session key for prompt config view with key %s",
-                self.formatted_class_name,
+                "cached session key for prompt config view with key %s",
                 self.cache_key,
             )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError("Misconfigured. Failed to cache session key for prompt config view.") from e
 
-        logger.debug("%s.post() completed for prompt config view: %s", self.formatted_class_name, response)
+        logger.debug("completed for prompt config view: %s", response)
         return response

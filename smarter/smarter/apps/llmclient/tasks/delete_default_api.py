@@ -60,7 +60,6 @@ from .utils import is_taskable
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 def _account_number_from_hostname(hostname: str) -> Optional[str]:
@@ -148,8 +147,7 @@ def delete_default_api(
             account_number = Account.get_cached_object(pk=account_id).account_number  # type: ignore[union-attr]
         except Account.DoesNotExist:
             logger.warning(
-                "%s account %s no longer exists. Using the account number of the api url %s.",
-                logger_prefix,
+                "account %s no longer exists. Using the account number of the api url %s.",
                 account_id,
                 api_url,
             )
@@ -157,8 +155,7 @@ def delete_default_api(
     if not _is_default_api_hostname(hostname, account_number):
         # not retried: a retry can't make the url valid.
         logger.error(
-            "%s %s is not the default api url of an llmclient of account %s. Nothing was deleted.",
-            logger_prefix,
+            "%s is not the default api url of an llmclient of account %s. Nothing was deleted.",
             api_url,
             account_number,
         )
@@ -169,10 +166,8 @@ def delete_default_api(
         sender=delete_default_api, url=api_url, account_number=account_number, name=name, task_id=task_id
     )
 
-    prefix = logger_prefix + f".{delete_default_api.__name__}()"
     logger.info(
-        "%s llmclient %s account: %s name: %s task_id: %s",
-        prefix,
+        "llmclient %s account: %s name: %s task_id: %s",
         api_url,
         account_number,
         name,
@@ -185,8 +180,7 @@ def delete_default_api(
     )
     if ingress_deleted and certificate_deleted and secret_delete:
         logger.info(
-            "%s llmclient %s account: %s name: %s all resources successfully deleted task_id: %s",
-            prefix,
+            "llmclient %s account: %s name: %s all resources successfully deleted task_id: %s",
             api_url,
             account_number,
             name,
@@ -194,8 +188,7 @@ def delete_default_api(
         )
     else:
         logger.error(
-            "%s llmclient %s account: %s name: %s one or more resources were not deleted task_id: %s",
-            prefix,
+            "llmclient %s account: %s name: %s one or more resources were not deleted task_id: %s",
             api_url,
             account_number,
             name,

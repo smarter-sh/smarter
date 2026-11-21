@@ -29,6 +29,7 @@ from smarter.apps.llmtool.signals import (
 )
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
+from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import PluginAppTestBase, get_test_data
 
@@ -60,37 +61,18 @@ class TestPluginReceivers(PluginAppTestBase):
 
     def setUp(self):
         super().setUp()
-        # every receivers module has its own logger. They share one mock.
-        self.logger = mock.MagicMock()
-        for module in RECEIVER_MODULES:
-            patcher = mock.patch.object(module, "logger", self.logger)
-            patcher.start()
-            self.addCleanup(patcher.stop)
-        self.messages: list[str] = []
-        self.info_messages: list[str] = []
-        # messages are formatted when they are logged, while the models they
-        # describe still exist.
-        self.logger.debug.side_effect = self.log
-        self.logger.info.side_effect = self.log_info
-        self.logger.warning.side_effect = self.log
-
-    def log(self, msg, *args, **kwargs):  # pylint: disable=W0613
-        """Record a formatted log message."""
-        self.messages.append(msg % args if args else msg)
-
-    def log_info(self, msg, *args, **kwargs):  # pylint: disable=W0613
-        """Record a formatted log message that was logged at INFO."""
-        message = msg % args if args else msg
-        self.info_messages.append(message)
-        self.messages.append(message)
+        # every receivers module has its own logger. One capture records them all, with each
+        # message's prefix, which names the receiver that logged it.
+        loggers = [module.logger for module in RECEIVER_MODULES]
+        self.capture = WrappedLoggerCapture(self, *loggers)
 
     def logged(self) -> str:
         """Return everything the receivers logged, as one string."""
-        return "\n".join(self.messages)
+        return self.capture.text()
 
     def logged_at_info(self) -> str:
         """Return everything the receivers logged at INFO, as one string."""
-        return "\n".join(self.info_messages)
+        return self.capture.text(logging.INFO)
 
     # -------------------------------------------------------------------------
     # plugin lifecycle signals
@@ -224,7 +206,7 @@ class TestPluginReceivers(PluginAppTestBase):
         with mock.patch(TASK_PATCH) as task:
             plugin_selected.send(sender=self.__class__, plugin=None, user=self.admin_user, input_text="hello")
         task.delay.assert_not_called()
-        self.logger.warning.assert_called()
+        self.assertGreater(self.capture.count(logging.WARNING), 0)
 
     def test_plugin_selected_by_selector(self):
         """Test that a plugin's selector sends plugin_selected when the input text refers to a search term."""
@@ -274,7 +256,7 @@ class TestPluginReceivers(PluginAppTestBase):
             target="https://example.com/a",
             error="HTTP 404",
         )
-        self.logger.warning.assert_called_once()
+        self.assertEqual(self.capture.count(logging.WARNING), 1)
         self.assertIn("HTTP 404", self.logged())
 
     # -------------------------------------------------------------------------
@@ -292,7 +274,7 @@ class TestPluginReceivers(PluginAppTestBase):
     def test_model_updated(self):
         """Test that the post_save receivers log an updated model."""
         plugin = self.new_static_plugin("test_plugin_app_receivers_updated")
-        self.messages.clear()
+        self.capture.clear()
         plugin_meta: PluginMeta = plugin.plugin_meta  # type: ignore[assignment]
         plugin_meta.description = "An updated description."
         plugin_meta.save()
@@ -302,7 +284,7 @@ class TestPluginReceivers(PluginAppTestBase):
         """Test that the pre_delete receivers log each model that a deleted plugin deletes."""
         name = "test_plugin_app_receivers_deleted"
         self.new_static_plugin(name)
-        self.messages.clear()
+        self.capture.clear()
         self.delete_plugin_by_name(name)
         logged = self.logged()
         self.assertIn("PluginMeta().pre_delete()", logged)
@@ -340,17 +322,16 @@ class TestPluginReceivers(PluginAppTestBase):
             for event, kwargs in cases.items():
                 name = f"{family}_plugin_{event}"
                 with self.subTest(signal=name):
-                    self.messages.clear()
-                    self.logger.reset_mock()
+                    self.capture.clear()
                     getattr(signals, name).send(sender=self.__class__, plugin=plugin, **kwargs)
                     self.assertIn(name, self.logged())
                     self.assertIn(plugin.name, self.logged())
                     if event in ("failed", "authentication_failed"):
-                        self.logger.warning.assert_called_once()
+                        self.assertEqual(self.capture.count(logging.WARNING), 1)
                         self.assertIn(kwargs["error"], self.logged())
                     else:
-                        self.logger.info.assert_called_once()
-        self.messages.clear()
+                        self.assertEqual(self.capture.count(logging.INFO), 1)
+        self.capture.clear()
         signals.api_plugin_responded.send(sender=self.__class__, plugin=plugin, response="abc", cached=False)
         self.assertIn("characters: 3", self.logged())
         signals.sql_plugin_request_completed.send(sender=self.__class__, plugin=plugin, success=True, duration=1.5)
@@ -373,7 +354,7 @@ class TestPluginReceivers(PluginAppTestBase):
         signals.skill_plugin_retrieval_failed.send(
             sender=self.__class__, plugin=self.static_plugin, url=url, error="SKILL.md was not found", duration=0.1
         )
-        self.logger.warning.assert_called_once()
+        self.assertEqual(self.capture.count(logging.WARNING), 1)
         self.assertIn("SKILL.md was not found", self.logged())
 
     # -------------------------------------------------------------------------
@@ -398,9 +379,9 @@ class TestPluginReceivers(PluginAppTestBase):
         self.assertIn("characters: 1024", self.logged())
         signals.extension_tool_completed.send(sender=self.__class__, success=True, duration=0.5, **tool)
         self.assertIn("success: True duration: 0.500s", self.logged())
-        self.logger.warning.assert_not_called()
+        self.assertEqual(self.capture.count(logging.WARNING), 0)
         signals.extension_disabled.send(sender=self.__class__, extension=extension, reason="disabled by admin")
         signals.extension_tool_failed.send(sender=self.__class__, error="timed out", **tool)
-        self.assertEqual(self.logger.warning.call_count, 2)
+        self.assertEqual(self.capture.count(logging.WARNING), 2)
         self.assertIn("disabled by admin", self.logged())
         self.assertIn("timed out", self.logged())

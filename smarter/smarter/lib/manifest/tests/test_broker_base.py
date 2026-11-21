@@ -40,7 +40,6 @@ class TestSAMBrokerBaseClass(TestAccountMixin):
     _manifest_filespec: str
     token_record: SmarterAuthToken
     token_key: str
-    test_sam_broker_base_logger_prefix = f"{SmarterFormattedText.text(__name__)}.TestSAMBrokerBaseClass()"
 
     @classmethod
     def setUpClass(cls):

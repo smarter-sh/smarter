@@ -59,7 +59,7 @@ class DataExportListView(SmarterAuthenticatedAPIView):
         try:
             export, started = start_data_export(user)  # type: ignore[arg-type]
         except DataExportStartRefused as e:
-            logger.info("%s.post() refused a data export for user %s: %s", self.formatted_class_name, user.pk, e)  # type: ignore[union-attr]
+            logger.info("refused a data export for user %s: %s", user.pk, e)  # type: ignore[union-attr]
             return Response({"detail": str(e)}, status=HTTPStatus.TOO_MANY_REQUESTS)
         if started:
             status = HTTPStatus.ACCEPTED

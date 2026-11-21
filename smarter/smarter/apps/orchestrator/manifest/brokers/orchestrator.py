@@ -119,7 +119,10 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         logger.debug(
-            "%s.__init__() broker for %s %s is %s.", self.formatted_class_name, self.kind, self.name, self.ready_state
+            "broker for %s %s is %s.",
+            self.kind,
+            self.name,
+            self.ready_state,
         )
 
     @property
@@ -144,12 +147,11 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             return self._ready
         retval = super().ready
         if not retval:
-            logger.debug("%s.ready() AbstractBroker is not ready for %s", self.formatted_class_name, self.kind)
+            logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
         retval = self.manifest is not None or self.account is not None
         logger.debug(
-            "%s.ready() manifest presence indicates ready=%s for %s",
-            self.formatted_class_name,
+            "manifest presence indicates ready=%s for %s",
             retval,
             self.kind,
         )
@@ -192,8 +194,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 .get(user_profile=self.user_profile, name=self.name)
             )
             logger.debug(
-                "%s.orchestrator() retrieved existing Orchestrator instance %s owned by %s from database.",
-                self.formatted_class_name,
+                "retrieved existing Orchestrator instance %s owned by %s from database.",
                 self._orchestrator,
                 self.user_profile,
             )
@@ -202,29 +203,26 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             self._orchestrator = None
 
         logger.debug(
-            "%s.orchestrator() Orchestrator instance not found for user_profile %s. Attempting to create a new instance.",
-            self.formatted_class_name,
+            "Orchestrator instance not found for user_profile %s. Attempting to create a new instance.",
             self.user_profile,
         )
         if self.manifest:
             data = self.manifest_to_django_orm()
             data["user_profile"] = self.user_profile
-            logger.debug("%s.orchestrator() Creating new Orchestrator with data: %s", self.formatted_class_name, data)
+            logger.debug("Creating new Orchestrator with data: %s", data)
             tags = data.pop("tags", [])
             self._orchestrator = Orchestrator.objects.create(**data)
             if self._orchestrator and tags:
                 self._orchestrator.tags.set(tags)
             self._created = True
             logger.warning(
-                "%s.orchestrator() lazily created new Orchestrator instance %s owned by %s. This logic should be handled in apply().",
-                self.formatted_class_name,
+                "lazily created new Orchestrator instance %s owned by %s. This logic should be handled in apply().",
                 self._orchestrator,
                 self.user_profile,
             )
         else:
             logger.warning(
-                "%s.orchestrator() %s not found for user_profile %s",
-                self.formatted_class_name,
+                "%s not found for user_profile %s",
                 self._orchestrator,
                 self.user_profile,
             )
@@ -266,8 +264,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             **config_dump,
         }
         logger.debug(
-            "%s.manifest_to_django_orm() converted manifest to Django ORM dict: %s",
-            self.formatted_class_name,
+            "converted manifest to Django ORM dict: %s",
             retval,
         )
 
@@ -366,8 +363,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
         stale_count = stale.count()
         if stale_count:
             logger.debug(
-                "%s.sync_harnesses() removing %s stale harness(es) for %s not present in manifest",
-                self.formatted_class_name,
+                "removing %s stale harness(es) for %s not present in manifest",
                 stale_count,
                 self.orchestrator.name,
             )
@@ -395,8 +391,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             )
         if not self.orchestrator:
             logger.warning(
-                "%s.django_orm_to_manifest_dict() called without an Orchestrator. This could affect broker operations.",
-                self.formatted_class_name,
+                "called without an Orchestrator. This could affect broker operations.",
             )
             return None
         orchestrator_dict = model_to_dict(self.orchestrator)
@@ -457,8 +452,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
         )
 
         logger.debug(
-            "%s.django_orm_to_manifest_dict() converted Orchestrator %s to manifest dict: %s",
-            self.formatted_class_name,
+            "converted Orchestrator %s to manifest dict: %s",
             self.orchestrator.name,
             model.model_dump(),
         )
@@ -503,8 +497,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             return self._manifest
         if self.manifest_data is not None:
             logger.debug(
-                "%s.manifest() initializing %s from manifest data with name %s",
-                self.formatted_class_name,
+                "initializing %s from manifest data with name %s",
                 self.kind,
                 (self.manifest_metadata or {}).get(SAMMetadataKeys.NAME.value, "unknown"),
             )
@@ -514,16 +507,14 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             self._manifest = self.django_orm_to_manifest_dict()  # type: ignore
             if self._manifest:
                 logger.debug(
-                    "%s.manifest() initialized from manifest data for existing Orchestrator %s with name %s",
-                    self.formatted_class_name,
+                    "initialized from manifest data for existing Orchestrator %s with name %s",
                     self._orchestrator,
                     self._orchestrator.name,
                 )
                 return self._manifest
         else:
             logger.debug(
-                "%s.manifest() could not initialize",
-                self.formatted_class_name,
+                "could not initialize",
             )
         return self._manifest
 
@@ -537,7 +528,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
         .. returns: None
         .. rtype: None
         """
-        logger.debug("%s.cache_invalidations() called.", self.formatted_class_name)
+        logger.debug("called.")
 
         # 1.) invalidate the Orchestrator cache itself.
         Orchestrator.get_cached_object(pk=self.orchestrator.id, invalidate=True)  # type: ignore
@@ -654,8 +645,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
             :MAX_RESULTS
         ]
         logger.debug(
-            "%s.get() found %s Orchestrators for account %s",
-            self.formatted_class_name,
+            "found %s Orchestrators for account %s",
             orchestrators.count(),
             self.account,
         )
@@ -671,8 +661,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 items.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
-                    "%s.get() failed to serialize %s %s",
-                    self.formatted_class_name,
+                    "failed to serialize %s %s",
                     self.kind,
                     orchestrator.name,
                     exc_info=True,
@@ -741,8 +730,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 try:
                     if not isinstance(self.orchestrator.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
-                            "%s.apply() orchestrator.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the Orchestrator model definition or the database state. Tags=%s",
-                            self.formatted_class_name,
+                            "orchestrator.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the Orchestrator model definition or the database state. Tags=%s",
                             self.kind,
                             self.manifest.metadata.name,
                             self.user_profile,
@@ -753,8 +741,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
-                        "%s.apply() failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
-                        self.formatted_class_name,
+                        "failed to set tags for %s %s owned by %s. Tags=%s. Error: %s",
                         self.kind,
                         self.manifest.metadata.name,
                         self.user_profile,
@@ -765,8 +752,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 self.orchestrator.refresh_from_db()
             except Exception as e:
                 logger.error(
-                    "%s.apply() failed to save %s %s owned by %s. Error: %s",
-                    self.formatted_class_name,
+                    "failed to save %s %s owned by %s. Error: %s",
                     self.kind,
                     self.manifest.metadata.name,
                     self.user_profile,
@@ -809,8 +795,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 logger.error(
-                    "%s.describe() failed to describe %s %s",
-                    self.formatted_class_name,
+                    "failed to describe %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,
@@ -879,8 +864,7 @@ class SAMOrchestratorBroker(AbstractBroker[Orchestrator, Orchestrator]):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 logger.error(
-                    "%s.delete() failed to delete %s %s",
-                    self.formatted_class_name,
+                    "failed to delete %s %s",
                     self.kind,
                     self.name,
                     exc_info=True,

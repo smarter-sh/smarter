@@ -234,14 +234,12 @@ class SqlPlugin(PluginBase):
         try:
             self._plugin_data = PluginDataSql.get_cached_object(plugin=self.plugin_meta)  # type: ignore[call-arg]
             logger.debug(
-                "%s.plugin_data() retrieved existing PluginDataSql from database.",
-                self.formatted_class_name,
+                "retrieved existing PluginDataSql from database.",
             )
             return self._plugin_data
         except PluginDataSql.DoesNotExist:
             logger.debug(
-                "%s.plugin_data() no existing PluginDataSql found in database for plugin_meta: %s",
-                self.formatted_class_name,
+                "no existing PluginDataSql found in database for plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -256,16 +254,14 @@ class SqlPlugin(PluginBase):
             self._plugin_data = PluginDataSql(**plugin_data_django_model)
             self._plugin_data.save()
             logger.debug(
-                "%s.plugin_data() created new instance of %s from manifest and plugin metadata.",
-                self.formatted_class_name,
+                "created new instance of %s from manifest and plugin metadata.",
                 self.plugin_data_class.__name__,
             )
         if self.plugin_meta:
             # we don't have a Pydantic model but we do have an existing
             # Django ORM model instance, so we can use that directly.
             logger.debug(
-                "%s.plugin_data() retrieving PluginDataSql from database using plugin metadata.",
-                self.formatted_class_name,
+                "retrieving PluginDataSql from database using plugin metadata.",
             )
             self._plugin_data = PluginDataSql.get_cached_data_by_plugin(
                 plugin=self.plugin_meta,
@@ -458,8 +454,7 @@ class SqlPlugin(PluginBase):
 
         if not isinstance(self.plugin_meta, PluginMeta):
             logger.debug(
-                "%s.plugin_data_django_model() plugin_meta is not set. plugin_meta: %s",
-                self.formatted_class_name,
+                "plugin_meta is not set. plugin_meta: %s",
                 self.plugin_meta,
             )
 
@@ -511,7 +506,7 @@ class SqlPlugin(PluginBase):
                 f"{self.formatted_class_name}.plugin_data_django_model() error: {self.name} parameters must be a list of dictionaries. Received: {parameters} {type(parameters)}"
             )
         if parameters:
-            logger.debug("%s.plugin_data_django_model() recasting parameters", self.formatted_class_name)
+            logger.debug("recasting parameters")
             for parameter in parameters:
                 if not isinstance(parameter, Parameter):
                     raise SmarterConfigurationError(
@@ -521,8 +516,7 @@ class SqlPlugin(PluginBase):
                 # standard json dict.
                 parameter_json = parameter.model_dump()
                 logger.debug(
-                    "%s.plugin_data_django_model() processing parameter: %s",
-                    self.formatted_class_name,
+                    "processing parameter: %s",
                     parameter_json,
                 )
                 if not isinstance(parameter_json, dict):
@@ -687,7 +681,7 @@ class SqlPlugin(PluginBase):
         :returns: None
         :rtype: None
         """
-        logger.debug("%s.create() called.", self.formatted_class_name)
+        logger.debug("called.")
         super().create()
 
     # pylint: disable=too-many-branches,too-many-statements
@@ -728,7 +722,7 @@ class SqlPlugin(PluginBase):
         with PluginRequest(
             SQL_PLUGIN_REQUEST_SIGNALS, sender=self.__class__, plugin=self, function_args=function_args
         ) as plugin_request:
-            logger.debug("%s.tool_call_fetch_plugin_response() called.", self.formatted_class_name)
+            logger.debug("called.")
 
             def sql_value(val, backslash_escapes: bool):
                 if val is None:
@@ -827,7 +821,8 @@ class SqlPlugin(PluginBase):
                 sql += ";"
 
             logger.debug(
-                "%s.tool_call_fetch_plugin_response() executing remote SQL query: %s", self.formatted_class_name, sql
+                "executing remote SQL query: %s",
+                sql,
             )
 
             limit = (
@@ -861,8 +856,7 @@ class SqlPlugin(PluginBase):
                         f"{self.formatted_class_name}.tool_call_fetch_plugin_response() error: {self.name} SQL query failed: {sql}"
                     )
                 logger.debug(
-                    "%s.tool_call_fetch_plugin_response() fetched and cached SQL query result for query: %s",
-                    self.formatted_class_name,
+                    "fetched and cached SQL query result for query: %s",
                     sql,
                 )
                 return retval
@@ -876,8 +870,7 @@ class SqlPlugin(PluginBase):
 
             if not retval:
                 logger.warning(
-                    "%s.tool_call_fetch_plugin_response() SQL query returned no results. Returning empty string.",
-                    self.formatted_class_name,
+                    "SQL query returned no results. Returning empty string.",
                 )
                 plugin_request.responded(response="", cached=not executed, sql=sql)
                 return ""

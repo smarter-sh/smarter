@@ -91,7 +91,8 @@ class CustomDomainListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             custom_domain = LLMClientCustomDomain.objects.with_read_permission_for(self.user_profile.user).get(id=custom_domain_id)  # type: ignore
         except LLMClientCustomDomain.DoesNotExist:
             logger.warning(
-                "%s.post() Custom domain with id %s not found for cloning.", self.formatted_class_name, custom_domain_id
+                "Custom domain with id %s not found for cloning.",
+                custom_domain_id,
             )
             return JsonResponse(
                 {"error": f"Custom domain with id {custom_domain_id} not found."}, status=HTTPStatus.NOT_FOUND
@@ -103,8 +104,7 @@ class CustomDomainListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error cloning custom domain with id %s: %s",
-                self.formatted_class_name,
+                "Error cloning custom domain with id %s: %s",
                 custom_domain_id,
                 e,
             )
@@ -113,8 +113,7 @@ class CustomDomainListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error cloning custom domain with id %s",
-                self.formatted_class_name,
+                "Error cloning custom domain with id %s",
                 custom_domain_id,
                 exc_info=True,
             )
@@ -148,8 +147,7 @@ class CustomDomainListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             custom_domain = LLMClientCustomDomain.objects.with_ownership_permission_for(self.user_profile.user).get(id=custom_domain_id)  # type: ignore
         except LLMClientCustomDomain.DoesNotExist:
             logger.warning(
-                "%s.post() Custom domain with id %s not found for deletion.",
-                self.formatted_class_name,
+                "Custom domain with id %s not found for deletion.",
                 custom_domain_id,
             )
             return JsonResponse(
@@ -170,8 +168,7 @@ class CustomDomainListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
             )
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error deleting custom domain with id %s: %s",
-                self.formatted_class_name,
+                "Error deleting custom domain with id %s: %s",
                 custom_domain_id,
                 e,
             )
@@ -180,8 +177,7 @@ class CustomDomainListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error deleting custom domain with id %s",
-                self.formatted_class_name,
+                "Error deleting custom domain with id %s",
                 custom_domain_id,
                 exc_info=True,
             )
@@ -218,8 +214,7 @@ class CustomDomainListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             custom_domain = LLMClientCustomDomain.objects.with_ownership_permission_for(self.user_profile.user).get(id=custom_domain_id)  # type: ignore
         except LLMClientCustomDomain.DoesNotExist:
             logger.warning(
-                "%s.post() Custom domain with id %s not found for renaming.",
-                self.formatted_class_name,
+                "Custom domain with id %s not found for renaming.",
                 custom_domain_id,
             )
             return JsonResponse(
@@ -232,8 +227,7 @@ class CustomDomainListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
             return JsonResponse(data, status=HTTPStatus.OK)  # type: ignore
         except CLIENT_ERROR_TYPES as e:
             logger.warning(
-                "%s.post() Error renaming custom domain with id %s: %s",
-                self.formatted_class_name,
+                "Error renaming custom domain with id %s: %s",
                 custom_domain_id,
                 e,
             )
@@ -242,8 +236,7 @@ class CustomDomainListApiRenameView(SmarterAuthenticatedNeverCachedWebView):
         # pylint: disable=broad-except
         except Exception:
             logger.error(
-                "%s.post() Error renaming custom domain with id %s",
-                self.formatted_class_name,
+                "Error renaming custom domain with id %s",
                 custom_domain_id,
                 exc_info=True,
             )

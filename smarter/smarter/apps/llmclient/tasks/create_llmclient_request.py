@@ -57,7 +57,6 @@ from smarter.workers.celery import app
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.LLM_CLIENT_LOGGING]
 )
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 
 @app.task(
@@ -108,8 +107,7 @@ def create_llmclient_request(llmclient_id: int, request_data: SmarterDictType):
     # the request holds the user's prompt, which is personal data, so only its
     # size and the masked session key are logged here.
     logger.debug(
-        "%s.create_llmclient_request() llmclient %s task_id: %s received %s message(s) for session %s",
-        logger_prefix,
+        "llmclient %s task_id: %s received %s message(s) for session %s",
         llmclient_id,
         task_id,
         len(request_data.get("messages") or []),

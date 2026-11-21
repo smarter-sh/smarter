@@ -174,8 +174,7 @@ class PluginController(AbstractController):
     ):
         super().__init__(user_profile, **kwargs)
         logger.debug(
-            "%s.__init__ called with user_profile: %s, manifest: %s, plugin_meta: %s, name: %s, kwargs: %s",
-            self.formatted_class_name,
+            "called with user_profile: %s, manifest: %s, plugin_meta: %s, name: %s, kwargs: %s",
             user_profile,
             manifest,
             plugin_meta,
@@ -199,8 +198,7 @@ class PluginController(AbstractController):
                 )
             SAMPluginCls = self.sam_map[manifest["kind"]]
             logger.debug(
-                "%s received %s manifest as dict, converting to %s.",
-                self.formatted_class_name,
+                "received %s manifest as dict, converting to %s.",
                 manifest["kind"],
                 SAMPluginCls.__name__,
             )
@@ -208,7 +206,10 @@ class PluginController(AbstractController):
 
         if isinstance(manifest, SAMPluginCommon):
             self._manifest = manifest
-            logger.debug("%s received manifest: %s", self.formatted_class_name, self._manifest.metadata.name)
+            logger.debug(
+                "received manifest: %s",
+                self._manifest.metadata.name,
+            )
             if self._manifest.kind not in VALID_MANIFEST_KINDS:
                 raise SAMPluginControllerError(
                     f"Manifest kind {self._manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
@@ -216,16 +217,18 @@ class PluginController(AbstractController):
 
         if isinstance(plugin_meta, PluginMeta):
             self._plugin_meta = plugin_meta
-            logger.debug("%s received plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+            logger.debug(
+                "received plugin_meta: %s",
+                self._plugin_meta.name,
+            )
 
         if isinstance(name, str):
             self._name = name
-            logger.debug("%s received name: %s", self.formatted_class_name, self._name)
+            logger.debug("received name: %s", self._name)
 
         if self.ready:
             logger.debug(
-                "%s initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
-                self.formatted_class_name,
+                "initialized with account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
                 self.account,
                 self.user,
                 self.user_profile,
@@ -235,8 +238,7 @@ class PluginController(AbstractController):
             )
         else:
             logger.warning(
-                "%s initialized but not ready. account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
-                self.formatted_class_name,
+                "initialized but not ready. account: %s, user: %s, user_profile: %s, manifest: %s, plugin_meta: %s, name: %s",
                 self.account,
                 self.user,
                 self.user_profile,
@@ -283,8 +285,7 @@ class PluginController(AbstractController):
                 )
                 if not plugin_meta:
                     logger.debug(
-                        "%s.plugin_meta: No PluginMeta found for user_profile %s, name %s, plugin_class %s",
-                        self.formatted_class_name,
+                        "No PluginMeta found for user_profile %s, name %s, plugin_class %s",
                         self.user_profile,
                         self.name,
                         self.plugin_class,
@@ -292,14 +293,13 @@ class PluginController(AbstractController):
                     return None
                 if plugin_meta.user_profile not in valid_resource_owners_for_user(self.user_profile):
                     logger.warning(
-                        "%s.plugin_meta: PluginMeta %s does not belong to a valid resource owner for user_profile %s",
-                        self.formatted_class_name,
+                        "PluginMeta %s does not belong to a valid resource owner for user_profile %s",
                         plugin_meta,
                         self.user_profile,
                     )
                     return None
                 self._plugin_meta = plugin_meta
-                logger.debug("%s retrieved plugin_meta: %s", self.formatted_class_name, self._plugin_meta.name)
+                logger.debug("retrieved plugin_meta: %s", self._plugin_meta.name)
             except MultipleObjectsReturned:
                 self._plugin_meta = PluginMeta.objects.get(
                     user_profile=self.user_profile, name=self.name, plugin_class=self.plugin_class

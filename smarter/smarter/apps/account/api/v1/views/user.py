@@ -29,7 +29,6 @@ from smarter.lib.typing import SmarterDictType
 from .base import AccountListViewBase, AccountViewBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.API_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 #: The fields of a new user that the request body may set.
 USER_CREATE_FIELDS = ("username", "password", "email", "first_name", "last_name")
@@ -49,7 +48,7 @@ def validate_request_body(request: Request):
     :returns: None if the body is valid, else a 400 :class:`JsonResponse` that explains why not.
     """
     # do a cursory check of the request data. The body has the new user's password, so it isn't logged.
-    logger.debug("%s.validate_request_body() - request body of %d bytes", logger_prefix, len(request.body))
+    logger.debug("request body of %d bytes", len(request.body))
     try:
         data = json.loads(request.body)
         if not isinstance(data, dict):
@@ -69,7 +68,7 @@ def validate_request_body(request: Request):
         )
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.validate_request_body() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while reading the request."},
             status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
@@ -89,7 +88,7 @@ def eval_permissions(request, user_to_update: User, user_to_update_profile: Opti
     :param user_to_update_profile: The UserProfile of ``user_to_update``, if it has one.
     :returns: None if the request user may modify the user, else a 401 :class:`JsonResponse`.
     """
-    logger.debug("%s.eval_permissions() - request: %s", __name__, request)
+    logger.debug("request: %s", request)
     user = get_resolved_user(request.user)
     if user is None or not getattr(user, "is_authenticated", False):
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
@@ -170,21 +169,21 @@ def get_user(request, user_id: Optional[int] = None):
     """
     logger.debug("%s.get_user() - user_id: %s, request: %s", request, user_id, request)
     if user_id is None:
-        logger.debug("UserListView.get_queryset() - returning current user: %s", request.user)
+        logger.debug("returning current user: %s", request.user)
         return user_response(request.user)
 
     request_user = get_resolved_user(request.user)
     if request_user is None:
-        logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
+        logger.debug("user not found for request: %s", request)
         return JsonResponse({"detail": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     # if the user is a superuser, they can get any user
     if request_user.is_superuser:
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            logger.debug("UserListView.get_queryset() - user not found for id: %s", user_id)
+            logger.debug("user not found for id: %s", user_id)
             return JsonResponse({"detail": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
-        logger.debug("UserListView.get_queryset() - returning user for id %s: %s", user_id, user)
+        logger.debug("returning user for id %s: %s", user_id, user)
         return user_response(user)
 
     # if the user is a staff member, they can get users within their own account
@@ -193,16 +192,16 @@ def get_user(request, user_id: Optional[int] = None):
             account = UserProfile.objects.get(user=request.user).account
             user = UserProfile.objects.get(account=account, user_id=user_id).user
         except (UserProfile.DoesNotExist, User.DoesNotExist):
-            logger.debug("UserListView.get_queryset() - user not found for id: %s", user_id)
+            logger.debug("user not found for id: %s", user_id)
             return JsonResponse({"detail": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
         return user_response(user)
 
     # mere mortals can only get their own account
     if user_id != request.user.id:
-        logger.debug("UserListView.get_queryset() - unauthorized access attempt for user id: %s", user_id)
+        logger.debug("unauthorized access attempt for user id: %s", user_id)
         return JsonResponse({"detail": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
-    logger.debug("UserListView.get_queryset() - returning current user: %s", request.user)
+    logger.debug("returning current user: %s", request.user)
     return user_response(request.user)
 
 
@@ -213,10 +212,10 @@ def create_user(request: Request):
 
     user = get_resolved_user(request.user)
     if user is None:
-        logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
+        logger.debug("user not found for request: %s", request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
     if not user.is_superuser and not user.is_staff:
-        logger.debug("UserListView.get_queryset() - unauthorized access attempt for user: %s", user)
+        logger.debug("unauthorized access attempt for user: %s", user)
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     invalid = validate_request_body(request)
@@ -230,7 +229,7 @@ def create_user(request: Request):
     try:
         account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:
-        logger.debug("UserListView.get_queryset() - user profile not found for user: %s", user)
+        logger.debug("user profile not found for user: %s", user)
         return JsonResponse({"error": "User is not associated with any account."}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
@@ -238,20 +237,20 @@ def create_user(request: Request):
             user = User.objects.create_user(**data)
             UserProfile.objects.create(name=user.username, user=user, account=account)
     except REQUEST_DATA_ERROR_TYPES as e:
-        logger.warning("%s.create_user() could not create the user: %s", logger_prefix, type(e).__name__)
+        logger.warning("could not create the user: %s", type(e).__name__)
         message = client_error_message(e, "The request data is not valid.")
         return JsonResponse(
             {"error": "Invalid request data", "exception": message}, status=HTTPStatus.BAD_REQUEST.value
         )
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.create_user() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while creating the user."},
             status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
         )
 
-    logger.debug("UserListView.get_queryset() - user created successfully: %s", user)
+    logger.debug("user created successfully: %s", user)
     return HttpResponseRedirect(request.path_info + str(user.id) + "/")  # type: ignore[return-value]
 
 
@@ -266,7 +265,7 @@ def update_user(request: Request, user_id: int):
     :param user_id: The User's id.
     :returns: The response: the updated user, or an error :class:`JsonResponse`.
     """
-    logger.debug("%s.update_user() - user_id: %s, request: %s", logger_prefix, user_id, request)
+    logger.debug("user_id: %s, request: %s", user_id, request)
     data: SmarterDictType
 
     # a partial update: the body needn't have the username and password that validate_request_body() requires.
@@ -275,7 +274,8 @@ def update_user(request: Request, user_id: int):
     except json.JSONDecodeError:
         # the body may have a password, so it isn't logged.
         logger.debug(
-            "%s.update_user() - invalid JSON format in a request body of %d bytes", logger_prefix, len(request.body)
+            "invalid JSON format in a request body of %d bytes",
+            len(request.body),
         )
         return JsonResponse({"error": "Invalid JSON format in request body."}, status=HTTPStatus.BAD_REQUEST.value)
     if not isinstance(data, dict):
@@ -290,10 +290,10 @@ def update_user(request: Request, user_id: int):
     user_to_update, user_to_update_profile = result
 
     if not isinstance(user_to_update, User):
-        logger.debug("UserListView.get_queryset() - user not found for request: %s", request)
+        logger.debug("user not found for request: %s", request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST.value)
     if not isinstance(user_to_update_profile, UserProfile):
-        logger.debug("UserListView.get_queryset() - user profile not found for user: %s", user_to_update)
+        logger.debug("user profile not found for user: %s", user_to_update)
         return JsonResponse({"error": "User profile not found"}, status=HTTPStatus.BAD_REQUEST.value)
     forbidden = eval_permissions(request, user_to_update, user_to_update_profile)
     if forbidden:
@@ -305,14 +305,14 @@ def update_user(request: Request, user_id: int):
             if key in USER_UPDATE_FIELDS:
                 setattr(user_to_update, key, value)
         user_to_update.save()
-        logger.debug("UserListView.get_queryset() - user updated successfully: %s", user_to_update)
+        logger.debug("user updated successfully: %s", user_to_update)
     except CLIENT_ERROR_TYPES as e:
-        logger.warning("%s.update_user() could not update the user: %s", logger_prefix, type(e).__name__)
+        logger.warning("could not update the user: %s", type(e).__name__)
         message = client_error_message(e, "The request data is not valid.")
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST.value)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.update_user() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while updating the user."},
             status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
@@ -329,7 +329,7 @@ def delete_user(request: Request, user_id: Optional[int] = None):
     :param user_id: The User's id, or None for the request user.
     :returns: A redirect to the parent url, or a 404, 401 or 500 :class:`JsonResponse`.
     """
-    logger.debug("%s.delete_user() - user_id: %s, request: %s", __name__, user_id, request)
+    logger.debug("user_id: %s, request: %s", user_id, request)
     user: Union[User, AnonymousUser]
     try:
         if user_id:
@@ -337,7 +337,7 @@ def delete_user(request: Request, user_id: Optional[int] = None):
         else:
             user = request.user
     except User.DoesNotExist:
-        logger.debug("%s.delete_user() - user not found for request: %s", __name__, request)
+        logger.debug("user not found for request: %s", request)
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if not isinstance(user, User):
@@ -352,14 +352,14 @@ def delete_user(request: Request, user_id: Optional[int] = None):
         with transaction.atomic():
             UserProfile.objects.get(user=user).delete()
             user.delete()
-            logger.debug("%s.delete_user() - user deleted successfully: %s", __name__, user)
+            logger.debug("user deleted successfully: %s", user)
     except CLIENT_ERROR_TYPES as e:
-        logger.warning("%s.delete_user() refused: %s", logger_prefix, type(e).__name__)
+        logger.warning("refused: %s", type(e).__name__)
         message = client_error_message(e, "The user could not be deleted.")
         return JsonResponse({"error": message}, status=HTTPStatus.BAD_REQUEST.value)
     # pylint: disable=broad-except
     except Exception:
-        logger.error("%s.delete_user() failed", logger_prefix, exc_info=True)
+        logger.error("failed", exc_info=True)
         return JsonResponse(
             {"error": "An unknown error occurred while deleting the user."},
             status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
@@ -381,7 +381,7 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`get_user`.
         """
-        logger.debug("%s.get() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        logger.debug("user_id: %s, request: %s", user_id, request)
         response = get_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -394,7 +394,7 @@ class UserView(AccountViewBase):
         :param user_id: Unused.
         :returns: The response of :func:`create_user`.
         """
-        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
+        logger.debug("request: %s", request)
         response = create_user(request)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -407,7 +407,7 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`update_user`.
         """
-        logger.debug("%s.patch() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        logger.debug("user_id: %s, request: %s", user_id, request)
         response = update_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -420,7 +420,7 @@ class UserView(AccountViewBase):
         :param user_id: The User's id.
         :returns: The response of :func:`delete_user`.
         """
-        logger.debug("%s.delete() - user_id: %s, request: %s", self.formatted_class_name, user_id, request)
+        logger.debug("user_id: %s, request: %s", user_id, request)
         response = delete_user(request, user_id)
         api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
@@ -433,9 +433,9 @@ class UserView(AccountViewBase):
         :returns: The response.
         """
         if isinstance(exc, Http404):
-            logger.debug("%s.handle_exception() - Http404: %s", self.formatted_class_name, exc)
+            logger.debug("Http404: %s", exc)
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        logger.error("%s.handle_exception() - unhandled exception: %s", self.formatted_class_name, exc)
+        logger.error("unhandled exception: %s", exc)
         return super().handle_exception(exc)
 
 
@@ -453,8 +453,7 @@ class UserListView(AccountListViewBase):
         """
         super().setup(request, *args, **kwargs)
         logger.debug(
-            "%s.setup() - request: %s, user: %s, user_profile: %s is_authenticated: %s",
-            self.formatted_class_name,
+            "request: %s, user: %s, user_profile: %s is_authenticated: %s",
             smarter_build_absolute_uri(self.request),
             self.request.user.username if self.request.user else "Anonymous",  # type: ignore[assignment]
             self.user_profile,
@@ -467,29 +466,31 @@ class UserListView(AccountListViewBase):
 
         :returns: The queryset, or an error :class:`Response` when the user or its UserProfile is not found.
         """
-        logger.debug("%s.get_queryset() - request: %s", self.formatted_class_name, self.request)
+        logger.debug("request: %s", self.request)
         user = get_resolved_user(self.request.user)
         if user is None:
-            logger.debug("%s.get_queryset() - user not found for request: %s", self.formatted_class_name, self.request)
+            logger.debug("user not found for request: %s", self.request)
             return Response({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
         if user.is_superuser:
-            logger.debug("%s.get_queryset() - user is superuser: %s", self.formatted_class_name, user)
+            logger.debug("user is superuser: %s", user)
             return User.objects.all()
 
         try:
             accounts = UserProfile.objects.filter(user=self.request.user).values("account")
             account_users = UserProfile.objects.filter(account__in=accounts).values_list("user", flat=True)
             logger.debug(
-                "%s.get_queryset() - account users for %s: %s", self.formatted_class_name, user, list(account_users)
+                "account users for %s: %s",
+                user,
+                list(account_users),
             )
             return User.objects.filter(id__in=account_users)
         except UserProfile.DoesNotExist:
-            logger.debug("%s.get_queryset() - user profile not found for user: %s", self.formatted_class_name, user)
+            logger.debug("user profile not found for user: %s", user)
             return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     def get_list(self, request: Request):
         """Get a list of all users the requesting user has access to, as :class:`AccountApiUserDetail` models."""
-        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
+        logger.debug("request: %s", request)
         queryset = self.get_queryset()
         if isinstance(queryset, Response):
             return queryset
@@ -498,10 +499,10 @@ class UserListView(AccountListViewBase):
 
     def get(self, request: Request, *args, **kwargs):
         """Handle GET requests to retrieve the list of users."""
-        logger.debug("%s.get() - request: %s", self.formatted_class_name, request)
+        logger.debug("request: %s", request)
         return self.get_list(request)
 
     def post(self, request, *args, **kwargs):
         """Handle POST requests to create a new user."""
-        logger.debug("%s.post() - request: %s", self.formatted_class_name, request)
+        logger.debug("request: %s", request)
         return self.get_list(request)

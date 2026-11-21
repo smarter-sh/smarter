@@ -26,7 +26,6 @@ logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.ACCOUNT_LOGGING]
 )
 logger_level = logger.getEffectiveLevel()
-module_prefix = "smarter.apps.account.tasks."
 
 
 @app.task(
@@ -62,7 +61,6 @@ def create_charge(*args, **kwargs):
     completion_tokens = kwargs.get("completion_tokens")
     total_tokens = kwargs.get("total_tokens")
     total_cost = kwargs.get("total_cost")
-    prefix = logging.SmarterFormattedText.text(module_prefix + "create_charge()")
     if total_cost is None:
         total_cost = LLMPrices.cost_of(
             charge_type=charge_type,
@@ -72,8 +70,7 @@ def create_charge(*args, **kwargs):
         )
 
     logger.debug(
-        "%s. resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
-        prefix,
+        ". resource_locator %s, charge_type %s, prompt_tokens %s, completion_tokens %s, total_tokens %s",
         resource_locator,
         charge_type,
         prompt_tokens,
@@ -93,7 +90,7 @@ def create_charge(*args, **kwargs):
         )
     # pylint: disable=W0703
     except Exception as e:
-        logger.error("%s error creating charge: %s", prefix, e)
+        logger.error("error creating charge: %s", e)
 
 
 @app.task(
@@ -118,8 +115,7 @@ def aggregate_records():
         # (see your Celery Beat configuration)
     """
 
-    prefix = logging.SmarterFormattedText.text(module_prefix + "aggregate_records()")
-    logger.info(prefix)
+    logger.info("aggregating the charges")
 
     aggregate_charges()
 
@@ -139,9 +135,8 @@ def evaluate_budget_constraints() -> int:
 
     :returns: The number of locked resources.
     """
-    prefix = logging.SmarterFormattedText.text(module_prefix + "evaluate_budget_constraints()")
     retval = evaluate_budgets()
-    logger.info("%s %s resources are locked by a budget.", prefix, retval)
+    logger.info("%s resources are locked by a budget.", retval)
     return retval
 
 
@@ -167,16 +162,14 @@ def send_slack_invitation_emails() -> int:
 
     :returns: The number of emails sent.
     """
-    prefix = logging.SmarterFormattedText.text(module_prefix + "send_slack_invitation_emails()")
     if not waffle.switch_is_active(SmarterWaffleSwitches.ENABLE_SLACK_INVITATION_EMAIL):
         logger.debug(
-            "%s the %s waffle switch is not active. Sending no Slack invitation emails.",
-            prefix,
+            "the %s waffle switch is not active. Sending no Slack invitation emails.",
             SmarterWaffleSwitches.ENABLE_SLACK_INVITATION_EMAIL,
         )
         return 0
     if not infrastructure.email.ready:
-        logger.warning("%s the email service is not configured. Sending no Slack invitation emails.", prefix)
+        logger.warning("the email service is not configured. Sending no Slack invitation emails.")
         return 0
     return AccountContact.send_slack_invitation_emails()
 
@@ -201,8 +194,7 @@ def create_data_export(export_id: int) -> str:
     # pylint: disable=import-outside-toplevel
     from .data_export import run_data_export
 
-    prefix = logging.SmarterFormattedText.text(module_prefix + "create_data_export()")
-    logger.info("%s export %s", prefix, export_id)
+    logger.info("export %s", export_id)
     export = run_data_export(export_id)
     return str(export.status)
 
@@ -225,10 +217,9 @@ def delete_expired_data_exports() -> int:
     # pylint: disable=import-outside-toplevel
     from .data_export import delete_expired_data_exports as delete_expired
 
-    prefix = logging.SmarterFormattedText.text(module_prefix + "delete_expired_data_exports()")
     if not infrastructure.storage.ready:
-        logger.debug("%s private storage is not ready. Deleting nothing.", prefix)
+        logger.debug("private storage is not ready. Deleting nothing.")
         return 0
     deleted = delete_expired()
-    logger.info("%s deleted %s expired data exports.", prefix, deleted)
+    logger.info("deleted %s expired data exports.", deleted)
     return deleted

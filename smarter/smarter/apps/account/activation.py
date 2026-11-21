@@ -28,7 +28,6 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.ACCOUNT_LOGGING])
-logger_prefix = logging.SmarterFormattedText.text(__name__)
 
 ACCOUNT_ACTIVATE_LINK_NAME = "account:account_activate"
 """The url name of the link, which :mod:`smarter.apps.account.urls` serves at ``/account/activate/<uidb64>/<token>/``."""
@@ -78,7 +77,7 @@ def send_activation_email(request: HttpRequest, user: User) -> None:
     infrastructure.email.send_email(
         subject=_("Activate your account."), body=body, to=user.email, html=True, bcc_admin=False
     )
-    logger.info("%s.send_activation_email() sent to identity %s", logger_prefix, login_identity(user.email))
+    logger.info("sent to identity %s", login_identity(user.email))
 
 
 def resend_activation_email(request: HttpRequest, email: str) -> bool:
@@ -117,6 +116,6 @@ def activate(request: HttpRequest, uidb64: str, token: str) -> User:
     if not user.is_active:
         user.is_active = True
         user.save(update_fields=["is_active"])
-        logger.info("%s.activate() activated identity %s", logger_prefix, login_identity(user.email))
+        logger.info("activated identity %s", login_identity(user.email))
     login(request, user, backend=PASSWORD_BACKEND)
     return user

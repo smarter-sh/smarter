@@ -15,4 +15,5 @@ Logging Technical References
    logging/streaming-log-handler
    logging/streaming-file-handler
    logging/middleware
+   logging/utils
    logging/waffle-switched-logging

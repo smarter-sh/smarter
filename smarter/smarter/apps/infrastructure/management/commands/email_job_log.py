@@ -58,8 +58,7 @@ from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.validators import SmarterValidator
 
-logger = logging.getLogger(__name__)
-logger_prefix = logging.SmarterFormattedText.text(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SECRET_ENV_NAME = re.compile(r"PASSWORD|SECRET|TOKEN|KEY", re.IGNORECASE)
 """Environment variables whose values are redacted from the log."""
@@ -124,7 +123,7 @@ def read_summary_text(filename: str) -> str:
     try:
         return redact(Path(filename).read_text(encoding="utf-8", errors="replace")).strip()
     except OSError as e:
-        logger.warning("%s.read_summary_text() could not read the summary %s: %s", logger_prefix, filename, e)
+        logger.warning("could not read the summary %s: %s", filename, e)
         return ""
 
 
@@ -279,7 +278,7 @@ class Command(SmarterCommand):
                     )
                 # pylint: disable=broad-except
                 except Exception as e:
-                    logger.error("%s.handle() could not save the log of %s: %s", logger_prefix, job, e)
+                    logger.error("could not save the log of %s: %s", job, e)
                     tail = "\n".join(log[-lines:])
                     note = (
                         f"<p>The log ({size}) is too large to attach, and could not be saved: "
@@ -305,7 +304,7 @@ class Command(SmarterCommand):
                 self.post_to_slack(channel, subject, status, summary, log, filename, content, url, read_error)
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("%s.handle() could not post the log of %s to Slack: %s", logger_prefix, job, e)
+                logger.error("could not post the log of %s to Slack: %s", job, e)
                 self.stdout.write(self.style.WARNING(f"The log of {job} could not be posted to Slack #{channel}."))
 
         # the job's outcome is decided by the job, not by whether its log could be emailed or posted.
@@ -348,7 +347,8 @@ class Command(SmarterCommand):
         slack = infrastructure.slack
         if not slack.ready:
             logger.warning(
-                "%s.post_to_slack() Slack is not configured. Nothing was posted to %s.", logger_prefix, channel
+                "Slack is not configured. Nothing was posted to %s.",
+                channel,
             )
             self.stdout.write(
                 self.style.WARNING(
