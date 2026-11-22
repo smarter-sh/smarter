@@ -1,7 +1,10 @@
 """
-Middleware that applies the UserProfile that a signed-in user chose for their web console session.
+Middleware of the account app.
 
-See :mod:`smarter.apps.account.profile_selection`.
+- :class:`SmarterUserProfileSelectionMiddleware` applies the UserProfile that a signed-in user chose for
+  their web console session. See :mod:`smarter.apps.account.profile_selection`.
+- :class:`SmarterLocaleMiddleware` restores the language that a signed-in user chose, when their browser
+  has no language cookie. See :mod:`smarter.apps.account.language`.
 """
 
 from __future__ import annotations
@@ -9,8 +12,12 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import cast
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponseBase
+from django.middleware.locale import LocaleMiddleware
+from django.utils import translation
 
+from smarter.apps.account.language import chosen_console_language
 from smarter.apps.account.profile_selection import (
     SELECTED_USER_PROFILE_SESSION_KEY,
     selected_user_profile_id,
@@ -104,3 +111,56 @@ class SmarterUserProfileSelectionMiddleware(SmarterMiddlewareMixin):
         except (TypeError, ValueError):
             logger.warning("ignored a malformed session value: %r", value)
             return None
+
+
+RESTORED_LANGUAGE_ATTRIBUTE = "smarter_restored_language"
+"""The request attribute that holds the language that SmarterLocaleMiddleware restored, for its response."""
+
+
+class SmarterLocaleMiddleware(LocaleMiddleware):
+    """
+    Django's ``LocaleMiddleware``, which also restores a signed-in user's chosen language.
+
+    Django activates the language of the language cookie, or else the best match for the browser's
+    ``Accept-Language`` header. When a signed-in user's browser has no language cookie, e.g. on another
+    device, or after the cookie was cleared, this activates the language that they last chose in the
+    language menu, :func:`~smarter.apps.account.language.chosen_console_language`, and sets the cookie
+    again on the response, so that the lookup happens once. A request that authenticates with an api
+    key is left to Django: it has no browser, and so no cookie.
+
+    It must come after ``AuthenticationMiddleware``, whose ``request.user`` it reads, and before
+    ``CommonMiddleware``.
+    """
+
+    def process_request(self, request: HttpRequest) -> None:
+        super().process_request(request)
+        if settings.LANGUAGE_COOKIE_NAME in request.COOKIES:
+            return
+        if SmarterUserProfileSelectionMiddleware.has_api_token(request):
+            return
+        user = getattr(request, "user", None)
+        if user is None or not user.is_authenticated:
+            return
+        code = chosen_console_language(user.pk)
+        if not code:
+            return
+        translation.activate(code)
+        request.LANGUAGE_CODE = translation.get_language()  # type: ignore[attr-defined]
+        setattr(request, RESTORED_LANGUAGE_ATTRIBUTE, code)
+        logger.debug("restored language %s for user %s", code, user.pk)
+
+    def process_response(self, request: HttpRequest, response: HttpResponseBase) -> HttpResponseBase:
+        code = getattr(request, RESTORED_LANGUAGE_ATTRIBUTE, None)
+        if code:
+            # the cookie that django.views.i18n.set_language sets, with the same settings.
+            response.set_cookie(
+                settings.LANGUAGE_COOKIE_NAME,
+                code,
+                max_age=settings.LANGUAGE_COOKIE_AGE,
+                path=settings.LANGUAGE_COOKIE_PATH,
+                domain=settings.LANGUAGE_COOKIE_DOMAIN,
+                secure=settings.LANGUAGE_COOKIE_SECURE,
+                httponly=settings.LANGUAGE_COOKIE_HTTPONLY,
+                samesite=settings.LANGUAGE_COOKIE_SAMESITE,
+            )
+        return super().process_response(request, response)  # type: ignore[arg-type]
