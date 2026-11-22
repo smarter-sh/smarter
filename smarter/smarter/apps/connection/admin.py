@@ -13,7 +13,7 @@ from .models import (
     SqlConnection,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # Register your models here.

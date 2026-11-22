@@ -22,14 +22,14 @@ from smarter.apps.secret.manifest.models.secret.spec import (
 from smarter.apps.secret.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.secret.manifest.transformers.secret import SecretTransformer
 from smarter.apps.secret.models import Secret
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -60,8 +60,7 @@ def should_log(level):
     )
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 MAX_RESULTS = 1000
 
@@ -581,7 +580,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         spec = SAMSecretSpec(config=config)
         status = SAMSecretStatus(
             accountNumber=SMARTER_ACCOUNT_NUMBER,
-            username=SMARTER_ADMIN_USERNAME,
+            username=smarter_settings.platform_admin_username,
             recordLocator="example-record-locator",
             created=current_date,
             modified=current_date,

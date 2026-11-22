@@ -28,9 +28,9 @@ on their next prompt.
 Decision
 --------
 1. **Separate queues and workers.** Operational tasks run in
-   ``smarter_settings.llmclient_tasks_celery_task_queue`` (``default_celery_task_queue``), served by
+   ``smarter_settings.app_llmclient_tasks_celery_task_queue`` (``default_celery_task_queue``), served by
    the ``smarter-worker``. Infrastructure tasks run in
-   ``smarter_settings.infrastructure_tasks_celery_task_queue`` (``infrastructure_celery_task_queue``),
+   ``smarter_settings.app_infrastructure_tasks_celery_task_queue`` (``infrastructure_celery_task_queue``),
    served by its own ``smarter-worker-infrastructure``. A deployment can never block an operational task.
 2. **Never wait in a task.** A task that waits for something outside Smarter checks once, and if it
    is not ready, schedules itself to check again later, with ``apply_async(countdown=...)``, passing the

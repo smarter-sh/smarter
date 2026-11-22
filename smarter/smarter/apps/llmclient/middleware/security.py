@@ -144,7 +144,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # Short-circuit for any requests born from internal IP address hosts
         # This is unlikely, but not impossible.
-        if any(host.startswith(prefix) for prefix in smarter_settings.internal_ip_prefixes):
+        if any(host.startswith(prefix) for prefix in smarter_settings.platform_internal_ip_prefixes):
             logger.debug(
                 "%s identified as an internal IP address, exiting.",
                 mask_url_query(self.smarter_build_absolute_uri(request)),

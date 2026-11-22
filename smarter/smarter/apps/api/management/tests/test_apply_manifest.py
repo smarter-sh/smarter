@@ -83,7 +83,7 @@ class TestApplyManifestCommand(CommandTestBase):
 
     def test_disabled_kind_is_skipped(self):
         """Test that a manifest of a disabled kind is skipped, without failing, and not applied."""
-        with disabled_sam_apps("enable_guardrail"):
+        with disabled_sam_apps("app_guardrail_enable"):
             self.run_command("apply_manifest", filespec=GUARDRAIL_MANIFEST, username=self.admin_user.username)
         self.assertFalse(Guardrail.objects.filter(name="test_guardrail", user_profile=self.user_profile).exists())
 

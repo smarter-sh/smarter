@@ -119,7 +119,7 @@ def live_hosts() -> set[str]:
     return hosts
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def delete_orphan_dns_records(dry_run: bool = False) -> list[str]:
     """
     Delete the A records, in the zone of the environment's API domain, of hosts that no LLMClient or LLMHost uses.

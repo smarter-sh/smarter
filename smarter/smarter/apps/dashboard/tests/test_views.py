@@ -94,7 +94,7 @@ class TestDashboardReactViews(TestAccountMixin):
         self.addCleanup(sidebar_context.invalidate)
         for enabled in (True, False):
             sidebar_context.invalidate()
-            with patch(SETTINGS, SettingsWith(enable_web_console_terminal=enabled)):
+            with patch(SETTINGS, SettingsWith(app_dashboard_web_console_terminal_enable=enabled)):
                 links = sidebar_context()["sidebar"]
             self.assertEqual(links.get("terminal") == terminal, enabled)
 
@@ -154,12 +154,12 @@ class TestDashboardReactViews(TestAccountMixin):
             reverse(DashboardTerminalApiReverseNames.namespace, DashboardTerminalApiReverseNames.ticket),
             "/api/web/dashboard/terminal/ticket/",
         )
-        if smarter_settings.enable_dashboard_passthrough_prompt:
+        if smarter_settings.app_dashboard_passthrough_prompt_enable:
             self.assertEqual(
                 reverse(PassthroughApiReverseNames.namespace, PassthroughApiReverseNames.api_providers),
                 "/api/web/dashboard/passthrough/providers/",
             )
-        if smarter_settings.enable_dashboard_server_logs:
+        if smarter_settings.app_dashboard_server_logs_enable:
             self.assertEqual(
                 reverse(DashboardLogsApiReverseNames.namespace, DashboardLogsApiReverseNames.stream),
                 "/api/web/dashboard/logs/stream/",

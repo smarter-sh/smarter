@@ -55,14 +55,12 @@ from smarter.apps.llmtool.manifest.models.sql_plugin.spec import (
 from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
 from smarter.apps.llmtool.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
-from smarter.common.const import SMARTER_ADMIN_USERNAME
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.typing import SmarterDictType
 
@@ -76,8 +74,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 MAX_SQL_QUERY_LENGTH = 1000  # Maximum length of SQL query to prevent excessive load on the database
 
 
@@ -596,15 +593,15 @@ class SqlPlugin(PluginBase):
             searchTerms=[
                 "smarter",
                 "users",
-                SMARTER_ADMIN_USERNAME,
+                smarter_settings.platform_admin_username,
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+            provider=smarter_settings.llm_default_provider,
             systemRole="You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
-            model=settings_defaults.LLM_DEFAULT_MODEL,
-            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+            model=smarter_settings.llm_default_model,
+            temperature=smarter_settings.llm_default_temperature,
+            maxTokens=smarter_settings.llm_default_max_tokens,
         )
         connection = "example_connection"
         sql_data = SqlData(
@@ -648,7 +645,7 @@ class SqlPlugin(PluginBase):
         )
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
-            username=SMARTER_ADMIN_USERNAME,
+            username=smarter_settings.platform_admin_username,
             recordLocator="example_record_locator",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),

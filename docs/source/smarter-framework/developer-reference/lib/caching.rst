@@ -25,7 +25,7 @@ once Django is ready, never through ``django.core.cache``. The ``CACHE_RESULTS``
 :mod:`cache_results.conf`) names the cache alias, the default timeout, a key prefix and version that can
 abandon every cached result at once, the key encoder, and the logging hooks.
 :mod:`smarter.lib.cache.hooks` connects them to Smarter: the default timeout is
-``smarter_settings.cache_expiration``, logging follows the ``CACHE_LOGGING`` waffle switch, the
+``smarter_settings.subsystem_cache_expiration``, logging follows the ``CACHE_LOGGING`` waffle switch, the
 key encoder accepts Pydantic models, and the package's :func:`~cache_results.colors.log_prefix`
 colors log messages. These hooks stay in Smarter because they need Pydantic, django-waffle and
 Smarter's settings, which the package doesn't depend on.
@@ -61,7 +61,7 @@ may be cached and for how long:
   indexed again. See :mod:`smarter.apps.mcpserver.protocol.caching`.
 
 The LLM's answer to the first message of a conversation is cached too, for
-``smarter_settings.prompt_response_cache_expiration`` seconds (``SMARTER_PROMPT_RESPONSE_CACHE_EXPIRATION``,
+``smarter_settings.subsystem_cache_prompt_response_expiration`` seconds (``SMARTER_SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION``,
 an hour by default, 0 to disable). A first message has no conversation before it, so the same
 message, sent to the same LLMClient, gets the same answer, and the LLMClient's
 ``appExamplePrompts`` arrive word for word. The key is a hash of the message, normalized for case,

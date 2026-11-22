@@ -24,7 +24,7 @@ from ..serializers import (
 )
 from .mixins import TestAccountMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SERIALIZER_MODULES = [
     "smarter.apps.connection.serializers",

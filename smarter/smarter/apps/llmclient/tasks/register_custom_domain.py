@@ -71,9 +71,9 @@ logger = logging.getSmarterLogger(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def register_custom_domain(account_id: int, domain_name: str) -> bool:
     """

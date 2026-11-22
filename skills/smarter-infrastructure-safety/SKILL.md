@@ -73,10 +73,10 @@ install the fakes in `setUpClass`, and reset them in `tearDownClass`.
 - Patch `.delay` or `.apply_async` on tasks that the code under test queues, and
   on the task itself when it re-queues (retries), so nothing reaches a worker.
 - A task that calls Kubernetes or AWS is declared with
-  `queue=smarter_settings.infrastructure_tasks_celery_task_queue`. That queue is
+  `queue=smarter_settings.app_infrastructure_tasks_celery_task_queue`. That queue is
   served by `smarter-worker-infrastructure`, so slow infrastructure calls never
   block the operational queues, such as
-  `smarter_settings.llmclient_tasks_celery_task_queue`. Copy the decorator of an
+  `smarter_settings.app_llmclient_tasks_celery_task_queue`. Copy the decorator of an
   existing task (`smarter/smarter/apps/llmclient/tasks/deploy_custom_api.py`):
   `autoretry_for`, `retry_backoff`, `max_retries`, and `queue`.
 - `is_taskable()` (`smarter/smarter/apps/llmclient/tasks/utils.py`) checks that

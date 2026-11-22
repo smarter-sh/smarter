@@ -66,7 +66,7 @@ def annotation_content_type(model: ModelOrInstance) -> ContentType:
     return content_type
 
 
-@cache_results(timeout=smarter_settings.cache_expiration)
+@cache_results(timeout=smarter_settings.subsystem_cache_expiration)
 def get_cached_annotations(content_type_id: int, pk: str) -> AnnotationsMap:
     """
     Return the annotations of one resource, from the cache when possible.

@@ -40,7 +40,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache.pubsub.return_value = fake_pubsub
 
         with (
-            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=True)),
             patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
@@ -58,7 +58,7 @@ class TestLogStreams(TestAccountMixin):
         fake_cache = MagicMock()
 
         with (
-            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=True)),
             patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
             patch.object(streams, "logger") as logger,
@@ -94,7 +94,7 @@ class TestLogStreams(TestAccountMixin):
         ]
 
         with (
-            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=True)),
             patch.object(streams, "get_resolved_user", return_value=self.non_admin_user),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
@@ -116,7 +116,7 @@ class TestLogStreams(TestAccountMixin):
         request.user = user or self.non_admin_user
         with (
             patch.object(
-                streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True, log_level=log_level)
+                streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=True, log_level=log_level)
             ),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
         ):
@@ -151,7 +151,7 @@ class TestLogStreams(TestAccountMixin):
         """Test that the view explains that log streaming is disabled."""
         request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = self.non_admin_user
-        with patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=False)):
+        with patch.object(streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=False)):
             response = streams.stream_user_logs(request)
         self.assertIn(b"disabled", response.content)
 
@@ -168,7 +168,7 @@ class TestLogStreams(TestAccountMixin):
         request = RequestFactory().get("/api/web/dashboard/logs/stream/")
         request.user = AnonymousUser()
         with (
-            patch.object(streams, "smarter_settings", MagicMock(enable_dashboard_server_logs=True)),
+            patch.object(streams, "smarter_settings", MagicMock(app_dashboard_server_logs_enable=True)),
             patch.object(streams, "get_redis_connection", return_value=fake_cache),
             patch.object(streams, "get_resolved_user", return_value=None),
         ):

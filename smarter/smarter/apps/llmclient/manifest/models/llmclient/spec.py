@@ -10,7 +10,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.const import MANIFEST_KIND
 from smarter.apps.llmclient.manifest.models.llmclient.styles import (
     SAMLLMClientSpecConfigStyles,
 )
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.lib.manifest.models import AbstractSAMSpecBase, is_client_manifest
 from smarter.lib.manifest.system_role import (
     SMARTER_MAX_SYSTEM_ROLE_LENGTH,
@@ -74,18 +74,18 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
     )
     defaultModel: Optional[str] = Field(
         None,
-        description=f"{class_identifier}.default_model[str]. Optional. The default model to use for the llmclient. This changes routinely and is currently defaults to {settings_defaults.LLM_DEFAULT_MODEL}",
+        description=f"{class_identifier}.default_model[str]. Optional. The default model to use for the llmclient. This changes routinely and is currently defaults to {smarter_settings.llm_default_model}",
     )
     defaultSystemRole: Optional[str] = Field(
         None,
         max_length=SMARTER_MAX_SYSTEM_ROLE_LENGTH,
-        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\n{settings_defaults.LLM_DEFAULT_SYSTEM_ROLE}.\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is sent with every prompt, so its tokens count towards every turn's cost. The maximum length of the system prompt is {SMARTER_MAX_SYSTEM_ROLE_LENGTH} characters.",
+        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the llmclient. This defaults to the following value:\n{smarter_settings.llm_default_system_role}.\nThe system prompt is the first message in the conversation and is used to set the context for the llmclient. It is sent with every prompt, so its tokens count towards every turn's cost. The maximum length of the system prompt is {SMARTER_MAX_SYSTEM_ROLE_LENGTH} characters.",
     )
     defaultTemperature: Optional[float] = Field(
         None,
         ge=0.0,
         le=1.0,
-        description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the llmclient. This defaults to {settings_defaults.LLM_DEFAULT_TEMPERATURE}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the llmclient's responses. A value of 0 means that the llmclient will always choose the most likely response, while a value of 1 means that the llmclient will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
+        description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the llmclient. This defaults to {smarter_settings.llm_default_temperature}.\nThe temperature is a floating point value between 0 and 1 that controls the randomness of the llmclient's responses. A value of 0 means that the llmclient will always choose the most likely response, while a value of 1 means that the llmclient will choose a random response. Low values work better for information retrieval tasks, while high values work better for creative tasks.",
     )
     defaultReasoningEffort: Optional[OpenAIReasoningEffort] = Field(
         default=None,
@@ -102,7 +102,7 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
     defaultMaxTokens: Optional[int] = Field(
         None,
         gt=0,
-        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the llmclient. This defaults to {settings_defaults.LLM_DEFAULT_MAX_TOKENS}.\nThe max tokens is an integer value that controls the maximum number of tokens in the llmclient's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
+        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the llmclient. This defaults to {smarter_settings.llm_default_max_tokens}.\nThe max tokens is an integer value that controls the maximum number of tokens in the llmclient's response. The maximum number of tokens is the sum of the tokens in the prompt and the tokens in the response. The maximum number of tokens varies by provider. Refer to vendor documentation as this value routinely changes as new models are released.",
     )
 
     appName: Optional[str] = Field(

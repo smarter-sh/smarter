@@ -328,7 +328,7 @@ class TestInitializeProviders(TestAccountMixin):
     def test_google_maps(self):
         with (
             patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "maps-key"}),
+            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_MAPS_API_KEY": "maps-key"}),
         ):
             self.command.initialize_google_maps()
         self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "maps-key")
@@ -337,77 +337,34 @@ class TestInitializeProviders(TestAccountMixin):
         """Test that no Secret is stored, and the missing key is recorded, when the Google Maps api key is not set."""
         with (
             patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "SET-ME-PLEASE"}),
+            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_MAPS_API_KEY": "SET-ME-PLEASE"}),
         ):
             self.command.initialize_google_maps()
         initialize_secret.assert_not_called()
-        self.assertEqual(self.command.missing_api_keys[0][0], "GOOGLE_MAPS_API_KEY")
-
-    def test_tavily(self):
-        """Test that the Tavily api key is stored as the tavily_api_key Secret."""
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"TAVILY_API_KEY": "tavily-key"}),
-        ):
-            self.command.initialize_tavily()
-        self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "tavily-key")
-        self.assertEqual(initialize_secret.call_args.kwargs["secret_name"], "tavily_api_key")
-
-    def test_tavily_missing(self):
-        """Test that no Secret is stored when the Tavily api key is not set, or is a .env.example or helm placeholder."""
-        for value in (None, "SET-ME-PLEASE", "SET-ME-IN-helm/charts/smarter/values.yaml"):
-            with (
-                self.subTest(value=value),
-                patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-                patch.dict(os.environ, {}),
-            ):
-                for name in ("TAVILY_API_KEY", "SMARTER_TAVILY_API_KEY"):
-                    os.environ.pop(name, None)
-                if value:
-                    os.environ["TAVILY_API_KEY"] = value
-                self.command.initialize_tavily()
-            initialize_secret.assert_not_called()
-
-    def test_brave_search(self):
-        """Test that the Brave Search api key is stored as the brave_search_api_key Secret."""
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"BRAVE_SEARCH_API_KEY": "brave-key"}),
-        ):
-            self.command.initialize_brave_search()
-        self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "brave-key")
-        self.assertEqual(initialize_secret.call_args.kwargs["secret_name"], "brave_search_api_key")
-
-    def test_brave_search_missing(self):
-        """Test that no Secret is stored, and the missing api key is recorded, when it is a placeholder."""
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"BRAVE_SEARCH_API_KEY": "SET-ME-PLEASE"}),
-        ):
-            self.command.initialize_brave_search()
-        initialize_secret.assert_not_called()
-        self.assertEqual(self.command.missing_api_keys[0][0], "BRAVE_SEARCH_API_KEY")
+        self.assertEqual(self.command.missing_api_keys[0][0], "APP_PROVIDER_GOOGLE_MAPS_API_KEY")
 
     def test_google_service_account_missing(self):
         """Test that no Secret is stored, and the missing credential is recorded, when it is not set."""
         with (
             patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"GOOGLE_SERVICE_ACCOUNT_B64": "SET-ME-PLEASE"}),
+            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": "SET-ME-PLEASE"}),
         ):
             self.command.initialize_google_service_account()
         initialize_secret.assert_not_called()
-        self.assertEqual(self.command.missing_api_keys[0][0], "GOOGLE_SERVICE_ACCOUNT_B64")
+        self.assertEqual(self.command.missing_api_keys[0][0], "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64")
 
     def test_log_missing_api_keys(self):
         """Test that the missing api keys are logged in one banner, with how to set them, and nothing when none are."""
         with patch.object(initialize_providers.logger, "error") as error:
             self.command.log_missing_api_keys()
             error.assert_not_called()
-            self.command.missing_api_key("OPENAI_API_KEY", "the openai Provider", "https://example.com/keys")
+            self.command.missing_api_key(
+                "APP_PROVIDER_OPENAI_API_KEY", "the openai Provider", "https://example.com/keys"
+            )
             self.command.log_missing_api_keys()
         banner = error.call_args.args[0]
         self.assertIn("1 API keys are not set", banner)
-        self.assertIn("SMARTER_OPENAI_API_KEY", banner)
+        self.assertIn("SMARTER_APP_PROVIDER_OPENAI_API_KEY", banner)
         self.assertIn("https://example.com/keys", banner)
         self.assertIn("manage.py initialize_providers", banner)
 
@@ -415,7 +372,7 @@ class TestInitializeProviders(TestAccountMixin):
         """Test that a service account that is not base64 encoded json is not stored."""
         with patch.object(initialize_providers, "initialize_secret") as initialize_secret:
             for value in ("not base64 json", base64.b64encode(b"\xff\xfe").decode()):
-                with patch.dict(os.environ, {"GOOGLE_SERVICE_ACCOUNT_B64": value}):
+                with patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": value}):
                     self.command.initialize_google_service_account()
         initialize_secret.assert_not_called()
 
@@ -426,7 +383,7 @@ class TestInitializeProviders(TestAccountMixin):
         name = initialize_providers.GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
         self.addCleanup(Secret.objects.filter(user_profile=self.user_profile, name=name).delete)
         with (
-            patch.dict(os.environ, {"GOOGLE_SERVICE_ACCOUNT_B64": value}),
+            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": value}),
             patch.object(
                 initialize_providers, "initialize_secret", wraps=initialize_providers.initialize_secret
             ) as initialize_secret,

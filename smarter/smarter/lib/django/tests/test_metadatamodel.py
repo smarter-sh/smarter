@@ -11,7 +11,7 @@ from smarter.apps.account.tests.test_account_mixin import TestAccountMixin
 # our stuff
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestMetaDataModel(TestAccountMixin):

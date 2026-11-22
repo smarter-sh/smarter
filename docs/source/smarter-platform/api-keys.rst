@@ -41,14 +41,14 @@ Configuration Options
 Smarter inherits and extends `Django Knox AuthToken <https://jazzband.github.io/django-rest-knox/>`__, which itself has several configuration options
 that can be set in the Django settings file.
 
-`SMARTER_API_KEY_MAX_LIFETIME_DAYS <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/const.py#L41>`__ determines the maximum recommended lifetime of
+`SMARTER_API_KEY_MAX_LIFETIME_DAYS <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/drf/const.py>`__ determines the maximum recommended lifetime of
 an API key in days. After this period, the application will generate warnings in the logs indicating that the key is beyond its
 recommended expiration.
 
 .. code-block:: python
 
-    # Maximum lifetime of an API key in days. After this period, the key will expire and become invalid.
-    SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
+    # smarter/smarter/lib/drf/const.py. An older key still works; the token middleware logs a warning.
+    SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3
 
 Extensions to the Django Know model include the following fields and methods:
 

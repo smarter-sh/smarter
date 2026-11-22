@@ -60,7 +60,7 @@ def managed_hostname(llmhost: LLMHost) -> Optional[str]:
 
 def dns_enabled() -> bool:
     """Whether LLMHost tasks manage DNS records, like LLMClient tasks."""
-    return bool(smarter_settings.llmclient_tasks_create_dns_record and infrastructure.dns.ready)
+    return bool(smarter_settings.app_llmclient_tasks_create_dns_record and infrastructure.dns.ready)
 
 
 def create_dns_record(llmhost: LLMHost) -> None:
@@ -106,7 +106,7 @@ def destroy_dns_record(llmhost: LLMHost) -> None:
     destroy_domain_A_record.delay(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain)
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def launch_llmhost(llmhost_id: int) -> Optional[str]:
     """
     Launch an LLMHost, and create the DNS record of its Ingress.
@@ -124,7 +124,7 @@ def launch_llmhost(llmhost_id: int) -> Optional[str]:
     return observation.status
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def destroy_llmhost(llmhost_id: int, purge: bool = False) -> Optional[str]:
     """
     Destroy an LLMHost's Kubernetes resources, and the DNS record of its Ingress.
@@ -143,7 +143,7 @@ def destroy_llmhost(llmhost_id: int, purge: bool = False) -> Optional[str]:
     return llmhost.status
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def refresh_llmhost_status(llmhost_id: Optional[int] = None) -> dict[str, str]:
     """
     Check the status of an LLMHost, or of every deployed LLMHost.
@@ -167,7 +167,7 @@ def refresh_llmhost_status(llmhost_id: Optional[int] = None) -> dict[str, str]:
     return retval
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def reconcile_llmhost_compute(compute_id: int, attempt: int = 1) -> Optional[SmarterDictType]:
     """
     Reconcile a compute's node group with its LLMHosts, and check their status.
@@ -202,7 +202,7 @@ def reconcile_llmhost_compute(compute_id: int, attempt: int = 1) -> Optional[Sma
     return asdict(state) if state is not None else None
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def reconcile_llmhost_computes() -> dict[str, str]:
     """
     Reconcile every compute that has nodes, or deployed LLMHosts.
@@ -223,7 +223,7 @@ def reconcile_llmhost_computes() -> dict[str, str]:
     return retval
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def charge_llmhost_computes() -> dict[str, str]:
     """
     Charge an hour of each compute's ready nodes, at its price_per_hour, to the compute, its owner, and their account.

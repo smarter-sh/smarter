@@ -20,7 +20,7 @@ def absolute_static(path: str) -> str:
 
     A mail client has no page url to resolve a relative ``src`` against, so every image in an email needs an
     absolute one. ``{% static %}`` returns ``/static/...`` while the server serves the static files, and the CDN's
-    absolute url while ``SMARTER_STATIC_FILES_ON_CDN`` is on, so prefixing it with the platform's url breaks the
+    absolute url while ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on, so prefixing it with the platform's url breaks the
     second case. This tag handles both.
 
     :param path: The static file's path, e.g. ``images/logo/smarter-crop.png``.
@@ -36,4 +36,5 @@ def smarter_logo_url() -> str:
 
     :returns: The url, e.g. ``https://cdn.smarter.sh/images/logo/smarter-crop.png``.
     """
-    return f"{smarter_settings.smarter_project_cdn_url.rstrip('/')}/{LOGO_PATH}"
+    cdn_url = str(smarter_settings.platform_branding_cdn_url).rstrip("/")
+    return f"{cdn_url}/{LOGO_PATH}"

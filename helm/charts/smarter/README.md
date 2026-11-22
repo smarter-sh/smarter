@@ -16,11 +16,11 @@ helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
   --timeout 900s \
   --namespace smarter-prod \
   --create-namespace \
-  --set env.SMARTER_MYSQL_HOST=your-mysql-host \
-  --set env.SMARTER_MYSQL_PASSWORD=your-password \
-  --set env.OPENAI_API_KEY=your-key \
-  --set env.SECRET_KEY=your-django-secret \
-  --set env.FERNET_ENCRYPTION_KEY=your-fernet-key \
+  --set env.SMARTER_SUBSYSTEM_SQL_HOST=your-mysql-host \
+  --set env.SMARTER_SUBSYSTEM_SQL_PASSWORD=your-password \
+  --set env.SMARTER_APP_PROVIDER_OPENAI_API_KEY=your-key \
+  --set env.DJANGO_SECRET_KEY=your-django-secret \
+  --set env.SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY=your-fernet-key \
   --values values.yaml
 ```
 

@@ -22,6 +22,6 @@ class DropzoneView(ConsoleAppView):
     """
     The manifest drop zone page, ``/dashboard/dropzone/``: the single-page console's.
 
-    The page exists only while ``smarter_settings.enable_dropzone_manifest_apply`` is set: otherwise its url is not
+    The page exists only while ``smarter_settings.app_dashboard_manifest_dropzone_enable`` is set: otherwise its url is not
     registered, and the console's session says that the page is off, so that the console shows its Page not found.
     """

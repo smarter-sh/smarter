@@ -58,7 +58,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 if TYPE_CHECKING:
     from unittest.mock import _patch
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")

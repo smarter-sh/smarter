@@ -111,6 +111,21 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
         settings = settings_from_environment(environ, current)
         self.assertEqual(settings, {"APPEND_SLASH": False, "SESSION_COOKIE_AGE": 60, "SMARTER_TEST_NEW": "hello"})
 
+    def test_the_secret_key_is_left_to_smarter_settings(self):
+        """DJANGO_SECRET_KEY is read, and validated, by smarter_settings.django_secret_key, which base.py's SECRET_KEY is."""
+        settings = settings_from_environment({"DJANGO_SECRET_KEY": "SET-ME-PLEASE"}, {"SECRET_KEY": "generated"})
+        self.assertEqual(settings, {})
+
+    def test_the_variables_that_the_helm_chart_sets(self):
+        """The chart's and the deploy action's DJANGO_* variables, as lists and strings."""
+        backends = "a.Backend,b.Backend"
+        broker = "redis://:pw@redis.example.test:6379/0"
+        environ = {"DJANGO_AUTHENTICATION_BACKENDS": backends, "DJANGO_CELERY_BROKER_URL": broker}
+        current = {"AUTHENTICATION_BACKENDS": ["x.Backend"], "CELERY_BROKER_URL": "redis://smarter-redis:6379/0"}
+        settings = settings_from_environment(environ, current)
+        self.assertEqual(settings["AUTHENTICATION_BACKENDS"], ["a.Backend", "b.Backend"])
+        self.assertEqual(settings["CELERY_BROKER_URL"], broker)
+
     def test_django_defaults_give_the_type(self):
         """A setting that Smarter doesn't set takes the type of Django's default: a list for SILENCED_SYSTEM_CHECKS."""
         environ = {"DJANGO_SILENCED_SYSTEM_CHECKS": "security.W001, security.W003"}
@@ -210,6 +225,35 @@ class TestApplyUserSettings(SmarterTestBase):
         self.assertIs(settings["APPEND_SLASH"], True)
         # a dictionary replaces Smarter's: it isn't merged.
         self.assertEqual(settings["LOGGING"], {"disable_existing_loggers": True})
+
+    def test_redbeat_follows_the_broker(self):
+        """RedBeat's Redis is computed from the broker's, so it moves with DJANGO_CELERY_BROKER_URL."""
+        default = "redis://smarter-redis:6379/0"
+        broker = "redis://:pw@redis.example.test:6379/0"
+        settings: dict[str, object] = {"CELERY_BROKER_URL": default, "CELERY_REDBEAT_REDIS_URL": default}
+        applied = self.apply("", {"DJANGO_CELERY_BROKER_URL": broker}, settings)
+        self.assertEqual(applied, ["CELERY_BROKER_URL", "CELERY_REDBEAT_REDIS_URL"])
+        self.assertEqual(settings["CELERY_REDBEAT_REDIS_URL"], broker)
+
+    def test_redbeat_of_its_own_stays(self):
+        """A RedBeat url that the user, or a settings module, set apart from the broker's is not replaced."""
+        default = "redis://smarter-redis:6379/0"
+        broker = "redis://:pw@redis.example.test:6379/0"
+        redbeat = "redis://:pw@redbeat.example.test:6379/3"
+        cases: tuple[tuple[dict[str, str], dict[str, object]], ...] = (
+            (
+                {"DJANGO_CELERY_BROKER_URL": broker, "DJANGO_CELERY_REDBEAT_REDIS_URL": redbeat},
+                {"CELERY_BROKER_URL": default, "CELERY_REDBEAT_REDIS_URL": default},
+            ),
+            ({"DJANGO_CELERY_BROKER_URL": broker}, {"CELERY_BROKER_URL": default, "CELERY_REDBEAT_REDIS_URL": redbeat}),
+        )
+        for environ, settings in cases:
+            with self.subTest(environ=environ):
+                self.apply("", environ, settings)
+                self.assertEqual(settings["CELERY_REDBEAT_REDIS_URL"], redbeat)
+        untouched: dict[str, object] = {"CELERY_BROKER_URL": default, "CELERY_REDBEAT_REDIS_URL": default}
+        self.apply("", {"DJANGO_APPEND_SLASH": "false"}, untouched)
+        self.assertEqual(untouched["CELERY_REDBEAT_REDIS_URL"], default)
 
     def test_the_file_gives_a_variable_its_type(self):
         settings: dict[str, object] = {}

@@ -70,7 +70,7 @@ The web console becomes a single-page app (SPA), and Django serves only the back
    there too.
 8. **One origin, static files on a CDN.** The console stays on the platform host, which keeps
    serving its small ``index.html``, the api, the session and the Terminal's WebSocket. Only static
-   files move: while ``SMARTER_STATIC_FILES_ON_CDN`` is on, each deployment uploads them to the
+   files move: while ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on, each deployment uploads them to the
    environment's S3 bucket, and pages load the console's scripts and styles from its CDN,
    ``cdn.<platform>``, once this build's upload is done. Without it, or on an install with no CDN,
    the server serves them, as before. Cookies, CSRF, CORS and host routing don't change. Then the

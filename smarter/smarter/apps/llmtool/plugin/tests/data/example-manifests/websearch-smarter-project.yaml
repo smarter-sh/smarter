@@ -4,8 +4,8 @@
 # from reputable sources.
 #
 # Prerequisite: a Smarter Secret named tavily_api_key, containing a Tavily API key from
-# https://tavily.com. manage.py initialize_providers creates it from the environment
-# variable TAVILY_API_KEY (or SMARTER_TAVILY_API_KEY).
+# https://tavily.com. manage.py initialize_llmtool_api_keys creates it from the environment
+# variable APP_LLMTOOL_TAVILY_API_KEY (or SMARTER_APP_LLMTOOL_TAVILY_API_KEY).
 #
 # Experimental: the WebsearchPlugin was designed and coded by Claude Code (Anthropic's
 # Claude Opus 5.5), with Lawrence McDaniel as co-author.

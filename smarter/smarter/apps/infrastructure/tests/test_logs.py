@@ -234,7 +234,7 @@ class TestLokiLogService(InfrastructureTestBase):
     def setUp(self):
         super().setUp()
         self.loki = LokiLogService(allow_in_tests=True)
-        settings = patch(f"{MODULE}.smarter_settings", MagicMock(loki_url=LOKI_URL))
+        settings = patch(f"{MODULE}.smarter_settings", MagicMock(subsystem_logging_loki_url=LOKI_URL))
         settings.start()
         self.addCleanup(settings.stop)
         get = patch(f"{MODULE}.requests.get")
@@ -244,7 +244,7 @@ class TestLokiLogService(InfrastructureTestBase):
     def test_ready(self):
         self.assertTrue(self.loki.ready)
         self.assertFalse(LokiLogService().ready, "never ready in the unit tests")
-        with patch(f"{MODULE}.smarter_settings", MagicMock(loki_url="")):
+        with patch(f"{MODULE}.smarter_settings", MagicMock(subsystem_logging_loki_url="")):
             self.assertFalse(self.loki.ready)
 
     def test_refuses_in_unit_tests(self):
@@ -311,7 +311,7 @@ class TestLokiLogService(InfrastructureTestBase):
             self.loki.label_values("pod", NOW - timedelta(hours=1), NOW)
 
     def test_not_configured(self):
-        with patch(f"{MODULE}.smarter_settings", MagicMock(loki_url="")):
+        with patch(f"{MODULE}.smarter_settings", MagicMock(subsystem_logging_loki_url="")):
             with self.assertRaises(InfrastructureNotReadyError):
                 self.loki.query(LogQuery.last(timedelta(hours=1)))
 

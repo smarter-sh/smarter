@@ -82,7 +82,7 @@ Setting It Up
 
    The deploy workflow passes the app token and the url to the prod deployment only, because two
    bots with the same Slack app would each receive part of the messages. It passes the tokens to
-   the chart as ``env.SMARTER_SLACK_BOT_TOKEN`` and ``env.SMARTER_SLACK_APP_TOKEN``, which are
+   the chart as ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN`` and ``env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``, which are
    stored in the platform's environment Secret, and the url as ``slackBot.agentUrl``. It sets
    ``slackBot.enabled`` to ``true`` only when all three are set. The bot token alone, which only
    posts, goes to every environment, whose init Job and database backup post their outcome with
@@ -98,8 +98,8 @@ To install the chart by hand instead, set the same values:
    helm upgrade --install smarter ./helm/charts/smarter/ \
      --set slackBot.enabled=true \
      --set slackBot.agentUrl=https://smarter-developer.<account-number>.api.<root-domain>/ \
-     --set env.SMARTER_SLACK_BOT_TOKEN=xoxb-... \
-     --set env.SMARTER_SLACK_APP_TOKEN=xapp-... \
+     --set env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN=xoxb-... \
+     --set env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN=xapp-... \
      ...
 
 Values
@@ -124,9 +124,9 @@ Values
      - The Python image, ``python:3.12-slim`` by default.
    * - ``slackBot.resources``
      - The container's requests and limits: 50m CPU and 128Mi of memory, up to 256Mi.
-   * - ``env.SMARTER_SLACK_BOT_TOKEN``, ``env.SMARTER_SLACK_APP_TOKEN``
+   * - ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, ``env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``
      - The Slack app's bot and app-level tokens. The platform also reads the bot token, as
-       ``smarter_settings.slack_bot_token``, to post its Jobs' logs, whether or not the bot is
+       ``smarter_settings.subsystem_slack_bot_token``, to post its Jobs' logs, whether or not the bot is
        enabled.
 
 Operating It

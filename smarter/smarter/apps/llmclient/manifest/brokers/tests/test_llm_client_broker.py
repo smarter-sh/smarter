@@ -28,7 +28,7 @@ from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import required
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):

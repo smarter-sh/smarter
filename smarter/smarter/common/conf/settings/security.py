@@ -3,43 +3,80 @@
 
 import base64
 import binascii
-import re
-from typing import List, Optional, Pattern, Union
+import os
+import warnings
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, SecretStr, ValidationError
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
 from smarter.common.conf.env import is_missing_value
-from smarter.common.conf.util import before_field_validator, validate_throttle_rate
+from smarter.common.conf.util import (
+    before_field_validator,
+    comma_separated,
+    field_default,
+    validate_throttle_rate,
+)
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.utils.utils import generate_fernet_encryption_key
+
+_generated_django_secret_key: Optional[SecretStr] = None
+"""The Django secret key that this process generated, because none was configured, or None."""
+
+_generated_fernet_encryption_key: Optional[SecretStr] = None
+"""The Fernet encryption key that this process generated, because none was configured, or None."""
 
 
-def compile_amnesty_pattern(item: object) -> Pattern:
+def generated_django_secret_key() -> SecretStr:
     """
-    Compile one of the sensitive files amnesty patterns.
+    Return a random Django secret key, the same one for the life of the process: the default of ``django_secret_key``.
 
-    :param item: A regular expression, as a string or already compiled.
-    :returns: The compiled pattern.
-    :raises SmarterConfigurationError: If the item is not a valid regular expression.
+    It is generated, with a warning, the first time a ``django_secret_key`` isn't configured. Outside of the
+    local environment, Smarter refuses to start with it: see :meth:`SecuritySettings.django_secret_key_is_set`.
+
+    :returns: The key.
     """
-    if isinstance(item, re.Pattern):
-        return item
-    if not isinstance(item, str):
-        raise SmarterConfigurationError(
-            "sensitive_files_amnesty_patterns must be a list of strings or compiled regex patterns."
+    global _generated_django_secret_key  # pylint: disable=global-statement
+    if _generated_django_secret_key is None:
+        warnings.warn(
+            "DJANGO_SECRET_KEY is not set. A new secret key will be generated. "
+            "This may cause existing sessions and other cryptographic operations to become invalid. "
+            "You can safely disregard this warning if this is a new installation or test environment. "
+            "Outside of the local environment, Smarter refuses to start without a DJANGO_SECRET_KEY.",
+            UserWarning,
         )
-    try:
-        return re.compile(item)
-    except re.error as e:
-        raise SmarterConfigurationError(f"Invalid regex pattern: {item}") from e
+        random_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
+        _generated_django_secret_key = SecretStr(random_key)
+    return _generated_django_secret_key
+
+
+def generated_fernet_encryption_key() -> SecretStr:
+    """
+    Return a new Fernet key, the same one for the life of the process: the default of ``platform_fernet_encryption_key``.
+
+    It is generated, with a warning, the first time the key isn't configured. Secrets encrypted with
+    it can't be read by another process, or after a restart.
+
+    :returns: The key.
+    """
+    global _generated_fernet_encryption_key  # pylint: disable=global-statement
+    if _generated_fernet_encryption_key is None:
+        warnings.warn(
+            "PLATFORM_FERNET_ENCRYPTION_KEY is not set. "
+            "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
+            "You can safely disregard this warning if this is a new installation, test environment or CI-CD process.",
+            UserWarning,
+        )
+        new_key = generate_fernet_encryption_key()
+        _generated_fernet_encryption_key = SecretStr(new_key)
+    return _generated_fernet_encryption_key
 
 
 class SecuritySettings(BaseModel):
     """The superuser, encryption keys, trusted hosts and request throttling."""
 
-    admin_username: str = Field(
-        settings_defaults.ADMIN_USERNAME,
+    platform_admin_username: str = Field(
+        "admin",
         description="The username of the platform's superuser, which manage.py initialize_platform creates.",
         examples=["admin"],
         title="Administrator Username",
@@ -48,15 +85,15 @@ class SecuritySettings(BaseModel):
     The username of the platform's superuser.
 
     ``manage.py initialize_platform`` creates this superuser, unless ``--username`` names
-    another. Set it with ``SMARTER_ADMIN_USERNAME``.
+    another. Set it with ``SMARTER_PLATFORM_ADMIN_USERNAME``.
 
     :type: str
-    :default: Value from ``settings_defaults.ADMIN_USERNAME``, ``admin`` if it is not set.
+    :default: ``admin`` if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
 
-    @before_field_validator("admin_username")
-    def validate_admin_username(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_admin_username")
+    def validate_platform_admin_username(cls, v: Optional[str]) -> str:
         """Validates the `admin_username` field.
 
         Args:
@@ -65,13 +102,13 @@ class SecuritySettings(BaseModel):
             str: The validated administrator username.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.ADMIN_USERNAME
+            v = field_default(cls, "platform_admin_username")
         if not isinstance(v, str) or not v:
             raise SmarterConfigurationError(f"admin_username of type {type(v)} is not a non-empty string.")
         return v
 
-    admin_password: Optional[SecretStr] = Field(
-        settings_defaults.ADMIN_PASSWORD,
+    platform_admin_password: Optional[SecretStr] = Field(
+        None,
         description="The password of the platform's superuser, which manage.py initialize_platform creates.",
         examples=["your-admin-password"],
         title="Administrator Password",
@@ -80,16 +117,16 @@ class SecuritySettings(BaseModel):
     The password of the platform's superuser.
 
     ``manage.py initialize_platform`` gives the superuser and the example users this password,
-    unless ``--password`` gives another. Set it with ``SMARTER_ADMIN_PASSWORD``. Reading it from
+    unless ``--password`` gives another. Set it with ``SMARTER_PLATFORM_ADMIN_PASSWORD``. Reading it from
     the environment keeps it off the command line, and out of the init Job's log.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.ADMIN_PASSWORD``, None if it is not set.
+    :default: None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
-    @before_field_validator("admin_password")
-    def validate_admin_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+    @before_field_validator("platform_admin_password")
+    def validate_platform_admin_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `admin_password` field.
 
         Args:
@@ -98,70 +135,15 @@ class SecuritySettings(BaseModel):
             Optional[SecretStr]: The validated administrator password, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.ADMIN_PASSWORD
+            v = field_default(cls, "platform_admin_password")
         if is_missing_value(v):
             return None
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
         return v
 
-    sensitive_files_amnesty_patterns: List[Pattern] = Field(
-        settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS,
-        description="List of regex patterns for sensitive file amnesty.",
-        title="Sensitive Files Amnesty Patterns",
-        examples=[
-            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/api(/.*)?$"),
-            re.compile(r"^/admin(/.*)?$"),
-        ],
-    )
-    """
-    Sensitive file amnesty patterns used by smarter.lib.django.middleware.sensitive_files.SensitiveFileAccessMiddleware.
-
-    Requests matching these patterns will be allowed even if they match sensitive file names.
-
-    .. note::
-
-        Do not modify this setting unless you fully understand the implications of doing so.
-
-    List of regex patterns for sensitive file amnesty.
-    This setting defines a list of regular expression patterns that identify files
-    considered sensitive. Files matching these patterns may be subject to special handling,
-    such as exclusion from certain operations or additional security measures.
-
-    :type: List[Pattern]
-    :default: Value from ``settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS``
-    :raises SmarterConfigurationError: If the value is not a list of valid regex patterns.
-    """
-
-    @before_field_validator("sensitive_files_amnesty_patterns")
-    def parse_sensitive_files_amnesty_patterns(cls, v: Optional[Union[List[str], str]]) -> List[Pattern]:
-        """Validates the 'sensitive_files_amnesty_patterns' field.
-
-        Args:
-            v (Optional[Union[List[str], str]]): the sensitive_files_amnesty_patterns value to validate
-        Returns:
-            List[Pattern]: The validated sensitive_files_amnesty_patterns.
-        Examples:
-            >>> parse_sensitive_files_amnesty_patterns([r"^/api(/.*)?$", r"^/admin(/.*)?$"])
-            [re.compile('^/api(/.*)?$'), re.compile('^/admin(/.*)?$')]
-        """
-        if isinstance(v, list):
-            patterns = []
-            for item in v:
-                pattern = compile_amnesty_pattern(item)
-                patterns.append(pattern)
-            return patterns
-        if v in THE_EMPTY_SET:
-            return settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS
-        if isinstance(v, str):
-            pattern = compile_amnesty_pattern(v)
-            return [pattern]
-
-        raise SmarterConfigurationError(f"could not validate sensitive_files_amnesty_patterns: {v}")
-
-    fernet_encryption_key: SecretStr = Field(
-        settings_defaults.FERNET_ENCRYPTION_KEY,
+    platform_fernet_encryption_key: SecretStr = Field(
+        default_factory=generated_fernet_encryption_key,
         description="The Fernet encryption key used for encrypting Smarter Secrets data.",
         examples=["gAAAAABh..."],
         title="Fernet Encryption Key",
@@ -174,12 +156,12 @@ class SecuritySettings(BaseModel):
     32-byte key.
 
     :type: str
-    :default: Value from ``settings_defaults.FERNET_ENCRYPTION_KEY``
+    :default: a key that the process generates, with a warning: see :func:`generated_fernet_encryption_key`
     :raises SmarterConfigurationError: If the value is not a valid Fernet key.
     """
 
-    @before_field_validator("fernet_encryption_key")
-    def validate_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+    @before_field_validator("platform_fernet_encryption_key")
+    def validate_platform_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `fernet_encryption_key` field.
 
         Args:
@@ -193,10 +175,10 @@ class SecuritySettings(BaseModel):
         """
 
         if v is None:
-            return settings_defaults.FERNET_ENCRYPTION_KEY
+            return field_default(cls, "platform_fernet_encryption_key")
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"fernet_encryption_key of type {type(v)} is not a SecretStr: {v}")
+            raise SmarterConfigurationError(f"fernet_encryption_key of type {type(v)} is not a SecretStr.")
         encryption_key = v.get_secret_value()
         try:
             # Decode the key using URL-safe base64
@@ -210,10 +192,10 @@ class SecuritySettings(BaseModel):
 
         return v
 
-    internal_ip_prefixes: List[str] = Field(
-        settings_defaults.INTERNAL_IP_PREFIXES,
+    platform_internal_ip_prefixes: List[str] = Field(
+        ["192.168."],
         description="A list of internal IP prefixes used for security and middleware features.",
-        examples=settings_defaults.INTERNAL_IP_PREFIXES,
+        examples=[["192.168.", "10.0."]],
         title="Internal IP Prefixes",
     )
     """
@@ -230,12 +212,12 @@ class SecuritySettings(BaseModel):
     enabling specific security measures and middleware behaviors.
 
     :type: List[str]
-    :default: Value from ``settings_defaults.INTERNAL_IP_PREFIXES``
-    :raises SmarterConfigurationError: If the value is not a list of strings matching settings_defaults.INTERNAL_IP_PREFIXES
+    :default: ``["192.168."]``
+    :raises SmarterConfigurationError: If the value is not a list of strings
     """
 
-    @before_field_validator("internal_ip_prefixes")
-    def validate_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
+    @before_field_validator("platform_internal_ip_prefixes")
+    def validate_platform_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
         """Validates the `internal_ip_prefixes` field.
 
         Args:
@@ -245,49 +227,15 @@ class SecuritySettings(BaseModel):
             List[str]: The validated internal IP prefixes.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.INTERNAL_IP_PREFIXES
-
+            return field_default(cls, "platform_internal_ip_prefixes")
+        v = comma_separated(v)
         if not isinstance(v, list):
             raise SmarterConfigurationError(f"internal_ip_prefixes of type {type(v)} is not a list: {v}")
         return v
 
-    local_hosts: List[str] = Field(
-        settings_defaults.LOCAL_HOSTS,
-        description="A list of hostnames considered local for development and testing purposes.",
-        examples=settings_defaults.LOCAL_HOSTS,
-        title="Local Hosts",
-    )
-    """
-    A list of hostnames considered local for development and testing purposes.
-
-    This setting defines hostnames that are treated as local addresses by the platform.
-    It is useful for distinguishing between local and remote requests, especially
-    during development and testing.
-
-    :type: List[str]
-    :default: Value from ``settings_defaults.LOCAL_HOSTS``
-    :raises SmarterConfigurationError: If the value is not a list of strings matching settings_defaults.LOCAL_HOSTS
-    """
-
-    @before_field_validator("local_hosts")
-    def validate_local_hosts(cls, v: Optional[List[str]]) -> List[str]:
-        """Validates the `local_hosts` field.
-
-        Args:
-            v (Optional[List[str]]): The local hosts value to validate.
-
-        Returns:
-            List[str]: The validated local hosts.
-        """
-        if v in THE_EMPTY_SET:
-            return settings_defaults.LOCAL_HOSTS
-
-        if not isinstance(v, list):
-            raise SmarterConfigurationError(f"local_hosts of type {type(v)} is not a list: {v}")
-        return v
-
-    secret_key: Optional[SecretStr] = Field(
-        settings_defaults.SECRET_KEY,
+    django_secret_key: Optional[SecretStr] = Field(
+        validation_alias="DJANGO_SECRET_KEY",
+        default_factory=generated_django_secret_key,
         description="The Django secret key for cryptographic signing.",
         examples=["your-django-secret-key"],
         title="Django Secret Key",
@@ -300,13 +248,13 @@ class SecuritySettings(BaseModel):
     cryptographic operations within the Django framework.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.SECRET_KEY``
+    :default: a key that the process generates, with a warning: see :func:`generated_django_secret_key`
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("secret_key")
+    @before_field_validator("django_secret_key")
     def validate_secret_key(cls, v: Optional[SecretStr]) -> SecretStr:
-        """Validates the `secret_key` field.
+        """Validates the `django_secret_key` field.
 
         Args:
             v (Optional[SecretStr]): The secret key value to validate.
@@ -314,20 +262,20 @@ class SecuritySettings(BaseModel):
             SecretStr: The validated secret key.
         """
         if v is None:
-            return settings_defaults.SECRET_KEY
+            return field_default(cls, "django_secret_key")
 
         if isinstance(v, str):
             try:
                 v = SecretStr(v)
             except ValidationError as e:
-                raise SmarterConfigurationError(f"secret_key {v} is not a valid SecretStr.") from e
+                raise SmarterConfigurationError("django_secret_key is not a valid SecretStr.") from e
 
         if not isinstance(v, SecretStr):
-            raise SmarterConfigurationError(f"secret_key {type(v)} is not a SecretStr.")
+            raise SmarterConfigurationError(f"django_secret_key {type(v)} is not a SecretStr.")
         return v
 
-    throttle_rate_anon: Optional[str] = Field(
-        settings_defaults.THROTTLE_RATE_ANON,
+    app_api_throttle_rate_anon: Optional[str] = Field(
+        "120/minute",
         description="The request rate limit of each anonymous client, by IP address. None disables it.",
         examples=["120/minute", "10/second", "none"],
         title="Anonymous Throttle Rate",
@@ -340,12 +288,12 @@ class SecuritySettings(BaseModel):
     HTTP 429 Too Many Requests with a ``Retry-After`` header. See :mod:`smarter.lib.drf.throttling`.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.THROTTLE_RATE_ANON``
+    :default: ``"120/minute"``
     :raises SmarterConfigurationError: If the value is not a rate, e.g. ``120/minute``, or ``none``.
     """
 
-    @before_field_validator("throttle_rate_anon")
-    def validate_throttle_rate_anon(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("app_api_throttle_rate_anon")
+    def validate_app_api_throttle_rate_anon(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `throttle_rate_anon` field.
 
         Args:
@@ -354,10 +302,10 @@ class SecuritySettings(BaseModel):
         Returns:
             Optional[str]: The validated rate, or None if the throttle is disabled.
         """
-        return validate_throttle_rate("throttle_rate_anon", v, settings_defaults.THROTTLE_RATE_ANON)
+        return validate_throttle_rate("app_api_throttle_rate_anon", v, field_default(cls, "app_api_throttle_rate_anon"))
 
-    throttle_rate_user: Optional[str] = Field(
-        settings_defaults.THROTTLE_RATE_USER,
+    app_api_throttle_rate_user: Optional[str] = Field(
+        "600/minute",
         description="The request rate limit of each authenticated user. None disables it.",
         examples=["600/minute", "20/second", "none"],
         title="User Throttle Rate",
@@ -370,12 +318,12 @@ class SecuritySettings(BaseModel):
     See :mod:`smarter.lib.drf.throttling`.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.THROTTLE_RATE_USER``
+    :default: ``"600/minute"``
     :raises SmarterConfigurationError: If the value is not a rate, e.g. ``600/minute``, or ``none``.
     """
 
-    @before_field_validator("throttle_rate_user")
-    def validate_throttle_rate_user(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("app_api_throttle_rate_user")
+    def validate_app_api_throttle_rate_user(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `throttle_rate_user` field.
 
         Args:
@@ -384,31 +332,35 @@ class SecuritySettings(BaseModel):
         Returns:
             Optional[str]: The validated rate, or None if the throttle is disabled.
         """
-        return validate_throttle_rate("throttle_rate_user", v, settings_defaults.THROTTLE_RATE_USER)
+        return validate_throttle_rate("app_api_throttle_rate_user", v, field_default(cls, "app_api_throttle_rate_user"))
 
     @property
-    def secret_key_is_set(self) -> bool:
+    def django_secret_key_is_set(self) -> bool:
         """
         Return True if a Django secret key was configured.
 
         A secret key is not configured if it is missing, if it is a placeholder such as
         ``helm/charts/smarter/values.yaml``'s ``SET-ME-IN-helm/...``, or if it is the random
-        key that ``settings_defaults`` generates when ``SECRET_KEY`` is not set.
+        key that :func:`generated_django_secret_key` generates when ``DJANGO_SECRET_KEY`` is not set.
 
         Example:
-            >>> print(smarter_settings.secret_key_is_set)
+            >>> print(smarter_settings.django_secret_key_is_set)
             True
 
         See Also:
-            - smarter_settings.secret_key
-            - smarter_settings.require_secret_key()
+            - smarter_settings.django_secret_key
+            - smarter_settings.require_django_secret_key()
         """
-        if is_missing_value(self.secret_key):
+        if is_missing_value(self.django_secret_key):
             return False
-        if settings_defaults.SECRET_KEY_IS_GENERATED and self.secret_key is not None:
-            generated = settings_defaults.SECRET_KEY.get_secret_value()
-            return self.secret_key.get_secret_value() != generated
+        if _generated_django_secret_key is not None and self.django_secret_key is not None:
+            generated = _generated_django_secret_key.get_secret_value()
+            return self.django_secret_key.get_secret_value() != generated
         return True
 
 
-__all__ = ["SecuritySettings", "compile_amnesty_pattern"]
+__all__ = [
+    "SecuritySettings",
+    "generated_fernet_encryption_key",
+    "generated_django_secret_key",
+]

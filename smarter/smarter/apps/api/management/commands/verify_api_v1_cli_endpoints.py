@@ -13,11 +13,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_ACCOUNT_NUMBER,
-    SMARTER_ADMIN_USERNAME,
-    SmarterEnvironments,
-)
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.shortcuts import reverse
@@ -83,7 +79,7 @@ class Command(SmarterCommand):
             "username",
             type=str,
             nargs="?",
-            default=SMARTER_ADMIN_USERNAME,
+            default=smarter_settings.platform_admin_username,
             help="A user associated with the Smarter account.",
         )
 

@@ -36,7 +36,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import get_test_data
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SWITCH_PATCH = "smarter.apps.llmtool.nlp.switch_is_active"
 WORDNET_PATCH = "smarter.apps.llmtool.nlp.wordnet"

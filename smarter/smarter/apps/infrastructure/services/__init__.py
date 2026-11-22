@@ -25,7 +25,7 @@ The infrastructure service layer: the platform's only way to reach its infrastru
 - ``slack``: :class:`~.slack.SlackService`, implemented with the Slack Web API.
 - ``logs``: :class:`~.logs.LogService`, the pod logs, implemented with Loki.
 - ``provider``: the :class:`~smarter.apps.infrastructure.providers.base.CloudProvider` of
-  ``smarter_settings.cloud_provider``.
+  ``smarter_settings.platform_cloud_provider``.
 
 Each service is resolved when it is used, not when this module is imported, so that tests can
 replace it, with :func:`~smarter.apps.infrastructure.providers.configure_provider`,
@@ -88,7 +88,7 @@ class InfrastructureServices:
 
     @property
     def provider(self) -> "CloudProvider":
-        """The cloud provider, ``smarter_settings.cloud_provider``, unless one is configured."""
+        """The cloud provider, ``smarter_settings.platform_cloud_provider``, unless one is configured."""
         # pylint: disable=import-outside-toplevel
         from ..providers import get_provider
 

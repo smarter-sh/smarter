@@ -11,7 +11,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestUrlParam(SmarterTestBase):

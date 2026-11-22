@@ -29,7 +29,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 def should_log(level):
@@ -39,8 +38,7 @@ def should_log(level):
     )
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 VERIFICATION_MAX_COMPLETION_TOKENS = 1024

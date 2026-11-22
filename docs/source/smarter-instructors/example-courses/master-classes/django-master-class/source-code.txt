@@ -19,7 +19,7 @@ Configuration and Startup
        :doc:`ADR 007 </adr/007-settings>`.
      - `common/conf/settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/common/conf/settings>`__,
        `common/conf/env.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/env.py>`__,
-       `common/conf/defaults.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/defaults.py>`__,
+       `common/conf/const.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf/const.py>`__,
        `settings/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,
        `.env.example <https://github.com/smarter-sh/smarter/blob/main/.env.example>`__
    * - 2. The startup sequence

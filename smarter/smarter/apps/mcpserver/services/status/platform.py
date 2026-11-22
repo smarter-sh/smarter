@@ -64,11 +64,11 @@ def task_queues() -> tuple[str, ...]:
 
     :returns: The default queue, which runs most background work, e.g. prompts' follow-ups, and the
         infrastructure queue, which runs deploys, DNS and certificate work, from
-        ``smarter_settings.llmclient_tasks_celery_task_queue`` and
-        ``smarter_settings.infrastructure_tasks_celery_task_queue``.
+        ``smarter_settings.app_llmclient_tasks_celery_task_queue`` and
+        ``smarter_settings.app_infrastructure_tasks_celery_task_queue``.
     """
-    default_queue = smarter_settings.llmclient_tasks_celery_task_queue
-    infrastructure_queue = smarter_settings.infrastructure_tasks_celery_task_queue
+    default_queue = smarter_settings.app_llmclient_tasks_celery_task_queue
+    infrastructure_queue = smarter_settings.app_infrastructure_tasks_celery_task_queue
     return (default_queue, infrastructure_queue)
 
 

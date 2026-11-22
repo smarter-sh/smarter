@@ -169,7 +169,7 @@ class TestLoadFromGithub(TestAccountMixin):
     def test_a_disabled_kind_is_skipped(self):
         """Test that a manifest of a disabled SAM app's kind is skipped, and isn't a failure."""
         self.use_repo(self.repo({"secrets/s.yaml": manifest("Secret", self.secret_name, "  config:\n    value: x\n")}))
-        with disabled_sam_apps("enable_secret"):
+        with disabled_sam_apps("app_secret_enable"):
             output = self.run_command()
         self.assertIn("Skipped secrets/s.yaml: Secret manifests are disabled on this platform.", output)
         self.assertFalse(Secret.objects.filter(name=self.secret_name).exists())

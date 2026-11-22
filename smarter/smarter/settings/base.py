@@ -12,14 +12,13 @@ Notes:
 - For the full list of settings and their values, see the `Django settings reference <https://docs.djangoproject.com/en/6.0/ref/settings/>`_.
 """
 
-import logging
-import logging.config
 import os
 import secrets
 import sys
 import time
 import urllib.parse
 from collections.abc import Mapping
+from logging import config as logging_config
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -29,16 +28,16 @@ from django.utils.csp import CSP
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
-from smarter.common.conf import smarter_settings
+from smarter.common.conf import const, smarter_settings
 from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils.redis_url import redis_url_with_database
+from smarter.lib import logging
 from smarter.lib.django.csp import CSP_REPORT_PATH
-from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
+logger = logging.getSmarterLogger(__name__)
 
 load_dotenv()
 
@@ -59,13 +58,13 @@ See:
     - smarter_settings.allowed_hosts
 """
 
-LOCAL_HOSTS = smarter_settings.local_hosts
+LOCAL_HOSTS = const.LOCAL_HOSTS
 """
 Supplemental list of local host/domain names that this Django site can serve.
 
 This is specicific to Smarter and not officially part of Django settings.
 
-See: smarter_settings.local_hosts
+See: smarter.common.conf.const.LOCAL_HOSTS
 """
 
 # to disable redis/celery in collectstatic
@@ -151,10 +150,13 @@ CSRF_COOKIE_SECURE = False
 """
 A boolean that determines whether the CSRF cookie should be marked as "secure".
 
-This is set to
-False in base settings but **should** be set to True in production environments. Note that
-there are challenges with setting this to True if the Smarter platform is behind a load balancer or
-reverse proxy that terminates SSL.
+False here, for local development over plain ``http://localhost``, where a browser would drop a
+secure cookie. ``smarter.settings.base_aws`` sets it to True.
+
+A proxy that terminates TLS doesn't get in the way. Django adds the ``Secure`` attribute to the
+cookie whether or not it sees the request as secure, and the browser enforces it against the url it
+loaded, which is ``https://``. The web console's JavaScript can still read the cookie: ``Secure``
+only keeps it off plain HTTP connections.
 
 See:
 
@@ -326,10 +328,9 @@ SESSION_COOKIE_SECURE = False
 """
 A boolean that determines whether the session cookie should be marked as "secure".
 
-This is set to
-False in base settings but **should** be set to True in production environments. Note that
-there are challenges with setting this to True if the Smarter platform is behind a load balancer or
-reverse proxy that terminates SSL.
+False here, for local development over plain ``http://localhost``, where a browser would drop a
+secure cookie. ``smarter.settings.base_aws`` sets it to True. A proxy that terminates TLS doesn't get
+in the way: see ``CSRF_COOKIE_SECURE``.
 
 See:
 
@@ -395,13 +396,17 @@ See:
 - https://docs.djangoproject.com/en/6.0/ref/settings/#session-cookie-httponly
 """
 
-SECURE_PROXY_SSL_HEADER = None
+SECURE_PROXY_SSL_HEADER: tuple[str, str] | None = None
 """
 A tuple representing a header/value combination that signifies a request is secure.
 
-This is set to None in base settings
-and **should** be set appropriately in production environments if the Smarter platform is behind
-a load balancer or reverse proxy that terminates SSL.
+None here, for local development, where no proxy sits in front of Django. In AWS, Traefik
+terminates TLS and forwards plain HTTP with ``X-Forwarded-Proto``, so ``smarter.settings.base_aws``
+sets it to ``("HTTP_X_FORWARDED_PROTO", "https")``. Without it, ``request.is_secure()`` is always
+False there, and ``build_absolute_uri()`` returns ``http://`` urls.
+
+Set it only behind a proxy that overwrites the header: a client could otherwise send it, and make
+Django treat a plain HTTP request as secure.
 
 See: https://docs.djangoproject.com/en/6.0/ref/settings/#secure-proxy-ssl-header
 """
@@ -551,8 +556,11 @@ See:
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 SECRET_KEY = (
-    smarter_settings.secret_key.get_secret_value()
-    if (smarter_settings.secret_key and getattr(smarter_settings.secret_key, "_secret_value", None) is not None)
+    smarter_settings.django_secret_key.get_secret_value()
+    if (
+        smarter_settings.django_secret_key
+        and getattr(smarter_settings.django_secret_key, "_secret_value", None) is not None
+    )
     else None
 )
 """
@@ -561,7 +569,7 @@ The secret key for this Django installation.
 This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning in the
 local environment. In every other environment, Smarter refuses to start without it. See
-``smarter_settings.require_secret_key()``.
+``smarter_settings.require_django_secret_key()``.
 
 For production deployments the chain of custody should be:
 
@@ -570,13 +578,13 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://docs.djangoproject.com/en/6.0/ref/settings/#secret-key
-    - smarter_settings.secret_key
+    - smarter_settings.django_secret_key
 """
 
-smarter_settings.require_secret_key()
+smarter_settings.require_django_secret_key()
 
 # A placeholder such as SET-ME-PLEASE is published in this repository, so it is never
-# used as a key. settings_defaults already generates a key when SECRET_KEY is unset,
+# used as a key. smarter_settings already generates a key when SECRET_KEY is unset,
 # but not when it is set to a placeholder.
 if is_missing_value(SECRET_KEY):
     SECRET_KEY = secrets.token_hex(32)
@@ -680,7 +688,7 @@ See:
 
 CACHE_RESULTS = {
     "CACHE_ALIAS": "default",
-    "TIMEOUT": smarter_settings.cache_expiration,
+    "TIMEOUT": smarter_settings.subsystem_cache_expiration,
     "KEY_ENCODER": "smarter.lib.cache.hooks.SmarterCacheKeyEncoder",
     "LOGGING_ENABLED": "smarter.lib.cache.hooks.logging_enabled",
     "VERBOSE_LOGGING": "smarter.lib.cache.hooks.verbose_logging",
@@ -689,7 +697,7 @@ CACHE_RESULTS = {
 """
 The configuration of the ``@cache_results`` decorator.
 
-Its default timeout is ``smarter_settings.cache_expiration``, the hooks in
+Its default timeout is ``smarter_settings.subsystem_cache_expiration``, the hooks in
 ``smarter.lib.cache.hooks`` connect it to the ``CACHE_LOGGING`` waffle switch
 and Pydantic cache key arguments, and log messages are colored by the package's
 ``cache_results.colors.log_prefix``. Every entry
@@ -1030,8 +1038,8 @@ subclass is missing.
 ``security.W004`` and ``security.W008`` say that ``SECURE_HSTS_SECONDS`` and ``SECURE_SSL_REDIRECT``
 aren't set. In AWS, Traefik terminates TLS, redirects HTTP to HTTPS, and adds the
 Strict-Transport-Security header (its ``https-redirect`` and ``hsts`` middlewares, in
-smarter-infrastructure). Django couldn't do either: behind the proxy, with
-``SECURE_PROXY_SSL_HEADER`` unset, it sees every request as plain HTTP.
+smarter-infrastructure), in front of every host, including the deployed LLMClients and custom
+domains, so Django doesn't do either again.
 """
 
 ROOT_HOSTCONF = "smarter.hosts"
@@ -1117,11 +1125,15 @@ if smarter_settings.database_read_timeout:
 DATABASES: dict[str, SmarterDictType] = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": smarter_settings.mysql_database,
-        "USER": smarter_settings.mysql_user,
-        "PASSWORD": smarter_settings.mysql_password.get_secret_value() if smarter_settings.mysql_password else "",
-        "HOST": smarter_settings.mysql_host,
-        "PORT": str(smarter_settings.mysql_port),
+        "NAME": smarter_settings.subsystem_sql_database,
+        "USER": smarter_settings.subsystem_sql_user,
+        "PASSWORD": (
+            smarter_settings.subsystem_sql_password.get_secret_value()
+            if smarter_settings.subsystem_sql_password
+            else ""
+        ),
+        "HOST": smarter_settings.subsystem_sql_host,
+        "PORT": str(smarter_settings.subsystem_sql_port),
         "OPTIONS": DATABASE_OPTIONS,
     }
 }
@@ -1131,8 +1143,8 @@ The Django database configuration for Smarter, using MariaDB as the database bac
 Smarter **should** be able to support other common Sql databases supported by Django
 with minimal or no changes, but MariaDB is the recommended and tested database backend.
 
-Every value comes from smarter_settings: ``SMARTER_MYSQL_HOST``, ``SMARTER_MYSQL_PORT``,
-``SMARTER_MYSQL_DATABASE``, ``SMARTER_MYSQL_USER`` and ``SMARTER_MYSQL_PASSWORD``. Their defaults are
+Every value comes from smarter_settings: ``SMARTER_SUBSYSTEM_SQL_HOST``, ``SMARTER_SUBSYSTEM_SQL_PORT``,
+``SMARTER_SUBSYSTEM_SQL_DATABASE``, ``SMARTER_SUBSYSTEM_SQL_USER`` and ``SMARTER_SUBSYSTEM_SQL_PASSWORD``. Their defaults are
 docker-compose.yml's smarter-mariadb service. Outside the local environment the password has no default.
 
 These credentials are created for you by the Smarter Terraform scripts when deploying
@@ -1151,24 +1163,20 @@ See:
 # https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
-authentication_backends_env = os.environ.get("AUTHENTICATION_BACKENDS")
-AUTHENTICATION_BACKENDS = (
-    authentication_backends_env.split(",")
-    if authentication_backends_env
-    else [
-        "social_core.backends.google.GoogleOAuth2",
-        "social_core.backends.github.GithubOAuth2",
-        "django.contrib.auth.backends.ModelBackend",
-    ]
-)
+AUTHENTICATION_BACKENDS = [
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.github.GithubOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+]
 """
 The authentication backends for Smarter, including social authentication.
 
-backends for Google, GitHub, and LinkedIn, as well as the default Django
-model backend.
+Google's and GitHub's, and Django's model backend. Smarter additionally implements its own
+key-based REST API authentication backend.
 
-Note that Smarter additionally implements its own custom key-based REST API
-authentication backend.
+An operator sets their own with ``DJANGO_AUTHENTICATION_BACKENDS``, comma-separated, e.g. the
+multitenant backends in ``smarter.lib.social_core.backends.multitenant`` (see
+:mod:`smarter.settings.user`).
 
 See:
 
@@ -1230,10 +1238,10 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
-    smarter_settings.social_auth_google_oauth2_key.get_secret_value()
+    smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value()
     if (
-        smarter_settings.social_auth_google_oauth2_key
-        and getattr(smarter_settings.social_auth_google_oauth2_key, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_google_oauth2_key
+        and getattr(smarter_settings.subsystem_social_auth_google_oauth2_key, "_secret_value", None) is not None
     )
     else None
 )
@@ -1247,14 +1255,14 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
-    - smarter_settings.social_auth_google_oauth2_key
+    - smarter_settings.subsystem_social_auth_google_oauth2_key
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = (
-    smarter_settings.social_auth_google_oauth2_secret.get_secret_value()
+    smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value()
     if (
-        smarter_settings.social_auth_google_oauth2_secret
-        and getattr(smarter_settings.social_auth_google_oauth2_secret, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_google_oauth2_secret
+        and getattr(smarter_settings.subsystem_social_auth_google_oauth2_secret, "_secret_value", None) is not None
     )
     else None
 )
@@ -1268,7 +1276,7 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/google.html
-    - smarter_settings.social_auth_google_oauth2_secret
+    - smarter_settings.subsystem_social_auth_google_oauth2_secret
 """
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
@@ -1293,10 +1301,10 @@ See: https://python-social-auth.readthedocs.io/en/latest/backends/google.html
 """
 
 SOCIAL_AUTH_GITHUB_KEY = (
-    smarter_settings.social_auth_github_key.get_secret_value()
+    smarter_settings.subsystem_social_auth_github_key.get_secret_value()
     if (
-        smarter_settings.social_auth_github_key
-        and getattr(smarter_settings.social_auth_github_key, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_github_key
+        and getattr(smarter_settings.subsystem_social_auth_github_key, "_secret_value", None) is not None
     )
     else None
 )
@@ -1310,14 +1318,14 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
-    - smarter_settings.social_auth_github_key
+    - smarter_settings.subsystem_social_auth_github_key
 """
 
 SOCIAL_AUTH_GITHUB_SECRET = (
-    smarter_settings.social_auth_github_secret.get_secret_value()
+    smarter_settings.subsystem_social_auth_github_secret.get_secret_value()
     if (
-        smarter_settings.social_auth_github_secret
-        and getattr(smarter_settings.social_auth_github_secret, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_github_secret
+        and getattr(smarter_settings.subsystem_social_auth_github_secret, "_secret_value", None) is not None
     )
     else None
 )
@@ -1331,14 +1339,14 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/github.html
-    - smarter_settings.social_auth_github_secret
+    - smarter_settings.subsystem_social_auth_github_secret
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = (
-    smarter_settings.social_auth_linkedin_oauth2_key.get_secret_value()
+    smarter_settings.subsystem_social_auth_linkedin_oauth2_key.get_secret_value()
     if (
-        smarter_settings.social_auth_linkedin_oauth2_key
-        and getattr(smarter_settings.social_auth_linkedin_oauth2_key, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_linkedin_oauth2_key
+        and getattr(smarter_settings.subsystem_social_auth_linkedin_oauth2_key, "_secret_value", None) is not None
     )
     else None
 )
@@ -1352,13 +1360,13 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
-    - smarter_settings.social_auth_linkedin_oauth2_key
+    - smarter_settings.subsystem_social_auth_linkedin_oauth2_key
 """
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = (
-    smarter_settings.social_auth_linkedin_oauth2_secret.get_secret_value()
+    smarter_settings.subsystem_social_auth_linkedin_oauth2_secret.get_secret_value()
     if (
-        smarter_settings.social_auth_linkedin_oauth2_secret
-        and getattr(smarter_settings.social_auth_linkedin_oauth2_secret, "_secret_value", None) is not None
+        smarter_settings.subsystem_social_auth_linkedin_oauth2_secret
+        and getattr(smarter_settings.subsystem_social_auth_linkedin_oauth2_secret, "_secret_value", None) is not None
     )
     else None
 )
@@ -1375,7 +1383,7 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
-    - smarter_settings.social_auth_linkedin_oauth2_secret
+    - smarter_settings.subsystem_social_auth_linkedin_oauth2_secret
 """
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
@@ -1624,7 +1632,7 @@ from the various Django apps and store them in a single location for serving.
 See: https://docs.djangoproject.com/en/6.0/ref/settings/#static-root
 """
 
-if smarter_settings.static_files_on_cdn:
+if smarter_settings.platform_static_files_on_cdn:
     if smarter_settings.aws_is_configured:
         STORAGES["staticfiles"] = {
             "BACKEND": "smarter.lib.django.static_storage.SmarterStaticFilesStorage",
@@ -1634,10 +1642,10 @@ if smarter_settings.static_files_on_cdn:
         STATIC_URL = f"{cdn_url}/static/"
     else:
         logger.warning(
-            "SMARTER_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
+            "SMARTER_PLATFORM_STATIC_FILES_ON_CDN is on, but AWS is not configured: the server serves the static files.",
         )
 """
-While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the static files are on the environment's S3 bucket, under ``static/``,
+While ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on, the static files are on the environment's S3 bucket, under ``static/``,
 and ``STATIC_URL`` is its CDN's, e.g. ``https://cdn.platform.example.com/static/``.
 ``initialize_platform`` uploads them on each deployment. Pages, cookies and the api stay on the platform's
 own host. See :mod:`smarter.lib.django.static_storage` and :doc:`ADR-035 </adr/035-single-page-app>`.
@@ -1737,7 +1745,7 @@ REST_FRAMEWORK = {
 The Django REST Framework configuration for Smarter, including default authentication classes,.
 
 permission classes, parser classes and throttle classes. The throttle rates are
-``smarter_settings.throttle_rate_anon`` and ``smarter_settings.throttle_rate_user``.
+``smarter_settings.app_api_throttle_rate_anon`` and ``smarter_settings.app_api_throttle_rate_user``.
 See :mod:`smarter.lib.drf.throttling`.
 
 Do not change these values unless you know what you are doing. Even then, it's probably a bad idea.
@@ -1973,9 +1981,9 @@ that logs are available both in the console and in Redis for further processing
 or monitoring.
 """
 
-logging.config.dictConfig(LOGGING)
+logging_config.dictConfig(LOGGING)
 
-SMTP_SENDER = smarter_settings.smtp_sender
+SMTP_SENDER = smarter_settings.subsystem_smtp_sender
 """
 The default sender email address for outgoing emails from Smarter.
 
@@ -1984,10 +1992,10 @@ This is derived from smarter_settings.
 See:
 
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_sender
+    - smarter_settings.subsystem_smtp_sender
 """
 
-SMTP_FROM_EMAIL = smarter_settings.smtp_from_email
+SMTP_FROM_EMAIL = smarter_settings.subsystem_smtp_from_email
 """
 The default "from" email address for outgoing emails from Smarter.
 
@@ -1996,10 +2004,10 @@ This is derived from smarter_settings.
 See:
 
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_from_email
+    - smarter_settings.subsystem_smtp_from_email
 """
 
-SMTP_HOST = smarter_settings.smtp_host
+SMTP_HOST = smarter_settings.subsystem_smtp_host
 """
 The SMTP host for outgoing emails from Smarter.
 
@@ -2007,12 +2015,15 @@ This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_host
+    - smarter_settings.subsystem_smtp_host
 """
 
 SMTP_PASSWORD = (
-    smarter_settings.smtp_password.get_secret_value()
-    if (smarter_settings.smtp_password and getattr(smarter_settings.smtp_password, "_secret_value", None) is not None)
+    smarter_settings.subsystem_smtp_password.get_secret_value()
+    if (
+        smarter_settings.subsystem_smtp_password
+        and getattr(smarter_settings.subsystem_smtp_password, "_secret_value", None) is not None
+    )
     else None
 )
 """
@@ -2033,10 +2044,10 @@ See:
 
     - https://docs.djangoproject.com/en/6.0/topics/email/
     - https://github.com/smarter-sh/smarter-infrastructure
-    - smarter_settings.smtp_password
+    - smarter_settings.subsystem_smtp_password
 """
 
-SMTP_PORT = smarter_settings.smtp_port
+SMTP_PORT = smarter_settings.subsystem_smtp_port
 """
 The SMTP port for outgoing emails from Smarter.
 
@@ -2044,10 +2055,10 @@ This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_port
+    - smarter_settings.subsystem_smtp_port
 """
 
-SMTP_USE_SSL = smarter_settings.smtp_use_ssl
+SMTP_USE_SSL = smarter_settings.subsystem_smtp_use_ssl
 """
 A boolean that specifies whether to use SSL for SMTP connections in Smarter.
 
@@ -2056,10 +2067,10 @@ This is derived from smarter_settings.
 See:
 
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_use_ssl
+    - smarter_settings.subsystem_smtp_use_ssl
 """
 
-SMTP_USE_TLS = smarter_settings.smtp_use_tls
+SMTP_USE_TLS = smarter_settings.subsystem_smtp_use_tls
 """
 A boolean that specifies whether to use TLS for SMTP connections in Smarter.
 
@@ -2067,12 +2078,15 @@ This is derived from smarter_settings.
 
 See:
     - https://docs.djangoproject.com/en/6.0/topics/email/
-    - smarter_settings.smtp_use_tls
+    - smarter_settings.subsystem_smtp_use_tls
 """
 
 SMTP_USERNAME = (
-    smarter_settings.smtp_username.get_secret_value()
-    if (smarter_settings.smtp_username and getattr(smarter_settings.smtp_username, "_secret_value", None) is not None)
+    smarter_settings.subsystem_smtp_username.get_secret_value()
+    if (
+        smarter_settings.subsystem_smtp_username
+        and getattr(smarter_settings.subsystem_smtp_username, "_secret_value", None) is not None
+    )
     else None
 )
 """
@@ -2093,7 +2107,7 @@ See:
 
     - https://docs.djangoproject.com/en/6.0/topics/email/
     - https://github.com/smarter-sh/smarter-infrastructure
-    - smarter_settings.smtp_username
+    - smarter_settings.subsystem_smtp_username
 """
 
 TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
@@ -2106,11 +2120,11 @@ If True, enables automatic creation of missing waffle switches in the database d
 jobs. This is intended to simplify management of waffle switches in Smarter deployments.
 """
 
-TAGGIT_CASE_INSENSITIVE = os.environ.get("TAGGIT_CASE_INSENSITIVE", "True").lower() in ("true", "1", "t", "yes")
+TAGGIT_CASE_INSENSITIVE = True
 """
 Whether taggit treats tags as case insensitive, e.g. "Tag" and "tag" as the same tag.
 
-From the environment variable ``TAGGIT_CASE_INSENSITIVE``, which defaults to "True".
+``DJANGO_TAGGIT_CASE_INSENSITIVE=false`` turns it off (see :mod:`smarter.settings.user`).
 """
 
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
@@ -2146,7 +2160,7 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
 
     :param settings: The environment's settings module's namespace.
     """
-    if not (smarter_settings.settings_output or "manage.py" not in sys.argv[0]):
+    if not (smarter_settings.platform_settings_output or "manage.py" not in sys.argv[0]):
         return
     logger.debug("=" * 80)
     logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18))

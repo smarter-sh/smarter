@@ -27,6 +27,6 @@ class PromptPassthroughView(ConsoleAppView):
     """
     The Prompt Passthrough page, ``/dashboard/passthrough/``: the single-page console's.
 
-    The page exists only while ``smarter_settings.enable_dashboard_passthrough_prompt`` is set: otherwise its url is
+    The page exists only while ``smarter_settings.app_dashboard_passthrough_prompt_enable`` is set: otherwise its url is
     not registered, and the console's session says that the page is off, so that the console shows its Page not found.
     """

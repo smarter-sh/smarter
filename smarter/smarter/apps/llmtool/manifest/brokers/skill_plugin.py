@@ -39,7 +39,7 @@ from smarter.apps.llmtool.plugin.skill import (
 from smarter.apps.llmtool.plugin.skill_sources import retrieve_skill
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -646,11 +646,11 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
                 searchTerms=["meeting notes", "meeting transcript", "action items", "minutes"],
             ),
             prompt=SAMPluginCommonSpecPrompt(
-                provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+                provider=smarter_settings.llm_default_provider,
                 systemRole="You are a helpful assistant that produces clear, accurate meeting notes.",
-                model=settings_defaults.LLM_DEFAULT_MODEL,
-                temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-                maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+                model=smarter_settings.llm_default_model,
+                temperature=smarter_settings.llm_default_temperature,
+                maxTokens=smarter_settings.llm_default_max_tokens,
             ),
             skillData=SkillData(skill=EXAMPLE_SKILL, resources={"assets/template.md": EXAMPLE_TEMPLATE}),
         )

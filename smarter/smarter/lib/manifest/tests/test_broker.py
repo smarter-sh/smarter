@@ -27,7 +27,7 @@ from smarter.lib.typing import SmarterDictType
 
 from .abstractbroker_test_class import SAMTestBroker
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods

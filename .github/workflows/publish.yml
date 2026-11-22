@@ -67,9 +67,9 @@ permissions:
 env:
   # conf.py reads the platform's settings. The workflow has no .env, and
   # conf.py's load_dotenv() never overrides these. (html_baseurl, and so the
-  # sitemap and canonical links, is SMARTER_PROJECT_DOCS_URL, not ROOT_DOMAIN.)
+  # sitemap and canonical links, is SMARTER_PLATFORM_BRANDING_DOCS_URL, not SMARTER_PLATFORM_ROOT_DOMAIN.)
   ENVIRONMENT: "local"
-  ROOT_DOMAIN: "smarter.sh"
+  SMARTER_PLATFORM_ROOT_DOMAIN: "smarter.sh"
   BLOB_MANIFEST: docs/build/source-blobs.json
 
 jobs:

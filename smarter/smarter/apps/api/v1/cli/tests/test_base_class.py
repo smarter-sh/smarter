@@ -25,7 +25,7 @@ from smarter.apps.api.v1.cli.views.base import (
     http_status_for_exception,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -136,7 +136,7 @@ class TestApiCliV1BaseClass(ApiV1CliTestBase):
         receiver_logger.warning.assert_called_once()
         logged = str(mock_logger.warning.call_args_list) + str(receiver_logger.warning.call_args_list)
         self.assertIn("no Authorization header", logged)
-        self.assertNotIn(SMARTER_CUSTOMER_SUPPORT_EMAIL, logged)
+        self.assertNotIn(smarter_settings.platform_branding_support_email, logged)
         self.assertNotIn("Token ", logged)
 
     def test_authentication_with_a_wrong_key_logs_a_warning(self):

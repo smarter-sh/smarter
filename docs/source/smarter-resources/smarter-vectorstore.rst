@@ -27,7 +27,7 @@ Smarter manages the whole life of the database:
 .. note::
 
    The Smarter Vectorstore is enabled by default. Set the environment variable
-   ``SMARTER_ENABLE_VECTORSTORE=false`` to disable it.
+   ``SMARTER_APP_VECTORSTORE_ENABLE=false`` to disable it.
 
 .. seealso::
 
@@ -122,10 +122,10 @@ ApiConnections of the managed services from these environment variables:
      - Environment variables
      - ApiConnection
    * - Pinecone
-     - ``PINECONE_API_KEY``
+     - ``APP_VECTORSTORE_PINECONE_API_KEY``
      - ``pinecone``
    * - Qdrant Cloud
-     - ``QDRANT_CLOUD_URL``, ``QDRANT_CLOUD_API_KEY``
+     - ``APP_VECTORSTORE_QDRANT_CLOUD_URL``, ``APP_VECTORSTORE_QDRANT_CLOUD_API_KEY``
      - ``qdrant_cloud``
 
 A managed database's index name includes the account number, so that accounts that share a

@@ -4,9 +4,9 @@ Test the initialize_waffle and set_debug_logging management commands.
 The database's switches are never changed: call_command and the Switch model are patched.
 """
 
-import logging
 from unittest.mock import MagicMock, patch
 
+from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .base import CommandTestBase
@@ -72,7 +72,7 @@ class TestInitializeWaffle(CommandTestBase):
 class TestSetDebugLogging(CommandTestBase):
     def setUp(self):
         super().setUp()
-        root = logging.getLogger()
+        root = logging.getSmarterLogger()
         levels = (root.level, [handler.level for handler in root.handlers])
 
         def restore():
@@ -85,7 +85,7 @@ class TestSetDebugLogging(CommandTestBase):
     def test_enable_and_disable(self):
         with patch(f"{LOGGING}.call_command") as call:
             self.run_command("set_debug_logging", enable=True)
-            self.assertEqual(logging.getLogger().level, logging.DEBUG)
+            self.assertEqual(logging.getSmarterLogger().level, logging.DEBUG)
             self.run_command("set_debug_logging", disable=True)
-            self.assertEqual(logging.getLogger().level, logging.INFO)
+            self.assertEqual(logging.getSmarterLogger().level, logging.INFO)
         self.assertEqual([c.args[2] for c in call.call_args_list], ["on", "off"])

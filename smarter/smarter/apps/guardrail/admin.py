@@ -21,7 +21,7 @@ from smarter.lib import logging
 
 from .models import Guardrail, GuardrailEvent
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class GuardrailAdmin(SmarterCustomerModelAdmin):

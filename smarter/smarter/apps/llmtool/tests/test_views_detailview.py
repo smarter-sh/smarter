@@ -28,7 +28,7 @@ from smarter.lib.unittest.resource_views import (
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 OTHER_PLUGIN_NAME = "test_plugin_app_detail_other_account"
 

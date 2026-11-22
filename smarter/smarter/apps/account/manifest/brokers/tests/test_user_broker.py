@@ -20,7 +20,7 @@ from smarter.lib.manifest.enum import SAMMetadataKeys
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterUserBroker(TestSAMBrokerBaseClass):

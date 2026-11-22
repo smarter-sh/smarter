@@ -52,7 +52,7 @@ Every endpoint is stateless: it answers every POST with ``application/json``, is
 platform's pods can answer any request. It speaks the ``initialize`` handshake of protocol versions
 2024-11-05 through 2025-11-25, and accepts batches of up to 20 messages.
 
-Each client IP address may send at most ``SMARTER_MCPSERVER_RATE_LIMIT`` requests a minute, to all
+Each client IP address may send at most ``SMARTER_APP_MCPSERVER_RATE_LIMIT`` requests a minute, to all
 of the endpoints together, 1200 by default, and is answered ``429 Too Many Requests``, with a
 ``Retry-After`` header, beyond that. The platform's own MCPClients count too: they connect from the
 platform's egress addresses, and each tool call is about three requests, so a busy platform may need
@@ -456,7 +456,7 @@ stored. See :doc:`../smarter-framework/smarter-on-kubernetes/operations`. A fail
 with a keyed hash of the email address, not the address: see
 :py:mod:`smarter.apps.account.login_audit`.
 
-While the platform has no log store, for example in local development, where ``SMARTER_LOKI_URL`` is
+While the platform has no log store, for example in local development, where ``SMARTER_SUBSYSTEM_LOGGING_LOKI_URL`` is
 empty, the log tools answer that they are not available.
 
 Authentication

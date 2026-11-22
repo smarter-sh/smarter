@@ -8,15 +8,15 @@
 # pinned, signature-verified AWS CLI), and executes the backup script.
 #
 # databaseScheduledBackup in values.yaml sets the S3 location (s3Uri, by default
-# s3://$SMARTER_S3_BUCKET/backups/sql) and awsCliVersion. The backup dumps the
-# database as the read-only account SMARTER_MYSQL_BACKUP_USERNAME (smarter_backup),
-# which job-init.yaml creates when SMARTER_MYSQL_BACKUP_PASSWORD is set. Until it is
+# s3://$SMARTER_PLATFORM_S3_BUCKET/backups/sql) and awsCliVersion. The backup dumps the
+# database as the read-only account SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME (smarter_backup),
+# which job-init.yaml creates when SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD is set. Until it is
 # set, the backup dumps as the root account. The backup container receives only the
 # environment variables that the backup needs.
 #
 # When the backup completes, the Job emails the result, with the backup's log
 # attached, in the same way that job-init.yaml does: with manage.py email_job_log,
-# to databaseScheduledBackup.notifyEmail, or to smarter_settings.email_admin, and
+# to databaseScheduledBackup.notifyEmail, or to smarter_settings.platform_email_admin, and
 # posts it to the Slack channel databaseScheduledBackup.notifySlackChannel, if any,
 # with the log in the message's thread. A successful backup's email and Slack
 # message name the backup file, its size and where in S3 it was saved. The Debian image has no Django, so the backup runs as an init container,
@@ -32,7 +32,7 @@
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if .Values.databaseScheduledBackup.enabled }}
-{{- $backupPassword := .Values.env.SMARTER_MYSQL_BACKUP_PASSWORD | default "" }}
+{{- $backupPassword := .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
 {{- $useBackupAccount := and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
 apiVersion: batch/v1
 kind: CronJob
@@ -135,36 +135,36 @@ spec:
 
               # only what the backup needs: the database, the backup account, the S3 location
               # and the AWS credentials, not the platform's other secrets. The root account is
-              # passed only when no backup account is configured (SMARTER_MYSQL_BACKUP_PASSWORD).
+              # passed only when no backup account is configured (SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD).
               # The passwords and AWS keys are read from the Secret in secret-env.yaml.
               env:
-                - name: SMARTER_MYSQL_HOST
-                  value: {{ .Values.env.SMARTER_MYSQL_HOST | quote }}
-                - name: SMARTER_MYSQL_PORT
-                  value: {{ .Values.env.SMARTER_MYSQL_PORT | default "3306" | quote }}
-                - name: SMARTER_MYSQL_DATABASE
-                  value: {{ .Values.env.SMARTER_MYSQL_DATABASE | quote }}
+                - name: SMARTER_SUBSYSTEM_SQL_HOST
+                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_HOST | quote }}
+                - name: SMARTER_SUBSYSTEM_SQL_PORT
+                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_PORT | default "3306" | quote }}
+                - name: SMARTER_SUBSYSTEM_SQL_DATABASE
+                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_DATABASE | quote }}
                 {{- if $useBackupAccount }}
-                - name: SMARTER_MYSQL_BACKUP_USERNAME
-                  value: {{ .Values.env.SMARTER_MYSQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
-                - name: SMARTER_MYSQL_BACKUP_PASSWORD
+                - name: SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME
+                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
+                - name: SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: "{{ $.Values.global.appName }}-env"
-                      key: SMARTER_MYSQL_BACKUP_PASSWORD
+                      key: SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD
                       optional: true
                 {{- else }}
-                - name: SMARTER_MYSQL_ROOT_USERNAME
-                  value: {{ .Values.env.SMARTER_MYSQL_ROOT_USERNAME | quote }}
-                - name: SMARTER_MYSQL_ROOT_PASSWORD
+                - name: SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME
+                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME | quote }}
+                - name: SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: "{{ $.Values.global.appName }}-env"
-                      key: SMARTER_MYSQL_ROOT_PASSWORD
+                      key: SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
                       optional: true
                 {{- end }}
-                - name: SMARTER_S3_BUCKET
-                  value: {{ .Values.env.SMARTER_S3_BUCKET | default "" | quote }}
+                - name: SMARTER_PLATFORM_S3_BUCKET
+                  value: {{ .Values.env.SMARTER_PLATFORM_S3_BUCKET | default "" | quote }}
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
                     secretKeyRef:
@@ -183,7 +183,7 @@ spec:
                   value: /job/backup-summary.txt
                 {{- with .Values.databaseScheduledBackup }}
                 {{- if .s3Uri }}
-                - name: SMARTER_MYSQL_BACKUP_S3_URI
+                - name: SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI
                   value: {{ .s3Uri | quote }}
                 {{- end }}
                 {{- if .awsCliVersion }}

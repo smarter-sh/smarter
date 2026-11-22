@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
-from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
+from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType, required
 
 from .manifest import ExtensionSettingType, SettingValue
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 SCHEMA_PATH = Path(__file__).parent / "extension-console.schema.json"
 """The committed JSON Schema of the contract."""
-SCHEMA_ID = f"{SMARTER_PROJECT_WEBSITE_URL}/schemas/extension-console.schema.json"
+SCHEMA_ID = smarter_schema_id("extension-console.schema.json")
 
 TrustBadge = Literal["official", "verified", "community", "unverified"]
 """How far an extension's publisher is trusted.

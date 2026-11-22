@@ -66,7 +66,7 @@ share: ``SMARTER_API_KEY``, ``SMARTER_ENVIRONMENT``, ``SMARTER_BASE_URL`` (a
 platform url such as ``http://localhost:9357``, instead of the environment's),
 ``SMARTER_CONFIG_FILE``, ``SMARTER_TIMEOUT`` (seconds), ``SMARTER_MAX_RETRIES``
 and ``SMARTER_LOG`` (``debug`` or ``info`` turns on ``--verbose``). The cli
-doesn't read ``SMARTER_ROOT_DOMAIN``, which the platform's own settings use for
+doesn't read ``SMARTER_PLATFORM_ROOT_DOMAIN``, which the platform's own settings use for
 its apex domain.
 
 Commands

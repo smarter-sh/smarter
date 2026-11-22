@@ -2,11 +2,19 @@
 """The domains, urls, hosts and bucket names derived from :class:`PlatformSettings`."""
 
 from functools import cached_property
-from typing import List
+from typing import List, Optional, Union
 from urllib.parse import urlparse
 
-from smarter.common.conf.defaults import settings_defaults
+from pydantic import Field, model_validator
+
+from smarter.common.conf.const import THE_EMPTY_SET
 from smarter.common.conf.settings.platform import PlatformSettings
+from smarter.common.conf.util import (
+    before_field_validator,
+    comma_separated,
+    field_default,
+    input_value,
+)
 from smarter.common.const import (
     SMARTER_API_SUBDOMAIN,
     SMARTER_LOCAL_PORT,
@@ -19,77 +27,121 @@ from smarter.lib.django.validators import SmarterValidator
 class DomainSettings(PlatformSettings):
     """The domains, urls, hosts and bucket names that are derived from the platform's identity."""
 
-    @cached_property
-    def allowed_hosts(self) -> List[str]:
+    allowed_hosts: List[str] = Field(
+        ["localhost", "testserver"],
+        description="The hosts that the platform serves: its own domains, and those set with SMARTER_ALLOWED_HOSTS.",
+        examples=[["localhost", "testserver"]],
+        title="Allowed Hosts",
+    )
+    """
+    The host names that the platform serves, Django's ``ALLOWED_HOSTS``: its own domains, and the.
+
+    hosts set with ``SMARTER_ALLOWED_HOSTS``, a comma-separated list.
+
+    The platform's domains are always added: see :meth:`add_platform_hosts`. ``localhost`` and
+    ``testserver`` are there for Kubernetes' liveness and readiness probes, and for Django's test
+    client. Smarter's own middleware validates hosts as well: see
+    :class:`smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware`.
+
+    :type: List[str]
+    :default: ``["localhost", "testserver"]``, plus the platform's domains
+    """
+
+    api_schema: str = Field(
+        "http",
+        description="The schema of the api's urls, http or https. Set with SMARTER_API_SCHEMA. Always http locally.",
+        examples=["http", "https"],
+        title="API Schema",
+    )
+    """
+    The schema of the api's urls, ``http`` or ``https``.
+
+    Set it with ``SMARTER_API_SCHEMA``. The local environment always uses ``http``, whatever it is set
+    to: see :meth:`local_api_schema`.
+
+    :type: str
+    :default: ``"http"``
+    :raises SmarterConfigurationError: If the value is neither ``http`` nor ``https``.
+    """
+
+    @before_field_validator("allowed_hosts")
+    def validate_allowed_hosts(cls, v: Optional[Union[List[str], str]]) -> List[str]:
+        """Validates the `allowed_hosts` field: a list, or a comma-separated string.
+
+        Args:
+            v: The hosts.
+        Returns:
+            List[str]: The hosts, or the default if it is empty.
         """
-        A list of strings representing the host/domain names that this Django site can serve.
+        if v in THE_EMPTY_SET:
+            return list(field_default(cls, "allowed_hosts"))
+        v = comma_separated(v)
+        if not isinstance(v, list):
+            raise SmarterConfigurationError(f"allowed_hosts of type {type(v)} is not a list.")
+        return [str(host) for host in v]
 
-        Smarter implements its own middleware to validate host names.
-        See smarter.apps.llmclient.middleware.security.SmarterSecurityMiddleware.
+    @before_field_validator("api_schema")
+    def validate_api_schema(cls, v: Optional[str]) -> str:
+        """Validates the `api_schema` field: ``http`` or ``https``, or the default if it is empty.
 
-        See: https://docs.djangoproject.com/en/stable/ref/settings/#allowed-hosts
-
-        Supplemental list of allowed host/domain names for Smarter LLMClients/Agents.
-        This is specicific to Smarter and not officially part of Django settings.
-
-        List of allowed host/domain names for this Django site.
-        This setting specifies which hostnames the Django application is allowed to serve.
-        It is a security measure to prevent HTTP Host header attacks.
-
-        :type: List[str]
-        :default: Value from ``settings_defaults.ALLOWED_HOSTS``
-        :raises SmarterConfigurationError: If the value is not a list of strings.
-        :examples: ["example.com", "www.example.com"]
+        Args:
+            v (Optional[str]): The schema.
+        Returns:
+            str: The validated schema.
         """
-        default_allowed_hosts = settings_defaults.ALLOWED_HOSTS.copy() or []
-        if not isinstance(default_allowed_hosts, list):
-            raise SmarterConfigurationError(f"allowed_hosts of type {type(default_allowed_hosts)} is not a list.")
-        if not all(isinstance(host, str) for host in default_allowed_hosts):
-            raise SmarterConfigurationError("allowed_hosts must be a list of strings.")
-        if not isinstance(self.environment_platform_domain, str):
-            raise SmarterConfigurationError(
-                f"environment_platform_domain of type {type(self.environment_platform_domain)} is not a string."
-            )
-        if not isinstance(self.environment_api_domain, str):
-            raise SmarterConfigurationError(
-                f"environment_api_domain of type {type(self.environment_api_domain)} is not a string."
-            )
-        if self.environment_platform_domain is None:
-            raise SmarterConfigurationError("environment_platform_domain is None.")
-        if self.environment_api_domain is None:
-            raise SmarterConfigurationError("environment_api_domain is None.")
+        if v in THE_EMPTY_SET:
+            return str(field_default(cls, "api_schema"))
+        if not isinstance(v, str) or v.strip().lower() not in ("http", "https"):
+            raise SmarterConfigurationError(f"api_schema {v} is neither http nor https.")
+        return v.strip().lower()
 
-        retval = [
+    @model_validator(mode="before")
+    @classmethod
+    def local_api_schema(cls, data: object) -> object:
+        """
+        Use ``http`` for the api's urls in the local environment, which serves no https.
+
+        :param data: The values to validate: the constructor's and the environment's.
+        :returns: The values, with ``api_schema`` set to ``http`` in the local environment.
+        """
+        if not isinstance(data, dict):
+            return data
+        environment = input_value(cls, data, "environment")
+        if environment != SmarterEnvironments.LOCAL:
+            return data
+        local = dict(data)
+        local["api_schema"] = "http"
+        return local
+
+    @model_validator(mode="after")
+    def add_platform_hosts(self) -> "DomainSettings":
+        """
+        Add the platform's own domains to :attr:`allowed_hosts`, so that it is the complete list.
+
+        The domains, e.g. :attr:`environment_platform_domain`, are derived from the validated
+        environment, root domain and subdomain, so they are added once those are validated. Each host
+        with a port is added without it as well. Every host is validated.
+
+        :returns: The settings, whose ``allowed_hosts`` is final.
+        :raises SmarterConfigurationError: If a host is not a valid hostname.
+        """
+        hosts = [
             self.environment_platform_domain,
             self.environment_api_domain,
             f".{self.environment_api_domain}",
-        ] + default_allowed_hosts
-        # For each host, append the hostname (without port) if not already present
-        for host in retval:
+        ]
+        for host in self.allowed_hosts:
+            hosts.append(host)
+        for host in list(hosts):
             parsed = urlparse(f"//{host}")
-            if parsed.hostname and parsed.hostname not in retval:
-                retval.append(parsed.hostname)
-        for host in retval:
+            if parsed.hostname and parsed.hostname not in hosts:
+                hosts.append(parsed.hostname)
+        for host in hosts:
             SmarterValidator.validate_hostname(host)
-
-        return list(set(retval))
-
-    @cached_property
-    def api_schema(self) -> str:
-        """
-        The schema to use for API URLs (http or https).
-
-        This setting specifies the URL schema to be used when constructing API endpoints.
-        It determines whether the API URLs will use HTTP or HTTPS.
-        :type: str
-        :default: Value from ``settings_defaults.API_SCHEMA``
-        :raises SmarterConfigurationError: If the value is not 'http' or 'https'.
-        :examples: ["http", "https"],
-        """
-        if self.environment_is_local:
-            return "http"
-        else:
-            return settings_defaults.API_SCHEMA
+        unique_hosts = sorted(set(hosts))
+        # the settings are frozen: this is the one place that completes a field after validation.
+        object.__setattr__(self, "allowed_hosts", unique_hosts)
+        return self
 
     @cached_property
     def environment_cdn_domain(self) -> str:
@@ -110,7 +162,7 @@ class DomainSettings(PlatformSettings):
         """
         if self.environment_is_local:
             # returns cdn.local.example.com
-            return f"cdn.{SmarterEnvironments.LOCAL}.{self.root_domain}"
+            return f"cdn.{SmarterEnvironments.LOCAL}.{self.platform_root_domain}"
         return f"cdn.{self.environment_platform_domain}"
 
     @cached_property
@@ -157,9 +209,9 @@ class DomainSettings(PlatformSettings):
             'cdn.example.com'
         See Also:
             - smarter_settings.platform_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return f"cdn.{self.root_domain}"
+        return f"cdn.{self.platform_root_domain}"
 
     @cached_property
     def root_cdn_url(self) -> str:
@@ -194,9 +246,9 @@ class DomainSettings(PlatformSettings):
 
         See Also:
             - smarter_settings.platform_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return f"{self.platform_subdomain}.{self.root_domain}"
+        return f"{self.platform_subdomain}.{self.platform_root_domain}"
 
     @cached_property
     def root_proxy_domain(self) -> str:
@@ -210,7 +262,7 @@ class DomainSettings(PlatformSettings):
             >>> print(smarter_settings.root_proxy_domain)
             'local.example.com'
         """
-        return f"{SmarterEnvironments.LOCAL}.{self.root_domain}"
+        return f"{SmarterEnvironments.LOCAL}.{self.platform_root_domain}"
 
     @cached_property
     def platform_url(self) -> str:
@@ -320,7 +372,7 @@ class DomainSettings(PlatformSettings):
             - SmarterEnvironments()
             - smarter_settings.platform_subdomain
             - smarter_settings.api_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
             - smarter_settings.root_api_domain
             - smarter_settings.root_platform_domain
         """
@@ -336,16 +388,16 @@ class DomainSettings(PlatformSettings):
         ]
         domains = set()
         # Add root domains
-        domains.add(self.root_domain)
+        domains.add(self.platform_root_domain)
         domains.add(self.root_api_domain)
         domains.add(self.root_platform_domain)
         # Add environment/subdomain combinations
         for subdomain in subdomains:
             # example: platform.example.com, api.platform.example.com
-            domains.add(f"{subdomain}.{self.root_domain}")
+            domains.add(f"{subdomain}.{self.platform_root_domain}")
             for environment in environments[1:]:  # skip None for env-prefixed
                 # example: alpha.platform.example.com, alpha.api.platform.example.com
-                domains.add(f"{environment}.{subdomain}.{self.root_domain}")
+                domains.add(f"{environment}.{subdomain}.{self.platform_root_domain}")
         return sorted(domains)
 
     @cached_property
@@ -383,9 +435,9 @@ class DomainSettings(PlatformSettings):
             'smarter'
 
         See Also:
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return self.root_domain.split(".")[0]
+        return self.platform_root_domain.split(".")[0]
 
     @cached_property
     def function_calling_identifier_prefix(self) -> str:
@@ -451,7 +503,7 @@ class DomainSettings(PlatformSettings):
             - smarter_settings.environment_platform_domain
             - smarter_settings.api_subdomain
         """
-        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
+        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.platform_root_domain}"
 
     @cached_property
     def proxy_api_domain(self) -> str:
@@ -568,7 +620,7 @@ class DomainSettings(PlatformSettings):
             In local environments, this returns 'alpha.platform.example.com' as a proxy.
 
         See Also:
-            - smarter_settings.shared_resource_identifier
+            - smarter_settings.platform_shared_resource_identifier
             - smarter_settings.root_platform_domain
             - SmarterEnvironments()
             - smarter_settings.environment_platform_domain

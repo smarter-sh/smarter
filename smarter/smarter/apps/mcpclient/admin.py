@@ -20,7 +20,7 @@ from .models import (
     MCPClient,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class MCPClientAdmin(SmarterCustomerModelAdmin):

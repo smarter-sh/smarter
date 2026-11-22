@@ -59,14 +59,14 @@ web console.
     # manually configure logging to use RedisLogHandler
     # NOTE: this is technically possible but not a great idea.
     #
-    import logging
+    from smarter.lib import logging
     from smarter.lib.logging.redis_log_handler import RedisLogHandler, user_id_context, job_id_factory
 
     # Set the current job ID (typically in a Celery task or similar context)
     user_id_context.set(job_id_factory("task"))
 
     # Configure the logger
-    logger = logging.getLogger("my_logger")
+    logger = logging.getSmarterLogger("my_logger")
     logger.setLevel(logging.INFO)
     logger.addHandler(RedisLogHandler())
 
@@ -543,7 +543,7 @@ class RedisLogHandler(logging.Handler):
 
     publishing_enabled: Optional[bool] = None
     """
-    Whether log records are published at all: ``smarter_settings.enable_dashboard_server_logs``.
+    Whether log records are published at all: ``smarter_settings.app_dashboard_server_logs_enable``.
 
     When it is off, the dashboard refuses to stream logs, so publishing them would only cost
     Redis commands. It is read on the first record, once Django's settings exist, and kept.
@@ -556,7 +556,7 @@ class RedisLogHandler(logging.Handler):
         The setting is read once, on the first record after Smarter's settings can be
         imported. A record logged before then is not published.
 
-        :returns: ``smarter_settings.enable_dashboard_server_logs``.
+        :returns: ``smarter_settings.app_dashboard_server_logs_enable``.
         """
         if self.publishing_enabled is not None:
             return self.publishing_enabled
@@ -564,7 +564,7 @@ class RedisLogHandler(logging.Handler):
             # pylint: disable=import-outside-toplevel
             from smarter.common.conf import smarter_settings
 
-            enabled = bool(smarter_settings.enable_dashboard_server_logs)
+            enabled = bool(smarter_settings.app_dashboard_server_logs_enable)
         # pylint: disable=broad-except
         except Exception:
             # Smarter's settings are still being imported. Ask again on the next record.

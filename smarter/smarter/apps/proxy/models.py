@@ -236,7 +236,7 @@ class Proxy(MetaDataWithOwnershipModel):
         """
         The path of the Proxy's passthrough endpoint, e.g. ``/api/v1/proxy/openai/``.
 
-        Empty if the endpoints are disabled, with ``SMARTER_ENABLE_PROXY=false``.
+        Empty if the endpoints are disabled, with ``SMARTER_APP_PROXY_ENABLE=false``.
         """
         # pylint: disable=C0415
         from smarter.apps.proxy.api.v1.urls import ProxyApiV1ReverseViews

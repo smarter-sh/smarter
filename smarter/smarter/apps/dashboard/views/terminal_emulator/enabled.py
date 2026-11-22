@@ -24,10 +24,10 @@ def server_logs_enabled() -> bool:
     :attr:`SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS`, is active. Otherwise the
     stream would stay empty.
 
-    :returns: True if ``smarter_settings.enable_dashboard_server_logs`` is set and the switch is active.
+    :returns: True if ``smarter_settings.app_dashboard_server_logs_enable`` is set and the switch is active.
     :rtype: bool
     """
-    return smarter_settings.enable_dashboard_server_logs and switch_is_active(
+    return smarter_settings.app_dashboard_server_logs_enable and switch_is_active(
         SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_SERVER_LOGS
     )
 
@@ -62,10 +62,10 @@ def terminal_enabled() -> bool:
     :func:`require_terminal` and
     :class:`smarter.apps.dashboard.views.terminal_emulator.api.consumers.TerminalConsumer`.
 
-    :returns: True if ``smarter_settings.enable_web_console_terminal`` is set.
+    :returns: True if ``smarter_settings.app_dashboard_web_console_terminal_enable`` is set.
     :rtype: bool
     """
-    return smarter_settings.enable_web_console_terminal
+    return smarter_settings.app_dashboard_web_console_terminal_enable
 
 
 def require_terminal(view: Callable[..., HttpResponseBase]) -> Callable[..., HttpResponseBase]:

@@ -48,3 +48,12 @@ Choose the installation method that best suits your needs.
    installation/quick-start
    installation/production-deployment
    ../smarter-framework/guides/developer-setup
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   prerequisites
+   cloud-infrastructure
+   updates
+   backup-and-restore

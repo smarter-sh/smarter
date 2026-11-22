@@ -18,7 +18,7 @@ from :func:`listview_cache_generation` that changes when it is invalidated:
   alter what any list shows, such as a user's profile, an account, or a resource's tags or annotations.
 
 A new generation leaves the previous pages unread, until they expire after
-``smarter_settings.listview_cache_expiration`` seconds. So invalidating a list is a single cache
+``smarter_settings.subsystem_cache_listview_expiration`` seconds. So invalidating a list is a single cache
 delete, however many users and pages it has.
 
 .. code-block:: python
@@ -137,7 +137,7 @@ class OwnershipManager(Protocol):
         ...
 
 
-@cache_results(timeout=smarter_settings.listview_cache_expiration)
+@cache_results(timeout=smarter_settings.subsystem_cache_listview_expiration)
 def listview_cache_generation(kind: str, user_profile_id: Optional[int] = None) -> int:  # pylint: disable=W0613
     """
     Return the current generation of a list's cached pages.
@@ -243,7 +243,7 @@ class ListviewPageRequest(HttpRequest):
         return self._listview_scheme
 
 
-@cache_results(timeout=smarter_settings.listview_cache_expiration)
+@cache_results(timeout=smarter_settings.subsystem_cache_listview_expiration)
 def cached_listview_page(  # pylint: disable=W0613,R0913,R0917
     view: str,
     kind_generation: int,

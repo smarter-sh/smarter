@@ -35,7 +35,7 @@ from smarter.apps.mcpserver.services.repositories import (
     project_blog,
     project_repositories,
 )
-from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
+from smarter.common.conf import smarter_settings
 
 PUBLIC_ENDPOINT_NAME = "smarter-project"
 """
@@ -180,7 +180,7 @@ class PublicEndpoint(MCPEndpointBase):
             title=title,
             version=SERVER_VERSION,
             description=description,
-            website_url=SMARTER_PROJECT_WEBSITE_URL,
+            website_url=str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
         )
         return info
 

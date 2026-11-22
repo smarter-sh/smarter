@@ -8,6 +8,7 @@ the broker methods that those commands don't reach.
 import os
 
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.apps.prompt.manifest.brokers.prompt import (
     PromptSerializer,
     SAMPromptBroker,
@@ -15,7 +16,6 @@ from smarter.apps.prompt.manifest.brokers.prompt import (
 )
 from smarter.apps.prompt.manifest.models.prompt.model import SAMPrompt
 from smarter.apps.prompt.models import Prompt
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
 from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotFound,

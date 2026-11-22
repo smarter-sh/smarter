@@ -16,7 +16,7 @@ from .models import (
     Orchestrator,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class OrchestratorAdmin(SmarterCustomerModelAdmin):

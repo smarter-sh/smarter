@@ -7,7 +7,7 @@ The service layer manages node groups only through :class:`NodeGroupBackend`, so
 tested with :class:`InMemoryNodeGroupBackend`, and so that another cloud is a new backend.
 
 :class:`EKSNodeGroupBackend`, the default, manages EKS managed node groups of the platform's
-cluster, ``smarter_settings.aws_eks_cluster_name``:
+cluster, ``smarter_settings.subsystem_k8s_cluster_name``:
 
 - It creates a node group with the EKS API, starting at 0 nodes, and scales it up by raising
   its desired size.
@@ -15,8 +15,8 @@ cluster, ``smarter_settings.aws_eks_cluster_name``:
   and lowering its desired size, as the Kubernetes Cluster Autoscaler does. Lowering the desired
   size alone would let the Auto Scaling group choose which instance to terminate, which could
   be a busy one.
-- A node group's IAM role and subnets are ``smarter_settings.llmhost_node_role_arn`` and
-  ``smarter_settings.llmhost_node_subnet_ids`` if they are set, else those of the cluster's
+- A node group's IAM role and subnets are ``smarter_settings.app_llmhost_node_role_arn`` and
+  ``smarter_settings.app_llmhost_node_subnet_ids`` if they are set, else those of the cluster's
   first managed node group that Smarter did not create, i.e. the one that Smarter runs on.
 
 Smarter's IAM identity requires: ``eks:CreateNodegroup``, ``eks:DescribeNodegroup``,
@@ -127,7 +127,7 @@ class EKSNodeGroupBackend(NodeGroupBackend):
     """EKS managed node groups of the platform's cluster."""
 
     def __init__(self, cluster_name: Optional[str] = None, eks_client=None, autoscaling_client=None):
-        self.cluster_name = cluster_name or smarter_settings.aws_eks_cluster_name
+        self.cluster_name = cluster_name or smarter_settings.subsystem_k8s_cluster_name
         self._eks = eks_client
         self._autoscaling = autoscaling_client
         self._defaults: Optional[tuple[str, list[str]]] = None
@@ -219,15 +219,15 @@ class EKSNodeGroupBackend(NodeGroupBackend):
         """The node role and subnets of new node groups: from settings, else the platform's node group."""
         if self._defaults is not None:
             return self._defaults
-        role = smarter_settings.llmhost_node_role_arn
-        subnets = list(smarter_settings.llmhost_node_subnet_ids or [])
+        role = smarter_settings.app_llmhost_node_role_arn
+        subnets = list(smarter_settings.app_llmhost_node_subnet_ids or [])
         if not role or not subnets:
             names = self._call("eks:ListNodegroups", self.eks.list_nodegroups, clusterName=self.cluster_name)
             platform = [name for name in names.get("nodegroups", []) if not name.startswith("smarter-")]
             if not platform:
                 raise LLMHostComputeError(
                     f"EKS cluster {self.cluster_name} has no node group to copy the node role and subnets from. "
-                    "Set SMARTER_LLMHOST_NODE_ROLE_ARN and SMARTER_LLMHOST_NODE_SUBNET_IDS."
+                    "Set SMARTER_APP_LLMHOST_NODE_ROLE_ARN and SMARTER_APP_LLMHOST_NODE_SUBNET_IDS."
                 )
             nodegroup = self._call(
                 "eks:DescribeNodegroup",

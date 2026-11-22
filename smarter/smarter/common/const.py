@@ -1,74 +1,32 @@
 # pylint: disable=E1101
-"""A module containing constants for the OpenAI API."""
+"""
+Constants of the platform's code.
+
+This is for constants that are highly unlikely to change.
+Anything else belongs in ``smarter_settings`` and/or Django settings, who's values are
+substantially derived from the Helm chart and environment variables.
+"""
 
 import importlib.util
 import os
 from pathlib import Path
 from typing import Dict
 
-import hcl2
-
-from smarter.lib import logging
-
-logger = logging.getLogger(__name__)
-
 SMARTER_LOCAL_PORT = 9357
-SMARTER_ADMIN_USERNAME = "admin"
 SMARTER_ACCOUNT_NUMBER = "3141-5926-5359"
 SMARTER_API_SUBDOMAIN = "api"
-SMARTER_PLATFORM_DEFAULT_SUBDOMAIN = "platform"
-SMARTER_PRODUCT_NAME = "The Smarter Project"
-SMARTER_APP_NAME = "Smarter"
-SMARTER_PRODUCT_DESCRIPTION = "An open source, no-code AI authoring platform designed for instructional use."
-SMARTER_EXAMPLE_LLM_CLIENT_NAME = "example"
-SMARTER_CUSTOMER_SUPPORT_EMAIL = "lpm0073@gmail.com"
-SMARTER_CONTACT_EMAIL = "lpm0073@gmail.com"
-SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (617) 834-6172"
-SMARTER_PROJECT_ROOT_DOMAIN = "smarter.sh"
-SMARTER_PROJECT_WEBSITE_URL = f"https://{SMARTER_PROJECT_ROOT_DOMAIN}"
-SMARTER_ORGANIZATION_WEBSITE_URL = "https://lawrencemcdaniel.com"  # FIX NOTE: set this to the non-profit organization website URL when that is set up. For now, it points to my personal website.
-SMARTER_ORGANIZATION_NAME = "Lawrence P. McDaniel"  # FIX NOTE: set this to the non-profit organization website URL when that is set up. For now, it points to my personal website.
-SMARTER_PROJECT_CDN_URL = f"https://cdn.{SMARTER_PROJECT_ROOT_DOMAIN}"
-SMARTER_PROJECT_DOCS_URL = f"https://docs.{SMARTER_PROJECT_ROOT_DOMAIN}"
-SMARTER_PROJECT_BLOG_URL = f"https://blog.{SMARTER_PROJECT_ROOT_DOMAIN}"
-SMARTER_PROJECT_REPOSITORY_URL = (
-    "https://github.com/smarter-sh/smarter"  # the default of smarter_settings.repository_url
-)
-SMARTER_BUG_REPORT_URL = "https://github.com/smarter-sh/smarter/issues."
 
-# The following are used in the React app
-# to store the llmclient prompt session key and debug mode settings
-# as browser cookies. The React app has constants
-# for these values as well which should be kept in sync.
-SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 
 # This is a custom attribute that can be added to the request
 # to indicate that the request is an internal API request. This
 # is used to bypass DRF authentication and permission checks in the API views.
 SMARTER_IS_INTERNAL_API_REQUEST = "smarter_is_internal_api_request"
 
-# Default maximum lifetime for Smarter API keys in days.
-SMARTER_API_KEY_MAX_LIFETIME_DAYS = 365 * 3  # 3 years
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
 REPO_ROOT = str(Path(PYTHON_ROOT).parent)  # ./
-TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)  # ./
-
-TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
-if not os.path.exists(TERRAFORM_TFVARS):
-    TERRAFORM_TFVARS = os.path.join(PROJECT_ROOT, "terraform.tfvars")
-
-IS_USING_TFVARS = False
-
-try:
-    with open(TERRAFORM_TFVARS, encoding="utf-8") as f:
-        TFVARS = hcl2.load(f)  # type: ignore
-    IS_USING_TFVARS = True
-except FileNotFoundError:
-    logger.debug("No terraform.tfvars file found. Using default values.")
 
 
 def load_version() -> Dict[str, str]:
@@ -108,6 +66,3 @@ class SmarterHttpMethods:
     PATCH = "PATCH"
     DELETE = "DELETE"
     all = [GET, POST, PUT, PATCH, DELETE]
-
-
-LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]

@@ -13,15 +13,14 @@ the configuration values. The configuration values are initialized according to 
 prioritization sequence:
 
     1. Settings constructor
-    2. `.env` file. Loads any variable with ``SMARTER_`` prefix.
-    3. environment variables. Loads any variable with ``SMARTER_`` prefix.
-    4. default values defined in settings_defaults.
+    2. environment variables, which include the `.env` file's: ``SMARTER_<FIELD>``.
+    3. each field's default.
 
 .. note::
 
-    You can also set any Django settings value from environment variables
-    and/or `.env` file variables. For example, to set the Django
-    ``SECRET_KEY`` setting, you can set the environment variable ``SECRET_KEY=MYSECRET``.
+    You can also set any Django setting from a ``DJANGO_<SETTING>`` environment variable, or `.env`
+    file variable, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``: see :mod:`smarter.settings.user`. The
+    secret key is ``DJANGO_SECRET_KEY``, which ``smarter_settings.django_secret_key`` reads and validates.
 
 .. warning::
 
@@ -29,16 +28,15 @@ prioritization sequence:
     sits upstream of Django and is intended to be used independently of Django.
 """
 
-import logging
 from functools import lru_cache
-from typing import Any
+from typing import Any, get_args
 
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from smarter.common.conf.const import DEFAULT_ROOT_DOMAIN
-from smarter.common.conf.defaults import settings_defaults
+from smarter.common.conf.env import unquoted
+from smarter.common.conf.settings.app_keys import AppKeySettings
 from smarter.common.conf.settings.aws import AwsSettings
 from smarter.common.conf.settings.branding import BrandingSettings
 from smarter.common.conf.settings.cache import CacheSettings
@@ -52,18 +50,20 @@ from smarter.common.conf.settings.platform import PlatformSettings
 from smarter.common.conf.settings.project import ProjectSettings
 from smarter.common.conf.settings.security import SecuritySettings
 from smarter.common.conf.settings.tasks import TaskSettings
+from smarter.common.conf.util import field_default
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.processes import is_first_worker
 from smarter.common.utils import get_diagnostics, recursive_sort_dict
-from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
+from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
-logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods,too-many-ancestors
 class Settings(
+    AppKeySettings,
     DomainSettings,
     EmailSettings,
     AwsSettings,
@@ -104,39 +104,35 @@ class Settings(
     - Sensitive values are stored as pydantic SecretStr types.
     - smarter_settings values are initialized according to the following prioritization sequence:
         1. constructor. This is discouraged. prefer to use .env file or environment variables.
-        2. `.env` file. When sourced, these override existing environment variables.
-        3. environment variables.
-        4. settings_defaults
+        2. environment variables, and the `.env` file's: ``SMARTER_<FIELD>``.
+        3. each field's default, on the field.
     - The dump property returns a dictionary of all configuration values.
     - smarter_settings values should be accessed via the smarter_settings singleton instance when possible.
     """
 
     model_config = SettingsConfigDict(
-        strict=True,
+        env_prefix="SMARTER_",
+        enable_decoding=False,
+        populate_by_name=True,
         frozen=True,
-        # env_file=".env",
-        # env_prefix="SMARTER_",
         extra="forbid",
         validate_default=True,
     )
     """
     Pydantic v2 Configuration class for the Settings model.
 
-    This configuration enforces strict type checking,
-    immutability, and environment variable loading behavior for the Settings class.
     see https://docs.pydantic.dev/latest/concepts/pydantic_settings/
 
-    .. note::
+    Each field is read from the environment variable ``SMARTER_<FIELD>``, e.g. ``debug_mode`` from
+    ``SMARTER_DEBUG_MODE``. The `.env` file is loaded into the environment first, by
+    :mod:`smarter.common.conf.const`. A field that keeps the name that other tools use, e.g.
+    ``aws_region`` from ``AWS_REGION``, names it with its ``validation_alias``.
 
-        We're not currently using env_file and env_prefix here because we're
-        handling that in settings_defaults for backward compatibility. There
-        are type conversions and defaulting behavior in the legacy code
-        that is slightly more robust than in Pydantic v2.
-
-    :param strict: Enforce strict type checking for all fields.
+    :param env_prefix: The prefix of every field's environment variable.
+    :param enable_decoding: False: a list is a comma-separated string, which the field's validator
+        splits, not JSON.
+    :param populate_by_name: The constructor takes a field's name as well as its alias.
     :param frozen: Make the settings instance immutable after instantiation.
-    :param env_file: Load environment variables from the specified .env file.
-    :param env_prefix: Prefix to use for environment variables.
     :param extra: Forbid extra fields not defined in the model.
     :param validate_default: Validate default values defined in the model.
 
@@ -144,6 +140,49 @@ class Settings(
     """
 
     _ready: bool
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def secret_from_string(cls, v: object, info: ValidationInfo) -> object:
+        """
+        Unquote a string, and wrap a secret's in a ``SecretStr``, before any of its field's validators see it.
+
+        An environment variable is always a string. Its surrounding quotes are stripped
+        (:func:`~smarter.common.conf.env.unquoted`), since ``make`` exports ``.env``'s lines with them.
+        A secret is masked from the moment it is read, so that no validator, error message or log can
+        show it.
+
+        :param v: The value to validate.
+        :param info: Pydantic's validation info, which names the field.
+        :returns: A ``SecretStr`` for a secret's string, the unquoted string otherwise, or the value
+            itself if it is not a string.
+        """
+        if not isinstance(v, str):
+            return v
+        v = unquoted(v)
+        field_name = str(info.field_name)
+        field = cls.model_fields[field_name]
+        if field.annotation is SecretStr or SecretStr in get_args(field.annotation):
+            return SecretStr(v)
+        return v
+
+    def field_defaults(self) -> SmarterDictType:
+        """
+        Return each field's declared default, for the settings dump.
+
+        A default that a factory makes, e.g. a generated key, is not made: it is listed as its
+        factory's name.
+
+        :returns: The defaults, by field name.
+        """
+        defaults: SmarterDictType = {}
+        for name, field in type(self).model_fields.items():
+            if field.default_factory is not None:
+                factory_name = getattr(field.default_factory, "__name__", "factory")
+                defaults[name] = f"<{factory_name}()>"
+                continue
+            defaults[name] = field.default
+        return defaults
 
     def __init__(self, **data: Any):
         super().__init__(**data)
@@ -196,7 +235,8 @@ class Settings(
         :type: bool
         """
         retval = True
-        if self.root_domain == DEFAULT_ROOT_DOMAIN and not self.environment_is_local:
+        default_root_domain = field_default(type(self), "platform_root_domain")
+        if self.platform_root_domain == default_root_domain and not self.environment_is_local:
             print(
                 SmarterFormattedText.text(
                     "\n"
@@ -231,7 +271,7 @@ class Settings(
         self._ready = retval
         return self._ready
 
-    def require_secret_key(self) -> None:
+    def require_django_secret_key(self) -> None:
         """
         Refuse to run outside of the local environment without a Django secret key.
 
@@ -244,16 +284,16 @@ class Settings(
             environment is not local.
 
         See Also:
-            - smarter_settings.secret_key_is_set
+            - smarter_settings.django_secret_key_is_set
         """
-        if self.secret_key_is_set:
+        if self.django_secret_key_is_set:
             return
         if not self.environment_is_local:
             raise SmarterConfigurationError(
-                f"SECRET_KEY is not set. It is required in the {self.environment} environment. "
-                "Set SMARTER_SECRET_KEY to a long (50+ characters), random string that is the same for every pod."
+                f"DJANGO_SECRET_KEY is not set. It is required in the {self.environment} environment. "
+                "Set DJANGO_SECRET_KEY to a long (50+ characters), random string that is the same for every pod."
             )
-        logger.warning("SECRET_KEY is not set. Using a randomized value.")
+        logger.warning("DJANGO_SECRET_KEY is not set. Using a randomized value.")
 
     def to_json(self) -> SmarterDictType:
         """
@@ -288,7 +328,7 @@ class Settings(
             },
         }
         if self.dump_defaults:
-            retval["settings_defaults"] = settings_defaults.to_dict()
+            retval["defaults"] = self.field_defaults()
 
         if self.is_using_dotenv_file:
             retval["environment"]["dotenv"] = self.environment_variables

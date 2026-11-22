@@ -188,7 +188,7 @@ These commands are safe to run without asking: their output (`smarter/staticfile
 
 ## Static files on the CDN
 
-With `SMARTER_STATIC_FILES_ON_CDN` on (AWS only, off locally), `STATIC_URL` is `cdn.<platform>/static/`,
+With `SMARTER_PLATFORM_STATIC_FILES_ON_CDN` on (AWS only, off locally), `STATIC_URL` is `cdn.<platform>/static/`,
 and `ConsoleAppView` rewrites the console page's `/static/` urls to it once `initialize_platform` has
 uploaded that build (`smarter.lib.django.static_storage`, `mark_console_uploaded()`). Until then the
 pods serve it. So the console's scripts never hard-code `/static/` (smarter-console's rule). Never

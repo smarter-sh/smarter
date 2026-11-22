@@ -245,7 +245,7 @@ In the web console, the **Delete** button is disabled for resources you can't de
 ## Upgrading
 
 - **New infrastructure permissions.** LLMHost needs IAM permissions to create, resize and delete EKS node groups, and GPU servers need the NVIDIA device plugin. If you don't plan to self-host models, you can skip this.
-- **Optional settings:** `SMARTER_LLMHOST_NODE_ROLE_ARN` and `SMARTER_LLMHOST_NODE_SUBNET_IDS` set the IAM role and subnets of new node groups. By default, they are copied from the node group that Smarter runs on.
+- **Optional settings:** `SMARTER_APP_LLMHOST_NODE_ROLE_ARN` and `SMARTER_APP_LLMHOST_NODE_SUBNET_IDS` set the IAM role and subnets of new node groups. By default, they are copied from the node group that Smarter runs on.
 - **Vectorstore credentials:** set `PINECONE_API_KEY`, `QDRANT_CLOUD_URL` and `QDRANT_CLOUD_API_KEY` to use the managed backends.
 - **If you ran a pre-release:** the `proxy` and `vectorstore` migrations were replaced by a single `0001_initial`. If you applied the old migrations from a v0.16 alpha, run `manage.py migrate proxy zero` and `manage.py migrate vectorstore zero` before you upgrade.
 - **Existing MariaDB tables are not converted to `utf8mb4`.** If one of your columns needs 4-byte characters, such as a SkillPlugin's document, convert it by hand.

@@ -151,6 +151,19 @@ Read the PNG before you finish: text that runs past a card's edge, or a badge
 that touches it, is easy to miss in the SVG source. Hand-edit the script, never
 the SVG.
 
+The settings diagram, `docs/source/_static/settings-data-flow.svg`, at the top of
+`docs/source/smarter-platform/configuration.rst`, shows how the settings are
+initialized: from the sources (GitHub Actions secrets, Kubernetes Secrets, the
+Helm chart, `.env`, the user settings file), through the environment and
+`smarter_settings`, to Django's settings. [scripts/settings-diagram.py](scripts/settings-diagram.py)
+draws it. Update it when that flow changes, e.g. a new source, or a settings
+module, and read the rendered PNG the same way:
+
+```console
+skills/smarter-sphinx-docs/scripts/settings-diagram.py
+rsvg-convert -w 1875 docs/source/_static/settings-data-flow.svg -o <scratchpad>/settings.png
+```
+
 - **List only what's published.** Check each package on its registry before you
   list it there (`registry.npmjs.org/<name>`, `pypi.org/pypi/<name>/json`,
   `proxy.golang.org/<module>/@latest`, Docker Hub's and Artifact Hub's APIs).

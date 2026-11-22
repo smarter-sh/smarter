@@ -3,12 +3,12 @@
 
 Usage::
 
-    python3 -I scripts/run_test_shards.py                          # 8 shards, the whole suite
+    python3 -I scripts/run_test_shards.py                          # as many shards as Docker has room for
     python3 -I scripts/run_test_shards.py --shards 4
-    python3 -I scripts/run_test_shards.py --labels smarter.apps.account smarter.apps.secret
+    python3 -I scripts/run_test_shards.py --labels smarter.apps.account.tests.test_activation   # one shard
     python3 -I scripts/run_test_shards.py --keep                   # leave the stacks running afterwards
 
-``make test-sharded`` (``SHARDS=<n>``) runs it. CI splits the suite the same way, eight shards on eight runners
+``make docker-test`` runs it (``SHARDS=<n>`` to choose the number, ``LABELS=<dotted paths>`` for part of the suite). CI splits the suite the same way, eight shards on eight runners
 (``SMARTER_TEST_SHARD``, ``smarter.lib.unittest.runner``). Locally the shards can't share one stack: the tests
 write real rows without rollback, sweep every test account in teardown, clear the shared Redis cache, and send
 requests and Celery tasks to the one dev server and its workers. So each shard gets its own Compose project,
@@ -26,11 +26,18 @@ Steps:
    shard's output goes to ``<out>/shard-<n>.log``.
 4. Print each shard's result and every failing test, then stop and remove the stacks, unless ``--keep``.
 
-It needs the ``smarter`` image (``make build``) and about 4 GB of Docker's memory per shard. It exits with 1
-when a shard fails, or ends without a result, e.g. when Docker ran out of memory.
+Without ``--shards``, it runs as many shards as Docker has room for (:func:`ideal_shards`): ``docker info``
+gives the CPUs and memory of Docker's VM, and each shard needs about MEMORY_PER_SHARD_BYTES of memory and
+CPUS_PER_SHARD CPUs, after DEV_STACK_MEMORY_BYTES and DEV_STACK_CPUS for the dev stack, whose MariaDB the run
+reads. Memory is usually the limit: a shard that runs out of it is killed and ends without a result.
+
+It needs the ``smarter`` image (``make build``). It exits with 1 when a shard fails, or ends without a result,
+e.g. when Docker ran out of memory.
 """
 
 import argparse
+import json
+import math
 import re
 import subprocess
 import sys
@@ -51,6 +58,26 @@ APPLICATIONS = ["smarter-api", "smarter-worker", "smarter-worker-infrastructure"
 WORKDIR = "/home/smarter_user/smarter"
 READY_TIMEOUT_SECONDS = 300
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
+GIB = 1024**3
+DEFAULT_LABELS = ["smarter"]
+
+# What one shard needs, from docker stats sampled every 10 seconds through a 12-shard run of the whole suite
+# (7,939 tests, 5.6 minutes) on Docker Desktop with 16 CPUs and 47.2 GiB. A shard's five containers peaked at
+# 3.73 GiB together, and averaged at most 0.86 CPU: the api's test process is capped at one CPU by
+# docker-compose.shard.yml, and spends part of its time waiting on MariaDB and Redis.
+MEMORY_PER_SHARD_BYTES = int(3.75 * GIB)
+CPUS_PER_SHARD = 1.0
+# Left for the dev stack (its api, two workers, Beat, MariaDB and Redis used 3.04 GiB in the same run).
+DEV_STACK_MEMORY_BYTES = 3 * GIB
+DEV_STACK_CPUS = 1.0
+
+
+@dataclass
+class DockerResources:
+    """The CPUs and memory that Docker's containers can use, from ``docker info``."""
+
+    cpus: int
+    memory_bytes: int
 
 
 @dataclass
@@ -112,6 +139,65 @@ def parse_log(shard: int, text: str) -> ShardResult:
     if result.ran is None:
         result.ok = False
     return result
+
+
+def docker_resources() -> DockerResources:
+    """
+    Ask Docker how many CPUs and how much memory its containers can use.
+
+    On Docker Desktop these are the VM's, as set in its Resources settings, not the host's.
+
+    :returns: Docker's CPUs and memory.
+    :raises RuntimeError: When Docker doesn't answer, e.g. when it isn't running.
+    """
+    completed = run(["docker", "info", "--format", "{{json .}}"])
+    info = json.loads(completed.stdout)
+    cpus = int(info["NCPU"])
+    memory_bytes = int(info["MemTotal"])
+    return DockerResources(cpus=cpus, memory_bytes=memory_bytes)
+
+
+def ideal_shards(resources: DockerResources) -> int:
+    """
+    The number of shards that Docker has room for: the fewer of what its memory allows and what its CPUs allow.
+
+    :param resources: Docker's CPUs and memory.
+    :returns: The number of shards, 1 or more.
+    """
+    memory_for_shards = resources.memory_bytes - DEV_STACK_MEMORY_BYTES
+    shards_by_memory = math.floor(memory_for_shards / MEMORY_PER_SHARD_BYTES)
+    cpus_for_shards = resources.cpus - DEV_STACK_CPUS
+    shards_by_cpu = math.floor(cpus_for_shards / CPUS_PER_SHARD)
+    shards = min(shards_by_memory, shards_by_cpu)
+    return max(shards, 1)
+
+
+def describe_resources(resources: DockerResources, shards: int) -> str:
+    """A line that says what Docker has and how many shards that makes, e.g. for the run's first output."""
+    memory_gib = resources.memory_bytes / GIB
+    return f"Docker has {resources.cpus} CPUs and {memory_gib:.1f} GiB of memory: room for {shards} shards."
+
+
+def choose_shards(requested: int | None, labels: list[str]) -> int:
+    """
+    The number of shards to run: the one asked for, else one for part of the suite, else what Docker fits.
+
+    Part of the suite, e.g. the one test module being worked on, runs in one shard, because starting a stack
+    takes longer than most modules' tests.
+
+    :param requested: The ``--shards`` option, or None.
+    :param labels: The ``--labels`` option: what to test.
+    :returns: The number of shards.
+    :raises RuntimeError: When none was asked for, the whole suite runs, and Docker doesn't answer.
+    """
+    if requested is not None:
+        return requested
+    if labels != DEFAULT_LABELS:
+        return 1
+    resources = docker_resources()
+    shards = ideal_shards(resources)
+    print(describe_resources(resources, shards))
+    return shards
 
 
 def run(command: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -233,15 +319,30 @@ def main(argv: list[str] | None = None) -> int:
     Returns the exit code.
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--shards", type=int, default=10, help="how many shards, each in its own stack (default 10)")
-    parser.add_argument("--labels", nargs="+", default=["smarter"], help="what to test (default: smarter)")
+    parser.add_argument(
+        "--shards",
+        type=int,
+        default=None,
+        help="how many shards, each in its own stack (default: as many as Docker's CPUs and memory have room for)",
+    )
+    parser.add_argument(
+        "--labels",
+        nargs="+",
+        default=DEFAULT_LABELS,
+        help="what to test, in one shard unless --shards says otherwise (default: smarter, the whole suite)",
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="where the logs go (default .test-shards/)")
     parser.add_argument("--keep", action="store_true", help="leave the stacks running afterwards")
     options = parser.parse_args(argv)
-    if options.shards < 1:
+    if options.shards is not None and options.shards < 1:
         parser.error("--shards must be 1 or more")
+    try:
+        shard_count = choose_shards(options.shards, options.labels)
+    except RuntimeError as e:
+        print(e, file=sys.stderr)
+        return 1
 
-    shards = list(range(1, options.shards + 1))
+    shards = list(range(1, shard_count + 1))
     out: Path = options.out
     out.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
@@ -253,7 +354,7 @@ def main(argv: list[str] | None = None) -> int:
             list(pool.map(lambda shard: start_shard(shard, dump), shards))
         print(f"Running {len(shards)} shards of {' '.join(options.labels)}, logs in {out}/ ...")
         with ThreadPoolExecutor(max_workers=len(shards)) as pool:
-            results = list(pool.map(lambda shard: run_shard(shard, options.shards, options.labels, out), shards))
+            results = list(pool.map(lambda shard: run_shard(shard, shard_count, options.labels, out), shards))
     except RuntimeError as e:
         print(e, file=sys.stderr)
         results = None
