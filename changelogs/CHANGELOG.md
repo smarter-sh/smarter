@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.14-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.3...v0.46.14-alpha.4) (2026-11-22)
+
+### Bug Fixes
+
+* **templates:** link the web app manifest only on hosts whose urlconf serves it ([e452bf2](https://github.com/smarter-sh/smarter/commit/e452bf275a49ec7cfffa0cfcd6257f0f6e20c3a3)), closes [#1032](https://github.com/smarter-sh/smarter/issues/1032)
+
 ## [0.46.14-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.2...v0.46.14-alpha.3) (2026-11-22)
 
 ### Bug Fixes
