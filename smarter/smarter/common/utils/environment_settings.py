@@ -152,4 +152,4 @@ def log_environment_variables(logger: SmarterDebugLogger, settings: BaseModel, g
     :param group: The group, e.g. ``APP_LLMCLIENT``.
     """
     for variable, value in get_environment_variables(settings, group).items():
-        logger.debug("%s%s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT, variable, value, stacklevel=2)
+        logger.debug("%s - %s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT, variable, value, stacklevel=2)
