@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.13-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.12...v0.46.13-alpha.1) (2026-11-22)
+
+### Bug Fixes
+
+* **account:** keep the console language and show the welcome tour once ([d9ff141](https://github.com/smarter-sh/smarter/commit/d9ff1416583df1f0312555327dcc6dba547d1588))
+* **dashboard:** serve the web app manifest from the platform's origin ([58fc2a0](https://github.com/smarter-sh/smarter/commit/58fc2a0bede55246f542c02a6791d5b1836bb7b4))
+
 ## [0.46.12](https://github.com/smarter-sh/smarter/compare/v0.46.11...v0.46.12) (2026-11-21)
 
 ### Bug Fixes
