@@ -65,14 +65,14 @@ Compare the run's commit with the working tree: `git log --oneline -5` and `git 
 
 ## 4. Reproduce, fix, verify
 
-Run the failed test by its dotted name in the smarter-api container (see `smarter-docker-environment` and
-`smarter-python-testing`), after syncing your edits:
+Run the failed test's module by its dotted name (see `smarter-python-testing`), in the background:
 
 ```console
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.lib.drf.tests.test_listview_api"
+make docker-test LABELS=smarter.lib.drf.tests.test_listview_api
 ```
 
-Then run its whole package, and the pre-commit hooks on the files you changed. React tests run in
+Then verify with the whole suite (`make docker-test`), and run the pre-commit hooks on the files you
+changed. React tests run in
 smarter-sh/smarter-console's own CI, not here: a failure there is that repository's (its checkout is
 `../smarter-console`, with `make test`).
 

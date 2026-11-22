@@ -59,7 +59,7 @@ temporary folder and diffs, without writing to the repository: use it to answer
 Then run the contract tests:
 
 ```console
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.api.v1.contract"
+make docker-test LABELS=smarter.apps.api.v1.contract
 ```
 
 They make one real, billable LLM request (the prompt test), which is fine.

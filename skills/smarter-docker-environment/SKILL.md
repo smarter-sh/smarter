@@ -1,6 +1,6 @@
 ---
 name: smarter-docker-environment
-description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for tests, migrations, manage.py commands or the dev server. Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
+description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for migrations, manage.py commands or the dev server (tests run with make docker-test; see smarter-python-testing). Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
 ---
 
 # Smarter Docker Environment
@@ -27,13 +27,13 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 
 ## The containers
 
-| Container                          | Role                                                                            |
-| ---------------------------------- | ------------------------------------------------------------------------------- |
-| `smarter-api`                      | Django dev server on http://localhost:9357, and where tests and `manage.py` run |
-| `smarter-worker`                   | Celery worker for operational tasks                                             |
-| `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)             |
-| `smarter-beat`                     | Celery beat scheduler                                                           |
-| `smarter-mariadb`, `smarter-redis` | Database and cache/broker                                                       |
+| Container                          | Role                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `smarter-api`                      | Django dev server on http://localhost:9357, and where `manage.py` commands run |
+| `smarter-worker`                   | Celery worker for operational tasks                                            |
+| `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)            |
+| `smarter-beat`                     | Celery beat scheduler                                                          |
+| `smarter-mariadb`, `smarter-redis` | Database and cache/broker                                                      |
 
 Host path `smarter/smarter/<path>` is `/home/smarter_user/smarter/smarter/<path>`
 in every app container. The working directory for `manage.py` is

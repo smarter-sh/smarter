@@ -62,12 +62,12 @@ inside the `smarter-api` container.
    kubeconfig points at the real EKS cluster, and its AWS and Route53
    credentials are live. Fake or mock every Kubernetes, DNS, ACM, and AWS call.
    See `smarter-infrastructure-safety`.
-3. **Run the tests yourself.** Get your changes into the containers (`make build
-&& make run`) and run the test modules you touched. Never ask the user to
-   re-run them. When a change touches more than one or two test modules,
-   run the whole suite in eight shards instead (`make build && make
-   docker-test-sharded`, in the background): it is about five times faster
-   than one process, and faster than a serial run of several apps. See
+3. **Run the tests yourself, with `make docker-test`, in the background.** It
+   is the only way to run them: it builds the image and runs the suite in
+   shards. Verify every change with the whole suite, however small the change;
+   `make docker-test LABELS=<test module>` is only for iterating on one module.
+   Never `docker exec smarter-api ... manage.py test`: it runs on one core,
+   against stale code. Never ask the user to re-run them. See
    `smarter-python-testing` and `smarter-docker-environment`. The host shell
    is zsh, which doesn't word-split variables: a file list in `$FILES` or flags
    in `$args` reach the command as one argument, and the result looks like a

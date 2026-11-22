@@ -27,7 +27,7 @@ Docker Compose mounts this directory read-only at `/home/smarter_user/user-setti
 `smarter/smarter/settings/user.py` applies the file after all of Smarter's settings. A `DJANGO_<SETTING>`
 environment variable, e.g. in `.env`, supersedes the file.
 
-The test shards (`make docker-test-sharded`) don't mount this directory, so your settings don't change the
+The test shards (`make docker-test`) don't mount this directory, so your settings don't change the
 tests. Tests that you run in the dev containers with `docker exec` do read it.
 
 ## `DJANGO_*` environment variables

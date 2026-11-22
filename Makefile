@@ -25,7 +25,7 @@ include .env
 
 .PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
-	docker-check docker-init docker-shell docker-build docker-run docker-test docker-test-sharded docker-prune \
+	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
 	python-init python-lint python-clean python-requirements check-python \
 	keen-init keen-build keen-server \
@@ -129,7 +129,8 @@ analyze: ## Generate code analysis report using cloc
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 # docker exec smarter-api bash -c "coverage run manage.py test smarter.apps.llmtool && coverage report -m && coverage html"
-# Celery Beat is stopped while the tests run, as in docker-test.
+# Celery Beat is stopped while the tests run: its scheduled tasks would change the rows of
+# running tests.
 coverage: ## Generate Docker-based code coverage report
 	@echo "==============================================================================="
 	@echo "Generating code coverage report using Docker and coverage.py ..."
@@ -219,35 +220,28 @@ docker-run: ## Start all Docker containers using docker-compose
 	make docker-check && \
 	docker compose up
 
-# Note: Tests tagged `infrastructure` use the real Kubernetes cluster and AWS (Route53, ACM),
-# and are skipped by default. They are slow: a deploy can wait up to 40 minutes for a
-# TLS certificate. To include them, pass the environment variable into the container
-# (exporting it on the host has no effect):
-#   docker exec -e SMARTER_TEST_INFRASTRUCTURE=true smarter-api bash -c "python manage.py test smarter"
-# To run only the infrastructure tests:
+# The Python tests, in shards, as CI splits them: each shard runs in a Docker stack of its own
+# (docker-compose.shard.yml), with a copy of the local database, all at once. The tests can't
+# share one stack: they write rows without rollback, and share Redis, the dev server and the
+# workers. The stacks have no Celery Beat, whose scheduled tasks would change a running test's
+# rows. They run the smarter image, not the dev containers, so this builds it first. Without
+# SHARDS, the script runs as many shards as Docker's CPUs and memory have room for, about 3.75 GB
+# and one CPU each. LABELS runs part of the suite, in one shard unless SHARDS says otherwise, e.g.
+#   make docker-test LABELS=smarter.apps.account.tests.test_activation
+# Logs go to .test-shards/. Needs smarter-mariadb running, whose database the
+# shards copy. See scripts/run_test_shards.py.
+#
+# Tests tagged `infrastructure` use the real Kubernetes cluster and AWS (Route53, ACM), and are
+# skipped. They are slow: a deploy can wait up to 40 minutes for a TLS certificate. Run them
+# only when asked, in the dev container, with Celery Beat stopped:
 #   docker exec smarter-api bash -c "python manage.py test smarter --tag infrastructure"
 # See smarter/smarter/lib/unittest/runner.py.
-#
-# Celery Beat is stopped while the tests run, and started again afterwards, even when a
-# test fails. The tests share the database with the Celery workers and don't roll back
-# their rows, so a scheduled task, e.g. reconcile_vectorstores, would change a running
-# test's data, and fail it at random. In the local containers it would also send a test's
-# resources to the real Kubernetes cluster. The workers keep running, for .delay().
-docker-test: ## Run Python-Django unit tests in Docker
+SHARDS ?=
+LABELS ?=
+docker-test: ## Run the Python-Django unit tests in Docker, in shards (SHARDS=<n>, LABELS=<dotted paths>)
 	make docker-check
-	docker stop smarter-beat > /dev/null || true
-	docker exec smarter-api bash -c "python manage.py test smarter"; status=$$?; \
-	docker start smarter-beat > /dev/null; \
-	exit $$status
-
-# The Python tests in SHARDS shards at once, as CI splits them, each in a Docker stack of its
-# own (docker-compose.shard.yml), with a copy of the local database. The tests can't share one
-# stack: they write rows without rollback, and share Redis, the dev server and the workers.
-# Each stack needs about 4 GB of Docker's memory. Logs go to .test-shards/. Needs the smarter
-# image (make build) and smarter-mariadb running. See scripts/run_test_shards.py.
-SHARDS ?= 10
-docker-test-sharded: ## Run them in SHARDS (default 10) Docker stacks at once
-	python3 -I scripts/run_test_shards.py --shards $(SHARDS)
+	make build
+	python3 -I scripts/run_test_shards.py $(if $(SHARDS),--shards $(SHARDS)) $(if $(LABELS),--labels $(LABELS))
 
 docker-prune: ## Remove unused Docker objects and clean up Docker artifacts
 	@echo ""

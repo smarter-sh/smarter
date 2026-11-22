@@ -1,6 +1,7 @@
 """Tests of scripts/run_test_shards.py: its names, its commands, and how it reads a shard's output."""
 
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -110,8 +111,86 @@ class TestReport(unittest.TestCase):
         self.assertIn("FAIL: test_detail", text)
 
 
+class TestIdealShards(unittest.TestCase):
+    """The number of shards is the fewer of what Docker's memory allows and what its CPUs allow."""
+
+    GIB = run_test_shards.GIB
+
+    def test_memory_is_the_limit(self):
+        """Docker Desktop with 16 CPUs and 47.2 GiB: (47.2 - 3) / 3.75 = 11 by memory, (16 - 1) / 1 = 15 by CPU."""
+        resources = run_test_shards.DockerResources(cpus=16, memory_bytes=50651189248)
+        self.assertEqual(run_test_shards.ideal_shards(resources), 11)
+
+    def test_cpus_are_the_limit(self):
+        resources = run_test_shards.DockerResources(cpus=4, memory_bytes=64 * self.GIB)
+        self.assertEqual(run_test_shards.ideal_shards(resources), 3)
+
+    def test_at_least_one_shard(self):
+        resources = run_test_shards.DockerResources(cpus=1, memory_bytes=2 * self.GIB)
+        self.assertEqual(run_test_shards.ideal_shards(resources), 1)
+
+
+class TestDockerResources(unittest.TestCase):
+    """Docker's CPUs and memory come from docker info."""
+
+    def test_reads_ncpu_and_memtotal(self):
+        info = {"NCPU": 16, "MemTotal": 50651189248, "OperatingSystem": "Docker Desktop"}
+        completed = run_test_shards.subprocess.CompletedProcess(args=[], returncode=0, stdout=json.dumps(info))
+        with patch.object(run_test_shards, "run", return_value=completed) as run:
+            resources = run_test_shards.docker_resources()
+        self.assertEqual(resources, run_test_shards.DockerResources(cpus=16, memory_bytes=50651189248))
+        self.assertEqual(run.call_args.args[0][:2], ["docker", "info"])
+
+    def test_choose_shards_prefers_the_option(self):
+        with patch.object(run_test_shards, "docker_resources") as resources:
+            self.assertEqual(run_test_shards.choose_shards(3, ["smarter"]), 3)
+        resources.assert_not_called()
+
+    def test_part_of_the_suite_runs_in_one_shard(self):
+        with patch.object(run_test_shards, "docker_resources") as resources:
+            shards = run_test_shards.choose_shards(None, ["smarter.apps.account.tests.test_activation"])
+        self.assertEqual(shards, 1)
+        resources.assert_not_called()
+
+    def test_choose_shards_asks_docker_without_the_option(self):
+        resources = run_test_shards.DockerResources(cpus=16, memory_bytes=50651189248)
+        output = io.StringIO()
+        with patch.object(run_test_shards, "docker_resources", return_value=resources), redirect_stdout(output):
+            shards = run_test_shards.choose_shards(None, ["smarter"])
+        self.assertEqual(shards, 11)
+        self.assertIn("Docker has 16 CPUs and 47.2 GiB of memory: room for 11 shards.", output.getvalue())
+
+
 class TestMain(unittest.TestCase):
     """Main() stops every stack it started, and fails when a step fails."""
+
+    def test_fails_when_docker_does_not_answer(self):
+        with (
+            patch.object(run_test_shards, "docker_resources", side_effect=RuntimeError("docker info failed")),
+            patch.object(run_test_shards, "dump_database") as dump,
+            patch("sys.stderr", new_callable=io.StringIO) as stderr,
+        ):
+            status = run_test_shards.main([])
+        self.assertEqual(status, 1)
+        self.assertIn("docker info failed", stderr.getvalue())
+        dump.assert_not_called()
+
+    def test_runs_the_shards_docker_has_room_for(self):
+        result = run_test_shards.parse_log(1, PASSING_LOG)
+        resources = run_test_shards.DockerResources(cpus=4, memory_bytes=64 * run_test_shards.GIB)
+        with tempfile.TemporaryDirectory() as out:
+            with (
+                patch.object(run_test_shards, "docker_resources", return_value=resources),
+                patch.object(run_test_shards, "dump_database", return_value=Path(out) / "dump.sql"),
+                patch.object(run_test_shards, "start_shard") as start,
+                patch.object(run_test_shards, "run_shard", return_value=result) as run_shard,
+                patch.object(run_test_shards, "stop_shard"),
+                redirect_stdout(io.StringIO()),
+            ):
+                status = run_test_shards.main(["--out", out])
+        self.assertEqual(status, 0)
+        self.assertEqual(start.call_count, 3)
+        self.assertEqual({call.args[1] for call in run_shard.call_args_list}, {3})
 
     def test_stops_the_stacks_after_a_failed_start(self):
         with tempfile.TemporaryDirectory() as out:

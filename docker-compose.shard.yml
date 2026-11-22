@@ -1,6 +1,6 @@
 ---
 #------------------------------------------------------------------------------
-# One shard of the Python test suite, for make test-sharded (scripts/run_test_shards.py).
+# One shard of the Python test suite, for make docker-test (scripts/run_test_shards.py).
 #
 # The tests share their database, Redis, dev server and Celery workers, without
 # rollback, so two shards can't run in one stack: each gets a stack of its own,
