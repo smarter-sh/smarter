@@ -92,7 +92,7 @@ spec:
                 db "CREATE USER IF NOT EXISTS '$SMARTER_SUBSYSTEM_SQL_USER'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_PASSWORD';" || status=1
                 db "ALTER USER '$SMARTER_SUBSYSTEM_SQL_USER'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_PASSWORD';" || status=1
                 db "GRANT ALL PRIVILEGES ON $SMARTER_SUBSYSTEM_SQL_DATABASE.* TO '$SMARTER_SUBSYSTEM_SQL_USER'@'%'; FLUSH PRIVILEGES;" || status=1
-                {{- $backupPassword := .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
+                {{- $backupPassword := (include "smarter.env" . | fromYaml).SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
                 {{- if and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
                 # the read-only account that the nightly backup, job-mysql-backup.yaml, dumps the database with.
                 # SHOW CREATE ROUTINE exists in MariaDB 11.3 and later. On an older server, the grant without it

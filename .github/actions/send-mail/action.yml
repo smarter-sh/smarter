@@ -28,6 +28,10 @@ inputs:
   body:
     description: "The body of the email"
     required: true
+  to:
+    description: "The recipients, comma-separated. Empty: no email is sent."
+    required: false
+    default: ""
 runs:
   using:
     "composite"
@@ -50,10 +54,11 @@ runs:
         aws-region: ${{ inputs.aws-region }}
 
     - name: Send Email
+      if: inputs.to != ''
       shell: bash
       run: |
         aws ses send-email \
           --from "no-reply@${{ inputs.deployment-domain }}" \
-          --destination "ToAddresses=lpm0073@gmail.com,kent@querium.com,shoesaphone@gmail.com" \
+          --destination "ToAddresses=${{ inputs.to }}" \
           --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
           --reply-to-addresses "no-reply@${{ inputs.deployment-domain }}"

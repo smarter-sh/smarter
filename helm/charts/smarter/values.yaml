@@ -45,13 +45,13 @@ env:
   # every pod, or quietly weaken the platform's security. Prefer a SMARTER_* variable where one exists,
   # and try the change in alpha before prod.
   DJANGO_AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
-  # Also the workers' liveness probe's broker, and RedBeat's Redis. The cache is the chart's own Redis,
+  # DJANGO_CELERY_BROKER_URL: Celery's broker, also the workers' liveness probe's and RedBeat's Redis.
+  # Left out, the chart's own Redis in the release's namespace. The cache is the chart's Redis too,
   # databases 1 and 2: for another, set DJANGO_CACHES, as JSON, with its default and sessions caches.
-  DJANGO_CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  # smarter_settings.django_secret_key, Django's SECRET_KEY. The deploy action sets it from the
-  # smarter-django-secret-key Kubernetes Secret that smarter-infrastructure creates.
-  DJANGO_SECRET_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
+  # DJANGO_SETTINGS_MODULE: left out, smarter.settings.<SMARTER_ENVIRONMENT>.
+  # DJANGO_SECRET_KEY: smarter_settings.django_secret_key, Django's SECRET_KEY. On a cluster that
+  # smarter-infrastructure built, read from its Kubernetes Secret smarter-django-secret-key
+  # (infrastructureSecrets, below). Otherwise, set it.
 
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -83,7 +83,8 @@ env:
   SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_PLATFORM_INTERNAL_IP_PREFIXES: "192.168."
   SMARTER_PLATFORM_ROOT_DOMAIN: "example.com"
-  SMARTER_PLATFORM_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # SMARTER_PLATFORM_S3_BUCKET: left out, the bucket that smarter-infrastructure creates, named after the
+  # environment's platform domain: <subdomain>.<root domain> in prod, <environment>.<subdomain>.<root domain>.
   SMARTER_PLATFORM_SETTINGS_OUTPUT: "false"
   SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER: "smarter"
   # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
@@ -132,9 +133,8 @@ env:
   SMARTER_SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION: "3600"
   SMARTER_SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION: "300"
   # The Kubernetes cluster that hosts the platform (e.g. its EKS cluster on AWS), where Smarter deploys
-  # LLMClients and LLMHosts, and the release's namespace, which the chart's api Service is created in.
+  # LLMClients and LLMHosts. SMARTER_SUBSYSTEM_K8S_NAMESPACE, left out, is the release's namespace.
   SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SUBSYSTEM_K8S_NAMESPACE: "smarter-platform-prod"
 
   # The Slack app's tokens, which only the optional Slack bot reads (slackBot.enabled).
   SMARTER_SUBSYSTEM_SLACK_APP_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
@@ -254,6 +254,39 @@ env:
   SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_API_KEY: "your-qdrant-cloud-api-key"
   # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_URL: "https://xyz-example.us-east-1-0.aws.cloud.qdrant.io:6333"
+
+# -----------------------------------------------------------------------------
+## @param infrastructureSecrets The Kubernetes Secrets that smarter-infrastructure creates in each
+## environment's namespace, and the env variables that their keys set: the database, administrator,
+## email and Django credentials. The chart reads them when it is installed or upgraded, so they are never
+## copied into a values file. A value read from one of them supersedes the same variable in env. A Secret
+## that doesn't exist is skipped, so the chart also works on a cluster that smarter-infrastructure didn't
+## build: then set these variables in env. See smarter.env in templates/_helpers.tpl.
+# -----------------------------------------------------------------------------
+infrastructureSecrets:
+  enabled: true
+  secrets:
+    mysql-smarter:
+      SMARTER_MYSQL_DATABASE: SMARTER_SUBSYSTEM_SQL_DATABASE
+      SMARTER_MYSQL_USERNAME: SMARTER_SUBSYSTEM_SQL_USER
+      SMARTER_MYSQL_PASSWORD: SMARTER_SUBSYSTEM_SQL_PASSWORD
+      MYSQL_HOST: SMARTER_SUBSYSTEM_SQL_HOST
+      MYSQL_PORT: SMARTER_SUBSYSTEM_SQL_PORT
+    mysql-root:
+      MYSQL_ROOT_USERNAME: SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME
+      MYSQL_ROOT_PASSWORD: SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
+    smarter-admin:
+      SMARTER_ADMIN_USERNAME: SMARTER_PLATFORM_ADMIN_USERNAME
+      SMARTER_ADMIN_PASSWORD: SMARTER_PLATFORM_ADMIN_PASSWORD
+    smarter-django-secret-key:
+      SECRET_KEY: DJANGO_SECRET_KEY
+    aws-ses-config:
+      SMTP_HOST: SMARTER_SUBSYSTEM_SMTP_HOST
+      SMTP_PORT: SMARTER_SUBSYSTEM_SMTP_PORT
+      SMTP_USE_SSL: SMARTER_SUBSYSTEM_SMTP_USE_SSL
+      SMTP_USE_TLS: SMARTER_SUBSYSTEM_SMTP_USE_TLS
+      SMTP_USERNAME: SMARTER_SUBSYSTEM_SMTP_USERNAME
+      SMTP_PASSWORD: SMARTER_SUBSYSTEM_SMTP_PASSWORD
 
 # -----------------------------------------------------------------------------
 # Global Configuration
@@ -594,6 +627,11 @@ mysql:
 mariadb:
   enabled: true
   nameOverride: "mariadb"               # every resource becomes <release>-mariadb = smarter-mariadb
+  auth:
+    # the passwords, from templates/secret-mariadb.yaml: the platform's database credentials, i.e.
+    # smarter-infrastructure's Kubernetes Secrets mysql-root and mysql-smarter. The name is the one that
+    # this subchart gives its own Secret, so that MariaDB's pod spec stays the same.
+    existingSecret: "{{ .Release.Name }}-mariadb"
   # Bitnami publishes bitnami/mariadb only as `latest`, so a version tag can't be pinned. The
   # digest pins the image, so that a pod rescheduled onto a new node runs the same MariaDB as
   # before, and never a new major version against the existing data directory. A digest

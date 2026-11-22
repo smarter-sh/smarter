@@ -45,6 +45,59 @@ The rest of data/ stays the image's own, read from the image.
 {{- end }}
 
 {{/*
+The platform's environment: the settings that every pod reads, from the Secret in secret-env.yaml.
+
+  {{- $env := include "smarter.env" . | fromYaml }}
+
+It starts from .Values.env, then:
+
+- leaves out every null value, e.g. the AWS keys when the pods have an IAM role, and every
+  SET-ME placeholder, so that a setting nobody set gets Smarter's own default rather than the
+  placeholder's text;
+- derives what follows from the other values, unless .Values.env sets it:
+  DJANGO_SETTINGS_MODULE from SMARTER_ENVIRONMENT, DJANGO_CELERY_BROKER_URL from the chart's Redis
+  and the release's namespace, SMARTER_SUBSYSTEM_K8S_NAMESPACE (the release's namespace), and
+  SMARTER_PLATFORM_S3_BUCKET, which smarter-infrastructure names after the environment's platform
+  domain: <subdomain>.<root domain> in prod, <environment>.<subdomain>.<root domain> elsewhere;
+- reads the Kubernetes Secrets that smarter-infrastructure creates in the release's namespace
+  (infrastructureSecrets in values.yaml): the database, administrator, email and Django
+  credentials. A value read from one of them supersedes .Values.env, because the infrastructure
+  created the credential it describes. A Secret that doesn't exist, as in `helm template`, which
+  can't read the cluster, is skipped.
+*/}}
+{{- define "smarter.env" -}}
+{{- $env := dict -}}
+{{- range $key, $value := .Values.env -}}
+{{- $isNull := kindIs "invalid" $value -}}
+{{- $isPlaceholder := and (kindIs "string" $value) (hasPrefix "SET-ME" $value) -}}
+{{- if not (or $isNull $isPlaceholder) -}}
+{{- $_ := set $env $key $value -}}
+{{- end -}}
+{{- end -}}
+{{- $environment := get $env "SMARTER_ENVIRONMENT" | default "prod" -}}
+{{- $subdomain := get $env "SMARTER_PLATFORM_SUBDOMAIN" | default "platform" -}}
+{{- $rootDomain := get $env "SMARTER_PLATFORM_ROOT_DOMAIN" | default "example.com" -}}
+{{- $prefix := ternary "" (printf "%s." $environment) (eq $environment "prod") -}}
+{{- $redis := printf "%s-master.%s.svc.cluster.local:6379" .Values.redis.fullnameOverride .Release.Namespace -}}
+{{- $_ := set $env "DJANGO_SETTINGS_MODULE" (get $env "DJANGO_SETTINGS_MODULE" | default (printf "smarter.settings.%s" $environment)) -}}
+{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (get $env "DJANGO_CELERY_BROKER_URL" | default (printf "redis://:%s@%s/0" .Values.redis.auth.password $redis)) -}}
+{{- $_ := set $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" (get $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" | default .Release.Namespace) -}}
+{{- $_ := set $env "SMARTER_PLATFORM_S3_BUCKET" (get $env "SMARTER_PLATFORM_S3_BUCKET" | default (printf "%s%s.%s" $prefix $subdomain $rootDomain)) -}}
+{{- if .Values.infrastructureSecrets.enabled -}}
+{{- range $secretName, $keys := .Values.infrastructureSecrets.secrets -}}
+{{- $secret := lookup "v1" "Secret" $.Release.Namespace $secretName -}}
+{{- $data := get $secret "data" | default dict -}}
+{{- range $secretKey, $envName := $keys -}}
+{{- if hasKey $data $secretKey -}}
+{{- $_ := set $env $envName (get $data $secretKey | b64dec) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $env -}}
+{{- end }}
+
+{{/*
 The init container that holds a pod of a fresh install until its database is migrated.
 
 On an install, Helm starts the Deployments' pods as soon as it creates them, but the database, its

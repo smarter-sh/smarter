@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.16-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.16-alpha.1...v0.46.16-alpha.2) (2026-11-22)
+
+### Bug Fixes
+
+* **deploy:** write the chart's boolean settings as JSON booleans ([3d73af9](https://github.com/smarter-sh/smarter/commit/3d73af94d0aa7b715c375247fe2d56f11eaf98b9))
+
+## [0.46.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.15...v0.46.16-alpha.1) (2026-11-22)
+
+### Bug Fixes
+
+* **helm:** install the chart with a values file, no deploy workflow ([c7622a2](https://github.com/smarter-sh/smarter/commit/c7622a2b7554af523d097c22c3b7ade90a29c9ed))
+
 ## [0.46.15](https://github.com/smarter-sh/smarter/compare/v0.46.14...v0.46.15) (2026-11-22)
 
 ### Bug Fixes

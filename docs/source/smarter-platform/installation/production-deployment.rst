@@ -1,117 +1,288 @@
+:orphan:
+
 Production Deployment
 ===================================
 
-.. attention::
+A production deployment of Smarter runs on Kubernetes, on any cluster: a cloud provider's managed
+Kubernetes, or your own cluster, wherever it runs, including your own data center. At a high level,
+you'll be performing the following three steps:
 
-  This is a complex deployment process that requires advanced knowledge of `Linux <https://www.linux.org/>`__, `Docker <https://www.docker.com/>`__, `Kubernetes <https://kubernetes.io/>`__,
-  `Helm <https://helm.sh/>`__, `Terraform <https://developer.hashicorp.com/terraform>`__, `AWS cloud infrastructure <https://docs.aws.amazon.com/>`__, `Python <https://www.python.org/>`__-`Django <https://www.djangoproject.com/>`__ applications, and `GitHub Actions <https://github.com/features/actions>`__.
-  Consider using one of our recommended `hosting partners <https://smarter.sh/>`__, or a certified installation expert.
+1. **Identify the common settings** that are needed by both the cloud infrastructure and the Kubernetes deployment.
+2. **Build the cloud infrastructure**: the Kubernetes cluster, and for each environment its namespace,
+   DNS, certificates, email, storage and credentials.
+   `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ builds all of it with
+   Terraform on AWS, with Azure and Google Cloud to follow. On another cluster, you provide these yourself.
+3. **Deploy the Kubernetes pods**, with the
+   `Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__: the
+   application server, the Celery workers, Celery Beat, MariaDB and Redis.
 
-.. note::
-
-  Before beginning production deployment, you should have already installed
-  your production AWS cloud infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
-
-
-Smarter runs natively on Kubernetes using `spot-priced <https://aws.amazon.com/ec2/spot/pricing/>`__
-compute instances. This is a cost-effective, resilient, and
-scalable architecture that requires minimal maintenance once deployed. It
-natively handles multiple environments (alpha, beta, next, prod)
-for the same installation, maintaining clean separation of resources and
-data between environments. It also natively handles multiple installations of
-Smarter (ie multiple EKS clusters) within the same AWS account.
+The infrastructure must exist before the pods are deployed. The Helm chart installs into the
+environment's namespace, and reads the database, administrator, email and Django credentials from the
+Kubernetes Secrets there.
 
 
-Production deployment involves the following steps:
+Step 1: Identify the common settings
+------------------------------------
 
-1. Build AWS Infrastructure using the `Smarter Official Terraform Modules <https://github.com/smarter-sh/smarter-infrastructure>`__.
-2. Deploy the Smarter Platform to your Kubernetes cluster using the `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
-
-The web console's React apps, including :doc:`Smarter Chat <../../smarter-framework/smarter-chat>`,
-the chat of the Prompt Engineer Workbench, are built into the Smarter Docker image's static files, so they need no
-separate deployment.
-
-
-A modest amount of advance planning and an understanding of some basic organizational principles within Smarter will save you time and heartache.
-Smarter's fundamental identification and organizational units are as follows:
+These are the root values used for naming key resources. smarter-infrastructure and the Helm chart each
+need them, and they must agree. These values are not easily changed after a deployment, so choose them
+carefully.
 
 .. list-table::
-   :widths: 20 80
+   :header-rows: 1
+   :widths: 20 24 28 28
 
-   * - **root_domain**
-     - This is the root domain that you will use for your Smarter deployment. For example,
-       if you want to access your Smarter instance at "platform.example.com", then your root domain
-       would be "example.com". This value is used in both Terraform and Helm configurations,
-       and it affects the naming of various resources such as DNS records and Hosted Zones.
-   * - **platform_name**
-     - Default is "smarter". Ensure that this matches in both Terraform and Helm configurations.
-       Within the Smarter Platform application, the platform_name is derived from the root_domain by taking the first segment.
-       For example, if your root domain is "example.com", then the platform_name will be "example".
-   * - **shared_resource_identifier**
-     - Default is "platform". Ensure that this matches in both Terraform and Helm configurations.
-       Consider using a unique identifier such as your organization's domain name or abbreviation
-       to avoid naming ambiguities with other Smarter deployments in your AWS account.
-   * - **Environment**
-     - One of "alpha", "beta", "next", or "prod". This is managed entirely inside the application, but affects the
-       names of cloud resources including but not limited to DNS records and Hosted Zones that are created
-       as part of normal platform operation.
-   * - **platform_region**
-     - Default is "us". Used exclusively inside of Terraform as part of naming high-level resources such
-       as the EKS cluster, S3 buckets, SES resources, and more. Several environment variables in Helm are based on this value.
+   * - Value
+     - Example
+     - smarter-infrastructure ``.env``
+     - Helm values
+   * - Root domain
+     - ``example.com``
+     - ``ROOT_DOMAIN``
+     - ``env.SMARTER_PLATFORM_ROOT_DOMAIN``
+   * - Platform subdomain
+     - ``platform``
+     - ``PLATFORM_SUBDOMAIN``
+     - ``env.SMARTER_PLATFORM_SUBDOMAIN``
+   * - AWS region
+     - ``ca-central-1``
+     - ``AWS_REGION``
+     - ``env.AWS_REGION``
+   * - Environment
+     - ``prod``, or ``alpha``, ``beta``, ``next``
+     - one folder per environment, ``aws/environments/<environment>``
+     - ``env.SMARTER_ENVIRONMENT``
 
-These four organizational units are combined in various ways to create higher-level naming conventions for both cloud resources as
-well as application-level resources. Some examples:
+A Route53 hosted zone for the root domain must already exist in your AWS account.
 
-- Kubernetes namespaces are named using the convention
 
-  ``{platform_name}-{shared_resource_identifier}-{environment}``
+Step 2: Build the cloud infrastructure
+--------------------------------------
 
-  which by default would be 'smarter-platform-prod'.
-- S3 buckets are named using the convention
+smarter-infrastructure builds everything with `Terraform <https://developer.hashicorp.com/terraform>`__
+and `Terragrunt <https://terragrunt.gruntwork.io/>`__, a wrapper that applies the same Terraform to
+several environments. You don't need to change its code, apart from the one line below. Its
+`README <https://github.com/smarter-sh/smarter-infrastructure>`__ and
+`Makefile <https://github.com/smarter-sh/smarter-infrastructure/blob/main/Makefile>`__ explain each
+command.
 
-  ``{environment}.{shared_resource_identifier}.{root_domain}``
+.. danger::
 
-  which by default would be 'alpha.platform.example.com'.
-- EKS clusters are named using the convention
+   **Running cloud infrastructure costs money.** The cluster, its nodes, the load balancer, CloudFront and
+   the rest are billed by AWS from the moment they are created. Review AWS's pricing for each before you
+   apply. Expect to spend at least a few hundred US dollars per month for a production deployment,
+   and more if you run multiple environments. Delete the infrastructure when you don't need it, with
+   ``make destroy`` in smarter-infrastructure.
 
-  ``{platform_name}-{shared_resource_identifier}-{platform_region}-{{unique_id}}``
+1. Clone `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__, and run
+   ``make`` to create its ``.env``. Fill it in:
 
-  which by default would be 'smarter-platform-us-{{unique_id}}'.
-- k8s namespaces are named using the convention
+   .. list-table::
+      :header-rows: 1
+      :widths: 34 12 54
 
-  ``{platform_name}-{shared_resource_identifier}-{environment}``
+      * - Variable
+        - Required
+        - What it is
+      * - ``ROOT_DOMAIN``, ``PLATFORM_SUBDOMAIN``, ``AWS_REGION``
+        - yes
+        - The common settings, from Step 1.
+      * - ``AWS_ACCOUNT_ID``
+        - yes
+        - The AWS account.
+      * - ``AWS_PROFILE``
+        - yes
+        - The AWS credentials that Terraform runs with, an administrator's.
+      * - ``IAM_ADMIN_USER_ARN``
+        - yes
+        - The IAM user who administers the cluster.
+      * - ``MYSQL_ROOT_USERNAME``, ``MYSQL_ROOT_PASSWORD``
+        - yes
+        - The database server's administrator.
+      * - ``DOCKER_USERNAME``, ``DOCKER_PAT``
+        - yes
+        - A Docker Hub account and access token, for the cluster's image cache.
+      * - ``UNIQUE_ID``
+        - yes
+        - A suffix that makes the cluster's name unique, e.g. the date, ``202602121853``.
+      * - ``UPTIME_ALERT_EMAIL``
+        - no
+        - Where the uptime checks send their alarms.
+      * - ``COST_CODE``
+        - no
+        - A tag on every resource. Default ``smarter``.
 
-  which by default would be 'smarter-platform-prod'.
-- IAM roles are prefixed with
+2. In ``aws/terraform/smarter/providers.tf``, set the Kubernetes provider's ``config_context`` to your
+   cluster's kubeconfig context. It names the maintainers' cluster.
+3. Build the shared infrastructure, once: the VPC, the Kubernetes cluster, then its ingress, certificate
+   manager and descheduler. ``cd aws/stack && terragrunt run --all apply`` applies them in that order.
+4. Build each environment. For an environment other than ``prod`` or ``alpha``, copy one of their folders
+   under ``aws/environments/`` and change its ``environment``. Then
+   ``cd aws/environments/<environment> && terragrunt apply``. This creates the environment's namespace,
+   its Kubernetes Secrets, IAM roles, DNS zones, certificates, SES email, S3 buckets and CloudFront
+   distribution.
+5. Note three values for Step 3: the cluster's name, the output ``cluster_name`` of ``aws/stack/kubernetes``;
+   and the IAM roles of the pods and of the nightly database backup, the outputs ``smarter_iam_role_arn``
+   and ``smarter_backup_iam_role_arn`` of ``aws/environments/<environment>``. Read each with
+   ``terragrunt output -raw <name>`` in its folder.
 
-  ``{platform_name}-{shared_resource_identifier}-{platform_region}``
+.. warning::
 
-  which by default would be 'smarter-platform-us'.
+   Don't build or change these resources by hand. They depend on each other, and Terraform tags each one,
+   which is how you find them in your AWS account afterwards.
 
-Within the Smarter application itself, these organizational units are combined to create higher-level organizational units. Examples:
 
-- environment_namespaces are named using the convention
+Step 3: Deploy the Kubernetes pods
+----------------------------------
 
-  ``{platform_name}-{shared_resource_identifier}-{environment}``
+The Helm chart installs Smarter into the environment's namespace. It reads the database, administrator,
+email and Django credentials from the Kubernetes Secrets that smarter-infrastructure created there, so
+your values file holds only the settings below.
 
-  which by default would be 'smarter-platform-prod'.
-- environment_platform_domain is named using the convention
+.. tip::
 
-  ``{environment}.{shared_resource_identifier}.{root_domain}``
+   The smarter repository's GitHub Actions workflow
+   `Deploy <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/deploy.yml>`__ already does
+   every part of this step: it connects to the cluster, writes the values file from GitHub Actions
+   secrets, and runs ``helm upgrade --install``, on every release. Use it as the model for automating your
+   own deployments.
 
-  which by default would be 'alpha.platform.example.com'.
-- CDN domains are named using the convention
+1. On the computer that you run ``helm`` from, connect ``kubectl`` and ``helm`` to the cluster. On AWS:
 
-  ``cdn.{environment}.{shared_resource_identifier}.{root_domain}``
+   .. code-block:: bash
 
-  which by default would be 'cdn.alpha.platform.example.com'.
-- API domains are named using the convention
+      aws eks update-kubeconfig --region <region> --name <cluster name>
 
-  ``{environment}.api.{shared_resource_identifier}.{root_domain}``
+2. On that computer, create a file named ``my-values.yaml``, in any folder.
+   The next step passes it to ``helm``. It holds API keys, so don't commit it to a repository.
 
-  which by default would be 'alpha.api.platform.example.com'.
+   **This is the minimum set of values.** On a cluster that smarter-infrastructure built, the deployment needs each
+   of these values.
 
-**Example Kubernetes Deployment**
+   .. code-block:: yaml
+
+      env:
+        SMARTER_ENVIRONMENT: "prod"
+        SMARTER_PLATFORM_ROOT_DOMAIN: "example.com"
+        SMARTER_PLATFORM_SUBDOMAIN: "platform"
+        AWS_REGION: "ca-central-1"
+        SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME: "smarter-platform-ca-202602121853"
+        SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY: "<a URL-safe base64-encoded 32-byte key>"
+        SMARTER_APP_PROVIDER_OPENAI_API_KEY: "<your OpenAI API key>"
+        DOCKERHUB_USERNAME: "<DOCKER_USERNAME>"
+        DOCKERHUB_PAT: "<DOCKER_PAT>"
+      serviceAccount:
+        awsRoleArn: "<smarter_iam_role_arn>"
+        createClusterRole: false
+      databaseScheduledBackup:
+        awsRoleArn: "<smarter_backup_iam_role_arn>"
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 42 58
+
+      * - Value
+        - What it is
+      * - ``env.SMARTER_ENVIRONMENT``, ``_PLATFORM_ROOT_DOMAIN``, ``_PLATFORM_SUBDOMAIN``,
+          ``env.AWS_REGION``
+        - The common settings, from Step 1.
+      * - ``env.SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME``
+        - The cluster's name, from Step 2. Smarter deploys LLMClients into it.
+      * - ``serviceAccount.awsRoleArn``, ``databaseScheduledBackup.awsRoleArn``
+        - The IAM roles, from Step 2. ``createClusterRole: false``: smarter-infrastructure has already
+          created the pods' cluster role.
+      * - ``env.SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY``
+        - The key that Smarter encrypts Secrets with. Without it, each pod generates its own key, and a
+          Secret saved by one pod can't be read by another, or after a restart.
+      * - ``env.SMARTER_APP_PROVIDER_OPENAI_API_KEY``
+        - OpenAI is the default LLM provider, and the example resources and Stackademy use it.
+      * - ``env.DOCKERHUB_USERNAME``, ``env.DOCKERHUB_PAT``
+        - The Docker Hub account from Step 2, which pulls Smarter's image.
+
+   **What else can go in the file.** Five kinds of values, each to change a default or turn on a feature:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 22 30 48
+
+      * - Kind
+        - In the file
+        - Where to find the names
+      * - Smarter settings
+        - ``env.SMARTER_<SETTING>``
+        - The chart's `values.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__ lists every one, with its default, spelled exactly as your file must spell
+          it. ``SMARTER_PLATFORM_ROOT_DOMAIN`` sets the setting ``platform_root_domain``, and so on, which
+          :doc:`../../smarter-framework/developer-reference/smarter-settings` describes.
+      * - Resource types, on or off
+        - ``env.SMARTER_APP_<APP>_ENABLE``
+        - :ref:`sam-app-feature-flags`, in :doc:`../configuration`.
+      * - Django settings
+        - ``env.DJANGO_<SETTING>``
+        - Any setting of Django, or of a Django package that Smarter uses:
+          `Django's settings reference <https://docs.djangoproject.com/en/6.0/ref/settings/>`__. Yours
+          replaces Smarter's value outright; read :doc:`../user-defined-django-settings` first.
+      * - The chart's own options
+        - top-level keys, e.g. ``app``, ``hpa``, ``worker``, ``beat``, ``databaseInit``,
+          ``databaseScheduledBackup``, ``slackBot``
+        - The chart's `values.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__: replicas, resources, autoscaling, the init job, the nightly backup, and the
+          Slack bot.
+      * - MariaDB and Redis
+        - ``mariadb.*``, ``redis.*``
+        - The Bitnami charts that the chart installs them with:
+          `mariadb <https://artifacthub.io/packages/helm/bitnami/mariadb>`__ and
+          `redis <https://artifacthub.io/packages/helm/bitnami/redis>`__.
+
+   The Smarter settings that most deployments add:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 42 58
+
+      * - Value
+        - What it is
+      * - ``env.SMARTER_PLATFORM_EMAIL_ADMIN``
+        - The administrators' email address.
+      * - ``env.SMARTER_PLATFORM_BRANDING_*``
+        - Your organization's name, address, support email, contact URL and logo, as the web console and
+          its emails show them. Unset, they show The Smarter Project's.
+      * - ``env.SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``, ``_GEMINI_API_KEY``, ``_MISTRAL_API_KEY``, ...
+        - The other LLM providers.
+      * - ``env.SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY``, ``env.SMARTER_APP_LLMTOOL_TAVILY_API_KEY``,
+          ``_BRAVE_SEARCH_API_KEY``, ``env.SMARTER_APP_VECTORSTORE_PINECONE_API_KEY``
+        - Tools and vector stores that the example resources use.
+      * - ``env.SMARTER_SUBSYSTEM_SOCIAL_AUTH_*``
+        - Sign-in with Google, GitHub or LinkedIn.
+      * - ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, ``databaseInit.notifySlackChannel``
+        - The init job's and the nightly backup's notices in Slack.
+      * - ``env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD``
+        - A read-only database account for the nightly backup. Unset, the backup uses the root account.
+
+3. Install the chart into the environment's namespace, ``smarter-<subdomain>-<environment>``:
+
+   .. code-block:: bash
+
+      helm upgrade --install smarter oci://ghcr.io/smarter-sh/charts/smarter \
+        --version <chart version> \
+        --namespace smarter-platform-prod \
+        --values my-values.yaml \
+        --timeout 900s
+
+   The chart versions are listed on
+   `Artifact Hub <https://artifacthub.io/packages/helm/project-smarter/smarter>`__. To upgrade, run the
+   same command with the new version.
+
+On a fresh install, the pods wait until the chart's init job has created and migrated the database. The
+init job then runs ``manage.py initialize_platform``, which creates the administrator, the built-in
+providers, the example resources and Stackademy. See
+:doc:`../../smarter-framework/smarter-on-kubernetes`.
+
+When it's done, sign in at ``https://<subdomain>.<root domain>/``, e.g. ``https://platform.example.com/``,
+as ``admin``, with the password in the Kubernetes Secret ``smarter-admin``:
+
+.. code-block:: bash
+
+   kubectl get secret smarter-admin -n smarter-platform-prod \
+     -o jsonpath='{.data.SMARTER_ADMIN_PASSWORD}' | base64 --decode
 
 .. figure:: https://cdn.smarter.sh/images/example-kubernetes-deployment.png
   :alt: Example Kubernetes Deployment
@@ -120,95 +291,56 @@ Within the Smarter application itself, these organizational units are combined t
   :class: img-bottom-margin
 
 
-I. Infrastructure
--------------------
-
-The entire AWS infrastructure build is fully automated using Terraform and Terragrunt
-scripts. You should begin by reviewing the following documentation:
-
-- README at `Smarter Infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__.
-- `Makefile <https://github.com/smarter-sh/smarter-infrastructure/blob/main/Makefile>`__. This
-  Makefile provides working shortcuts for all major operations. You should at least cursorily review
-  these in order to ensure that you understand the basic intention of the Terraform scripts.
-- `.env.example <https://github.com/smarter-sh/smarter-infrastructure/blob/main/.env.example>`__.
-  The Terraform scripts in this repo use environment variables for all configuration values.
-  You should not need to fork nor modify the code in this repo. The Makefile provides a shortcut
-  for getting this setup correctly.
-
-Note that this repo uses Terragrunt, a higher level wrapper around Terraform that provides
-an ability to manage multiple environments and multiple deployments with the same codebase.
-Make sure that you understand the basic principles of how Terragrunt works, and how it is
-being used in this repo, before proceeding.
-
-.. warning::
-
-    Do not attempt to circumvent the official Terraform scripts. The
-    cloud infrastructure is complex and has many interdependencies that would
-    be difficult if not impossible to manage manually. Additionally, the
-    Terraform scripts create a detailed set of resource tags that are the
-    sole means of effectively tracking these resources inside your AWS account
-    once they've been created.
-
-
-II. Smarter Platform Application
---------------------------------
-
-The Smarter Platform application is deployed to Kubernetes using the `official Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
-The application itself consists of a Python-Django backend that supports an
-API and a Web Console frontend. This single code base is deployed to Kubernetes as
-an application server, two Celery workers, and a Celery Beat worker. One Celery worker runs the
-operational tasks, such as recording prompts and charges, and the other runs the infrastructure
-tasks, which deploy and verify DNS records, certificates and node groups, so that a deployment never
-delays the operational tasks. See :doc:`ADR-030 <../../adr/030-task-queues>`.
-The application follows 12-factor app principles and is designed to be horizontally
-scalable and resilient to failure.
-
-In most cases, you can deploy the Smarter Platform application using the official Helm
-chart with minimal configuration. However, you can optionally build and deploy
-from source, though this is out of the scope of this documentation.
-
-Begin by reviewing the following documentation:
-
-- README at `Official Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`__.
-- `Values.yaml <https://artifacthub.io/packages/helm/project-smarter/smarter?modal=values>`__.
-  This file contains the comprehensive set of configuration values for the Helm chart. These
-  cover not only configuration of the application itself, but also all backing services and
-  deployment options. Note that there are multiple options for the Database backend, including
-  pod-based Mysql and MariaDB, and remote AWS RDS.
-- (Optional) `Source code <https://github.com/smarter-sh/smarter>`__. You might find some
-  of the source code helpful for understanding how to configure the application. Of interest
-  are the `Django settings files <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/settings>`__,
-  the `Smarter Settings module <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`__,
-  the `Smarter Settings documentation <../smarter-framework/smarter-settings.html>`__,
-  the `Python requirements <https://github.com/smarter-sh/smarter/tree/main/smarter/requirements>`__, and the
-  `Dockerfile <https://github.com/smarter-sh/smarter/blob/main/Dockerfile>`__.
-
-.. important::
-
-    1. You will need to create your own Deployment workflow. You can use the `Smarter GitHub Actions Deployment workflow <https://github.com/smarter-sh/smarter/blob/main/.github/workflows/deploy.yml>`__
-    and `Smarter GitHub Deployment Action <https://github.com/smarter-sh/smarter/blob/main/.github/actions/deploy/action.yml>`__
-    in the official Smarter repo as a reference, but you should not attempt to use it directly unless you have forked
-    the Smarter repo. The deployment workflow depends on a number GitHub Secrets that you must configure in your own GitHub repository.
-    If possible, see `Smarter Settings - Secrets <https://github.com/smarter-sh/smarter/settings/secrets/actions>`__.
-
-    2. You will need an AWS IAM key-pair with sufficient permissions to deploy the application to your Kubernetes cluster.
-    At a minimum, this key-pair will need complete control of the EKS service, in addition to permissions to create and
-    manage the various resources that the application depends on such as EC2 instances, EBS volumes, S3 buckets,
-    SES resources, and more.
-
-
 Trouble Shooting
 ------------------
 
-Permissions and naming are the two most common sources of deployment-related problems. Consider the example
-Kubernetes Ingress manifest below. It contains eleven references, created by either of Terraform or
-the Smarter Platform application itself. These names have to agree, and must be able to "hand shake" as necessary
-between Kubernetes and the Smarter Platform application.
-
-
+Permissions and naming are the two most common causes of deployment problems. The Kubernetes Ingress
+manifest below holds eleven names, made by either Terraform or Smarter, that have to agree.
 
 .. figure:: https://cdn.smarter.sh/images/naming-example.png
   :alt: Example Kubernetes Ingress Manifest
   :align: center
   :width: 100%
   :class: img-bottom-margin
+
+How resources are named
+~~~~~~~~~~~~~~~~~~~~~~~
+
+smarter-infrastructure and Smarter derive the names of a broad range of resources from the common
+settings in Step 1. The names must agree, or the deployment fails. In these examples, the root
+domain is ``example.com`` and the platform subdomain ``platform``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 42 34
+
+   * - Resource
+     - Name
+     - prod / alpha
+   * - Kubernetes cluster
+     - ``smarter-<subdomain>-ca-<UNIQUE_ID>``
+     - one for every environment
+   * - Kubernetes namespace
+     - ``smarter-<subdomain>-<environment>``
+     - ``smarter-platform-prod``
+   * - Platform domain, and S3 bucket
+     - ``<subdomain>.<root>``; ``<environment>.<subdomain>.<root>`` outside prod
+     - ``platform.example.com`` / ``alpha.platform.example.com``
+   * - API domain
+     - ``api.<subdomain>.<root>``; ``<environment>.api.<subdomain>.<root>`` outside prod
+     - ``api.platform.example.com`` / ``alpha.api.platform.example.com``
+   * - CDN domain
+     - ``cdn.<platform domain>``
+     - ``cdn.platform.example.com``
+   * - Backup and export buckets
+     - ``backups.<platform domain>``, ``exports.<platform domain>``
+     - ``backups.platform.example.com``
+   * - IAM roles
+     - ``<namespace>-smarter-irsa``, ``<namespace>-smarter-backup-irsa``
+     - ``smarter-platform-prod-smarter-irsa``
+   * - Database and its user
+     - the namespace, with ``_`` for ``-``
+     - ``smarter_platform_prod``
+
+The ``ca`` in the cluster's name is fixed in smarter-infrastructure's ``aws/global.hcl``, whatever the
+region.
