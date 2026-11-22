@@ -251,7 +251,6 @@ class TestResolveDomain(InfrastructureTestBase):
             environment_api_domain="api.localhost:9357",
             environment_api_dns_domain="api.local.example.com",
             platform_root_domain="example.com",
-            local_hosts=["localhost", "127.0.0.1", "localhost:9357"],
         )
 
     def test_local_environment_proxy_domain(self):

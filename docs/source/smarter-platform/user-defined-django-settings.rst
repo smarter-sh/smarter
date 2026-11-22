@@ -125,7 +125,7 @@ an error: there are simply no user settings.
 For a ``DJANGO_*`` variable, add it to ``.env``, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``, and recreate the
 containers (``make run``), since Docker Compose reads ``.env`` when it creates them.
 
-The test shards (``make docker-test-sharded``) don't mount ``user-settings/``, so your settings don't change
+The test shards (``make docker-test``) don't mount ``user-settings/``, so your settings don't change
 their results. Tests that you run in the dev containers with ``docker exec`` do read your file.
 
 alpha, prod, and every other environment on AWS
@@ -242,8 +242,9 @@ Rules
   One exception follows yours: RedBeat's ``CELERY_REDBEAT_REDIS_URL`` is set to your
   ``CELERY_BROKER_URL`` unless you set it too. The ``CACHES`` that Smarter builds have two caches,
   ``default`` and ``sessions``, on different Redis databases; yours needs both.
-- **The secret key is the exception.** ``DJANGO_SECRET_KEY`` is read by ``smarter_settings``, which
-  refuses a missing key or a placeholder outside the local environment, before Django starts.
+- **The secret key is the exception.** ``DJANGO_SECRET_KEY`` is read by
+  ``smarter_settings.django_secret_key``, which refuses a missing key or a placeholder outside the
+  local environment, before Django starts.
 - **Prefer a** ``SMARTER_*`` **setting where one exists.** Many Django settings are derived from
   ``smarter_settings`` (see :doc:`configuration`), e.g. ``ALLOWED_HOSTS`` from ``SMARTER_ALLOWED_HOSTS``,
   and everything derived from it changes with it. Use a user-defined Django setting for what Smarter

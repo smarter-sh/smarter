@@ -181,7 +181,7 @@ def flags(user: Optional[User]) -> ConsoleFlags:
         secret=smarter_settings.app_secret_enable,
         vectorsearch=smarter_settings.app_vectorsearch_enable,
         vectorstore=smarter_settings.app_vectorstore_enable,
-        manifest_drop_zone=smarter_settings.enable_dropzone_manifest_apply,
+        manifest_drop_zone=smarter_settings.app_dashboard_manifest_dropzone_enable,
         terminal=terminal_enabled() and is_superuser,
         passthrough=smarter_settings.app_dashboard_passthrough_prompt_enable,
         server_logs=server_logs_enabled(),

@@ -16,6 +16,7 @@ import validators
 from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 
+from smarter.common.conf.const import LOCAL_HOSTS
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -65,10 +66,8 @@ class SmarterValidator:
         see https://python-validators.github.io/validators/
     """
 
-    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
-    """List of local hosts used for validation purposes."""
-    LOCAL_HOSTS += [host + ":9357" for host in LOCAL_HOSTS]
-    LOCAL_HOSTS.append("testserver")
+    LOCAL_HOSTS = LOCAL_HOSTS
+    """The local hosts, :data:`smarter.common.conf.const.LOCAL_HOSTS`, used for validation purposes."""
 
     LOCAL_URLS = [f"http://{host}" for host in LOCAL_HOSTS] + [f"https://{host}" for host in LOCAL_HOSTS]
     """List of local URLs used for validation purposes."""

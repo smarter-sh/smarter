@@ -11,6 +11,7 @@ from django.conf import settings
 from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.env import is_missing_value
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -40,7 +41,7 @@ def is_credential_set(credential: SecretStr) -> bool:
     :returns: False when it is empty or the settings' placeholder for a missing value.
     """
     value = credential.get_secret_value()
-    if value in ("", None, smarter_settings.default_missing_value):
+    if is_missing_value(value):
         return False
     return True
 

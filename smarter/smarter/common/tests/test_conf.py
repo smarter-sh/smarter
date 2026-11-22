@@ -170,17 +170,11 @@ class TestSettings(SmarterTestBase):
         self.assertIsInstance(smarter_settings.app_mcpserver_rate_limit, int)
         self.assertGreaterEqual(smarter_settings.app_mcpserver_rate_limit, 0)
 
-    def test_sensitive_files_amnesty_patterns(self):
-        self.assertIsNotNone(smarter_settings.platform_sensitive_files_amnesty_patterns)
-
     def test_debug_mode(self):
         self.assertIsNotNone(smarter_settings.debug_mode)
 
     def test_dump_defaults(self):
         self.assertIsNotNone(smarter_settings.dump_defaults)
-
-    def test_default_missing_value(self):
-        self.assertIsNotNone(smarter_settings.default_missing_value)
 
     def test_developer_mode(self):
         self.assertIsNotNone(smarter_settings.developer_mode)
@@ -199,9 +193,6 @@ class TestSettings(SmarterTestBase):
 
     def test_log_level(self):
         self.assertIsNotNone(smarter_settings.log_level)
-
-    def test_local_hosts(self):
-        self.assertIsNotNone(smarter_settings.local_hosts)
 
     def test_llm_default_provider(self):
         self.assertIsNotNone(smarter_settings.llm_default_provider)
@@ -225,7 +216,7 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.platform_root_domain)
 
     def test_secret_key(self):
-        self.assertIsNotNone(smarter_settings.secret_key)
+        self.assertIsNotNone(smarter_settings.django_secret_key)
 
     def test_settings_output(self):
         self.assertIsNotNone(smarter_settings.platform_settings_output)

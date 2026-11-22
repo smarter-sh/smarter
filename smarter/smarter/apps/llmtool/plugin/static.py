@@ -64,7 +64,7 @@ from smarter.apps.llmtool.models import PluginDataStatic
 from smarter.apps.llmtool.serializers import PluginStaticSerializer
 from smarter.apps.llmtool.signals import plugin_called, plugin_responded
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -505,11 +505,11 @@ class StaticPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+            provider=smarter_settings.llm_default_provider,
             systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-            model=settings_defaults.LLM_DEFAULT_MODEL,
-            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+            model=smarter_settings.llm_default_model,
+            temperature=smarter_settings.llm_default_temperature,
+            maxTokens=smarter_settings.llm_default_max_tokens,
         )
         data = SAMPluginStaticSpecData(
             staticData={

@@ -8,16 +8,22 @@ exception, e.g. a TypeError or an AttributeError, is a bug in the validator.
 """
 
 import inspect
-import os
-from typing import Optional
+from contextlib import contextmanager
+from typing import Iterator, Optional
 from unittest.mock import Mock, PropertyMock, patch
 
+from botocore.exceptions import (
+    EndpointConnectionError,
+    NoCredentialsError,
+    ProfileNotFound,
+)
 from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
-from smarter.common.conf.defaults import github_token_env
-from smarter.common.conf.env import DEFAULT_MISSING_VALUE
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.common.conf.settings import Settings
+from smarter.common.conf.settings.aws import AWS_REGIONS, aws_credentials_work
+from smarter.common.conf.util import field_default
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -64,6 +70,25 @@ def field_validators() -> dict[str, list[str]]:
         name: list(decorator.info.fields)
         for name, decorator in Settings.__pydantic_decorators__.field_validators.items()
     }
+
+
+@contextmanager
+def patched_defaults(module: str) -> Iterator[dict[str, object]]:
+    """
+    Replace some fields' defaults, as the validators of one settings module see them.
+
+    :param module: The settings module, e.g. ``smarter.common.conf.settings.email``.
+    :returns: A dict to put the replacements in, by field name. The other fields keep their defaults.
+    """
+    replacements: dict[str, object] = {}
+
+    def fake_field_default(model, field_name: str) -> object:
+        if field_name in replacements:
+            return replacements[field_name]
+        return field_default(model, field_name)
+
+    with patch(f"{module}.field_default", side_effect=fake_field_default):
+        yield replacements
 
 
 def call(validator, value, data: SmarterDictType, field_name: Optional[str] = None):
@@ -226,7 +251,11 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_smtp_is_configured(self):
         """Test that SMTP is configured only when every credential is set, and none is a placeholder."""
-        configured = {"subsystem_smtp_username": SecretStr("user"), "subsystem_smtp_password": SecretStr("password")}
+        configured = {
+            "subsystem_smtp_host": "smtp.example.com",
+            "subsystem_smtp_username": SecretStr("user"),
+            "subsystem_smtp_password": SecretStr("password"),
+        }
 
         def smtp_is_configured(**update) -> bool:
             settings = smarter_settings.model_copy(update={**configured, **update})
@@ -234,43 +263,40 @@ class TestSettingsMethods(SmarterTestBase):
             settings.__dict__.pop("smtp_is_configured", None)
             return settings.smtp_is_configured
 
-        with patch.object(Settings, "subsystem_smtp_host", new_callable=PropertyMock, return_value="smtp.example.com"):
-            self.assertTrue(smtp_is_configured())
-            for name, value in (
-                ("subsystem_smtp_username", None),
-                ("subsystem_smtp_password", None),
-                ("subsystem_smtp_password", SecretStr(DEFAULT_MISSING_VALUE)),
-                ("subsystem_smtp_username", SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")),
-            ):
-                with self.subTest(name=name, value=value):
-                    self.assertFalse(smtp_is_configured(**{name: value}))
-        with patch.object(Settings, "subsystem_smtp_host", new_callable=PropertyMock, return_value=None):
-            self.assertFalse(smtp_is_configured())
+        self.assertTrue(smtp_is_configured())
+        for name, value in (
+            ("subsystem_smtp_username", None),
+            ("subsystem_smtp_password", None),
+            ("subsystem_smtp_password", SecretStr(DEFAULT_MISSING_VALUE)),
+            ("subsystem_smtp_username", SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")),
+            ("subsystem_smtp_host", None),
+        ):
+            with self.subTest(name=name, value=value):
+                self.assertFalse(smtp_is_configured(**{name: value}))
 
     def test_smtp_host_and_from_email(self):
         """Test that SMTP_HOST and SMTP_FROM_EMAIL are used when set, and derived otherwise."""
-        module = "smarter.common.conf.settings.email"
-        settings = smarter_settings.model_copy(update={"aws_region": "us-west-2"})
-        with patch(f"{module}.settings_defaults") as defaults:
-            defaults.SUBSYSTEM_SMTP_HOST = "smtp.example.com"
-            defaults.SUBSYSTEM_SMTP_FROM_EMAIL = "hello@example.com"
-            self.assertEqual(settings.subsystem_smtp_host, "smtp.example.com")
-            self.assertEqual(settings.subsystem_smtp_from_email, "hello@example.com")
-            defaults.SUBSYSTEM_SMTP_HOST = None
-            defaults.SUBSYSTEM_SMTP_FROM_EMAIL = DEFAULT_MISSING_VALUE
-            self.assertEqual(settings.subsystem_smtp_host, "email-smtp.us-west-2.amazonaws.com")
-            self.assertEqual(
-                settings.subsystem_smtp_from_email,
-                f"no-reply@{settings.platform_subdomain}.{settings.platform_root_domain}",
-            )
-            self.assertIsNone(smarter_settings.model_copy(update={"aws_region": None}).subsystem_smtp_host)
+        configured = smarter_settings.model_copy(
+            update={
+                "subsystem_smtp_host": "smtp.example.com",
+                "subsystem_smtp_from_email": "hello@example.com",
+            }
+        )
+        self.assertEqual(configured.subsystem_smtp_host, "smtp.example.com")
+        self.assertEqual(configured.subsystem_smtp_from_email, "hello@example.com")
+        derived = Settings(aws_region="us-west-2", subsystem_smtp_host=None, subsystem_smtp_from_email="")
+        self.assertEqual(derived.subsystem_smtp_host, "email-smtp.us-west-2.amazonaws.com")
+        self.assertEqual(
+            derived.subsystem_smtp_from_email,
+            f"no-reply@{derived.platform_subdomain}.{derived.platform_root_domain}",
+        )
+        no_region = Settings(aws_region="", subsystem_smtp_host=None)
+        self.assertIsNone(no_region.subsystem_smtp_host)
 
     def test_admin_credentials(self):
         """Test that the admin username falls back to its default, and the password is None when missing, or a placeholder."""
         module = "smarter.common.conf.settings.security"
-        with patch(f"{module}.settings_defaults") as defaults:
-            defaults.PLATFORM_ADMIN_USERNAME = "admin"
-            defaults.PLATFORM_ADMIN_PASSWORD = None
+        with patched_defaults(module) as defaults:
             for value in (None, ""):
                 with self.subTest(value=value):
                     self.assertEqual(call(Settings.validate_platform_admin_username, value, {}), "admin")
@@ -282,7 +308,7 @@ class TestSettingsMethods(SmarterTestBase):
             )
             with self.assertRaises(SmarterConfigurationError):
                 call(Settings.validate_platform_admin_password, "not a SecretStr", {})
-            defaults.PLATFORM_ADMIN_USERNAME = ""
+            defaults["platform_admin_username"] = ""
             with self.assertRaises(SmarterConfigurationError):
                 call(Settings.validate_platform_admin_username, None, {})
 
@@ -292,12 +318,9 @@ class TestSettingsMethods(SmarterTestBase):
         for value in (None, "", DEFAULT_MISSING_VALUE):
             with (
                 self.subTest(value=value),
-                patch(f"{package}.aws.settings_defaults") as aws_defaults,
-                patch(f"{package}.email.settings_defaults") as email_defaults,
+                patched_defaults(f"{package}.aws") as aws_defaults,
             ):
-                aws_defaults.SUBSYSTEM_K8S_CLUSTER_NAME = DEFAULT_MISSING_VALUE
-                email_defaults.SUBSYSTEM_SMTP_PASSWORD = None
-                email_defaults.SUBSYSTEM_SMTP_USERNAME = None
+                aws_defaults["subsystem_k8s_cluster_name"] = DEFAULT_MISSING_VALUE
                 self.assertIsNone(call(Settings.validate_subsystem_k8s_cluster_name, value, {}))
                 self.assertIsNone(call(Settings.validate_subsystem_smtp_password, value, {}))
                 self.assertIsNone(call(Settings.validate_subsystem_smtp_username, value, {}))
@@ -306,45 +329,19 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_github_token(self):
         """Test that the GitHub token is None when missing, or a placeholder, and must be a SecretStr."""
-        module = "smarter.common.conf.settings.integrations"
         placeholders = (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml"))
         for value in placeholders:
-            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.GITHUB_TOKEN = None
+            with self.subTest(value=value):
                 self.assertIsNone(call(Settings.validate_github_token, value, {}))
         token = SecretStr("ghp_" + "x" * 36)
         self.assertIs(call(Settings.validate_github_token, token, {}), token)
         with self.assertRaises(SmarterConfigurationError):
             call(Settings.validate_github_token, "github-token", {})
 
-    def test_github_token_names(self):
-        """Test that GITHUB_TOKEN wins, then GH_TOKEN, then the old GITHUB_API_TOKEN, each with or without SMARTER_."""
-        names = ("GITHUB_TOKEN", "GH_TOKEN", "GITHUB_API_TOKEN")
-        cleared = {}
-        for name in names:
-            cleared[name] = ""
-            cleared[f"SMARTER_{name}"] = ""
-        cases: tuple[tuple[dict[str, str], Optional[str]], ...] = (
-            ({"GITHUB_TOKEN": "a", "GH_TOKEN": "b", "GITHUB_API_TOKEN": "c"}, "a"),
-            ({"GH_TOKEN": "b", "SMARTER_GITHUB_API_TOKEN": "c"}, "b"),
-            ({"SMARTER_GITHUB_API_TOKEN": "c"}, "c"),
-            ({}, None),
-        )
-        for environment, expected in cases:
-            with self.subTest(environment=environment), patch.dict(os.environ, {**cleared, **environment}):
-                token = github_token_env()
-                if expected is None:
-                    self.assertIsNone(token)
-                else:
-                    assert token is not None
-                    self.assertEqual(token.get_secret_value(), expected)
-
     def test_account_manager_api_key(self):
         """Test that Account Manager's key is None when missing, or a placeholder, and must be a SecretStr."""
-        module = "smarter.common.conf.settings.integrations"
         for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-PLEASE")):
-            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.ACCOUNT_MANAGER_API_KEY = None
+            with self.subTest(value=value):
                 self.assertIsNone(call(Settings.validate_account_manager_api_key, value, {}))
         key = SecretStr("a-platform-key")
         self.assertIs(call(Settings.validate_account_manager_api_key, key, {}), key)
@@ -353,10 +350,8 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_slack_bot_token(self):
         """Test that the Slack bot token is None when missing, or a placeholder, and must be a SecretStr."""
-        module = "smarter.common.conf.settings.integrations"
         for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")):
-            with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.SUBSYSTEM_SLACK_BOT_TOKEN = None
+            with self.subTest(value=value):
                 self.assertIsNone(call(Settings.validate_subsystem_slack_bot_token, value, {}))
         token = SecretStr("xoxb-test")
         self.assertIs(call(Settings.validate_subsystem_slack_bot_token, token, {}), token)
@@ -374,7 +369,7 @@ class TestSettingsMethods(SmarterTestBase):
         """Test that to_json() dumps the settings, and the defaults when dump_defaults is set."""
         dump = smarter_settings.model_copy(update={"dump_defaults": True}).to_json()
         self.assertIn("smarter_settings", dump)
-        self.assertIn("settings_defaults", dump)
+        self.assertIn("defaults", dump)
         self.assertEqual(list(dump.keys()), sorted(dump.keys()))
 
 
@@ -385,14 +380,14 @@ class TestSettingsMissingDefaults(SmarterTestBase):
         """An empty AWS profile or region is None when its default is missing, and the default otherwise."""
         module = "smarter.common.conf.settings.aws"
         for name, validator in (
-            ("AWS_PROFILE", Settings.validate_aws_profile),
-            ("AWS_REGION", Settings.validate_aws_region),
+            ("aws_profile", Settings.validate_aws_profile),
+            ("aws_region", Settings.validate_aws_region),
         ):
             with self.subTest(default=name):
-                with patch(f"{module}.settings_defaults") as defaults:
-                    setattr(defaults, name, DEFAULT_MISSING_VALUE)
+                with patched_defaults(module) as defaults:
+                    defaults[name] = DEFAULT_MISSING_VALUE
                     self.assertIsNone(call(validator, "", {}))
-                    setattr(defaults, name, "the-default")
+                    defaults[name] = "the-default"
                     self.assertEqual(call(validator, "", {}), "the-default")
 
     def test_urls_that_cannot_be_built(self):
@@ -448,3 +443,68 @@ class TestStaticAwsKeyPairWarning(SmarterTestBase):
         # the profile case logs that the key is ignored; nothing logs the security warning.
         for logged in logger.warning.call_args_list:
             self.assertNotIn("SECURITY WARNING", str(logged.args[0]))
+
+
+class TestAwsCredentialsWork(SmarterTestBase):
+    """Aws_is_configured asks STS whether the credentials work, with a faked boto3 session: never AWS itself."""
+
+    MODULE = "smarter.common.conf.settings.aws"
+
+    def fake_session(self, credentials: Optional[object], sts_error: Optional[Exception] = None) -> Mock:
+        """A boto3 session with these credentials, whose STS client raises sts_error, or answers."""
+        session = Mock()
+        session.get_credentials.return_value = credentials
+        sts = session.client.return_value
+        if sts_error is not None:
+            sts.get_caller_identity.side_effect = sts_error
+        return session
+
+    def test_working_credentials(self):
+        session = self.fake_session(credentials=object())
+        with patch(f"{self.MODULE}.boto3.Session", return_value=session):
+            self.assertTrue(aws_credentials_work())
+        session.client.assert_called_once_with("sts")
+        session.client.return_value.get_caller_identity.assert_called_once_with()
+
+    def test_no_credentials(self):
+        session = self.fake_session(credentials=None)
+        with patch(f"{self.MODULE}.boto3.Session", return_value=session):
+            with self.assertLogs(self.MODULE, level="WARNING"):
+                self.assertFalse(aws_credentials_work())
+        session.client.assert_not_called()
+
+    def test_rejected_credentials(self):
+        errors = [NoCredentialsError(), ProfileNotFound(profile="smarter"), EndpointConnectionError(endpoint_url="x")]
+        for error in errors:
+            with self.subTest(error=type(error).__name__):
+                session = self.fake_session(credentials=object(), sts_error=error)
+                with patch(f"{self.MODULE}.boto3.Session", return_value=session):
+                    with self.assertLogs(self.MODULE, level="WARNING"):
+                        self.assertFalse(aws_credentials_work())
+
+    def test_unexpected_error_logs_its_type_only(self):
+        """An error's message can carry an account id or an ARN, so only its type is logged."""
+        error = RuntimeError("arn:aws:iam::000000000000:user/someone is not authorized")
+        session = self.fake_session(credentials=object(), sts_error=error)
+        with patch(f"{self.MODULE}.boto3.Session", return_value=session):
+            with self.assertLogs(self.MODULE, level="WARNING") as captured:
+                self.assertFalse(aws_credentials_work())
+        message = captured.records[0].getMessage()
+        self.assertIn("RuntimeError", message)
+        self.assertNotIn("arn:aws", message)
+
+    def test_aws_is_configured_uses_it(self):
+        """Settings() asks once itself, in ready(); the property asks again."""
+        with patch(f"{self.MODULE}.aws_credentials_work", return_value=False) as works:
+            settings = Settings()
+            calls_by_init = works.call_count
+            self.assertFalse(settings.aws_is_configured)
+        self.assertEqual(works.call_count, calls_by_init + 1)
+
+    def test_aws_regions_default(self):
+        """The default lists every commercial region, opt-in ones included, and validates aws_region against them."""
+        self.assertIn("us-east-1", AWS_REGIONS)
+        self.assertIn("af-south-1", AWS_REGIONS)
+        self.assertEqual(len(AWS_REGIONS), len(set(AWS_REGIONS)))
+        settings = Settings(aws_region="ap-southeast-4")
+        self.assertEqual(settings.aws_region, "ap-southeast-4")

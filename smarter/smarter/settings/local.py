@@ -50,7 +50,7 @@ for port in cors_ports:
 CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
 CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")
 
-CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
+CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in LOCAL_HOSTS]
 CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 CSRF_COOKIE_SAMESITE = "lax"
 

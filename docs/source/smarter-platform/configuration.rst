@@ -8,20 +8,21 @@ the `recommended approach <installation.html>`_ of AWS EKS with the provided Hel
 How the settings are initialized
 --------------------------------
 
-Every setting starts in one of a few places: in Kubernetes, the GitHub Actions secrets, the Kubernetes
+Each setting value originates from one of a few places: in Kubernetes, the GitHub Actions secrets, the Kubernetes
 Secrets that `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ creates, and
-the Helm chart's values; locally, ``.env`` and ``user-settings/settings.yaml``. The deploy action and the Helm
-release, or Docker Compose, turn them into the process's environment variables. ``smarter_settings`` reads
-those, with ``smarter.common.const`` supplying only code constants, and validates them. Django's settings
-modules derive their settings from ``smarter_settings``, and your own settings file and ``DJANGO_*``
-variables supersede them last.
+the Helm chart's values. Locally these originate from ``.env`` and ``user-settings/settings.yaml``.
+The deploy action and the Helm release, or Docker Compose, turn these into the process's environment
+variables. ``smarter_settings`` reads the environment variables, along with any values set in ``smarter.common.const``,
+then validates and freezes its final settings. Django's settings modules derive their settings from
+``smarter_settings`` where possible, noting that your own settings ``DJANGO_*`` supersede them, and your
+``user-settings/settings.yaml`` file and its environment variables supersede them last.
 
 .. image:: ../_static/settings-data-flow.svg
    :alt: Sources (GitHub Actions secrets, the Kubernetes Secrets mysql-smarter, mysql-root, smarter-admin,
          aws-ses-config and smarter-django-secret-key, the Helm chart's values, .env and
          user-settings/settings.yaml) become environment variables through the deploy action and the Helm
-         release's env Secret, or Docker Compose. get_env reads them into settings_defaults, with the code
-         constants of smarter.common.const, and smarter_settings validates them. Django's settings modules,
+         release's env Secret, or Docker Compose. smarter_settings reads them, by field, into the fields
+         whose defaults it declares, with the code constants of smarter.common.const, and validates them. Django's settings modules,
          base.py, base_aws.py and the environment's module, derive from smarter_settings; the user settings
          file and DJANGO_* variables supersede them. The startup logs, the initialize commands and the web
          console read the result.
@@ -499,10 +500,13 @@ are often initialized from values in ``smarter_settings``.
 - Configuration values are initialized in the following order of precedence:
 
   1. Constructor (not recommended; prefer ``.env`` or environment variables)
-  2. ``SettingsDefaults``
-  3. ``.env`` file
-  4. Environment variables (if present and not already consumed by ``SettingsDefaults``, these are overridden by ``.env`` file values)
-  5. Default values defined in the class
+  2. Environment variables, which include the ``.env`` file's. Each field is read from its name in
+     capitals with the ``SMARTER_`` prefix, which is required: ``debug_mode`` from
+     ``SMARTER_DEBUG_MODE``. A list is comma-separated, and a boolean ``true`` or ``false``. The
+     exceptions keep the names that other tools use: ``AWS_PROFILE``, ``AWS_ACCESS_KEY_ID``,
+     ``AWS_SECRET_ACCESS_KEY``, ``AWS_REGION``, ``GITHUB_TOKEN`` and ``DJANGO_SECRET_KEY``.
+  3. The default declared on each field. A default that depends on another setting, such as the SMTP
+     sender at the root domain, is derived from that setting's value.
 
 - The ``dump`` property returns a dictionary of all configuration values, which is useful for debugging and logging.
 - Always access configuration values via the ``smarter_settings`` singleton instance when possible.

@@ -22,8 +22,7 @@ from smarter.apps.provider.const import (
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
 from smarter.common.conf import smarter_settings
-from smarter.common.conf.const import get_env
-from smarter.common.conf.env import is_missing_value
+from smarter.common.conf.env import get_env, is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand

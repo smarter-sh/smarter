@@ -3,7 +3,7 @@ URL configuration for the Prompt Passthrough's endpoints in the web console's ap
 
 These are mounted at ``/api/web/dashboard/passthrough/``, from
 :mod:`smarter.apps.dashboard.api.web.urls`. Registration is conditional on the
-``ENABLE_DASHBOARD_PASSTHROUGH_PROMPT`` setting, as is the Prompt Passthrough page's: when
+``SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE`` setting, as is the Prompt Passthrough page's: when
 disabled, no routes are registered.
 
 These endpoints are part of Smarter's Django-React integration. The Django view that renders a

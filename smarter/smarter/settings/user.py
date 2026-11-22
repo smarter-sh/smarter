@@ -60,7 +60,7 @@ IGNORED_ENVIRONMENT_VARIABLES = ("DJANGO_SETTINGS_MODULE", "DJANGO_SECRET_KEY")
 ``DJANGO_*`` variables that this module doesn't apply.
 
 ``DJANGO_SETTINGS_MODULE`` is Django's own, not a setting. ``DJANGO_SECRET_KEY`` is read by
-``smarter_settings.secret_key``, which rejects a placeholder, and ``smarter.settings.base`` sets
+``smarter_settings.django_secret_key``, which rejects a placeholder, and ``smarter.settings.base`` sets
 ``SECRET_KEY`` from it. Applied here as well, a placeholder would replace the random key that
 ``base`` generates for one.
 """

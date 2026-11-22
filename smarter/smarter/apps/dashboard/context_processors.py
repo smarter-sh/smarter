@@ -227,7 +227,7 @@ def sidebar_context() -> SmarterDictType:
         if not sam_app.is_enabled(smarter_settings):
             continue
         context["sidebar"][link_name] = console_reverse(*url_name)
-    if smarter_settings.enable_dropzone_manifest_apply:
+    if smarter_settings.app_dashboard_manifest_dropzone_enable:
         context["sidebar"]["manifest_drop_zone"] = console_reverse(
             DashboardReverseNames.namespace,
             DropzoneReverseNames.namespace,
@@ -308,7 +308,7 @@ def base(request: "HttpRequest") -> SmarterDictType:
                 "username": username,
                 "is_proxy_enabled": smarter_settings.app_proxy_enable,
                 "is_vectorstore_enabled": smarter_settings.app_vectorstore_enable,
-                "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
+                "is_file_drop_zone_enabled": smarter_settings.app_dashboard_manifest_dropzone_enable,
                 "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
                 "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
                 "product_name": smarter_settings.platform_branding_product_name,

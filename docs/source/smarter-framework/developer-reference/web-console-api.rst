@@ -252,7 +252,7 @@ The other endpoints
      - The welcome card and the onboarding tour.
    * - ``/api/web/dashboard/passthrough/providers/``
      - The Prompt Passthrough's providers and their models, when
-       ``ENABLE_DASHBOARD_PASSTHROUGH_PROMPT`` is true.
+       ``SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE`` is true.
    * - ``/api/web/dashboard/logs/stream/``
      - The user's server log stream, when ``SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE`` is true.
    * - ``/api/web/dashboard/terminal/ticket/``

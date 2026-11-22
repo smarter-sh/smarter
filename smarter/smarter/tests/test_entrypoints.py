@@ -22,6 +22,7 @@ from pydantic import SecretStr
 
 import smarter.settings.base as base_settings
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -262,13 +263,13 @@ class TestBaseSettings(SmarterTestBase):
             vars(module).update(saved)
 
     def _reload_base_with_secret_key(self, secret_key: str) -> tuple[SmarterDictType, list[str]]:
-        """Re-execute base.py with the given smarter_settings.secret_key, capturing every log message it emits."""
+        """Re-execute base.py with the given smarter_settings.django_secret_key, capturing every log message it emits."""
         with (
             patch.dict(os.environ),
             patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
             patch(
                 "smarter.common.conf.smarter_settings",
-                smarter_settings.model_copy(update={"secret_key": SecretStr(secret_key)}),
+                smarter_settings.model_copy(update={"django_secret_key": SecretStr(secret_key)}),
             ),
             patch("logging.config.dictConfig"),
             self.assertLogs("smarter.settings.base", level=logging.DEBUG) as captured,
@@ -286,9 +287,9 @@ class TestBaseSettings(SmarterTestBase):
 
     def test_randomized_secret_key_is_never_logged(self):
         """A missing SECRET_KEY is replaced with a random value, with a warning that does not include it."""
-        namespace, messages = self._reload_base_with_secret_key(smarter_settings.default_missing_value)
+        namespace, messages = self._reload_base_with_secret_key(DEFAULT_MISSING_VALUE)
         secret_key = namespace["SECRET_KEY"]
-        self.assertNotEqual(secret_key, smarter_settings.default_missing_value)
+        self.assertNotEqual(secret_key, DEFAULT_MISSING_VALUE)
         self.assertEqual(len(secret_key), 64)
         self.assertTrue(
             [message for message in messages if message.endswith("SECRET_KEY not set. Using a randomized value.")]

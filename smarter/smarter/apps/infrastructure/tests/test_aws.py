@@ -188,17 +188,15 @@ def connect(helper: AWSHelperType, client: Any) -> AWSHelperType:
 
 
 class AWSTestBase(InfrastructureTestBase):
-    """Patch boto3.Session and the STS configuration check, so that no test can reach AWS."""
+    """Patch boto3.Session, so that no test can reach AWS."""
 
     session: MagicMock
-    services: MagicMock
 
     def setUp(self):
         super().setUp()
-        for target in (f"{HELPERS}.base.boto3.Session", f"{HELPERS}.base.services"):
-            patcher = patch(target)
-            setattr(self, target.rsplit(".", 1)[-1].lower(), patcher.start())
-            self.addCleanup(patcher.stop)
+        patcher = patch(f"{HELPERS}.base.boto3.Session")
+        self.session = patcher.start()
+        self.addCleanup(patcher.stop)
         self.route53_client = FakeRoute53Client()
         self.acm_client = FakeACMClient()
 

@@ -29,7 +29,7 @@ from django.utils.csp import CSP
 from dotenv import load_dotenv
 
 from smarter.__version__ import __version__ as smarter_version
-from smarter.common.conf import smarter_settings
+from smarter.common.conf import const, smarter_settings
 from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.resources import log_resource_limits
@@ -59,13 +59,13 @@ See:
     - smarter_settings.allowed_hosts
 """
 
-LOCAL_HOSTS = smarter_settings.local_hosts
+LOCAL_HOSTS = const.LOCAL_HOSTS
 """
 Supplemental list of local host/domain names that this Django site can serve.
 
 This is specicific to Smarter and not officially part of Django settings.
 
-See: smarter_settings.local_hosts
+See: smarter.common.conf.const.LOCAL_HOSTS
 """
 
 # to disable redis/celery in collectstatic
@@ -557,8 +557,11 @@ See:
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 SECRET_KEY = (
-    smarter_settings.secret_key.get_secret_value()
-    if (smarter_settings.secret_key and getattr(smarter_settings.secret_key, "_secret_value", None) is not None)
+    smarter_settings.django_secret_key.get_secret_value()
+    if (
+        smarter_settings.django_secret_key
+        and getattr(smarter_settings.django_secret_key, "_secret_value", None) is not None
+    )
     else None
 )
 """
@@ -567,7 +570,7 @@ The secret key for this Django installation.
 This is retrieved and validated
 from smarter_settings. If not set, a random key is generated and logged as a warning in the
 local environment. In every other environment, Smarter refuses to start without it. See
-``smarter_settings.require_secret_key()``.
+``smarter_settings.require_django_secret_key()``.
 
 For production deployments the chain of custody should be:
 
@@ -576,13 +579,13 @@ GitHub Secrets -> GitHub Actions -> environment variable -> smarter_settings -> 
 See:
 
     - https://docs.djangoproject.com/en/6.0/ref/settings/#secret-key
-    - smarter_settings.secret_key
+    - smarter_settings.django_secret_key
 """
 
-smarter_settings.require_secret_key()
+smarter_settings.require_django_secret_key()
 
 # A placeholder such as SET-ME-PLEASE is published in this repository, so it is never
-# used as a key. settings_defaults already generates a key when SECRET_KEY is unset,
+# used as a key. smarter_settings already generates a key when SECRET_KEY is unset,
 # but not when it is set to a placeholder.
 if is_missing_value(SECRET_KEY):
     SECRET_KEY = secrets.token_hex(32)

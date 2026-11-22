@@ -14,7 +14,7 @@ from typing import Optional
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import botocore.exceptions
 
-from smarter.common.conf import services, smarter_settings
+from smarter.common.conf import smarter_settings
 
 # our stuff
 from smarter.common.helpers.console_helpers import SmarterFormattedText
@@ -86,7 +86,6 @@ class AWSBase(SmarterHelperMixin):
         init_info: Optional[str] = None,
     ):
         super().__init__()
-        services.raise_error_on_disabled(services.AWS_CLI)
         logger.debug("initializing")
 
         self._shared_resource_identifier = (

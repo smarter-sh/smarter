@@ -72,7 +72,7 @@ Django Security Features
 - **Security Middleware** (custom and built-in). Implements various security measures through middleware components. See `Security Middleware <https://docs.djangoproject.com/en/stable/topics/security/#security-middlewares>`_
 - **Session Security**. Manages user session expiration and secure cookie settings. See `Session Security <https://docs.djangoproject.com/en/stable/topics/http/sessions/#security>`_
 - **Secure Cookie Settings**. Ensures cookies are transmitted securely and are protected from cross-site scripting. See `Cookie Security <https://docs.djangoproject.com/en/stable/ref/settings/#std-setting-SESSION_COOKIE_SECURE>`_
-- **Secret Key Management**. The secret key that signs sessions and password reset tokens comes from ``SMARTER_SECRET_KEY``. Outside of the local environment, Smarter refuses to start if it is missing or still a ``SET-ME`` placeholder, rather than generating a different random key in every pod. See `SECRET_KEY <https://docs.djangoproject.com/en/stable/ref/settings/#secret-key>`_
+- **Secret Key Management**. The secret key that signs sessions and password reset tokens comes from ``DJANGO_SECRET_KEY``. Outside of the local environment, Smarter refuses to start if it is missing or still a ``SET-ME`` placeholder, rather than generating a different random key in every pod. See `SECRET_KEY <https://docs.djangoproject.com/en/stable/ref/settings/#secret-key>`_
 - **Password Validation**. Enforces strong password policies to enhance account security. See `Password Validation <https://docs.djangoproject.com/en/stable/topics/auth/passwords/#password-validation>`_. The default password policy configuration is as follows:
 
   .. code-block:: python

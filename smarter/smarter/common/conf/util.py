@@ -5,13 +5,108 @@ The field validators of the Settings use these, so that the same rule is written
 """
 
 import re
-from typing import Optional, Pattern
+from typing import Any, Optional, Pattern, Union
 
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
 from smarter.common.conf.env import is_missing_value
 from smarter.common.exceptions import SmarterConfigurationError
+
+
+def field_default(model: Union[type[BaseModel], BaseModel], field_name: str) -> Any:
+    """
+    Return a settings field's default, as its declaration states it.
+
+    The validators use it for a value that is empty, e.g. ``""`` passed to the constructor, so that a
+    default is written once, on its field.
+
+    :param model: The settings class, or the class of one group of its fields. An instance of one is
+        read as its class: the validators' ``cls`` is typed as an instance.
+    :param field_name: The field, e.g. ``debug_mode``.
+    :returns: Its default, whose type is the field's. A default that a factory makes is made.
+    """
+    if isinstance(model, BaseModel):
+        model_class = type(model)
+    else:
+        model_class = model
+    field = model_class.model_fields[field_name]
+    default = field.get_default(call_default_factory=True)
+    return default
+
+
+def is_unset(data: object, field_name: str) -> bool:
+    """
+    Return True if the values to validate leave a field out, or set it to an empty value.
+
+    :param data: The values that a ``mode="before"`` model validator receives.
+    :param field_name: The field.
+    :returns: True if the field will get its default.
+    """
+    if not isinstance(data, dict):
+        return False
+    value = data.get(field_name)
+    if value is None:
+        return True
+    if isinstance(value, str) and value in THE_EMPTY_SET:
+        return True
+    return False
+
+
+def input_value(model: Union[type[BaseModel], BaseModel], data: object, field_name: str) -> Any:
+    """
+    Return the value that a field will be validated from: the one given, or else its default.
+
+    :param model: The settings class, or the class of one group of its fields.
+    :param data: The values that a ``mode="before"`` model validator receives.
+    :param field_name: The field.
+    :returns: Its value, not yet validated, which may be of any type the field accepts.
+    """
+    if is_unset(data, field_name):
+        return field_default(model, field_name)
+    assert isinstance(data, dict)
+    return data[field_name]
+
+
+def with_derived_default(data: object, field_name: str, value: object) -> object:
+    """
+    Return the values to validate, with a derived default for a field that they leave unset.
+
+    A default that depends on another field, e.g. an address at the platform's domain, can't be written
+    on its field. A ``mode="before"`` model validator computes it instead, and passes it here.
+
+    :param data: The values that a ``mode="before"`` model validator receives.
+    :param field_name: The field.
+    :param value: Its derived default.
+    :returns: A copy of the values with the field set, or the values themselves if they set it.
+    """
+    if not is_unset(data, field_name):
+        return data
+    assert isinstance(data, dict)
+    derived = dict(data)
+    derived[field_name] = value
+    return derived
+
+
+def comma_separated(v: Any) -> Any:
+    """
+    Split a comma-separated string into a list, e.g. ``"a, b,"`` into ``["a", "b"]``.
+
+    A list setting's environment variable is a comma-separated string. Any other value is returned
+    as it is, for its validator to judge.
+
+    :param v: The value of a list setting.
+    :returns: The list of the string's items, without whitespace or empty items, or the value itself,
+        which may be of any type: the validator that calls it judges it.
+    """
+    if not isinstance(v, str):
+        return v
+    items = []
+    for item in v.split(","):
+        stripped = item.strip()
+        if stripped:
+            items.append(stripped)
+    return items
 
 
 def before_field_validator(*args, **kwargs):
@@ -96,6 +191,11 @@ __all__ = [
     "THROTTLE_RATE_DISABLED",
     "THROTTLE_RATE_PATTERN",
     "before_field_validator",
+    "comma_separated",
+    "field_default",
+    "input_value",
+    "is_unset",
+    "with_derived_default",
     "parse_int_setting",
     "validate_throttle_rate",
 ]

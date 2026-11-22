@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from pydantic import SecretStr
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.common.utils import (
     ENVIRONMENT_VARIABLE_PREFIX,
     environment_setting_log_value,
@@ -42,7 +43,7 @@ class TestEnvironmentSettings(SmarterTestBase):
         secret = f"unit-test-secret-{self.hash_suffix}"
         value = environment_setting_log_value
         self.assertEqual(value("platform_fernet_encryption_key", SecretStr(secret)), "set")
-        self.assertEqual(value("platform_admin_password", SecretStr(smarter_settings.default_missing_value)), "not set")
+        self.assertEqual(value("platform_admin_password", SecretStr(DEFAULT_MISSING_VALUE)), "not set")
         self.assertNotIn("person", value("platform_email_admin", "person@example.com"))
         self.assertNotIn("Ada Lovelace", value("platform_branding_primary_contact", "Ada Lovelace"))
         self.assertEqual(value("platform_sensitive_files_amnesty_patterns", [re.compile("^/api/"), "x"]), "[^/api/, x]")

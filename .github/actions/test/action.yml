@@ -167,11 +167,11 @@ runs:
 
         # AI services
         # -----------------------
-        echo "APP_PROVIDER_OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
-        echo "APP_VECTORSTORE_PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
-        echo "APP_PROVIDER_GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .
-        echo "APP_PROVIDER_LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .
-        echo "APP_PROVIDER_GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
+        echo "SMARTER_APP_PROVIDER_OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
+        echo "SMARTER_APP_VECTORSTORE_PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
+        echo "SMARTER_APP_PROVIDER_GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .env
+        echo "SMARTER_APP_PROVIDER_LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .env
+        echo "SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
 
     #--------------------------------------------------------------------------
     # Test
@@ -182,7 +182,7 @@ runs:
       env:
         ENVIRONMENT: local
         GITHUB_ACTIONS: "true"
-        DEBUG_MODE: "true"
+        SMARTER_DEBUG_MODE: "true"
       run: |
         make docker-init
         echo "FIX NOTE: ADD PYTHON UNIT TESTS HERE..."

@@ -62,7 +62,7 @@ from smarter.apps.llmtool.manifest.models.common.plugin.status import (
 from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
 from smarter.apps.llmtool.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults, smarter_settings
+from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
@@ -612,11 +612,11 @@ class ApiPlugin(PluginBase):
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
-            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+            provider=smarter_settings.llm_default_provider,
             systemRole="You are a helpful sales agent for Stackademy. You can provide information about courses available at Stackademy.\n",
-            model=settings_defaults.LLM_DEFAULT_MODEL,
-            temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-            maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+            model=smarter_settings.llm_default_model,
+            temperature=smarter_settings.llm_default_temperature,
+            maxTokens=smarter_settings.llm_default_max_tokens,
         )
         connection = "example_connection"
         api_data = ApiData(

@@ -50,11 +50,11 @@ if smarter_settings.app_dashboard_server_logs_enable:
     )
 
     logger.debug(
-        "Server logs app url endpoint is %s. Set env `SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE=false` to disable.",
+        "Server logs app url endpoint is %s. Set env 'SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE' to 'false' to disable.",
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "Server logs app is %s. Set env `SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE=true` to enable the server logs endpoint at /api/web/dashboard/logs/.",
+        "Server logs app is %s. Set env 'SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE' to 'true' to enable the server logs endpoint at /api/web/dashboard/logs/.",
         SmarterReadyState.NOT_READY,
     )

@@ -224,6 +224,7 @@ from django.http import (
 )
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import SENSITIVE_FILES_AMNESTY_PATTERNS
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -246,10 +247,7 @@ else:
     )
 
 
-ALLOWED_PATTERNS = tuple(
-    pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.IGNORECASE)
-    for pattern in smarter_settings.platform_sensitive_files_amnesty_patterns
-)
+ALLOWED_PATTERNS = SENSITIVE_FILES_AMNESTY_PATTERNS
 
 SENSITIVE_FILES = frozenset(
     {

@@ -14,8 +14,7 @@ from smarter.apps.vectorstore.const import (
     QDRANT_CLOUD_API_KEY_SECRET_NAME,
     QDRANT_CLOUD_CONNECTION_NAME,
 )
-from smarter.common.conf.const import get_env
-from smarter.common.conf.env import is_missing_value
+from smarter.common.conf.env import get_env, is_missing_value
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 

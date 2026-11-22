@@ -1,4 +1,4 @@
-"""Test :func:`smarter.common.conf.env.get_env`, and the helpers built on it."""
+"""Test :func:`smarter.common.conf.env.get_env`, and the helpers it and the settings source share."""
 
 import os
 from unittest import TestCase
@@ -7,8 +7,13 @@ from unittest.mock import patch
 from pydantic import SecretStr
 
 from smarter.common.conf import env
-from smarter.common.conf.defaults import optional_secret_env
-from smarter.common.conf.env import DEFAULT_MISSING_VALUE, get_env, is_missing_value
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
+from smarter.common.conf.env import (
+    cast_environment_value,
+    get_env,
+    is_missing_value,
+    read_environment_variable,
+)
 
 VAR = "TEST_SMARTER_GET_ENV"
 
@@ -97,20 +102,56 @@ class TestIsMissingValue(TestCase):
         self.assertFalse(is_missing_value(SecretStr("sk-key")))
 
 
-class TestOptionalSecretEnv(TestCase):
-    """Test that optional_secret_env() is a SecretStr when the variable is set, and None otherwise."""
+class TestReadEnvironmentVariable(TestCase):
+    """Test that read_environment_variable() reads a variable with or without SMARTER_, and strips it."""
 
-    def test_set(self):
-        with patch.dict(os.environ, {VAR: "sk-key"}):
-            secret = optional_secret_env(VAR)
-        self.assertIsInstance(secret, SecretStr)
-        self.assertEqual(secret.get_secret_value(), "sk-key")  # type: ignore[union-attr]
+    def setUp(self):
+        for name in (VAR, f"SMARTER_{VAR}"):
+            patcher = patch.dict(os.environ, {}, clear=False)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+            os.environ.pop(name, None)
 
     def test_missing(self):
-        for value in ("", DEFAULT_MISSING_VALUE, "SET-ME-IN-helm/charts/smarter/values.yaml"):
-            with self.subTest(value=value), patch.dict(os.environ, {VAR: value}):
-                self.assertIsNone(optional_secret_env(VAR))
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop(VAR, None)
-            os.environ.pop(f"SMARTER_{VAR}", None)
-            self.assertIsNone(optional_secret_env(VAR))
+        self.assertIsNone(read_environment_variable(VAR))
+
+    def test_unprefixed_wins(self):
+        with patch.dict(os.environ, {VAR: "plain", f"SMARTER_{VAR}": "prefixed"}):
+            self.assertEqual(read_environment_variable(VAR), "plain")
+
+    def test_prefixed(self):
+        """The prefixed name is read when the plain one is missing, or empty."""
+        with patch.dict(os.environ, {f"SMARTER_{VAR}": "prefixed"}):
+            self.assertEqual(read_environment_variable(VAR), "prefixed")
+        with patch.dict(os.environ, {VAR: "", f"SMARTER_{VAR}": "prefixed"}):
+            self.assertEqual(read_environment_variable(VAR), "prefixed")
+
+    def test_strips_whitespace_and_quotes(self):
+        with patch.dict(os.environ, {VAR: '  "quoted"  '}):
+            self.assertEqual(read_environment_variable(VAR), "quoted")
+
+
+class TestCastEnvironmentValue(TestCase):
+    """Test that cast_environment_value() casts to the default's type, and never logs the value."""
+
+    def test_casts(self):
+        self.assertEqual(cast_environment_value(VAR, " text ", "default"), "text")
+        self.assertIs(cast_environment_value(VAR, "yes", False), True)
+        self.assertEqual(cast_environment_value(VAR, "7", 0), 7)
+        self.assertEqual(cast_environment_value(VAR, "1.5", 0.0), 1.5)
+        self.assertEqual(cast_environment_value(VAR, "a, b,", []), ["a", "b"])
+        self.assertEqual(cast_environment_value(VAR, '{"a": 1}', {}), {"a": 1})
+        self.assertEqual(cast_environment_value(VAR, "raw", None), "raw")
+
+    def test_missing_is_the_default(self):
+        self.assertEqual(cast_environment_value(VAR, None, 3), 3)
+        self.assertEqual(cast_environment_value(VAR, DEFAULT_MISSING_VALUE, 3), 3)
+
+    def test_uncastable_is_the_default_and_the_value_is_not_logged(self):
+        for raw, default in (("secret-value", 0), ("secret-value", 0.0), ("secret-value", {})):
+            with self.subTest(default=default):
+                with self.assertLogs("smarter.common.conf.env", level="WARNING") as captured:
+                    self.assertEqual(cast_environment_value(VAR, raw, default), default)
+                message = captured.records[0].getMessage()
+                self.assertIn(VAR, message)
+                self.assertNotIn("secret-value", message)

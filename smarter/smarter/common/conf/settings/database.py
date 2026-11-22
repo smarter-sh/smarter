@@ -3,12 +3,18 @@
 
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
 from smarter.common.conf.env import is_missing_value
-from smarter.common.conf.util import before_field_validator, parse_int_setting
+from smarter.common.conf.util import (
+    before_field_validator,
+    field_default,
+    input_value,
+    parse_int_setting,
+    with_derived_default,
+)
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -16,7 +22,7 @@ class DatabaseSettings(BaseModel):
     """The platform's MySQL (MariaDB) database."""
 
     subsystem_sql_root_username: str = Field(
-        settings_defaults.SUBSYSTEM_SQL_ROOT_USERNAME,
+        "root",
         description="The database server's administrator, whom manage.py load_from_github --run_scripts passes to a repository's scripts.",
         examples=["root"],
         title="MySQL Root Username",
@@ -30,7 +36,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME``.
 
     :type: str
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_ROOT_USERNAME``, ``root`` if it is not set.
+    :default: ``root`` if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
 
@@ -44,13 +50,13 @@ class DatabaseSettings(BaseModel):
             str: The validated username.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.SUBSYSTEM_SQL_ROOT_USERNAME
+            v = field_default(cls, "subsystem_sql_root_username")
         if not isinstance(v, str) or not v:
             raise SmarterConfigurationError(f"sql_root_username of type {type(v)} is not a non-empty string.")
         return v
 
     subsystem_sql_root_password: Optional[SecretStr] = Field(
-        settings_defaults.SUBSYSTEM_SQL_ROOT_PASSWORD,
+        None,
         description="The password of the database server's administrator, sql_root_username.",
         examples=["your-root-password"],
         title="MySQL Root Password",
@@ -63,7 +69,7 @@ class DatabaseSettings(BaseModel):
     clients read it, which keeps it off the command line. Without it, the scripts don't receive it.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_ROOT_PASSWORD``, None if it is not set.
+    :default: None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
@@ -77,7 +83,7 @@ class DatabaseSettings(BaseModel):
             Optional[SecretStr]: The validated password, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.SUBSYSTEM_SQL_ROOT_PASSWORD
+            v = field_default(cls, "subsystem_sql_root_password")
         if is_missing_value(v):
             return None
         if not isinstance(v, SecretStr):
@@ -85,7 +91,7 @@ class DatabaseSettings(BaseModel):
         return v
 
     subsystem_sql_host: str = Field(
-        settings_defaults.SUBSYSTEM_SQL_HOST,
+        "smarter-mariadb",
         description="The host name of the platform's database server.",
         examples=["smarter-mariadb", "mysql.example.com"],
         title="MySQL Host",
@@ -96,7 +102,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_SUBSYSTEM_SQL_HOST``.
 
     :type: str
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_HOST``, ``smarter-mariadb``, the local docker-compose
+    :default: ``smarter-mariadb``, the local docker-compose
         service, if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
@@ -111,13 +117,13 @@ class DatabaseSettings(BaseModel):
             str: The validated host name.
         """
         if v in THE_EMPTY_SET or is_missing_value(v):
-            v = settings_defaults.SUBSYSTEM_SQL_HOST
+            v = field_default(cls, "subsystem_sql_host")
         if not isinstance(v, str) or not v.strip():
             raise SmarterConfigurationError(f"sql_host of type {type(v)} is not a non-empty string.")
         return v.strip()
 
     subsystem_sql_port: int = Field(
-        settings_defaults.SUBSYSTEM_SQL_PORT,
+        3306,
         ge=1,
         le=65535,
         description="The TCP port of the platform's database server.",
@@ -130,7 +136,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_SUBSYSTEM_SQL_PORT``.
 
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_PORT``, 3306 if it is not set.
+    :default: 3306 if it is not set.
     :raises SmarterConfigurationError: If the value is not a port number, 1 to 65535.
     """
 
@@ -144,11 +150,11 @@ class DatabaseSettings(BaseModel):
             int: The validated port.
         """
         return parse_int_setting(
-            "subsystem_sql_port", v, settings_defaults.SUBSYSTEM_SQL_PORT, minimum=1, maximum=65535
+            "subsystem_sql_port", v, field_default(cls, "subsystem_sql_port"), minimum=1, maximum=65535
         )
 
     subsystem_sql_database: str = Field(
-        settings_defaults.SUBSYSTEM_SQL_DATABASE,
+        "smarter",
         description="The name of the platform's database.",
         examples=["smarter"],
         title="MySQL Database",
@@ -159,7 +165,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_SUBSYSTEM_SQL_DATABASE``.
 
     :type: str
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_DATABASE``, ``smarter`` if it is not set.
+    :default: ``smarter`` if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
 
@@ -173,13 +179,13 @@ class DatabaseSettings(BaseModel):
             str: The validated database name.
         """
         if v in THE_EMPTY_SET or is_missing_value(v):
-            v = settings_defaults.SUBSYSTEM_SQL_DATABASE
+            v = field_default(cls, "subsystem_sql_database")
         if not isinstance(v, str) or not v.strip():
             raise SmarterConfigurationError(f"sql_database of type {type(v)} is not a non-empty string.")
         return v.strip()
 
     subsystem_sql_user: str = Field(
-        settings_defaults.SUBSYSTEM_SQL_USER,
+        "smarter",
         description="The database user that the platform connects as.",
         examples=["smarter"],
         title="MySQL User",
@@ -190,7 +196,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_SUBSYSTEM_SQL_USER``.
 
     :type: str
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_USER``, ``smarter`` if it is not set.
+    :default: ``smarter`` if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
 
@@ -204,13 +210,13 @@ class DatabaseSettings(BaseModel):
             str: The validated user name.
         """
         if v in THE_EMPTY_SET or is_missing_value(v):
-            v = settings_defaults.SUBSYSTEM_SQL_USER
+            v = field_default(cls, "subsystem_sql_user")
         if not isinstance(v, str) or not v.strip():
             raise SmarterConfigurationError(f"sql_user of type {type(v)} is not a non-empty string.")
         return v.strip()
 
     subsystem_sql_password: Optional[SecretStr] = Field(
-        settings_defaults.SUBSYSTEM_SQL_PASSWORD,
+        None,
         description="The password of sql_user, the database user that the platform connects as.",
         examples=["your-database-password"],
         title="MySQL Password",
@@ -223,7 +229,7 @@ class DatabaseSettings(BaseModel):
     a placeholder such as ``SET-ME-PLEASE``, is None, and the platform can't connect to its database.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.SUBSYSTEM_SQL_PASSWORD``.
+    :default: ``"smarter"`` in the local environment, and None elsewhere. See :meth:`derive_database_defaults`.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
@@ -237,7 +243,7 @@ class DatabaseSettings(BaseModel):
             Optional[SecretStr]: The validated password, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.SUBSYSTEM_SQL_PASSWORD
+            v = field_default(cls, "subsystem_sql_password")
         if isinstance(v, str):
             v = SecretStr(v)
         if is_missing_value(v):
@@ -246,8 +252,27 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_password of type {type(v)} is not a SecretStr")
         return v
 
+    @model_validator(mode="before")
+    @classmethod
+    def derive_database_defaults(cls, data: object) -> object:
+        """
+        Derive the local environment's database password, unless it is set.
+
+        In the local environment, the password is docker-compose.yml's smarter-mariadb service's,
+        ``smarter``. Elsewhere there is no default.
+
+        :param data: The values to validate: the constructor's and the environment's.
+        :returns: The values, with the derived default added in the local environment.
+        """
+        if "environment" not in cls.model_fields:
+            return data
+        environment = input_value(cls, data, "environment")
+        if environment != SmarterEnvironments.LOCAL:
+            return data
+        return with_derived_default(data, "subsystem_sql_password", "smarter")
+
     database_read_timeout: int = Field(
-        settings_defaults.DATABASE_READ_TIMEOUT,
+        0,
         ge=0,
         description=(
             "The seconds that a query of the platform's database may wait for the server's reply before it fails. "
@@ -268,7 +293,7 @@ class DatabaseSettings(BaseModel):
     Set it with ``SMARTER_DATABASE_READ_TIMEOUT``.
 
     :type: int
-    :default: Value from ``settings_defaults.DATABASE_READ_TIMEOUT``, 0 if it is not set.
+    :default: 0 if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
@@ -281,7 +306,7 @@ class DatabaseSettings(BaseModel):
         Returns:
             int: The validated database_read_timeout.
         """
-        return parse_int_setting("database_read_timeout", v, settings_defaults.DATABASE_READ_TIMEOUT)
+        return parse_int_setting("database_read_timeout", v, field_default(cls, "database_read_timeout"))
 
 
 __all__ = ["DatabaseSettings"]

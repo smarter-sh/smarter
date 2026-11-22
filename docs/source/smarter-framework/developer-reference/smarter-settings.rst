@@ -47,3 +47,12 @@ Helpers
 
 .. automodule:: smarter.common.conf.util
    :members:
+
+The environment
+---------------
+
+.. automodule:: smarter.common.conf.const
+   :members:
+
+.. automodule:: smarter.common.conf.env
+   :members:

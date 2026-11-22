@@ -4,11 +4,10 @@
 import logging
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field, ValidationInfo
+from pydantic import BaseModel, Field, ValidationInfo, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
-from smarter.common.conf.util import before_field_validator
+from smarter.common.conf.util import before_field_validator, field_default
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -16,7 +15,7 @@ class FeatureSettings(BaseModel):
     """Feature flags, debugging and logging."""
 
     debug_mode: bool = Field(
-        settings_defaults.DEBUG_MODE,
+        False,
         description="True if debug mode is enabled. This enables verbose logging and other debug features.",
         title="Debug Mode",
     )
@@ -30,7 +29,7 @@ class FeatureSettings(BaseModel):
     other diagnostic data that can help identify issues during development or testing.
 
     :type: bool
-    :default: Value from ``settings_defaults.DEBUG_MODE``
+    :default: ``False``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
@@ -47,14 +46,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.DEBUG_MODE
+            return field_default(cls, "debug_mode")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate debug_mode: {v}")
 
     dump_defaults: bool = Field(
-        settings_defaults.DUMP_DEFAULTS,
+        False,
         description="True if default values should be dumped for debugging purposes.",
         title="Dump Defaults",
     )
@@ -67,7 +66,7 @@ class FeatureSettings(BaseModel):
     trouble shooting issues related to settings.
 
     :type: bool
-    :default: Value from ``settings_defaults.DUMP_DEFAULTS``
+    :default: ``False``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
@@ -84,7 +83,7 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.DUMP_DEFAULTS
+            return field_default(cls, "dump_defaults")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
@@ -94,7 +93,7 @@ class FeatureSettings(BaseModel):
     # True if developer mode is enabled. Used as a means to configure a production
     # Docker container to run locally for student use.
     developer_mode: bool = Field(
-        settings_defaults.DEVELOPER_MODE,
+        False,
         description="True if developer mode is enabled. Used as a means to configure a production Docker container to run locally for student use.",
         title="Developer Mode",
     )
@@ -108,7 +107,7 @@ class FeatureSettings(BaseModel):
     constraints that would normally apply in a live environment.
 
     :type: bool
-    :default: Value from ``settings_defaults.DEVELOPER_MODE``
+    :default: ``False``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
@@ -124,14 +123,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.DEVELOPER_MODE
+            return field_default(cls, "developer_mode")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate developer_mode: {v}")
 
-    enable_dropzone_manifest_apply: bool = Field(
-        settings_defaults.APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE,
+    app_dashboard_manifest_dropzone_enable: bool = Field(
+        True,
         description="True if the file drop zone feature is enabled based on the current environment.",
         title="Enable File Drop Zone",
     )
@@ -141,52 +140,52 @@ class FeatureSettings(BaseModel):
         bool: True if the file drop zone is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_dropzone_manifest_apply")
-    def parse_enable_dashboard_apply(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_dropzone_manifest_apply' field.
+    @before_field_validator("app_dashboard_manifest_dropzone_enable")
+    def parse_app_dashboard_manifest_dropzone_enable(cls, v: Optional[Union[bool, str]]) -> bool:
+        """Validates the 'app_dashboard_manifest_dropzone_enable' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the enable_dropzone_manifest_apply value to validate
+            v (Optional[Union[bool, str]]): the app_dashboard_manifest_dropzone_enable value to validate
         Returns:
-            bool: The validated enable_dropzone_manifest_apply.
+            bool: The validated app_dashboard_manifest_dropzone_enable.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE
+            return field_default(cls, "app_dashboard_manifest_dropzone_enable")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_dropzone_manifest_apply: {v}")
+        raise SmarterConfigurationError(f"could not validate app_dashboard_manifest_dropzone_enable: {v}")
 
     # -------------------------------------------------------------------------
     # One flag per SAM resource app. Each one mounts, or leaves out, the app's
     # web console urls. See smarter.urls.console. All of them default to True.
     # -------------------------------------------------------------------------
     app_connection_enable: bool = Field(
-        settings_defaults.APP_CONNECTION_ENABLE,
+        True,
         description="True if the web console serves the Connection pages. Set with SMARTER_APP_CONNECTION_ENABLE.",
         title="Enable Connection",
     )
     """True if the web console serves the Connection pages, under ``/connection/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_CONNECTION_ENABLE``, True unless ``SMARTER_APP_CONNECTION_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_CONNECTION_ENABLE`` is false.
     """
 
     app_guardrail_enable: bool = Field(
-        settings_defaults.APP_GUARDRAIL_ENABLE,
+        True,
         description="True if the web console serves the Guardrail pages. Set with SMARTER_APP_GUARDRAIL_ENABLE.",
         title="Enable Guardrail",
     )
     """True if the web console serves the Guardrail pages, under ``/guardrail/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_GUARDRAIL_ENABLE``, True unless ``SMARTER_APP_GUARDRAIL_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_GUARDRAIL_ENABLE`` is false.
     """
 
     app_llmclient_enable: bool = Field(
-        settings_defaults.APP_LLMCLIENT_ENABLE,
+        True,
         description="True if the web console serves the LLMClient pages. Set with SMARTER_APP_LLMCLIENT_ENABLE.",
         title="Enable LLMClient",
     )
@@ -195,90 +194,90 @@ class FeatureSettings(BaseModel):
     It doesn't affect the chat and config endpoints of LLMClients on their custom domains.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_LLMCLIENT_ENABLE``, True unless ``SMARTER_APP_LLMCLIENT_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_LLMCLIENT_ENABLE`` is false.
     """
 
     app_llmhost_enable: bool = Field(
-        settings_defaults.APP_LLMHOST_ENABLE,
+        True,
         description="True if the web console serves the LLMHost pages. Set with SMARTER_APP_LLMHOST_ENABLE.",
         title="Enable LLMHost",
     )
     """True if the web console serves the LLMHost pages, under ``/llmhost/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_LLMHOST_ENABLE``, True unless ``SMARTER_APP_LLMHOST_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_LLMHOST_ENABLE`` is false.
     """
 
     app_llmtool_enable: bool = Field(
-        settings_defaults.APP_LLMTOOL_ENABLE,
+        True,
         description="True if the web console serves the LLMTool and Extension pages. Set with SMARTER_APP_LLMTOOL_ENABLE.",
         title="Enable LLMTool",
     )
     """True if the web console serves the LLMTool pages, under ``/llm-tools/``, and the Extension pages.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_LLMTOOL_ENABLE``, True unless ``SMARTER_APP_LLMTOOL_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_LLMTOOL_ENABLE`` is false.
     """
 
     app_mcpclient_enable: bool = Field(
-        settings_defaults.APP_MCPCLIENT_ENABLE,
+        True,
         description="True if the web console serves the MCPClient pages. Set with SMARTER_APP_MCPCLIENT_ENABLE.",
         title="Enable MCPClient",
     )
     """True if the web console serves the MCPClient pages, under ``/mcpclient/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_MCPCLIENT_ENABLE``, True unless ``SMARTER_APP_MCPCLIENT_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_MCPCLIENT_ENABLE`` is false.
     """
 
     app_orchestrator_enable: bool = Field(
-        settings_defaults.APP_ORCHESTRATOR_ENABLE,
+        True,
         description="True if the web console serves the Orchestrator pages. Set with SMARTER_APP_ORCHESTRATOR_ENABLE.",
         title="Enable Orchestrator",
     )
     """True if the web console serves the Orchestrator pages, under ``/orchestrator/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_ORCHESTRATOR_ENABLE``, True unless ``SMARTER_APP_ORCHESTRATOR_ENABLE``
+    :default: True unless ``SMARTER_APP_ORCHESTRATOR_ENABLE``
         is false.
     """
 
     app_provider_enable: bool = Field(
-        settings_defaults.APP_PROVIDER_ENABLE,
+        True,
         description="True if the web console serves the Provider pages. Set with SMARTER_APP_PROVIDER_ENABLE.",
         title="Enable Provider",
     )
     """True if the web console serves the Provider pages, under ``/provider/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_PROVIDER_ENABLE``, True unless ``SMARTER_APP_PROVIDER_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_PROVIDER_ENABLE`` is false.
     """
 
     app_secret_enable: bool = Field(
-        settings_defaults.APP_SECRET_ENABLE,
+        True,
         description="True if the web console serves the Secret pages. Set with SMARTER_APP_SECRET_ENABLE.",
         title="Enable Secret",
     )
     """True if the web console serves the Secret pages, under ``/secret/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_SECRET_ENABLE``, True unless ``SMARTER_APP_SECRET_ENABLE`` is false.
+    :default: True unless ``SMARTER_APP_SECRET_ENABLE`` is false.
     """
 
     app_vectorsearch_enable: bool = Field(
-        settings_defaults.APP_VECTORSEARCH_ENABLE,
+        True,
         description="True if the web console serves the VectorSearch pages. Set with SMARTER_APP_VECTORSEARCH_ENABLE.",
         title="Enable VectorSearch",
     )
     """True if the web console serves the VectorSearch pages, under ``/vectorsearch/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.APP_VECTORSEARCH_ENABLE``, True unless ``SMARTER_APP_VECTORSEARCH_ENABLE``
+    :default: True unless ``SMARTER_APP_VECTORSEARCH_ENABLE``
         is false.
     """
 
     app_vectorstore_enable: bool = Field(
-        settings_defaults.APP_VECTORSTORE_ENABLE,
+        True,
         description="True if the vectorstore feature is enabled based on the current environment.",
         title="Enable Vectorstore",
     )
@@ -291,7 +290,7 @@ class FeatureSettings(BaseModel):
     """
 
     app_proxy_enable: bool = Field(
-        settings_defaults.APP_PROXY_ENABLE,
+        True,
         description="True if the proxy feature is enabled based on the current environment.",
         title="Enable Proxy",
     )
@@ -321,8 +320,7 @@ class FeatureSettings(BaseModel):
         """
         Validate one of the SAM apps' ``enable_<app>`` flags.
 
-        An empty value falls back to the field's default in ``settings_defaults``, e.g.
-        ``settings_defaults.APP_GUARDRAIL_ENABLE`` for ``app_guardrail_enable``.
+        An empty value falls back to the field's default, True for every one of them.
 
         :param v: The value to validate.
         :param info: Pydantic's validation info, which names the field.
@@ -333,8 +331,7 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            default_name = field_name.upper()
-            default = getattr(settings_defaults, default_name)
+            default = field_default(cls, field_name)
             return bool(default)
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
@@ -342,7 +339,7 @@ class FeatureSettings(BaseModel):
         raise SmarterConfigurationError(f"could not validate {field_name}: {v}")
 
     app_dashboard_server_logs_enable: bool = Field(
-        settings_defaults.APP_DASHBOARD_SERVER_LOGS_ENABLE,
+        True,
         description="True if the terminal app feature is enabled based on the current environment.",
         title="Enabled Terminal App",
     )
@@ -354,24 +351,24 @@ class FeatureSettings(BaseModel):
 
     @before_field_validator("app_dashboard_server_logs_enable")
     def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_dashboard_server_logs' field.
+        """Validates the 'app_dashboard_server_logs_enable' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the enable_dashboard_server_logs value to validate
+            v (Optional[Union[bool, str]]): the app_dashboard_server_logs_enable value to validate
         Returns:
-            bool: The validated enable_dashboard_server_logs.
+            bool: The validated app_dashboard_server_logs_enable.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.APP_DASHBOARD_SERVER_LOGS_ENABLE
+            return field_default(cls, "app_dashboard_server_logs_enable")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
+        raise SmarterConfigurationError(f"could not validate app_dashboard_server_logs_enable: {v}")
 
     app_dashboard_web_console_terminal_enable: bool = Field(
-        settings_defaults.APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE,
+        False,
         description=(
             "True if superusers can open a bash shell inside the server's container from the web console's "
             "Terminal page. Off by default."
@@ -392,24 +389,24 @@ class FeatureSettings(BaseModel):
 
     @before_field_validator("app_dashboard_web_console_terminal_enable")
     def parse_app_dashboard_web_console_terminal_enable(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_web_console_terminal' field.
+        """Validates the 'app_dashboard_web_console_terminal_enable' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the enable_web_console_terminal value to validate
+            v (Optional[Union[bool, str]]): the app_dashboard_web_console_terminal_enable value to validate
         Returns:
-            bool: The validated enable_web_console_terminal.
+            bool: The validated app_dashboard_web_console_terminal_enable.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE
+            return field_default(cls, "app_dashboard_web_console_terminal_enable")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_web_console_terminal: {v}")
+        raise SmarterConfigurationError(f"could not validate app_dashboard_web_console_terminal_enable: {v}")
 
     platform_static_files_on_cdn: bool = Field(
-        settings_defaults.PLATFORM_STATIC_FILES_ON_CDN,
+        False,
         description=(
             "True if the platform's static files, the web console's scripts among them, are uploaded to the "
             "environment's S3 bucket and served from its CDN. Off by default: the server serves them."
@@ -441,14 +438,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.PLATFORM_STATIC_FILES_ON_CDN
+            return field_default(cls, "platform_static_files_on_cdn")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate static_files_on_cdn: {v}")
 
     app_dashboard_passthrough_prompt_enable: bool = Field(
-        settings_defaults.APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE,
+        True,
         description="True if the passthrough prompt feature is enabled based on the current environment.",
         title="Enable Passthrough Prompt",
     )
@@ -460,33 +457,91 @@ class FeatureSettings(BaseModel):
 
     @before_field_validator("app_dashboard_passthrough_prompt_enable")
     def parse_app_dashboard_passthrough_prompt_enable(cls, v: Optional[Union[bool, str]]) -> bool:
-        """Validates the 'enable_dashboard_passthrough_prompt' field.
+        """Validates the 'app_dashboard_passthrough_prompt_enable' field.
 
         Args:
-            v (Optional[Union[bool, str]]): the enable_dashboard_passthrough_prompt value to validate
+            v (Optional[Union[bool, str]]): the app_dashboard_passthrough_prompt_enable value to validate
         Returns:
-            bool: The validated enable_dashboard_passthrough_prompt.
+            bool: The validated app_dashboard_passthrough_prompt_enable.
         """
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE
+            return field_default(cls, "app_dashboard_passthrough_prompt_enable")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
-        raise SmarterConfigurationError(f"could not validate enable_dashboard_passthrough_prompt: {v}")
+        raise SmarterConfigurationError(f"could not validate app_dashboard_passthrough_prompt_enable: {v}")
 
     log_level: int = Field(
-        settings_defaults.LOG_LEVEL,
+        logging.INFO,
         ge=0,
         le=50,
-        description="The logging level for the platform based on Python logging levels: logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL",
-        examples=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
+        description="The platform's Python logging level: DEBUG, INFO, WARNING, ERROR or CRITICAL, or its number. Set with SMARTER_LOG_LEVEL.",
+        examples=["DEBUG", "INFO", logging.WARNING],
         title="Logging Level",
     )
+    """
+    The platform's Python logging level, e.g. ``logging.INFO``.
+
+    Set it with ``SMARTER_LOG_LEVEL``, a level's name, e.g. ``DEBUG``, or its number, e.g. ``10``.
+    Unless it is set, it is derived from :attr:`debug_mode`: ``logging.DEBUG`` in debug mode, and
+    ``logging.INFO`` otherwise. See :meth:`derive_log_level`.
+
+    :type: int
+    :default: ``logging.INFO``, or ``logging.DEBUG`` in debug mode
+    :raises SmarterConfigurationError: If the value is neither a level's name nor its number.
+    """
+
+    @before_field_validator("log_level")
+    def parse_log_level(cls, v: Optional[Union[int, str]]) -> int:
+        """Validates the 'log_level' field: a level's name, e.g. ``DEBUG``, or its number.
+
+        Args:
+            v (Optional[Union[int, str]]): the level.
+        Returns:
+            int: The level's number.
+        """
+        if isinstance(v, bool):
+            raise SmarterConfigurationError(f"log_level {v} is a bool, not a logging level.")
+        if isinstance(v, int):
+            return v
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"log_level of type {type(v)} is not a logging level.")
+        text = v.strip()
+        if text.isdigit():
+            return int(text)
+        level = logging.getLevelNamesMapping().get(text.upper())
+        if level is None:
+            raise SmarterConfigurationError(f"log_level {v} is not one of DEBUG, INFO, WARNING, ERROR or CRITICAL.")
+        return level
+
+    @model_validator(mode="before")
+    @classmethod
+    def derive_log_level(cls, data: object) -> object:
+        """
+        Derive ``log_level`` from ``debug_mode``, unless it is set.
+
+        :param data: The values to validate, before any field's validators: the constructor's and the
+            environment's.
+        :returns: The values, with ``log_level`` added when it is missing.
+        """
+        if not isinstance(data, dict):
+            return data
+        if "log_level" in data:
+            return data
+        debug_mode = data.get("debug_mode", field_default(cls, "debug_mode"))
+        if isinstance(debug_mode, str):
+            debug_mode = debug_mode.lower() in ["true", "1", "t", "y", "yes"]
+        derived = dict(data)
+        if debug_mode is True:
+            derived["log_level"] = logging.DEBUG
+        else:
+            derived["log_level"] = logging.INFO
+        return derived
 
     verbose_logging: bool = Field(
-        settings_defaults.VERBOSE_LOGGING,
+        False,
         description="Whether to enable verbose logging for debugging purposes.",
         examples=[True, False],
         title="Verbose Logging",
@@ -496,7 +551,7 @@ class FeatureSettings(BaseModel):
 
     If True, enables verbose logging throughout the Smarter platform for debugging purposes.
     :type: bool
-    :default: Value from ``settings_defaults.VERBOSE_LOGGING``
+    :default: ``False``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 

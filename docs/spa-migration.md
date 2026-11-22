@@ -245,8 +245,8 @@ signed-in part and is the starting point.
   `userProfileCount`.
 - **`account`:** account number, name, selected user profile.
 - **`flags`** from `smarter_settings`: `app_proxy_enable`, `app_vectorstore_enable`,
-  `enable_dropzone_manifest_apply`, `enable_web_console_terminal` (and superuser),
-  `enable_dashboard_passthrough_prompt`, `enable_dashboard_server_logs`.
+  `app_dashboard_manifest_dropzone_enable`, `app_dashboard_web_console_terminal_enable` (and superuser),
+  `app_dashboard_passthrough_prompt_enable`, `app_dashboard_server_logs_enable`.
 - **`flags`** from waffle switches: `enable_reactapp_debug_mode`, `enable_web_console_did_you_know`,
   `enable_web_console_onboarding_hints`, `enable_web_console_server_logs`,
   `enable_account_registration`, `enable_oauth2`, `enable_login_footer_links`, `enable_doodle`.
@@ -354,7 +354,7 @@ Paths: `/authtoken/<uuid>/`, `/budget/budgets/<id>/`, `/connection/connections/s
 | `/dashboard/`                         | `apps/dashboard/views/views/dashboard.py:46`            | dashboard          | none (8 `/api/web/dashboard/` URLs)            | `/dashboard`                        | 2     |
 | `/workbench/llm-clients/<id>/prompt/` | `apps/prompt/views/.../prompt_workbench_view.py:205`    | workbench          | server-logs flag; the rest derives from `<id>` | `/workbench/llm-clients/:id/prompt` | 2     |
 | `/extensions/<slug>/`                 | `apps/llmtool/extension/views.py:321`                   | extension-console  | `canEdit` (superuser)                          | `/extensions/:slug`                 | 2     |
-| `/dashboard/dropzone/`                | `apps/dashboard/views/dropzone/view.py:45`              | manifest-dropzone  | `enable_dropzone_manifest_apply`               | `/dashboard/dropzone`               | 2     |
+| `/dashboard/dropzone/`                | `apps/dashboard/views/dropzone/view.py:45`              | manifest-dropzone  | `app_dashboard_manifest_dropzone_enable`       | `/dashboard/dropzone`               | 2     |
 | `/dashboard/terminal/`                | `apps/dashboard/views/terminal_emulator/reactapp.py:40` | terminal-emulator  | flag and superuser; WebSocket `ws/terminal/`   | `/dashboard/terminal`               | 2     |
 | `/dashboard/passthrough/`             | `apps/dashboard/views/passthrough/view.py:46`           | prompt-passthrough | flag; server-logs flag                         | `/dashboard/passthrough`            | 2     |
 

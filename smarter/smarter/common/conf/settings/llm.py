@@ -6,8 +6,11 @@ from typing import Optional, Union
 from pydantic import BaseModel, Field
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
-from smarter.common.conf.util import before_field_validator, parse_int_setting
+from smarter.common.conf.util import (
+    before_field_validator,
+    field_default,
+    parse_int_setting,
+)
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -15,7 +18,7 @@ class LLMSettings(BaseModel):
     """LLM defaults, prompts, tools, plugins, extensions and the MCP server."""
 
     max_tool_rounds: int = Field(
-        settings_defaults.MAX_TOOL_ROUNDS,
+        5,
         ge=1,
         description="The most requests of one prompt that offer the LLM its tools.",
         title="Max Tool Rounds",
@@ -29,7 +32,7 @@ class LLMSettings(BaseModel):
     is sent the tool results without tools, so that it answers with what it has.
 
     :type: int
-    :default: Value from ``settings_defaults.MAX_TOOL_ROUNDS``, 5
+    :default: 5
     :raises SmarterConfigurationError: If the value is not a positive integer.
 
     see: :meth:`smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_provider.OpenAISmarterClient.handler`
@@ -44,10 +47,10 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated max_tool_rounds.
         """
-        return parse_int_setting("max_tool_rounds", v, settings_defaults.MAX_TOOL_ROUNDS, minimum=1)
+        return parse_int_setting("max_tool_rounds", v, field_default(cls, "max_tool_rounds"), minimum=1)
 
     prompt_history_max_age: int = Field(
-        settings_defaults.PROMPT_HISTORY_MAX_AGE,
+        90,
         ge=1,
         description="Days to keep chat sessions and their prompt history before they are deleted.",
         title="Prompt History Max Age",
@@ -66,7 +69,7 @@ class LLMSettings(BaseModel):
     Set it with ``SMARTER_PROMPT_HISTORY_MAX_AGE``.
 
     :type: int
-    :default: Value from ``settings_defaults.PROMPT_HISTORY_MAX_AGE``, 90
+    :default: 90
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -79,10 +82,10 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated prompt_history_max_age.
         """
-        return parse_int_setting("prompt_history_max_age", v, settings_defaults.PROMPT_HISTORY_MAX_AGE, minimum=1)
+        return parse_int_setting("prompt_history_max_age", v, field_default(cls, "prompt_history_max_age"), minimum=1)
 
     app_llmtool_plugin_max_data_results: int = Field(
-        settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS,
+        50,
         gt=0,
         description="A global maximum number of data row results that can be returned by any Smarter plugin.",
         title="Plugin Max Data Results",
@@ -94,7 +97,7 @@ class LLMSettings(BaseModel):
     or lead to resource exhaustion. Plugins should respect this limit when querying
     data sources and returning results to ensure efficient operation of the platform.
     :type: int
-    :default: Value from ``settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS``
+    :default: ``50``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -108,11 +111,14 @@ class LLMSettings(BaseModel):
             int: The validated plugin_max_data_results.
         """
         return parse_int_setting(
-            "app_llmtool_plugin_max_data_results", v, settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS, minimum=0
+            "app_llmtool_plugin_max_data_results",
+            v,
+            field_default(cls, "app_llmtool_plugin_max_data_results"),
+            minimum=0,
         )
 
     app_llmtool_extension_registry_url: str = Field(
-        settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL,
+        "https://smarter-sh.github.io/extensions-registry/index.json",
         description="The url of the Smarter Extension registry's signed index, index.json.",
         examples=["https://smarter-sh.github.io/extensions-registry/index.json"],
         title="Extension Registry URL",
@@ -125,7 +131,7 @@ class LLMSettings(BaseModel):
     for updates to installed extensions. Its signature, at the same url with ``.sig``
     appended, is verified with :attr:`extension_registry_public_key`.
     :type: str
-    :default: Value from ``settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL``
+    :default: ``"https://smarter-sh.github.io/extensions-registry/index.json"``
     """
 
     @before_field_validator("app_llmtool_extension_registry_url")
@@ -139,14 +145,14 @@ class LLMSettings(BaseModel):
             str: The validated url.
         """
         if v is None or str(v).strip() == "":
-            return settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL
+            return field_default(cls, "app_llmtool_extension_registry_url")
         v = str(v).strip()
         if not v.startswith("https://"):
             raise SmarterConfigurationError(f"extension_registry_url {v} must be an https url.")
         return v
 
     app_llmtool_extension_registry_public_key: str = Field(
-        settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY,
+        "",
         description="The base64 Ed25519 public key that verifies the extension registry's index. Empty disables the registry.",
         title="Extension Registry Public Key",
     )
@@ -156,11 +162,11 @@ class LLMSettings(BaseModel):
     It is public, not a secret. While it is empty, the registry is disabled: extensions can
     only be installed from uploaded archives, and updates are not checked.
     :type: str
-    :default: Value from ``settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY``
+    :default: ``""``
     """
 
     app_mcpserver_rate_limit: int = Field(
-        settings_defaults.APP_MCPSERVER_RATE_LIMIT,
+        1200,
         ge=0,
         description="The maximum number of requests per minute that one client IP address may send to the MCPServer's endpoints. 0 disables the limit.",
         title="MCP Server Rate Limit",
@@ -175,7 +181,7 @@ class LLMSettings(BaseModel):
     call is about three requests, so set the limit well above the platform's own traffic.
     0 disables the limit.
     :type: int
-    :default: Value from ``settings_defaults.APP_MCPSERVER_RATE_LIMIT``
+    :default: ``1200``
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
@@ -188,10 +194,12 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated mcpserver_rate_limit.
         """
-        return parse_int_setting("app_mcpserver_rate_limit", v, settings_defaults.APP_MCPSERVER_RATE_LIMIT, minimum=0)
+        return parse_int_setting(
+            "app_mcpserver_rate_limit", v, field_default(cls, "app_mcpserver_rate_limit"), minimum=0
+        )
 
     llm_default_provider: str = Field(
-        settings_defaults.LLM_DEFAULT_PROVIDER,
+        "openai",
         description="The default LLM provider to use for language model interactions.",
         examples=["openai", "anthropic", "gemini", "llama"],
         title="Default LLM Provider",
@@ -204,7 +212,7 @@ class LLMSettings(BaseModel):
     will handle requests for language generation, understanding, and other related functions.
 
     :type: str
-    :default: Value from ``settings_defaults.LLM_DEFAULT_PROVIDER``
+    :default: ``"openai"``
     :raises SmarterConfigurationError: If the value is not a valid LLM provider name
     """
 
@@ -218,15 +226,51 @@ class LLMSettings(BaseModel):
         Returns:
             Optional[str]: The validated LLM default provider.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.LLM_DEFAULT_PROVIDER is not None:
-            return settings_defaults.LLM_DEFAULT_PROVIDER
+        if str(v) in THE_EMPTY_SET and field_default(cls, "llm_default_provider") is not None:
+            return field_default(cls, "llm_default_provider")
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"llm_default_provider of type {type(v)} is not a str: {v}")
         return v
 
+    llm_default_model: str = Field(
+        "gpt-6-luna",
+        description="The default model of the default LLM provider, for plugins whose manifests don't name one.",
+        examples=["gpt-6-luna"],
+        title="Default LLM Model",
+    )
+    """
+    The model of :attr:`llm_default_provider` that a plugin's prompt uses when its manifest names none.
+
+    :type: str
+    :default: ``"gpt-6-luna"``
+    :raises SmarterConfigurationError: If the value is not a non-empty string.
+    """
+
+    @before_field_validator("llm_default_model")
+    def validate_llm_default_model(cls, v: Optional[str]) -> str:
+        """Validates the `llm_default_model` field: the default if it is empty.
+
+        Args:
+            v (Optional[str]): The model's name.
+        Returns:
+            str: The validated model's name.
+        """
+        if v in THE_EMPTY_SET:
+            return str(field_default(cls, "llm_default_model"))
+        if not isinstance(v, str) or not v.strip():
+            raise SmarterConfigurationError(f"llm_default_model of type {type(v)} is not a non-empty str: {v}")
+        return v.strip()
+
     llm_default_system_role: str = Field(
-        settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
+        (
+            "You are a helpful llmclient. When given the opportunity to utilize "
+            "function calling, you should always do so. This will allow you to "
+            "provide the best possible responses to the user. If you are unable to "
+            "provide a response, you should prompt the user for more information. If "
+            "you are still unable to provide a response, you should inform the user "
+            "that you are unable to help them at this time."
+        ),
         description="The default system role prompt to use for language model interactions.",
         examples=["You are a helpful llmclient..."],
         title="Default LLM System Role",
@@ -239,7 +283,7 @@ class LLMSettings(BaseModel):
     tone of the responses generated by the model.
 
     :type: str
-    :default: Value from ``settings_defaults.LLM_DEFAULT_SYSTEM_ROLE``
+    :default: ``"You are a helpful llmclient. ..."``, which asks the LLM to call its tools
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
@@ -253,15 +297,15 @@ class LLMSettings(BaseModel):
         Returns:
             Optional[str]: The validated LLM default system role.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.LLM_DEFAULT_SYSTEM_ROLE is not None:
-            return settings_defaults.LLM_DEFAULT_SYSTEM_ROLE
+        if str(v) in THE_EMPTY_SET and field_default(cls, "llm_default_system_role") is not None:
+            return field_default(cls, "llm_default_system_role")
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"llm_default_system_role of type {type(v)} is not a str: {v}")
         return v
 
     llm_default_temperature: float = Field(
-        settings_defaults.LLM_DEFAULT_TEMPERATURE,
+        1.0,
         description="The default temperature to use for language model interactions.",
         examples=[0.0, 0.5, 1.0],
         title="Default LLM Temperature",
@@ -275,7 +319,7 @@ class LLMSettings(BaseModel):
     and creative outputs.
 
     :type: float
-    :default: Value from ``settings_defaults.LLM_DEFAULT_TEMPERATURE``
+    :default: ``1.0``
     :raises SmarterConfigurationError: If the value is not a float between 0.
     """
 
@@ -291,7 +335,7 @@ class LLMSettings(BaseModel):
         if isinstance(v, float):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_DEFAULT_TEMPERATURE
+            return field_default(cls, "llm_default_temperature")
         try:
             retval = float(v)  # type: ignore
             return retval
@@ -299,7 +343,7 @@ class LLMSettings(BaseModel):
             raise SmarterConfigurationError(f"llm_default_temperature of type {type(v)} is not a float: {v}") from e
 
     llm_default_max_tokens: int = Field(
-        settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+        2048,
         ge=1,
         description="The default maximum number of tokens to generate for language model interactions.",
         examples=[256, 512, 1024, 2048],
@@ -313,7 +357,7 @@ class LLMSettings(BaseModel):
     of the output and manage resource usage.
 
     :type: int
-    :default: Value from ``settings_defaults.LLM_DEFAULT_MAX_TOKENS``
+    :default: ``2048``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -327,10 +371,10 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated LLM default max tokens.
         """
-        return parse_int_setting("llm_default_max_tokens", v, settings_defaults.LLM_DEFAULT_MAX_TOKENS)
+        return parse_int_setting("llm_default_max_tokens", v, field_default(cls, "llm_default_max_tokens"))
 
     prompt_threads: int = Field(
-        settings_defaults.PROMPT_THREADS,
+        32,
         ge=1,
         description="The threads in each web server process that run streamed chat prompts.",
         title="Prompt Threads",
@@ -346,7 +390,7 @@ class LLMSettings(BaseModel):
     Set it with ``SMARTER_PROMPT_THREADS``.
 
     :type: int
-    :default: Value from ``settings_defaults.PROMPT_THREADS``, 32 if it is not set.
+    :default: 32 if it is not set.
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -359,7 +403,7 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated prompt_threads.
         """
-        return parse_int_setting("prompt_threads", v, settings_defaults.PROMPT_THREADS)
+        return parse_int_setting("prompt_threads", v, field_default(cls, "prompt_threads"))
 
 
 __all__ = ["LLMSettings"]

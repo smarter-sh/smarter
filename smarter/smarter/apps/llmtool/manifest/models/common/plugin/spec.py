@@ -14,7 +14,7 @@ from smarter.apps.llmtool.manifest.enum import (
 from smarter.apps.provider.services.text_completion.const import (
     VALID_CHAT_COMPLETION_MODELS,
 )
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
@@ -123,10 +123,10 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
-    DEFAULT_PROVIDER: ClassVar[str] = settings_defaults.LLM_DEFAULT_PROVIDER
-    DEFAULT_MODEL: ClassVar[str] = settings_defaults.LLM_DEFAULT_MODEL
-    DEFAULT_TEMPERATURE: ClassVar[float] = settings_defaults.LLM_DEFAULT_TEMPERATURE
-    DEFAULT_MAXTOKENS: ClassVar[int] = settings_defaults.LLM_DEFAULT_MAX_TOKENS
+    DEFAULT_PROVIDER: ClassVar[str] = smarter_settings.llm_default_provider
+    DEFAULT_MODEL: ClassVar[str] = smarter_settings.llm_default_model
+    DEFAULT_TEMPERATURE: ClassVar[float] = smarter_settings.llm_default_temperature
+    DEFAULT_MAXTOKENS: ClassVar[int] = smarter_settings.llm_default_max_tokens
 
     provider: str = Field(
         DEFAULT_PROVIDER,
@@ -185,7 +185,7 @@ class SAMPluginCommonSpecPrompt(SmarterBasePydanticModel):
         """
 
         # TODO: This is a placeholder for the actual valid providers
-        VALID_PROVIDERS = [settings_defaults.LLM_DEFAULT_PROVIDER]
+        VALID_PROVIDERS = [smarter_settings.llm_default_provider]
         if v not in VALID_PROVIDERS:
             err_desc_me_name = SAMPluginCommonSpecPromptKeys.PROVIDER.value
 

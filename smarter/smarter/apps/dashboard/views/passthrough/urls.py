@@ -4,7 +4,7 @@ URL configuration for the Dashboard app's passthrough views.
 This module registers URL patterns for the prompt passthrough sub-application
 of the dashboard. Its api, the providers list, is in the web console's api, at
 ``/api/web/dashboard/passthrough/``: see :mod:`.api.urls`. Registration is conditional on the
-``ENABLE_DASHBOARD_PASSTHROUGH_PROMPT`` setting: when disabled, no routes are
+``SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE`` setting: when disabled, no routes are
 registered and an informational log message is emitted.
 
 Attributes:
@@ -57,13 +57,13 @@ if smarter_settings.app_dashboard_passthrough_prompt_enable:
         path("", PromptPassthroughView.as_view(), name=PassthroughReverseNames.view),
     ]
     logger.debug(
-        "%s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'false' to disable.",
+        "%s app passthrough url endpoint is %s. Set env 'SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE' to 'false' to disable.",
         app_name,
         SmarterReadyState.READY,
     )
 else:
     logger.info(
-        "%s app passthrough url endpoint is %s. Set env 'ENABLE_DASHBOARD_PASSTHROUGH_PROMPT' to 'true' to enable.",
+        "%s app passthrough url endpoint is %s. Set env 'SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE' to 'true' to enable.",
         app_name,
         SmarterReadyState.NOT_READY,
     )

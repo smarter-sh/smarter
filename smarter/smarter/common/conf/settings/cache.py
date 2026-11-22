@@ -5,15 +5,18 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 
-from smarter.common.conf.defaults import settings_defaults
-from smarter.common.conf.util import before_field_validator, parse_int_setting
+from smarter.common.conf.util import (
+    before_field_validator,
+    field_default,
+    parse_int_setting,
+)
 
 
 class CacheSettings(BaseModel):
     """How long cached views, prompts, llmclients and responses are kept."""
 
     subsystem_cache_expiration: int = Field(
-        settings_defaults.SUBSYSTEM_CACHE_EXPIRATION,
+        60 * 1,
         gt=0,
         description="The cache expiration time in seconds for cached data.",
         title="Cache Expiration",
@@ -29,7 +32,7 @@ class CacheSettings(BaseModel):
     cache refreshes, while a longer expiration time can improve performance by reducing
     the number of cache lookups.
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_CACHE_EXPIRATION``
+    :default: ``60 * 1``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -43,11 +46,11 @@ class CacheSettings(BaseModel):
             int: The validated cache_expiration.
         """
         return parse_int_setting(
-            "subsystem_cache_expiration", v, settings_defaults.SUBSYSTEM_CACHE_EXPIRATION, minimum=0
+            "subsystem_cache_expiration", v, field_default(cls, "subsystem_cache_expiration"), minimum=0
         )
 
     subsystem_cache_chat_expiration: int = Field(
-        settings_defaults.SUBSYSTEM_CACHE_CHAT_EXPIRATION,
+        60 * 5,
         gt=0,
         description="The prompt cache expiration time in seconds for cached prompt data.",
         title="Prompt Cache Expiration",
@@ -61,7 +64,7 @@ class CacheSettings(BaseModel):
     the number of cache lookups.
 
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_CACHE_CHAT_EXPIRATION``
+    :default: ``60 * 5``
     :raises SmarterConfigurationError: If the value is not a positive integer.
 
     see: :class:`smarter.apps.prompt.models.PromptHelper`
@@ -77,11 +80,11 @@ class CacheSettings(BaseModel):
             int: The validated cache_chat_expiration.
         """
         return parse_int_setting(
-            "subsystem_cache_chat_expiration", v, settings_defaults.SUBSYSTEM_CACHE_CHAT_EXPIRATION, minimum=0
+            "subsystem_cache_chat_expiration", v, field_default(cls, "subsystem_cache_chat_expiration"), minimum=0
         )
 
     subsystem_cache_prompt_response_expiration: int = Field(
-        settings_defaults.SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION,
+        60 * 60,
         ge=0,
         description="Seconds to cache the LLM's answer to the first message of a conversation. 0 disables the cache.",
         title="Prompt Response Cache Expiration",
@@ -97,7 +100,7 @@ class CacheSettings(BaseModel):
     :mod:`smarter.apps.provider.services.text_completion.lib.prompt_cache`.
 
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION``, one hour
+    :default: one hour
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
@@ -113,12 +116,12 @@ class CacheSettings(BaseModel):
         return parse_int_setting(
             "subsystem_cache_prompt_response_expiration",
             v,
-            settings_defaults.SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION,
+            field_default(cls, "subsystem_cache_prompt_response_expiration"),
             minimum=0,
         )
 
     subsystem_cache_listview_expiration: int = Field(
-        settings_defaults.SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION,
+        60 * 60,
         gt=0,
         description="The cache expiration time in seconds for the pages of the web console's list views.",
         title="List View Cache Expiration",
@@ -132,7 +135,7 @@ class CacheSettings(BaseModel):
     ``QuerySet.update()``, can go unnoticed.
 
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION``
+    :default: ``60 * 60``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -146,11 +149,14 @@ class CacheSettings(BaseModel):
             int: The validated cache_listview_expiration.
         """
         return parse_int_setting(
-            "subsystem_cache_listview_expiration", v, settings_defaults.SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION, minimum=0
+            "subsystem_cache_listview_expiration",
+            v,
+            field_default(cls, "subsystem_cache_listview_expiration"),
+            minimum=0,
         )
 
     subsystem_cache_llm_client_expiration: int = Field(
-        settings_defaults.SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION,
+        60 * 5,
         gt=0,
         description="The llmclient cache expiration time in seconds for cached llmclient data.",
         title="LLMClient Cache Expiration",
@@ -164,7 +170,7 @@ class CacheSettings(BaseModel):
     the number of cache lookups.
 
     :type: int
-    :default: Value from ``settings_defaults.SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION``
+    :default: ``60 * 5``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
@@ -180,7 +186,7 @@ class CacheSettings(BaseModel):
         return parse_int_setting(
             "subsystem_cache_llm_client_expiration",
             v,
-            settings_defaults.SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION,
+            field_default(cls, "subsystem_cache_llm_client_expiration"),
             minimum=0,
         )
 

@@ -99,8 +99,8 @@ out.append(
     '<desc id="d">Deployment sources (GitHub Actions secrets, the Kubernetes Secrets that '
     "smarter-infrastructure creates, and the Helm chart's values) and local sources (.env and "
     "user-settings/settings.yaml) become the process's environment variables, through the deploy "
-    "action and the Helm release's env Secret, or Docker Compose. get_env reads them into "
-    "settings_defaults, with the code constants of smarter.common.const, and smarter_settings validates "
+    "action and the Helm release's env Secret, or Docker Compose. smarter_settings reads them into its "
+    "fields, whose defaults it declares, with the code constants of smarter.common.const, and validates "
     "them. Django's settings modules derive their settings from smarter_settings, then the user's own "
     "settings file and DJANGO_* variables supersede them. The startup logs, the initialize commands, and "
     "the web console read the result.</desc>"
@@ -228,7 +228,7 @@ box(
         "SMARTER_PLATFORM_* · SMARTER_APP_*",
         "SMARTER_SUBSYSTEM_* · DJANGO_*",
         "DJANGO_SETTINGS_MODULE",
-        "the unprefixed names count too",
+        "AWS_* · GITHUB_TOKEN",
     ],
     code="os.environ",
 )
@@ -246,9 +246,9 @@ box(
     x,
     384,
     w,
-    "Defaults",
-    ["get_env(NAME): NAME, else SMARTER_NAME;", "else the literal default"],
-    code="smarter.common.conf.defaults",
+    "Pydantic env source",
+    ["field name: SMARTER_NAME;", "else the field's default"],
+    code="smarter.common.conf.settings",
 )
 box(
     "settings",

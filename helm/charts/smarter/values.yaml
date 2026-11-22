@@ -37,7 +37,6 @@ env:
   # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are optional: prefer serviceAccount.awsRoleArn
   # (IRSA). Static keys win over the role, so set them only for a cluster without IRSA.
   AWS_REGION: "us-east-1"
-  DEBUG_MODE: "false"
   # ///////////////////////////////////////////////////////////////////////////////////////////////
   # DJANGO_<SETTING> sets the Django setting <SETTING>, e.g. DJANGO_SESSION_COOKIE_AGE: "3600", after
   # everything in smarter/smarter/settings/ (smarter.settings.user). A JSON value sets a list or a dict.
@@ -49,13 +48,13 @@ env:
   # Also the workers' liveness probe's broker, and RedBeat's Redis. The cache is the chart's own Redis,
   # databases 1 and 2: for another, set DJANGO_CACHES, as JSON, with its default and sessions caches.
   DJANGO_CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # smarter_settings.django_secret_key, Django's SECRET_KEY. The deploy action sets it from the
+  # smarter-django-secret-key Kubernetes Secret that smarter-infrastructure creates.
   DJANGO_SECRET_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
 
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  DUMP_DEFAULTS: "False"
-  ENVIRONMENT: "prod"
   # Optional. The platform's GitHub token, smarter_settings.github_token: SkillPlugin skill downloads
   # (any token), and the bug reports that Smarter Sysadmin opens (a classic ghp_ token with the
   # public_repo scope). Without it, create_bug_report says bug reports are not configured.
@@ -69,16 +68,22 @@ env:
   # comma-separated, a boolean "true" or "false". To keep a setting's default, leave its key out, as
   # the commented-out examples below are. A SET-ME placeholder or an empty string is a value: replace
   # every placeholder with yours, or delete its line. Prefer one of these over a DJANGO_* variable
-  # whenever both could make the change. The unprefixed name, e.g. ROOT_DOMAIN, sets the same setting
-  # and wins when both are set; don't use both. See https://docs.smarter.sh, Configuration.
+  # whenever both could make the change. The prefix is required: PLATFORM_ROOT_DOMAIN sets nothing.
+  # The exceptions keep the names that other tools use: AWS_*, GITHUB_TOKEN and DJANGO_SECRET_KEY.
+  # See https://docs.smarter.sh, Configuration.
 
+  # smarter_settings.log_level: DEBUG, INFO, WARNING, ERROR or CRITICAL. Without it, DEBUG in
+  # debug mode, and INFO otherwise.
+  SMARTER_LOG_LEVEL: "INFO"
+  SMARTER_DEBUG_MODE: "false"
+  SMARTER_DUMP_DEFAULTS: "false"
+  SMARTER_ENVIRONMENT: "prod"
   SMARTER_PLATFORM_CLOUD_PROVIDER: "aws"
   SMARTER_PLATFORM_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   SMARTER_PLATFORM_INTERNAL_IP_PREFIXES: "192.168."
   SMARTER_PLATFORM_ROOT_DOMAIN: "example.com"
   SMARTER_PLATFORM_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
   SMARTER_PLATFORM_SETTINGS_OUTPUT: "false"
   SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER: "smarter"
   # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and

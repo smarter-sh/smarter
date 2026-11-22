@@ -10,14 +10,12 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, SecretStr
 
-from smarter.common.conf.defaults import settings_defaults
-
 
 class AppKeySettings(BaseModel):
     """The api keys of Smarter's apps, by their ``SMARTER_APP_<APP>_*`` environment variables."""
 
     app_provider_anthropic_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_ANTHROPIC_API_KEY,
+        None,
         description="Anthropic's api key, for the built-in anthropic Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_ANTHROPIC_API_KEY",
     )
@@ -27,7 +25,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_cohere_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_COHERE_API_KEY,
+        None,
         description="Cohere's api key, for the built-in cohere Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_COHERE_API_KEY",
     )
@@ -37,7 +35,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_fireworks_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_FIREWORKS_API_KEY,
+        None,
         description="Fireworks AI's api key, for the built-in fireworks Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_FIREWORKS_API_KEY",
     )
@@ -47,7 +45,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_gemini_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_GEMINI_API_KEY,
+        None,
         description="Google AI's api key, for the built-in googleai Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_GEMINI_API_KEY",
     )
@@ -57,7 +55,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_google_maps_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_GOOGLE_MAPS_API_KEY,
+        None,
         description="Google Maps' api key, for the weather extension. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_GOOGLE_MAPS_API_KEY",
     )
@@ -67,7 +65,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_google_service_account_b64: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64,
+        None,
         description="Google service account credentials, base64-encoded, for Google Cloud bearer tokens. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64",
     )
@@ -77,7 +75,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_llama_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_LLAMA_API_KEY,
+        None,
         description="Meta's Llama api key, for the built-in metaai Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_LLAMA_API_KEY",
     )
@@ -87,7 +85,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_mistral_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_MISTRAL_API_KEY,
+        None,
         description="Mistral's api key, for the built-in mistral Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_MISTRAL_API_KEY",
     )
@@ -97,7 +95,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_openai_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_OPENAI_API_KEY,
+        None,
         description="OpenAI's api key, for the built-in openai Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_OPENAI_API_KEY",
     )
@@ -107,7 +105,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_provider_togetherai_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_PROVIDER_TOGETHERAI_API_KEY,
+        None,
         description="Together AI's api key, for the built-in togetherai Provider. Masked by pydantic SecretStr.",
         title="APP_PROVIDER_TOGETHERAI_API_KEY",
     )
@@ -117,7 +115,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_llmtool_brave_search_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_LLMTOOL_BRAVE_SEARCH_API_KEY,
+        None,
         description="Brave Search's api key, for ImageSearchPlugins and the Brave web search samples. Masked by pydantic SecretStr.",
         title="APP_LLMTOOL_BRAVE_SEARCH_API_KEY",
     )
@@ -127,7 +125,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_llmtool_tavily_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_LLMTOOL_TAVILY_API_KEY,
+        None,
         description="Tavily's api key, for WebsearchPlugins. Masked by pydantic SecretStr.",
         title="APP_LLMTOOL_TAVILY_API_KEY",
     )
@@ -137,7 +135,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_vectorstore_pinecone_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_VECTORSTORE_PINECONE_API_KEY,
+        None,
         description="Pinecone's api key, for the managed Pinecone vector database. Masked by pydantic SecretStr.",
         title="APP_VECTORSTORE_PINECONE_API_KEY",
     )
@@ -147,7 +145,7 @@ class AppKeySettings(BaseModel):
     """
 
     app_vectorstore_qdrant_cloud_api_key: Optional[SecretStr] = Field(
-        settings_defaults.APP_VECTORSTORE_QDRANT_CLOUD_API_KEY,
+        None,
         description="Qdrant Cloud's api key, for the managed Qdrant Cloud vector database. Masked by pydantic SecretStr.",
         title="APP_VECTORSTORE_QDRANT_CLOUD_API_KEY",
     )

@@ -183,7 +183,8 @@ class EmailService(InfrastructureService):
         """
         message = MIMEMultipart("mixed" if attachments else "alternative")
         message["Subject"] = subject
-        message["From"] = from_email or smarter_settings.subsystem_smtp_from_email
+        sender = from_email or smarter_settings.subsystem_smtp_from_email or ""
+        message["From"] = sender
         message["To"] = ", ".join(to)
         for name, value in (headers or {}).items():
             message[name] = value

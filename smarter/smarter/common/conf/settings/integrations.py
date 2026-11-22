@@ -6,10 +6,9 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, SecretStr
 
-from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE, THE_EMPTY_SET
 from smarter.common.conf.env import is_missing_value
-from smarter.common.conf.util import before_field_validator
+from smarter.common.conf.util import before_field_validator, field_default
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -17,7 +16,7 @@ class IntegrationSettings(BaseModel):
     """The credentials of third-party services: Account Manager, GitHub, Slack, Stripe and social login."""
 
     account_manager_api_key: Optional[SecretStr] = Field(
-        settings_defaults.ACCOUNT_MANAGER_API_KEY,
+        None,
         description="The platform's key for Account Manager's subscription status api, which multitenant authentication sends as 'Authorization: Platform <key>'. Masked by pydantic SecretStr.",
         examples=["the key that Account Manager's create_platform_api_key command printed"],
         title="Account Manager API Key",
@@ -35,7 +34,7 @@ class IntegrationSettings(BaseModel):
     ``require_platform_key`` waffle switch is on.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.ACCOUNT_MANAGER_API_KEY``, None if it is not set.
+    :default: None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
@@ -49,7 +48,7 @@ class IntegrationSettings(BaseModel):
             Optional[SecretStr]: The validated key, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.ACCOUNT_MANAGER_API_KEY
+            v = field_default(cls, "account_manager_api_key")
         if is_missing_value(v):
             return None
 
@@ -58,7 +57,8 @@ class IntegrationSettings(BaseModel):
         return v
 
     github_token: Optional[SecretStr] = Field(
-        settings_defaults.GITHUB_TOKEN,
+        None,
+        validation_alias="GITHUB_TOKEN",
         description="The platform's GitHub token, from GITHUB_TOKEN, for the GitHub REST api requests that retrieve remote SkillPlugin skills, and that open the bug reports of the platform's staff. Masked by pydantic SecretStr.",
         examples=["ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
         title="GitHub Token",
@@ -66,9 +66,7 @@ class IntegrationSettings(BaseModel):
     """
     The platform's GitHub token, from ``GITHUB_TOKEN``.
 
-    It is read from the first of ``GITHUB_TOKEN``, ``GH_TOKEN`` and ``GITHUB_API_TOKEN`` that is set,
-    each with or without the ``SMARTER_`` prefix (see
-    :data:`~smarter.common.conf.defaults.GITHUB_TOKEN_NAMES`). It is used for two things:
+    ``GITHUB_TOKEN`` is the name that GitHub Actions and most tools use. It is used for two things:
 
     - **SkillPlugin skills.** A SkillPlugin whose skill is in a GitHub repository lists the skill's
       files with the GitHub git trees api. Without a token those requests are anonymous, and GitHub
@@ -85,7 +83,7 @@ class IntegrationSettings(BaseModel):
     The token is sent only to ``api.github.com``, and is never logged.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.GITHUB_TOKEN``, None if it is not set.
+    :default: None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
@@ -99,7 +97,7 @@ class IntegrationSettings(BaseModel):
             Optional[SecretStr]: The validated GitHub token, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.GITHUB_TOKEN
+            v = field_default(cls, "github_token")
         if is_missing_value(v):
             return None
 
@@ -108,7 +106,7 @@ class IntegrationSettings(BaseModel):
         return v
 
     subsystem_social_auth_google_oauth2_key: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 key for Google social authentication. Masked by pydantic SecretStr.",
         examples=["your-google-oauth2-key"],
         title="Google OAuth2 Key",
@@ -121,7 +119,7 @@ class IntegrationSettings(BaseModel):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID.
     """
 
@@ -134,15 +132,15 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated Google OAuth2 key.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_google_oauth2_key"):
+            return field_default(cls, "subsystem_social_auth_google_oauth2_key")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_google_oauth2_key of type {type(v)} is not a SecretStr")
         return v
 
     subsystem_social_auth_google_oauth2_secret: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 secret for Google social authentication. Masked by pydantic SecretStr.",
         examples=["your-google-oauth2-secret"],
         title="Google OAuth2 Secret",
@@ -155,7 +153,7 @@ class IntegrationSettings(BaseModel):
     It is required for enabling users to log in using their Google accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -169,15 +167,15 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated Google OAuth2 secret.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET is not None:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_google_oauth2_secret") is not None:
+            return field_default(cls, "subsystem_social_auth_google_oauth2_secret")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_google_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
     subsystem_social_auth_github_key: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 key for GitHub social authentication. Masked by pydantic SecretStr.",
         examples=["your-github-oauth2-key"],
         title="GitHub OAuth2 Key",
@@ -190,7 +188,7 @@ class IntegrationSettings(BaseModel):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
@@ -203,8 +201,8 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated GitHub OAuth2 key.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY is not None:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_github_key") is not None:
+            return field_default(cls, "subsystem_social_auth_github_key")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_github_key of type {type(v)} is not a SecretStr")
@@ -212,7 +210,7 @@ class IntegrationSettings(BaseModel):
         return v
 
     subsystem_social_auth_github_secret: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 secret for GitHub social authentication. Masked by pydantic SecretStr.",
         examples=["your-github-oauth2-secret"],
         title="GitHub OAuth2 Secret",
@@ -225,7 +223,7 @@ class IntegrationSettings(BaseModel):
     It is required for enabling users to log in using their GitHub accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -238,15 +236,15 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated GitHub OAuth2 secret.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET is not None:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_github_secret") is not None:
+            return field_default(cls, "subsystem_social_auth_github_secret")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_github_secret of type {type(v)} is not a SecretStr.")
         return v
 
     subsystem_social_auth_linkedin_oauth2_key: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 key for LinkedIn social authentication. Masked by pydantic SecretStr.",
         examples=["your-linkedin-oauth2-key"],
         title="LinkedIn OAuth2 Key",
@@ -261,7 +259,7 @@ class IntegrationSettings(BaseModel):
     It was required for enabling users to log in using their LinkedIn accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client ID
     """
 
@@ -274,14 +272,14 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated LinkedIn OAuth2 key.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY is not None:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_linkedin_oauth2_key") is not None:
+            return field_default(cls, "subsystem_social_auth_linkedin_oauth2_key")
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_key of type {type(v)} is not a SecretStr.")
         return v
 
     subsystem_social_auth_linkedin_oauth2_secret: SecretStr = Field(
-        settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="The OAuth2 secret for LinkedIn social authentication. Masked by pydantic SecretStr.",
         examples=["your-linkedin-oauth2-secret"],
         title="LinkedIn OAuth2 Secret",
@@ -296,7 +294,7 @@ class IntegrationSettings(BaseModel):
     It was required for enabling users to log in using their LinkedIn accounts.
 
     :type: SecretStr
-    :default: Value from ``settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a valid OAuth2 client secret
     """
 
@@ -310,14 +308,14 @@ class IntegrationSettings(BaseModel):
         Returns:
             SecretStr: The validated LinkedIn OAuth2 secret.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET is not None:
-            return settings_defaults.SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
+        if str(v) in THE_EMPTY_SET and field_default(cls, "subsystem_social_auth_linkedin_oauth2_secret") is not None:
+            return field_default(cls, "subsystem_social_auth_linkedin_oauth2_secret")
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
     subsystem_slack_bot_token: Optional[SecretStr] = Field(
-        settings_defaults.SUBSYSTEM_SLACK_BOT_TOKEN,
+        None,
         description="A Slack app's bot token, xoxb-..., which the platform posts its Kubernetes jobs' logs to Slack with. Masked by pydantic SecretStr.",
         examples=["xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"],
         title="Slack Bot Token",
@@ -336,7 +334,7 @@ class IntegrationSettings(BaseModel):
     :py:class:`smarter.apps.infrastructure.services.slack.SlackWebApiService`.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.SUBSYSTEM_SLACK_BOT_TOKEN``, None if it is not set.
+    :default: None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
@@ -350,7 +348,7 @@ class IntegrationSettings(BaseModel):
             Optional[SecretStr]: The validated Slack bot token, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.SUBSYSTEM_SLACK_BOT_TOKEN
+            v = field_default(cls, "subsystem_slack_bot_token")
         if is_missing_value(v):
             return None
 
@@ -359,7 +357,7 @@ class IntegrationSettings(BaseModel):
         return v
 
     stripe_live_secret_key: Optional[SecretStr] = Field(
-        settings_defaults.STRIPE_LIVE_SECRET_KEY,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="DEPRECATED: The secret key for Stripe live environment.",
         examples=["sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"],
         title="Stripe Live Secret Key",
@@ -374,7 +372,7 @@ class IntegrationSettings(BaseModel):
     It is used for processing real transactions and payments.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.STRIPE_LIVE_SECRET_KEY``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
@@ -393,14 +391,14 @@ class IntegrationSettings(BaseModel):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            return settings_defaults.STRIPE_LIVE_SECRET_KEY
+            return field_default(cls, "stripe_live_secret_key")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"stripe_live_secret_key of type {type(v)} is not a SecretStr.")
         return v
 
     stripe_test_secret_key: Optional[SecretStr] = Field(
-        settings_defaults.STRIPE_TEST_SECRET_KEY,
+        SecretStr(DEFAULT_MISSING_VALUE),
         description="DEPRECATED: The secret key for Stripe test environment.",
         examples=["sk_test_xxxxxxxxxxxxxxxxxxxxxxxx"],
         title="Stripe Test Secret Key",
@@ -415,7 +413,7 @@ class IntegrationSettings(BaseModel):
     It is used for processing test transactions and payments.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.STRIPE_TEST_SECRET_KEY``
+    :default: not set, the ``SET-ME-PLEASE`` placeholder
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
@@ -434,7 +432,7 @@ class IntegrationSettings(BaseModel):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            return settings_defaults.STRIPE_TEST_SECRET_KEY
+            return field_default(cls, "stripe_test_secret_key")
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"stripe_test_secret_key of type {type(v)} is not a SecretStr.")

@@ -112,7 +112,7 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
         self.assertEqual(settings, {"APPEND_SLASH": False, "SESSION_COOKIE_AGE": 60, "SMARTER_TEST_NEW": "hello"})
 
     def test_the_secret_key_is_left_to_smarter_settings(self):
-        """DJANGO_SECRET_KEY is read, and validated, by smarter_settings.secret_key, which base.py's SECRET_KEY is."""
+        """DJANGO_SECRET_KEY is read, and validated, by smarter_settings.django_secret_key, which base.py's SECRET_KEY is."""
         settings = settings_from_environment({"DJANGO_SECRET_KEY": "SET-ME-PLEASE"}, {"SECRET_KEY": "generated"})
         self.assertEqual(settings, {})
 
