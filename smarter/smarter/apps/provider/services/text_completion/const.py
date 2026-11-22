@@ -190,3 +190,7 @@ VALID_EMBEDDING_MODELS = [
     "text-embedding-3-small",
     "text-embedding-ada-002",
 ]
+
+
+LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]
+"""The roles of the messages that a LangChain message history keeps, of a prompt's messages."""

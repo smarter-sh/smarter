@@ -62,8 +62,8 @@ from smarter.apps.llmtool.manifest.models.common.plugin.status import (
 from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
 from smarter.apps.llmtool.serializers import PluginApiSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
-from smarter.common.const import SMARTER_ADMIN_USERNAME, SmarterHttpMethods
+from smarter.common.conf import settings_defaults, smarter_settings
+from smarter.common.const import SmarterHttpMethods
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
@@ -608,7 +608,7 @@ class ApiPlugin(PluginBase):
             searchTerms=[
                 "smarter",
                 "users",
-                SMARTER_ADMIN_USERNAME,
+                smarter_settings.platform_admin_username,
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
@@ -677,7 +677,7 @@ class ApiPlugin(PluginBase):
         )
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
-            username=SMARTER_ADMIN_USERNAME,
+            username=smarter_settings.platform_admin_username,
             recordLocator="abc123def456",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),

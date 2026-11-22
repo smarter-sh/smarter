@@ -222,7 +222,7 @@ message to the channel that owns it, and describe them this way in emails, docs 
 | `#smarter`       | Workflow results that are specific to the smarter-sh/smarter repository |
 
 The bot token has no `channels:read` scope, so it can't list them: this table is the source.
-The invite link is `smarter_settings.branding_url_slack` (`{{ branding.url_slack }}` in templates);
+The invite link is `smarter_settings.platform_branding_url_slack` (`{{ branding.url_slack }}` in templates);
 don't hard-code it in Python or templates.
 
 ## Caching

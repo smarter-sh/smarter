@@ -21,9 +21,6 @@ from pydantic import (
 
 from smarter.common.const import (
     SMARTER_LOCAL_PORT,
-    SMARTER_ORGANIZATION_NAME,
-    SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
-    SMARTER_PROJECT_CDN_URL,
     SmarterEnvironments,
 )
 
@@ -100,7 +97,7 @@ class SettingsDefaults:
         Do not add application logic or side effects to this class. It should only define static default values and simple logic for fallback selection.
     """
 
-    ROOT_DOMAIN: str = get_env("ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN)
+    PLATFORM_ROOT_DOMAIN: str = get_env("PLATFORM_ROOT_DOMAIN", DEFAULT_ROOT_DOMAIN)
 
     # for liveness and readiness probes from kubernetes.
     # see https://stackoverflow.com/questions/40582423/how-to-fix-django-error-disallowedhost-at-invalid-http-host-header-you-m
@@ -111,8 +108,8 @@ class SettingsDefaults:
     ACCOUNT_MANAGER_API_KEY: Optional[SecretStr] = optional_secret_env("ACCOUNT_MANAGER_API_KEY")
 
     # the platform's superuser, which manage.py initialize_platform creates.
-    ADMIN_USERNAME: str = get_env("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD: Optional[SecretStr] = optional_secret_env("ADMIN_PASSWORD")
+    PLATFORM_ADMIN_USERNAME: str = get_env("PLATFORM_ADMIN_USERNAME", "admin")
+    PLATFORM_ADMIN_PASSWORD: Optional[SecretStr] = optional_secret_env("PLATFORM_ADMIN_PASSWORD")
 
     API_SCHEMA: str = get_env("API_SCHEMA", "http")
 
@@ -122,70 +119,115 @@ class SettingsDefaults:
     AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = optional_secret_env("AWS_SECRET_ACCESS_KEY")
     AWS_REGION = get_env("AWS_REGION", default=None)
 
-    CLOUD_PROVIDER: str = get_env("CLOUD_PROVIDER", "aws")
-    AWS_EKS_CLUSTER_NAME: Optional[str] = get_env("AWS_EKS_CLUSTER_NAME", default=None)
-    LLMHOST_NODE_ROLE_ARN = get_env("LLMHOST_NODE_ROLE_ARN", default=None)
-    LLMHOST_NODE_SUBNET_IDS = get_env("LLMHOST_NODE_SUBNET_IDS", default=[])
+    PLATFORM_CLOUD_PROVIDER: str = get_env("PLATFORM_CLOUD_PROVIDER", "aws")
+    SUBSYSTEM_K8S_CLUSTER_NAME: Optional[str] = get_env("SUBSYSTEM_K8S_CLUSTER_NAME", default=None)
+    APP_LLMHOST_NODE_ROLE_ARN = get_env("APP_LLMHOST_NODE_ROLE_ARN", default=None)
+    APP_LLMHOST_NODE_SUBNET_IDS = get_env("APP_LLMHOST_NODE_SUBNET_IDS", default=[])
 
-    BRANDING_CORPORATE_NAME: str = get_env("BRANDING_CORPORATE_NAME", SMARTER_ORGANIZATION_NAME)
-    BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
-    BRANDING_SUPPORT_EMAIL: EmailStr = get_env("BRANDING_SUPPORT_EMAIL", "lpm0073@gmail.com")
-    BRANDING_ADDRESS1: str = get_env("BRANDING_ADDRESS1", "123 Main St, Anytown, USA")
-    BRANDING_ADDRESS2: str = get_env("BRANDING_ADDRESS2", "Suite 100")
-    BRANDING_CITY: str = get_env("BRANDING_CITY", "Anytown")
-    BRANDING_STATE: str = get_env("BRANDING_STATE", "CA")
-    BRANDING_POSTAL_CODE: str = get_env("BRANDING_POSTAL_CODE", "12345")
-    BRANDING_COUNTRY: str = get_env("BRANDING_COUNTRY", "USA")
-    BRANDING_CURRENCY: str = get_env("BRANDING_CURRENCY", "USD")
-    BRANDING_TIMEZONE: str = get_env("BRANDING_TIMEZONE", "America/Denver")
-    BRANDING_CONTACT_URL: HttpUrl = HttpUrl(get_env("BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/"))
-    BRANDING_PRIMARY_CONTACT: str = get_env("BRANDING_PRIMARY_CONTACT", "Lawrence McDaniel")
-    BRANDING_SUPPORT_HOURS: str = get_env("BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)")
-    BRANDING_URL_FACEBOOK: HttpUrl = HttpUrl(get_env("BRANDING_URL_FACEBOOK", "https://facebook.com"))
-    BRANDING_URL_TWITTER: HttpUrl = HttpUrl(get_env("BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry"))
-    BRANDING_URL_LINKEDIN: HttpUrl = HttpUrl(
-        get_env("BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
+    # the apps' api keys: each app's manage.py initialize_* command stores them as Secrets.
+    APP_PROVIDER_ANTHROPIC_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_ANTHROPIC_API_KEY")
+    APP_PROVIDER_COHERE_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_COHERE_API_KEY")
+    APP_PROVIDER_FIREWORKS_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_FIREWORKS_API_KEY")
+    APP_PROVIDER_GEMINI_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_GEMINI_API_KEY")
+    APP_PROVIDER_GOOGLE_MAPS_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_GOOGLE_MAPS_API_KEY")
+    APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64: Optional[SecretStr] = optional_secret_env(
+        "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64"
     )
-    BRANDING_URL_SLACK: HttpUrl = HttpUrl(
+    APP_PROVIDER_LLAMA_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_LLAMA_API_KEY")
+    APP_PROVIDER_MISTRAL_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_MISTRAL_API_KEY")
+    APP_PROVIDER_OPENAI_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_OPENAI_API_KEY")
+    APP_PROVIDER_TOGETHERAI_API_KEY: Optional[SecretStr] = optional_secret_env("APP_PROVIDER_TOGETHERAI_API_KEY")
+    APP_LLMTOOL_BRAVE_SEARCH_API_KEY: Optional[SecretStr] = optional_secret_env("APP_LLMTOOL_BRAVE_SEARCH_API_KEY")
+    APP_LLMTOOL_TAVILY_API_KEY: Optional[SecretStr] = optional_secret_env("APP_LLMTOOL_TAVILY_API_KEY")
+    APP_VECTORSTORE_PINECONE_API_KEY: Optional[SecretStr] = optional_secret_env("APP_VECTORSTORE_PINECONE_API_KEY")
+    APP_VECTORSTORE_QDRANT_CLOUD_API_KEY: Optional[SecretStr] = optional_secret_env(
+        "APP_VECTORSTORE_QDRANT_CLOUD_API_KEY"
+    )
+
+    PLATFORM_BRANDING_APP_NAME: str = get_env("PLATFORM_BRANDING_APP_NAME", "Smarter")
+    PLATFORM_BRANDING_PRODUCT_NAME: str = get_env("PLATFORM_BRANDING_PRODUCT_NAME", "The Smarter Project")
+    PLATFORM_BRANDING_PRODUCT_DESCRIPTION: str = get_env(
+        "PLATFORM_BRANDING_PRODUCT_DESCRIPTION",
+        "An open source, no-code AI authoring platform designed for instructional use.",
+    )
+    PLATFORM_BRANDING_CDN_URL: HttpUrl = HttpUrl(get_env("PLATFORM_BRANDING_CDN_URL", "https://cdn.smarter.sh"))
+    PLATFORM_BRANDING_DOCS_URL: HttpUrl = HttpUrl(get_env("PLATFORM_BRANDING_DOCS_URL", "https://docs.smarter.sh"))
+    PLATFORM_BRANDING_BLOG_URL: HttpUrl = HttpUrl(get_env("PLATFORM_BRANDING_BLOG_URL", "https://blog.smarter.sh"))
+    PLATFORM_BRANDING_CORPORATE_NAME: str = get_env("PLATFORM_BRANDING_CORPORATE_NAME", "Lawrence P. McDaniel")
+    PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER: str = get_env("PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER", "(###) 555-1212")
+    PLATFORM_BRANDING_SUPPORT_EMAIL: EmailStr = get_env("PLATFORM_BRANDING_SUPPORT_EMAIL", "lpm0073@gmail.com")
+    PLATFORM_BRANDING_ADDRESS1: str = get_env("PLATFORM_BRANDING_ADDRESS1", "123 Main St, Anytown, USA")
+    PLATFORM_BRANDING_ADDRESS2: str = get_env("PLATFORM_BRANDING_ADDRESS2", "Suite 100")
+    PLATFORM_BRANDING_CITY: str = get_env("PLATFORM_BRANDING_CITY", "Anytown")
+    PLATFORM_BRANDING_STATE: str = get_env("PLATFORM_BRANDING_STATE", "CA")
+    PLATFORM_BRANDING_POSTAL_CODE: str = get_env("PLATFORM_BRANDING_POSTAL_CODE", "12345")
+    PLATFORM_BRANDING_COUNTRY: str = get_env("PLATFORM_BRANDING_COUNTRY", "USA")
+    PLATFORM_BRANDING_CURRENCY: str = get_env("PLATFORM_BRANDING_CURRENCY", "USD")
+    PLATFORM_BRANDING_TIMEZONE: str = get_env("PLATFORM_BRANDING_TIMEZONE", "America/Denver")
+    PLATFORM_BRANDING_CONTACT_URL: HttpUrl = HttpUrl(
+        get_env("PLATFORM_BRANDING_CONTACT_URL", "https://lawrencemcdaniel.com/")
+    )
+    PLATFORM_BRANDING_PRIMARY_CONTACT: str = get_env("PLATFORM_BRANDING_PRIMARY_CONTACT", "Lawrence McDaniel")
+    PLATFORM_BRANDING_SUPPORT_HOURS: str = get_env(
+        "PLATFORM_BRANDING_SUPPORT_HOURS", "MON-FRI 9:00 AM - 5:00 PM GMT-6 (CST)"
+    )
+    PLATFORM_BRANDING_URL_FACEBOOK: HttpUrl = HttpUrl(get_env("PLATFORM_BRANDING_URL_FACEBOOK", "https://facebook.com"))
+    PLATFORM_BRANDING_URL_TWITTER: HttpUrl = HttpUrl(
+        get_env("PLATFORM_BRANDING_URL_TWITTER", "https://x.com/fullstackwlarry")
+    )
+    PLATFORM_BRANDING_URL_LINKEDIN: HttpUrl = HttpUrl(
+        get_env("PLATFORM_BRANDING_URL_LINKEDIN", "https://www.linkedin.com/in/lawrencemcdaniel/")
+    )
+    PLATFORM_BRANDING_URL_SLACK: HttpUrl = HttpUrl(
         get_env(
-            "BRANDING_URL_SLACK",
+            "PLATFORM_BRANDING_URL_SLACK",
             "https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw",
         )
     )
 
-    CACHE_EXPIRATION: int = int(get_env("CACHE_EXPIRATION", 60 * 1))  # 1 minute
-    CHAT_CACHE_EXPIRATION: int = int(get_env("CHAT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    SUBSYSTEM_CACHE_EXPIRATION: int = int(get_env("SUBSYSTEM_CACHE_EXPIRATION", 60 * 1))  # 1 minute
+    SUBSYSTEM_CACHE_CHAT_EXPIRATION: int = int(get_env("SUBSYSTEM_CACHE_CHAT_EXPIRATION", 60 * 5))  # 5 minutes
     CONFIGURE_UBC_ACCOUNT: bool = bool_environment_variable("CONFIGURE_UBC_ACCOUNT", False)
-    LISTVIEW_CACHE_EXPIRATION: int = int(get_env("LISTVIEW_CACHE_EXPIRATION", 60 * 60))  # 1 hour
-    LLM_CLIENT_CACHE_EXPIRATION: int = int(get_env("LLM_CLIENT_CACHE_EXPIRATION", 60 * 5))  # 5 minutes
+    SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION: int = int(get_env("SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION", 60 * 60))  # 1 hour
+    SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION: int = int(
+        get_env("SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION", 60 * 5)
+    )  # 5 minutes
     MAX_TOOL_ROUNDS: int = int(get_env("MAX_TOOL_ROUNDS", 5))
     PROMPT_HISTORY_MAX_AGE: int = int(get_env("PROMPT_HISTORY_MAX_AGE", 90))  # days
-    PROMPT_RESPONSE_CACHE_EXPIRATION: int = int(get_env("PROMPT_RESPONSE_CACHE_EXPIRATION", 60 * 60))  # 1 hour
-    LLM_CLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable("LLM_CLIENT_TASKS_CREATE_DNS_RECORD", True)
-    LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
-        "LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST", True
+    SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION: int = int(
+        get_env("SUBSYSTEM_CACHE_PROMPT_RESPONSE_EXPIRATION", 60 * 60)
+    )  # 1 hour
+    APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD: bool = bool_environment_variable(
+        "APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD", True
     )
-    LLM_CLIENT_TASKS_DEFAULT_TTL: int = get_env("LLM_CLIENT_TASKS_DEFAULT_TTL", 600)
+    APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST: bool = bool_environment_variable(
+        "APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST", True
+    )
+    APP_LLMCLIENT_TASKS_DEFAULT_TTL: int = get_env("APP_LLMCLIENT_TASKS_DEFAULT_TTL", 600)
 
-    LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("LLM_CLIENT_TASKS_CELERY_MAX_RETRIES", 3))
-    LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable(
-        "LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF", True
+    APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES: int = int(get_env("APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES", 3))
+    APP_LLMCLIENT_TASKS_CELERY_RETRY_BACKOFF: bool = bool_environment_variable(
+        "APP_LLMCLIENT_TASKS_CELERY_RETRY_BACKOFF", True
     )
-    LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env("LLM_CLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue")
-    INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: str = get_env(
-        "INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
+    APP_LLMCLIENT_TASKS_CELERY_TASK_QUEUE: str = get_env(
+        "APP_LLMCLIENT_TASKS_CELERY_TASK_QUEUE", "default_celery_task_queue"
     )
-    PLUGIN_MAX_DATA_RESULTS: int = int(get_env("PLUGIN_MAX_DATA_RESULTS", 50))
-    MCPSERVER_RATE_LIMIT: int = int(get_env("MCPSERVER_RATE_LIMIT", 1200))  # requests per minute, per client IP
-    EXTENSION_REGISTRY_URL: str = get_env(
-        "EXTENSION_REGISTRY_URL", "https://smarter-sh.github.io/extensions-registry/index.json"
+    APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: str = get_env(
+        "APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE", "infrastructure_celery_task_queue"
     )
-    EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("EXTENSION_REGISTRY_PUBLIC_KEY", "")
-    LOKI_URL: str = get_env("LOKI_URL", "")  # e.g. http://smarter-loki:3100. Empty: no pod log store
+    APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS: int = int(get_env("APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS", 50))
+    APP_MCPSERVER_RATE_LIMIT: int = int(get_env("APP_MCPSERVER_RATE_LIMIT", 1200))  # requests per minute, per client IP
+    APP_LLMTOOL_EXTENSION_REGISTRY_URL: str = get_env(
+        "APP_LLMTOOL_EXTENSION_REGISTRY_URL", "https://smarter-sh.github.io/extensions-registry/index.json"
+    )
+    APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY: str = get_env("APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY", "")
+    SUBSYSTEM_LOGGING_LOKI_URL: str = get_env(
+        "SUBSYSTEM_LOGGING_LOKI_URL", ""
+    )  # e.g. http://smarter-loki:3100. Empty: no pod log store
     # the user's own Django settings: see smarter.settings.user, which reads the same variable.
     USER_SETTINGS_FILE: str = get_env("USER_SETTINGS_FILE", "/home/smarter_user/user-settings/settings.yaml")
 
-    SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
+    PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS: List[Pattern] = [
         re.compile(r"^/$"),
         re.compile(r"^/static(/.*)?$"),
         re.compile(r"^/api/v\d+(\.\d+)?/.+"),
@@ -202,41 +244,47 @@ class SettingsDefaults:
     DEVELOPER_MODE: bool = bool_environment_variable("DEVELOPER_MODE", False)
 
     DUMP_DEFAULTS: bool = bool(get_env("DUMP_DEFAULTS", False))
-    EMAIL_ADMIN: EmailStr = get_env("EMAIL_ADMIN", "admin@example.com")
+    PLATFORM_EMAIL_ADMIN: EmailStr = get_env("PLATFORM_EMAIL_ADMIN", "admin@example.com")
     ENVIRONMENT = get_env("ENVIRONMENT", SmarterEnvironments.LOCAL)
 
-    ENABLE_CONNECTION: bool = bool_environment_variable("ENABLE_CONNECTION", True)
-    ENABLE_GUARDRAIL: bool = bool_environment_variable("ENABLE_GUARDRAIL", True)
-    ENABLE_LLMCLIENT: bool = bool_environment_variable("ENABLE_LLMCLIENT", True)
-    ENABLE_LLMHOST: bool = bool_environment_variable("ENABLE_LLMHOST", True)
-    ENABLE_LLMTOOL: bool = bool_environment_variable("ENABLE_LLMTOOL", True)
-    ENABLE_MCPCLIENT: bool = bool_environment_variable("ENABLE_MCPCLIENT", True)
-    ENABLE_ORCHESTRATOR: bool = bool_environment_variable("ENABLE_ORCHESTRATOR", True)
-    ENABLE_PROVIDER: bool = bool_environment_variable("ENABLE_PROVIDER", True)
-    ENABLE_SECRET: bool = bool_environment_variable("ENABLE_SECRET", True)
-    ENABLE_VECTORSEARCH: bool = bool_environment_variable("ENABLE_VECTORSEARCH", True)
-    ENABLE_VECTORSTORE: bool = bool_environment_variable("ENABLE_VECTORSTORE", True)
-    ENABLE_MANIFEST_DROPZONE: bool = bool_environment_variable("ENABLE_MANIFEST_DROPZONE", True)
-    ENABLE_DASHBOARD_SERVER_LOGS: bool = bool_environment_variable("ENABLE_DASHBOARD_SERVER_LOGS", True)
-    ENABLE_WEB_CONSOLE_TERMINAL: bool = bool_environment_variable("ENABLE_WEB_CONSOLE_TERMINAL", False)
-    STATIC_FILES_ON_CDN: bool = bool_environment_variable("STATIC_FILES_ON_CDN", False)
-    ENABLE_DASHBOARD_PASSTHROUGH_PROMPT: bool = bool_environment_variable("ENABLE_DASHBOARD_PASSTHROUGH_PROMPT", True)
-    ENABLE_PROXY: bool = bool_environment_variable("ENABLE_PROXY", True)
+    APP_CONNECTION_ENABLE: bool = bool_environment_variable("APP_CONNECTION_ENABLE", True)
+    APP_GUARDRAIL_ENABLE: bool = bool_environment_variable("APP_GUARDRAIL_ENABLE", True)
+    APP_LLMCLIENT_ENABLE: bool = bool_environment_variable("APP_LLMCLIENT_ENABLE", True)
+    APP_LLMHOST_ENABLE: bool = bool_environment_variable("APP_LLMHOST_ENABLE", True)
+    APP_LLMTOOL_ENABLE: bool = bool_environment_variable("APP_LLMTOOL_ENABLE", True)
+    APP_MCPCLIENT_ENABLE: bool = bool_environment_variable("APP_MCPCLIENT_ENABLE", True)
+    APP_ORCHESTRATOR_ENABLE: bool = bool_environment_variable("APP_ORCHESTRATOR_ENABLE", True)
+    APP_PROVIDER_ENABLE: bool = bool_environment_variable("APP_PROVIDER_ENABLE", True)
+    APP_SECRET_ENABLE: bool = bool_environment_variable("APP_SECRET_ENABLE", True)
+    APP_VECTORSEARCH_ENABLE: bool = bool_environment_variable("APP_VECTORSEARCH_ENABLE", True)
+    APP_VECTORSTORE_ENABLE: bool = bool_environment_variable("APP_VECTORSTORE_ENABLE", True)
+    APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE: bool = bool_environment_variable(
+        "APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE", True
+    )
+    APP_DASHBOARD_SERVER_LOGS_ENABLE: bool = bool_environment_variable("APP_DASHBOARD_SERVER_LOGS_ENABLE", True)
+    APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE: bool = bool_environment_variable(
+        "APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE", False
+    )
+    PLATFORM_STATIC_FILES_ON_CDN: bool = bool_environment_variable("PLATFORM_STATIC_FILES_ON_CDN", False)
+    APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE: bool = bool_environment_variable(
+        "APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE", True
+    )
+    APP_PROXY_ENABLE: bool = bool_environment_variable("APP_PROXY_ENABLE", True)
 
-    fernet = get_env("FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
+    fernet = get_env("PLATFORM_FERNET_ENCRYPTION_KEY", default=None, is_secret=True)
     if fernet is None:
         warnings.warn(
-            "FERNET_ENCRYPTION_KEY is not set. "
+            "PLATFORM_FERNET_ENCRYPTION_KEY is not set. "
             "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
             "You can safely disregard this warning if this is a new installation, test environment or CI-CD process.",
             UserWarning,
         )
         fernet = generate_fernet_encryption_key()
-    FERNET_ENCRYPTION_KEY = SecretStr(fernet)
+    PLATFORM_FERNET_ENCRYPTION_KEY = SecretStr(fernet)
 
     GITHUB_TOKEN: Optional[SecretStr] = github_token_env()
 
-    INTERNAL_IP_PREFIXES: List[str] = get_env("INTERNAL_IP_PREFIXES", ["192.168."])
+    PLATFORM_INTERNAL_IP_PREFIXES: List[str] = get_env("PLATFORM_INTERNAL_IP_PREFIXES", ["192.168."])
 
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-6-luna"
@@ -258,22 +306,26 @@ class SettingsDefaults:
 
     LOG_LEVEL: int = logging.DEBUG if get_env("DEBUG_MODE", False) else logging.INFO
 
-    LOGO: AnyUrl = AnyUrl(get_env("LOGO", urljoin(SMARTER_PROJECT_CDN_URL, "/images/logo/smarter-crop.png")))
+    PLATFORM_BRANDING_LOGO: AnyUrl = AnyUrl(
+        get_env("PLATFORM_BRANDING_LOGO", urljoin(str(PLATFORM_BRANDING_CDN_URL), "/images/logo/smarter-crop.png"))
+    )
 
-    MARKETING_SITE_URL: HttpUrl = HttpUrl(get_env("MARKETING_SITE_URL", f"https://{ROOT_DOMAIN}"))
+    PLATFORM_BRANDING_MARKETING_SITE_URL: HttpUrl = HttpUrl(
+        get_env("PLATFORM_BRANDING_MARKETING_SITE_URL", f"https://{PLATFORM_ROOT_DOMAIN}")
+    )
 
     # the database server's administrator, whom manage.py load_from_github --run_scripts passes to a
     # repository's scripts, e.g. to the Stackademy script that creates its course database and its users.
-    MYSQL_ROOT_USERNAME: str = get_env("MYSQL_ROOT_USERNAME", "root")
-    MYSQL_ROOT_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_ROOT_PASSWORD")
+    SUBSYSTEM_SQL_ROOT_USERNAME: str = get_env("SUBSYSTEM_SQL_ROOT_USERNAME", "root")
+    SUBSYSTEM_SQL_ROOT_PASSWORD: Optional[SecretStr] = optional_secret_env("SUBSYSTEM_SQL_ROOT_PASSWORD")
 
     # the platform's own database, Django's DATABASES["default"]. The defaults are docker-compose.yml's
     # smarter-mariadb service. Its password is a default only locally: elsewhere it must be set.
-    MYSQL_HOST: str = get_env("MYSQL_HOST", "smarter-mariadb")
-    MYSQL_PORT: int = get_env("MYSQL_PORT", 3306)
-    MYSQL_DATABASE: str = get_env("MYSQL_DATABASE", "smarter")
-    MYSQL_USER: str = get_env("MYSQL_USER", "smarter")
-    MYSQL_PASSWORD: Optional[SecretStr] = optional_secret_env("MYSQL_PASSWORD") or (
+    SUBSYSTEM_SQL_HOST: str = get_env("SUBSYSTEM_SQL_HOST", "smarter-mariadb")
+    SUBSYSTEM_SQL_PORT: int = get_env("SUBSYSTEM_SQL_PORT", 3306)
+    SUBSYSTEM_SQL_DATABASE: str = get_env("SUBSYSTEM_SQL_DATABASE", "smarter")
+    SUBSYSTEM_SQL_USER: str = get_env("SUBSYSTEM_SQL_USER", "smarter")
+    SUBSYSTEM_SQL_PASSWORD: Optional[SecretStr] = optional_secret_env("SUBSYSTEM_SQL_PASSWORD") or (
         SecretStr("smarter") if ENVIRONMENT == SmarterEnvironments.LOCAL else None
     )
     DATABASE_READ_TIMEOUT: int = int(get_env("DATABASE_READ_TIMEOUT", 0))  # 0: no timeout
@@ -281,9 +333,14 @@ class SettingsDefaults:
     # the threads per web server process that run streamed chat prompts, smarter.apps.prompt.progress.
     PROMPT_THREADS: int = int(get_env("PROMPT_THREADS", 32))
 
-    PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", SMARTER_PLATFORM_DEFAULT_SUBDOMAIN)
+    PLATFORM_SUBDOMAIN = get_env("PLATFORM_SUBDOMAIN", "platform")
 
-    secret = get_env("SECRET_KEY", default=None, is_secret=True)
+    # DJANGO_SECRET_KEY, the name of every other Django setting's variable, then SECRET_KEY or
+    # SMARTER_SECRET_KEY. It is read here, not by smarter.settings.user, so that
+    # smarter_settings.require_secret_key() sees it, and validates it, before Django starts.
+    secret = get_env("DJANGO_SECRET_KEY", default=None, is_secret=True)
+    if secret is None:
+        secret = get_env("SECRET_KEY", default=None, is_secret=True)
     SECRET_KEY_IS_GENERATED: bool = secret is None
     if secret is None:
         warnings.warn(
@@ -295,51 +352,59 @@ class SettingsDefaults:
         )
         secret = base64.urlsafe_b64encode(os.urandom(32)).decode()
     SECRET_KEY: SecretStr = SecretStr(secret)
-    SETTINGS_OUTPUT: bool = bool_environment_variable("SETTINGS_OUTPUT", False)
+    PLATFORM_SETTINGS_OUTPUT: bool = bool_environment_variable("PLATFORM_SETTINGS_OUTPUT", False)
 
-    SHARED_RESOURCE_IDENTIFIER = get_env("SHARED_RESOURCE_IDENTIFIER", "smarter")
+    PLATFORM_SHARED_RESOURCE_IDENTIFIER = get_env("PLATFORM_SHARED_RESOURCE_IDENTIFIER", "smarter")
 
     # Slack is optional: without a bot token, the Kubernetes jobs' logs are not posted to Slack.
-    SLACK_BOT_TOKEN: Optional[SecretStr] = optional_secret_env("SLACK_BOT_TOKEN")
+    SUBSYSTEM_SLACK_BOT_TOKEN: Optional[SecretStr] = optional_secret_env("SUBSYSTEM_SLACK_BOT_TOKEN")
 
     # SMTP is optional: without credentials, email is not sent, and each email that is not sent is logged.
-    SMTP_SENDER = get_env("SMTP_SENDER", f"admin@{ROOT_DOMAIN}")
+    SUBSYSTEM_SMTP_SENDER = get_env("SUBSYSTEM_SMTP_SENDER", f"admin@{PLATFORM_ROOT_DOMAIN}")
     # None unless set: smarter_settings derives the from address from the platform domain.
-    SMTP_FROM_EMAIL: Optional[str] = get_env("SMTP_FROM_EMAIL", default=None)
+    SUBSYSTEM_SMTP_FROM_EMAIL: Optional[str] = get_env("SUBSYSTEM_SMTP_FROM_EMAIL", default=None)
     # None unless set: smarter_settings derives the AWS SES endpoint of AWS_REGION.
-    SMTP_HOST: Optional[str] = get_env("SMTP_HOST", default=None)
-    SMTP_PORT = int(get_env("SMTP_PORT", "587"))
-    SMTP_USE_SSL = bool(get_env("SMTP_USE_SSL", False))
-    SMTP_USE_TLS = bool(get_env("SMTP_USE_TLS", True))
-    SMTP_PASSWORD: Optional[SecretStr] = optional_secret_env("SMTP_PASSWORD")
-    SMTP_USERNAME: Optional[SecretStr] = optional_secret_env("SMTP_USERNAME")
+    SUBSYSTEM_SMTP_HOST: Optional[str] = get_env("SUBSYSTEM_SMTP_HOST", default=None)
+    SUBSYSTEM_SMTP_PORT = int(get_env("SUBSYSTEM_SMTP_PORT", "587"))
+    SUBSYSTEM_SMTP_USE_SSL = bool(get_env("SUBSYSTEM_SMTP_USE_SSL", False))
+    SUBSYSTEM_SMTP_USE_TLS = bool(get_env("SUBSYSTEM_SMTP_USE_TLS", True))
+    SUBSYSTEM_SMTP_PASSWORD: Optional[SecretStr] = optional_secret_env("SUBSYSTEM_SMTP_PASSWORD")
+    SUBSYSTEM_SMTP_USERNAME: Optional[SecretStr] = optional_secret_env("SUBSYSTEM_SMTP_USERNAME")
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", is_secret=True))
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", is_secret=True))
+    SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: SecretStr = SecretStr(
+        get_env("SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", is_secret=True)
+    )
+    SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: SecretStr = SecretStr(
+        get_env("SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", is_secret=True)
+    )
     # -------------------------------------------------------------------------
     # see: https://github.com/settings/applications/2620957
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_KEY", is_secret=True))
-    SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(get_env("SOCIAL_AUTH_GITHUB_SECRET", is_secret=True))
+    SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY: SecretStr = SecretStr(get_env("SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY", is_secret=True))
+    SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET: SecretStr = SecretStr(
+        get_env("SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET", is_secret=True)
+    )
     # -------------------------------------------------------------------------
     # see:  https://www.linkedin.com/developers/apps/221422881/settings
     #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", is_secret=True))
-    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
-        get_env("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", is_secret=True)
+    SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: SecretStr = SecretStr(
+        get_env("SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", is_secret=True)
+    )
+    SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: SecretStr = SecretStr(
+        get_env("SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", is_secret=True)
     )
 
     STRIPE_LIVE_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_LIVE_SECRET_KEY", is_secret=True))
     STRIPE_TEST_SECRET_KEY: SecretStr = SecretStr(get_env("STRIPE_TEST_SECRET_KEY", is_secret=True))
 
     # Django REST Framework throttle rates, e.g. 120/minute. "none" disables a throttle.
-    THROTTLE_RATE_ANON = get_env("THROTTLE_RATE_ANON", "120/minute")
-    THROTTLE_RATE_USER = get_env("THROTTLE_RATE_USER", "600/minute")
+    APP_API_THROTTLE_RATE_ANON = get_env("APP_API_THROTTLE_RATE_ANON", "120/minute")
+    APP_API_THROTTLE_RATE_USER = get_env("APP_API_THROTTLE_RATE_USER", "600/minute")
 
     VERBOSE_LOGGING: bool = bool_environment_variable("VERBOSE_LOGGING", False)
 

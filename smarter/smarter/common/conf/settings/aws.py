@@ -16,6 +16,42 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 
 logger = logging.getLogger(__name__)
 
+STATIC_AWS_KEY_PAIR_WARNING = (
+    "SECURITY WARNING: a static AWS key pair is configured (%s, from AWS_ACCESS_KEY_ID and "
+    "AWS_SECRET_ACCESS_KEY). This is a security risk, and it is not recommended. A key pair never "
+    "expires: it sits in every pod's environment and in the Helm release's Secret, and anyone who "
+    "obtains it can use the AWS account from anywhere until it is revoked. Prefer IAM role-based "
+    "credentials. On Kubernetes, that is IAM Roles for Service Accounts (IRSA), which the "
+    "smarter-infrastructure Terraform modules create for each environment "
+    "(aws/terraform/smarter/iam-irsa.tf: the smarter and smarter-backup roles, scoped to the "
+    "platform's own permissions), and which the Helm chart assumes through serviceAccount.awsRoleArn "
+    "and databaseScheduledBackup.awsRoleArn. Each pod then gets short-lived credentials that AWS "
+    "rotates automatically, and that nothing stores. A key pair takes precedence over the role, so "
+    "once the role is in place, remove AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from the "
+    "chart's env and from .env. For local development, prefer an AWS profile (AWS_PROFILE, e.g. "
+    "with AWS IAM Identity Center) to a long-lived key pair."
+)
+"""The warning that a real AWS key pair is configured: %s is the setting's name, never its value."""
+
+_warned_static_aws_key_pair = False
+"""Whether this process has logged :data:`STATIC_AWS_KEY_PAIR_WARNING`, which it logs once."""
+
+
+def warn_static_aws_key_pair(field_name: str) -> None:
+    """
+    Log, once per process, that a real AWS key pair is configured, and why an IAM role is preferred.
+
+    The access key id and the secret access key are validated one after the other, and both are set
+    together, so the pair is reported once. The log names the setting, never its value.
+
+    :param field_name: The setting that holds a key, e.g. ``aws_access_key_id``.
+    """
+    global _warned_static_aws_key_pair  # pylint: disable=global-statement
+    if _warned_static_aws_key_pair:
+        return
+    _warned_static_aws_key_pair = True
+    logger.warning(STATIC_AWS_KEY_PAIR_WARNING, f"smarter_settings.{field_name}")
+
 
 class AwsSettings(BaseModel):
     """The cloud provider: AWS credentials, region, and the EKS cluster."""
@@ -107,6 +143,7 @@ class AwsSettings(BaseModel):
         if not re.match(pattern, v.get_secret_value()):
             raise SmarterConfigurationError("aws_access_key_id is not a valid AWS access key ID format.")
 
+        warn_static_aws_key_pair("aws_access_key_id")
         return v
 
     aws_secret_access_key: Optional[SecretStr] = Field(
@@ -159,6 +196,7 @@ class AwsSettings(BaseModel):
         if not re.match(pattern, v.get_secret_value()):
             raise SmarterConfigurationError("aws_secret_access_key is not a valid AWS secret access key format.")
 
+        warn_static_aws_key_pair("aws_secret_access_key")
         return v
 
     aws_regions: List[str] = Field(
@@ -235,8 +273,8 @@ class AwsSettings(BaseModel):
         logger.debug("Checking if AWS is configured with aws_profile, or aws_access_key_id and aws_secret_access_key.")
         return services.is_connected_to_aws()
 
-    cloud_provider: str = Field(
-        settings_defaults.CLOUD_PROVIDER,
+    platform_cloud_provider: str = Field(
+        settings_defaults.PLATFORM_CLOUD_PROVIDER,
         description="The cloud provider of the platform's infrastructure services: DNS, TLS certificates, and the Kubernetes cluster's credentials.",
         examples=["aws", "memory"],
         title="Cloud Provider",
@@ -250,12 +288,12 @@ class AwsSettings(BaseModel):
     without a cloud account.
 
     :type: str
-    :default: ``aws``, from ``settings_defaults.CLOUD_PROVIDER``
+    :default: ``aws``, from ``settings_defaults.PLATFORM_CLOUD_PROVIDER``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("cloud_provider")
-    def validate_cloud_provider(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_cloud_provider")
+    def validate_platform_cloud_provider(cls, v: Optional[str]) -> str:
         """Validates the `cloud_provider` field.
 
         Args:
@@ -265,54 +303,53 @@ class AwsSettings(BaseModel):
             str: The validated cloud provider's name, in lower case.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.CLOUD_PROVIDER
+            return settings_defaults.PLATFORM_CLOUD_PROVIDER
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"cloud_provider of type {type(v)} is not a str.")
         return v.strip().lower()
 
-    aws_eks_cluster_name: Optional[str] = Field(
-        settings_defaults.AWS_EKS_CLUSTER_NAME,
-        description="The name of the AWS EKS cluster used for hosting applications.",
+    subsystem_k8s_cluster_name: Optional[str] = Field(
+        settings_defaults.SUBSYSTEM_K8S_CLUSTER_NAME,
+        description="The name of the Kubernetes cluster that hosts the platform, e.g. its EKS cluster on AWS.",
         examples=["apps-hosting-service"],
-        title="AWS EKS Cluster Name",
+        title="Kubernetes Cluster Name",
     )
     """
-    The name of the AWS EKS cluster used for hosting applications.
+    The name of the Kubernetes cluster that hosts the platform: ``SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME``.
 
-    This setting specifies the Amazon EKS cluster that the platform will use
-    for deploying and managing containerized applications. The cluster name
-    should correspond to an existing EKS cluster in the configured AWS account.
+    The platform deploys LLMClients and LLMHosts to it. On AWS it is an EKS cluster in the
+    configured account, which the AWS infrastructure provider describes to build its kubeconfig.
 
     It is optional. Without it, the platform runs, but LLMClients and LLMHosts are not
     deployed to Kubernetes, and the first attempt to reach the cluster logs how to set it.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.AWS_EKS_CLUSTER_NAME``, None if it is not set.
+    :default: Value from ``settings_defaults.SUBSYSTEM_K8S_CLUSTER_NAME``, None if it is not set.
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("aws_eks_cluster_name")
-    def validate_aws_eks_cluster_name(cls, v: Optional[str]) -> Optional[str]:
-        """Validates the `aws_eks_cluster_name` field.
+    @before_field_validator("subsystem_k8s_cluster_name")
+    def validate_subsystem_k8s_cluster_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validates the `k8s_cluster_name` field.
 
         Args:
-            v (Optional[str]): The AWS EKS cluster name value to validate.
+            v (Optional[str]): The Kubernetes cluster name value to validate.
 
         Returns:
-            Optional[str]: The validated AWS EKS cluster name, or None if it is missing or a placeholder.
+            Optional[str]: The validated cluster name, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.AWS_EKS_CLUSTER_NAME
+            v = settings_defaults.SUBSYSTEM_K8S_CLUSTER_NAME
         if is_missing_value(v):
             return None
 
         if not isinstance(v, str):
-            raise SmarterConfigurationError(f"aws_eks_cluster_name of type {type(v)} is not a str.")
+            raise SmarterConfigurationError(f"k8s_cluster_name of type {type(v)} is not a str.")
 
         return v
 
-    llmhost_node_role_arn: Optional[str] = Field(
-        settings_defaults.LLMHOST_NODE_ROLE_ARN,
+    app_llmhost_node_role_arn: Optional[str] = Field(
+        settings_defaults.APP_LLMHOST_NODE_ROLE_ARN,
         description="The IAM role of the node groups that Smarter creates for LLMHosts.",
         examples=["arn:aws:iam::123456789012:role/eks-node-role"],
         title="LLMHost Node Role ARN",
@@ -324,11 +361,11 @@ class AwsSettings(BaseModel):
     that it did not create, i.e. the node group that Smarter itself runs on.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.LLMHOST_NODE_ROLE_ARN``
+    :default: Value from ``settings_defaults.APP_LLMHOST_NODE_ROLE_ARN``
     """
 
-    llmhost_node_subnet_ids: List[str] = Field(
-        settings_defaults.LLMHOST_NODE_SUBNET_IDS,
+    app_llmhost_node_subnet_ids: List[str] = Field(
+        settings_defaults.APP_LLMHOST_NODE_SUBNET_IDS,
         description="The subnets of the node groups that Smarter creates for LLMHosts.",
         examples=[["subnet-0123456789abcdef0"]],
         title="LLMHost Node Subnet IDs",
@@ -344,11 +381,11 @@ class AwsSettings(BaseModel):
     per node group avoids this.
 
     :type: List[str]
-    :default: Value from ``settings_defaults.LLMHOST_NODE_SUBNET_IDS``
+    :default: Value from ``settings_defaults.APP_LLMHOST_NODE_SUBNET_IDS``
     """
 
-    @before_field_validator("llmhost_node_subnet_ids")
-    def validate_llmhost_node_subnet_ids(cls, v: Optional[Union[List[str], str]]) -> List[str]:
+    @before_field_validator("app_llmhost_node_subnet_ids")
+    def validate_app_llmhost_node_subnet_ids(cls, v: Optional[Union[List[str], str]]) -> List[str]:
         """Validates the `llmhost_node_subnet_ids` field: a list, or a comma-separated string."""
         if v in THE_EMPTY_SET:
             return []

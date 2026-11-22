@@ -21,8 +21,8 @@ class PlatformSettings(BaseModel):
         None,
     )
 
-    loki_url: str = Field(
-        settings_defaults.LOKI_URL,
+    subsystem_logging_loki_url: str = Field(
+        settings_defaults.SUBSYSTEM_LOGGING_LOKI_URL,
         description="The base url of the Loki that stores the platform's pod logs, e.g. http://smarter-loki:3100. Empty: there is none.",
         examples=["http://smarter-loki:3100"],
         title="Loki URL",
@@ -35,7 +35,7 @@ class PlatformSettings(BaseModel):
     :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``. While it is empty, e.g. in
     local development, the log tools say that there is no log store.
     :type: str
-    :default: Value from ``settings_defaults.LOKI_URL``
+    :default: Value from ``settings_defaults.SUBSYSTEM_LOGGING_LOKI_URL``
     :raises SmarterConfigurationError: If the value is not an http or https url.
     """
 
@@ -52,15 +52,15 @@ class PlatformSettings(BaseModel):
 
     :mod:`smarter.settings.user` reads the file, from this same environment variable, before
     ``smarter_settings`` is used for anything else. A missing file is not an error: there are no user
-    settings. Locally, Docker Compose mounts ``user-settings/`` from the repository's root here; the Helm
-    chart mounts the file that it writes from ``djangoSettings``.
+    settings. Locally, Docker Compose mounts ``user-settings/`` from the repository's root here. The Helm
+    chart mounts no file: on Kubernetes, user settings are ``DJANGO_*`` variables in its ``env``.
 
     :type: str
     :default: Value from ``settings_defaults.USER_SETTINGS_FILE``
     """
 
-    @before_field_validator("loki_url")
-    def validate_loki_url(cls, v: Optional[str]) -> str:
+    @before_field_validator("subsystem_logging_loki_url")
+    def validate_subsystem_logging_loki_url(cls, v: Optional[str]) -> str:
         """Validates the 'loki_url' field: an http or https url without a trailing slash, or empty.
 
         Args:
@@ -136,8 +136,8 @@ class PlatformSettings(BaseModel):
         title="Platform Subdomain",
     )
 
-    root_domain: str = Field(
-        settings_defaults.ROOT_DOMAIN,
+    platform_root_domain: str = Field(
+        settings_defaults.PLATFORM_ROOT_DOMAIN,
         description="The root domain for the platform.",
         examples=["example.com"],
         title="Root Domain",
@@ -150,12 +150,12 @@ class PlatformSettings(BaseModel):
     configurations.
 
     :type: str
-    :default: Value from ``settings_defaults.ROOT_DOMAIN``
+    :default: Value from ``settings_defaults.PLATFORM_ROOT_DOMAIN``
     :raises SmarterConfigurationError: If the value is not a valid domain name.
     """
 
-    @before_field_validator("root_domain")
-    def validate_root_domain(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_root_domain")
+    def validate_platform_root_domain(cls, v: Optional[str]) -> str:
         """
         Validates the `root_domain` field.
 
@@ -168,15 +168,15 @@ class PlatformSettings(BaseModel):
             str: The validated root domain.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.ROOT_DOMAIN
+            return settings_defaults.PLATFORM_ROOT_DOMAIN
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"root_domain of type {type(v)} is not a str: {v}")
 
         return v
 
-    settings_output: bool = Field(
-        settings_defaults.SETTINGS_OUTPUT,
+    platform_settings_output: bool = Field(
+        settings_defaults.PLATFORM_SETTINGS_OUTPUT,
         description="Flag to enable or disable output of settings for debugging purposes.",
         examples=[True, False],
         title="Settings Output",
@@ -188,12 +188,12 @@ class PlatformSettings(BaseModel):
     Kubernetes pods running Smarter services.
 
     :type: bool
-    :default: Value from ``settings_defaults.SETTINGS_OUTPUT``
+    :default: Value from ``settings_defaults.PLATFORM_SETTINGS_OUTPUT``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("settings_output")
-    def validate_settings_output(cls, v: Optional[bool]) -> bool:
+    @before_field_validator("platform_settings_output")
+    def validate_platform_settings_output(cls, v: Optional[bool]) -> bool:
         """Validates the `settings_output` field.
 
         Args:
@@ -203,14 +203,14 @@ class PlatformSettings(BaseModel):
             bool: The validated settings output.
         """
         if v is None:
-            return settings_defaults.SETTINGS_OUTPUT
+            return settings_defaults.PLATFORM_SETTINGS_OUTPUT
 
         if not isinstance(v, bool):
             raise SmarterConfigurationError(f"settings_output of type {type(v)} is not a bool: {v}")
         return v
 
-    shared_resource_identifier: str = Field(
-        settings_defaults.SHARED_RESOURCE_IDENTIFIER,
+    platform_shared_resource_identifier: str = Field(
+        settings_defaults.PLATFORM_SHARED_RESOURCE_IDENTIFIER,
         description="Smarter 1-word identifier to be used when naming any shared resource.",
         examples=["smarter", "mycompany", "myproject"],
         title="Shared Resource Identifier",
@@ -239,12 +239,12 @@ class PlatformSettings(BaseModel):
         - ``myproject``
 
     :type: str
-    :default: Value from ``settings_defaults.SHARED_RESOURCE_IDENTIFIER``
+    :default: Value from ``settings_defaults.PLATFORM_SHARED_RESOURCE_IDENTIFIER``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("shared_resource_identifier")
-    def validate_shared_resource_identifier(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_shared_resource_identifier")
+    def validate_platform_shared_resource_identifier(cls, v: Optional[str]) -> str:
         """Validates the `shared_resource_identifier` field.
 
         Uses settings_defaults if no value is received.
@@ -256,7 +256,7 @@ class PlatformSettings(BaseModel):
             str: The validated shared resource identifier.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.SHARED_RESOURCE_IDENTIFIER
+            return settings_defaults.PLATFORM_SHARED_RESOURCE_IDENTIFIER
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"shared_resource_identifier of type {type(v)} is not a str: {v}")

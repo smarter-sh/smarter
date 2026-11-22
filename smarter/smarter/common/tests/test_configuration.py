@@ -131,16 +131,16 @@ class TestConfiguration(SmarterTestBase):
             aws_profile="test-profile",
             aws_regions=["eu-west-1"],
             aws_region="eu-west-1",
-            root_domain="test-domain.com",
-            shared_resource_identifier="TEST_shared_resource_identifier",
+            platform_root_domain="test-domain.com",
+            platform_shared_resource_identifier="TEST_shared_resource_identifier",
             init_info="test_initialize_with_values()",
         )
         self.assertEqual(mock_settings.debug_mode, False)
         self.assertEqual(mock_settings.dump_defaults, False)
         self.assertEqual(mock_settings.aws_profile, "test-profile")
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
-        self.assertEqual(mock_settings.root_domain, "test-domain.com")
-        self.assertEqual(mock_settings.shared_resource_identifier, "TEST_shared_resource_identifier")
+        self.assertEqual(mock_settings.platform_root_domain, "test-domain.com")
+        self.assertEqual(mock_settings.platform_shared_resource_identifier, "TEST_shared_resource_identifier")
 
     def test_semantic_version(self):
         """Test that the semantic version conforms to a valid pattern."""

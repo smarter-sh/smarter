@@ -77,8 +77,8 @@ class TestEKSNodeGroupBackend(SmarterTestBase):
     def test_create_gpu(self):
         """Test a GPU node group: the NVIDIA AMI, the compute's label, the GPU taint, and the platform's role and subnets."""
         with patch("smarter.apps.llmhost.services.nodegroups.smarter_settings") as settings:
-            settings.llmhost_node_role_arn = None
-            settings.llmhost_node_subnet_ids = []
+            settings.app_llmhost_node_role_arn = None
+            settings.app_llmhost_node_subnet_ids = []
             settings.environment = "local"
             settings.platform_name = "smarter"
             nodegroup = self.backend.create(compute(), 1)
@@ -98,8 +98,8 @@ class TestEKSNodeGroupBackend(SmarterTestBase):
     def test_create_cpu(self):
         """Test a CPU node group: the standard AMI, the compute's own taint, and its own subnets."""
         with patch("smarter.apps.llmhost.services.nodegroups.smarter_settings") as settings:
-            settings.llmhost_node_role_arn = "arn:aws:iam::123:role/llmhost-nodes"
-            settings.llmhost_node_subnet_ids = ["subnet-x"]
+            settings.app_llmhost_node_role_arn = "arn:aws:iam::123:role/llmhost-nodes"
+            settings.app_llmhost_node_subnet_ids = ["subnet-x"]
             settings.environment = "local"
             settings.platform_name = "smarter"
             self.backend.create(compute(gpu=False, subnetIds=["subnet-z"]), 0)
@@ -113,8 +113,8 @@ class TestEKSNodeGroupBackend(SmarterTestBase):
     def test_no_platform_nodegroup(self):
         self.eks.list_nodegroups.return_value = {"nodegroups": ["smarter-local-1-other"]}
         with patch("smarter.apps.llmhost.services.nodegroups.smarter_settings") as settings:
-            settings.llmhost_node_role_arn = None
-            settings.llmhost_node_subnet_ids = []
+            settings.app_llmhost_node_role_arn = None
+            settings.app_llmhost_node_subnet_ids = []
             with self.assertRaises(LLMHostComputeError):
                 self.backend.create(compute(), 1)
 

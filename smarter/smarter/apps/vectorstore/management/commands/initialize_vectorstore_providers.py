@@ -1,6 +1,5 @@
 """Create the ApiConnections of the managed vector database services: Pinecone, and Qdrant Cloud."""
 
-import os
 from typing import Optional
 
 from smarter.apps.account.models import UserProfile
@@ -15,6 +14,8 @@ from smarter.apps.vectorstore.const import (
     QDRANT_CLOUD_API_KEY_SECRET_NAME,
     QDRANT_CLOUD_CONNECTION_NAME,
 )
+from smarter.common.conf.const import get_env
+from smarter.common.conf.env import is_missing_value
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
@@ -29,13 +30,13 @@ class Command(SmarterCommand):
     updates, a Secret with its API key, and an ApiConnection, owned by the Smarter admin, which the
     built-in Vectorstore manifests use:
 
-    - Pinecone: ``PINECONE_API_KEY``. The ApiConnection ``pinecone``.
-    - Qdrant Cloud: ``QDRANT_CLOUD_URL`` and ``QDRANT_CLOUD_API_KEY``. The ApiConnection ``qdrant_cloud``.
+    - Pinecone: ``APP_VECTORSTORE_PINECONE_API_KEY``. The ApiConnection ``pinecone``.
+    - Qdrant Cloud: ``APP_VECTORSTORE_QDRANT_CLOUD_URL`` and ``APP_VECTORSTORE_QDRANT_CLOUD_API_KEY``. The ApiConnection ``qdrant_cloud``.
 
     A self-hosted Qdrant database needs neither: Smarter runs it, and generates its API key.
     """
 
-    help = "Create the ApiConnections of Pinecone and Qdrant Cloud, from PINECONE_API_KEY, QDRANT_CLOUD_URL and QDRANT_CLOUD_API_KEY."
+    help = "Create the ApiConnections of Pinecone and Qdrant Cloud, from APP_VECTORSTORE_PINECONE_API_KEY, APP_VECTORSTORE_QDRANT_CLOUD_URL and APP_VECTORSTORE_QDRANT_CLOUD_API_KEY."
 
     def connection(
         self, user_profile: UserProfile, name: str, base_url: str, secret_name: str, api_key: str, description: str
@@ -83,12 +84,13 @@ class Command(SmarterCommand):
         :param user_profile: The owner, the platform's admin.
         :param name: The ApiConnection's name.
         :param url: The provider's API url, or None.
-        :param api_key_var: The name of the environment variable with the API key.
+        :param api_key_var: The name of the environment variable with the API key, without the optional
+            ``SMARTER_`` prefix.
         :param secret_name: The name of the Secret that holds the API key.
         :param description: The provider's name, e.g. ``Pinecone``.
         """
-        api_key = os.environ.get(api_key_var)
-        if not api_key or not url:
+        api_key = get_env(api_key_var, default=None, is_secret=True)
+        if api_key is None or url is None or is_missing_value(api_key) or is_missing_value(url):
             self.stdout.write(self.style.WARNING(f"Skipped {description}: {api_key_var} is not set."))
             return
         self.connection(user_profile, name, url, secret_name, api_key, description)
@@ -108,15 +110,15 @@ class Command(SmarterCommand):
                 user_profile,
                 PINECONE_CONNECTION_NAME,
                 PINECONE_API_URL,
-                "PINECONE_API_KEY",
+                "APP_VECTORSTORE_PINECONE_API_KEY",
                 PINECONE_API_KEY_SECRET_NAME,
                 "Pinecone",
             )
             self.initialize(
                 user_profile,
                 QDRANT_CLOUD_CONNECTION_NAME,
-                os.environ.get("QDRANT_CLOUD_URL"),
-                "QDRANT_CLOUD_API_KEY",
+                get_env("APP_VECTORSTORE_QDRANT_CLOUD_URL", default=None),
+                "APP_VECTORSTORE_QDRANT_CLOUD_API_KEY",
                 QDRANT_CLOUD_API_KEY_SECRET_NAME,
                 "Qdrant Cloud",
             )

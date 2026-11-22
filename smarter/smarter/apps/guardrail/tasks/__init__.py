@@ -33,7 +33,7 @@ AWAITING_REVIEW = (GuardrailDisposition.FLAGGED, GuardrailDisposition.ESCALATED)
 """The dispositions of events that await review, and are kept until they are reviewed."""
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def purge_guardrail_events(days: int = EVENT_RETENTION_DAYS) -> int:
     """
     Delete the guardrail events older than ``days``, except those that await review.

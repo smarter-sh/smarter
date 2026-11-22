@@ -87,8 +87,8 @@ def google_oauth_enabled() -> bool:
     """
     return oauth_provider_enabled(
         "Google",
-        smarter_settings.social_auth_google_oauth2_key,
-        smarter_settings.social_auth_google_oauth2_secret,
+        smarter_settings.subsystem_social_auth_google_oauth2_key,
+        smarter_settings.subsystem_social_auth_google_oauth2_secret,
         GOOGLE_OAUTH_BACKENDS,
     )
 
@@ -101,7 +101,7 @@ def github_oauth_enabled() -> bool:
     """
     return oauth_provider_enabled(
         "GitHub",
-        smarter_settings.social_auth_github_key,
-        smarter_settings.social_auth_github_secret,
+        smarter_settings.subsystem_social_auth_github_key,
+        smarter_settings.subsystem_social_auth_github_secret,
         GITHUB_OAUTH_BACKENDS,
     )

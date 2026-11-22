@@ -228,7 +228,7 @@ class SmarterWaffleSwitches:
     ENABLE_SMARTER_PAGE_CACHING = "enable_smarter_page_caching"
     """Enables the Smarter user-based page caching decorator for user-facing pages to improve performance."""
 
-    ENABLE_LLMCLIENT_ENDPOINTS_PAGE = "enable_llmclient_endpoints_page"
+    ENABLE_LLMCLIENT_ENDPOINTS_PAGE = "llmclient_enable_endpoints_page"
     """Enables the page that a browser receives from a GET of a deployed LLMClient's endpoints."""
 
     ENABLE_FORMATTED_LOGGING = "enable_formatted_logging"

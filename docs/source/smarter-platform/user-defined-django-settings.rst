@@ -54,15 +54,14 @@ environment.
         - ``user-settings/settings.yaml``, in the repository's root
         - The Helm chart: nothing local reads it
       * - **alpha, beta, next, prod**, and every other environment on AWS (Kubernetes)
-        - ``djangoSettings`` in the Helm chart's values
+        - ``DJANGO_<SETTING>`` variables in ``env`` in the Helm chart's values
         - ``user-settings/``: it is **never** built into the Docker image, and no deployed pod reads it
 
    A setting that you put in ``user-settings/settings.yaml`` changes your own computer only. To change
    alpha or prod, change the Helm values that their deployment uses.
 
-In both places, the settings are the same YAML, and the same code applies them:
-:mod:`smarter.settings.user`. You can also set one setting at a time with an environment variable named
-``DJANGO_<SETTING>``, in either place.
+The same code applies both: :mod:`smarter.settings.user`. ``DJANGO_*`` variables work locally too, in
+``.env``.
 
 How your settings supersede Smarter's
 -------------------------------------
@@ -75,21 +74,19 @@ and your settings come last. From lowest to highest priority:
 2. ``smarter/settings/base_aws.py``, Smarter's settings for the environments on AWS. Local development
    skips it.
 3. The environment's own module: ``local.py``, ``alpha.py``, ``beta.py``, ``next.py`` or ``prod.py``.
-4. **Your settings file**: ``user-settings/settings.yaml`` locally, or ``djangoSettings`` from the Helm
-   chart.
+4. **Your settings file**, ``user-settings/settings.yaml``, locally.
 5. **Your** ``DJANGO_*`` **environment variables**, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``.
 
-A later step wins. So your file supersedes everything that Smarter sets, in every environment, and an
-environment variable supersedes your file. For example, ``base_aws.py`` sets
-``SESSION_COOKIE_SECURE = True`` for alpha and prod. With this in the Helm values:
+A later step wins. So your settings supersede everything that Smarter sets, and a variable supersedes
+your file. For example, ``base_aws.py`` sets ``SESSION_COOKIE_SECURE = True`` for alpha and prod. With
+this in the Helm values:
 
 .. code-block:: yaml
 
-   djangoSettings:
-     SESSION_COOKIE_SECURE: false
+   env:
+     DJANGO_SESSION_COOKIE_SECURE: "false"
 
-prod runs with ``SESSION_COOKIE_SECURE = False``. If prod's environment also had
-``DJANGO_SESSION_COOKIE_SECURE=true``, it would run with ``True``.
+prod runs with ``SESSION_COOKIE_SECURE = False``.
 
 Every environment's module ends the same way: it applies your settings, then logs its configuration. So
 what the log shows is what Django runs with, your settings included, and no line of Smarter's settings
@@ -134,47 +131,21 @@ their results. Tests that you run in the dev containers with ``docker exec`` do 
 alpha, prod, and every other environment on AWS
 -----------------------------------------------
 
-Here your settings go in the Helm chart's values, never in ``user-settings/``. Write them under
-``djangoSettings``, as a map of setting names to values, in the values file that your deployment passes to
-``helm upgrade`` (or in ``helm/charts/smarter/values.yaml``):
-
-.. code-block:: yaml
-
-   djangoSettings:
-     SESSION_COOKIE_AGE: 3600
-     ADMINS:
-       - ops@example.com
-     DATA_UPLOAD_MAX_MEMORY_SIZE: 10485760
-
-What the chart does with it:
-
-- It writes the map, as YAML, to the Kubernetes Secret ``<appName>-django-settings``, e.g.
-  ``smarter-django-settings``. It is a Secret, not a ConfigMap, so a value may be a password, e.g. a
-  database's in ``DATABASES``. Anyone who may read the namespace's Secrets may read it.
-- It mounts the Secret read-only at ``/home/smarter_user/user-settings/settings.yaml`` in every pod that
-  loads Django's settings: the api, the two Celery workers, Celery Beat, and the init and migrate jobs.
-  That is the same path that Docker Compose uses locally, so the same code reads it.
-- A change to ``djangoSettings`` changes the pods' ``checksum/django-settings`` annotation, so
-  ``helm upgrade`` rolls the api, worker and beat pods, which then read the new settings.
-
-``djangoSettings`` defaults to ``{}``: no user settings. The values schema allows only upper case setting
-names as its keys, so a misspelled ``session_cookie_age`` fails ``helm upgrade`` before anything changes.
-
-For a ``DJANGO_*`` variable, add it to ``env`` in the same values. The chart stores ``env`` in the Secret
-``<appName>-env``, which every pod reads as its environment:
+Here your settings go in the Helm chart's values, never in ``user-settings/``. Add a ``DJANGO_<SETTING>``
+variable for each one to ``env``, in the values file that your deployment passes to ``helm upgrade`` (or in
+``helm/charts/smarter/values.yaml``). Quote every value: the chart's environment is strings. A list or a
+dictionary is JSON:
 
 .. code-block:: yaml
 
    env:
      DJANGO_SESSION_COOKIE_AGE: "3600"
+     DJANGO_ADMINS: '["ops@example.com"]'
+     DJANGO_DATA_UPLOAD_MAX_MEMORY_SIZE: "10485760"
 
-.. note::
-
-   The migrate job runs before ``helm upgrade`` applies the release's Secrets, so it reads the previous
-   release's ``djangoSettings``. On the first upgrade to a chart that has ``djangoSettings`` at all, the
-   Secret doesn't exist yet, and the migrate job runs with no user settings; its volume is optional for
-   exactly that reason. A migration rarely depends on a setting of yours. The init job, the api, the
-   workers and beat always read the new release's settings.
+The chart stores ``env`` in the Kubernetes Secret ``<appName>-env``, which every pod reads as its
+environment, so a value may be a password. A change to it changes the pods' ``checksum/env`` annotation,
+so ``helm upgrade`` rolls the api, worker and beat pods, which then read the new settings.
 
 ``DJANGO_*`` environment variables
 ----------------------------------
@@ -268,6 +239,11 @@ Rules
 - **Settings that Smarter computes from other settings are not computed again.** For example, the
   Content Security Policy's sources are built from ``STATIC_URL``, and ``STORAGES`` from whether AWS is
   configured. If you change ``STATIC_URL``, the policy keeps the sources of the old value; change it too.
+  One exception follows yours: RedBeat's ``CELERY_REDBEAT_REDIS_URL`` is set to your
+  ``CELERY_BROKER_URL`` unless you set it too. The ``CACHES`` that Smarter builds have two caches,
+  ``default`` and ``sessions``, on different Redis databases; yours needs both.
+- **The secret key is the exception.** ``DJANGO_SECRET_KEY`` is read by ``smarter_settings``, which
+  refuses a missing key or a placeholder outside the local environment, before Django starts.
 - **Prefer a** ``SMARTER_*`` **setting where one exists.** Many Django settings are derived from
   ``smarter_settings`` (see :doc:`configuration`), e.g. ``ALLOWED_HOSTS`` from ``SMARTER_ALLOWED_HOSTS``,
   and everything derived from it changes with it. Use a user-defined Django setting for what Smarter
@@ -290,7 +266,7 @@ setting:
 .. code-block:: text
 
    smarter.settings.user.apply_user_settings() Applying 2 setting(s) from /home/smarter_user/user-settings/settings.yaml: ADMINS, SESSION_COOKIE_AGE
-   smarter.settings.user.apply_user_settings() Applying 1 setting(s) from DJANGO_* environment variables: SECRET_KEY
+   smarter.settings.user.apply_user_settings() Applying 1 setting(s) from DJANGO_* environment variables: AUTHENTICATION_BACKENDS
 
 To see the value that Django runs with, ask Django, in the container or the pod:
 
@@ -307,6 +283,6 @@ Reference
 - :mod:`smarter.settings.user`, which reads and applies your settings:
   :doc:`its technical reference </smarter-framework/developer-reference/lib/django/settings/user>`.
 - ``user-settings/README.md`` and ``user-settings/settings.example.yaml``, in the repository's root.
-- ``djangoSettings`` in ``helm/charts/smarter/values.yaml``, and ``templates/secret-django-settings.yaml``.
+- ``env`` in ``helm/charts/smarter/values.yaml``, and ``templates/secret-env.yaml``.
 - `Django's settings reference <https://docs.djangoproject.com/en/6.0/ref/settings/>`__, for every
   setting that Django defines.

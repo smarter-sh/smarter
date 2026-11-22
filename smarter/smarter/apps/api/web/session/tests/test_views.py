@@ -77,7 +77,7 @@ class TestConsoleSessionView(TestAccountMixin):
         modules = ("smarter.apps.api.web.session.views", "smarter.apps.dashboard.context_processors")
         sidebar_context.invalidate()  # type: ignore[attr-defined]
         self.addCleanup(sidebar_context.invalidate)  # type: ignore[attr-defined]
-        with disabled_sam_apps("enable_guardrail", "enable_llmtool", modules=modules):
+        with disabled_sam_apps("app_guardrail_enable", "app_llmtool_enable", modules=modules):
             session = self.get_session()
         self.assertFalse(session.flags.guardrail)
         self.assertFalse(session.flags.llmtool)
@@ -267,7 +267,7 @@ class TestConsoleSessionView(TestAccountMixin):
     def test_missing_marketing_site_url(self):
         """A platform without a marketing site gets empty links, not the text None."""
         # smarter_settings is frozen, so patch in a copy without a marketing site.
-        settings_without_site = views.smarter_settings.model_copy(update={"marketing_site_url": None})
+        settings_without_site = views.smarter_settings.model_copy(update={"platform_branding_marketing_site_url": None})
         with mock.patch.object(views, "smarter_settings", settings_without_site):
             branding = views.branding()
         self.assertEqual(branding.marketing_site_url, "")

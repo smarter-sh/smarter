@@ -100,7 +100,7 @@ Open the ``.env`` file at the root of your Smarter deployment and add:
 
 .. code-block:: bash
 
-   SMARTER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Restart the application so the new credential is loaded:
 
@@ -353,7 +353,7 @@ Troubleshooting
 Startup error: "API key not found"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``SMARTER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or the
+The ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or the
 application has not been restarted. Double-check the variable name (it is
 case-sensitive) and run ``make restart``.
 

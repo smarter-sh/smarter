@@ -49,7 +49,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=app
-      - SMARTER_MYSQL_ROOT_PASSWORD=smarter
+      - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD=smarter
 
   smarter-worker:
     mem_limit: 2g

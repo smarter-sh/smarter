@@ -100,7 +100,7 @@ class TestDashboardApiViews(TestAccountMixin):
     def test_my_resources_disabled_sam_apps(self):
         """Test that a disabled SAM app's list url is None, since its pages aren't mounted."""
         self.clear_cache()
-        with disabled_sam_apps("enable_guardrail", "enable_llmtool"):
+        with disabled_sam_apps("app_guardrail_enable", "app_llmtool_enable"):
             data = self.my_resources()
         self.addCleanup(lazy_cache.clear)
         self.assertIsNone(data["guardrails_url"])

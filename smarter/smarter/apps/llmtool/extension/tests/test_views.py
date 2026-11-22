@@ -318,7 +318,7 @@ class TestExtensionRegistryApi(ConsoleClientMixin, RegistryTestMixin):
         with patch.object(views.registry, "is_enabled", return_value=False):
             data = self.post("registry/")
         self.assertFalse(data["enabled"])
-        self.assertIn("SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY", data["error"])
+        self.assertIn("SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY", data["error"])
         with patch.object(views.registry, "get_index", side_effect=views.SmarterExtensionException("unreachable")):
             self.assertEqual(self.post("registry/")["error"], "unreachable")
 

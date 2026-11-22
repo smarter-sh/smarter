@@ -193,7 +193,9 @@ class TestDeployDefaultApi(TestAccountMixin):
         self.addCleanup(LLMClient.objects.filter(pk=self.llmclient.pk).delete)
         self.infrastructure = MagicMock()
         self.infrastructure.dns.create_domain_a_record.return_value = ({}, True)
-        self.settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
+        self.settings = MagicMock(
+            app_llmclient_tasks_create_dns_record=True, app_llmclient_tasks_create_ingress_manifest=True
+        )
         for target, value in (
             ("is_taskable", MagicMock(return_value=True)),
             ("infrastructure", self.infrastructure),
@@ -239,7 +241,7 @@ class TestDeployDefaultApi(TestAccountMixin):
 
     def test_without_ingress_manifest(self):
         """Test that the domain is verified next when the ingress manifest is not created."""
-        self.settings.llmclient_tasks_create_ingress_manifest = False
+        self.settings.app_llmclient_tasks_create_ingress_manifest = False
         deploy_default_api(self.llmclient.pk)
         self.apply_ingress_manifest.assert_not_called()
         self.continue_default_api_deployment.assert_called_once()

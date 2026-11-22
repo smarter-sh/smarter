@@ -8,7 +8,7 @@ xterm.js draws it. See :mod:`.messages` for the protocol.
 
 The shell runs as the server's operating system user, with the server's environment, and so with
 every credential that the server has. Only a superuser can connect, while
-``smarter_settings.enable_web_console_terminal`` is set, with a single use ticket from
+``smarter_settings.app_dashboard_web_console_terminal_enable`` is set, with a single use ticket from
 :class:`.tickets.TerminalTicketApiView`. A connection that fails a check is refused before the
 WebSocket is accepted, and the refusal is logged.
 

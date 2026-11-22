@@ -131,7 +131,7 @@ class FeatureSettings(BaseModel):
         raise SmarterConfigurationError(f"could not validate developer_mode: {v}")
 
     enable_dropzone_manifest_apply: bool = Field(
-        settings_defaults.ENABLE_MANIFEST_DROPZONE,
+        settings_defaults.APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE,
         description="True if the file drop zone feature is enabled based on the current environment.",
         title="Enable File Drop Zone",
     )
@@ -153,7 +153,7 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_MANIFEST_DROPZONE
+            return settings_defaults.APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
@@ -163,31 +163,31 @@ class FeatureSettings(BaseModel):
     # One flag per SAM resource app. Each one mounts, or leaves out, the app's
     # web console urls. See smarter.urls.console. All of them default to True.
     # -------------------------------------------------------------------------
-    enable_connection: bool = Field(
-        settings_defaults.ENABLE_CONNECTION,
-        description="True if the web console serves the Connection pages. Set with SMARTER_ENABLE_CONNECTION.",
+    app_connection_enable: bool = Field(
+        settings_defaults.APP_CONNECTION_ENABLE,
+        description="True if the web console serves the Connection pages. Set with SMARTER_APP_CONNECTION_ENABLE.",
         title="Enable Connection",
     )
     """True if the web console serves the Connection pages, under ``/connection/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_CONNECTION``, True unless ``SMARTER_ENABLE_CONNECTION`` is false.
+    :default: Value from ``settings_defaults.APP_CONNECTION_ENABLE``, True unless ``SMARTER_APP_CONNECTION_ENABLE`` is false.
     """
 
-    enable_guardrail: bool = Field(
-        settings_defaults.ENABLE_GUARDRAIL,
-        description="True if the web console serves the Guardrail pages. Set with SMARTER_ENABLE_GUARDRAIL.",
+    app_guardrail_enable: bool = Field(
+        settings_defaults.APP_GUARDRAIL_ENABLE,
+        description="True if the web console serves the Guardrail pages. Set with SMARTER_APP_GUARDRAIL_ENABLE.",
         title="Enable Guardrail",
     )
     """True if the web console serves the Guardrail pages, under ``/guardrail/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_GUARDRAIL``, True unless ``SMARTER_ENABLE_GUARDRAIL`` is false.
+    :default: Value from ``settings_defaults.APP_GUARDRAIL_ENABLE``, True unless ``SMARTER_APP_GUARDRAIL_ENABLE`` is false.
     """
 
-    enable_llmclient: bool = Field(
-        settings_defaults.ENABLE_LLMCLIENT,
-        description="True if the web console serves the LLMClient pages. Set with SMARTER_ENABLE_LLMCLIENT.",
+    app_llmclient_enable: bool = Field(
+        settings_defaults.APP_LLMCLIENT_ENABLE,
+        description="True if the web console serves the LLMClient pages. Set with SMARTER_APP_LLMCLIENT_ENABLE.",
         title="Enable LLMClient",
     )
     """True if the web console serves the LLMClient pages, under ``/llmclient/``.
@@ -195,90 +195,90 @@ class FeatureSettings(BaseModel):
     It doesn't affect the chat and config endpoints of LLMClients on their custom domains.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_LLMCLIENT``, True unless ``SMARTER_ENABLE_LLMCLIENT`` is false.
+    :default: Value from ``settings_defaults.APP_LLMCLIENT_ENABLE``, True unless ``SMARTER_APP_LLMCLIENT_ENABLE`` is false.
     """
 
-    enable_llmhost: bool = Field(
-        settings_defaults.ENABLE_LLMHOST,
-        description="True if the web console serves the LLMHost pages. Set with SMARTER_ENABLE_LLMHOST.",
+    app_llmhost_enable: bool = Field(
+        settings_defaults.APP_LLMHOST_ENABLE,
+        description="True if the web console serves the LLMHost pages. Set with SMARTER_APP_LLMHOST_ENABLE.",
         title="Enable LLMHost",
     )
     """True if the web console serves the LLMHost pages, under ``/llmhost/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_LLMHOST``, True unless ``SMARTER_ENABLE_LLMHOST`` is false.
+    :default: Value from ``settings_defaults.APP_LLMHOST_ENABLE``, True unless ``SMARTER_APP_LLMHOST_ENABLE`` is false.
     """
 
-    enable_llmtool: bool = Field(
-        settings_defaults.ENABLE_LLMTOOL,
-        description="True if the web console serves the LLMTool and Extension pages. Set with SMARTER_ENABLE_LLMTOOL.",
+    app_llmtool_enable: bool = Field(
+        settings_defaults.APP_LLMTOOL_ENABLE,
+        description="True if the web console serves the LLMTool and Extension pages. Set with SMARTER_APP_LLMTOOL_ENABLE.",
         title="Enable LLMTool",
     )
     """True if the web console serves the LLMTool pages, under ``/llm-tools/``, and the Extension pages.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_LLMTOOL``, True unless ``SMARTER_ENABLE_LLMTOOL`` is false.
+    :default: Value from ``settings_defaults.APP_LLMTOOL_ENABLE``, True unless ``SMARTER_APP_LLMTOOL_ENABLE`` is false.
     """
 
-    enable_mcpclient: bool = Field(
-        settings_defaults.ENABLE_MCPCLIENT,
-        description="True if the web console serves the MCPClient pages. Set with SMARTER_ENABLE_MCPCLIENT.",
+    app_mcpclient_enable: bool = Field(
+        settings_defaults.APP_MCPCLIENT_ENABLE,
+        description="True if the web console serves the MCPClient pages. Set with SMARTER_APP_MCPCLIENT_ENABLE.",
         title="Enable MCPClient",
     )
     """True if the web console serves the MCPClient pages, under ``/mcpclient/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_MCPCLIENT``, True unless ``SMARTER_ENABLE_MCPCLIENT`` is false.
+    :default: Value from ``settings_defaults.APP_MCPCLIENT_ENABLE``, True unless ``SMARTER_APP_MCPCLIENT_ENABLE`` is false.
     """
 
-    enable_orchestrator: bool = Field(
-        settings_defaults.ENABLE_ORCHESTRATOR,
-        description="True if the web console serves the Orchestrator pages. Set with SMARTER_ENABLE_ORCHESTRATOR.",
+    app_orchestrator_enable: bool = Field(
+        settings_defaults.APP_ORCHESTRATOR_ENABLE,
+        description="True if the web console serves the Orchestrator pages. Set with SMARTER_APP_ORCHESTRATOR_ENABLE.",
         title="Enable Orchestrator",
     )
     """True if the web console serves the Orchestrator pages, under ``/orchestrator/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_ORCHESTRATOR``, True unless ``SMARTER_ENABLE_ORCHESTRATOR``
+    :default: Value from ``settings_defaults.APP_ORCHESTRATOR_ENABLE``, True unless ``SMARTER_APP_ORCHESTRATOR_ENABLE``
         is false.
     """
 
-    enable_provider: bool = Field(
-        settings_defaults.ENABLE_PROVIDER,
-        description="True if the web console serves the Provider pages. Set with SMARTER_ENABLE_PROVIDER.",
+    app_provider_enable: bool = Field(
+        settings_defaults.APP_PROVIDER_ENABLE,
+        description="True if the web console serves the Provider pages. Set with SMARTER_APP_PROVIDER_ENABLE.",
         title="Enable Provider",
     )
     """True if the web console serves the Provider pages, under ``/provider/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_PROVIDER``, True unless ``SMARTER_ENABLE_PROVIDER`` is false.
+    :default: Value from ``settings_defaults.APP_PROVIDER_ENABLE``, True unless ``SMARTER_APP_PROVIDER_ENABLE`` is false.
     """
 
-    enable_secret: bool = Field(
-        settings_defaults.ENABLE_SECRET,
-        description="True if the web console serves the Secret pages. Set with SMARTER_ENABLE_SECRET.",
+    app_secret_enable: bool = Field(
+        settings_defaults.APP_SECRET_ENABLE,
+        description="True if the web console serves the Secret pages. Set with SMARTER_APP_SECRET_ENABLE.",
         title="Enable Secret",
     )
     """True if the web console serves the Secret pages, under ``/secret/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_SECRET``, True unless ``SMARTER_ENABLE_SECRET`` is false.
+    :default: Value from ``settings_defaults.APP_SECRET_ENABLE``, True unless ``SMARTER_APP_SECRET_ENABLE`` is false.
     """
 
-    enable_vectorsearch: bool = Field(
-        settings_defaults.ENABLE_VECTORSEARCH,
-        description="True if the web console serves the VectorSearch pages. Set with SMARTER_ENABLE_VECTORSEARCH.",
+    app_vectorsearch_enable: bool = Field(
+        settings_defaults.APP_VECTORSEARCH_ENABLE,
+        description="True if the web console serves the VectorSearch pages. Set with SMARTER_APP_VECTORSEARCH_ENABLE.",
         title="Enable VectorSearch",
     )
     """True if the web console serves the VectorSearch pages, under ``/vectorsearch/``.
 
     :type: bool
-    :default: Value from ``settings_defaults.ENABLE_VECTORSEARCH``, True unless ``SMARTER_ENABLE_VECTORSEARCH``
+    :default: Value from ``settings_defaults.APP_VECTORSEARCH_ENABLE``, True unless ``SMARTER_APP_VECTORSEARCH_ENABLE``
         is false.
     """
 
-    enable_vectorstore: bool = Field(
-        settings_defaults.ENABLE_VECTORSTORE,
+    app_vectorstore_enable: bool = Field(
+        settings_defaults.APP_VECTORSTORE_ENABLE,
         description="True if the vectorstore feature is enabled based on the current environment.",
         title="Enable Vectorstore",
     )
@@ -290,8 +290,8 @@ class FeatureSettings(BaseModel):
         bool: True if the vectorstore is enabled, False otherwise.
     """
 
-    enable_proxy: bool = Field(
-        settings_defaults.ENABLE_PROXY,
+    app_proxy_enable: bool = Field(
+        settings_defaults.APP_PROXY_ENABLE,
         description="True if the proxy feature is enabled based on the current environment.",
         title="Enable Proxy",
     )
@@ -304,25 +304,25 @@ class FeatureSettings(BaseModel):
     """
 
     @before_field_validator(
-        "enable_connection",
-        "enable_guardrail",
-        "enable_llmclient",
-        "enable_llmhost",
-        "enable_llmtool",
-        "enable_mcpclient",
-        "enable_orchestrator",
-        "enable_provider",
-        "enable_proxy",
-        "enable_secret",
-        "enable_vectorsearch",
-        "enable_vectorstore",
+        "app_connection_enable",
+        "app_guardrail_enable",
+        "app_llmclient_enable",
+        "app_llmhost_enable",
+        "app_llmtool_enable",
+        "app_mcpclient_enable",
+        "app_orchestrator_enable",
+        "app_provider_enable",
+        "app_proxy_enable",
+        "app_secret_enable",
+        "app_vectorsearch_enable",
+        "app_vectorstore_enable",
     )
     def parse_enable_sam_app(cls, v: Optional[Union[bool, str]], info: ValidationInfo) -> bool:
         """
         Validate one of the SAM apps' ``enable_<app>`` flags.
 
         An empty value falls back to the field's default in ``settings_defaults``, e.g.
-        ``settings_defaults.ENABLE_GUARDRAIL`` for ``enable_guardrail``.
+        ``settings_defaults.APP_GUARDRAIL_ENABLE`` for ``app_guardrail_enable``.
 
         :param v: The value to validate.
         :param info: Pydantic's validation info, which names the field.
@@ -341,8 +341,8 @@ class FeatureSettings(BaseModel):
 
         raise SmarterConfigurationError(f"could not validate {field_name}: {v}")
 
-    enable_dashboard_server_logs: bool = Field(
-        settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS,
+    app_dashboard_server_logs_enable: bool = Field(
+        settings_defaults.APP_DASHBOARD_SERVER_LOGS_ENABLE,
         description="True if the terminal app feature is enabled based on the current environment.",
         title="Enabled Terminal App",
     )
@@ -352,7 +352,7 @@ class FeatureSettings(BaseModel):
         bool: True if the terminal app is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_dashboard_server_logs")
+    @before_field_validator("app_dashboard_server_logs_enable")
     def parse_enabled_terminal_app(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'enable_dashboard_server_logs' field.
 
@@ -364,14 +364,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_DASHBOARD_SERVER_LOGS
+            return settings_defaults.APP_DASHBOARD_SERVER_LOGS_ENABLE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate enable_dashboard_server_logs: {v}")
 
-    enable_web_console_terminal: bool = Field(
-        settings_defaults.ENABLE_WEB_CONSOLE_TERMINAL,
+    app_dashboard_web_console_terminal_enable: bool = Field(
+        settings_defaults.APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE,
         description=(
             "True if superusers can open a bash shell inside the server's container from the web console's "
             "Terminal page. Off by default."
@@ -384,14 +384,14 @@ class FeatureSettings(BaseModel):
     credentials, inside whichever server process (and so whichever pod or container) accepted the
     connection. See :mod:`smarter.apps.dashboard.views.terminal_emulator.api.consumers`.
 
-    Set with ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL``. Defaults to False.
+    Set with ``SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE``. Defaults to False.
 
     Returns:
         bool: True if the web console terminal is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_web_console_terminal")
-    def parse_enable_web_console_terminal(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("app_dashboard_web_console_terminal_enable")
+    def parse_app_dashboard_web_console_terminal_enable(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'enable_web_console_terminal' field.
 
         Args:
@@ -402,14 +402,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_WEB_CONSOLE_TERMINAL
+            return settings_defaults.APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate enable_web_console_terminal: {v}")
 
-    static_files_on_cdn: bool = Field(
-        settings_defaults.STATIC_FILES_ON_CDN,
+    platform_static_files_on_cdn: bool = Field(
+        settings_defaults.PLATFORM_STATIC_FILES_ON_CDN,
         description=(
             "True if the platform's static files, the web console's scripts among them, are uploaded to the "
             "environment's S3 bucket and served from its CDN. Off by default: the server serves them."
@@ -423,14 +423,14 @@ class FeatureSettings(BaseModel):
     cookies and the api stay on the platform's own host: only static files come from the CDN. It needs AWS,
     and is ignored, with a warning, without it. See :doc:`ADR-035 </adr/035-single-page-app>`.
 
-    Set with ``SMARTER_STATIC_FILES_ON_CDN``. Defaults to False.
+    Set with ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN``. Defaults to False.
 
     Returns:
         bool: True if the static files are served from the CDN, False otherwise.
     """
 
-    @before_field_validator("static_files_on_cdn")
-    def parse_static_files_on_cdn(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("platform_static_files_on_cdn")
+    def parse_platform_static_files_on_cdn(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'static_files_on_cdn' field.
 
         Args:
@@ -441,14 +441,14 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.STATIC_FILES_ON_CDN
+            return settings_defaults.PLATFORM_STATIC_FILES_ON_CDN
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate static_files_on_cdn: {v}")
 
-    enable_dashboard_passthrough_prompt: bool = Field(
-        settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT,
+    app_dashboard_passthrough_prompt_enable: bool = Field(
+        settings_defaults.APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE,
         description="True if the passthrough prompt feature is enabled based on the current environment.",
         title="Enable Passthrough Prompt",
     )
@@ -458,8 +458,8 @@ class FeatureSettings(BaseModel):
         bool: True if the passthrough prompt is enabled, False otherwise.
     """
 
-    @before_field_validator("enable_dashboard_passthrough_prompt")
-    def parse_enable_dashboard_passthrough_prompt(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("app_dashboard_passthrough_prompt_enable")
+    def parse_app_dashboard_passthrough_prompt_enable(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'enable_dashboard_passthrough_prompt' field.
 
         Args:
@@ -470,7 +470,7 @@ class FeatureSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.ENABLE_DASHBOARD_PASSTHROUGH_PROMPT
+            return settings_defaults.APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 

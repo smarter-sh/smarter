@@ -15,6 +15,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from smarter.common.conf import smarter_settings
+from smarter.common.utils.environment_settings import log_environment_settings
 from smarter.lib.logging import getSmarterLogger
 
 from .base import *
@@ -30,7 +31,7 @@ if smarter_settings.developer_mode:
     keen_source = [Path(p) for p in glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))]
     STATICFILES_DIRS.extend(keen_source)
     # Uncompressed static files in development, unless they are on the CDN.
-    if not smarter_settings.static_files_on_cdn:
+    if not smarter_settings.platform_static_files_on_cdn:
         STORAGES["staticfiles"] = {
             "BACKEND": "whitenoise.storage.StaticFilesStorage",
             "OPTIONS": {},
@@ -61,8 +62,8 @@ for template in TEMPLATES:
 # Disable Django template caching in development environment.
 TEMPLATES[0]["OPTIONS"]["debug"] = True
 
-SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
-SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+SMTP_SENDER = smarter_settings.subsystem_smtp_sender or ENVIRONMENT_DOMAIN
+SMTP_FROM_EMAIL = smarter_settings.subsystem_smtp_from_email or "no-reply@" + SMTP_SENDER
 SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
@@ -75,31 +76,8 @@ apply_user_settings(globals())
 log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)
-if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
-
-    logger.debug("*" * 80)
-    logger.debug("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
-    logger.debug("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
-    logger.debug("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-    logger.debug("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
-    logger.debug("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
-    logger.debug("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
-    logger.debug("API_SCHEMA: %s", smarter_settings.api_schema)
-    logger.debug("ALLOWED_HOSTS: %s", smarter_settings.local_hosts)
-    logger.debug("SMTP_SENDER: %s", SMTP_SENDER)
-    logger.debug("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
-    logger.debug("-" * 80)
-    logger.debug("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
-    logger.debug("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
-    logger.debug("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
-    logger.debug("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
-    logger.debug("-" * 80)
-    logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
-    logger.debug("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
-    logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
-    logger.debug("SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI)
-    logger.debug("SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI: %s", SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI)
-    logger.debug("*" * 80)
+if smarter_settings.platform_settings_output or "manage.py" not in sys.argv[0]:
+    log_environment_settings(logger, smarter_settings, "PLATFORM")
 
 # mypy can't evaluate a computed __all__, and would then treat a star import of this
 # module as importing nothing. It skips this block, and exports every public name.

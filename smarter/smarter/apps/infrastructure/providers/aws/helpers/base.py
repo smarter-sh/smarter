@@ -62,7 +62,7 @@ class AWSBase(SmarterHelperMixin):
     _client = None
     _client_type: Optional[str] = None
 
-    _root_domain: str = smarter_settings.root_domain
+    _root_domain: str = smarter_settings.platform_root_domain
     _environment: str = smarter_settings.environment
     _environment_domain: Optional[str] = None
     _shared_resource_identifier: Optional[str] = None
@@ -89,10 +89,12 @@ class AWSBase(SmarterHelperMixin):
         services.raise_error_on_disabled(services.AWS_CLI)
         logger.debug("initializing")
 
-        self._shared_resource_identifier = shared_resource_identifier or smarter_settings.shared_resource_identifier
+        self._shared_resource_identifier = (
+            shared_resource_identifier or smarter_settings.platform_shared_resource_identifier
+        )
         self._environment = environment or smarter_settings.environment
 
-        self._root_domain = root_domain or smarter_settings.root_domain
+        self._root_domain = root_domain or smarter_settings.platform_root_domain
         self._environment_domain = environment_domain or smarter_settings.environment_platform_domain
         self._debug_mode = debug_mode or smarter_settings.debug_mode
 

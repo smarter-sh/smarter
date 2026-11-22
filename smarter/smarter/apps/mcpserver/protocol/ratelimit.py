@@ -2,7 +2,7 @@
 The per-IP rate limit of the MCPServer's public endpoint.
 
 The MCP server requires no authentication, so each client IP address may send at most
-``smarter_settings.mcpserver_rate_limit`` requests a minute, 1200 by default. The requests
+``smarter_settings.app_mcpserver_rate_limit`` requests a minute, 1200 by default. The requests
 are counted in fixed one-minute windows, in Redis, so that every pod of the platform shares
 the count. A request beyond the limit is answered ``429 Too Many Requests``, with a
 ``Retry-After`` header, until the window ends.
@@ -118,10 +118,10 @@ def is_rate_limited(ip: Optional[str]) -> bool:
     Side effects: one or two cache writes, unless the limit is off or the address is unknown.
 
     :param ip: The client's IP address, from :func:`client_ip`.
-    :returns: True if the client has sent more than ``smarter_settings.mcpserver_rate_limit``
+    :returns: True if the client has sent more than ``smarter_settings.app_mcpserver_rate_limit``
         requests in the current window. Always False if the limit is 0, or the address is unknown.
     """
-    limit = smarter_settings.mcpserver_rate_limit
+    limit = smarter_settings.app_mcpserver_rate_limit
     if not limit or not ip:
         return False
     window = current_window()

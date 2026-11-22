@@ -42,4 +42,4 @@ class TestSmarterLogoUrl(SmarterTestBase):
     def test_logo_url_is_on_the_project_cdn(self):
         """The logo's url is the project CDN's url plus the logo's path."""
         html = Template("{% load smarter_email %}{% smarter_logo_url %}").render(Context())
-        self.assertEqual(html, f"{smarter_settings.smarter_project_cdn_url.rstrip('/')}/{LOGO}")
+        self.assertEqual(html, f"{str(smarter_settings.platform_branding_cdn_url).rstrip('/')}/{LOGO}")

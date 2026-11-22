@@ -229,7 +229,7 @@ def handle_chat_completion_response_received(
         sender_name,
         prompt,
     )
-    if smarter_settings.enable_dashboard_server_logs or (logger_level == logging.DEBUG):
+    if smarter_settings.app_dashboard_server_logs_enable or (logger_level == logging.DEBUG):
         request_data = request_to_json(request) if request else None
         if isinstance(request_data, (dict, list)):
             formatted_request_data = SmarterFormattedText.json(

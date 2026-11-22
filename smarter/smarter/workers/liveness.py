@@ -14,7 +14,8 @@ answers. A worker that doesn't answer is stuck, and Kubernetes restarts it.
 
 It imports neither Django nor the platform's tasks, so it starts in a fraction of a second and
 uses little memory, every time the probe runs. It reads the broker's url from the
-``CELERY_BROKER_URL`` environment variable, which every pod of the chart has.
+``DJANGO_CELERY_BROKER_URL`` environment variable, which every pod of the chart has, and which also
+sets Django's ``CELERY_BROKER_URL`` (see :mod:`smarter.settings.user`).
 
 .. code-block:: console
 
@@ -35,7 +36,7 @@ A busy worker answers between tasks, from its main process.
 """
 
 DEFAULT_BROKER_URL = "redis://:smarter@smarter-redis:6379/0"
-"""The broker of docker-compose, when ``CELERY_BROKER_URL`` is not set.
+"""The broker of docker-compose, when ``DJANGO_CELERY_BROKER_URL`` is not set.
 
 It is base.py's ``CELERY_BROKER_URL``.
 """
@@ -43,11 +44,11 @@ It is base.py's ``CELERY_BROKER_URL``.
 
 def broker_url() -> str:
     """
-    Return the url of the Celery broker, from the ``CELERY_BROKER_URL`` environment variable.
+    Return the url of the Celery broker, from the ``DJANGO_CELERY_BROKER_URL`` environment variable.
 
     :returns: The url, or :data:`DEFAULT_BROKER_URL` if the variable is empty or not set.
     """
-    url = os.environ.get("CELERY_BROKER_URL", "")
+    url = os.environ.get("DJANGO_CELERY_BROKER_URL", "")
     if not url:
         return DEFAULT_BROKER_URL
     return url

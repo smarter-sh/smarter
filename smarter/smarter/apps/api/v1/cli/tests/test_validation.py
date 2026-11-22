@@ -54,7 +54,7 @@ class TestValidateManifest(SmarterTestBase):
 
     def test_disabled_kind(self):
         """A manifest of a kind whose SAM app is disabled has one error."""
-        with disabled_sam_apps("enable_guardrail"):
+        with disabled_sam_apps("app_guardrail_enable"):
             validation = validate_manifest(self.manifest)
         self.assertFalse(validation.valid)
         self.assertEqual(validation.errors[0].type, "disabled_kind")

@@ -37,11 +37,9 @@ from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_admin_user_for_account,
 )
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_IS_INTERNAL_API_REQUEST,
-)
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import (

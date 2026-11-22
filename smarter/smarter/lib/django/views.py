@@ -471,8 +471,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         return redirect_and_expire_cache(path="/login/")
 
 
-@method_decorator(cache_control(max_age=smarter_settings.cache_expiration), name="dispatch")
-@method_decorator(cache_page(smarter_settings.cache_expiration), name="dispatch")
+@method_decorator(cache_control(max_age=smarter_settings.subsystem_cache_expiration), name="dispatch")
+@method_decorator(cache_page(smarter_settings.subsystem_cache_expiration), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """
     An optimized and cached web view that requires authentication.

@@ -107,8 +107,8 @@ In particular:
 
 - set `SMARTER_SECRET_KEY` to a long, random value that every pod shares;
   outside of the local environment, Smarter refuses to start without one,
-- keep the API rate limits, `SMARTER_THROTTLE_RATE_ANON` and
-  `SMARTER_THROTTLE_RATE_USER`, enabled,
+- keep the API rate limits, `SMARTER_APP_API_THROTTLE_RATE_ANON` and
+  `SMARTER_APP_API_THROTTLE_RATE_USER`, enabled,
 - keep secrets out of manifests and source control: store them as Smarter
   Secrets, or in your cloud's secret manager,
 - upgrade to each patch release of your minor version promptly.

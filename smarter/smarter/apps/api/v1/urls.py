@@ -120,19 +120,19 @@ urlpatterns = [
 ]
 
 SAM_APP_API_URLS: list[SamAppUrls] = [
-    SamAppUrls("enable_connection", "Connection", "connections/", connection_urls, connnection_namespace),
-    SamAppUrls("enable_guardrail", "Guardrail", "guardrails/", guardrail_urls, guardrail_namespace),
-    SamAppUrls("enable_llmclient", "LLMClient", "llm-clients/", llmclient_urls, llmclient_namespace),
-    SamAppUrls("enable_llmhost", "LLMHost", "llmhosts/", llmhost_urls, llmhost_namespace),
-    SamAppUrls("enable_llmtool", "LLMTool", "plugins/", llmtool_urls, llmtool_namespace),
-    SamAppUrls("enable_llmtool", "Extension", "extensions/", extension_urls, extension_namespace),
-    SamAppUrls("enable_mcpclient", "MCPClient", "mcpclients/", mcpclient_urls, mcpclient_namespace),
-    SamAppUrls("enable_orchestrator", "Orchestrator", "orchestrators/", orchestrator_urls, orchestrator_namespace),
-    SamAppUrls("enable_provider", "Provider", "providers/", provider_urls, provider_namespace),
-    SamAppUrls("enable_proxy", "Proxy", "proxy/", proxy_urls, proxy_namespace),
-    SamAppUrls("enable_secret", "Secret", "secrets/", secret_urls, secret_namespace),
-    SamAppUrls("enable_vectorsearch", "VectorSearch", "vectorsearches/", vectorsearch_urls, vectorsearch_namespace),
-    SamAppUrls("enable_vectorstore", "Vectorstore", "vectorstores/", vectorstore_urls, "vectorstore"),
+    SamAppUrls("app_connection_enable", "Connection", "connections/", connection_urls, connnection_namespace),
+    SamAppUrls("app_guardrail_enable", "Guardrail", "guardrails/", guardrail_urls, guardrail_namespace),
+    SamAppUrls("app_llmclient_enable", "LLMClient", "llm-clients/", llmclient_urls, llmclient_namespace),
+    SamAppUrls("app_llmhost_enable", "LLMHost", "llmhosts/", llmhost_urls, llmhost_namespace),
+    SamAppUrls("app_llmtool_enable", "LLMTool", "plugins/", llmtool_urls, llmtool_namespace),
+    SamAppUrls("app_llmtool_enable", "Extension", "extensions/", extension_urls, extension_namespace),
+    SamAppUrls("app_mcpclient_enable", "MCPClient", "mcpclients/", mcpclient_urls, mcpclient_namespace),
+    SamAppUrls("app_orchestrator_enable", "Orchestrator", "orchestrators/", orchestrator_urls, orchestrator_namespace),
+    SamAppUrls("app_provider_enable", "Provider", "providers/", provider_urls, provider_namespace),
+    SamAppUrls("app_proxy_enable", "Proxy", "proxy/", proxy_urls, proxy_namespace),
+    SamAppUrls("app_secret_enable", "Secret", "secrets/", secret_urls, secret_namespace),
+    SamAppUrls("app_vectorsearch_enable", "VectorSearch", "vectorsearches/", vectorsearch_urls, vectorsearch_namespace),
+    SamAppUrls("app_vectorstore_enable", "Vectorstore", "vectorstores/", vectorstore_urls, "vectorstore"),
 ]
 """
 The REST api endpoints of the SAM resource apps.

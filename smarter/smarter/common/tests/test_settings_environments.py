@@ -38,7 +38,7 @@ class TestSettingsEnvironments(SmarterTestBase):
         self.assertEqual(settings.api_schema, settings_defaults.API_SCHEMA)
         self.assertEqual(settings.environment_cdn_domain, f"cdn.{settings.environment_platform_domain}")
         self.assertTrue(settings.environment_cdn_url.startswith("https://"))
-        self.assertEqual(settings.root_cdn_domain, f"cdn.{settings.root_domain}")
+        self.assertEqual(settings.root_cdn_domain, f"cdn.{settings.platform_root_domain}")
         self.assertTrue(settings.root_cdn_url.startswith("https://"))
         self.assertTrue(settings.environment_platform_url.startswith("https://"))
         self.assertTrue(settings.environment_api_url.startswith("https://"))
@@ -65,9 +65,13 @@ class TestSettingsEnvironments(SmarterTestBase):
         self.assertIn("localhost", settings.environment_api_domain)
         # DNS can't serve localhost: LLMClients' records, and their ClusterIssuer, use the proxy domain,
         # api.local.<root domain>, which smarter-infrastructure's local environment creates.
-        self.assertEqual(settings.environment_api_dns_domain, f"api.{SmarterEnvironments.LOCAL}.{settings.root_domain}")
+        self.assertEqual(
+            settings.environment_api_dns_domain, f"api.{SmarterEnvironments.LOCAL}.{settings.platform_root_domain}"
+        )
         self.assertEqual(settings.environment_api_dns_domain, settings.proxy_api_domain)
-        self.assertEqual(settings.environment_cdn_domain, f"cdn.{SmarterEnvironments.LOCAL}.{settings.root_domain}")
+        self.assertEqual(
+            settings.environment_cdn_domain, f"cdn.{SmarterEnvironments.LOCAL}.{settings.platform_root_domain}"
+        )
         self.assertEqual(settings.aws_s3_bucket_name, settings.root_proxy_domain)
         self.assertTrue(settings.environment_namespace.endswith(SmarterEnvironments.LOCAL))
 
@@ -99,15 +103,20 @@ class TestSettingsValidators(SmarterTestBase):
     def test_sensitive_files_amnesty_patterns(self):
         """Patterns may be strings, compiled patterns, or a single string, but must be valid regexes."""
         compiled = re.compile(r"^/compiled/")
-        settings = make_settings(sensitive_files_amnesty_patterns=[r"^/api/", compiled])
-        self.assertEqual([p.pattern for p in settings.sensitive_files_amnesty_patterns], [r"^/api/", r"^/compiled/"])
-        settings = make_settings(sensitive_files_amnesty_patterns=r"^/single/")
-        self.assertEqual([p.pattern for p in settings.sensitive_files_amnesty_patterns], [r"^/single/"])
-        settings = make_settings(sensitive_files_amnesty_patterns="")
-        self.assertEqual(settings.sensitive_files_amnesty_patterns, settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS)
+        settings = make_settings(platform_sensitive_files_amnesty_patterns=[r"^/api/", compiled])
+        self.assertEqual(
+            [p.pattern for p in settings.platform_sensitive_files_amnesty_patterns], [r"^/api/", r"^/compiled/"]
+        )
+        settings = make_settings(platform_sensitive_files_amnesty_patterns=r"^/single/")
+        self.assertEqual([p.pattern for p in settings.platform_sensitive_files_amnesty_patterns], [r"^/single/"])
+        settings = make_settings(platform_sensitive_files_amnesty_patterns="")
+        self.assertEqual(
+            settings.platform_sensitive_files_amnesty_patterns,
+            settings_defaults.PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS,
+        )
         for bad in (["[unclosed"], [42], "[unclosed"):
             with self.assertRaises(CONFIG_ERRORS):
-                make_settings(sensitive_files_amnesty_patterns=bad)
+                make_settings(platform_sensitive_files_amnesty_patterns=bad)
 
     def test_secret_key(self):
         """A plain string secret key is wrapped in a SecretStr."""
@@ -138,17 +147,17 @@ class TestSettingsValidators(SmarterTestBase):
 
     def test_throttle_rates(self):
         """Throttle rates accept DRF rates and the disabled values, and reject anything else."""
-        settings = make_settings(throttle_rate_anon=" 10/Second ", throttle_rate_user="none")
-        self.assertEqual(settings.throttle_rate_anon, "10/second")
-        self.assertIsNone(settings.throttle_rate_user)
-        settings = make_settings(throttle_rate_anon="", throttle_rate_user=None)
-        self.assertEqual(settings.throttle_rate_anon, settings_defaults.THROTTLE_RATE_ANON)
-        self.assertEqual(settings.throttle_rate_user, settings_defaults.THROTTLE_RATE_USER)
+        settings = make_settings(app_api_throttle_rate_anon=" 10/Second ", app_api_throttle_rate_user="none")
+        self.assertEqual(settings.app_api_throttle_rate_anon, "10/second")
+        self.assertIsNone(settings.app_api_throttle_rate_user)
+        settings = make_settings(app_api_throttle_rate_anon="", app_api_throttle_rate_user=None)
+        self.assertEqual(settings.app_api_throttle_rate_anon, settings_defaults.APP_API_THROTTLE_RATE_ANON)
+        self.assertEqual(settings.app_api_throttle_rate_user, settings_defaults.APP_API_THROTTLE_RATE_USER)
         for disabled in ("off", "Disabled", "NONE"):
             self.assertIsNone(validate_throttle_rate("throttle_rate_anon", disabled, "1/day"))
         for bad in ("lots", "10", "10/fortnight", "/minute", 10):
             with self.assertRaises(CONFIG_ERRORS):
-                make_settings(throttle_rate_anon=bad)
+                make_settings(app_api_throttle_rate_anon=bad)
 
     def test_aws_profile_and_region_defaults(self):
         """Empty AWS profile and region fall back to the defaults."""

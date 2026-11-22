@@ -180,20 +180,20 @@ class TestApplyResult(ApiV1CliTestBase):
 
 
 class TestDisabledKinds(ApiV1CliTestBase):
-    """Test that the cli api refuses the kinds of a disabled SAM app, e.g. with SMARTER_ENABLE_SECRET=false."""
+    """Test that the cli api refuses the kinds of a disabled SAM app, e.g. with SMARTER_APP_SECRET_ENABLE=false."""
 
     def test_get_a_disabled_kind(self):
         """Test that get of a disabled kind is a bad request that names the environment variable."""
         path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs={SAMKeys.KIND.value: SAMKinds.SECRET.value})
-        with disabled_sam_apps("enable_secret"):
+        with disabled_sam_apps("app_secret_enable"):
             response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)
-        self.assertIn("SMARTER_ENABLE_SECRET=true", str(response))
+        self.assertIn("SMARTER_APP_SECRET_ENABLE=true", str(response))
 
     def test_get_a_core_kind(self):
         """Test that the core kinds, e.g. User, have no flag."""
         path = reverse(self.namespace + ApiV1CliReverseViews.get, kwargs={SAMKeys.KIND.value: SAMKinds.USER.value})
-        with disabled_sam_apps("enable_secret"):
+        with disabled_sam_apps("app_secret_enable"):
             response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK, response)
 
@@ -203,10 +203,10 @@ class TestDisabledKinds(ApiV1CliTestBase):
         name = manifest["metadata"]["name"]
         self.addCleanup(lambda: Secret.objects.filter(name=name, user_profile=self.user_profile).delete())
         path = reverse(self.namespace + ApiV1CliReverseViews.apply)
-        with disabled_sam_apps("enable_secret"):
+        with disabled_sam_apps("app_secret_enable"):
             response, status = self.get_response(path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.BAD_REQUEST, response)
-        self.assertIn("SMARTER_ENABLE_SECRET=true", str(response))
+        self.assertIn("SMARTER_APP_SECRET_ENABLE=true", str(response))
         self.assertFalse(Secret.objects.filter(name=name, user_profile=self.user_profile).exists())
 
 

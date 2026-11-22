@@ -110,7 +110,7 @@ class DomainSettings(PlatformSettings):
         """
         if self.environment_is_local:
             # returns cdn.local.example.com
-            return f"cdn.{SmarterEnvironments.LOCAL}.{self.root_domain}"
+            return f"cdn.{SmarterEnvironments.LOCAL}.{self.platform_root_domain}"
         return f"cdn.{self.environment_platform_domain}"
 
     @cached_property
@@ -157,9 +157,9 @@ class DomainSettings(PlatformSettings):
             'cdn.example.com'
         See Also:
             - smarter_settings.platform_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return f"cdn.{self.root_domain}"
+        return f"cdn.{self.platform_root_domain}"
 
     @cached_property
     def root_cdn_url(self) -> str:
@@ -194,9 +194,9 @@ class DomainSettings(PlatformSettings):
 
         See Also:
             - smarter_settings.platform_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return f"{self.platform_subdomain}.{self.root_domain}"
+        return f"{self.platform_subdomain}.{self.platform_root_domain}"
 
     @cached_property
     def root_proxy_domain(self) -> str:
@@ -210,7 +210,7 @@ class DomainSettings(PlatformSettings):
             >>> print(smarter_settings.root_proxy_domain)
             'local.example.com'
         """
-        return f"{SmarterEnvironments.LOCAL}.{self.root_domain}"
+        return f"{SmarterEnvironments.LOCAL}.{self.platform_root_domain}"
 
     @cached_property
     def platform_url(self) -> str:
@@ -320,7 +320,7 @@ class DomainSettings(PlatformSettings):
             - SmarterEnvironments()
             - smarter_settings.platform_subdomain
             - smarter_settings.api_subdomain
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
             - smarter_settings.root_api_domain
             - smarter_settings.root_platform_domain
         """
@@ -336,16 +336,16 @@ class DomainSettings(PlatformSettings):
         ]
         domains = set()
         # Add root domains
-        domains.add(self.root_domain)
+        domains.add(self.platform_root_domain)
         domains.add(self.root_api_domain)
         domains.add(self.root_platform_domain)
         # Add environment/subdomain combinations
         for subdomain in subdomains:
             # example: platform.example.com, api.platform.example.com
-            domains.add(f"{subdomain}.{self.root_domain}")
+            domains.add(f"{subdomain}.{self.platform_root_domain}")
             for environment in environments[1:]:  # skip None for env-prefixed
                 # example: alpha.platform.example.com, alpha.api.platform.example.com
-                domains.add(f"{environment}.{subdomain}.{self.root_domain}")
+                domains.add(f"{environment}.{subdomain}.{self.platform_root_domain}")
         return sorted(domains)
 
     @cached_property
@@ -383,9 +383,9 @@ class DomainSettings(PlatformSettings):
             'smarter'
 
         See Also:
-            - smarter_settings.root_domain
+            - smarter_settings.platform_root_domain
         """
-        return self.root_domain.split(".")[0]
+        return self.platform_root_domain.split(".")[0]
 
     @cached_property
     def function_calling_identifier_prefix(self) -> str:
@@ -451,7 +451,7 @@ class DomainSettings(PlatformSettings):
             - smarter_settings.environment_platform_domain
             - smarter_settings.api_subdomain
         """
-        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.root_domain}"
+        return f"{self.api_subdomain}.{self.platform_subdomain}.{self.platform_root_domain}"
 
     @cached_property
     def proxy_api_domain(self) -> str:
@@ -568,7 +568,7 @@ class DomainSettings(PlatformSettings):
             In local environments, this returns 'alpha.platform.example.com' as a proxy.
 
         See Also:
-            - smarter_settings.shared_resource_identifier
+            - smarter_settings.platform_shared_resource_identifier
             - smarter_settings.root_platform_domain
             - SmarterEnvironments()
             - smarter_settings.environment_platform_domain

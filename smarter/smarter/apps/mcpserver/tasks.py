@@ -31,7 +31,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def index_repository(name: str, force: bool = False) -> str:
     """
     Bring a repository's index up to date with the latest commit of its branch.
@@ -60,7 +60,7 @@ def index_repository(name: str, force: bool = False) -> str:
     return status
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def index_blog(force: bool = False) -> str:
     """
     Bring the blog's index up to date with its published posts.
@@ -86,7 +86,7 @@ def index_blog(force: bool = False) -> str:
     return status
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def index_repositories(force: bool = False) -> int:
     """
     Queue :func:`index_repository` for every repository of The Smarter Project, and :func:`index_blog`.

@@ -6,13 +6,16 @@ from typing import Any, Optional, Union, overload
 from pydantic import SecretStr
 
 from smarter.common.helpers.console_helpers import SmarterFormattedText
-from smarter.common.utils.utils import bool_environment_variable
+from smarter.common.utils.utils import (
+    ENVIRONMENT_VARIABLE_PREFIX,
+    bool_environment_variable,
+)
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
 DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
-VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
+VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_PLATFORM_SETTINGS_OUTPUT", False)
 
 EnvValueType = Union[str, bool, int, float, list[str], SmarterDictType, None]
 """
@@ -179,7 +182,7 @@ def get_env(
                 return default
         return val
 
-    retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    retval = os.environ.get(var_name) or os.environ.get(f"{ENVIRONMENT_VARIABLE_PREFIX}{var_name}")
     # Strip surrounding quotes if present
     retval = str(retval).strip() if retval is not None else None
     # Strip surrounding quotes if present

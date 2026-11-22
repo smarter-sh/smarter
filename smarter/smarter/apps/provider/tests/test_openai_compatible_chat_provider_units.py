@@ -644,9 +644,9 @@ class TestChatProviderBaseUnits(SmarterTestBase):
             "default_max_tokens": 100,
         }
         for provider_name, env_var, api_key in (
-            ("openai", "OPENAI_API_KEY", None),
-            ("googleai", "GEMINI_API_KEY", ""),
-            ("custom", "CUSTOM_API_KEY", "SET-ME-PLEASE"),
+            ("openai", "APP_PROVIDER_OPENAI_API_KEY", None),
+            ("googleai", "APP_PROVIDER_GEMINI_API_KEY", ""),
+            ("custom", "APP_PROVIDER_CUSTOM_API_KEY", "SET-ME-PLEASE"),
         ):
             with (
                 self.subTest(provider=provider_name),

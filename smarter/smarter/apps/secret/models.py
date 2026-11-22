@@ -360,7 +360,7 @@ class Secret(MetaDataWithOwnershipModel):
 
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
         """
-        encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
+        encryption_key = smarter_settings.platform_fernet_encryption_key.get_secret_value()
         if not encryption_key:
             raise SmarterConfigurationError(
                 "Encryption key not found in settings. Please set smarter.common.conf.settings.fernet_encryption_key"

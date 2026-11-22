@@ -24,6 +24,7 @@ from smarter_types import SAMKinds
 
 from smarter.common.conf.settings.features import FeatureSettings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.common.utils.utils import ENVIRONMENT_VARIABLE_PREFIX
 from smarter.lib import logging
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 
@@ -37,7 +38,7 @@ class SamApp(NamedTuple):
     """The Django app label, e.g. ``guardrail``."""
 
     setting: str
-    """The name of the ``smarter_settings`` flag that enables the app, e.g. ``enable_guardrail``."""
+    """The name of the ``smarter_settings`` flag that enables the app, e.g. ``app_guardrail_enable``."""
 
     label: str
     """The app's name in messages, e.g. ``Guardrail``."""
@@ -47,8 +48,8 @@ class SamApp(NamedTuple):
 
     @property
     def env_name(self) -> str:
-        """The environment variable that sets the flag, e.g. ``SMARTER_ENABLE_GUARDRAIL``."""
-        return f"SMARTER_{self.setting.upper()}"
+        """The environment variable that sets the flag, e.g. ``SMARTER_APP_GUARDRAIL_ENABLE``."""
+        return f"{ENVIRONMENT_VARIABLE_PREFIX}{self.setting.upper()}"
 
     def is_enabled(self, settings: FeatureSettings) -> bool:
         """
@@ -64,26 +65,26 @@ class SamApp(NamedTuple):
 SAM_APPS: tuple[SamApp, ...] = (
     SamApp(
         "connection",
-        "enable_connection",
+        "app_connection_enable",
         "Connection",
         (SAMKinds.API_CONNECTION.value, SAMKinds.SQL_CONNECTION.value),
     ),
-    SamApp("guardrail", "enable_guardrail", "Guardrail", (SAMKinds.GUARDRAIL.value,)),
+    SamApp("guardrail", "app_guardrail_enable", "Guardrail", (SAMKinds.GUARDRAIL.value,)),
     SamApp(
         "llmclient",
-        "enable_llmclient",
+        "app_llmclient_enable",
         "LLMClient",
         (SAMKinds.LLM_CLIENT.value, SAMKinds.CUSTOM_DOMAIN.value),
     ),
     SamApp(
         "llmhost",
-        "enable_llmhost",
+        "app_llmhost_enable",
         "LLMHost",
         (SAMKinds.LLM_HOST.value, SAMKinds.LLM_HOST_COMPUTE.value),
     ),
     SamApp(
         "llmtool",
-        "enable_llmtool",
+        "app_llmtool_enable",
         "LLMTool",
         (
             SAMKinds.API_PLUGIN.value,
@@ -94,13 +95,13 @@ SAM_APPS: tuple[SamApp, ...] = (
             SAMKinds.WEBSEARCH_PLUGIN.value,
         ),
     ),
-    SamApp("mcpclient", "enable_mcpclient", "MCPClient", (SAMKinds.MCP_CLIENT.value,)),
-    SamApp("orchestrator", "enable_orchestrator", "Orchestrator", (SAMKinds.ORCHESTRATOR.value,)),
-    SamApp("provider", "enable_provider", "Provider", (SAMKinds.PROVIDER.value,)),
-    SamApp("proxy", "enable_proxy", "Proxy", (SAMKinds.PROXY.value,)),
-    SamApp("secret", "enable_secret", "Secret", (SAMKinds.SECRET.value,)),
-    SamApp("vectorsearch", "enable_vectorsearch", "VectorSearch", (SAMKinds.VECTORSEARCH.value,)),
-    SamApp("vectorstore", "enable_vectorstore", "Vectorstore", (SAMKinds.VECTORSTORE.value,)),
+    SamApp("mcpclient", "app_mcpclient_enable", "MCPClient", (SAMKinds.MCP_CLIENT.value,)),
+    SamApp("orchestrator", "app_orchestrator_enable", "Orchestrator", (SAMKinds.ORCHESTRATOR.value,)),
+    SamApp("provider", "app_provider_enable", "Provider", (SAMKinds.PROVIDER.value,)),
+    SamApp("proxy", "app_proxy_enable", "Proxy", (SAMKinds.PROXY.value,)),
+    SamApp("secret", "app_secret_enable", "Secret", (SAMKinds.SECRET.value,)),
+    SamApp("vectorsearch", "app_vectorsearch_enable", "VectorSearch", (SAMKinds.VECTORSEARCH.value,)),
+    SamApp("vectorstore", "app_vectorstore_enable", "Vectorstore", (SAMKinds.VECTORSTORE.value,)),
 )
 """Every SAM resource app that has a feature flag."""
 
@@ -123,7 +124,7 @@ def get_sam_app(setting: str) -> SamApp:
     """
     Return the SAM app that a flag enables.
 
-    :param setting: The flag's name, e.g. ``enable_guardrail``.
+    :param setting: The flag's name, e.g. ``app_guardrail_enable``.
     :returns: The app.
     :raises KeyError: If no SAM app has that flag.
     """
@@ -190,7 +191,7 @@ def reverse_if_enabled(setting: str, *args: str, urlconf: Optional[str] = None) 
     """
     Reverse a url of a SAM app, or return None while the app is disabled and its urls aren't mounted.
 
-    :param setting: The app's flag, e.g. ``enable_guardrail``.
+    :param setting: The app's flag, e.g. ``app_guardrail_enable``.
     :param args: The namespaces and the view name, as for :func:`smarter.lib.django.shortcuts.reverse`.
     :param urlconf: The urlconf to reverse against, or None for the active one.
     :returns: The url path, or None.
@@ -213,7 +214,7 @@ class SamAppUrls(NamedTuple):
     """The urls of one SAM resource app in one urlconf, and the feature flag that mounts them."""
 
     setting: str
-    """The name of the ``smarter_settings`` flag that mounts the urls, e.g. ``enable_guardrail``."""
+    """The name of the ``smarter_settings`` flag that mounts the urls, e.g. ``app_guardrail_enable``."""
 
     label: str
     """The urls' name in log messages, e.g. ``Guardrail``."""

@@ -19,7 +19,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def plan_doodles(days: int = PLANNING_DAYS) -> int:
     """
     Plan the doodles of every region, ``days`` days ahead, and let the editor choose those of new days.

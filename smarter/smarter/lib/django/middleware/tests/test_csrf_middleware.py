@@ -84,7 +84,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     @patch("smarter.lib.django.middleware.csrf.waffle")
     def test_process_view_csrf_suppress_for_llmclients(self, mock_waffle, mock_smarter_settings):
         mock_smarter_settings.environment = "prod"
-        mock_smarter_settings.internal_ip_prefixes = []
+        mock_smarter_settings.platform_internal_ip_prefixes = []
         # ENABLE_MIDDLEWARE_CSRF and CSRF_SUPPRESS_FOR_LLM_CLIENTS
         mock_waffle.switch_is_active.return_value = True
         self.request.path = "/"
@@ -102,7 +102,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
         """Test that a POST without a CSRF token, from a host that has no bypass, is forbidden."""
         mock_waffle.switch_is_active.return_value = True
         mock_smarter_settings.environment = "prod"
-        mock_smarter_settings.internal_ip_prefixes = []
+        mock_smarter_settings.platform_internal_ip_prefixes = []
         self.request.method = "POST"
         self.request.path = "/test-csrf-protected/"
         self.request.META["SERVER_NAME"] = "example.com"
@@ -178,7 +178,7 @@ class TestSmarterCsrfViewMiddleware(TestAccountMixin):
     def test_a_safe_request_is_not_classified(self, mock_waffle, mock_smarter_settings):
         mock_waffle.switch_is_active.return_value = True
         mock_smarter_settings.environment = "prod"
-        mock_smarter_settings.internal_ip_prefixes = []
+        mock_smarter_settings.platform_internal_ip_prefixes = []
         request = RequestFactory().get("/dashboard/")
         request.user = self.admin_user
         with patch.object(SmarterCsrfViewMiddleware, "llmclient_request_kind") as kind:

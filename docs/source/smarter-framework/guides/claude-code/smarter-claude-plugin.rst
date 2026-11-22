@@ -635,7 +635,7 @@ Add the required environment variable ``.env``:
 .. code-block:: bash
 
    # Anthropic / Claude provider
-   SMARTER_ANTHROPIC_API_KEY=your-anthropic-api-key-here
+   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=your-anthropic-api-key-here
 
 .. note::
 
@@ -679,7 +679,7 @@ Use the following names consistently across the codebase:
    * - Settings config key
      - ``smarter_settings.anthropic_api_key``
    * - Environment variable
-     - ``SMARTER_ANTHROPIC_API_KEY``
+     - ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``
    * - Database display name
      - ``Anthropic`` (or ``Claude``)
 

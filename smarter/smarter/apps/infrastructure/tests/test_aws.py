@@ -265,7 +265,7 @@ class TestAWSProvider(AWSTestBase):
         provider._eks = eks  # pylint: disable=protected-access
         # set the cluster name here, so the test does not depend on the environment's .env.
         with patch(f"{HELPERS}.eks.smarter_settings") as settings:
-            settings.aws_eks_cluster_name = "cluster"
+            settings.subsystem_k8s_cluster_name = "cluster"
             self.assertEqual(
                 provider.get_kubernetes_cluster_info(),
                 {"health": {}, "platformVersion": "eks.1", "status": "ACTIVE", "version": "1.33"},
@@ -293,7 +293,7 @@ class TestAWSProvider(AWSTestBase):
                 resources["kubernetes.addon"], [DiscoveredResource("kubernetes.addon", "coredns", "arn:addon")]
             )
             self.assertFalse(resources["kubernetes.nodegroup"][0].billable)
-            get.side_effect = AWSNotReadyError("aws_eks_cluster_name is not set.")
+            get.side_effect = AWSNotReadyError("k8s_cluster_name is not set.")
             self.assertEqual(provider.get_kubernetes_cluster_resources(), {})
             get.side_effect = RuntimeError("AccessDenied")
             self.assertEqual(provider.get_kubernetes_cluster_resources(), {})
@@ -470,7 +470,7 @@ class TestAWSHelpers(AWSTestBase):
             patch(f"{HELPERS}.eks.smarter_settings") as settings,
             patch(f"{HELPERS}.eks.subprocess.check_call") as call,
         ):
-            settings.aws_eks_cluster_name = "cluster"
+            settings.subsystem_k8s_cluster_name = "cluster"
             settings.aws_region = "us-east-1"
             self.assertTrue(eks.update_kubeconfig())
             self.assertEqual(call.call_args.args[0][:3], ["aws", "eks", "update-kubeconfig"])
@@ -478,7 +478,7 @@ class TestAWSHelpers(AWSTestBase):
             self.assertIs(call.call_args.kwargs["stdout"], subprocess.DEVNULL)
             call.side_effect = subprocess.CalledProcessError(1, "aws")
             self.assertFalse(eks.update_kubeconfig())
-            settings.aws_eks_cluster_name = None
+            settings.subsystem_k8s_cluster_name = None
             self.assertFalse(eks.update_kubeconfig())
 
     def test_missing_cluster_name_is_logged_once(self):
@@ -490,7 +490,7 @@ class TestAWSHelpers(AWSTestBase):
             patch(f"{HELPERS}.eks.logger") as logger,
             patch.object(AWSEks, "_cluster_name_warned", False),
         ):
-            settings.aws_eks_cluster_name = None
+            settings.subsystem_k8s_cluster_name = None
             self.assertFalse(eks.update_kubeconfig())
             self.assertFalse(eks.update_kubeconfig())
             with self.assertRaises(AWSNotReadyError):
@@ -498,13 +498,13 @@ class TestAWSHelpers(AWSTestBase):
         call.assert_not_called()
         eks.client.describe_cluster.assert_not_called()
         logger.error.assert_called_once()
-        self.assertIn("SMARTER_AWS_EKS_CLUSTER_NAME", logger.error.call_args.args[0])
+        self.assertIn("SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME", logger.error.call_args.args[0])
 
     def test_get_kubernetes_info(self):
         eks = connect(AWSEks(), MagicMock())
         eks.client.describe_cluster.return_value = {"cluster": {"status": "ACTIVE", "version": "1.33"}}
         with patch(f"{HELPERS}.eks.smarter_settings") as settings:
-            settings.aws_eks_cluster_name = "cluster"
+            settings.subsystem_k8s_cluster_name = "cluster"
             info = eks.get_kubernetes_info()
         eks.client.describe_cluster.assert_called_once_with(name="cluster")
         self.assertEqual(info["status"], "ACTIVE")
@@ -524,7 +524,7 @@ class TestAWSHelpers(AWSTestBase):
             "nodegroup": {"nodegroupName": nodegroupName, "nodegroupArn": f"arn:nodegroup/{nodegroupName}"}
         }
         with patch(f"{HELPERS}.eks.smarter_settings") as settings:
-            settings.aws_eks_cluster_name = "cluster"
+            settings.subsystem_k8s_cluster_name = "cluster"
             resources = eks.get_cluster_resources()
         self.assertEqual(resources["cluster"], [{"name": "cluster", "arn": "arn:cluster"}])
         self.assertEqual([a["name"] for a in resources["addons"]], ["coredns", "vpc-cni"])
@@ -537,7 +537,7 @@ class TestAWSHelpers(AWSTestBase):
                 AWSEks().get_cluster_resources()
         eks = connect(AWSEks(), MagicMock())
         with patch(f"{HELPERS}.eks.smarter_settings") as settings, patch.object(AWSEks, "_cluster_name_warned", True):
-            settings.aws_eks_cluster_name = None
+            settings.subsystem_k8s_cluster_name = None
             with self.assertRaises(AWSNotReadyError):
                 eks.get_cluster_resources()
         eks.client.describe_cluster.assert_not_called()
@@ -553,7 +553,7 @@ class TestAWSHelpers(AWSTestBase):
         )
         eks._aws_region = "ca-central-1"  # pylint: disable=protected-access
         with patch(f"{HELPERS}.eks.smarter_settings") as settings:
-            settings.aws_eks_cluster_name = "cluster"
+            settings.subsystem_k8s_cluster_name = "cluster"
             before = time.time()
             token, expires = eks.get_token()
         self.assertTrue(token.startswith("k8s-aws-v1."))
@@ -570,7 +570,7 @@ class TestAWSHelpers(AWSTestBase):
     def test_get_token_not_ready(self):
         eks = AWSEks()
         with patch(f"{HELPERS}.eks.smarter_settings") as settings:
-            settings.aws_eks_cluster_name = None
+            settings.subsystem_k8s_cluster_name = None
             with self.assertRaises(AWSNotReadyError):
                 eks.get_token()
 
@@ -815,7 +815,7 @@ class TestAWSEksClusterHealth(AWSTestBase):
         settings = patch(f"{HELPERS}.eks.smarter_settings")
         self.settings = settings.start()
         self.addCleanup(settings.stop)
-        self.settings.aws_eks_cluster_name = "cluster"
+        self.settings.subsystem_k8s_cluster_name = "cluster"
 
     def test_get_cluster_health(self):
         health = self.eks.get_cluster_health()
@@ -861,7 +861,7 @@ class TestAWSEksClusterHealth(AWSTestBase):
         with patch.object(AWSEks, "ready", new_callable=PropertyMock, return_value=False):
             with self.assertRaises(AWSNotReadyError):
                 AWSEks().get_cluster_health()
-        self.settings.aws_eks_cluster_name = None
+        self.settings.subsystem_k8s_cluster_name = None
         with patch.object(AWSEks, "_cluster_name_warned", True):
             with self.assertRaises(AWSNotReadyError):
                 self.eks.get_cluster_health()

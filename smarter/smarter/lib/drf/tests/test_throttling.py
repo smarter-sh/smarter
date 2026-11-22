@@ -25,7 +25,7 @@ CLIENT_IP = "192.0.2.17"
 
 def rates(anon="2/minute", user="3/minute") -> Mock:
     """Return a stand-in for smarter_settings with the given throttle rates."""
-    return Mock(throttle_rate_anon=anon, throttle_rate_user=user)
+    return Mock(app_api_throttle_rate_anon=anon, app_api_throttle_rate_user=user)
 
 
 class TestThrottling(TestAccountMixin):

@@ -7,8 +7,10 @@ import sys  # libraries for error management
 import traceback  # libraries for error management
 from typing import Optional, Union
 
+from smarter.apps.provider.services.text_completion.const import (
+    LANGCHAIN_MESSAGE_HISTORY_ROLES,
+)
 from smarter.common.conf import smarter_settings
-from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import (  # library for interacting with JSON data https://www.json.org/json-en.html
     json,

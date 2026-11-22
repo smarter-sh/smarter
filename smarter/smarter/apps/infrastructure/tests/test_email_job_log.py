@@ -41,7 +41,11 @@ class TestRedact(InfrastructureTestBase):
     """Test redact() and secret_values()."""
 
     def test_redacts_credentials(self):
-        env = {"SMARTER_MYSQL_PASSWORD": "hunter2-long", "SOME_API_KEY": "sk-abcdef", "SMARTER_MYSQL_PORT": "3306306"}
+        env = {
+            "SMARTER_SUBSYSTEM_SQL_PASSWORD": "hunter2-long",
+            "SOME_API_KEY": "sk-abcdef",
+            "SMARTER_SUBSYSTEM_SQL_PORT": "3306306",
+        }
         with patch.dict(os.environ, env):
             self.assertIn("hunter2-long", secret_values())
             self.assertNotIn("3306306", secret_values())
@@ -108,7 +112,7 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
         self.assertIn("Emailed the log", output)
         self.assertEqual(len(self.email.outbox), 1)
         sent = self.email.outbox[0]
-        self.assertEqual(sent.recipients, [str(smarter_settings.email_admin)])
+        self.assertEqual(sent.recipients, [str(smarter_settings.platform_email_admin)])
         self.assertEqual(sent.bcc, [])
         self.assertIn("smarter-job-init SUCCEEDED", sent.subject)
         self.assertIn("(2 lines, 39 bytes) is attached as smarter-job-init-", sent.body)
@@ -123,7 +127,7 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
         self.call(to="ops@example.com")
         sent = self.email.outbox[0]
         self.assertEqual(sent.recipients, ["ops@example.com"])
-        self.assertEqual(sent.bcc, [str(smarter_settings.email_admin)])
+        self.assertEqual(sent.bcc, [str(smarter_settings.platform_email_admin)])
 
     def test_failure_status(self):
         self.log.write_text("FAILED: python manage.py migrate\n", encoding="utf-8")
@@ -132,7 +136,7 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
 
     def test_redacted(self):
         self.log.write_text("Access denied for password s3cr3t-value\n", encoding="utf-8")
-        with patch.dict(os.environ, {"SMARTER_MYSQL_ROOT_PASSWORD": "s3cr3t-value"}):
+        with patch.dict(os.environ, {"SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD": "s3cr3t-value"}):
             self.call()
         content = self.email.outbox[0].attachments[0].content.decode("utf-8")
         self.assertNotIn("s3cr3t-value", content)
@@ -147,7 +151,7 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
 
     def test_too_large_is_saved_and_linked(self):
         self.log.write_text("\n".join(f"line {i}" for i in range(10)), encoding="utf-8")
-        with patch.dict(os.environ, {"SMARTER_MYSQL_ROOT_PASSWORD": "line 5"}):
+        with patch.dict(os.environ, {"SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD": "line 5"}):
             self.call(job="smarter-job-init 1.0", max_attachment_bytes=10)
         sent = self.email.outbox[0]
         self.assertEqual(sent.attachments, [])
@@ -187,7 +191,7 @@ class TestEmailJobLogCommand(InfrastructureTestBase):
         summary = self.log.with_suffix(".summary")
         self.addCleanup(summary.unlink, missing_ok=True)
         summary.write_text("Backup file: smarter.tar.gz <12 MiB>\nkey s3cr3t-value\n", encoding="utf-8")
-        with patch.dict(os.environ, {"SMARTER_MYSQL_ROOT_PASSWORD": "s3cr3t-value"}):
+        with patch.dict(os.environ, {"SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD": "s3cr3t-value"}):
             self.call(job="smarter-mysql-backup", summary=str(summary))
         body = self.email.outbox[0].body
         self.assertIn("<pre>Backup file: smarter.tar.gz &lt;12 MiB&gt;\nkey ********</pre>", body)
@@ -289,7 +293,7 @@ class TestEmailJobLogSlack(InfrastructureTestBase):
         self.addCleanup(summary.unlink, missing_ok=True)
         summary.write_text("Backup file: smarter.tar.gz <12 MiB>\nkey s3cr3t-value\n", encoding="utf-8")
         self.log.write_text("FAILED: <!channel> s3cr3t-value\n", encoding="utf-8")
-        with patch.dict(os.environ, {"SMARTER_MYSQL_ROOT_PASSWORD": "s3cr3t-value"}):
+        with patch.dict(os.environ, {"SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD": "s3cr3t-value"}):
             self.call(job="smarter-mysql-backup <1.0>", status=2, summary=str(summary), slack_channel="smarter")
         text = self.slack.messages[0].text
         self.assertTrue(text.startswith(":x: *["))
@@ -346,7 +350,9 @@ class TestEmailJobLogSlack(InfrastructureTestBase):
     def test_slack_not_ready(self):
         configure_slack(lambda: InMemorySlackService(ready=False))
         output = self.call(slack_channel="smarter")
-        self.assertIn("Slack is not configured (SMARTER_SLACK_BOT_TOKEN). Nothing was posted to #smarter.", output)
+        self.assertIn(
+            "Slack is not configured (SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN). Nothing was posted to #smarter.", output
+        )
         self.assertEqual(len(self.email.outbox), 1)
 
     def test_slack_errors_do_not_change_the_outcome(self):

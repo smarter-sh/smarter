@@ -6,10 +6,10 @@ Smarter's code:
 
 1. **The user settings file**, a YAML mapping of setting names to values, at
    ``SMARTER_USER_SETTINGS_FILE`` (default :data:`DEFAULT_USER_SETTINGS_FILE`). Locally it is
-   ``user-settings/settings.yaml`` in the repository's root, which Docker Compose mounts. The Helm
-   chart writes it from ``djangoSettings`` in its values. Nested settings, such as ``LOGGING`` or
-   ``CACHES``, are written as YAML.
-2. **Environment variables named** ``DJANGO_<SETTING>``, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``.
+   ``user-settings/settings.yaml`` in the repository's root, which Docker Compose mounts. Nested
+   settings, such as ``LOGGING`` or ``CACHES``, are written as YAML. The Helm chart mounts no file.
+2. **Environment variables named** ``DJANGO_<SETTING>``, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``, in
+   ``.env`` locally, and in ``env`` in the Helm chart's values on Kubernetes.
 
 Every environment's settings module (``local``, ``alpha``, ``beta``, ``next``, ``prod``) calls
 :func:`apply_user_settings` after its last assignment of a setting, so nothing in Smarter's settings can
@@ -24,7 +24,8 @@ with. The order, from lowest to highest priority:
 
 A user setting replaces the whole setting of that name: a dictionary is not merged with Smarter's.
 Settings that Smarter computes from other settings were computed before this runs, so they keep the
-values they were computed from.
+values they were computed from, except those in :data:`DERIVED_SETTINGS`, which follow the setting
+they are computed from. A ``CACHES`` of the user's has to name its ``sessions`` cache too.
 
 The log names each setting that is set here, and never its value, which may be a password.
 """
@@ -54,8 +55,24 @@ DEFAULT_USER_SETTINGS_FILE = "/home/smarter_user/user-settings/settings.yaml"
 ENVIRONMENT_PREFIX = "DJANGO_"
 """The prefix of an environment variable that sets the Django setting named by the rest of its name."""
 
-IGNORED_ENVIRONMENT_VARIABLES = ("DJANGO_SETTINGS_MODULE",)
-"""``DJANGO_*`` variables that are Django's own, not settings."""
+IGNORED_ENVIRONMENT_VARIABLES = ("DJANGO_SETTINGS_MODULE", "DJANGO_SECRET_KEY")
+"""
+``DJANGO_*`` variables that this module doesn't apply.
+
+``DJANGO_SETTINGS_MODULE`` is Django's own, not a setting. ``DJANGO_SECRET_KEY`` is read by
+``smarter_settings.secret_key``, which rejects a placeholder, and ``smarter.settings.base`` sets
+``SECRET_KEY`` from it. Applied here as well, a placeholder would replace the random key that
+``base`` generates for one.
+"""
+
+DERIVED_SETTINGS = {"CELERY_REDBEAT_REDIS_URL": "CELERY_BROKER_URL"}
+"""
+Settings that Smarter computes from another setting, by name, and the setting each is computed from.
+
+They were computed before the user's settings are applied. When the user sets the setting that one is
+computed from, and not the derived setting itself, the derived setting follows it, e.g.
+``DJANGO_CELERY_BROKER_URL`` moves RedBeat's Redis too.
+"""
 
 SETTING_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 """A Django setting's name: upper case letters, digits and underscores, starting with a letter."""
@@ -292,6 +309,7 @@ def apply_user_settings(
     """
     if environ is None:
         environ = os.environ
+    sources_before = {source: settings.get(source) for source in DERIVED_SETTINGS.values()}
     path = user_settings_file_path(environ)
     file_settings = settings_from_file(path)
     if file_settings:
@@ -320,5 +338,35 @@ def apply_user_settings(
         )
 
     applied = set(file_settings) | set(environment_settings)
+    applied |= follow_derived_settings(settings, applied, sources_before)
     retval = sorted(applied)
+    return retval
+
+
+def follow_derived_settings(
+    settings: MutableMapping[str, object],
+    applied: set[str],
+    sources_before: Mapping[str, object],
+) -> set[str]:
+    """
+    Set each of :data:`DERIVED_SETTINGS` again, from the user's value of the setting it is computed from.
+
+    A derived setting is left alone when the user set it, when the user didn't set its source, or when
+    a settings module had already given it a value of its own, i.e. not its source's.
+
+    :param settings: The settings module's namespace, changed in place.
+    :param applied: The names of the settings that the user's file and variables set.
+    :param sources_before: Each source setting's value before the user's settings.
+    :returns: The names of the derived settings that were set.
+    """
+    retval: set[str] = set()
+    for derived, source in DERIVED_SETTINGS.items():
+        if derived in applied or source not in applied:
+            continue
+        if settings.get(derived) != sources_before.get(source):
+            continue
+        settings[derived] = settings[source]
+        retval.add(derived)
+    if retval:
+        logger.info("Following the user's settings: %s", ", ".join(sorted(retval)))
     return retval

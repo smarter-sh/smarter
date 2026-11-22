@@ -39,6 +39,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from smarter.common.conf.const import DEFAULT_ROOT_DOMAIN
 from smarter.common.conf.defaults import settings_defaults
+from smarter.common.conf.settings.app_keys import AppKeySettings
 from smarter.common.conf.settings.aws import AwsSettings
 from smarter.common.conf.settings.branding import BrandingSettings
 from smarter.common.conf.settings.cache import CacheSettings
@@ -64,6 +65,7 @@ logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods,too-many-ancestors
 class Settings(
+    AppKeySettings,
     DomainSettings,
     EmailSettings,
     AwsSettings,
@@ -196,7 +198,7 @@ class Settings(
         :type: bool
         """
         retval = True
-        if self.root_domain == DEFAULT_ROOT_DOMAIN and not self.environment_is_local:
+        if self.platform_root_domain == DEFAULT_ROOT_DOMAIN and not self.environment_is_local:
             print(
                 SmarterFormattedText.text(
                     "\n"

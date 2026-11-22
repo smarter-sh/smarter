@@ -27,8 +27,8 @@ from smarter.common.conf import smarter_settings
 from .operations_base import TICKET, OperationsTestBase
 
 TOOLS = "smarter.apps.mcpserver.services.status.report"
-DEFAULT_QUEUE = smarter_settings.llmclient_tasks_celery_task_queue
-INFRASTRUCTURE_QUEUE = smarter_settings.infrastructure_tasks_celery_task_queue
+DEFAULT_QUEUE = smarter_settings.app_llmclient_tasks_celery_task_queue
+INFRASTRUCTURE_QUEUE = smarter_settings.app_infrastructure_tasks_celery_task_queue
 EVENT = AwsEvent(
     service="EKS",
     published=datetime(2026, 11, 2, 20, 0, tzinfo=timezone.utc),

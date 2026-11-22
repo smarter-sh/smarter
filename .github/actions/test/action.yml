@@ -37,10 +37,6 @@ inputs:
     description: "The Pinecone API key"
     required: true
     type: string
-  pinecone-environment:
-    description: "The Pinecone environment"
-    required: true
-    type: string
   google-maps-api-key:
     description: "Google Maps API key"
     required: true
@@ -151,17 +147,17 @@ runs:
 
         # basic django configuration for local
         # -----------------------
-        echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> .env
-        echo "SECRET_KEY=top-secret-key-value" >> .env
+        echo "SMARTER_PLATFORM_ROOT_DOMAIN=${{ inputs.root-domain }}" >> .env
+        echo "DJANGO_SECRET_KEY=top-secret-key-value" >> .env
 
         # SMTP email configuration
         # -----------------------
-        echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
-        echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
-        echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> .env
-        echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> .env
-        echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> .env
-        echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> .env
+        echo "SMARTER_SUBSYSTEM_SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> .env
 
         # AWS
         # -----------------------
@@ -171,12 +167,11 @@ runs:
 
         # AI services
         # -----------------------
-        echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
-        echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
-        echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> .env
-        echo "GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .
-        echo "LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .
-        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
+        echo "APP_PROVIDER_OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
+        echo "APP_VECTORSTORE_PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
+        echo "APP_PROVIDER_GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .
+        echo "APP_PROVIDER_LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .
+        echo "APP_PROVIDER_GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
 
     #--------------------------------------------------------------------------
     # Test

@@ -456,7 +456,7 @@ class ExtensionRegistryHandler(ExtensionApiHandler):
         if not registry.is_enabled():
             return RegistryResponse(
                 enabled=False,
-                error="The extension registry is disabled until SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY is set.",
+                error="The extension registry is disabled until SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY is set.",
                 objects=[],
             )
         try:

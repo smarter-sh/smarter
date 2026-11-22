@@ -71,7 +71,7 @@ services:
       - SERVICE_TYPE=app
       # smarter-mariadb's MYSQL_ROOT_PASSWORD, as whom initialize_platform creates the Stackademy
       # course database, with the pre script of its scripts/scripts.yaml.
-      - SMARTER_MYSQL_ROOT_PASSWORD=smarter
+      - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD=smarter
 
   smarter-worker:
     container_name: smarter-worker

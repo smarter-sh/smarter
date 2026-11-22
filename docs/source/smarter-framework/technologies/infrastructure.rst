@@ -61,12 +61,12 @@ The Services
   `kubectl <https://kubernetes.io/docs/reference/kubectl/>`__.
 - ``email``: the platform's outgoing email, through SMTP. See :doc:`smtp`.
 - ``slack``: the platform's messages to Slack, through the Slack Web API, as the bot of
-  ``SMARTER_SLACK_BOT_TOKEN``. It posts messages, and uploads files into a channel or a message's
+  ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``. It posts messages, and uploads files into a channel or a message's
   thread. The Helm chart's init Job and nightly database backup post their outcome and log with it
   (see :doc:`../smarter-on-kubernetes`). Like email, it never raises: a failure is logged, and
   returned as ``None`` or ``False``.
 - ``logs``: the last 72 hours of the platform's pod logs, from the Loki that the Helm chart runs,
-  at ``SMARTER_LOKI_URL``. A query is structured, not LogQL: the service escapes every value, so
+  at ``SMARTER_SUBSYSTEM_LOGGING_LOKI_URL``. A query is structured, not LogQL: the service escapes every value, so
   that a caller, such as an LLM's tool call, cannot inject a query of its own. The
   :ref:`MCPServer's staff-only tools <mcpserver-staff-only-tools>` read it.
 - ``provider``: the cloud provider itself, for example its account identity, and a
@@ -91,13 +91,13 @@ Some services depend on a cloud, and some do not:
   for example AWS Simple Email Service's.
 - **Slack** does not depend on a cloud: it is Slack's own Web API.
 
-``SMARTER_CLOUD_PROVIDER``, which is ``smarter_settings.cloud_provider``, selects the provider.
+``SMARTER_PLATFORM_CLOUD_PROVIDER``, which is ``smarter_settings.platform_cloud_provider``, selects the provider.
 It is ``aws`` by default. ``memory`` selects a provider that keeps DNS zones, records,
 certificates and private objects in memory, for local development without a cloud account, and for the unit tests.
 
 .. code-block:: bash
 
-    SMARTER_CLOUD_PROVIDER=aws
+    SMARTER_PLATFORM_CLOUD_PROVIDER=aws
 
 A provider implements only a few primitives of the DNS and certificate services, for example
 "find a zone", "create a zone", "list a zone's records". The operations that the platform
@@ -117,7 +117,7 @@ To add a cloud, for example Azure:
    infrastructure exceptions, with the services' ``operation()`` context manager.
 2. Register the provider in :mod:`smarter.apps.infrastructure.providers`, under its
    :class:`~smarter.apps.infrastructure.const.CloudProviders` name.
-3. Set ``SMARTER_CLOUD_PROVIDER=azure``.
+3. Set ``SMARTER_PLATFORM_CLOUD_PROVIDER=azure``.
 
 The AWS provider, :mod:`smarter.apps.infrastructure.providers.aws`, and the in-memory provider,
 :mod:`smarter.apps.infrastructure.providers.memory`, are examples.

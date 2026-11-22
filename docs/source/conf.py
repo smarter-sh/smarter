@@ -23,13 +23,7 @@ import django
 from dotenv import load_dotenv
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    AUTHOR,
-    SMARTER_ORGANIZATION_WEBSITE_URL,
-    SMARTER_PRODUCT_NAME,
-    SMARTER_PROJECT_DOCS_URL,
-    SMARTER_PROJECT_WEBSITE_URL,
-)
+from smarter.common.const import AUTHOR
 from smarter.common.exceptions import SmarterConfigurationError
 
 # Load environment variables from .env file. This is necessary for the
@@ -195,10 +189,10 @@ html_extra_path = ["robots.txt", "llms.txt"]
 html_context = {
     # "commit": commit,
     "last_updated": last_updated,
-    "branding_company_name": smarter_settings.branding_corporate_name,
-    "branding_smarter_product_name": SMARTER_PRODUCT_NAME,
-    "smarter_project_web_site_url": SMARTER_PROJECT_WEBSITE_URL,
-    "smarter_organization_web_site_url": SMARTER_ORGANIZATION_WEBSITE_URL,
+    "branding_company_name": smarter_settings.platform_branding_corporate_name,
+    "branding_smarter_product_name": smarter_settings.platform_branding_product_name,
+    "smarter_project_web_site_url": str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
+    "smarter_organization_web_site_url": str(smarter_settings.platform_branding_contact_url).rstrip("/"),
 }
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -277,7 +271,7 @@ autodoc_use_type_comments = False
 # site, whatever platform the build's environment configures: a ROOT_DOMAIN
 # in the builder's shell (which overrides .env) must not change the sitemap's
 # urls, or the canonical links of every page.
-html_baseurl = f"{SMARTER_PROJECT_DOCS_URL}/"
+html_baseurl = str(smarter_settings.platform_branding_docs_url).rstrip("/") + "/"
 sitemap_url_scheme = "{link}"
 sitemap_filename = "sitemap.xml"
 

@@ -1,7 +1,7 @@
 """
 The cloud providers, and the one that the platform uses.
 
-``smarter_settings.cloud_provider`` (``SMARTER_CLOUD_PROVIDER``) names the provider, e.g.
+``smarter_settings.platform_cloud_provider`` (``SMARTER_PLATFORM_CLOUD_PROVIDER``) names the provider, e.g.
 ``aws``, and :func:`get_provider` returns it. Tests replace it with :func:`configure_provider`:
 
 .. code-block:: python
@@ -33,7 +33,7 @@ _provider: Optional[CloudProvider] = None
 
 def register_provider(name: str, factory: ProviderFactory) -> None:
     """
-    Register a cloud provider under its name, so that ``smarter_settings.cloud_provider`` can select it.
+    Register a cloud provider under its name, so that ``smarter_settings.platform_cloud_provider`` can select it.
 
     :param name: The provider's name, see :class:`~smarter.apps.infrastructure.const.CloudProviders`.
     :param factory: Returns the provider, e.g. its class.
@@ -50,7 +50,7 @@ def configure_provider(factory: Optional[ProviderFactory]) -> None:
     """
     Use another provider, e.g. a fake in tests.
 
-    :param factory: Returns the provider, or None to restore ``smarter_settings.cloud_provider``.
+    :param factory: Returns the provider, or None to restore ``smarter_settings.platform_cloud_provider``.
     """
     global _provider_factory, _provider  # pylint: disable=global-statement
     _provider_factory = factory
@@ -61,14 +61,14 @@ def get_provider() -> CloudProvider:
     """
     Return the cloud provider, which is created once.
 
-    :raises InfrastructureConfigurationError: If ``smarter_settings.cloud_provider`` is not registered.
+    :raises InfrastructureConfigurationError: If ``smarter_settings.platform_cloud_provider`` is not registered.
     """
     global _provider  # pylint: disable=global-statement
     if _provider is None:
         if _provider_factory is not None:
             _provider = _provider_factory()
         else:
-            name = str(smarter_settings.cloud_provider)
+            name = str(smarter_settings.platform_cloud_provider)
             factory = _registry.get(name)
             if factory is None:
                 raise InfrastructureConfigurationError(

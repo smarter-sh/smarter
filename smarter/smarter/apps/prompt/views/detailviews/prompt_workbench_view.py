@@ -30,7 +30,7 @@ from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 MAX_RETURNED_PLUGINS = 10
-PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.cache_expiration
+PROMPT_LIST_CACHE_TIMEOUT = smarter_settings.subsystem_cache_expiration
 WORKBENCH_CACHE_TIMEOUT = 10  # 10 seconds. keeps the workbench snappy while avoiding appearing stale.
 
 

@@ -270,7 +270,7 @@ conversation, so the history includes only the sessions whose user the requestin
 their own, their account's users' for an account admin, and every one for a superuser. The journal's
 list is paged: ``page``, ``page_size``, ``search`` and ``ordering`` select the page, and its
 ``pagination`` describes it. A resource
-family's routes exist only while the platform enables it, e.g. ``SMARTER_ENABLE_PROXY``. See
+family's routes exist only while the platform enables it, e.g. ``SMARTER_APP_PROXY_ENABLE``. See
 :ref:`Turning resource types off <sam-app-feature-flags>`.
 
 A Guardrail's events, the prompt history, and a catalog's models in an LLMHost discovery, keep the

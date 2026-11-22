@@ -15,8 +15,170 @@ from smarter.lib.django.validators import SmarterValidator
 class BrandingSettings(BaseModel):
     """The platform operator's branding: name, address, contacts, links and logo."""
 
-    branding_corporate_name: str = Field(
-        settings_defaults.BRANDING_CORPORATE_NAME,
+    platform_branding_app_name: str = Field(
+        settings_defaults.PLATFORM_BRANDING_APP_NAME,
+        description="The application's name, which prefixes the names of the platform's Django apps in the admin and the web console.",
+        examples=["Acme AI"],
+        title="Branding App Name",
+    )
+    """
+    The application's name, which prefixes the names of the platform's Django apps in the admin and the web console: ``SMARTER_PLATFORM_BRANDING_APP_NAME``.
+
+    :type: str
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_APP_NAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("platform_branding_app_name")
+    def validate_platform_branding_app_name(cls, v: Optional[str]) -> str:
+        """
+        Validate ``platform_branding_app_name``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_APP_NAME
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"platform_branding_app_name of type {type(v)} is not a str.")
+        return v
+
+    platform_branding_product_name: str = Field(
+        settings_defaults.PLATFORM_BRANDING_PRODUCT_NAME,
+        description="The product's name, shown in the web console, emails and documentation.",
+        examples=["Acme AI Platform"],
+        title="Branding Product Name",
+    )
+    """
+    The product's name, shown in the web console, emails and documentation: ``SMARTER_PLATFORM_BRANDING_PRODUCT_NAME``.
+
+    :type: str
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_PRODUCT_NAME``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("platform_branding_product_name")
+    def validate_platform_branding_product_name(cls, v: Optional[str]) -> str:
+        """
+        Validate ``platform_branding_product_name``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_PRODUCT_NAME
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"platform_branding_product_name of type {type(v)} is not a str.")
+        return v
+
+    platform_branding_product_description: str = Field(
+        settings_defaults.PLATFORM_BRANDING_PRODUCT_DESCRIPTION,
+        description="A one-sentence description of the product, shown in the web console and in page metadata.",
+        examples=["A no-code AI platform for Acme's teams."],
+        title="Branding Product Description",
+    )
+    """
+    A one-sentence description of the product, shown in the web console and in page metadata: ``SMARTER_PLATFORM_BRANDING_PRODUCT_DESCRIPTION``.
+
+    :type: str
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_PRODUCT_DESCRIPTION``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("platform_branding_product_description")
+    def validate_platform_branding_product_description(cls, v: Optional[str]) -> str:
+        """
+        Validate ``platform_branding_product_description``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_PRODUCT_DESCRIPTION
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"platform_branding_product_description of type {type(v)} is not a str.")
+        return v
+
+    platform_branding_cdn_url: HttpUrl = Field(
+        settings_defaults.PLATFORM_BRANDING_CDN_URL,
+        description="The CDN of the product's own static assets, e.g. its logo and Open Graph image.",
+        examples=["https://cdn.example.com"],
+        title="Branding CDN URL",
+    )
+    """
+    The CDN of the product's own static assets, e.g. its logo and Open Graph image: ``SMARTER_PLATFORM_BRANDING_CDN_URL``.
+
+    :type: HttpUrl
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_CDN_URL``
+    """
+
+    @before_field_validator("platform_branding_cdn_url")
+    def validate_platform_branding_cdn_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
+        """
+        Validate ``platform_branding_cdn_url``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        """
+        if v is None or v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_CDN_URL
+        return v
+
+    platform_branding_docs_url: HttpUrl = Field(
+        settings_defaults.PLATFORM_BRANDING_DOCS_URL,
+        description="The product's documentation site, linked from the web console and the api.",
+        examples=["https://docs.example.com"],
+        title="Branding Documentation URL",
+    )
+    """
+    The product's documentation site, linked from the web console and the api: ``SMARTER_PLATFORM_BRANDING_DOCS_URL``.
+
+    :type: HttpUrl
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_DOCS_URL``
+    """
+
+    @before_field_validator("platform_branding_docs_url")
+    def validate_platform_branding_docs_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
+        """
+        Validate ``platform_branding_docs_url``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        """
+        if v is None or v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_DOCS_URL
+        return v
+
+    platform_branding_blog_url: HttpUrl = Field(
+        settings_defaults.PLATFORM_BRANDING_BLOG_URL,
+        description="The product's blog, e.g. its release announcements.",
+        examples=["https://blog.example.com"],
+        title="Branding Blog URL",
+    )
+    """
+    The product's blog, e.g. its release announcements: ``SMARTER_PLATFORM_BRANDING_BLOG_URL``.
+
+    :type: HttpUrl
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_BLOG_URL``
+    """
+
+    @before_field_validator("platform_branding_blog_url")
+    def validate_platform_branding_blog_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
+        """
+        Validate ``platform_branding_blog_url``: an empty value is the default.
+
+        :param v: The value.
+        :returns: The value, or the default.
+        """
+        if v is None or v in THE_EMPTY_SET:
+            return settings_defaults.PLATFORM_BRANDING_BLOG_URL
+        return v
+
+    platform_branding_corporate_name: str = Field(
+        settings_defaults.PLATFORM_BRANDING_CORPORATE_NAME,
         description="The corporate name used for branding purposes throughout the platform.",
         examples=["Acme Corporation"],
         title="Branding Corporate Name",
@@ -28,12 +190,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_CORPORATE_NAME``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_CORPORATE_NAME``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_corporate_name")
-    def validate_branding_corporate_name(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_corporate_name")
+    def validate_platform_branding_corporate_name(cls, v: Optional[str]) -> str:
         """Validates the `branding_corporate_name` field.
 
         Args:
@@ -43,15 +205,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding corporate name.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_CORPORATE_NAME
+            return settings_defaults.PLATFORM_BRANDING_CORPORATE_NAME
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_corporate_name of type {type(v)} is not a str.")
 
         return v
 
-    branding_support_phone_number: str = Field(
-        settings_defaults.BRANDING_SUPPORT_PHONE_NUMBER,
+    platform_branding_support_phone_number: str = Field(
+        settings_defaults.PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER,
         description="The support phone number used for branding purposes throughout the platform.",
         examples=["+1-800-555-1234"],
         title="Branding Support Phone Number",
@@ -63,12 +225,12 @@ class BrandingSettings(BaseModel):
     or assistance related to the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_SUPPORT_PHONE_NUMBER``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_support_phone_number")
-    def validate_branding_support_phone_number(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_support_phone_number")
+    def validate_platform_branding_support_phone_number(cls, v: Optional[str]) -> str:
         """Validates the `branding_support_phone_number` field.
 
         Args:
@@ -78,15 +240,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding support phone number.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_SUPPORT_PHONE_NUMBER
+            return settings_defaults.PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_support_phone_number of type {type(v)} is not a str.")
 
         return v
 
-    branding_support_email: EmailStr = Field(
-        settings_defaults.BRANDING_SUPPORT_EMAIL,
+    platform_branding_support_email: EmailStr = Field(
+        settings_defaults.PLATFORM_BRANDING_SUPPORT_EMAIL,
         description="The support email address used for branding purposes throughout the platform.",
         title="Branding Support Email",
     )
@@ -97,12 +259,12 @@ class BrandingSettings(BaseModel):
     or assistance related to the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: EmailStr
-    :default: Value from ``settings_defaults.BRANDING_SUPPORT_EMAIL``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_SUPPORT_EMAIL``
     :raises SmarterConfigurationError: If the value is not a EmailStr.
     """
 
-    @before_field_validator("branding_support_email")
-    def validate_branding_support_email(cls, v: Optional[EmailStr]) -> EmailStr:
+    @before_field_validator("platform_branding_support_email")
+    def validate_platform_branding_support_email(cls, v: Optional[EmailStr]) -> EmailStr:
         """Validates the `branding_support_email` field.
 
         Args:
@@ -111,7 +273,7 @@ class BrandingSettings(BaseModel):
             EmailStr: The validated branding support email.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_SUPPORT_EMAIL
+            return settings_defaults.PLATFORM_BRANDING_SUPPORT_EMAIL
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_support_email of type {type(v)} is not a EmailStr.")
@@ -119,8 +281,8 @@ class BrandingSettings(BaseModel):
 
         return v
 
-    branding_address1: str = Field(
-        settings_defaults.BRANDING_ADDRESS1,
+    platform_branding_address1: str = Field(
+        settings_defaults.PLATFORM_BRANDING_ADDRESS1,
         description="The corporate address used for branding purposes throughout the platform.",
         examples=["123 Main St, Anytown, USA"],
         title="Branding Address",
@@ -132,11 +294,11 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_ADDRESS1``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_ADDRESS1``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_address1")
+    @before_field_validator("platform_branding_address1")
     def validate_branding_address(cls, v: Optional[str]) -> str:
         """Validates the `branding_address1` field.
 
@@ -147,15 +309,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding address.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_ADDRESS1
+            return settings_defaults.PLATFORM_BRANDING_ADDRESS1
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_address1 of type {type(v)} is not a str.")
 
         return v
 
-    branding_address2: Optional[str] = Field(
-        settings_defaults.BRANDING_ADDRESS2,
+    platform_branding_address2: Optional[str] = Field(
+        settings_defaults.PLATFORM_BRANDING_ADDRESS2,
         description="The second line of the corporate address used for branding purposes throughout the platform.",
         examples=["Suite 100"],
         title="Branding Address Line 2",
@@ -167,12 +329,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: Optional[str]
-    :default: Value from ``settings_defaults.BRANDING_ADDRESS2``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_ADDRESS2``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_address2")
-    def validate_branding_address2(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("platform_branding_address2")
+    def validate_platform_branding_address2(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `branding_address2` field.
 
         Args:
@@ -189,8 +351,8 @@ class BrandingSettings(BaseModel):
 
         return v
 
-    branding_city: str = Field(
-        settings_defaults.BRANDING_CITY,
+    platform_branding_city: str = Field(
+        settings_defaults.PLATFORM_BRANDING_CITY,
         description="The corporate city used for branding purposes throughout the platform.",
         examples=["Anytown"],
         title="Branding City",
@@ -202,12 +364,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_CITY``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_CITY``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_city")
-    def validate_branding_city(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_city")
+    def validate_platform_branding_city(cls, v: Optional[str]) -> str:
         """Validates the `branding_city` field.
 
         Args:
@@ -217,15 +379,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding city.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_CITY
+            return settings_defaults.PLATFORM_BRANDING_CITY
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_city of type {type(v)} is not a str.")
 
         return v
 
-    branding_state: str = Field(
-        settings_defaults.BRANDING_STATE,
+    platform_branding_state: str = Field(
+        settings_defaults.PLATFORM_BRANDING_STATE,
         description="The corporate state used for branding purposes throughout the platform.",
         examples=["CA"],
         title="Branding State",
@@ -237,12 +399,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_STATE``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_STATE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_state")
-    def validate_branding_state(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_state")
+    def validate_platform_branding_state(cls, v: Optional[str]) -> str:
         """Validates the `branding_state` field.
 
         Args:
@@ -252,15 +414,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding state.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_STATE
+            return settings_defaults.PLATFORM_BRANDING_STATE
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_state of type {type(v)} is not a str.")
 
         return v
 
-    branding_postal_code: str = Field(
-        settings_defaults.BRANDING_POSTAL_CODE,
+    platform_branding_postal_code: str = Field(
+        settings_defaults.PLATFORM_BRANDING_POSTAL_CODE,
         description="The corporate postal code used for branding purposes throughout the platform.",
         examples=["12345"],
         title="Branding Postal Code",
@@ -272,12 +434,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_POSTAL_CODE``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_POSTAL_CODE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_postal_code")
-    def validate_branding_postal_code(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_postal_code")
+    def validate_platform_branding_postal_code(cls, v: Optional[str]) -> str:
         """Validates the `branding_postal_code` field.
 
         Args:
@@ -287,15 +449,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding postal code.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_POSTAL_CODE
+            return settings_defaults.PLATFORM_BRANDING_POSTAL_CODE
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_postal_code of type {type(v)} is not a str.")
 
         return v
 
-    branding_country: str = Field(
-        settings_defaults.BRANDING_COUNTRY,
+    platform_branding_country: str = Field(
+        settings_defaults.PLATFORM_BRANDING_COUNTRY,
         description="The corporate country used for branding purposes throughout the platform.",
         examples=["USA"],
         title="Branding Country",
@@ -307,12 +469,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_COUNTRY``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_COUNTRY``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_country")
-    def validate_branding_country(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_country")
+    def validate_platform_branding_country(cls, v: Optional[str]) -> str:
         """Validates the `branding_country` field.
 
         Args:
@@ -322,15 +484,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding country.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_COUNTRY
+            return settings_defaults.PLATFORM_BRANDING_COUNTRY
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_country of type {type(v)} is not a str.")
 
         return v
 
-    branding_currency: str = Field(
-        settings_defaults.BRANDING_CURRENCY,
+    platform_branding_currency: str = Field(
+        settings_defaults.PLATFORM_BRANDING_CURRENCY,
         description="The currency used for branding purposes throughout the platform.",
         examples=["USD"],
         title="Branding Currency",
@@ -343,12 +505,12 @@ class BrandingSettings(BaseModel):
     indicate the currency in which prices, billing, or financial information
     is presented to users.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_CURRENCY``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_CURRENCY``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_currency")
-    def validate_branding_currency(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_currency")
+    def validate_platform_branding_currency(cls, v: Optional[str]) -> str:
         """Validates the `branding_currency` field.
 
         Args:
@@ -358,15 +520,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding currency.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_CURRENCY
+            return settings_defaults.PLATFORM_BRANDING_CURRENCY
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_currency of type {type(v)} is not a str.")
 
         return v
 
-    branding_timezone: str = Field(
-        settings_defaults.BRANDING_TIMEZONE,
+    platform_branding_timezone: str = Field(
+        settings_defaults.PLATFORM_BRANDING_TIMEZONE,
         description="The timezone used for branding purposes throughout the platform.",
         examples=["America/New_York"],
         title="Branding Timezone",
@@ -378,12 +540,12 @@ class BrandingSettings(BaseModel):
     such as email templates, user interfaces, and documentation. It can be used to
     indicate the timezone in which dates and times are presented to users.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_TIMEZONE``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_TIMEZONE``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_timezone")
-    def validate_branding_timezone(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_timezone")
+    def validate_platform_branding_timezone(cls, v: Optional[str]) -> str:
         """Validates the `branding_timezone` field.
 
         Args:
@@ -393,15 +555,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding timezone.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_TIMEZONE
+            return settings_defaults.PLATFORM_BRANDING_TIMEZONE
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_timezone of type {type(v)} is not a str.")
 
         return v
 
-    branding_contact_url: Optional[HttpUrl] = Field(
-        settings_defaults.BRANDING_CONTACT_URL,
+    platform_branding_contact_url: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_CONTACT_URL,
         description="The contact URL used for branding purposes throughout the platform.",
         examples=["https://www.example.com/contact"],
         title="Branding Contact URL",
@@ -414,12 +576,12 @@ class BrandingSettings(BaseModel):
     It is used in various branding contexts, such as email templates,
     user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_CONTACT_URL``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_CONTACT_URL``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_contact_url")
-    def validate_branding_contact_url(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+    @before_field_validator("platform_branding_contact_url")
+    def validate_platform_branding_contact_url(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_contact_url` field.
 
         Args:
@@ -429,11 +591,11 @@ class BrandingSettings(BaseModel):
             Optional[HttpUrl]: The validated branding contact URL.
         """
         if v is None or v == "":
-            return settings_defaults.BRANDING_CONTACT_URL
+            return settings_defaults.PLATFORM_BRANDING_CONTACT_URL
         return v
 
-    branding_primary_contact: str = Field(
-        settings_defaults.BRANDING_PRIMARY_CONTACT,
+    platform_branding_primary_contact: str = Field(
+        settings_defaults.PLATFORM_BRANDING_PRIMARY_CONTACT,
         description="The name of the person who is the technical point of contact for this platform.",
         examples=["Lawrence McDaniel"],
         title="Branding Primary Contact",
@@ -444,12 +606,12 @@ class BrandingSettings(BaseModel):
     This setting names the person who hosts the platform and answers its users' questions.
     The welcome email is written from this person, and signed with this name.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_PRIMARY_CONTACT``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_PRIMARY_CONTACT``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_primary_contact")
-    def validate_branding_primary_contact(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_primary_contact")
+    def validate_platform_branding_primary_contact(cls, v: Optional[str]) -> str:
         """Validates the `branding_primary_contact` field.
 
         Args:
@@ -459,15 +621,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding primary contact.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_PRIMARY_CONTACT
+            return settings_defaults.PLATFORM_BRANDING_PRIMARY_CONTACT
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_primary_contact of type {type(v)} is not a str.")
 
         return v
 
-    branding_support_hours: str = Field(
-        settings_defaults.BRANDING_SUPPORT_HOURS,
+    platform_branding_support_hours: str = Field(
+        settings_defaults.PLATFORM_BRANDING_SUPPORT_HOURS,
         description="The support hours used for branding purposes throughout the platform.",
         examples=["Mon-Fri 9am-5pm EST"],
         title="Branding Support Hours",
@@ -479,12 +641,12 @@ class BrandingSettings(BaseModel):
     for users of the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: str
-    :default: Value from ``settings_defaults.BRANDING_SUPPORT_HOURS``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_SUPPORT_HOURS``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("branding_support_hours")
-    def validate_branding_support_hours(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_branding_support_hours")
+    def validate_platform_branding_support_hours(cls, v: Optional[str]) -> str:
         """Validates the `branding_support_hours` field.
 
         Args:
@@ -494,15 +656,15 @@ class BrandingSettings(BaseModel):
             str: The validated branding support hours.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.BRANDING_SUPPORT_HOURS
+            return settings_defaults.PLATFORM_BRANDING_SUPPORT_HOURS
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"branding_support_hours of type {type(v)} is not a str.")
 
         return v
 
-    branding_url_facebook: Optional[HttpUrl] = Field(
-        settings_defaults.BRANDING_URL_FACEBOOK,
+    platform_branding_url_facebook: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_URL_FACEBOOK,
         description="The Facebook URL used for branding purposes throughout the platform.",
         examples=["https://www.facebook.com/example"],
         title="Branding URL Facebook",
@@ -514,12 +676,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: Optional[HttpUrl]
-    :default: Value from ``settings_defaults.BRANDING_URL_FACEBOOK``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_URL_FACEBOOK``
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @before_field_validator("branding_url_facebook")
-    def validate_branding_url_facebook(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+    @before_field_validator("platform_branding_url_facebook")
+    def validate_platform_branding_url_facebook(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_facebook` field.
 
         Args:
@@ -528,11 +690,11 @@ class BrandingSettings(BaseModel):
             Optional[HttpUrl]: The validated branding URL Facebook.
         """
         if v is None or v == "":
-            return settings_defaults.BRANDING_URL_FACEBOOK
+            return settings_defaults.PLATFORM_BRANDING_URL_FACEBOOK
         return v
 
-    branding_url_twitter: Optional[HttpUrl] = Field(
-        settings_defaults.BRANDING_URL_TWITTER,
+    platform_branding_url_twitter: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_URL_TWITTER,
         description="The Twitter URL used for branding purposes throughout the platform.",
         examples=["https://www.twitter.com/example"],
         title="Branding URL Twitter",
@@ -544,12 +706,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: Optional[HttpUrl]
-    :default: Value from ``settings_defaults.BRANDING_URL_TWITTER``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_URL_TWITTER``
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @before_field_validator("branding_url_twitter")
-    def validate_branding_url_twitter(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+    @before_field_validator("platform_branding_url_twitter")
+    def validate_platform_branding_url_twitter(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_twitter` field.
 
         Args:
@@ -558,11 +720,11 @@ class BrandingSettings(BaseModel):
             Optional[HttpUrl]: The validated branding URL Twitter.
         """
         if v is None or v == "":
-            return settings_defaults.BRANDING_URL_TWITTER
+            return settings_defaults.PLATFORM_BRANDING_URL_TWITTER
         return v
 
-    branding_url_linkedin: Optional[HttpUrl] = Field(
-        settings_defaults.BRANDING_URL_LINKEDIN,
+    platform_branding_url_linkedin: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_URL_LINKEDIN,
         description="The LinkedIn URL used for branding purposes throughout the platform.",
         examples=["https://www.linkedin.com/company/example"],
         title="Branding URL LinkedIn",
@@ -574,12 +736,12 @@ class BrandingSettings(BaseModel):
     or operates the platform. It is used in various branding contexts,
     such as email templates, user interfaces, and documentation.
     :type: Optional[HttpUrl]
-    :default: Value from ``settings_defaults.BRANDING_URL_LINKEDIN``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_URL_LINKEDIN``
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @before_field_validator("branding_url_linkedin")
-    def validate_branding_url_linkedin(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+    @before_field_validator("platform_branding_url_linkedin")
+    def validate_platform_branding_url_linkedin(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_linkedin` field.
 
         Args:
@@ -588,11 +750,11 @@ class BrandingSettings(BaseModel):
             Optional[HttpUrl]: The validated branding URL LinkedIn.
         """
         if v is None or v == "":
-            return settings_defaults.BRANDING_URL_LINKEDIN
+            return settings_defaults.PLATFORM_BRANDING_URL_LINKEDIN
         return v
 
-    branding_url_slack: Optional[HttpUrl] = Field(
-        settings_defaults.BRANDING_URL_SLACK,
+    platform_branding_url_slack: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_URL_SLACK,
         description="The invite link of the Slack workspace that the platform's emails invite users to.",
         examples=["https://join.slack.com/t/example/shared_invite/zt-example"],
         title="Branding URL Slack",
@@ -605,12 +767,12 @@ class BrandingSettings(BaseModel):
     Project's Slack workspace.
 
     :type: Optional[HttpUrl]
-    :default: Value from ``settings_defaults.BRANDING_URL_SLACK``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_URL_SLACK``
     :raises SmarterConfigurationError: If the value is not a valid HttpUrl.
     """
 
-    @before_field_validator("branding_url_slack")
-    def validate_branding_url_slack(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
+    @before_field_validator("platform_branding_url_slack")
+    def validate_platform_branding_url_slack(cls, v: Optional[HttpUrl]) -> Optional[HttpUrl]:
         """Validates the `branding_url_slack` field.
 
         Args:
@@ -619,11 +781,11 @@ class BrandingSettings(BaseModel):
             Optional[HttpUrl]: The validated Slack invite link.
         """
         if v is None or v == "":
-            return settings_defaults.BRANDING_URL_SLACK
+            return settings_defaults.PLATFORM_BRANDING_URL_SLACK
         return v
 
-    logo: Optional[AnyUrl] = Field(
-        settings_defaults.LOGO,
+    platform_branding_logo: Optional[AnyUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_LOGO,
         description="The URL to the platform's logo image.",
         examples=["https://cdn.example.com/logo.png"],
         title="Platform Logo URL",
@@ -635,12 +797,12 @@ class BrandingSettings(BaseModel):
     It should be a valid URL pointing to an external image resource accessible by the frontend.
 
     :type: Optional[AnyUrl]
-    :default: Value from ``settings_defaults.LOGO``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_LOGO``
     :raises SmarterConfigurationError: If the value is not a valid URL string.
     """
 
-    @before_field_validator("logo")
-    def validate_logo(cls, v: Optional[AnyUrl]) -> AnyUrl:
+    @before_field_validator("platform_branding_logo")
+    def validate_platform_branding_logo(cls, v: Optional[AnyUrl]) -> AnyUrl:
         """Validates the `logo` field.
 
         Args:
@@ -650,11 +812,11 @@ class BrandingSettings(BaseModel):
             AnyUrl: The validated logo.
         """
         if v is None:
-            return settings_defaults.LOGO
+            return settings_defaults.PLATFORM_BRANDING_LOGO
         return v
 
-    marketing_site_url: Optional[HttpUrl] = Field(
-        settings_defaults.MARKETING_SITE_URL,
+    platform_branding_marketing_site_url: Optional[HttpUrl] = Field(
+        settings_defaults.PLATFORM_BRANDING_MARKETING_SITE_URL,
         description="The URL to the platform's marketing site.",
         examples=["https://www.example.com"],
         title="Marketing Site URL",
@@ -666,12 +828,12 @@ class BrandingSettings(BaseModel):
     with the platform. It should be a valid URL pointing to an external website.
 
     :type: Optional[httpHttpUrl]
-    :default: Value from ``settings_defaults.MARKETING_SITE_URL``
+    :default: Value from ``settings_defaults.PLATFORM_BRANDING_MARKETING_SITE_URL``
     :raises SmarterConfigurationError: If the value is not a valid URL string.
     """
 
-    @before_field_validator("marketing_site_url")
-    def validate_marketing_site_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
+    @before_field_validator("platform_branding_marketing_site_url")
+    def validate_platform_branding_marketing_site_url(cls, v: Optional[HttpUrl]) -> HttpUrl:
         """Validates the `marketing_site_url` field.
 
         Args:
@@ -679,8 +841,8 @@ class BrandingSettings(BaseModel):
         Returns:
             HttpUrl: The validated marketing site URL.
         """
-        if str(v) in THE_EMPTY_SET and settings_defaults.MARKETING_SITE_URL is not None:
-            return settings_defaults.MARKETING_SITE_URL
+        if str(v) in THE_EMPTY_SET and settings_defaults.PLATFORM_BRANDING_MARKETING_SITE_URL is not None:
+            return settings_defaults.PLATFORM_BRANDING_MARKETING_SITE_URL
         return v  # type: ignore
 
 

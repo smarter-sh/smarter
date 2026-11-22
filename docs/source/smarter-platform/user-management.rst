@@ -36,7 +36,7 @@ web console get the language of their browser, as the console itself does.
 you give it another ``--language``.
 
 Two days after the welcome email, the user is sent a second email, which invites them to the Slack
-workspace of ``SMARTER_BRANDING_URL_SLACK`` (by default The Smarter Project's) and introduces its
+workspace of ``SMARTER_PLATFORM_BRANDING_URL_SLACK`` (by default The Smarter Project's) and introduces its
 channels and its AI agent. A Celery Beat task, ``send_slack_invitation_emails``, sends it hourly to every
 account contact who is due it, once per email address, when the ``ENABLE_SLACK_INVITATION_EMAIL``
 waffle switch is on. The switch is off by default: turn it on in the Django admin to send the email.

@@ -7,7 +7,7 @@
 # - Purpose: Provides a shell script to back up the MariaDB database and upload it to S3.
 # - Usage: Mounted into the backup Job (job-mysql-backup.yaml) and the Bastion.
 #   The S3 location is set in values.yaml, under databaseScheduledBackup, and
-#   the backup account in env.SMARTER_MYSQL_BACKUP_USERNAME and _PASSWORD.
+#   the backup account in env.SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME and _PASSWORD.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -38,15 +38,15 @@ data:
     # This script performs a backup of the MariaDB database and uploads it to S3.
     #
     # environment:
-    #   SMARTER_MYSQL_HOST, SMARTER_MYSQL_PORT, SMARTER_MYSQL_DATABASE
-    #   SMARTER_MYSQL_BACKUP_S3_URI    where to upload, e.g. s3://my-bucket/backups/sql.
-    #                                  Default: s3://$SMARTER_S3_BUCKET/backups/sql
-    #   SMARTER_MYSQL_BACKUP_USERNAME  the read-only account to dump with, by default
-    #   SMARTER_MYSQL_BACKUP_PASSWORD  smarter_backup. job-init.yaml creates it, with
+    #   SMARTER_SUBSYSTEM_SQL_HOST, SMARTER_SUBSYSTEM_SQL_PORT, SMARTER_SUBSYSTEM_SQL_DATABASE
+    #   SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI    where to upload, e.g. s3://my-bucket/backups/sql.
+    #                                  Default: s3://$SMARTER_PLATFORM_S3_BUCKET/backups/sql
+    #   SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME  the read-only account to dump with, by default
+    #   SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD  smarter_backup. job-init.yaml creates it, with
     #                                  SELECT, SHOW VIEW, TRIGGER, EVENT and SHOW CREATE
     #                                  ROUTINE on the database. Without a password, the
-    #                                  script uses SMARTER_MYSQL_ROOT_USERNAME and
-    #                                  SMARTER_MYSQL_ROOT_PASSWORD.
+    #                                  script uses SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME and
+    #                                  SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD.
     #   BACKUP_SUMMARY_FILE            optional: where to write the summary below.
     #
     # The password is passed to mariadb-dump in a temporary option file, not on the
@@ -60,12 +60,12 @@ data:
     ################################################################################
     set -euo pipefail
 
-    if [ -n "${SMARTER_MYSQL_BACKUP_S3_URI:-}" ]; then
-      BACKUP_S3_PREFIX="${SMARTER_MYSQL_BACKUP_S3_URI%/}"
-    elif [ -n "${SMARTER_S3_BUCKET:-}" ] && [ "${SMARTER_S3_BUCKET#SET-ME}" = "${SMARTER_S3_BUCKET}" ]; then
-      BACKUP_S3_PREFIX="s3://${SMARTER_S3_BUCKET}/backups/sql"
+    if [ -n "${SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI:-}" ]; then
+      BACKUP_S3_PREFIX="${SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI%/}"
+    elif [ -n "${SMARTER_PLATFORM_S3_BUCKET:-}" ] && [ "${SMARTER_PLATFORM_S3_BUCKET#SET-ME}" = "${SMARTER_PLATFORM_S3_BUCKET}" ]; then
+      BACKUP_S3_PREFIX="s3://${SMARTER_PLATFORM_S3_BUCKET}/backups/sql"
     else
-      echo "FAILED: set databaseScheduledBackup.s3Uri (SMARTER_MYSQL_BACKUP_S3_URI) or SMARTER_S3_BUCKET to say where the backup goes."
+      echo "FAILED: set databaseScheduledBackup.s3Uri (SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI) or SMARTER_PLATFORM_S3_BUCKET to say where the backup goes."
       exit 1
     fi
     case "${BACKUP_S3_PREFIX}" in
@@ -75,17 +75,17 @@ data:
 
     # the read-only backup account, which job-init.yaml creates, when its password is
     # set. Otherwise the root account, which is all that a deployment without
-    # SMARTER_MYSQL_BACKUP_PASSWORD has.
-    if [ -n "${SMARTER_MYSQL_BACKUP_PASSWORD:-}" ] && [ "${SMARTER_MYSQL_BACKUP_PASSWORD#SET-ME}" = "${SMARTER_MYSQL_BACKUP_PASSWORD}" ]; then
-      BACKUP_USERNAME="${SMARTER_MYSQL_BACKUP_USERNAME:-smarter_backup}"
-      BACKUP_PASSWORD="${SMARTER_MYSQL_BACKUP_PASSWORD}"
+    # SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD has.
+    if [ -n "${SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD:-}" ] && [ "${SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD#SET-ME}" = "${SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD}" ]; then
+      BACKUP_USERNAME="${SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME:-smarter_backup}"
+      BACKUP_PASSWORD="${SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD}"
     else
-      echo "SMARTER_MYSQL_BACKUP_PASSWORD is not set, so the backup runs as the root account."
-      BACKUP_USERNAME="${SMARTER_MYSQL_ROOT_USERNAME}"
-      BACKUP_PASSWORD="${SMARTER_MYSQL_ROOT_PASSWORD}"
+      echo "SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD is not set, so the backup runs as the root account."
+      BACKUP_USERNAME="${SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME}"
+      BACKUP_PASSWORD="${SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD}"
     fi
 
-    BACKUP_FILENAME="${SMARTER_MYSQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
+    BACKUP_FILENAME="${SMARTER_SUBSYSTEM_SQL_DATABASE}-$(date +%Y%m%dT%H%M%S)"
     BACKUP_FILE="${BACKUP_FILENAME}.tar.gz"
     BACKUP_URI="${BACKUP_S3_PREFIX}/${BACKUP_FILE}"
 
@@ -98,14 +98,14 @@ data:
     ESCAPED_PASSWORD="${ESCAPED_PASSWORD//\"/\\\"}"
     cat > "${OPTION_FILE}" <<OPTIONS
     [client]
-    host=${SMARTER_MYSQL_HOST}
-    port=${SMARTER_MYSQL_PORT:-3306}
+    host=${SMARTER_SUBSYSTEM_SQL_HOST}
+    port=${SMARTER_SUBSYSTEM_SQL_PORT:-3306}
     user=${BACKUP_USERNAME}
     password="${ESCAPED_PASSWORD}"
     OPTIONS
 
-    echo "Starting MariaDB backup for database: ${SMARTER_MYSQL_DATABASE}, as ${BACKUP_USERNAME}"
-    mariadb-dump --defaults-extra-file="${OPTION_FILE}" --databases "${SMARTER_MYSQL_DATABASE}" \
+    echo "Starting MariaDB backup for database: ${SMARTER_SUBSYSTEM_SQL_DATABASE}, as ${BACKUP_USERNAME}"
+    mariadb-dump --defaults-extra-file="${OPTION_FILE}" --databases "${SMARTER_SUBSYSTEM_SQL_DATABASE}" \
       --add-drop-database --add-drop-table --routines --events --triggers \
       --single-transaction --quick --lock-tables=false --no-tablespaces > "${BACKUP_FILENAME}.sql"
     SQL_BYTES=$(stat -c %s "${BACKUP_FILENAME}.sql")
@@ -141,7 +141,7 @@ data:
     Backup file: ${BACKUP_FILE}
     Size:        $(numfmt --to=iec-i --suffix=B "${BACKUP_BYTES}") (${BACKUP_BYTES} bytes), compressed from $(numfmt --to=iec-i --suffix=B "${SQL_BYTES}") of SQL
     Saved to:    ${BACKUP_URI}
-    Database:    ${SMARTER_MYSQL_DATABASE} on ${SMARTER_MYSQL_HOST}
+    Database:    ${SMARTER_SUBSYSTEM_SQL_DATABASE} on ${SMARTER_SUBSYSTEM_SQL_HOST}
     Finished:    $(date -u +%Y-%m-%dT%H:%M:%SZ)
     SUMMARY
     )

@@ -153,9 +153,9 @@ class TestSettingsValidators(SmarterTestBase):
             with self.subTest(value=value), self.assertRaises(SmarterConfigurationError):
                 call(validator, value, {})
 
-    def test_mysql_port(self):
+    def test_sql_port(self):
         """Test that the database port parses an environment variable's string, defaults, and rejects non-ports."""
-        validator = Settings.validate_mysql_port
+        validator = Settings.validate_subsystem_sql_port
         self.assertEqual(call(validator, "3307", {}), 3307)
         self.assertEqual(call(validator, 3306, {}), 3306)
         self.assertEqual(call(validator, "", {}), 3306)
@@ -167,9 +167,9 @@ class TestSettingsValidators(SmarterTestBase):
     def test_mysql_names(self):
         """Test that the database host, name and user are trimmed, default when missing, and reject non-strings."""
         for validator, default in (
-            (Settings.validate_mysql_host, "smarter-mariadb"),
-            (Settings.validate_mysql_database, "smarter"),
-            (Settings.validate_mysql_user, "smarter"),
+            (Settings.validate_subsystem_sql_host, "smarter-mariadb"),
+            (Settings.validate_subsystem_sql_database, "smarter"),
+            (Settings.validate_subsystem_sql_user, "smarter"),
         ):
             with self.subTest(validator=validator.__name__):
                 self.assertEqual(call(validator, " db.example.com ", {}), "db.example.com")
@@ -178,9 +178,9 @@ class TestSettingsValidators(SmarterTestBase):
                 with self.assertRaises(SmarterConfigurationError):
                     call(validator, 42, {})
 
-    def test_mysql_password(self):
+    def test_sql_password(self):
         """Test that the database password is a SecretStr, and that a placeholder is no password."""
-        validator = Settings.validate_mysql_password
+        validator = Settings.validate_subsystem_sql_password
         self.assertEqual(call(validator, "s3cret", {}).get_secret_value(), "s3cret")
         self.assertEqual(call(validator, SecretStr("s3cret"), {}).get_secret_value(), "s3cret")
         self.assertIsNone(call(validator, DEFAULT_MISSING_VALUE, {}))
@@ -194,10 +194,10 @@ class TestSettingsValidators(SmarterTestBase):
         from django.conf import settings
 
         database = settings.DATABASES["default"]
-        self.assertEqual(database["HOST"], smarter_settings.mysql_host)
-        self.assertEqual(database["PORT"], str(smarter_settings.mysql_port))
-        self.assertEqual(database["USER"], smarter_settings.mysql_user)
-        self.assertIsNotNone(smarter_settings.mysql_password, "the local environment has a default password")
+        self.assertEqual(database["HOST"], smarter_settings.subsystem_sql_host)
+        self.assertEqual(database["PORT"], str(smarter_settings.subsystem_sql_port))
+        self.assertEqual(database["USER"], smarter_settings.subsystem_sql_user)
+        self.assertIsNotNone(smarter_settings.subsystem_sql_password, "the local environment has a default password")
 
 
 class TestSettingsMethods(SmarterTestBase):
@@ -205,7 +205,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_ready_reports_each_missing_service(self):
         """Test that ready() is False, and warns, for the default root domain outside of local, and missing AWS."""
-        settings = smarter_settings.model_copy(update={"root_domain": "example.com", "environment": "prod"})
+        settings = smarter_settings.model_copy(update={"platform_root_domain": "example.com", "environment": "prod"})
         with (
             patch.object(Settings, "aws_is_configured", new_callable=PropertyMock, return_value=False),
             patch("builtins.print") as mock_print,
@@ -215,7 +215,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_ready_needs_neither_smtp_nor_a_root_domain_locally(self):
         """Test that SMTP is never needed, and the default root domain is fine in the local environment."""
-        settings = smarter_settings.model_copy(update={"root_domain": "example.com", "environment": "local"})
+        settings = smarter_settings.model_copy(update={"platform_root_domain": "example.com", "environment": "local"})
         with (
             patch.object(Settings, "aws_is_configured", new_callable=PropertyMock, return_value=True),
             patch.object(Settings, "smtp_is_configured", new_callable=PropertyMock, return_value=False),
@@ -226,7 +226,7 @@ class TestSettingsMethods(SmarterTestBase):
 
     def test_smtp_is_configured(self):
         """Test that SMTP is configured only when every credential is set, and none is a placeholder."""
-        configured = {"smtp_username": SecretStr("user"), "smtp_password": SecretStr("password")}
+        configured = {"subsystem_smtp_username": SecretStr("user"), "subsystem_smtp_password": SecretStr("password")}
 
         def smtp_is_configured(**update) -> bool:
             settings = smarter_settings.model_copy(update={**configured, **update})
@@ -234,17 +234,17 @@ class TestSettingsMethods(SmarterTestBase):
             settings.__dict__.pop("smtp_is_configured", None)
             return settings.smtp_is_configured
 
-        with patch.object(Settings, "smtp_host", new_callable=PropertyMock, return_value="smtp.example.com"):
+        with patch.object(Settings, "subsystem_smtp_host", new_callable=PropertyMock, return_value="smtp.example.com"):
             self.assertTrue(smtp_is_configured())
             for name, value in (
-                ("smtp_username", None),
-                ("smtp_password", None),
-                ("smtp_password", SecretStr(DEFAULT_MISSING_VALUE)),
-                ("smtp_username", SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")),
+                ("subsystem_smtp_username", None),
+                ("subsystem_smtp_password", None),
+                ("subsystem_smtp_password", SecretStr(DEFAULT_MISSING_VALUE)),
+                ("subsystem_smtp_username", SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")),
             ):
                 with self.subTest(name=name, value=value):
                     self.assertFalse(smtp_is_configured(**{name: value}))
-        with patch.object(Settings, "smtp_host", new_callable=PropertyMock, return_value=None):
+        with patch.object(Settings, "subsystem_smtp_host", new_callable=PropertyMock, return_value=None):
             self.assertFalse(smtp_is_configured())
 
     def test_smtp_host_and_from_email(self):
@@ -252,34 +252,39 @@ class TestSettingsMethods(SmarterTestBase):
         module = "smarter.common.conf.settings.email"
         settings = smarter_settings.model_copy(update={"aws_region": "us-west-2"})
         with patch(f"{module}.settings_defaults") as defaults:
-            defaults.SMTP_HOST = "smtp.example.com"
-            defaults.SMTP_FROM_EMAIL = "hello@example.com"
-            self.assertEqual(settings.smtp_host, "smtp.example.com")
-            self.assertEqual(settings.smtp_from_email, "hello@example.com")
-            defaults.SMTP_HOST = None
-            defaults.SMTP_FROM_EMAIL = DEFAULT_MISSING_VALUE
-            self.assertEqual(settings.smtp_host, "email-smtp.us-west-2.amazonaws.com")
-            self.assertEqual(settings.smtp_from_email, f"no-reply@{settings.platform_subdomain}.{settings.root_domain}")
-            self.assertIsNone(smarter_settings.model_copy(update={"aws_region": None}).smtp_host)
+            defaults.SUBSYSTEM_SMTP_HOST = "smtp.example.com"
+            defaults.SUBSYSTEM_SMTP_FROM_EMAIL = "hello@example.com"
+            self.assertEqual(settings.subsystem_smtp_host, "smtp.example.com")
+            self.assertEqual(settings.subsystem_smtp_from_email, "hello@example.com")
+            defaults.SUBSYSTEM_SMTP_HOST = None
+            defaults.SUBSYSTEM_SMTP_FROM_EMAIL = DEFAULT_MISSING_VALUE
+            self.assertEqual(settings.subsystem_smtp_host, "email-smtp.us-west-2.amazonaws.com")
+            self.assertEqual(
+                settings.subsystem_smtp_from_email,
+                f"no-reply@{settings.platform_subdomain}.{settings.platform_root_domain}",
+            )
+            self.assertIsNone(smarter_settings.model_copy(update={"aws_region": None}).subsystem_smtp_host)
 
     def test_admin_credentials(self):
         """Test that the admin username falls back to its default, and the password is None when missing, or a placeholder."""
         module = "smarter.common.conf.settings.security"
         with patch(f"{module}.settings_defaults") as defaults:
-            defaults.ADMIN_USERNAME = "admin"
-            defaults.ADMIN_PASSWORD = None
+            defaults.PLATFORM_ADMIN_USERNAME = "admin"
+            defaults.PLATFORM_ADMIN_PASSWORD = None
             for value in (None, ""):
                 with self.subTest(value=value):
-                    self.assertEqual(call(Settings.validate_admin_username, value, {}), "admin")
-                    self.assertIsNone(call(Settings.validate_admin_password, value, {}))
-            self.assertEqual(call(Settings.validate_admin_username, "platform-admin", {}), "platform-admin")
-            self.assertIsNone(call(Settings.validate_admin_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
-            self.assertEqual(call(Settings.validate_admin_password, SecretStr("pw"), {}).get_secret_value(), "pw")
+                    self.assertEqual(call(Settings.validate_platform_admin_username, value, {}), "admin")
+                    self.assertIsNone(call(Settings.validate_platform_admin_password, value, {}))
+            self.assertEqual(call(Settings.validate_platform_admin_username, "platform-admin", {}), "platform-admin")
+            self.assertIsNone(call(Settings.validate_platform_admin_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
+            self.assertEqual(
+                call(Settings.validate_platform_admin_password, SecretStr("pw"), {}).get_secret_value(), "pw"
+            )
             with self.assertRaises(SmarterConfigurationError):
-                call(Settings.validate_admin_password, "not a SecretStr", {})
-            defaults.ADMIN_USERNAME = ""
+                call(Settings.validate_platform_admin_password, "not a SecretStr", {})
+            defaults.PLATFORM_ADMIN_USERNAME = ""
             with self.assertRaises(SmarterConfigurationError):
-                call(Settings.validate_admin_username, None, {})
+                call(Settings.validate_platform_admin_username, None, {})
 
     def test_optional_values_are_none_when_missing(self):
         """Test that the optional cluster name and SMTP credentials are None when missing, or a placeholder."""
@@ -290,14 +295,14 @@ class TestSettingsMethods(SmarterTestBase):
                 patch(f"{package}.aws.settings_defaults") as aws_defaults,
                 patch(f"{package}.email.settings_defaults") as email_defaults,
             ):
-                aws_defaults.AWS_EKS_CLUSTER_NAME = DEFAULT_MISSING_VALUE
-                email_defaults.SMTP_PASSWORD = None
-                email_defaults.SMTP_USERNAME = None
-                self.assertIsNone(call(Settings.validate_aws_eks_cluster_name, value, {}))
-                self.assertIsNone(call(Settings.validate_smtp_password, value, {}))
-                self.assertIsNone(call(Settings.validate_smtp_username, value, {}))
-        self.assertEqual(call(Settings.validate_aws_eks_cluster_name, "my-cluster", {}), "my-cluster")
-        self.assertIsNone(call(Settings.validate_smtp_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
+                aws_defaults.SUBSYSTEM_K8S_CLUSTER_NAME = DEFAULT_MISSING_VALUE
+                email_defaults.SUBSYSTEM_SMTP_PASSWORD = None
+                email_defaults.SUBSYSTEM_SMTP_USERNAME = None
+                self.assertIsNone(call(Settings.validate_subsystem_k8s_cluster_name, value, {}))
+                self.assertIsNone(call(Settings.validate_subsystem_smtp_password, value, {}))
+                self.assertIsNone(call(Settings.validate_subsystem_smtp_username, value, {}))
+        self.assertEqual(call(Settings.validate_subsystem_k8s_cluster_name, "my-cluster", {}), "my-cluster")
+        self.assertIsNone(call(Settings.validate_subsystem_smtp_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
 
     def test_github_token(self):
         """Test that the GitHub token is None when missing, or a placeholder, and must be a SecretStr."""
@@ -351,12 +356,12 @@ class TestSettingsMethods(SmarterTestBase):
         module = "smarter.common.conf.settings.integrations"
         for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")):
             with self.subTest(value=value), patch(f"{module}.settings_defaults") as defaults:
-                defaults.SLACK_BOT_TOKEN = None
-                self.assertIsNone(call(Settings.validate_slack_bot_token, value, {}))
+                defaults.SUBSYSTEM_SLACK_BOT_TOKEN = None
+                self.assertIsNone(call(Settings.validate_subsystem_slack_bot_token, value, {}))
         token = SecretStr("xoxb-test")
-        self.assertIs(call(Settings.validate_slack_bot_token, token, {}), token)
+        self.assertIs(call(Settings.validate_subsystem_slack_bot_token, token, {}), token)
         with self.assertRaises(SmarterConfigurationError):
-            call(Settings.validate_slack_bot_token, "xoxb-test", {})
+            call(Settings.validate_subsystem_slack_bot_token, "xoxb-test", {})
 
     def test_versions(self):
         for name in ("version", "python_version", "pydantic_version", "drf_version", "linux_distribution"):
@@ -399,3 +404,47 @@ class TestSettingsMissingDefaults(SmarterTestBase):
             ):
                 with self.assertRaises(SmarterConfigurationError):
                     getattr(Settings, name).func(smarter_settings)
+
+
+class TestStaticAwsKeyPairWarning(SmarterTestBase):
+    """A real AWS key pair is logged as a security risk, once, by name only; an IAM role is preferred."""
+
+    MODULE = "smarter.common.conf.settings.aws"
+    ACCESS_KEY_ID = "AKIA" + "Z" * 16
+    """Shaped like an access key id, which the validator checks, but not one."""
+    SECRET_ACCESS_KEY = "z" * 40
+    """Shaped like a secret access key, but not one."""
+
+    def setUp(self):
+        super().setUp()
+        warned = patch(f"{self.MODULE}._warned_static_aws_key_pair", False)
+        warned.start()
+        self.addCleanup(warned.stop)
+
+    def test_a_key_pair_is_a_warning_once(self):
+        """Both keys validate, and the pair is reported once, naming the setting, never the value."""
+        with self.assertLogs(self.MODULE, level="WARNING") as captured:
+            self.assertIsNotNone(call(Settings.validate_aws_access_key_id, SecretStr(self.ACCESS_KEY_ID), {}))
+            self.assertIsNotNone(call(Settings.validate_aws_secret_access_key, SecretStr(self.SECRET_ACCESS_KEY), {}))
+        self.assertEqual(len(captured.records), 1)
+        message = captured.records[0].getMessage()
+        self.assertIn("SECURITY WARNING", message)
+        self.assertIn("smarter_settings.aws_access_key_id", message)
+        self.assertIn("IRSA", message)
+        self.assertIn("smarter-infrastructure", message)
+        self.assertIn("serviceAccount.awsRoleArn", message)
+        self.assertNotIn(self.ACCESS_KEY_ID, message)
+        self.assertNotIn(self.SECRET_ACCESS_KEY, message)
+
+    def test_no_key_pair_is_no_warning(self):
+        """No keys, a placeholder, or keys that an AWS profile overrides, log nothing."""
+        with patch(f"{self.MODULE}.logger") as logger:
+            for value in (None, SecretStr(""), SecretStr(DEFAULT_MISSING_VALUE)):
+                with self.subTest(value=value):
+                    self.assertIsNone(call(Settings.validate_aws_access_key_id, value, {}))
+                    self.assertIsNone(call(Settings.validate_aws_secret_access_key, value, {}))
+            profile = {"aws_profile": "smarter"}
+            self.assertIsNone(call(Settings.validate_aws_access_key_id, SecretStr(self.ACCESS_KEY_ID), profile))
+        # the profile case logs that the key is ignored; nothing logs the security warning.
+        for logged in logger.warning.call_args_list:
+            self.assertNotIn("SECURITY WARNING", str(logged.args[0]))

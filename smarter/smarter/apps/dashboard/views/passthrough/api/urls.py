@@ -44,7 +44,7 @@ class PassthroughApiReverseNames:
 
 urlpatterns = []
 
-if smarter_settings.enable_dashboard_passthrough_prompt:
+if smarter_settings.app_dashboard_passthrough_prompt_enable:
     urlpatterns = [
         path("providers/", ProviderApiView.as_view(), name=PassthroughApiReverseNames.api_providers),
     ]

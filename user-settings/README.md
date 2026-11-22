@@ -1,9 +1,9 @@
 # User settings: local development only. NOT for prod, alpha, or any other environment on AWS
 
 **Nothing in this directory reaches prod, alpha or any other AWS environment.** It is never built into the
-Docker image, and no deployed pod reads it. For those environments, put your settings in the Helm chart:
-`djangoSettings` in `helm/charts/smarter/values.yaml`, or in the values that your deployment passes to
-`helm upgrade` (see "On Kubernetes" below).
+Docker image, and no deployed pod reads it. For those environments, put your settings in the Helm chart, as
+`DJANGO_<SETTING>` variables in `env` in `helm/charts/smarter/values.yaml`, or in the values that your
+deployment passes to `helm upgrade` (see "On Kubernetes" below).
 
 This directory holds your own Django settings for **local development** (`make run`, Docker Compose), which
 supersede Smarter's.
@@ -46,18 +46,16 @@ integer, `a,b` or a JSON list for a list. Nested settings are easier to write in
 
 ## On Kubernetes (alpha, prod, and every other environment on AWS)
 
-Put the same YAML under `djangoSettings` in the Helm chart's values:
+Write each setting as a `DJANGO_<SETTING>` variable in `env` in the Helm chart's values. Quote each value,
+and write a list or a dictionary as JSON:
 
 ```yaml
-djangoSettings:
-  SESSION_COOKIE_AGE: 3600
-  ADMINS:
-    - ops@example.com
+env:
+  DJANGO_SESSION_COOKIE_AGE: "3600"
+  DJANGO_ADMINS: '["ops@example.com"]'
 ```
 
-The chart writes it to the Secret `<appName>-django-settings`, and mounts that Secret at the same path,
-`/home/smarter_user/user-settings/settings.yaml`, in the api, worker, beat, init and migrate pods. Nothing in
-this directory reaches those pods.
+The chart mounts no settings file, and nothing in this directory reaches its pods.
 
 The full explanation, with the order in which settings supersede each other, is in the docs: Configuration,
 User-Defined Django Settings (`docs/source/smarter-platform/user-defined-django-settings.rst`).

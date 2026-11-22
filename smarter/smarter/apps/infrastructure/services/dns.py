@@ -442,7 +442,7 @@ class DNSService(InfrastructureService):
             zone_id=zone_id,
             name=hostname,
             record_type="A",
-            ttl=smarter_settings.llmclient_tasks_default_ttl,
+            ttl=smarter_settings.app_llmclient_tasks_default_ttl,
             values=a_record.values,
             alias=a_record.alias,
         )

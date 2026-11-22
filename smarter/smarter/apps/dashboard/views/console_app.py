@@ -7,7 +7,7 @@ ADR-035), Django serves its ``index.html`` at the paths of the pages that have m
 console's router shows the page. A path keeps its url name, so that emails, settings and templates that reverse
 it keep working. See ``docs/spa-migration.md``.
 
-While ``SMARTER_STATIC_FILES_ON_CDN`` is on, the page's scripts and styles come from the environment's CDN: the
+While ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on, the page's scripts and styles come from the environment's CDN: the
 page's ``/static/`` urls become ``STATIC_URL``'s, and the scripts load their chunks relative to themselves. The page
 itself, the cookies and the api stay on the platform's host. ``initialize_platform`` uploads the files after a
 deployment's new pods start, so until it has uploaded this build, the page keeps its ``/static/`` urls, which the

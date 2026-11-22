@@ -81,8 +81,8 @@ class LLMSettings(BaseModel):
         """
         return parse_int_setting("prompt_history_max_age", v, settings_defaults.PROMPT_HISTORY_MAX_AGE, minimum=1)
 
-    plugin_max_data_results: int = Field(
-        settings_defaults.PLUGIN_MAX_DATA_RESULTS,
+    app_llmtool_plugin_max_data_results: int = Field(
+        settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS,
         gt=0,
         description="A global maximum number of data row results that can be returned by any Smarter plugin.",
         title="Plugin Max Data Results",
@@ -94,12 +94,12 @@ class LLMSettings(BaseModel):
     or lead to resource exhaustion. Plugins should respect this limit when querying
     data sources and returning results to ensure efficient operation of the platform.
     :type: int
-    :default: Value from ``settings_defaults.PLUGIN_MAX_DATA_RESULTS``
+    :default: Value from ``settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS``
     :raises SmarterConfigurationError: If the value is not a positive integer.
     """
 
-    @before_field_validator("plugin_max_data_results")
-    def parse_plugin_max_data_results(cls, v: Optional[Union[int, str]]) -> int:
+    @before_field_validator("app_llmtool_plugin_max_data_results")
+    def parse_app_llmtool_plugin_max_data_results(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'plugin_max_data_results' field.
 
         Args:
@@ -107,10 +107,12 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated plugin_max_data_results.
         """
-        return parse_int_setting("plugin_max_data_results", v, settings_defaults.PLUGIN_MAX_DATA_RESULTS, minimum=0)
+        return parse_int_setting(
+            "app_llmtool_plugin_max_data_results", v, settings_defaults.APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS, minimum=0
+        )
 
-    extension_registry_url: str = Field(
-        settings_defaults.EXTENSION_REGISTRY_URL,
+    app_llmtool_extension_registry_url: str = Field(
+        settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL,
         description="The url of the Smarter Extension registry's signed index, index.json.",
         examples=["https://smarter-sh.github.io/extensions-registry/index.json"],
         title="Extension Registry URL",
@@ -123,11 +125,11 @@ class LLMSettings(BaseModel):
     for updates to installed extensions. Its signature, at the same url with ``.sig``
     appended, is verified with :attr:`extension_registry_public_key`.
     :type: str
-    :default: Value from ``settings_defaults.EXTENSION_REGISTRY_URL``
+    :default: Value from ``settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL``
     """
 
-    @before_field_validator("extension_registry_url")
-    def validate_extension_registry_url(cls, v: Optional[str]) -> str:
+    @before_field_validator("app_llmtool_extension_registry_url")
+    def validate_app_llmtool_extension_registry_url(cls, v: Optional[str]) -> str:
         """Validates the 'extension_registry_url' field: an https url, or the default if empty.
 
         Args:
@@ -137,14 +139,14 @@ class LLMSettings(BaseModel):
             str: The validated url.
         """
         if v is None or str(v).strip() == "":
-            return settings_defaults.EXTENSION_REGISTRY_URL
+            return settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_URL
         v = str(v).strip()
         if not v.startswith("https://"):
             raise SmarterConfigurationError(f"extension_registry_url {v} must be an https url.")
         return v
 
-    extension_registry_public_key: str = Field(
-        settings_defaults.EXTENSION_REGISTRY_PUBLIC_KEY,
+    app_llmtool_extension_registry_public_key: str = Field(
+        settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY,
         description="The base64 Ed25519 public key that verifies the extension registry's index. Empty disables the registry.",
         title="Extension Registry Public Key",
     )
@@ -154,11 +156,11 @@ class LLMSettings(BaseModel):
     It is public, not a secret. While it is empty, the registry is disabled: extensions can
     only be installed from uploaded archives, and updates are not checked.
     :type: str
-    :default: Value from ``settings_defaults.EXTENSION_REGISTRY_PUBLIC_KEY``
+    :default: Value from ``settings_defaults.APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY``
     """
 
-    mcpserver_rate_limit: int = Field(
-        settings_defaults.MCPSERVER_RATE_LIMIT,
+    app_mcpserver_rate_limit: int = Field(
+        settings_defaults.APP_MCPSERVER_RATE_LIMIT,
         ge=0,
         description="The maximum number of requests per minute that one client IP address may send to the MCPServer's endpoints. 0 disables the limit.",
         title="MCP Server Rate Limit",
@@ -173,12 +175,12 @@ class LLMSettings(BaseModel):
     call is about three requests, so set the limit well above the platform's own traffic.
     0 disables the limit.
     :type: int
-    :default: Value from ``settings_defaults.MCPSERVER_RATE_LIMIT``
+    :default: Value from ``settings_defaults.APP_MCPSERVER_RATE_LIMIT``
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @before_field_validator("mcpserver_rate_limit")
-    def parse_mcpserver_rate_limit(cls, v: Optional[Union[int, str]]) -> int:
+    @before_field_validator("app_mcpserver_rate_limit")
+    def parse_app_mcpserver_rate_limit(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'mcpserver_rate_limit' field.
 
         Args:
@@ -186,7 +188,7 @@ class LLMSettings(BaseModel):
         Returns:
             int: The validated mcpserver_rate_limit.
         """
-        return parse_int_setting("mcpserver_rate_limit", v, settings_defaults.MCPSERVER_RATE_LIMIT, minimum=0)
+        return parse_int_setting("app_mcpserver_rate_limit", v, settings_defaults.APP_MCPSERVER_RATE_LIMIT, minimum=0)
 
     llm_default_provider: str = Field(
         settings_defaults.LLM_DEFAULT_PROVIDER,

@@ -124,13 +124,13 @@ class Command(SmarterCommand):
             "%s has no A record. Falling back to the A record of the root domain %s, "
             "which must point at the platform's load balancer.",
             smarter_settings.root_platform_domain,
-            smarter_settings.root_domain,
+            smarter_settings.platform_root_domain,
         )
-        a_record = dns.get_environment_a_record(domain=smarter_settings.root_domain)
+        a_record = dns.get_environment_a_record(domain=smarter_settings.platform_root_domain)
         if not a_record:
             raise SmarterConfigurationError(
                 f"{log_prefix} Couldn't find an A record in the platform domain: "
-                f"{smarter_settings.root_platform_domain}, or in the root domain: {smarter_settings.root_domain}. "
+                f"{smarter_settings.root_platform_domain}, or in the root domain: {smarter_settings.platform_root_domain}. "
                 "Expected to find an 'A' record alias to the platform's load balancer. Cannot proceed."
             )
         return a_record
@@ -199,7 +199,7 @@ class Command(SmarterCommand):
             elif shared:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Verified A record for {child_domain}, which the platforms of {smarter_settings.root_domain} share."
+                        f"Verified A record for {child_domain}, which the platforms of {smarter_settings.platform_root_domain} share."
                     )
                 )
             else:
@@ -298,34 +298,34 @@ class Command(SmarterCommand):
         """
         log_prefix = f"{self.log_prefix}.verify_root_domain_dns_config()"
         # Look for an A record in the root domain hosted zone
-        self.stdout.write(self.style.NOTICE(f"Root domain DNS verification: {smarter_settings.root_domain}"))
+        self.stdout.write(self.style.NOTICE(f"Root domain DNS verification: {smarter_settings.platform_root_domain}"))
         self.stdout.write(
-            self.style.NOTICE(f"Verify that a zone exists for the root domain: {smarter_settings.root_domain}")
+            self.style.NOTICE(f"Verify that a zone exists for the root domain: {smarter_settings.platform_root_domain}")
         )
         dns = infrastructure.dns
         if not dns.ready:
             logger.warning(
                 "the DNS service is not ready. Skipping root domain DNS verification for %s.",
-                smarter_settings.root_domain,
+                smarter_settings.platform_root_domain,
             )
             return
-        root_zone = dns.get_zone(smarter_settings.root_domain)
+        root_zone = dns.get_zone(smarter_settings.platform_root_domain)
         if root_zone is None:
             raise SmarterConfigurationError(
-                f"{self.log_prefix} the DNS zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."
+                f"{self.log_prefix} the DNS zone for root domain: {smarter_settings.platform_root_domain} does not exist. Cannot proceed."
             )
         self.stdout.write(
-            self.style.SUCCESS(f"Verified the DNS zone for the root domain: {smarter_settings.root_domain}.")
+            self.style.SUCCESS(f"Verified the DNS zone for the root domain: {smarter_settings.platform_root_domain}.")
         )
 
         self.stdout.write(
-            self.style.NOTICE(f"Verify that an A record exists in the zone for {smarter_settings.root_domain}")
+            self.style.NOTICE(f"Verify that an A record exists in the zone for {smarter_settings.platform_root_domain}")
         )
-        a_record = dns.get_environment_a_record(domain=smarter_settings.root_domain)
+        a_record = dns.get_environment_a_record(domain=smarter_settings.platform_root_domain)
         if not a_record:
             raise SmarterConfigurationError(
                 f"{log_prefix} Couldn't find an A record in the root domain: "
-                f"{smarter_settings.root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
+                f"{smarter_settings.platform_root_domain}. Expected to find an 'A' record alias to an AWS Route53 "
                 "classic balancer. Cannot proceed."
             )
         self.stdout.write(self.style.SUCCESS(f"Found a propagatable A record in the zone for domain: {a_record.name}"))
@@ -333,7 +333,7 @@ class Command(SmarterCommand):
         # check NS records in the root domain hosted zone
         self.stdout.write(
             self.style.NOTICE(
-                f"Verify that we can retrieve a list of NS records from the zone for {smarter_settings.root_domain}"
+                f"Verify that we can retrieve a list of NS records from the zone for {smarter_settings.platform_root_domain}"
             )
         )
         # we're expecting NS records that delegate platform.example.com and local.example.com.
@@ -341,11 +341,13 @@ class Command(SmarterCommand):
         additional_ns_records = [record.name for record in ns_records if record.name != root_zone.name]
         self.stdout.write(
             self.style.SUCCESS(
-                f"Found {len(additional_ns_records)} sets of delegated NS records in the zone for domain: {smarter_settings.root_domain}: {additional_ns_records}"
+                f"Found {len(additional_ns_records)} sets of delegated NS records in the zone for domain: {smarter_settings.platform_root_domain}: {additional_ns_records}"
             )
         )
 
-        self.stdout.write(self.style.SUCCESS(f"Verified root domain {smarter_settings.root_domain} DNS configuration."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Verified root domain {smarter_settings.platform_root_domain} DNS configuration.")
+        )
 
     def verify_base_dns_config(self) -> list[str]:
         """
@@ -377,7 +379,7 @@ class Command(SmarterCommand):
         self.unchanged_a_record_domains = []
         self.stdout.write(
             self.style.NOTICE(
-                f"Verifying DNS configuration for {smarter_settings.root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
+                f"Verifying DNS configuration for {smarter_settings.platform_root_domain}, {smarter_settings.root_platform_domain} and {smarter_settings.root_api_domain}"
             )
         )
 
@@ -385,7 +387,7 @@ class Command(SmarterCommand):
         #    independent of this code base.
         # ---------------------------------------------------------------------
         self.verify_root_domain_dns_config()
-        verified_domains.append(smarter_settings.root_domain)
+        verified_domains.append(smarter_settings.platform_root_domain)
         a_record = self.get_load_balancer_a_record()
 
         # ---------------------------------------------------------------------
@@ -394,7 +396,7 @@ class Command(SmarterCommand):
         if smarter_settings.environment != SmarterEnvironments.LOCAL:
             self.verify_child_domain(
                 child_domain=smarter_settings.root_platform_domain,
-                parent_domain=smarter_settings.root_domain,
+                parent_domain=smarter_settings.platform_root_domain,
                 a_record=a_record,
                 verified_domains=verified_domains,
             )
@@ -410,7 +412,7 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         self.verify_child_domain(
             child_domain=smarter_settings.root_proxy_domain,
-            parent_domain=smarter_settings.root_domain,
+            parent_domain=smarter_settings.platform_root_domain,
             a_record=a_record,
             verified_domains=verified_domains,
             shared=True,

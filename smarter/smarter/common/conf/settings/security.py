@@ -38,8 +38,8 @@ def compile_amnesty_pattern(item: object) -> Pattern:
 class SecuritySettings(BaseModel):
     """The superuser, encryption keys, trusted hosts and request throttling."""
 
-    admin_username: str = Field(
-        settings_defaults.ADMIN_USERNAME,
+    platform_admin_username: str = Field(
+        settings_defaults.PLATFORM_ADMIN_USERNAME,
         description="The username of the platform's superuser, which manage.py initialize_platform creates.",
         examples=["admin"],
         title="Administrator Username",
@@ -48,15 +48,15 @@ class SecuritySettings(BaseModel):
     The username of the platform's superuser.
 
     ``manage.py initialize_platform`` creates this superuser, unless ``--username`` names
-    another. Set it with ``SMARTER_ADMIN_USERNAME``.
+    another. Set it with ``SMARTER_PLATFORM_ADMIN_USERNAME``.
 
     :type: str
-    :default: Value from ``settings_defaults.ADMIN_USERNAME``, ``admin`` if it is not set.
+    :default: Value from ``settings_defaults.PLATFORM_ADMIN_USERNAME``, ``admin`` if it is not set.
     :raises SmarterConfigurationError: If the value is not a non-empty string.
     """
 
-    @before_field_validator("admin_username")
-    def validate_admin_username(cls, v: Optional[str]) -> str:
+    @before_field_validator("platform_admin_username")
+    def validate_platform_admin_username(cls, v: Optional[str]) -> str:
         """Validates the `admin_username` field.
 
         Args:
@@ -65,13 +65,13 @@ class SecuritySettings(BaseModel):
             str: The validated administrator username.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.ADMIN_USERNAME
+            v = settings_defaults.PLATFORM_ADMIN_USERNAME
         if not isinstance(v, str) or not v:
             raise SmarterConfigurationError(f"admin_username of type {type(v)} is not a non-empty string.")
         return v
 
-    admin_password: Optional[SecretStr] = Field(
-        settings_defaults.ADMIN_PASSWORD,
+    platform_admin_password: Optional[SecretStr] = Field(
+        settings_defaults.PLATFORM_ADMIN_PASSWORD,
         description="The password of the platform's superuser, which manage.py initialize_platform creates.",
         examples=["your-admin-password"],
         title="Administrator Password",
@@ -80,16 +80,16 @@ class SecuritySettings(BaseModel):
     The password of the platform's superuser.
 
     ``manage.py initialize_platform`` gives the superuser and the example users this password,
-    unless ``--password`` gives another. Set it with ``SMARTER_ADMIN_PASSWORD``. Reading it from
+    unless ``--password`` gives another. Set it with ``SMARTER_PLATFORM_ADMIN_PASSWORD``. Reading it from
     the environment keeps it off the command line, and out of the init Job's log.
 
     :type: Optional[SecretStr]
-    :default: Value from ``settings_defaults.ADMIN_PASSWORD``, None if it is not set.
+    :default: Value from ``settings_defaults.PLATFORM_ADMIN_PASSWORD``, None if it is not set.
     :raises SmarterConfigurationError: If the value is not a SecretStr.
     """
 
-    @before_field_validator("admin_password")
-    def validate_admin_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+    @before_field_validator("platform_admin_password")
+    def validate_platform_admin_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `admin_password` field.
 
         Args:
@@ -98,15 +98,15 @@ class SecuritySettings(BaseModel):
             Optional[SecretStr]: The validated administrator password, or None if it is missing or a placeholder.
         """
         if v in THE_EMPTY_SET:
-            v = settings_defaults.ADMIN_PASSWORD
+            v = settings_defaults.PLATFORM_ADMIN_PASSWORD
         if is_missing_value(v):
             return None
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
         return v
 
-    sensitive_files_amnesty_patterns: List[Pattern] = Field(
-        settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS,
+    platform_sensitive_files_amnesty_patterns: List[Pattern] = Field(
+        settings_defaults.PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS,
         description="List of regex patterns for sensitive file amnesty.",
         title="Sensitive Files Amnesty Patterns",
         examples=[
@@ -130,12 +130,12 @@ class SecuritySettings(BaseModel):
     such as exclusion from certain operations or additional security measures.
 
     :type: List[Pattern]
-    :default: Value from ``settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS``
+    :default: Value from ``settings_defaults.PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS``
     :raises SmarterConfigurationError: If the value is not a list of valid regex patterns.
     """
 
-    @before_field_validator("sensitive_files_amnesty_patterns")
-    def parse_sensitive_files_amnesty_patterns(cls, v: Optional[Union[List[str], str]]) -> List[Pattern]:
+    @before_field_validator("platform_sensitive_files_amnesty_patterns")
+    def parse_platform_sensitive_files_amnesty_patterns(cls, v: Optional[Union[List[str], str]]) -> List[Pattern]:
         """Validates the 'sensitive_files_amnesty_patterns' field.
 
         Args:
@@ -143,7 +143,7 @@ class SecuritySettings(BaseModel):
         Returns:
             List[Pattern]: The validated sensitive_files_amnesty_patterns.
         Examples:
-            >>> parse_sensitive_files_amnesty_patterns([r"^/api(/.*)?$", r"^/admin(/.*)?$"])
+            >>> parse_platform_sensitive_files_amnesty_patterns([r"^/api(/.*)?$", r"^/admin(/.*)?$"])
             [re.compile('^/api(/.*)?$'), re.compile('^/admin(/.*)?$')]
         """
         if isinstance(v, list):
@@ -153,15 +153,15 @@ class SecuritySettings(BaseModel):
                 patterns.append(pattern)
             return patterns
         if v in THE_EMPTY_SET:
-            return settings_defaults.SENSITIVE_FILES_AMNESTY_PATTERNS
+            return settings_defaults.PLATFORM_SENSITIVE_FILES_AMNESTY_PATTERNS
         if isinstance(v, str):
             pattern = compile_amnesty_pattern(v)
             return [pattern]
 
         raise SmarterConfigurationError(f"could not validate sensitive_files_amnesty_patterns: {v}")
 
-    fernet_encryption_key: SecretStr = Field(
-        settings_defaults.FERNET_ENCRYPTION_KEY,
+    platform_fernet_encryption_key: SecretStr = Field(
+        settings_defaults.PLATFORM_FERNET_ENCRYPTION_KEY,
         description="The Fernet encryption key used for encrypting Smarter Secrets data.",
         examples=["gAAAAABh..."],
         title="Fernet Encryption Key",
@@ -174,12 +174,12 @@ class SecuritySettings(BaseModel):
     32-byte key.
 
     :type: str
-    :default: Value from ``settings_defaults.FERNET_ENCRYPTION_KEY``
+    :default: Value from ``settings_defaults.PLATFORM_FERNET_ENCRYPTION_KEY``
     :raises SmarterConfigurationError: If the value is not a valid Fernet key.
     """
 
-    @before_field_validator("fernet_encryption_key")
-    def validate_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+    @before_field_validator("platform_fernet_encryption_key")
+    def validate_platform_fernet_encryption_key(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
         """Validates the `fernet_encryption_key` field.
 
         Args:
@@ -193,7 +193,7 @@ class SecuritySettings(BaseModel):
         """
 
         if v is None:
-            return settings_defaults.FERNET_ENCRYPTION_KEY
+            return settings_defaults.PLATFORM_FERNET_ENCRYPTION_KEY
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"fernet_encryption_key of type {type(v)} is not a SecretStr: {v}")
@@ -210,10 +210,10 @@ class SecuritySettings(BaseModel):
 
         return v
 
-    internal_ip_prefixes: List[str] = Field(
-        settings_defaults.INTERNAL_IP_PREFIXES,
+    platform_internal_ip_prefixes: List[str] = Field(
+        settings_defaults.PLATFORM_INTERNAL_IP_PREFIXES,
         description="A list of internal IP prefixes used for security and middleware features.",
-        examples=settings_defaults.INTERNAL_IP_PREFIXES,
+        examples=settings_defaults.PLATFORM_INTERNAL_IP_PREFIXES,
         title="Internal IP Prefixes",
     )
     """
@@ -230,12 +230,12 @@ class SecuritySettings(BaseModel):
     enabling specific security measures and middleware behaviors.
 
     :type: List[str]
-    :default: Value from ``settings_defaults.INTERNAL_IP_PREFIXES``
-    :raises SmarterConfigurationError: If the value is not a list of strings matching settings_defaults.INTERNAL_IP_PREFIXES
+    :default: Value from ``settings_defaults.PLATFORM_INTERNAL_IP_PREFIXES``
+    :raises SmarterConfigurationError: If the value is not a list of strings matching settings_defaults.PLATFORM_INTERNAL_IP_PREFIXES
     """
 
-    @before_field_validator("internal_ip_prefixes")
-    def validate_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
+    @before_field_validator("platform_internal_ip_prefixes")
+    def validate_platform_internal_ip_prefixes(cls, v: Optional[List[str]]) -> List[str]:
         """Validates the `internal_ip_prefixes` field.
 
         Args:
@@ -245,7 +245,7 @@ class SecuritySettings(BaseModel):
             List[str]: The validated internal IP prefixes.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.INTERNAL_IP_PREFIXES
+            return settings_defaults.PLATFORM_INTERNAL_IP_PREFIXES
 
         if not isinstance(v, list):
             raise SmarterConfigurationError(f"internal_ip_prefixes of type {type(v)} is not a list: {v}")
@@ -326,8 +326,8 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"secret_key {type(v)} is not a SecretStr.")
         return v
 
-    throttle_rate_anon: Optional[str] = Field(
-        settings_defaults.THROTTLE_RATE_ANON,
+    app_api_throttle_rate_anon: Optional[str] = Field(
+        settings_defaults.APP_API_THROTTLE_RATE_ANON,
         description="The request rate limit of each anonymous client, by IP address. None disables it.",
         examples=["120/minute", "10/second", "none"],
         title="Anonymous Throttle Rate",
@@ -340,12 +340,12 @@ class SecuritySettings(BaseModel):
     HTTP 429 Too Many Requests with a ``Retry-After`` header. See :mod:`smarter.lib.drf.throttling`.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.THROTTLE_RATE_ANON``
+    :default: Value from ``settings_defaults.APP_API_THROTTLE_RATE_ANON``
     :raises SmarterConfigurationError: If the value is not a rate, e.g. ``120/minute``, or ``none``.
     """
 
-    @before_field_validator("throttle_rate_anon")
-    def validate_throttle_rate_anon(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("app_api_throttle_rate_anon")
+    def validate_app_api_throttle_rate_anon(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `throttle_rate_anon` field.
 
         Args:
@@ -354,10 +354,10 @@ class SecuritySettings(BaseModel):
         Returns:
             Optional[str]: The validated rate, or None if the throttle is disabled.
         """
-        return validate_throttle_rate("throttle_rate_anon", v, settings_defaults.THROTTLE_RATE_ANON)
+        return validate_throttle_rate("app_api_throttle_rate_anon", v, settings_defaults.APP_API_THROTTLE_RATE_ANON)
 
-    throttle_rate_user: Optional[str] = Field(
-        settings_defaults.THROTTLE_RATE_USER,
+    app_api_throttle_rate_user: Optional[str] = Field(
+        settings_defaults.APP_API_THROTTLE_RATE_USER,
         description="The request rate limit of each authenticated user. None disables it.",
         examples=["600/minute", "20/second", "none"],
         title="User Throttle Rate",
@@ -370,12 +370,12 @@ class SecuritySettings(BaseModel):
     See :mod:`smarter.lib.drf.throttling`.
 
     :type: Optional[str]
-    :default: Value from ``settings_defaults.THROTTLE_RATE_USER``
+    :default: Value from ``settings_defaults.APP_API_THROTTLE_RATE_USER``
     :raises SmarterConfigurationError: If the value is not a rate, e.g. ``600/minute``, or ``none``.
     """
 
-    @before_field_validator("throttle_rate_user")
-    def validate_throttle_rate_user(cls, v: Optional[str]) -> Optional[str]:
+    @before_field_validator("app_api_throttle_rate_user")
+    def validate_app_api_throttle_rate_user(cls, v: Optional[str]) -> Optional[str]:
         """Validates the `throttle_rate_user` field.
 
         Args:
@@ -384,7 +384,7 @@ class SecuritySettings(BaseModel):
         Returns:
             Optional[str]: The validated rate, or None if the throttle is disabled.
         """
-        return validate_throttle_rate("throttle_rate_user", v, settings_defaults.THROTTLE_RATE_USER)
+        return validate_throttle_rate("app_api_throttle_rate_user", v, settings_defaults.APP_API_THROTTLE_RATE_USER)
 
     @property
     def secret_key_is_set(self) -> bool:

@@ -11,7 +11,7 @@ Attributes:
     app_name (str): The Django application namespace, taken from
         :data:`~smarter.apps.dashboard.views.passthrough.const.namespace`.
     urlpatterns (list): The list of URL patterns registered for this app.
-        Empty when ``smarter_settings.enable_dashboard_passthrough_prompt`` is
+        Empty when ``smarter_settings.app_dashboard_passthrough_prompt_enable`` is
         ``False``.
 
 Classes:
@@ -52,7 +52,7 @@ class PassthroughReverseNames:
 
 urlpatterns = []
 
-if smarter_settings.enable_dashboard_passthrough_prompt:
+if smarter_settings.app_dashboard_passthrough_prompt_enable:
     urlpatterns = [
         path("", PromptPassthroughView.as_view(), name=PassthroughReverseNames.view),
     ]

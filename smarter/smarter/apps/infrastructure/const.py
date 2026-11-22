@@ -16,7 +16,7 @@ class CloudProviders(str, SmarterEnumAbstract):
     """
     The cloud providers that Smarter's infrastructure services can run on.
 
-    ``smarter_settings.cloud_provider`` selects one. Only AWS is implemented: the others are
+    ``smarter_settings.platform_cloud_provider`` selects one. Only AWS is implemented: the others are
     reserved, so that a new provider is a new package in
     :mod:`smarter.apps.infrastructure.providers`, registered with
     :func:`~smarter.apps.infrastructure.providers.register_provider`, rather than a change

@@ -25,7 +25,6 @@ pynacl                                  # Ed25519 signature checks of the Smarte
 redis                                   # Redis client, used directly by the log stream and waffle switches
 paramiko                                # SSH2 protocol library
 psutil                                  # a cross-platform library for retrieving information on running processes and system utilization
-python-hcl2                             # Terraform hcl parser for reading Terraform tfvars files
 python-dotenv                           # for reading environment variables from .env files
 requests                                # HTTP requests library
 httpx                                   # HTTP client, used directly by the proxy app and the api utilities

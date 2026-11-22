@@ -175,7 +175,7 @@ class EmailService(InfrastructureService):
         headers: Optional[dict[str, str]] = None,
     ) -> MIMEMultipart:
         """
-        Return a message, from ``smarter_settings.smtp_from_email`` unless ``from_email`` is given.
+        Return a message, from ``smarter_settings.subsystem_smtp_from_email`` unless ``from_email`` is given.
 
         It has no ``Bcc`` header: blind copies are added to the envelope by :meth:`_deliver`.
         A message with attachments is ``multipart/mixed``, with the body as its first part.
@@ -183,7 +183,7 @@ class EmailService(InfrastructureService):
         """
         message = MIMEMultipart("mixed" if attachments else "alternative")
         message["Subject"] = subject
-        message["From"] = from_email or smarter_settings.smtp_from_email
+        message["From"] = from_email or smarter_settings.subsystem_smtp_from_email
         message["To"] = ", ".join(to)
         for name, value in (headers or {}).items():
             message[name] = value
@@ -209,12 +209,12 @@ class EmailService(InfrastructureService):
     @staticmethod
     def admin_bcc(recipients: list[str]) -> list[str]:
         """
-        The blind copy to the platform's admin, ``smarter_settings.email_admin``.
+        The blind copy to the platform's admin, ``smarter_settings.platform_email_admin``.
 
         :param recipients: The email's recipients, who need no copy.
         :returns: The admin's address, or nothing if there is no valid admin address, or the admin is a recipient.
         """
-        admin = smarter_settings.email_admin
+        admin = smarter_settings.platform_email_admin
         if not admin or not SmarterValidator.is_valid_email(str(admin)):
             return []
         if str(admin).lower() in {recipient.lower() for recipient in recipients}:
@@ -246,9 +246,9 @@ class EmailService(InfrastructureService):
         :param body: The body, HTML if ``html`` is True.
         :param to: The recipient, or recipients. Invalid addresses are dropped.
         :param html: True if the body is HTML.
-        :param from_email: The sender, by default ``smarter_settings.smtp_from_email``.
+        :param from_email: The sender, by default ``smarter_settings.subsystem_smtp_from_email``.
         :param quiet: True to only log what would have been sent.
-        :param bcc_admin: Send a blind copy to the platform's admin, ``smarter_settings.email_admin``.
+        :param bcc_admin: Send a blind copy to the platform's admin, ``smarter_settings.platform_email_admin``.
             Pass False for an email that carries a secret, e.g. a password reset link, which only
             its recipient may see.
         :param attachments: Files to attach. The message's size, attachments included, is limited
@@ -331,10 +331,10 @@ class SMTPEmailService(EmailService):
                 f"[EMAIL NOT SENT] SMTP is not configured, so '{subject}' was not sent to: {logged_recipients}",
                 "To send email, add your SMTP server's credentials to .env, and restart the platform:",
                 "",
-                "    SMARTER_SMTP_USERNAME=<your SMTP username>",
-                "    SMARTER_SMTP_PASSWORD=<your SMTP password>",
-                "    SMARTER_SMTP_HOST=<your SMTP server>  # not needed for AWS SES when AWS_REGION is set",
-                "    SMARTER_SMTP_PORT=587                 # optional",
+                "    SMARTER_SUBSYSTEM_SMTP_USERNAME=<your SMTP username>",
+                "    SMARTER_SUBSYSTEM_SMTP_PASSWORD=<your SMTP password>",
+                "    SMARTER_SUBSYSTEM_SMTP_HOST=<your SMTP server>  # not needed for AWS SES when AWS_REGION is set",
+                "    SMARTER_SUBSYSTEM_SMTP_PORT=587                 # optional",
                 "",
                 "With AWS Simple Email Service, create SMTP credentials in the SES console:",
                 "https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html",
@@ -342,17 +342,18 @@ class SMTPEmailService(EmailService):
         )
 
     def _deliver(self, message: MIMEMultipart, recipients: list[str], bcc: list[str]) -> None:
-        if not smarter_settings.smtp_from_email:
+        if not smarter_settings.subsystem_smtp_from_email:
             raise EmailServiceError("smtp_from_email is not configured")
-        if smarter_settings.smtp_host is None or smarter_settings.smtp_port is None:
+        if smarter_settings.subsystem_smtp_host is None or smarter_settings.subsystem_smtp_port is None:
             raise EmailServiceError("SMTP host or port is not configured")
-        if smarter_settings.smtp_username is None or smarter_settings.smtp_password is None:
+        if smarter_settings.subsystem_smtp_username is None or smarter_settings.subsystem_smtp_password is None:
             raise EmailServiceError("SMTP username or password is not configured")
-        with self.smtp_class(smarter_settings.smtp_host, smarter_settings.smtp_port) as server:
-            if smarter_settings.smtp_use_tls:
+        with self.smtp_class(smarter_settings.subsystem_smtp_host, smarter_settings.subsystem_smtp_port) as server:
+            if smarter_settings.subsystem_smtp_use_tls:
                 server.starttls()
             server.login(
-                smarter_settings.smtp_username.get_secret_value(), smarter_settings.smtp_password.get_secret_value()
+                smarter_settings.subsystem_smtp_username.get_secret_value(),
+                smarter_settings.subsystem_smtp_password.get_secret_value(),
             )
             # the envelope's recipients include the blind copies, which the message's headers do not.
             server.sendmail(message["From"], recipients + bcc, message.as_string())

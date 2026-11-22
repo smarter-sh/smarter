@@ -77,7 +77,7 @@ def retarget_llmclient_ingresses(dry_run: bool = False) -> list[str]:
     :param dry_run: Find the ingresses, and log them, but change nothing.
     :returns: The hosts whose ingresses were rewritten, or that a dry run would rewrite.
     """
-    if not smarter_settings.llmclient_tasks_create_ingress_manifest:
+    if not smarter_settings.app_llmclient_tasks_create_ingress_manifest:
         logger.info("skipped: this platform doesn't create LLMClient ingresses.")
         return []
     if not infrastructure.kubernetes.ready:

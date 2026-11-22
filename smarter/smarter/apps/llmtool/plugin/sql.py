@@ -55,8 +55,7 @@ from smarter.apps.llmtool.manifest.models.sql_plugin.spec import (
 from smarter.apps.llmtool.models import PluginDataSql, PluginMeta
 from smarter.apps.llmtool.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
-from smarter.common.const import SMARTER_ADMIN_USERNAME
+from smarter.common.conf import settings_defaults, smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import to_snake_case
 from smarter.lib import json, logging
@@ -596,7 +595,7 @@ class SqlPlugin(PluginBase):
             searchTerms=[
                 "smarter",
                 "users",
-                SMARTER_ADMIN_USERNAME,
+                smarter_settings.platform_admin_username,
             ],
         )
         prompt = SAMPluginCommonSpecPrompt(
@@ -648,7 +647,7 @@ class SqlPlugin(PluginBase):
         )
         status = SAMPluginCommonStatus(
             accountNumber="0123456789",
-            username=SMARTER_ADMIN_USERNAME,
+            username=smarter_settings.platform_admin_username,
             recordLocator="example_record_locator",
             created=datetime(2024, 1, 1, 0, 0, 0),
             modified=datetime(2024, 1, 1, 0, 0, 0),

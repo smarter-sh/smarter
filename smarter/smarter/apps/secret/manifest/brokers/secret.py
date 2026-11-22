@@ -22,7 +22,8 @@ from smarter.apps.secret.manifest.models.secret.spec import (
 from smarter.apps.secret.manifest.models.secret.status import SAMSecretStatus
 from smarter.apps.secret.manifest.transformers.secret import SecretTransformer
 from smarter.apps.secret.models import Secret
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.utils.decorators import camel_case
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
@@ -581,7 +582,7 @@ class SAMSecretBroker(AbstractBroker[Secret, Secret]):
         spec = SAMSecretSpec(config=config)
         status = SAMSecretStatus(
             accountNumber=SMARTER_ACCOUNT_NUMBER,
-            username=SMARTER_ADMIN_USERNAME,
+            username=smarter_settings.platform_admin_username,
             recordLocator="example-record-locator",
             created=current_date,
             modified=current_date,

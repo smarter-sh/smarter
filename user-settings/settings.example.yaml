@@ -1,5 +1,5 @@
 # LOCAL DEVELOPMENT ONLY. NOT for prod, alpha, or any other environment on AWS:
-# for those, use djangoSettings in helm/charts/smarter/values.yaml instead.
+# for those, use DJANGO_<SETTING> variables in env in helm/charts/smarter/values.yaml.
 # -----------------------------------------------------------------------------
 # Your own Django settings, for your local Docker Compose containers.
 #
@@ -31,9 +31,9 @@
 #   worker and beat containers. Restart them to pick up a change:
 #   docker compose restart smarter-api smarter-worker smarter-worker-infrastructure smarter-beat
 #
-# On Kubernetes, the same YAML goes under djangoSettings in the Helm chart's
-# values, indented by two spaces. See https://docs.smarter.sh, Configuration,
-# User-Defined Django Settings.
+# On Kubernetes, write each setting as a DJANGO_* variable in env in the Helm
+# chart's values. See https://docs.smarter.sh, Configuration, User-Defined
+# Django Settings.
 #
 # Below is one example of each kind of value. Each one also shows the same
 # setting as a DJANGO_* environment variable, where one can express it.

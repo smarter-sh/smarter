@@ -314,8 +314,8 @@ class TestMain(unittest.TestCase):
         }
         environ = {
             "SMARTER_SLACK_BOT_AGENT_URL": AGENT_URL,
-            "SMARTER_SLACK_BOT_TOKEN": "xoxb-test",
-            "SMARTER_SLACK_APP_TOKEN": "xapp-test",
+            "SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN": "xoxb-test",
+            "SMARTER_SUBSYSTEM_SLACK_APP_TOKEN": "xapp-test",
         }
         with (
             mock.patch.dict(sys.modules, modules),

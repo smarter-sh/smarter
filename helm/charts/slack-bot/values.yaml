@@ -7,9 +7,9 @@
 #
 # The Slack tokens are not values of this chart. The bot reads them from the
 # smarter chart's environment Secret, <global.appName>-env, under the keys
-# SMARTER_SLACK_BOT_TOKEN (xoxb-...) and SMARTER_SLACK_APP_TOKEN (xapp-...),
-# which the smarter chart's env.SMARTER_SLACK_BOT_TOKEN and
-# env.SMARTER_SLACK_APP_TOKEN fill.
+# SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN (xoxb-...) and SMARTER_SUBSYSTEM_SLACK_APP_TOKEN (xapp-...),
+# which the smarter chart's env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN and
+# env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN fill.
 # ==============================================================================
 
 # Required. The deployed LLMClient that answers, e.g.

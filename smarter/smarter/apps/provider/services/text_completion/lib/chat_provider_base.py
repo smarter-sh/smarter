@@ -423,7 +423,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         :raises SmarterConfigurationError: Always.
         """
         env_var = BUILTIN_PROVIDER_API_KEY_ENV_VARS.get(
-            str(self.provider_name), f"{str(self.provider_name).upper()}_API_KEY"
+            str(self.provider_name), f"APP_PROVIDER_{str(self.provider_name).upper()}_API_KEY"
         )
         message = (
             f"The {self.provider_name} Provider has no API key. Add SMARTER_{env_var} to .env, restart the "

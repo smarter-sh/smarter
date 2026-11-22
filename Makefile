@@ -15,7 +15,7 @@ PIP := $(PYTHON) -m pip
 # (smarter-api, the workers, each manage.py call) must share it to decrypt the others' Secrets.
 ifeq ("$(wildcard .env)","")
     $(shell cp .env.example .env)
-    $(shell echo "SMARTER_FERNET_ENCRYPTION_KEY=$$(openssl rand -base64 32 | tr '+/' '-_')" >> .env)
+    $(shell echo "SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY=$$(openssl rand -base64 32 | tr '+/' '-_')" >> .env)
 endif
 include .env
 
@@ -68,7 +68,7 @@ init: ## Initialize local and Docker environments
 	@echo ""
 	@echo "The web console is served at http://localhost:9357/ with the following credentials:"
 	@echo "    Username: admin"
-	@echo "    Email: admin@$(or $(SMARTER_ROOT_DOMAIN),example.com)"
+	@echo "    Email: admin@$(or $(SMARTER_PLATFORM_ROOT_DOMAIN),example.com)"
 	@echo "    Password: smarter"
 	@echo ""
 	@echo "The database is accessible at localhost:3306 with the following credentials:"

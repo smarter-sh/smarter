@@ -142,7 +142,7 @@ The actions are siblings of ``listview/``, so a React app derives them from its 
      - ``VectorstoreApiWebReverseNames``
 
 A resource family's endpoints are mounted only while the platform enables it, e.g. with
-``SMARTER_ENABLE_GUARDRAIL``. See :ref:`Turning resource types off <sam-app-feature-flags>`.
+``SMARTER_APP_GUARDRAIL_ENABLE``. See :ref:`Turning resource types off <sam-app-feature-flags>`.
 
 Each list's console page stays at its own path (``/guardrail/``, ``/secret/``, ...). Its view class
 is named after its list api's, e.g. ``GuardrailListView`` for ``GuardrailListApiView``, which is how
@@ -254,7 +254,7 @@ The other endpoints
      - The Prompt Passthrough's providers and their models, when
        ``ENABLE_DASHBOARD_PASSTHROUGH_PROMPT`` is true.
    * - ``/api/web/dashboard/logs/stream/``
-     - The user's server log stream, when ``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS`` is true.
+     - The user's server log stream, when ``SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE`` is true.
    * - ``/api/web/dashboard/terminal/ticket/``
      - A one-time ticket that opens the Terminal's WebSocket.
    * - ``/api/web/prompt/llm-clients/<hashed_id>/manifest/``, ``architecture/``, ``deployment/``,

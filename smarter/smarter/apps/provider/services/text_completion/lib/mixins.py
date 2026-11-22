@@ -7,6 +7,7 @@ from django.db.models.query import QuerySet
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tasks import create_charge
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.apps.prompt.models import (
     Prompt,
     PromptHistory,
@@ -21,7 +22,6 @@ from smarter.apps.provider.models import (
     Provider,
     get_cached_active_provider_for_user,
 )
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django import waffle
