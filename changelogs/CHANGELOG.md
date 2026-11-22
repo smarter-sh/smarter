@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.14-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.2...v0.46.14-alpha.3) (2026-11-22)
+
+### Bug Fixes
+
+* **logging:** log only through getSmarterLogger; unquote env values ([82bd2bd](https://github.com/smarter-sh/smarter/commit/82bd2bd66406fc616733d1d90612ebbdd51f707f))
+
 ## [0.46.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.1...v0.46.14-alpha.2) (2026-11-22)
 
 ### Bug Fixes
