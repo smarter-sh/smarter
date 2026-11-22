@@ -237,7 +237,10 @@ class TestConsoleSessionView(TestAccountMixin):
         request.user = self.non_admin_user
         # a dict stands in for the session, which welcome() only reads and writes by key.
         request.session = {}  # type: ignore[assignment]
-        with mock.patch.object(views, "user_was_welcomed", return_value=False):
+        with (
+            mock.patch.object(views, "welcome_opens_at_sign_in", return_value=True),
+            mock.patch.object(views, "user_shows_welcome_at_startup", return_value=True),
+        ):
             first = views.welcome(request, self.non_admin_user)
             request.session = {WELCOME_SHOWN_SESSION_KEY: True}  # type: ignore[assignment]
             later = views.welcome(request, self.non_admin_user)

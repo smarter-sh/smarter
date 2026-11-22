@@ -31,8 +31,9 @@ class TestWelcomeApiViews(TestAccountMixin):
 
     def forget_welcome(self):
         """Make the non-admin user a user who has never closed the welcome dialog."""
-        UserProfile.objects.filter(user=self.non_admin_user).update(welcomed_at=None)
-        welcome.user_was_welcomed.invalidate(self.non_admin_user.id)
+        UserProfile.objects.filter(user=self.non_admin_user).update(welcomed_at=None, show_welcome_at_startup=False)
+        welcome.user_was_welcomed.invalidate(self.non_admin_user.pk)
+        welcome.user_shows_welcome_at_startup.invalidate(self.non_admin_user.pk)
 
     def post(self, url: str, body: SmarterDictType | None = None) -> SmarterDictType:
         self.client.force_login(self.non_admin_user)
@@ -69,23 +70,35 @@ class TestWelcomeApiViews(TestAccountMixin):
 
     def test_dismiss(self):
         """Test that dismissing records the date once, and that the user is welcomed from then on."""
-        self.assertFalse(welcome.user_was_welcomed(self.non_admin_user.id))
+        self.assertFalse(welcome.user_was_welcomed(self.non_admin_user.pk))
         self.assertTrue(self.post(self.dismiss_url)["welcomed"])
         welcomed_at = UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at
         self.assertIsNotNone(welcomed_at)
-        self.assertTrue(welcome.user_was_welcomed(self.non_admin_user.id))
+        self.assertTrue(welcome.user_was_welcomed(self.non_admin_user.pk))
         self.assertTrue(self.post(self.url)["welcomed"])
         # a second dismiss keeps the date of the first.
         self.post(self.dismiss_url)
         self.assertEqual(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at, welcomed_at)
 
     def test_dismiss_show_at_startup(self):
-        """Test that dismissing with Show at startup ticked clears the date, and unticked records it."""
+        """Test that dismissing records the date either way, and the Show at startup box's choice."""
+        self.assertTrue(self.post(self.dismiss_url, {"showAtStartup": True})["welcomed"])
+        profile = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        self.assertIsNotNone(profile.welcomed_at)
+        self.assertTrue(profile.show_welcome_at_startup)
+        self.assertTrue(welcome.user_shows_welcome_at_startup(self.non_admin_user.pk))
+        self.assertTrue(welcome.welcome_opens_at_sign_in(self.non_admin_user.pk))
         self.assertTrue(self.post(self.dismiss_url, {"showAtStartup": False})["welcomed"])
-        self.assertIsNotNone(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at)
-        self.assertFalse(self.post(self.dismiss_url, {"showAtStartup": True})["welcomed"])
-        self.assertIsNone(UserProfile.objects.get(pk=self.non_admin_user_profile.pk).welcomed_at)
-        self.assertFalse(welcome.user_was_welcomed(self.non_admin_user.id))
+        profile = UserProfile.objects.get(pk=self.non_admin_user_profile.pk)
+        self.assertIsNotNone(profile.welcomed_at)
+        self.assertFalse(profile.show_welcome_at_startup)
+        self.assertFalse(welcome.user_shows_welcome_at_startup(self.non_admin_user.pk))
+        self.assertFalse(welcome.welcome_opens_at_sign_in(self.non_admin_user.pk))
+
+    def test_a_new_user_sees_the_dialog_until_they_close_it(self):
+        """Test that the dialog opens by itself for a new user, whose Show at startup box is unticked."""
+        self.assertTrue(welcome.welcome_opens_at_sign_in(self.non_admin_user.pk))
+        self.assertFalse(welcome.user_shows_welcome_at_startup(self.non_admin_user.pk))
 
     def test_dismiss_invalid_body(self):
         """Test that a body that isn't a WelcomeDismissRequest is refused, and records nothing."""
@@ -122,10 +135,23 @@ class TestWelcomeApiViews(TestAccountMixin):
         self.client.force_login(self.non_admin_user)
         state = self.session_welcome()
         self.assertTrue(state.show)
+        self.assertFalse(state.show_at_startup)
         self.post(self.dismiss_url)
         state = self.session_welcome()
         self.assertFalse(state.show)
         self.assertFalse(state.show_at_startup)
+
+    def test_closing_it_keeps_it_closed_at_the_next_sign_in(self):
+        """Test that a user who closed the dialog, with its box as it came, doesn't see it at the next sign-in."""
+        self.client.force_login(self.non_admin_user)
+        state = self.session_welcome()
+        self.assertTrue(state.show)
+        # the console posts the box as it came: unticked.
+        self.post(self.dismiss_url, {"showAtStartup": state.show_at_startup})
+        # signing in again starts a new session.
+        self.client.logout()
+        self.client.force_login(self.non_admin_user)
+        self.assertFalse(self.session_welcome().show)
 
     def test_shows_once_per_session_at_startup(self):
         """Test that, with Show at startup ticked, the dialog opens by itself once per session, i.e. per sign-in."""

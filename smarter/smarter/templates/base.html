@@ -61,7 +61,8 @@
   <link rel="icon" type="image/png" sizes="256x256" href="{% static 'images/logo/favicon-256x256.png' %}?v={{ STATIC_VERSION }}">
 
   <!-- Manifest -->
-  <link rel="manifest" href="{% static 'site.webmanifest' %}?v={{ STATIC_VERSION }}">
+  <!-- from this origin, not the static files' url, which may be the CDN's: see site_webmanifest in urls/console.py. -->
+  <link rel="manifest" href="{% url 'site_webmanifest' %}?v={{ STATIC_VERSION }}">
 
   <!-- Theme -->
   <meta name="theme-color" content="#ff8c00">
