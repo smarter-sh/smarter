@@ -33,6 +33,11 @@ metadata:
     app.kubernetes.io/name: "{{ .Values.global.appName }}-job-init"
     app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
 spec:
+  # one run, never retried: a failed step fails the Job at once. Kubernetes' default, 6 retries, would run all of
+  # initialize_platform up to seven times, each run emailing and posting its log and prompting the Stackademy
+  # LLMClients again, until helm upgrade's --timeout ends it with a timeout instead of the step's own error.
+  # The next deployment runs it again.
+  backoffLimit: 0
   ttlSecondsAfterFinished: 3600
   template:
     metadata:
