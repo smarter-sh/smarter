@@ -1174,9 +1174,9 @@ The authentication backends for Smarter, including social authentication.
 Google's and GitHub's, and Django's model backend. Smarter additionally implements its own
 key-based REST API authentication backend.
 
-An operator sets their own with ``DJANGO_AUTHENTICATION_BACKENDS``, comma-separated, e.g. the
+A deployment overrides them with ``DJANGO_AUTHENTICATION_BACKENDS``, comma-separated, e.g. the
 multitenant backends in ``smarter.lib.social_core.backends.multitenant`` (see
-:mod:`smarter.settings.user`).
+:mod:`smarter.settings.overrides`).
 
 See:
 
@@ -2124,7 +2124,7 @@ TAGGIT_CASE_INSENSITIVE = True
 """
 Whether taggit treats tags as case insensitive, e.g. "Tag" and "tag" as the same tag.
 
-``DJANGO_TAGGIT_CASE_INSENSITIVE=false`` turns it off (see :mod:`smarter.settings.user`).
+``DJANGO_TAGGIT_CASE_INSENSITIVE=false`` turns it off (see :mod:`smarter.settings.overrides`).
 """
 
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
@@ -2155,8 +2155,8 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
     Log the platform's diagnostics, and the settings that every environment shares, outside of manage.py.
 
     Each environment's module calls it with its ``globals()``, after
-    :func:`smarter.settings.user.apply_user_settings`, so that the log shows the values that Django
-    runs with, the user's own settings included, rather than this module's.
+    :func:`smarter.settings.overrides.apply_overrides`, so that the log shows the values that Django
+    runs with, the deployment's overrides included, rather than this module's.
 
     :param settings: The environment's settings module's namespace.
     """

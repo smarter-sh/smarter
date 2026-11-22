@@ -1,31 +1,31 @@
-"""Test the user's own Django settings: :mod:`smarter.settings.user`."""
+"""Test the deployment's overrides of Django settings: :mod:`smarter.settings.overrides`."""
 
 import re
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-import smarter.settings.user as user_module
+import smarter.settings.overrides as overrides_module
 from smarter.lib.unittest.base_classes import SmarterTestBase
-from smarter.settings.user import (
-    DEFAULT_USER_SETTINGS_FILE,
-    SmarterUserSettingsError,
-    apply_user_settings,
+from smarter.settings.overrides import (
+    DEFAULT_OVERRIDES_FILE,
+    SmarterOverridesError,
+    apply_overrides,
     literal_value,
-    settings_from_environment,
-    settings_from_file,
-    user_settings_file_path,
+    overrides_file_path,
+    overrides_from_environment,
+    overrides_from_file,
     value_like,
 )
 
-MODULE = "smarter.settings.user"
+MODULE = "smarter.settings.overrides"
 
 EXAMPLE_LINE = re.compile(r"^# ([A-Z][A-Z0-9_]*:|  )")
 """A commented-out line of an example in settings.example.yaml: a setting, or a line indented under one."""
 
 
-class TestUserSettingsFile(SmarterTestBase):
-    """The YAML file of the user's settings."""
+class TestOverridesFile(SmarterTestBase):
+    """The overrides file, in YAML."""
 
     def setUp(self):
         super().setUp()
@@ -38,20 +38,20 @@ class TestUserSettingsFile(SmarterTestBase):
         return self.path
 
     def test_the_path(self):
-        """SMARTER_USER_SETTINGS_FILE, or its unprefixed name, which wins, as smarter_settings reads them."""
-        self.assertEqual(user_settings_file_path({}), Path(DEFAULT_USER_SETTINGS_FILE))
-        self.assertEqual(user_settings_file_path({"SMARTER_USER_SETTINGS_FILE": "/a.yaml"}), Path("/a.yaml"))
-        both = {"SMARTER_USER_SETTINGS_FILE": "/a.yaml", "USER_SETTINGS_FILE": "/b.yaml"}
-        self.assertEqual(user_settings_file_path(both), Path("/b.yaml"))
+        """SMARTER_OVERRIDES_FILE, or its unprefixed name, which wins, as smarter_settings reads them."""
+        self.assertEqual(overrides_file_path({}), Path(DEFAULT_OVERRIDES_FILE))
+        self.assertEqual(overrides_file_path({"SMARTER_OVERRIDES_FILE": "/a.yaml"}), Path("/a.yaml"))
+        both = {"SMARTER_OVERRIDES_FILE": "/a.yaml", "OVERRIDES_FILE": "/b.yaml"}
+        self.assertEqual(overrides_file_path(both), Path("/b.yaml"))
 
     def test_no_file_and_an_empty_file_have_no_settings(self):
-        self.assertEqual(settings_from_file(self.path), {})
-        self.assertEqual(settings_from_file(self.write("")), {})
-        self.assertEqual(settings_from_file(self.write("# only a comment\n")), {})
+        self.assertEqual(overrides_from_file(self.path), {})
+        self.assertEqual(overrides_from_file(self.write("")), {})
+        self.assertEqual(overrides_from_file(self.write("# only a comment\n")), {})
 
     def test_nested_values(self):
         text = "SESSION_COOKIE_AGE: 3600\nADMINS:\n  - ops@example.com\nCACHES:\n  default:\n    TIMEOUT: 60\n"
-        settings = settings_from_file(self.write(text))
+        settings = overrides_from_file(self.write(text))
         self.assertEqual(settings["SESSION_COOKIE_AGE"], 3600)
         self.assertEqual(settings["ADMINS"], ["ops@example.com"])
         self.assertEqual(settings["CACHES"], {"default": {"TIMEOUT": 60}})
@@ -64,11 +64,11 @@ class TestUserSettingsFile(SmarterTestBase):
             ("1: one\n", "is not a string"),
         ):
             with self.subTest(text=text):
-                with self.assertRaisesRegex(SmarterUserSettingsError, error):
-                    settings_from_file(self.write(text))
+                with self.assertRaisesRegex(SmarterOverridesError, error):
+                    overrides_from_file(self.write(text))
 
 
-class TestUserSettingsFromEnvironment(SmarterTestBase):
+class TestOverridesFromEnvironment(SmarterTestBase):
     """DJANGO_* environment variables, cast to the type of the setting's value before them."""
 
     def test_literal_value(self):
@@ -96,10 +96,10 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
     def test_a_value_of_the_wrong_type(self):
         for text, current in (("forty-two", 1), ("not-a-float", 1.0), ("[1]", {})):
             with self.subTest(text=text):
-                with self.assertRaises(SmarterUserSettingsError):
+                with self.assertRaises(SmarterOverridesError):
                     value_like(text, current)
 
-    def test_settings_from_environment(self):
+    def test_overrides_from_environment(self):
         environ = {
             "DJANGO_SETTINGS_MODULE": "smarter.settings.local",
             "DJANGO_APPEND_SLASH": "false",
@@ -108,12 +108,12 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
             "SMARTER_SOMETHING_ELSE": "x",
         }
         current = {"APPEND_SLASH": True, "SESSION_COOKIE_AGE": 1209600}
-        settings = settings_from_environment(environ, current)
+        settings = overrides_from_environment(environ, current)
         self.assertEqual(settings, {"APPEND_SLASH": False, "SESSION_COOKIE_AGE": 60, "SMARTER_TEST_NEW": "hello"})
 
     def test_the_secret_key_is_left_to_smarter_settings(self):
         """DJANGO_SECRET_KEY is read, and validated, by smarter_settings.django_secret_key, which base.py's SECRET_KEY is."""
-        settings = settings_from_environment({"DJANGO_SECRET_KEY": "SET-ME-PLEASE"}, {"SECRET_KEY": "generated"})
+        settings = overrides_from_environment({"DJANGO_SECRET_KEY": "SET-ME-PLEASE"}, {"SECRET_KEY": "generated"})
         self.assertEqual(settings, {})
 
     def test_the_variables_that_the_helm_chart_sets(self):
@@ -122,24 +122,24 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
         broker = "redis://:pw@redis.example.test:6379/0"
         environ = {"DJANGO_AUTHENTICATION_BACKENDS": backends, "DJANGO_CELERY_BROKER_URL": broker}
         current = {"AUTHENTICATION_BACKENDS": ["x.Backend"], "CELERY_BROKER_URL": "redis://smarter-redis:6379/0"}
-        settings = settings_from_environment(environ, current)
+        settings = overrides_from_environment(environ, current)
         self.assertEqual(settings["AUTHENTICATION_BACKENDS"], ["a.Backend", "b.Backend"])
         self.assertEqual(settings["CELERY_BROKER_URL"], broker)
 
     def test_django_defaults_give_the_type(self):
         """A setting that Smarter doesn't set takes the type of Django's default: a list for SILENCED_SYSTEM_CHECKS."""
         environ = {"DJANGO_SILENCED_SYSTEM_CHECKS": "security.W001, security.W003"}
-        settings = settings_from_environment(environ, {})
+        settings = overrides_from_environment(environ, {})
         self.assertEqual(settings["SILENCED_SYSTEM_CHECKS"], ["security.W001", "security.W003"])
 
     def test_the_example_file(self):
-        """Every example in user-settings/settings.example.yaml, uncommented, reads as its comments say."""
+        """Every example in overrides/settings.example.yaml, uncommented, reads as its comments say."""
         # the repository's root on the host, and /home/smarter_user in the containers, where Docker Compose
-        # mounts user-settings/.
-        root = Path(user_module.__file__).parents[3]
-        example_path = root / "user-settings" / "settings.example.yaml"
+        # mounts overrides/.
+        root = Path(overrides_module.__file__).parents[3]
+        example_path = root / "overrides" / "settings.example.yaml"
         if not example_path.is_file():
-            self.skipTest("user-settings/ isn't mounted here, e.g. in a test shard")
+            self.skipTest("overrides/ isn't mounted here, e.g. in a test shard")
         lines = []
         in_examples = False
         for line in example_path.read_text(encoding="utf-8").splitlines():
@@ -157,7 +157,7 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
         self.addCleanup(directory.cleanup)
         path = Path(directory.name) / "settings.yaml"
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        settings = settings_from_file(path)
+        settings = overrides_from_file(path)
         self.assertEqual(settings["SESSION_COOKIE_AGE"], 3600)
         self.assertEqual(settings["MY_PACKAGE_SAMPLE_RATE"], 0.25)
         self.assertIs(settings["APPEND_SLASH"], False)
@@ -183,7 +183,7 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
             "DJANGO_SILENCED_SYSTEM_CHECKS": '["security.W001", "security.W003"]',
             "DJANGO_MESSAGE_TAGS": '{40: "danger"}',
         }
-        settings = settings_from_environment(environ, {"SESSION_COOKIE_SECURE": False})
+        settings = overrides_from_environment(environ, {"SESSION_COOKIE_SECURE": False})
         self.assertEqual(settings["SESSION_COOKIE_AGE"], 3600)
         self.assertEqual(settings["MY_PACKAGE_SAMPLE_RATE"], 0.25)
         self.assertIs(settings["SESSION_COOKIE_SECURE"], True)
@@ -191,17 +191,17 @@ class TestUserSettingsFromEnvironment(SmarterTestBase):
         self.assertEqual(settings["SECURE_PROXY_SSL_HEADER"], ("HTTP_X_FORWARDED_PROTO", "https"))
         self.assertEqual(settings["SILENCED_SYSTEM_CHECKS"], ["security.W001", "security.W003"])
         self.assertEqual(settings["MESSAGE_TAGS"], {40: "danger"})
-        none_setting = settings_from_environment({"DJANGO_SECURE_PROXY_SSL_HEADER": "None"}, {})
+        none_setting = overrides_from_environment({"DJANGO_SECURE_PROXY_SSL_HEADER": "None"}, {})
         self.assertIsNone(none_setting["SECURE_PROXY_SSL_HEADER"])
 
     def test_a_bad_variable_names_itself(self):
-        with self.assertRaisesRegex(SmarterUserSettingsError, "DJANGO_SESSION_COOKIE_AGE"):
-            settings_from_environment({"DJANGO_SESSION_COOKIE_AGE": "an hour"}, {"SESSION_COOKIE_AGE": 1})
-        with self.assertRaisesRegex(SmarterUserSettingsError, "is not a Django setting name"):
-            settings_from_environment({"DJANGO_9LIVES": "1"}, {})
+        with self.assertRaisesRegex(SmarterOverridesError, "DJANGO_SESSION_COOKIE_AGE"):
+            overrides_from_environment({"DJANGO_SESSION_COOKIE_AGE": "an hour"}, {"SESSION_COOKIE_AGE": 1})
+        with self.assertRaisesRegex(SmarterOverridesError, "is not a Django setting name"):
+            overrides_from_environment({"DJANGO_9LIVES": "1"}, {})
 
 
-class TestApplyUserSettings(SmarterTestBase):
+class TestApplyOverrides(SmarterTestBase):
     """The file, then the variables, supersede a settings module's namespace."""
 
     def setUp(self):
@@ -212,8 +212,8 @@ class TestApplyUserSettings(SmarterTestBase):
 
     def apply(self, file_text: str, environ: dict[str, str], settings: dict[str, object]) -> list[str]:
         self.path.write_text(file_text, encoding="utf-8")
-        variables = {"SMARTER_USER_SETTINGS_FILE": str(self.path), **environ}
-        return apply_user_settings(settings, variables)
+        variables = {"SMARTER_OVERRIDES_FILE": str(self.path), **environ}
+        return apply_overrides(settings, variables)
 
     def test_the_order(self):
         """Smarter's value, then the file's, then the variable's."""
@@ -236,7 +236,7 @@ class TestApplyUserSettings(SmarterTestBase):
         self.assertEqual(settings["CELERY_REDBEAT_REDIS_URL"], broker)
 
     def test_redbeat_of_its_own_stays(self):
-        """A RedBeat url that the user, or a settings module, set apart from the broker's is not replaced."""
+        """A RedBeat url that an override, or a settings module, set apart from the broker's is not replaced."""
         default = "redis://smarter-redis:6379/0"
         broker = "redis://:pw@redis.example.test:6379/0"
         redbeat = "redis://:pw@redbeat.example.test:6379/3"
@@ -263,7 +263,7 @@ class TestApplyUserSettings(SmarterTestBase):
     def test_nothing_to_apply(self):
         settings: dict[str, object] = {"APPEND_SLASH": True}
         with patch(f"{MODULE}.logger") as logger:
-            applied = apply_user_settings(settings, {"SMARTER_USER_SETTINGS_FILE": str(self.path)})
+            applied = apply_overrides(settings, {"SMARTER_OVERRIDES_FILE": str(self.path)})
         self.assertEqual(applied, [])
         self.assertEqual(settings, {"APPEND_SLASH": True})
         logger.info.assert_not_called()
@@ -271,9 +271,9 @@ class TestApplyUserSettings(SmarterTestBase):
 
     def test_os_environ_by_default(self):
         settings: dict[str, object] = {"APPEND_SLASH": True}
-        environ = {"SMARTER_USER_SETTINGS_FILE": str(self.path), "DJANGO_APPEND_SLASH": "false"}
+        environ = {"SMARTER_OVERRIDES_FILE": str(self.path), "DJANGO_APPEND_SLASH": "false"}
         with patch.dict("os.environ", environ):
-            apply_user_settings(settings)
+            apply_overrides(settings)
         self.assertIs(settings["APPEND_SLASH"], False)
 
     def test_an_unknown_setting_is_set_with_a_warning(self):

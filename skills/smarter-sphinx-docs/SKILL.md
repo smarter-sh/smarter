@@ -154,7 +154,7 @@ the SVG.
 The settings diagram, `docs/source/_static/settings-data-flow.svg`, at the top of
 `docs/source/smarter-platform/configuration.rst`, shows how the settings are
 initialized: from the sources (GitHub Actions secrets, Kubernetes Secrets, the
-Helm chart, `.env`, the user settings file), through the environment and
+Helm chart, `.env`, the overrides file), through the environment and
 `smarter_settings`, to Django's settings. [scripts/settings-diagram.py](scripts/settings-diagram.py)
 draws it. Update it when that flow changes, e.g. a new source, or a settings
 module, and read the rendered PNG the same way:

@@ -10,21 +10,21 @@ How the settings are initialized
 
 Each setting value originates from one of a few places: in Kubernetes, the GitHub Actions secrets, the Kubernetes
 Secrets that `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ creates, and
-the Helm chart's values. Locally these originate from ``.env`` and ``user-settings/settings.yaml``.
+the Helm chart's values. Locally these originate from ``.env`` and ``overrides/settings.yaml``.
 The deploy action and the Helm release, or Docker Compose, turn these into the process's environment
 variables. ``smarter_settings`` reads each of its fields from its environment variable, else uses the default
 declared on the field, then validates and freezes its final settings. Django's settings modules derive their settings from
-``smarter_settings`` where possible, noting that your own settings ``DJANGO_*`` supersede them, and your
-``user-settings/settings.yaml`` file and its environment variables supersede them last.
+``smarter_settings`` where possible. Last, the deployment's overrides overwrite them: the
+``overrides/settings.yaml`` file locally, then ``DJANGO_*`` environment variables.
 
 .. image:: ../_static/settings-data-flow.svg
    :alt: Sources (GitHub Actions secrets, the Kubernetes Secrets mysql-smarter, mysql-root, smarter-admin,
          aws-ses-config and smarter-django-secret-key, the Helm chart's values, .env and
-         user-settings/settings.yaml) become environment variables through the deploy action and the Helm
+         overrides/settings.yaml) become environment variables through the deploy action and the Helm
          release's env Secret, or Docker Compose. smarter_settings reads each of its fields from its
          variable, else uses the default declared on the field, and validates them. Django's settings modules,
-         base.py, base_aws.py and the environment's module, derive from smarter_settings; the user settings
-         file and DJANGO_* variables supersede them. The startup logs, the initialize commands and the web
+         base.py, base_aws.py and the environment's module, derive from smarter_settings; the overrides
+         file and DJANGO_* variables overwrite them. The startup logs, the initialize commands and the web
          console read the result.
    :width: 100%
 
@@ -63,18 +63,18 @@ In all other cases, Smarter uses standard Django settings located in `smarter/se
 (``local.py``, ``alpha.py``, ``beta.py``, ``next.py``, ``prod.py``).
 
 Django defines many more settings than Smarter sets. See `Django Settings <https://docs.djangoproject.com/en/6.0/ref/settings/>`_
-for every one, and the next section for how to set them yourself.
+for every one, and the next section for how a deployment overrides them.
 
-3. User-Defined Django Settings
--------------------------------
+3. Overrides
+------------
 
-You can set any Django setting yourself, without changing Smarter's code: a session's lifetime, the administrators'
-email addresses, a Content Security Policy, or a setting of a Django package that you add. Your value supersedes
-Smarter's own, in every environment.
+A deployment can override any Django setting, without changing Smarter's code: a session's lifetime, the administrators'
+email addresses, a Content Security Policy, or a setting of a Django package that you add. The override overwrites
+Smarter's own value, in every environment.
 
 .. danger::
 
-   **A user-defined setting is a hammer.** It replaces Smarter's value of that setting outright, in every environment,
+   **An override is a hammer.** It replaces Smarter's value of that setting outright, in every environment,
    however carefully Smarter's value was built, and Smarter does nothing to stop you or warn you.
 
    - Many of Smarter's settings are computed, per environment, from other settings and from ``smarter_settings``:
@@ -92,21 +92,21 @@ Smarter's own, in every environment.
 
 .. important::
 
-   **Where your settings go depends on where Smarter runs.**
+   **Where your overrides go depends on where Smarter runs.**
 
-   - **Local development** (Docker Compose, ``make run``): ``user-settings/settings.yaml``, in the repository's root.
+   - **Local development** (Docker Compose, ``make run``): ``overrides/settings.yaml``, in the repository's root.
      This is for your own computer only. The file is never built into the Docker image, and no deployed environment
      reads it.
    - **alpha, beta, next, prod, and every other environment on AWS** (Kubernetes): an environment variable
      named ``DJANGO_<SETTING>`` in ``env`` in the Helm chart's values. To change prod, change the Helm values
-     that prod's deployment uses, never ``user-settings/``.
+     that prod's deployment uses, never ``overrides/``.
 
 The file is a YAML map of upper case setting names to values. A variable sets one setting, and a list or a
 dictionary is written as JSON:
 
 .. code-block:: yaml
 
-   # user-settings/settings.yaml, locally
+   # overrides/settings.yaml, locally
    SESSION_COOKIE_AGE: 3600
    ADMINS:
      - ops@example.com
@@ -125,14 +125,14 @@ Settings supersede each other in this order, from lowest to highest priority:
 1. ``smarter/settings/base.py``
 2. ``smarter/settings/base_aws.py``, in the environments on AWS
 3. the environment's own module, e.g. ``prod.py``
-4. your settings file, ``user-settings/settings.yaml``, locally
+4. the overrides file, ``overrides/settings.yaml``, locally
 5. your ``DJANGO_*`` environment variables
 
 Your value replaces Smarter's whole setting: a dictionary such as ``LOGGING`` is not merged with Smarter's. Where a
 ``SMARTER_*`` setting exists for what you want to change (see the previous section), prefer it, since Smarter
 derives other settings from it.
 
-See :doc:`user-defined-django-settings` for the full explanation: the steps for local development and for the Helm
+See :doc:`overrides` for the full explanation: the steps for local development and for the Helm
 chart, how to write each kind of value, the rules, and how to check what applied.
 
 .. _sam-app-feature-flags:
@@ -527,5 +527,5 @@ are often initialized from values in ``smarter_settings``.
    cost-accounting
    smarter-journal
    mcpserver
-   user-defined-django-settings
+   overrides
    security

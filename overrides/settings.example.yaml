@@ -1,9 +1,9 @@
 # LOCAL DEVELOPMENT ONLY. NOT for prod, alpha, or any other environment on AWS:
 # for those, use DJANGO_<SETTING> variables in env in helm/charts/smarter/values.yaml.
 # -----------------------------------------------------------------------------
-# Your own Django settings, for your local Docker Compose containers.
+# Your Django overrides, for your local Docker Compose containers.
 #
-# WARNING: a user-defined setting is a hammer. It replaces Smarter's value of
+# WARNING: an override is a hammer. It replaces Smarter's value of
 # that setting outright, however carefully that value was built. Many of
 # Smarter's settings are computed per environment (the database, the caches,
 # storage, allowed hosts, CORS and CSRF origins, cookie security, the Content
@@ -17,7 +17,7 @@
 # Only your local Docker Compose containers read this directory: it is never
 # built into the Docker image, and the deployed pods never see it.
 #
-# Copy this file to user-settings/settings.yaml (which git ignores), then
+# Copy this file to overrides/settings.yaml (which git ignores), then
 # uncomment and edit the settings that you want. Every setting in it
 # supersedes Smarter's value of that setting, in every environment:
 # smarter/smarter/settings/base.py, base_aws.py and the environment's own module
@@ -32,8 +32,7 @@
 #   docker compose restart smarter-api smarter-worker smarter-worker-infrastructure smarter-beat
 #
 # On Kubernetes, write each setting as a DJANGO_* variable in env in the Helm
-# chart's values. See https://docs.smarter.sh, Configuration, User-Defined
-# Django Settings.
+# chart's values. See https://docs.smarter.sh, Configuration, Overrides.
 #
 # Below is one example of each kind of value. Each one also shows the same
 # setting as a DJANGO_* environment variable, where one can express it.

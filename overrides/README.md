@@ -1,14 +1,14 @@
-# User settings: local development only. NOT for prod, alpha, or any other environment on AWS
+# Overrides: local development only. NOT for prod, alpha, or any other environment on AWS
 
 **Nothing in this directory reaches prod, alpha or any other AWS environment.** It is never built into the
-Docker image, and no deployed pod reads it. For those environments, put your settings in the Helm chart, as
+Docker image, and no deployed pod reads it. For those environments, put your overrides in the Helm chart, as
 `DJANGO_<SETTING>` variables in `env` in `helm/charts/smarter/values.yaml`, or in the values that your
 deployment passes to `helm upgrade` (see "On Kubernetes" below).
 
-This directory holds your own Django settings for **local development** (`make run`, Docker Compose), which
-supersede Smarter's.
+This directory holds the Django overrides for **local development** (`make run`, Docker Compose), which
+overwrite Smarter's Django settings.
 
-> **A user-defined setting is a hammer.** It replaces Smarter's value of that setting outright, however
+> **An override is a hammer.** It replaces Smarter's value of that setting outright, however
 > carefully that value was built: many of Smarter's settings are computed per environment (the database, the
 > caches, storage, allowed hosts, CORS and CSRF origins, cookie security, the Content Security Policy), and
 > nothing derived from the old value is computed again. A list or dictionary is replaced whole, not merged.
@@ -23,11 +23,11 @@ supersede Smarter's.
 3. Restart the containers that read Django's settings:
    `docker compose restart smarter-api smarter-worker smarter-worker-infrastructure smarter-beat`.
 
-Docker Compose mounts this directory read-only at `/home/smarter_user/user-settings/` in those containers.
-`smarter/smarter/settings/user.py` applies the file after all of Smarter's settings. A `DJANGO_<SETTING>`
+Docker Compose mounts this directory read-only at `/home/smarter_user/overrides/` in those containers.
+`smarter/smarter/settings/overrides.py` applies the file after all of Smarter's settings. A `DJANGO_<SETTING>`
 environment variable, e.g. in `.env`, supersedes the file.
 
-The test shards (`make docker-test`) don't mount this directory, so your settings don't change the
+The test shards (`make docker-test`) don't mount this directory, so your overrides don't change the
 tests. Tests that you run in the dev containers with `docker exec` do read it.
 
 ## `DJANGO_*` environment variables
@@ -58,4 +58,4 @@ env:
 The chart mounts no settings file, and nothing in this directory reaches its pods.
 
 The full explanation, with the order in which settings supersede each other, is in the docs: Configuration,
-User-Defined Django Settings (`docs/source/smarter-platform/user-defined-django-settings.rst`).
+Overrides (`docs/source/smarter-platform/overrides.rst`).
