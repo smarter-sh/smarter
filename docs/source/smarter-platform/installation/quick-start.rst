@@ -1,3 +1,5 @@
+:orphan:
+
 Quick Start Guide
 ===================================
 
@@ -11,7 +13,7 @@ from cloning the smarter-deploy repository and configuring its .env file to logg
 1. Install Docker Desktop.
 -------------------------------
 
-If you haven't already, download and install `Docker Desktop <https://docs.docker.com/desktop/>`__. This will also install Docker Compose.
+Check that your computer meets the :doc:`prerequisites <../prerequisites>`. If you haven't already, download and install `Docker Desktop <https://docs.docker.com/desktop/>`__. This will also install Docker Compose.
 
 2. Clone the Repository.
 -------------------------------
