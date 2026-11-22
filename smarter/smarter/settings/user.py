@@ -32,7 +32,6 @@ The log names each setting that is set here, and never its value, which may be a
 
 import ast
 import json
-import logging
 import os
 import re
 from collections.abc import Mapping, MutableMapping
@@ -42,9 +41,9 @@ from typing import Optional
 import yaml
 from django.conf import global_settings
 
-from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
+from smarter.lib import logging
 
-logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
+logger = logging.getSmarterLogger(__name__)
 
 USER_SETTINGS_FILE_VARIABLE = "SMARTER_USER_SETTINGS_FILE"
 """The environment variable that names the user settings file."""

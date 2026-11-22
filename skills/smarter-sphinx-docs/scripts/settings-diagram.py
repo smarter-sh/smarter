@@ -99,9 +99,8 @@ out.append(
     '<desc id="d">Deployment sources (GitHub Actions secrets, the Kubernetes Secrets that '
     "smarter-infrastructure creates, and the Helm chart's values) and local sources (.env and "
     "user-settings/settings.yaml) become the process's environment variables, through the deploy "
-    "action and the Helm release's env Secret, or Docker Compose. smarter_settings reads them into its "
-    "fields, whose defaults it declares, with the code constants of smarter.common.const, and validates "
-    "them. Django's settings modules derive their settings from smarter_settings, then the user's own "
+    "action and the Helm release's env Secret, or Docker Compose. smarter_settings reads each of its "
+    "fields from its variable, else uses the default declared on the field, and validates them. Django's settings modules derive their settings from smarter_settings, then the user's own "
     "settings file and DJANGO_* variables supersede them. The startup logs, the initialize commands, and "
     "the web console read the result.</desc>"
 )
@@ -233,16 +232,7 @@ box(
     code="os.environ",
 )
 box(
-    "const",
-    x + 118,
-    262,
-    w - 118,
-    "Code constants",
-    ["not configuration:", "port, admin account,", "paths, VERSION"],
-    code="common.const",
-)
-box(
-    "defaults",
+    "envsource",
     x,
     384,
     w,
@@ -339,9 +329,8 @@ arrow([right("compose"), (ex3 - 14, right("compose")[1]), (ex3 - 14, ey3 + 32), 
 text(right("compose")[0] + 4, right("compose")[1] - 6, "env_file", size=10.5, fill=MUTED, italic=True)
 
 envb = (BOXES["environ"][0] + 56, BOXES["environ"][1] + BOXES["environ"][3])
-arrow([envb, (envb[0], BOXES["defaults"][1] - 2)])
-arrow([bottom("const"), (bottom("const")[0], BOXES["defaults"][1] - 2)])
-arrow([bottom("defaults"), top("settings")])
+arrow([envb, (envb[0], BOXES["envsource"][1] - 2)])
+arrow([bottom("envsource"), top("settings")])
 
 # DJANGO_SETTINGS_MODULE picks the module
 arrow([right("environ", -20), left("django", -20)])
@@ -374,7 +363,12 @@ text(
 # --- precedence and legend ---------------------------------------------------------------------------
 out.append(f'<rect x="28" y="776" width="{W - 56}" height="64" rx="9" fill="#FFFFFF" stroke="{LINE}"/>')
 text(44, 798, "Precedence, lowest to highest", size=12.5, weight="bold")
-text(44, 818, "smarter_settings:  the literal default  →  SMARTER_NAME  →  NAME", size=11.5)
+text(
+    44,
+    818,
+    "smarter_settings:  the field's default  →  SMARTER_NAME  (AWS_*, GITHUB_TOKEN and DJANGO_SECRET_KEY keep their names)",
+    size=11.5,
+)
 text(
     44,
     834,

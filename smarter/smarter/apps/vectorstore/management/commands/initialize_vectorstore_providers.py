@@ -18,7 +18,7 @@ from smarter.common.conf.env import get_env, is_missing_value
 from smarter.lib import logging
 from smarter.lib.django.management.base import SmarterCommand
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class Command(SmarterCommand):

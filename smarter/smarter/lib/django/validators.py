@@ -20,7 +20,6 @@ from smarter.common.conf.const import LOCAL_HOSTS
 from smarter.common.const import SMARTER_API_SUBDOMAIN, SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 # guard against Sphinx doc build circular import errors
 validator_logging_is_active: bool = False
@@ -48,8 +47,7 @@ def should_log(level: int) -> bool:
     return validator_logging_is_active
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 # pylint: disable=R0904

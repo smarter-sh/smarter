@@ -19,7 +19,7 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ManifestTestsMixin(SmarterTestBase):

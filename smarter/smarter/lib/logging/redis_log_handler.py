@@ -59,14 +59,14 @@ web console.
     # manually configure logging to use RedisLogHandler
     # NOTE: this is technically possible but not a great idea.
     #
-    import logging
+    from smarter.lib import logging
     from smarter.lib.logging.redis_log_handler import RedisLogHandler, user_id_context, job_id_factory
 
     # Set the current job ID (typically in a Celery task or similar context)
     user_id_context.set(job_id_factory("task"))
 
     # Configure the logger
-    logger = logging.getLogger("my_logger")
+    logger = logging.getSmarterLogger("my_logger")
     logger.setLevel(logging.INFO)
     logger.addHandler(RedisLogHandler())
 

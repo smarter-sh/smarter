@@ -44,6 +44,22 @@ def is_missing_value(value: Any) -> bool:
     return not text or text.upper().startswith("SET-ME")
 
 
+def unquoted(value: str) -> str:
+    """
+    Strip surrounding whitespace, and one pair of matching quotes, from an environment variable's value.
+
+    ``make`` exports the lines of ``.env`` that the Makefile includes as they are written, so
+    ``NAME="value"`` reaches the process with its quotes. Docker Compose and python-dotenv strip them.
+
+    :param value: The value as the environment holds it.
+    :returns: The value without its surrounding whitespace and quotes.
+    """
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1].strip()
+    return value
+
+
 def read_environment_variable(var_name: str) -> Optional[str]:
     """
     Read an environment variable, with or without Smarter's ``SMARTER_`` prefix.
@@ -59,9 +75,7 @@ def read_environment_variable(var_name: str) -> Optional[str]:
         value = os.environ.get(f"{ENVIRONMENT_VARIABLE_PREFIX}{var_name}")
     if value is None:
         return None
-    value = value.strip()
-    value = value.strip('"').strip("'")
-    return value
+    return unquoted(value)
 
 
 def _cast_number(var_name: str, val: str, default: Union[int, float]) -> Union[int, float]:

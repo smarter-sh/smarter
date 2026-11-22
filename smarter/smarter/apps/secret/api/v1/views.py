@@ -25,7 +25,6 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
     SmarterAdminListAPIView,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 # pylint: disable=W0613
@@ -34,8 +33,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.SECRET_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def secrets_for_user(user) -> QuerySet[Secret]:

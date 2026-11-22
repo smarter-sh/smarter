@@ -260,7 +260,7 @@ class TestProviderModelVerification(ProviderTestBase):
     def test_answers_without_text(self):
         """Test that a model that answers with no text, as a reasoning model that runs out of tokens does, fails translation and summarization without raising."""
         self.openai.chat.completions.create.return_value = completion(None)
-        with self.assertLogs(model_checks.base_logger, "ERROR") as logs:
+        with self.assertLogs(model_checks.__name__, "ERROR") as logs:
             self.assertFalse(model_checks.verify_model_translation(provider_model=self.model))
             self.assertFalse(model_checks.verify_model_summarization(provider_model=self.model))
         output = "\n".join(logs.output)
@@ -324,7 +324,7 @@ class TestProviderModelVerification(ProviderTestBase):
                     self.openai.chat.completions.create.side_effect = error
                     with (
                         patch.object(model_checks, "set_model_verification") as recorded,
-                        self.assertLogs(model_checks.base_logger, "WARNING") as logs,
+                        self.assertLogs(model_checks.__name__, "WARNING") as logs,
                     ):
                         self.assertIsNone(model_checks.verify_provider_model(self.model.id))
                     recorded.assert_not_called()
@@ -346,8 +346,8 @@ class TestProviderModelVerification(ProviderTestBase):
                 # the failed check is logged where it failed, and the model's failure by the
                 # model_verification_failure receiver.
                 with (
-                    self.assertLogs(model_checks.base_logger, "ERROR") as logs,
-                    self.assertLogs(provider_receivers.base_logger, "ERROR") as receiver_logs,
+                    self.assertLogs(model_checks.__name__, "ERROR") as logs,
+                    self.assertLogs(provider_receivers.__name__, "ERROR") as receiver_logs,
                 ):
                     model_checks.verify_provider_model(self.model.id)
                 # a provider's http error is an expected answer: logged with its origin, without a traceback.
@@ -366,7 +366,7 @@ class TestProviderModelVerification(ProviderTestBase):
     def test_unexpected_error_logs_a_traceback(self):
         """Test that an exception that is not a provider's http error fails the check and is logged with its traceback."""
         self.openai.chat.completions.create.side_effect = ValueError("unexpected")
-        with self.assertLogs(model_checks.base_logger, "ERROR") as logs:
+        with self.assertLogs(model_checks.__name__, "ERROR") as logs:
             self.assertFalse(model_checks.verify_model_text_input(provider_model=self.model))
         self.assertIsNotNone(logs.records[0].exc_info)
         self.assertIn("verify_model_text_input()", logs.output[0])

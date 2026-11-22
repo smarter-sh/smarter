@@ -1,7 +1,6 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """The AWS settings: credentials, region, the EKS cluster, and the LLMHost node group."""
 
-import logging
 import re
 from typing import List, Optional, Union
 
@@ -21,8 +20,9 @@ from smarter.common.conf.util import (
     field_default,
 )
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 STATIC_AWS_KEY_PAIR_WARNING = (
     "SECURITY WARNING: a static AWS key pair is configured (%s, from AWS_ACCESS_KEY_ID and "

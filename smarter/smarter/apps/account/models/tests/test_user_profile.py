@@ -20,7 +20,7 @@ from smarter.apps.account.utils import smarter_cached_objects
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestUserProfile(TestAccountMixin):

@@ -13,6 +13,7 @@ from smarter.common.conf.env import (
     get_env,
     is_missing_value,
     read_environment_variable,
+    unquoted,
 )
 
 VAR = "TEST_SMARTER_GET_ENV"
@@ -129,6 +130,24 @@ class TestReadEnvironmentVariable(TestCase):
     def test_strips_whitespace_and_quotes(self):
         with patch.dict(os.environ, {VAR: '  "quoted"  '}):
             self.assertEqual(read_environment_variable(VAR), "quoted")
+
+
+class TestUnquoted(TestCase):
+    """Test that unquoted() strips whitespace and one pair of matching quotes, and nothing else."""
+
+    def test_matching_quotes(self):
+        self.assertEqual(unquoted('"https://example.com/contact/"'), "https://example.com/contact/")
+        self.assertEqual(unquoted("'single'"), "single")
+        self.assertEqual(unquoted('  " padded "  '), "padded")
+
+    def test_unquoted_and_unmatched(self):
+        """A value without a matching pair keeps its quotes, and inner quotes are kept."""
+        self.assertEqual(unquoted("plain"), "plain")
+        self.assertEqual(unquoted('"unmatched'), '"unmatched')
+        self.assertEqual(unquoted("\"mixed'"), "\"mixed'")
+        self.assertEqual(unquoted('say "hi"'), 'say "hi"')
+        self.assertEqual(unquoted('"'), '"')
+        self.assertEqual(unquoted('""'), "")
 
 
 class TestCastEnvironmentValue(TestCase):

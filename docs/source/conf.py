@@ -150,12 +150,49 @@ EXAMPLE_MANIFESTS_REPOSITORY_URL = "https://github.com/smarter-sh/example-manife
 EXAMPLE_MANIFESTS_DIR = os.path.join(HERE, "_example-manifests")
 
 
+def warn_if_example_manifests_are_modified():
+    """
+    Warn when the clone of smarter-sh/example-manifests has local changes, which the docs would show.
+
+    The clone is only a copy to include from, so a change in it, e.g. a stash popped with conflicts,
+    is a mistake: its files are shown as they are, conflict markers included, and ``git pull`` can't
+    update it. Unmerged files get a warning of their own.
+    """
+    status = subprocess.run(
+        ["git", "-C", EXAMPLE_MANIFESTS_DIR, "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    lines = [line for line in status.stdout.splitlines() if line.strip()]
+    if not lines:
+        return
+    logger = sphinx_logging.getLogger(__name__)
+    # porcelain's unmerged states: both sides changed (UU, AA, DD), or one side and a deletion.
+    unmerged = [line[3:] for line in lines if line[:2] in ("UU", "AA", "DD", "AU", "UA", "DU", "UD")]
+    if unmerged:
+        logger.warning(
+            "docs.conf.warn_if_example_manifests_are_modified() %s has unresolved merge conflicts, so the docs "
+            "show their conflict markers: %s. Delete the clone, and the next build makes a new one.",
+            EXAMPLE_MANIFESTS_DIR,
+            ", ".join(unmerged),
+        )
+    else:
+        logger.warning(
+            "docs.conf.warn_if_example_manifests_are_modified() %s has local changes, which the docs show "
+            "instead of smarter-sh/example-manifests: %s. Delete the clone, and the next build makes a new one.",
+            EXAMPLE_MANIFESTS_DIR,
+            ", ".join(line[3:] for line in lines),
+        )
+
+
 def clone_example_manifests():
     """Make or update the shallow clone of smarter-sh/example-manifests that the docs include from."""
     git_dir = os.path.join(EXAMPLE_MANIFESTS_DIR, ".git")
     try:
         if os.path.isdir(git_dir):
             subprocess.run(["git", "-C", EXAMPLE_MANIFESTS_DIR, "pull", "--ff-only", "--quiet"], check=False)
+            warn_if_example_manifests_are_modified()
         elif not os.path.exists(EXAMPLE_MANIFESTS_DIR):
             subprocess.run(
                 [

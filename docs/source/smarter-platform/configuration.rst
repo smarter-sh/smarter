@@ -12,8 +12,8 @@ Each setting value originates from one of a few places: in Kubernetes, the GitHu
 Secrets that `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ creates, and
 the Helm chart's values. Locally these originate from ``.env`` and ``user-settings/settings.yaml``.
 The deploy action and the Helm release, or Docker Compose, turn these into the process's environment
-variables. ``smarter_settings`` reads the environment variables, along with any values set in ``smarter.common.const``,
-then validates and freezes its final settings. Django's settings modules derive their settings from
+variables. ``smarter_settings`` reads each of its fields from its environment variable, else uses the default
+declared on the field, then validates and freezes its final settings. Django's settings modules derive their settings from
 ``smarter_settings`` where possible, noting that your own settings ``DJANGO_*`` supersede them, and your
 ``user-settings/settings.yaml`` file and its environment variables supersede them last.
 
@@ -21,8 +21,8 @@ then validates and freezes its final settings. Django's settings modules derive 
    :alt: Sources (GitHub Actions secrets, the Kubernetes Secrets mysql-smarter, mysql-root, smarter-admin,
          aws-ses-config and smarter-django-secret-key, the Helm chart's values, .env and
          user-settings/settings.yaml) become environment variables through the deploy action and the Helm
-         release's env Secret, or Docker Compose. smarter_settings reads them, by field, into the fields
-         whose defaults it declares, with the code constants of smarter.common.const, and validates them. Django's settings modules,
+         release's env Secret, or Docker Compose. smarter_settings reads each of its fields from its
+         variable, else uses the default declared on the field, and validates them. Django's settings modules,
          base.py, base_aws.py and the environment's module, derive from smarter_settings; the user settings
          file and DJANGO_* variables supersede them. The startup logs, the initialize commands and the web
          console read the result.

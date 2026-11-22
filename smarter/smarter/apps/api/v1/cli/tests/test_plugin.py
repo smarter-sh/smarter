@@ -18,7 +18,7 @@ from .base_class import ApiV1CliTestBase
 KIND = SAMKinds.STATIC_PLUGIN.value
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestApiV1CliPlugin(ApiV1CliTestBase):

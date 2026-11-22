@@ -28,7 +28,6 @@ prioritization sequence:
     sits upstream of Django and is intended to be used independently of Django.
 """
 
-import logging
 from functools import lru_cache
 from typing import Any, get_args
 
@@ -36,6 +35,7 @@ from pydantic import SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from smarter.common.conf.env import unquoted
 from smarter.common.conf.settings.app_keys import AppKeySettings
 from smarter.common.conf.settings.aws import AwsSettings
 from smarter.common.conf.settings.branding import BrandingSettings
@@ -55,10 +55,10 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.processes import is_first_worker
 from smarter.common.utils import get_diagnostics, recursive_sort_dict
-from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
+from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
-logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods,too-many-ancestors
@@ -145,17 +145,21 @@ class Settings(
     @classmethod
     def secret_from_string(cls, v: object, info: ValidationInfo) -> object:
         """
-        Wrap a secret's string in a ``SecretStr``, before any of its field's validators see it.
+        Unquote a string, and wrap a secret's in a ``SecretStr``, before any of its field's validators see it.
 
-        An environment variable is always a string. It is masked from the moment it is read, so that
-        no validator, error message or log can show it.
+        An environment variable is always a string. Its surrounding quotes are stripped
+        (:func:`~smarter.common.conf.env.unquoted`), since ``make`` exports ``.env``'s lines with them.
+        A secret is masked from the moment it is read, so that no validator, error message or log can
+        show it.
 
         :param v: The value to validate.
         :param info: Pydantic's validation info, which names the field.
-        :returns: A ``SecretStr`` for a secret's string, and the value itself otherwise.
+        :returns: A ``SecretStr`` for a secret's string, the unquoted string otherwise, or the value
+            itself if it is not a string.
         """
         if not isinstance(v, str):
             return v
+        v = unquoted(v)
         field_name = str(info.field_name)
         field = cls.model_fields[field_name]
         if field.annotation is SecretStr or SecretStr in get_args(field.annotation):

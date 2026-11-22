@@ -18,7 +18,7 @@ from smarter.lib.typing import SmarterDictType
 
 from .base_classes import PluginAppTestBase, get_test_data
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestPluginTasks(PluginAppTestBase):

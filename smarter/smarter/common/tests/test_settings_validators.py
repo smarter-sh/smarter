@@ -65,9 +65,15 @@ PROBES = [
 
 
 def field_validators() -> dict[str, list[str]]:
-    """Return the name of each of the Settings' field validators, and the fields it validates."""
+    """
+    Return the name of each of the Settings' field validators, and the fields it validates.
+
+    A wildcard validator, ``@field_validator("*")``, validates every field: its ``*`` is expanded to
+    the names of all the fields, so that it is called with a real field's name.
+    """
+    every_field = list(Settings.model_fields)
     return {
-        name: list(decorator.info.fields)
+        name: [field for pattern in decorator.info.fields for field in (every_field if pattern == "*" else [pattern])]
         for name, decorator in Settings.__pydantic_decorators__.field_validators.items()
     }
 

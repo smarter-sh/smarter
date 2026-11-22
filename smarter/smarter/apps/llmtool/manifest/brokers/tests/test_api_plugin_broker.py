@@ -24,7 +24,7 @@ from smarter.lib.typing import required
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 MANIFEST_PATH_API_CONNECTION = os.path.join(HERE, "data", "api-connection-broker.yaml")
 """ApiConnection manifest whose name matches spec.connection in data/api-plugin.yaml."""

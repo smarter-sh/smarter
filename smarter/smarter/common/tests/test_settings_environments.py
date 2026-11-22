@@ -158,6 +158,18 @@ class TestSettingsValidators(SmarterTestBase):
             with self.assertRaises(CONFIG_ERRORS):
                 make_settings(app_api_throttle_rate_anon=bad)
 
+    def test_quoted_environment_variables(self):
+        """A quoted value, as make exports .env's lines, is read without its quotes, a secret too."""
+        quoted = {
+            "SMARTER_PLATFORM_BRANDING_CONTACT_URL": '"https://example.com/contact/"',
+            "DJANGO_SECRET_KEY": "'a-quoted-secret-key'",
+        }
+        with patch.dict(os.environ, quoted):
+            settings = make_settings()
+        self.assertEqual(str(settings.platform_branding_contact_url), "https://example.com/contact/")
+        assert settings.django_secret_key is not None
+        self.assertEqual(settings.django_secret_key.get_secret_value(), "a-quoted-secret-key")
+
     def test_aws_profile_and_region_defaults(self):
         """Empty AWS profile and region fall back to their defaults, None."""
         settings = make_settings(aws_profile="", aws_region="")

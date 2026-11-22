@@ -19,6 +19,9 @@ from pydantic import BaseModel, SecretStr
 
 from .utils import ENVIRONMENT_VARIABLE_PREFIX, mask_email, mask_identifier
 
+ENVIRONMENT_VARIABLE_LOG_INDENT = " " * 4
+"""What :func:`log_environment_variables` puts in front of each variable, after the logger's prefix."""
+
 
 class SmarterDebugLogger(Protocol):  # pylint: disable=too-few-public-methods
     """A logger, or a wrapper of one such as Smarter's ``WaffleSwitchedLoggerWrapper``: anything with ``debug``."""
@@ -141,9 +144,12 @@ def log_environment_variables(logger: SmarterDebugLogger, settings: BaseModel, g
     """
     Log one group's environment variables at DEBUG, one line each, from :func:`get_environment_variables`.
 
+    Each line is indented by :data:`ENVIRONMENT_VARIABLE_LOG_INDENT`, so that the variables read as
+    children of the line that the caller logs before them, e.g. an app's ``LLMClient app is READY``.
+
     :param logger: The logger, the caller's, so that the lines name the caller.
     :param settings: The settings, e.g. ``smarter_settings``.
     :param group: The group, e.g. ``APP_LLMCLIENT``.
     """
     for variable, value in get_environment_variables(settings, group).items():
-        logger.debug("%s: %s", variable, value, stacklevel=2)
+        logger.debug("%s%s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT, variable, value, stacklevel=2)

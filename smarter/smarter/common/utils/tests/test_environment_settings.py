@@ -15,6 +15,7 @@ from smarter.common.utils import (
     log_environment_settings,
     log_environment_variables,
 )
+from smarter.common.utils.environment_settings import ENVIRONMENT_VARIABLE_LOG_INDENT
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -97,5 +98,9 @@ class TestEnvironmentVariables(SmarterTestBase):
         environ = {"SMARTER_APP_LLMCLIENT_ENABLE": "true"}
         with patch.dict("os.environ", environ):
             log_environment_variables(logger, smarter_settings, "APP_LLMCLIENT")
-        variables = [call.args[1] for call in logger.debug.call_args_list]
+        lines = [call.args for call in logger.debug.call_args_list]
+        variables = [line[2] for line in lines]
         self.assertIn("SMARTER_APP_LLMCLIENT_ENABLE", variables)
+        # indented, as children of the line that the caller logs before them.
+        self.assertTrue(all(line[:2] == ("%s%s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT) for line in lines))
+        self.assertTrue((lines[0][0] % lines[0][1:]).startswith("    SMARTER_APP_LLMCLIENT_"))

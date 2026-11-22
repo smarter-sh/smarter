@@ -67,7 +67,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.keys import unknown_keys
@@ -126,8 +125,7 @@ def should_log(level: int) -> bool:
     return waffle.switch_is_active(SmarterWaffleSwitches.MANIFEST_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def memoized_dependencies(func: Callable[..., List["SAMDependency"]]) -> Callable[..., List["SAMDependency"]]:

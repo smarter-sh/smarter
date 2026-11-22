@@ -35,7 +35,7 @@ from smarter.apps.dashboard.views.views.api.welcome import (
 from smarter.common.utils import to_snake_case
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class DashboardApiReverseNames:

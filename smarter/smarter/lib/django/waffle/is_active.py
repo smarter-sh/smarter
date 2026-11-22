@@ -1,5 +1,8 @@
 """Check whether a Waffle switch is active, with caching and database readiness checks."""
 
+# The standard library's logging, not smarter.lib.logging: smarter.lib.logging imports this module
+# while it is still initializing, so it can't give this module a logger.
+import logging
 import time
 from importlib import import_module
 from typing import TYPE_CHECKING, Optional
@@ -14,7 +17,6 @@ from redis.exceptions import RedisError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
 
-from smarter.lib import logging
 from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 from .ready import is_database_ready

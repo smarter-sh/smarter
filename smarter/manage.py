@@ -8,7 +8,7 @@ import sys
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     logger.info("Using Django settings module: %s", os.environ["DJANGO_SETTINGS_MODULE"])
 
     if os.getenv("DEBUG", "false").lower() == "true":
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getSmarterLogger().setLevel(logging.DEBUG)
         logger.debug("Debug mode is enabled.")
 
     try:

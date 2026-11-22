@@ -23,7 +23,7 @@ from smarter.lib import logging
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase, get_test_data
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SKILL_PLUGIN_NAME = "test_plugin_app_admin_skill_plugin"
 REGISTRY = {

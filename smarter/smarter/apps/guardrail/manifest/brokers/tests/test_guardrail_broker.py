@@ -27,7 +27,7 @@ from smarter.lib.manifest.broker import (
 from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 GUARDRAIL_NAME = "test_guardrail"
 

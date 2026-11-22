@@ -25,7 +25,7 @@ from .names import DashboardTerminalReverseNames
 from .reactapp import TerminalEmulatorView
 
 app_name = terminal_namespace
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 urlpatterns = [

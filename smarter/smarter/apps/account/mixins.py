@@ -17,7 +17,6 @@ from smarter.lib.drf.token_authentication import (
     SmarterAnonymousUser,
     SmarterTokenAuthentication,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import Account, User, UserProfile, user_administers_account
 from .serializers import (
@@ -38,8 +37,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_MIXIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def _first_instance_of(args: tuple, cls: type):

@@ -31,7 +31,7 @@ from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.unittest.runner import INFRASTRUCTURE
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @tag(INFRASTRUCTURE)

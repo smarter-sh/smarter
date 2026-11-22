@@ -13,7 +13,6 @@ from smarter.common.conf.env import get_env, is_missing_value
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .const import GOOGLE_MAPS_API_KEY_SECRET_NAME, GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
 from .models import (
@@ -39,8 +38,7 @@ def should_log(level):
     )
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def initialize_secret(

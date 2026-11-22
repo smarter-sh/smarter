@@ -12,14 +12,13 @@ Notes:
 - For the full list of settings and their values, see the `Django settings reference <https://docs.djangoproject.com/en/6.0/ref/settings/>`_.
 """
 
-import logging
-import logging.config
 import os
 import secrets
 import sys
 import time
 import urllib.parse
 from collections.abc import Mapping
+from logging import config as logging_config
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,11 +33,11 @@ from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.resources import log_resource_limits
 from smarter.common.utils.redis_url import redis_url_with_database
+from smarter.lib import logging
 from smarter.lib.django.csp import CSP_REPORT_PATH
-from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
-logger = WaffleSwitchedLoggerWrapper(logging.getLogger(__name__))
+logger = logging.getSmarterLogger(__name__)
 
 load_dotenv()
 
@@ -1982,7 +1981,7 @@ that logs are available both in the console and in Redis for further processing
 or monitoring.
 """
 
-logging.config.dictConfig(LOGGING)
+logging_config.dictConfig(LOGGING)
 
 SMTP_SENDER = smarter_settings.subsystem_smtp_sender
 """

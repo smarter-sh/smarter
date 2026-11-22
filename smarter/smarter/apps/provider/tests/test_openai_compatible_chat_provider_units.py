@@ -656,7 +656,7 @@ class TestChatProviderBaseUnits(SmarterTestBase):
                     api_key=PropertyMock(return_value=api_key),
                     **{name: PropertyMock(return_value=value) for name, value in required.items()},
                 ),
-                patch.object(base_module, "base_logger") as logger,
+                patch.object(base_module, "logger") as logger,
             ):
                 with self.assertRaises(SmarterConfigurationError) as context:
                     self.client.validate()
