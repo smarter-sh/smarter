@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.1...v0.46.14-alpha.2) (2026-11-22)
+
+### Bug Fixes
+
+* **manifest:** word the SAM apps' readiness log in the singular ([3accbff](https://github.com/smarter-sh/smarter/commit/3accbff7a852590b55f5e2bc80fb4455660dd650))
+
+### Refactoring
+
+* **settings:** declare defaults on fields, read env with Pydantic ([658f150](https://github.com/smarter-sh/smarter/commit/658f150bc0149e695463eecd46b6155abb714ef2))
+
 ## [0.46.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.13...v0.46.14-alpha.1) (2026-11-22)
 
 ### Bug Fixes
