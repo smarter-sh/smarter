@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.18-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.17...v0.46.18-alpha.1) (2026-11-22)
+
+### Bug Fixes
+
+* **settings:** rename user settings to overrides ([21412ae](https://github.com/smarter-sh/smarter/commit/21412aeebb74bddebf5f5e055ebb5a321277f738))
+
 ## [0.46.17](https://github.com/smarter-sh/smarter/compare/v0.46.16...v0.46.17) (2026-11-22)
 
 ### Bug Fixes
