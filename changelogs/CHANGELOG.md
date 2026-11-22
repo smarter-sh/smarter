@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.14](https://github.com/smarter-sh/smarter/compare/v0.46.13...v0.46.14) (2026-11-22)
+
+### Bug Fixes
+
+* **logging:** log only through getSmarterLogger; unquote env values ([82bd2bd](https://github.com/smarter-sh/smarter/commit/82bd2bd66406fc616733d1d90612ebbdd51f707f))
+* **manifest:** word the SAM apps' readiness log in the singular ([3accbff](https://github.com/smarter-sh/smarter/commit/3accbff7a852590b55f5e2bc80fb4455660dd650))
+* **settings:** group env vars by platform, subsystem and app ([1a4ed07](https://github.com/smarter-sh/smarter/commit/1a4ed078f40006ac03fff66d00e666a58957ced9))
+* **templates:** link the web app manifest only on hosts whose urlconf serves it ([e452bf2](https://github.com/smarter-sh/smarter/commit/e452bf275a49ec7cfffa0cfcd6257f0f6e20c3a3)), closes [#1032](https://github.com/smarter-sh/smarter/issues/1032)
+
+### Refactoring
+
+* **settings:** declare defaults on fields, read env with Pydantic ([658f150](https://github.com/smarter-sh/smarter/commit/658f150bc0149e695463eecd46b6155abb714ef2))
+
 ## [0.46.14-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.46.14-alpha.3...v0.46.14-alpha.4) (2026-11-22)
 
 ### Bug Fixes
