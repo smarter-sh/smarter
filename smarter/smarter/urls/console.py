@@ -179,6 +179,7 @@ class ConsoleReverseNames:
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
     csp_report = to_snake_case(CspReportView.__name__)
+    site_webmanifest = "site_webmanifest"
 
 
 urlpatterns = [
@@ -228,6 +229,19 @@ urlpatterns = [
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
     path(CSP_REPORT_PATH.lstrip("/"), CspReportView.as_view(), name=ConsoleReverseNames.csp_report),
+    # the web app manifest, from the platform's own origin, never the static files' CDN: a browser
+    # resolves the manifest's start_url, "/", against the manifest's url, and ignores a start_url on
+    # another origin than the page's. Its icons, /static/..., are then the pods' too. The policy's
+    # default-src 'self' covers it, so it needs no manifest-src.
+    path(
+        "site.webmanifest",
+        serve,
+        {
+            "path": "site.webmanifest",
+            "document_root": settings.STATIC_ROOT,
+        },
+        name=ConsoleReverseNames.site_webmanifest,
+    ),
     re_path(
         r"^apple-touch-icon\.png$",
         serve,

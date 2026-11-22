@@ -140,6 +140,44 @@ class TestCspReportLogging(SmarterTestBase):
                 self.assertNotIn(secret, logged)
         self.assertIn("https://cdn.example.com", logged)
         self.assertIn("password_reset_link", logged)
+        self.assertIn(f"line {violation.line_number}", logged)
+
+    def test_log_violation_without_a_line_number(self):
+        """A violation without a line number, e.g. a web app manifest's, doesn't log "line None"."""
+        violation = self.violation().model_copy(update={"line_number": None})
+        with patch(f"{MODULE}.logger") as logger:
+            self.assertTrue(log_violation(violation))
+        logged = " ".join(str(value) for value in logger.warning.call_args.args)
+        self.assertNotIn("None", logged)
+
+
+class TestWebAppManifest(SmarterTestBase):
+    """The web app manifest is served from the page's own origin, which the policy's default-src allows."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client()
+
+    def test_the_manifest_is_served_from_the_platforms_origin(self):
+        path = reverse(ConsoleReverseNames.site_webmanifest)
+        self.assertEqual(path, "/site.webmanifest")
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response["Content-Type"], "application/manifest+json")
+        manifest = json.loads(b"".join(response.streaming_content))  # type: ignore[attr-defined]
+        self.assertEqual(manifest["start_url"], "/")
+
+    def test_the_templates_link_it_from_the_platforms_origin(self):
+        """The base template links the same-origin manifest, never {% static %}'s, which may be the CDN's."""
+        template = (settings.BASE_DIR / "templates" / "base.html").read_text(encoding="utf-8")
+        self.assertIn("{% url 'site_webmanifest' %}", template)
+        self.assertNotIn("{% static 'site.webmanifest' %}", template)
+
+    def test_default_src_covers_the_manifest(self):
+        """With no manifest-src, a browser checks the manifest against default-src, which is 'self'."""
+        policy = settings.SECURE_CSP_REPORT_ONLY
+        self.assertNotIn("manifest-src", policy)
+        self.assertEqual(policy["default-src"], ["'self'"])
 
 
 class TestCspReportView(SmarterTestBase):
