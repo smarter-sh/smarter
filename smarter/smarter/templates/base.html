@@ -62,7 +62,9 @@
 
   <!-- Manifest -->
   <!-- from this origin, not the static files' url, which may be the CDN's: see site_webmanifest in urls/console.py. -->
-  <link rel="manifest" href="{% url 'site_webmanifest' %}?v={{ STATIC_VERSION }}">
+  <!-- Only the console's urlconf serves it: hosts whose urlconf doesn't, such as the api and deployed LLMClients, render pages without it. -->
+  {% url 'site_webmanifest' as site_webmanifest_url %}
+  {% if site_webmanifest_url %}<link rel="manifest" href="{{ site_webmanifest_url }}?v={{ STATIC_VERSION }}">{% endif %}
 
   <!-- Theme -->
   <meta name="theme-color" content="#ff8c00">
