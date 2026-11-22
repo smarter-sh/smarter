@@ -3,13 +3,15 @@
 API views for the web console's welcome dialog, the ``@smarter/welcome`` React app.
 
 The dialog opens by itself on the first console page that a user visits after
-they sign in, for as long as its first step's **Show at startup** box is ticked,
-which it is for a new user. It opens again whenever they choose Welcome Tour in
-the user menu. Closing it, in any way, records the box's choice: unticked, the
-date in :attr:`UserProfile.welcomed_at
-<smarter.apps.account.models.UserProfile.welcomed_at>`, so that it doesn't open
-by itself again, on any device; ticked, no date. Either way, it doesn't open by
-itself again in the same session.
+they sign in, until they first close it, and from then on only while its first
+step's **Show at startup** box is ticked, which it isn't unless the user ticks
+it. It opens again whenever they choose Welcome Tour in the user menu. Closing
+it, in any way, records that the user has seen it, the date in
+:attr:`UserProfile.welcomed_at
+<smarter.apps.account.models.UserProfile.welcomed_at>`, and the box's choice,
+:attr:`UserProfile.show_welcome_at_startup
+<smarter.apps.account.models.UserProfile.show_welcome_at_startup>`, on every
+device. Either way, it doesn't open by itself again in the same session.
 
 - ``welcome/`` returns the links that the dialog's last step offers. The
   dialog's text lives in the React app, where it is translated.
@@ -70,8 +72,8 @@ class WelcomeDismissRequest(BaseModel):
     """
     The body of a request to the welcome dismiss api.
 
-    :param show_at_startup: Whether the dialog opens by itself each time the user signs in: the first
-        step's **Show at startup** box. An empty body is ``False``.
+    :param show_at_startup: Whether the dialog opens by itself each time the user signs in, from now on:
+        the first step's **Show at startup** box. An empty body is ``False``.
     """
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
@@ -83,8 +85,8 @@ class WelcomeApiResponse(BaseModel):
     """
     The response of both welcome dialog api views.
 
-    :param welcomed: Whether the user has closed the welcome dialog before, with its **Show at startup**
-        box unticked, so that it no longer opens by itself.
+    :param welcomed: Whether the user has closed the welcome dialog before. It then opens by itself only
+        while its **Show at startup** box is ticked.
     :param urls: The links that the dialog's last step offers.
     """
 
@@ -97,19 +99,49 @@ class WelcomeApiResponse(BaseModel):
 @cache_results()
 def user_was_welcomed(user_id: int) -> bool:
     """
-    Whether the user has closed the welcome dialog with its **Show at startup** box unticked, in any of.
+    Whether the user has closed the welcome dialog before, in any of their accounts.
 
-    their accounts.
-
-    The console's base template asks on every page, so the answer is cached until
+    The console's session asks on every page load, so the answer is cached until
     :class:`WelcomeDismissView` invalidates it.
 
     :param user_id: The id of the Django user.
     :type user_id: int
-    :returns: True once the user has closed the welcome dialog, until they tick Show at startup again.
+    :returns: True once the user has closed the welcome dialog.
     :rtype: bool
     """
     return UserProfile.objects.filter(user_id=user_id, welcomed_at__isnull=False).exists()
+
+
+@cache_results()
+def user_shows_welcome_at_startup(user_id: int) -> bool:
+    """
+    Whether the user ticked the welcome dialog's **Show at startup** box, in any of their accounts.
+
+    The console's session asks on every page load, so the answer is cached until
+    :class:`WelcomeDismissView` invalidates it.
+
+    :param user_id: The id of the Django user.
+    :type user_id: int
+    :returns: True while the dialog opens by itself each time the user signs in.
+    :rtype: bool
+    """
+    return UserProfile.objects.filter(user_id=user_id, show_welcome_at_startup=True).exists()
+
+
+def welcome_opens_at_sign_in(user_id: int) -> bool:
+    """
+    Whether the welcome dialog opens by itself when the user signs in.
+
+    It does until the user first closes it, and from then on while its **Show at startup** box is ticked.
+
+    :param user_id: The id of the Django user.
+    :type user_id: int
+    :returns: True if the dialog opens by itself at the user's next sign-in.
+    :rtype: bool
+    """
+    if not user_was_welcomed(user_id):
+        return True
+    return user_shows_welcome_at_startup(user_id)
 
 
 def weather_llmclient_url(user: User) -> str | None:
@@ -203,20 +235,22 @@ class WelcomeDismissView(SmarterAuthenticatedWebView):
     """
     Records that the user has closed the welcome dialog, and whether it shows at startup.
 
-    The body is a :class:`WelcomeDismissRequest`, as JSON; a request that isn't JSON is an empty one. With ``showAtStartup`` false, or an empty body, it sets
-    :attr:`UserProfile.welcomed_at <smarter.apps.account.models.UserProfile.welcomed_at>` on each of the
-    user's profiles that hasn't got one, and keeps the date of an earlier visit, so that the dialog
-    doesn't open by itself again. With ``showAtStartup`` true, it clears the date, so that the dialog
-    opens by itself the next time the user signs in. Either way, it sets
-    :data:`WELCOME_SHOWN_SESSION_KEY`, so that the dialog doesn't open by itself again in this session.
-    Its response is that of :class:`WelcomeView`.
+    The body is a :class:`WelcomeDismissRequest`, as JSON; a request that isn't JSON is an empty one. It
+    sets :attr:`UserProfile.welcomed_at <smarter.apps.account.models.UserProfile.welcomed_at>` on each of
+    the user's profiles that hasn't got one, and keeps the date of an earlier visit, and sets
+    :attr:`UserProfile.show_welcome_at_startup
+    <smarter.apps.account.models.UserProfile.show_welcome_at_startup>` on each of them to
+    ``showAtStartup``: false, or an empty body, and the dialog doesn't open by itself again; true, and it
+    opens by itself each time the user signs in. It also sets :data:`WELCOME_SHOWN_SESSION_KEY`, so that
+    the dialog doesn't open by itself again in this session. Its response is that of :class:`WelcomeView`.
     """
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
         Record that the user closed the welcome dialog, and whether it shows at startup.
 
-        Updates ``welcomed_at`` on the user's profiles, and sets the session's welcome flag.
+        Updates ``welcomed_at`` and ``show_welcome_at_startup`` on the user's profiles, and sets the
+        session's welcome flag.
 
         :param request: The request, whose JSON body is a :class:`WelcomeDismissRequest`.
         :returns: The :class:`WelcomeView` response; ``401`` if not signed in; ``400`` if the body is
@@ -232,18 +266,17 @@ class WelcomeDismissView(SmarterAuthenticatedWebView):
         except (ValueError, ValidationError) as e:
             logger.warning("invalid body for user %s: %s", user.pk, e)
             return JsonResponse({"error": "Invalid request body."}, status=HTTPStatus.BAD_REQUEST)
-        if body.show_at_startup:
-            profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=False)
-            welcomed_at = None
-        else:
-            profiles = UserProfile.objects.filter(user=user, welcomed_at__isnull=True)
-            welcomed_at = timezone.now()
+        profiles = UserProfile.objects.filter(user=user)
         profile_ids = list(profiles.values_list("id", flat=True))
-        # an update(), rather than save(), so that no other field of a profile is written back.
-        profiles.update(welcomed_at=welcomed_at)
+        # update(), rather than save(), so that no other field of a profile is written back.
+        # the date of the first visit is kept.
+        not_yet_welcomed = profiles.filter(welcomed_at__isnull=True)
+        not_yet_welcomed.update(welcomed_at=timezone.now())
+        profiles.update(show_welcome_at_startup=body.show_at_startup)
         for profile_id in profile_ids:
             UserProfile.get_cached_object(invalidate=True, pk=profile_id)
         user_was_welcomed.invalidate(user.pk)
+        user_shows_welcome_at_startup.invalidate(user.pk)
         request.session[WELCOME_SHOWN_SESSION_KEY] = True
         logger.info(
             "welcomed user %s, show at startup: %s",

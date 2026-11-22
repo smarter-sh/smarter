@@ -17,10 +17,12 @@ docs.smarter.sh, and the Smarter api's responses, are not translated.
 How a Page Chooses Its Language
 -------------------------------
 
-Django's ``LocaleMiddleware`` activates a language for each request: the one in the language cookie,
-which the language menu sets, or else the best match for the browser's ``Accept-Language`` header,
-or else ``settings.LANGUAGE_CODE``, English. Only the languages in ``settings.LANGUAGES`` can be
-chosen. The page then renders in that language:
+``SmarterLocaleMiddleware`` (``smarter.apps.account.middleware``), Django's ``LocaleMiddleware`` with
+one addition, activates a language for each request: the one in the language cookie, which the
+language menu sets, or else, for a signed-in user, the language they last chose in the language menu,
+or else the best match for the browser's ``Accept-Language`` header, or else ``settings.LANGUAGE_CODE``,
+English. Only the languages in ``settings.LANGUAGES`` can be chosen. The page then renders in that
+language:
 
 - **Django templates** mark their text with ``{% translate %}`` and ``{% blocktranslate %}``, after
   ``{% load i18n %}``. ``base.html`` sets ``<html lang="...">`` to the active language.
@@ -43,8 +45,14 @@ through the ``<html lang>`` attribute of ``base.html``. See
 :doc:`Developing Smarter Chat <../smarter-chat/development>`.
 
 The language menu, in the user menu of the console's navbar (the ``@smarter/dashboard-user-menu``
-React app), lists each language in its own name, and posts the choice to Django's ``set_language`` view at ``/i18n/setlang/``. It is shown only when
-``settings.LANGUAGES`` has more than one language.
+React app), lists each language in its own name, and posts the choice to ``/i18n/setlang/``,
+``smarter.apps.account.language.set_language``. It is shown only when ``settings.LANGUAGES`` has more
+than one language. The view is Django's ``set_language``, which stores the choice in the language
+cookie for a year (``LANGUAGE_COOKIE_AGE``), plus a copy in ``UserProfile.console_language`` and
+``UserProfile.language``, on each of a signed-in user's profiles. When a signed-in user's browser has no
+language cookie, e.g. on another device or after they cleared their cookies,
+``SmarterLocaleMiddleware`` activates the language in their profile and sets the cookie again, rather
+than falling back to the browser's language.
 
 Emails are often sent outside a request, for example from a management command, so they are written in
 the recipient's preferred language instead, ``UserProfile.language``. It is English by default. A

@@ -56,7 +56,8 @@ from smarter.apps.dashboard.views.terminal_emulator.enabled import (
 from smarter.apps.dashboard.views.views.api.onboarding import seen_onboarding_hints
 from smarter.apps.dashboard.views.views.api.welcome import (
     WELCOME_SHOWN_SESSION_KEY,
-    user_was_welcomed,
+    user_shows_welcome_at_startup,
+    welcome_opens_at_sign_in,
 )
 from smarter.apps.llmtool.extension.registry import update_count
 from smarter.common.conf import smarter_settings
@@ -251,12 +252,14 @@ def welcome(request: HttpRequest, user: User) -> ConsoleWelcome:
 
     :param request: The request, whose session records whether the dialog was closed in this session.
     :param user: The signed-in user.
-    :returns: Whether the dialog shows at startup, and whether it opens by itself now.
+    :returns: Whether the dialog's Show at startup box is ticked, and whether the dialog opens by itself now:
+        until the user first closes it, and from then on while the box is ticked, once per session.
     """
-    show_at_startup = not user_was_welcomed(user.pk)
+    show_at_startup = user_shows_welcome_at_startup(user.pk)
+    opens_at_sign_in = welcome_opens_at_sign_in(user.pk)
     session = getattr(request, "session", None) or {}
     shown_this_session = session.get(WELCOME_SHOWN_SESSION_KEY, False)
-    show = show_at_startup and not shown_this_session
+    show = opens_at_sign_in and not shown_this_session
     return ConsoleWelcome(show_at_startup=show_at_startup, show=show)
 
 

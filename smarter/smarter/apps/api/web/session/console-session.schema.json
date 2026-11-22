@@ -977,12 +977,12 @@
       "description": "The state of the welcome dialog for the user.",
       "properties": {
         "show": {
-          "description": "Whether it opens by itself now: it shows at startup, and hasn't been closed in this session.",
+          "description": "Whether it opens by itself now: the user hasn't closed it before, or its Show at startup box is ticked, and it hasn't been closed in this session.",
           "title": "Show",
           "type": "boolean"
         },
         "showAtStartup": {
-          "description": "Whether the dialog opens by itself each time the user signs in.",
+          "description": "Whether the dialog's Show at startup box is ticked: it opens by itself at each sign-in.",
           "title": "Showatstartup",
           "type": "boolean"
         }

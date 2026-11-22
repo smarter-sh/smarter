@@ -209,14 +209,17 @@ def log_violation(violation: CspViolation) -> bool:
     if not is_new:
         return False
 
+    location = source or "the page"
+    # a violation without a line number, e.g. a manifest's, is reported without one.
+    if line_number is not None:
+        location = f"{location} line {line_number}"
     logger.warning(
-        "Content Security Policy (%s) violation: %s blocked %s on %s, from %s line %s.",
+        "Content Security Policy (%s) violation: %s blocked %s on %s, from %s.",
         truncated(violation.disposition) or "unknown",
         directive,
         blocked,
         page,
-        source or "the page",
-        line_number,
+        location,
     )
     return True
 

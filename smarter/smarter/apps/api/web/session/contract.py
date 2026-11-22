@@ -169,9 +169,15 @@ class ConsoleOnboarding(ConsoleSessionModel):
 class ConsoleWelcome(ConsoleSessionModel):
     """The state of the welcome dialog for the user."""
 
-    show_at_startup: bool = Field(..., description="Whether the dialog opens by itself each time the user signs in.")
+    show_at_startup: bool = Field(
+        ..., description="Whether the dialog's Show at startup box is ticked: it opens by itself at each sign-in."
+    )
     show: bool = Field(
-        ..., description="Whether it opens by itself now: it shows at startup, and hasn't been closed in this session."
+        ...,
+        description=(
+            "Whether it opens by itself now: the user hasn't closed it before, or its Show at startup box is "
+            "ticked, and it hasn't been closed in this session."
+        ),
     )
 
 

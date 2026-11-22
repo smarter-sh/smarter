@@ -204,6 +204,12 @@ class TestConsoleAppOnTheCdn(SmarterTestBase):
         self.assertIn('src="/jsi18n/"', page)
         self.assertNotIn('"/static/', page)
 
+    def test_the_manifest_stays_on_the_platform(self):
+        """The web app manifest's link, /site.webmanifest, isn't under /static/, so it stays on the page's origin."""
+        head = BUILT_HEAD + '<link rel="manifest" href="/site.webmanifest" />'
+        page = with_static_url(head, CDN_STATIC_URL)
+        self.assertIn('<link rel="manifest" href="/site.webmanifest" />', page)
+
     def test_with_the_default_static_url(self):
         """With the server's own /static/, the page is unchanged."""
         self.assertEqual(with_static_url(BUILT_HEAD, "/static/"), BUILT_HEAD)

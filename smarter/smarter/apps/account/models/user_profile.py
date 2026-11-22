@@ -405,13 +405,30 @@ class UserProfile(MetaDataModel):
     welcomed_at = models.DateTimeField(
         blank=True,
         null=True,
-        help_text="When the user closed the web console's welcome dialog. Empty until they have seen it.",
+        help_text="When the user first closed the web console's welcome dialog. Empty until they have seen it.",
+    )
+    show_welcome_at_startup = models.BooleanField(
+        default=False,
+        help_text=(
+            "Whether the web console's welcome dialog opens by itself each time the user signs in: "
+            "its Show at startup box. Unticked, it opens by itself only until the user first closes it."
+        ),
     )
     language = models.CharField(
         max_length=10,
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
         help_text="The user's preferred language, in which they are sent emails, e.g. the welcome email.",
+    )
+    console_language = models.CharField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        blank=True,
+        default="",
+        help_text=(
+            "The language that the user chose in the web console's language menu, which the console restores "
+            "when the browser has no language cookie, e.g. on another device. Empty until they choose one."
+        ),
     )
 
     @property
