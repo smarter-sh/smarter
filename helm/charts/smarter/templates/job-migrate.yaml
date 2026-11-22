@@ -14,8 +14,9 @@
 # - Upgrades only. A pre-install hook runs before any of the chart's resources exist,
 #   including the Secret in secret-env.yaml that holds the database's credentials, so it
 #   couldn't start. On a fresh install there are no older pods, and job-init.yaml creates
-#   the database and its user, then migrates. On an upgrade, job-init.yaml's migrate then
-#   finds nothing to do.
+#   the database and its user, then migrates, while the new pods wait for it in their
+#   init container (smarter.waitForDatabase in _helpers.tpl). On an upgrade, job-init.yaml's
+#   migrate then finds nothing to do.
 # - The Job reads the previous release's Secret, since Helm applies the new one after
 #   pre-upgrade hooks. That is enough to migrate: the database's user and password change
 #   only in job-init.yaml, after the rollout.

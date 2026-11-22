@@ -18,27 +18,21 @@ Choose the installation method that best suits your needs.
 	This method is ideal for developers who want to contribute to the project,
 	or who want to customize the application for their own use.
 
-- **Option 3: Professionally Installed Kubernetes Cloud Installation**
-
-	Use a `Certified Smarter Cloud Hosting Provider <https://smarter.sh/#services>`_
-	that offers installation and support for Kubernetes-based Smarter deployments.
-	This method is ideal for small organizations that want to use Smarter without
-	the hassle of managing their own infrastructure.
-
-- **Option 4: Managed Service**
-
-	Use a `Certified Smarter Cloud Hosting Provider <https://smarter.sh/#services>`_
-	that offers Smarter as a managed service. This method is ideal for organizations
-	that want to run Smarter in their own cloud environment, but don't want to
-	manage the software and infrastructure themselves.
-
-- **Option 5: Self-hosted Kubernetes Installation**
+- **Option 3: Production Kubernetes Installation**
 
 	`Deploy Smarter to a production environment <./installation/production-deployment.html>`_
-	using AWS and Kubernetes. This method is ideal for large organizations that
+	using AWS and Kubernetes. This method is ideal for organizations that
 	want to use Smarter in a production setting, and who have the resources to
 	manage a production deployment.
 
+.. note::
+
+	Hosting Smarter in production is complex and skills intensive. A production deployment involves a
+	Kubernetes cluster, a database server, extensive knowledge of networking and Internet security,
+	a broad range of cloud services, backups and upgrades, and someone who keeps all of it running. If you would
+	rather not do this yourself, a
+	`Certified Smarter Cloud Hosting Provider <https://smarter.sh/#services>`_
+	can install, host and support a Kubernetes deployment of Smarter for you.
 
 
 .. toctree::

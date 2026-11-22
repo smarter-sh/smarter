@@ -146,16 +146,6 @@ class Command(SmarterCommand):
         call_command(
             "create_user",
             account_number=SMARTER_ACCOUNT_NUMBER,
-            username="staff_user",
-            email=f"staff@{smarter_settings.platform_root_domain}",
-            password=password,
-            first_name="Staff",
-            last_name="User",
-            admin=True,
-        )
-        call_command(
-            "create_user",
-            account_number=SMARTER_ACCOUNT_NUMBER,
             username="customer_user",
             email=f"customer@{smarter_settings.platform_root_domain}",
             password=password,

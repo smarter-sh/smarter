@@ -34,7 +34,10 @@ class TestInitializePlatform(CommandTestBase):
         with patch(f"{MODULE}.call_command") as call:
             self.run_command("initialize_platform", username="admin", email="admin@example.com", password="pw")
         names = [c.args[0] for c in call.call_args_list]
-        self.assertEqual(names[:3], ["create_smarter_admin", "create_user", "create_user"])
+        self.assertEqual(names[:2], ["create_smarter_admin", "create_user"])
+        # the example customer user, and no staff user: the platform's only administrator is its superuser.
+        self.assertEqual(call.call_args_list[1].kwargs["username"], "customer_user")
+        self.assertNotIn("admin", call.call_args_list[1].kwargs)
         self.assertIn("initialize_waffle", names)
         self.assertIn("index_smarter_project", names)
         self.assertEqual(call.call_args_list[names.index("index_smarter_project")].kwargs, {"queue": True})
