@@ -13,12 +13,12 @@ from rest_framework.request import Request
 
 from smarter.apps.llmclient.api.v1.views.default import DefaultLLMClientApiView
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1
 from smarter.apps.prompt.models import Prompt, PromptHistory
 from smarter.apps.prompt.views.detailviews import PromptConfigView
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib import json, logging
 from smarter.lib.django import waffle

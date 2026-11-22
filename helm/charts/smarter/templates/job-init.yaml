@@ -61,7 +61,7 @@ spec:
               # so that a failed step fails the Job (and the Helm hook) instead of being hidden.
               # The mariadb commands carry passwords, so they don't run through run(), which echoes its command.
               # The steps' output is also written to a log file, which is emailed when the Job completes,
-              # to databaseInit.notifyEmail, or to smarter_settings.email_admin, and posted to the Slack
+              # to databaseInit.notifyEmail, or to smarter_settings.platform_email_admin, and posted to the Slack
               # channel databaseInit.notifySlackChannel, if any. The steps run in a subshell (they are piped to tee), so their exit status is passed back in a file.
               {
                 status=0
@@ -79,31 +79,31 @@ spec:
                 # Revisit this if the database moves to a managed service such as RDS, or outside the cluster's
                 # network: then pass the password in --defaults-extra-file and verify with --ssl-ca.
                 db() {
-                  MYSQL_PWD="$SMARTER_MYSQL_ROOT_PASSWORD" mariadb --default-character-set=utf8mb4 --skip-ssl-verify-server-cert \
-                    -u "$SMARTER_MYSQL_ROOT_USERNAME" --host "$SMARTER_MYSQL_HOST" --port "${SMARTER_MYSQL_PORT:-3306}" -e "$1"
+                  MYSQL_PWD="$SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD" mariadb --default-character-set=utf8mb4 --skip-ssl-verify-server-cert \
+                    -u "$SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME" --host "$SMARTER_SUBSYSTEM_SQL_HOST" --port "${SMARTER_SUBSYSTEM_SQL_PORT:-3306}" -e "$1"
                 }
-                db "CREATE DATABASE IF NOT EXISTS $SMARTER_MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-                db "ALTER DATABASE $SMARTER_MYSQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
-                db "CREATE USER IF NOT EXISTS '$SMARTER_MYSQL_USER'@'%' IDENTIFIED BY '$SMARTER_MYSQL_PASSWORD';" || status=1
-                db "ALTER USER '$SMARTER_MYSQL_USER'@'%' IDENTIFIED BY '$SMARTER_MYSQL_PASSWORD';" || status=1
-                db "GRANT ALL PRIVILEGES ON $SMARTER_MYSQL_DATABASE.* TO '$SMARTER_MYSQL_USER'@'%'; FLUSH PRIVILEGES;" || status=1
-                {{- $backupPassword := .Values.env.SMARTER_MYSQL_BACKUP_PASSWORD | default "" }}
+                db "CREATE DATABASE IF NOT EXISTS $SMARTER_SUBSYSTEM_SQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                db "ALTER DATABASE $SMARTER_SUBSYSTEM_SQL_DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" || status=1
+                db "CREATE USER IF NOT EXISTS '$SMARTER_SUBSYSTEM_SQL_USER'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_PASSWORD';" || status=1
+                db "ALTER USER '$SMARTER_SUBSYSTEM_SQL_USER'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_PASSWORD';" || status=1
+                db "GRANT ALL PRIVILEGES ON $SMARTER_SUBSYSTEM_SQL_DATABASE.* TO '$SMARTER_SUBSYSTEM_SQL_USER'@'%'; FLUSH PRIVILEGES;" || status=1
+                {{- $backupPassword := .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
                 {{- if and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
                 # the read-only account that the nightly backup, job-mysql-backup.yaml, dumps the database with.
                 # SHOW CREATE ROUTINE exists in MariaDB 11.3 and later. On an older server, the grant without it
                 # still dumps every table, view, trigger and event.
-                backup_user="${SMARTER_MYSQL_BACKUP_USERNAME:-smarter_backup}"
-                db "CREATE USER IF NOT EXISTS '$backup_user'@'%' IDENTIFIED BY '$SMARTER_MYSQL_BACKUP_PASSWORD';" || status=1
-                db "ALTER USER '$backup_user'@'%' IDENTIFIED BY '$SMARTER_MYSQL_BACKUP_PASSWORD';" || status=1
-                db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE ON $SMARTER_MYSQL_DATABASE.* TO '$backup_user'@'%';" \
-                  || { echo "This server has no SHOW CREATE ROUTINE privilege. Granting $backup_user the rest."; db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON $SMARTER_MYSQL_DATABASE.* TO '$backup_user'@'%';"; } \
+                backup_user="${SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME:-smarter_backup}"
+                db "CREATE USER IF NOT EXISTS '$backup_user'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD';" || status=1
+                db "ALTER USER '$backup_user'@'%' IDENTIFIED BY '$SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD';" || status=1
+                db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT, SHOW CREATE ROUTINE ON $SMARTER_SUBSYSTEM_SQL_DATABASE.* TO '$backup_user'@'%';" \
+                  || { echo "This server has no SHOW CREATE ROUTINE privilege. Granting $backup_user the rest."; db "GRANT SELECT, SHOW VIEW, TRIGGER, EVENT ON $SMARTER_SUBSYSTEM_SQL_DATABASE.* TO '$backup_user'@'%';"; } \
                   || status=1
                 {{- end }}
                 run python manage.py migrate
                 # initialize_platform does all of the platform's initialization, and this Job adds none of its
                 # own: every example resource, and Stackademy, including its course database, which it creates
-                # as SMARTER_MYSQL_ROOT_USERNAME. It reads the admin username and password from
-                # SMARTER_ADMIN_USERNAME and SMARTER_ADMIN_PASSWORD.
+                # as SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME. It reads the admin username and password from
+                # SMARTER_PLATFORM_ADMIN_USERNAME and SMARTER_PLATFORM_ADMIN_PASSWORD.
                 run python manage.py initialize_platform
                 echo $status > /tmp/job-init.status
               } 2>&1 | tee /tmp/job-init.log
@@ -134,10 +134,8 @@ spec:
             {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
-            {{- include "smarter.userSettingsVolumeMounts" . | nindent 12 }}
       volumes:
         {{- include "smarter.writableVolumes" . | nindent 8 }}
-        {{- include "smarter.userSettingsVolumes" . | nindent 8 }}
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never

@@ -8,50 +8,11 @@ from typing import List
 from pydantic import BaseModel
 
 from smarter.common.conf.const import DOT_ENV_LOADED
-from smarter.common.const import (
-    SMARTER_API_KEY_MAX_LIFETIME_DAYS,
-    SMARTER_PROJECT_CDN_URL,
-    SMARTER_PROJECT_DOCS_URL,
-    SMARTER_PROJECT_WEBSITE_URL,
-)
 from smarter.common.utils import get_repository_url, get_semantic_version
 
 
 class ProjectSettings(BaseModel):
     """Facts about the running software: versions, urls of the Smarter project, and paths."""
-
-    @cached_property
-    def smarter_project_website_url(self) -> str:
-        """
-        Return the URL for the Smarter project website.
-
-        Example:
-            >>> print(smarter_settings.smarter_project_website_url)
-            https://www.smarter.sh
-        """
-        return SMARTER_PROJECT_WEBSITE_URL
-
-    @cached_property
-    def smarter_project_cdn_url(self) -> str:
-        """
-        Return the URL for the Smarter project CDN.
-
-        Example:
-            >>> print(smarter_settings.smarter_project_cdn_url)
-            https://cdn.smarter.sh
-        """
-        return SMARTER_PROJECT_CDN_URL
-
-    @cached_property
-    def smarter_project_docs_url(self) -> str:
-        """
-        Return the URL for the Smarter project documentation.
-
-        Example:
-            >>> print(smarter_settings.smarter_project_docs_url)
-            https://docs.smarter.sh
-        """
-        return SMARTER_PROJECT_DOCS_URL
 
     @property
     def data_directory(self) -> str:
@@ -107,33 +68,32 @@ class ProjectSettings(BaseModel):
                 'ENVIRONMENT',
                 'PYTHONPATH',
                 'DEVELOPER_MODE',
-                'GEMINI_API_KEY',
-                'ANTHROPIC_API_KEY',
-                'COHERE_API_KEY',
-                'FIREWORKS_API_KEY',
-                'LLAMA_API_KEY',
-                'MISTRAL_API_KEY',
-                'OPENAI_API_KEY',
-                'TOGETHERAI_API_KEY',
-                'GOOGLE_SERVICE_ACCOUNT_B64',
-                'GOOGLE_MAPS_API_KEY',
+                'APP_PROVIDER_GEMINI_API_KEY',
+                'APP_PROVIDER_ANTHROPIC_API_KEY',
+                'APP_PROVIDER_COHERE_API_KEY',
+                'APP_PROVIDER_FIREWORKS_API_KEY',
+                'APP_PROVIDER_LLAMA_API_KEY',
+                'APP_PROVIDER_MISTRAL_API_KEY',
+                'APP_PROVIDER_OPENAI_API_KEY',
+                'APP_PROVIDER_TOGETHERAI_API_KEY',
+                'APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64',
+                'APP_PROVIDER_GOOGLE_MAPS_API_KEY',
                 'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY',
                 'SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET',
                 'SOCIAL_AUTH_GITHUB_KEY',
                 'SOCIAL_AUTH_GITHUB_SECRET',
                 'SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY',
                 'SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET',
-                'PINECONE_API_KEY',
-                'PINECONE_ENVIRONMENT',
+                'APP_VECTORSTORE_PINECONE_API_KEY',
                 'ROOT_DOMAIN',
                 'NAMESPACE',
-                'MYSQL_HOST',
-                'MYSQL_PORT',
-                'MYSQL_DATABASE',
-                'MYSQL_PASSWORD',
-                'MYSQL_USERNAME',
-                'MYSQL_ROOT_USERNAME',
-                'MYSQL_ROOT_PASSWORD',
+                'SQL_HOST',
+                'SQL_PORT',
+                'SQL_DATABASE',
+                'SQL_PASSWORD',
+                'SQL_USERNAME',
+                'SQL_ROOT_USERNAME',
+                'SQL_ROOT_PASSWORD',
                 'LOGIN_URL',
                 'ADMIN_PASSWORD',
                 'ADMIN_USERNAME',
@@ -144,26 +104,6 @@ class ProjectSettings(BaseModel):
             This list reflects the environment at the time the settings object was created.
         """
         return list(os.environ.keys())
-
-    @property
-    def smarter_api_key_max_lifetime_days(self) -> int:
-        """Maximum lifetime for Smarter API keys in days.
-
-        Returns:
-            int: The number of days.
-
-        Example:
-            >>> print(smarter_settings.smarter_api_key_max_lifetime_days)
-            90
-
-        Warning:
-            Changing this value requires a platform rebuild/redeploy.
-            Expired API keys still function but will log warnings.
-
-        See Also:
-            - SMARTER_API_KEY_MAX_LIFETIME_DAYS
-        """
-        return SMARTER_API_KEY_MAX_LIFETIME_DAYS
 
     @cached_property
     def version(self) -> str:
@@ -192,7 +132,7 @@ class ProjectSettings(BaseModel):
         Taken from ``git remote -v`` (the ``origin`` remote's fetch url), so that a fork links
         to its own repository, and its own GitHub Actions badges. The Docker image has no
         ``.git`` directory, so a platform running in a container gets the default,
-        :data:`~smarter.common.const.SMARTER_PROJECT_REPOSITORY_URL`. See
+        :data:`~smarter.common.utils.repository.DEFAULT_REPOSITORY_URL`. See
         :func:`smarter.common.utils.repository.get_repository_url`.
 
         Example:

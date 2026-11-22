@@ -78,7 +78,7 @@ from smarter.lib import json, logging
 from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")

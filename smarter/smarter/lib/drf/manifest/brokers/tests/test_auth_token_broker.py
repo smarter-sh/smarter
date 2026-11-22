@@ -36,7 +36,7 @@ from smarter.lib.manifest.parsing import parse_manifest, read_manifest_file
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterAuthTokenBrokerBase(TestSAMBrokerBaseClass):

@@ -11,11 +11,6 @@ from django.views.generic.base import RedirectView
 
 from smarter.apps.dashboard.const import namespace
 from smarter.apps.dashboard.views.console_app import ConsoleAppView
-from smarter.common.conf import smarter_settings
-from smarter.common.mixins.helper_mixin import SmarterReadyState
-from smarter.lib import logging
-
-logger = logging.getSmarterLogger(__name__)
 
 
 class DashboardReverseNames:
@@ -31,16 +26,3 @@ urlpatterns = [
     path("help/", RedirectView.as_view(url="/docs/"), name="help"),
     path("support/", RedirectView.as_view(url="/docs/"), name="support"),
 ]
-
-if smarter_settings.enable_dropzone_manifest_apply:
-    logger.debug(
-        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'false' to disable.",
-        namespace,
-        SmarterReadyState.READY,
-    )
-else:
-    logger.info(
-        "%s app dropzone url endpoint is %s. Set env 'ENABLE_MANIFEST_DROPZONE' to 'true' to enable.",
-        namespace,
-        SmarterReadyState.NOT_READY,
-    )

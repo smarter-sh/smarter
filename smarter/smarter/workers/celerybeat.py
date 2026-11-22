@@ -17,8 +17,8 @@ from smarter.lib.celery_conf import APP as app  # noqa: E402
 # not created, and Redis drops its messages: operational tasks go to OPERATIONAL, which the
 # smarter-worker consumes, and infrastructure tasks to INFRASTRUCTURE, which the
 # smarter-worker-infrastructure consumes.
-OPERATIONAL = {"queue": smarter_settings.llmclient_tasks_celery_task_queue}
-INFRASTRUCTURE = {"queue": smarter_settings.infrastructure_tasks_celery_task_queue}
+OPERATIONAL = {"queue": smarter_settings.app_llmclient_tasks_celery_task_queue}
+INFRASTRUCTURE = {"queue": smarter_settings.app_infrastructure_tasks_celery_task_queue}
 
 app.conf.beat_schedule = {
     "aggregate-prompt-history": {

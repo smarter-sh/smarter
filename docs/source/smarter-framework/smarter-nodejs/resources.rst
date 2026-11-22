@@ -106,7 +106,7 @@ Vectorstores
 
 ``addFiles()`` takes paths, ``file:`` urls, or ``File`` objects. Documents are split, embedded and
 loaded asynchronously, and only once the vectorstore is deployed. The platform serves these
-endpoints when ``SMARTER_ENABLE_VECTORSTORE`` is true.
+endpoints when ``SMARTER_APP_VECTORSTORE_ENABLE`` is true.
 
 Vectorsearches
 --------------
@@ -211,7 +211,7 @@ provider's own SDK:
    const smarter = new Smarter();
    const openai = new OpenAI({ baseURL: smarter.proxies.baseUrl("openai"), apiKey: smarter.apiKey });
 
-The platform serves proxies when ``SMARTER_ENABLE_PROXY`` is true.
+The platform serves proxies when ``SMARTER_APP_PROXY_ENABLE`` is true.
 
 Endpoints the SDK does not wrap
 -------------------------------

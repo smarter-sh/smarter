@@ -85,7 +85,7 @@ others are detached. Only the LLMClient's owner or an account admin can attach a
 account admin can create one. An LLMClient that isn't deployed shows the url that it will have, and
 the command that deploys it.
 
-A platform administrator can also show that page to browsers, with the ``enable_llmclient_endpoints_page``
+A platform administrator can also show that page to browsers, with the ``llmclient_enable_endpoints_page``
 :doc:`waffle switch <../smarter-framework/developer-reference/lib/django/waffle>`, which is off by
 default. A browser that opens a deployed LLMClient's url, or either endpoint, then receives it, with
 its api key steps written out rather than as forms, the LLMClient's manifest without its owner's

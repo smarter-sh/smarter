@@ -8,7 +8,7 @@ A fork of Smarter has its own repository, its own CI workflows and
 their badges, so the web console links to the repository that this codebase was
 cloned from, which ``git remote -v`` reports. The Docker image has no ``.git``
 directory, so a platform that runs in a container falls back to
-:data:`~smarter.common.const.SMARTER_PROJECT_REPOSITORY_URL`.
+:data:`DEFAULT_REPOSITORY_URL`.
 
 Functions
 ---------
@@ -22,8 +22,11 @@ from functools import cache
 from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
-from smarter.common.const import REPO_ROOT, SMARTER_PROJECT_REPOSITORY_URL
+from smarter.common.const import REPO_ROOT
 from smarter.lib import logging
+
+DEFAULT_REPOSITORY_URL = "https://github.com/smarter-sh/smarter"
+"""The repository that a platform without a ``.git`` directory, e.g. in the Docker image, reports."""
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -96,7 +99,7 @@ def get_repository_url() -> str:
     Return the https url of the source code repository of the running platform.
 
     Runs ``git remote -v`` in the repository's root folder. Falls back to
-    :data:`~smarter.common.const.SMARTER_PROJECT_REPOSITORY_URL` when git, or a
+    :data:`DEFAULT_REPOSITORY_URL` when git, or a
     ``.git`` directory, isn't there, as in the Docker image, or no remote has a url
     that a browser can open.
 
@@ -118,8 +121,8 @@ def get_repository_url() -> str:
         )
     except (OSError, subprocess.SubprocessError) as e:
         logger.debug("git remote -v failed, using the default: %s", e)
-        return SMARTER_PROJECT_REPOSITORY_URL
-    return parse_git_remotes(result.stdout) or SMARTER_PROJECT_REPOSITORY_URL
+        return DEFAULT_REPOSITORY_URL
+    return parse_git_remotes(result.stdout) or DEFAULT_REPOSITORY_URL
 
 
 __all__ = ["get_repository_url", "normalize_remote_url", "parse_git_remotes"]

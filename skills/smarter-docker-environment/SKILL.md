@@ -1,6 +1,6 @@
 ---
 name: smarter-docker-environment
-description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for tests, migrations, manage.py commands or the dev server. Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
+description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for migrations, manage.py commands or the dev server (tests run with make docker-test; see smarter-python-testing). Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
 ---
 
 # Smarter Docker Environment
@@ -16,8 +16,8 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 > `docker cp`'s errors.
 >
 > **The same trap hits any variable that holds more than one argument**, not
-> just file lists. `pw="-e SMARTER_MYSQL_PASSWORD=p4ss"; docker exec $pw ...`
-> passes `-e SMARTER_MYSQL_PASSWORD=p4ss` as **one** argument. Docker doesn't
+> just file lists. `pw="-e SMARTER_SUBSYSTEM_SQL_PASSWORD=p4ss"; docker exec $pw ...`
+> passes `-e SMARTER_SUBSYSTEM_SQL_PASSWORD=p4ss` as **one** argument. Docker doesn't
 > complain. The variable just never reaches the container, and the test reports
 > a bug in the code that isn't there. An agent once spent a debugging round
 > on exactly this, in a loop that tested "with and without a password". See
@@ -27,13 +27,13 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 
 ## The containers
 
-| Container                          | Role                                                                            |
-| ---------------------------------- | ------------------------------------------------------------------------------- |
-| `smarter-api`                      | Django dev server on http://localhost:9357, and where tests and `manage.py` run |
-| `smarter-worker`                   | Celery worker for operational tasks                                             |
-| `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)             |
-| `smarter-beat`                     | Celery beat scheduler                                                           |
-| `smarter-mariadb`, `smarter-redis` | Database and cache/broker                                                       |
+| Container                          | Role                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `smarter-api`                      | Django dev server on http://localhost:9357, and where `manage.py` commands run |
+| `smarter-worker`                   | Celery worker for operational tasks                                            |
+| `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)            |
+| `smarter-beat`                     | Celery beat scheduler                                                          |
+| `smarter-mariadb`, `smarter-redis` | Database and cache/broker                                                      |
 
 Host path `smarter/smarter/<path>` is `/home/smarter_user/smarter/smarter/<path>`
 in every app container. The working directory for `manage.py` is
@@ -153,11 +153,11 @@ docker cp smarter-api:/home/smarter_user/smarter/smarter/apps/widget/migrations/
   ```zsh
   # a function that takes the varying arguments as "$@"
   run() { docker exec -e ENVIRONMENT=prod "$@" smarter-api python -c '...'; }
-  run -e SMARTER_MYSQL_PASSWORD=p4ss
-  run -e SMARTER_MYSQL_PASSWORD=SET-ME-PLEASE
+  run -e SMARTER_SUBSYSTEM_SQL_PASSWORD=p4ss
+  run -e SMARTER_SUBSYSTEM_SQL_PASSWORD=SET-ME-PLEASE
 
   # or an array, expanded with "${args[@]}"
-  args=(-e ENVIRONMENT=prod -e SMARTER_MYSQL_PASSWORD=p4ss)
+  args=(-e ENVIRONMENT=prod -e SMARTER_SUBSYSTEM_SQL_PASSWORD=p4ss)
   docker exec "${args[@]}" smarter-api ...
   ```
 
@@ -179,7 +179,7 @@ image on an isolated network:
    hostnames are hard-coded in `settings/base.py`, so the aliases redirect
    everything.
 2. Grant `smarter` all privileges, as `docker-init` does, and pass
-   `SMARTER_MYSQL_ROOT_PASSWORD`: `initialize_platform` creates the Stackademy
+   `SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD`: `initialize_platform` creates the Stackademy
    course database as root.
 3. Run `smarter:latest` with `--env-file` (a copy of the template, plus a Fernet
    key), and a copy of the host's `smarter/smarter` mounted over

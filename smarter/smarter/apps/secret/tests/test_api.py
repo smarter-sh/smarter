@@ -11,7 +11,7 @@ from smarter.lib.django.shortcuts import reverse
 
 from .factories import factory_secret_teardown, secret_factory
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSecretAPIUrls(TestAccountMixin):

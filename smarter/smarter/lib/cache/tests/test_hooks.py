@@ -62,7 +62,7 @@ class TestSmarterConfiguration(SmarterTestBase):
         """The CACHE_RESULTS setting names Smarter's encoder, default timeout and logging hooks."""
         self.assertEqual(cache_results_settings.cache_alias, "default")
         self.assertIs(cache_results_settings.key_encoder, hooks.SmarterCacheKeyEncoder)
-        self.assertEqual(cache_results_settings.timeout, smarter_settings.cache_expiration)
+        self.assertEqual(cache_results_settings.timeout, smarter_settings.subsystem_cache_expiration)
         with patch("smarter.lib.django.waffle.switch_is_active", return_value=True):
             self.assertTrue(cache_results_settings.logging_enabled)
         self.assertEqual(cache_results_settings.verbose_logging, bool(smarter_settings.verbose_logging))

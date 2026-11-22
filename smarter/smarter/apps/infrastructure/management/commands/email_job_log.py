@@ -1,5 +1,5 @@
 """
-Email a job's log, by default to the platform's admin, ``smarter_settings.email_admin``, and post it to Slack.
+Email a job's log, by default to the platform's admin, ``smarter_settings.platform_email_admin``, and post it to Slack.
 
 The Helm chart's init Job tees its output to a file, and runs this command last, so that the
 admin, or whoever ``--to`` names, learns how each install and upgrade went without reading
@@ -21,7 +21,7 @@ also sends the admin a blind copy when someone else is the recipient.
 
 ``--slack-channel`` also posts the job's outcome to a Slack channel, whatever became of the email,
 with :data:`~smarter.apps.infrastructure.services.infrastructure` ``.slack``, when Slack is
-configured (``SMARTER_SLACK_BOT_TOKEN``). The message says whether the job succeeded, followed by
+configured (``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``). The message says whether the job succeeded, followed by
 the summary, if any, and the whole log, redacted, is uploaded into the message's thread, as the same
 file that the email attaches. If it cannot be uploaded, e.g. because the bot lacks the scope
 ``files:write``, the thread gets the log's last lines that fit in a Slack message instead, and the
@@ -184,7 +184,7 @@ class Command(SmarterCommand):
     """Django manage.py email_job_log command."""
 
     help = (
-        "Email a job's log, by default to the platform's admin (smarter_settings.email_admin), with credentials "
+        "Email a job's log, by default to the platform's admin (smarter_settings.platform_email_admin), with credentials "
         "redacted. The log is attached, or, if it is too large, saved to the platform's public file storage and "
         "linked. With --slack-channel, also post the outcome to Slack, with the log in the message's thread. "
         "Never fails, so that it never changes the job's outcome."
@@ -200,7 +200,7 @@ class Command(SmarterCommand):
         parser.add_argument("--job", type=str, default="job", help="The job's name, for the subject.")
         parser.add_argument("--status", type=int, default=0, help="The job's exit status. 0 is success.")
         parser.add_argument(
-            "--to", type=str, default="", help="The recipient. By default, smarter_settings.email_admin."
+            "--to", type=str, default="", help="The recipient. By default, smarter_settings.platform_email_admin."
         )
         parser.add_argument(
             "--summary",
@@ -220,7 +220,7 @@ class Command(SmarterCommand):
             default="",
             help=(
                 "Also post the job's outcome to this Slack channel, e.g. smarter, with the log in the message's thread. "
-                "Needs SMARTER_SLACK_BOT_TOKEN, a bot with the scopes chat:write and files:write, in the channel. "
+                "Needs SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN, a bot with the scopes chat:write and files:write, in the channel. "
                 "Empty: don't post."
             ),
         )
@@ -291,7 +291,7 @@ class Command(SmarterCommand):
         summary_html = f"<pre>{html.escape(summary)}</pre>" if summary else ""
         body = f"<p>{html.escape(job)} {html.escape(outcome)}.</p>{summary_html}{note}"
 
-        to = options["to"] or str(smarter_settings.email_admin)
+        to = options["to"] or str(smarter_settings.platform_email_admin)
         emailed = infrastructure.email.send_email(subject=subject, body=body, to=to, html=True, attachments=attachments)
         if emailed:
             self.stdout.write(self.style.SUCCESS(f"Emailed the log of {job} to {to}."))
@@ -352,7 +352,7 @@ class Command(SmarterCommand):
             )
             self.stdout.write(
                 self.style.WARNING(
-                    f"Slack is not configured (SMARTER_SLACK_BOT_TOKEN). Nothing was posted to #{channel}."
+                    f"Slack is not configured (SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN). Nothing was posted to #{channel}."
                 )
             )
             return False

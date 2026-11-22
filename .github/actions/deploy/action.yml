@@ -92,9 +92,6 @@ inputs:
   pinecone-api-key:
     description: "The Pinecone API key"
     required: true
-  pinecone-environment:
-    description: "The Pinecone environment"
-    required: true
   root-domain:
     description: "The root domain for the deployment: e.g. smarter.sh"
     required: true
@@ -223,17 +220,14 @@ runs:
           helm-${{ runner.os }}-
 
     # Initialize environment variables that are derived from the inputs
-    # mcdaniel: we're not accomplishing anything by doing this bc this matches the default in aws_base.py
     - name: Initialize environment variables
       shell: bash
       run: |-
         echo "NAMESPACE=${{ inputs.namespace-base }}-${{ inputs.environment }}" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
-        # The cache and the Celery broker use different Redis databases, so that
-        # cache.clear() can't delete the Celery queues.
-        echo "CACHES_LOCATION=${{ env.REDIS_URL }}/1" >> $GITHUB_ENV
-        echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}/0" >> $GITHUB_ENV
-        echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}/0" >> $GITHUB_ENV
+        # The broker, for Django and the workers' liveness probe. The cache is the same Redis,
+        # databases 1 and 2, which smarter.settings.base_aws computes.
+        echo "DJANGO_CELERY_BROKER_URL=${{ env.REDIS_URL }}/0" >> $GITHUB_ENV
       env:
         REDIS_URL: redis://:smarter@smarter-redis-master.${{ inputs.namespace-base }}-${{ inputs.environment }}.svc.cluster.local:6379
         DJANGO_SETTINGS_BASE: smarter.settings
@@ -374,7 +368,6 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMARTER_LOGIN_URL: https://alpha.platform.smarter.sh/login/
     # SMARTER_ADMIN_USERNAME: admin
     # SMARTER_ADMIN_PASSWORD: top-secret-password
     - name: Configure admin user from Kubernetes secret
@@ -426,7 +419,7 @@ runs:
         echo "SMARTER_S3_BUCKET=${S3_BUCKET}" >> $GITHUB_ENV
         # database backups go to a private bucket, never to the public-read environment
         # bucket above. smarter-infrastructure creates it (s3_backup_bucket_name).
-        echo "SMARTER_MYSQL_BACKUP_S3_URI=s3://backups.${S3_BUCKET}/backups/sql" >> $GITHUB_ENV
+        echo "SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI=s3://backups.${S3_BUCKET}/backups/sql" >> $GITHUB_ENV
 
     - name: Delete failed jobs
       id: delete-failed-jobs
@@ -442,90 +435,84 @@ runs:
         {
           "deployTimestamp": "$(date +%s)",
           "env": {
-            "AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
             "AWS_ACCESS_KEY_ID": ${{ !inputs.aws-iam-role-arn && inputs.aws-access-key-id && format('"{0}"', inputs.aws-access-key-id) || 'null' }},
             "AWS_REGION": ${{ inputs.aws-region && format('"{0}"', inputs.aws-region) || 'null' }},
             "AWS_SECRET_ACCESS_KEY": ${{ !inputs.aws-iam-role-arn && inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
-            "CACHES_LOCATION": ${{ env.CACHES_LOCATION && format('"{0}"', env.CACHES_LOCATION) || 'null' }},
-            "CELERY_BROKER_URL": ${{ env.CELERY_BROKER_URL && format('"{0}"', env.CELERY_BROKER_URL) || 'null' }},
-            "CELERY_RESULT_BACKEND": ${{ env.CELERY_RESULT_BACKEND && format('"{0}"', env.CELERY_RESULT_BACKEND) || 'null' }},
-            "DEBUG_MODE": ${{ inputs.debug-mode && format('"{0}"', inputs.debug-mode) || 'null' }},
+            "SMARTER_DEBUG_MODE": ${{ inputs.debug-mode && format('"{0}"', inputs.debug-mode) || 'null' }},
+            "DJANGO_AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
+            "DJANGO_CELERY_BROKER_URL": ${{ env.DJANGO_CELERY_BROKER_URL && format('"{0}"', env.DJANGO_CELERY_BROKER_URL) || 'null' }},
+            "DJANGO_SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
             "DJANGO_SETTINGS_MODULE": ${{ env.DJANGO_SETTINGS_MODULE && format('"{0}"', env.DJANGO_SETTINGS_MODULE) || 'null' }},
             "DOCKERHUB_PAT": ${{ inputs.dockerhub-pat && format('"{0}"', inputs.dockerhub-pat) || 'null' }},
             "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
-            "ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
-            "NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
-            "SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
-            "ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
-            "SMARTER_ADMIN_EMAIL": ${{ env.SMARTER_ADMIN_EMAIL && format('"{0}"', env.SMARTER_ADMIN_EMAIL) || 'null' }},
-            "SMARTER_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
-            "SMARTER_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
-            "SMARTER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
-            "SMARTER_BRANDING_ADDRESS1": ${{ inputs.smarter-branding-address1 && format('"{0}"', inputs.smarter-branding-address1) || 'null' }},
-            "SMARTER_BRANDING_ADDRESS2": ${{ inputs.smarter-branding-address2 && format('"{0}"', inputs.smarter-branding-address2) || 'null' }},
-            "SMARTER_BRANDING_CITY": ${{ inputs.smarter-branding-city && format('"{0}"', inputs.smarter-branding-city) || 'null' }},
-            "SMARTER_BRANDING_STATE": ${{ inputs.smarter-branding-state && format('"{0}"', inputs.smarter-branding-state) || 'null' }},
-            "SMARTER_BRANDING_POSTAL_CODE": ${{ inputs.smarter-branding-postal-code && format('"{0}"', inputs.smarter-branding-postal-code) || 'null' }},
-            "SMARTER_BRANDING_COUNTRY": ${{ inputs.smarter-branding-country && format('"{0}"', inputs.smarter-branding-country) || 'null' }},
-            "SMARTER_BRANDING_CURRENCY": ${{ inputs.smarter-branding-currency && format('"{0}"', inputs.smarter-branding-currency) || 'null' }},
-            "SMARTER_BRANDING_TIMEZONE": ${{ inputs.smarter-branding-timezone && format('"{0}"', inputs.smarter-branding-timezone) || 'null' }},
-            "SMARTER_BRANDING_CONTACT_URL": ${{ inputs.smarter-branding-contact-url && format('"{0}"', inputs.smarter-branding-contact-url) || 'null' }},
-            "SMARTER_BRANDING_CORPORATE_NAME": ${{ inputs.smarter-branding-corporate-name && format('"{0}"', inputs.smarter-branding-corporate-name) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_EMAIL": ${{ inputs.smarter-branding-support-email && format('"{0}"', inputs.smarter-branding-support-email) || 'null' }},
-            "SMARTER_BRANDING_PRIMARY_CONTACT": ${{ inputs.smarter-branding-primary-contact && format('"{0}"', inputs.smarter-branding-primary-contact) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
-            "SMARTER_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
-            "SMARTER_CACHE_EXPIRATION": ${{ inputs.smarter-cache-expiration && format('"{0}"', inputs.smarter-cache-expiration) || 'null' }},
-            "SMARTER_BRAVE_SEARCH_API_KEY": ${{ inputs.brave-search-api-key && format('"{0}"', inputs.brave-search-api-key) || 'null' }},
-            "SMARTER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
+            "SMARTER_ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
+            "SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE": ${{ inputs.smarter-enable-web-console-terminal && format('"{0}"', inputs.smarter-enable-web-console-terminal) || 'null' }},
+            "SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY": ${{ inputs.brave-search-api-key && format('"{0}"', inputs.brave-search-api-key) || 'null' }},
+            "SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY": ${{ inputs.extension-registry-public-key && format('"{0}"', inputs.extension-registry-public-key) || 'null' }},
+            "SMARTER_APP_LLMTOOL_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
+            "SMARTER_APP_PROVIDER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
+            "SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
+            "SMARTER_APP_VECTORSTORE_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
-            "SMARTER_AWS_EKS_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
-            "SMARTER_EMAIL_ADMIN": ${{ inputs.smarter-email-admin && format('"{0}"', inputs.smarter-email-admin) || 'null' }},
-            "SMARTER_ENABLE_WEB_CONSOLE_TERMINAL": ${{ inputs.smarter-enable-web-console-terminal && format('"{0}"', inputs.smarter-enable-web-console-terminal) || 'null' }},
-            "SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY": ${{ inputs.extension-registry-public-key && format('"{0}"', inputs.extension-registry-public-key) || 'null' }},
-            "SMARTER_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
-            "SMARTER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
-            "SMARTER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
-            "SMARTER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
-            "SMARTER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
-            "SMARTER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
-            "SMARTER_LOGIN_URL": ${{ env.SMARTER_LOGIN_URL && format('"{0}"', env.SMARTER_LOGIN_URL) || 'null' }},
-            "SMARTER_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
-            "SMARTER_MARKETING_SITE_URL": "https://smarter.sh",
-            "SMARTER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
-            "SMARTER_MYSQL_BACKUP_PASSWORD": ${{ inputs.smarter-mariadb-backup-password && format('"{0}"', inputs.smarter-mariadb-backup-password) || 'null' }},
-            "SMARTER_MYSQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
-            "SMARTER_MYSQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
-            "SMARTER_MYSQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
-            "SMARTER_MYSQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
-            "SMARTER_MYSQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
-            "SMARTER_MYSQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
-            "SMARTER_MYSQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }},
-            "SMARTER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
+            "SMARTER_PLATFORM_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
+            "SMARTER_PLATFORM_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_ADDRESS1": ${{ inputs.smarter-branding-address1 && format('"{0}"', inputs.smarter-branding-address1) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_ADDRESS2": ${{ inputs.smarter-branding-address2 && format('"{0}"', inputs.smarter-branding-address2) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_CITY": ${{ inputs.smarter-branding-city && format('"{0}"', inputs.smarter-branding-city) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_CONTACT_URL": ${{ inputs.smarter-branding-contact-url && format('"{0}"', inputs.smarter-branding-contact-url) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_CORPORATE_NAME": ${{ inputs.smarter-branding-corporate-name && format('"{0}"', inputs.smarter-branding-corporate-name) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_COUNTRY": ${{ inputs.smarter-branding-country && format('"{0}"', inputs.smarter-branding-country) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_CURRENCY": ${{ inputs.smarter-branding-currency && format('"{0}"', inputs.smarter-branding-currency) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_LOGO": ${{ inputs.smarter-logo && format('"{0}"', inputs.smarter-logo) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_MARKETING_SITE_URL": "https://smarter.sh",
+            "SMARTER_PLATFORM_BRANDING_POSTAL_CODE": ${{ inputs.smarter-branding-postal-code && format('"{0}"', inputs.smarter-branding-postal-code) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_PRIMARY_CONTACT": ${{ inputs.smarter-branding-primary-contact && format('"{0}"', inputs.smarter-branding-primary-contact) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_STATE": ${{ inputs.smarter-branding-state && format('"{0}"', inputs.smarter-branding-state) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_SUPPORT_EMAIL": ${{ inputs.smarter-branding-support-email && format('"{0}"', inputs.smarter-branding-support-email) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_SUPPORT_HOURS": ${{ inputs.smarter-branding-support-hours && format('"{0}"', inputs.smarter-branding-support-hours) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER": ${{ inputs.smarter-branding-support-phone-number && format('"{0}"', inputs.smarter-branding-support-phone-number) || 'null' }},
+            "SMARTER_PLATFORM_BRANDING_TIMEZONE": ${{ inputs.smarter-branding-timezone && format('"{0}"', inputs.smarter-branding-timezone) || 'null' }},
+            "SMARTER_PLATFORM_EMAIL_ADMIN": ${{ inputs.smarter-email-admin && format('"{0}"', inputs.smarter-email-admin) || 'null' }},
+            "SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY": $(jq -Rn --arg v "${{ inputs.fernet-encryption-key }}" '$v'),
+            "SMARTER_PLATFORM_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
+            "SMARTER_PLATFORM_S3_BUCKET": ${{ env.SMARTER_S3_BUCKET && format('"{0}"', env.SMARTER_S3_BUCKET) || 'null' }},
+            "SMARTER_PLATFORM_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
+            "SMARTER_PLATFORM_STATIC_FILES_ON_CDN": ${{ inputs.smarter-static-files-on-cdn && format('"{0}"', inputs.smarter-static-files-on-cdn) || 'null' }},
             "SMARTER_PLATFORM_SUBDOMAIN": ${{ inputs.platform-subdomain && format('"{0}"', inputs.platform-subdomain) || 'null' }},
-            "SMARTER_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
-            "SMARTER_PINECONE_ENVIRONMENT": ${{ inputs.pinecone-environment && format('"{0}"', inputs.pinecone-environment) || 'null' }},
-            "SMARTER_S3_BUCKET": ${{ env.SMARTER_S3_BUCKET && format('"{0}"', env.SMARTER_S3_BUCKET) || 'null' }},
-            "SMARTER_ROOT_DOMAIN": ${{ inputs.root-domain && format('"{0}"', inputs.root-domain) || 'null' }},
-            "SMARTER_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
-            "SMARTER_SMTP_SENDER": "no-reply@smarter.sh",
-            "SMARTER_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
-            "SMARTER_SETTINGS_OUTPUT": ${{ inputs.smarter-settings-output && format('"{0}"', inputs.smarter-settings-output) || 'null' }},
-            "SMARTER_STATIC_FILES_ON_CDN": ${{ inputs.smarter-static-files-on-cdn && format('"{0}"', inputs.smarter-static-files-on-cdn) || 'null' }},
-            "SMARTER_SLACK_APP_TOKEN": ${{ inputs.slack-app-token && format('"{0}"', inputs.slack-app-token) || 'null' }},
-            "SMARTER_SLACK_BOT_TOKEN": ${{ inputs.slack-bot-token && format('"{0}"', inputs.slack-bot-token) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
-            "SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
-            "SMARTER_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
-            "SMARTER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
-            "SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
-            "SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
-            "SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
-            "SMTP_USE_TLS": ${{ env.SMTP_USE_TLS && format('"{0}"', env.SMTP_USE_TLS) || 'null' }}
+            "SMARTER_SUBSYSTEM_CACHE_EXPIRATION": ${{ inputs.smarter-cache-expiration && format('"{0}"', inputs.smarter-cache-expiration) || 'null' }},
+            "SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME": ${{ inputs.eks-cluster-name && format('"{0}"', inputs.eks-cluster-name) || 'null' }},
+            "SMARTER_SUBSYSTEM_K8S_NAMESPACE": ${{ env.NAMESPACE && format('"{0}"', env.NAMESPACE) || 'null' }},
+            "SMARTER_SUBSYSTEM_SLACK_APP_TOKEN": ${{ inputs.slack-app-token && format('"{0}"', inputs.slack-app-token) || 'null' }},
+            "SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN": ${{ inputs.slack-bot-token && format('"{0}"', inputs.slack-bot-token) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_HOST": ${{ env.SMTP_HOST && format('"{0}"', env.SMTP_HOST) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_PASSWORD": ${{ env.SMTP_PASSWORD && format('"{0}"', env.SMTP_PASSWORD) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_PORT": ${{ env.SMTP_PORT && format('"{0}"', env.SMTP_PORT) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_SENDER": "no-reply@smarter.sh",
+            "SMARTER_SUBSYSTEM_SMTP_USERNAME": ${{ env.SMTP_USERNAME && format('"{0}"', env.SMTP_USERNAME) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_USE_SSL": ${{ env.SMTP_USE_SSL && format('"{0}"', env.SMTP_USE_SSL) || 'null' }},
+            "SMARTER_SUBSYSTEM_SMTP_USE_TLS": ${{ env.SMTP_USE_TLS && format('"{0}"', env.SMTP_USE_TLS) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY": ${{ inputs.social-auth-github-key && format('"{0}"', inputs.social-auth-github-key) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET": ${{ inputs.social-auth-github-secret && format('"{0}"', inputs.social-auth-github-secret) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY": ${{ inputs.social-auth-google-oauth2-key && format('"{0}"', inputs.social-auth-google-oauth2-key) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET": ${{ inputs.social-auth-google-oauth2-secret && format('"{0}"', inputs.social-auth-google-oauth2-secret) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY": ${{ inputs.social-auth-linkedin-oauth2-key && format('"{0}"', inputs.social-auth-linkedin-oauth2-key) || 'null' }},
+            "SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET": ${{ inputs.social-auth-linkedin-oauth2-secret && format('"{0}"', inputs.social-auth-linkedin-oauth2-secret) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD": ${{ inputs.smarter-mariadb-backup-password && format('"{0}"', inputs.smarter-mariadb-backup-password) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_DATABASE": ${{ env.SMARTER_MYSQL_DATABASE && format('"{0}"', env.SMARTER_MYSQL_DATABASE) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_HOST": ${{ env.MYSQL_HOST && format('"{0}"', env.MYSQL_HOST) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_PASSWORD": ${{ env.SMARTER_MYSQL_PASSWORD && format('"{0}"', env.SMARTER_MYSQL_PASSWORD) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_PORT": ${{ env.MYSQL_PORT && format('"{0}"', env.MYSQL_PORT) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD": ${{ env.MYSQL_ROOT_PASSWORD && format('"{0}"', env.MYSQL_ROOT_PASSWORD) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME": ${{ env.MYSQL_ROOT_USERNAME && format('"{0}"', env.MYSQL_ROOT_USERNAME) || 'null' }},
+            "SMARTER_SUBSYSTEM_SQL_USER": ${{ env.SMARTER_MYSQL_USERNAME && format('"{0}"', env.SMARTER_MYSQL_USERNAME) || 'null' }}
           }
         }
         EOF
@@ -582,7 +569,7 @@ runs:
           --set mariadb.auth.database="${{ env.SMARTER_MYSQL_DATABASE }}" \
           --set mariadb.auth.username="${{ env.SMARTER_MYSQL_USERNAME }}" \
           --set global.image.pullPolicy="IfNotPresent" \
-          --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_MYSQL_BACKUP_S3_URI }}" \
+          --set databaseScheduledBackup.s3Uri="${{ env.SMARTER_SUBSYSTEM_SQL_BACKUP_S3_URI }}" \
           --set serviceAccount.awsRoleArn="${{ inputs.aws-iam-role-arn }}" \
           --set databaseScheduledBackup.awsRoleArn="${{ inputs.aws-backup-iam-role-arn }}" \
           --set serviceAccount.createClusterRole=false \

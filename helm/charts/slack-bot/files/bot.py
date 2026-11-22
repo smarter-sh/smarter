@@ -14,8 +14,8 @@ in memory, so a restart starts every conversation again.
 
 Environment:
 
-- ``SMARTER_SLACK_BOT_TOKEN``: the Slack app's bot token, ``xoxb-...``.
-- ``SMARTER_SLACK_APP_TOKEN``: the Slack app's app-level token, ``xapp-...``, with
+- ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``: the Slack app's bot token, ``xoxb-...``.
+- ``SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``: the Slack app's app-level token, ``xapp-...``, with
   ``connections:write``.
 - ``SMARTER_SLACK_BOT_AGENT_URL``: the LLMClient's url, e.g.
   ``https://smarter-developer.<account-number>.api.<domain>/``.
@@ -269,10 +269,10 @@ def main() -> None:
         os.environ["SMARTER_SLACK_BOT_AGENT_URL"],
         timeout=float(os.environ.get("SMARTER_SLACK_BOT_TIMEOUT", "240")),
     )
-    app = App(token=os.environ["SMARTER_SLACK_BOT_TOKEN"])
+    app = App(token=os.environ["SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN"])
     register(app, agent)
     logger.info("answering with %s", agent.url)
-    SocketModeHandler(app, os.environ["SMARTER_SLACK_APP_TOKEN"]).start()
+    SocketModeHandler(app, os.environ["SMARTER_SUBSYSTEM_SLACK_APP_TOKEN"]).start()
 
 
 if __name__ == "__main__":

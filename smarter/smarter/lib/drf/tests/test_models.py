@@ -1,7 +1,6 @@
 """Test SmarterAuthToken, SmarterAuthTokenManager class."""
 
 from datetime import datetime, timedelta
-from logging import getLogger
 from unittest.mock import patch
 
 from django.utils import timezone
@@ -11,10 +10,11 @@ from smarter.apps.account.tests.factories import (
     factory_account_teardown,
     mortal_user_factory,
 )
+from smarter.lib import logging
 from smarter.lib.drf.models import LAST_USED_RESOLUTION, SmarterAuthToken
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterAuthTokenModels(SmarterTestBase):

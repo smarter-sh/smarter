@@ -77,32 +77,32 @@ urlpatterns = [
 
 SAM_APP_WEB_API_URLS: list[SamAppUrls] = [
     SamAppUrls(
-        "enable_connection", "Connection", f"{connection_namespace}/", connection_web_urls, connection_namespace
+        "app_connection_enable", "Connection", f"{connection_namespace}/", connection_web_urls, connection_namespace
     ),
-    SamAppUrls("enable_guardrail", "Guardrail", f"{guardrail_namespace}/", guardrail_web_urls, guardrail_namespace),
-    SamAppUrls("enable_llmclient", "LLMClient", f"{llmclient_namespace}/", llmclient_web_urls, llmclient_namespace),
-    SamAppUrls("enable_llmhost", "LLMHost", f"{llmhost_namespace}/", llmhost_web_urls, llmhost_namespace),
-    SamAppUrls("enable_llmtool", "LLMTool", f"{llmtool_namespace}/", llmtool_web_urls, llmtool_namespace),
-    SamAppUrls("enable_mcpclient", "MCPClient", f"{mcpclient_namespace}/", mcpclient_web_urls, mcpclient_namespace),
+    SamAppUrls("app_guardrail_enable", "Guardrail", f"{guardrail_namespace}/", guardrail_web_urls, guardrail_namespace),
+    SamAppUrls("app_llmclient_enable", "LLMClient", f"{llmclient_namespace}/", llmclient_web_urls, llmclient_namespace),
+    SamAppUrls("app_llmhost_enable", "LLMHost", f"{llmhost_namespace}/", llmhost_web_urls, llmhost_namespace),
+    SamAppUrls("app_llmtool_enable", "LLMTool", f"{llmtool_namespace}/", llmtool_web_urls, llmtool_namespace),
+    SamAppUrls("app_mcpclient_enable", "MCPClient", f"{mcpclient_namespace}/", mcpclient_web_urls, mcpclient_namespace),
     SamAppUrls(
-        "enable_orchestrator",
+        "app_orchestrator_enable",
         "Orchestrator",
         f"{orchestrator_namespace}/",
         orchestrator_web_urls,
         orchestrator_namespace,
     ),
-    SamAppUrls("enable_provider", "Provider", f"{provider_namespace}/", provider_web_urls, provider_namespace),
-    SamAppUrls("enable_proxy", "Proxy", f"{proxy_namespace}/", proxy_web_urls, proxy_namespace),
-    SamAppUrls("enable_secret", "Secret", f"{secret_namespace}/", secret_web_urls, secret_namespace),
+    SamAppUrls("app_provider_enable", "Provider", f"{provider_namespace}/", provider_web_urls, provider_namespace),
+    SamAppUrls("app_proxy_enable", "Proxy", f"{proxy_namespace}/", proxy_web_urls, proxy_namespace),
+    SamAppUrls("app_secret_enable", "Secret", f"{secret_namespace}/", secret_web_urls, secret_namespace),
     SamAppUrls(
-        "enable_vectorsearch",
+        "app_vectorsearch_enable",
         "VectorSearch",
         f"{vectorsearch_namespace}/",
         vectorsearch_web_urls,
         vectorsearch_namespace,
     ),
     SamAppUrls(
-        "enable_vectorstore",
+        "app_vectorstore_enable",
         "Vectorstore",
         f"{vectorstore_namespace}/",
         vectorstore_web_urls,
@@ -116,4 +116,4 @@ Each app's endpoints are mounted only if its ``smarter_settings.enable_<app>`` f
 :mod:`smarter.lib.manifest.sam_apps`.
 """
 
-urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_WEB_API_URLS, "web console api endpoints")
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_WEB_API_URLS, "web console API")

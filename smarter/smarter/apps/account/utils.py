@@ -33,7 +33,7 @@ from smarter.apps.account.models import (
 )
 from smarter.apps.account.models.user_profile import DEFAULT_PROFILE_IMAGE
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
@@ -165,7 +165,9 @@ class SmarterCachedObjects:
 
         if not self._admin_user:
             try:
-                self._admin_user = User.objects.get(username=SMARTER_ADMIN_USERNAME, is_superuser=True)
+                self._admin_user = User.objects.get(
+                    username=smarter_settings.platform_admin_username, is_superuser=True
+                )
                 logger.debug(
                     "initialized %s",
                     self._admin_user,
@@ -265,7 +267,7 @@ def get_cached_account_for_user(
         raise Account.DoesNotExist()
 
     username = getattr(user, "username")
-    if username == SMARTER_ADMIN_USERNAME:
+    if username == smarter_settings.platform_admin_username:
         return smarter_cached_objects.smarter_account
 
     user_id = getattr(user, "id", None)
@@ -432,7 +434,7 @@ def get_cached_user_for_username(invalidate: Optional[bool] = False, username: O
     if invalidate:
         _in_memory_user_by_username.invalidate(username, class_name=User.__name__)
 
-    if username == SMARTER_ADMIN_USERNAME:
+    if username == smarter_settings.platform_admin_username:
         return smarter_cached_objects.admin_user
 
     return _in_memory_user_by_username(username, class_name=User.__name__)
@@ -561,7 +563,7 @@ def get_cached_admin_user_for_account(account: Account, invalidate: Optional[boo
             # staff user, who would administer, or read, other accounts too.
             new_user = User.objects.create(
                 username=username,
-                email=f"{username}@{smarter_settings.root_domain}",
+                email=f"{username}@{smarter_settings.platform_root_domain}",
                 is_staff=False,
                 is_superuser=False,
                 is_active=True,

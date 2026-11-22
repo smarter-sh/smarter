@@ -7,7 +7,7 @@ from smarter.common.utils import (
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestConversionUtils(SmarterTestBase):

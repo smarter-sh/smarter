@@ -19,7 +19,7 @@ from smarter.lib.typing import SmarterDictType
 from .base import AWSBase
 from .exceptions import AWSNotReadyError
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class AWSCertificateManager(AWSBase):

@@ -149,7 +149,7 @@ from http import HTTPStatus
 from cache_results import lazy_cache as cache
 from django.http import HttpRequest, HttpResponseBase, HttpResponseForbidden
 
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
@@ -309,7 +309,7 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
             return HttpResponseForbidden(
                 "Too many invalid requests detected from your IP address. "
-                f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance."
+                f"Contact {smarter_settings.platform_branding_support_email} for assistance."
             )
 
         self.increment_throttle(throttle_key)

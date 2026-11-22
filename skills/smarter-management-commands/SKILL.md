@@ -177,8 +177,8 @@ Agents have broken this rule repeatedly, so read it before any change that sets 
 example-manifests and Stackademy. The Helm init job (`job-init.yaml`) and `make docker-init` run it alone, with no
 initialization step of their own beside it. It deploys the example and Stackademy
 LLMClients everywhere except the local environment, because a deploy creates a real DNS record
-and Kubernetes ingress. It reads the admin credentials from `smarter_settings.admin_username`
-and `admin_password` (`SMARTER_ADMIN_USERNAME`, `SMARTER_ADMIN_PASSWORD`), so the init job
+and Kubernetes ingress. It reads the admin credentials from `smarter_settings.platform_admin_username`
+and `admin_password` (`SMARTER_PLATFORM_ADMIN_USERNAME`, `SMARTER_PLATFORM_ADMIN_PASSWORD`), so the init job
 passes no password on its command line and can run it through `run()`.
 
 Place it after the things it depends on. For example, providers come before the

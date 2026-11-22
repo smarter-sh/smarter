@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.db import connection
 from django.http import Http404
 from django.test import RequestFactory
-from django.urls import get_resolver
+from django.urls import get_resolver, get_urlconf, set_urlconf
 
 from smarter.lib.django.http import error_handlers
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -67,6 +67,24 @@ class TestErrorHandlers(SmarterTestBase):
         response = error_handlers.page_not_found(self.request(), Http404())
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertIn(b"<html", response.content.lower())
+
+    def test_each_page_renders_on_every_host(self):
+        """
+        Each error page renders under each urlconf that a host routes to, as django-hosts sets it.
+
+        base.html is shared by all of them, so it may only reverse a name that every urlconf has,
+        or reverse it with ``{% url ... as ... %}``, which leaves the link out where it is missing,
+        e.g. ``site_webmanifest`` on the api's and deployed LLMClients' hosts.
+        """
+        previous = get_urlconf()
+        self.addCleanup(set_urlconf, previous)
+        for urlconf in URLCONFS:
+            set_urlconf(urlconf)
+            for status, (view, exception) in HANDLERS.items():
+                with self.subTest(urlconf=urlconf, status=status):
+                    args = (self.request(),) if exception is None else (self.request(), exception)
+                    response = view(*args)
+                    self.assertEqual(response.status_code, status)
 
     def test_closes_connections_when_the_view_raises(self):
         """The connections are closed even when the error view itself fails."""

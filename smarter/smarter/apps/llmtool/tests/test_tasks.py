@@ -12,13 +12,13 @@ from smarter.apps.llmtool.tasks import (
     create_plugin_charge,
     create_plugin_selector_history,
 )
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
 from .base_classes import PluginAppTestBase, get_test_data
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestPluginTasks(PluginAppTestBase):

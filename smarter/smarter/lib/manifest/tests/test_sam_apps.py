@@ -24,8 +24,8 @@ from smarter.lib.manifest.sam_apps import (
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 APPS_URLS = [
-    SamAppUrls("enable_guardrail", "Guardrail", "guardrail/", guardrail_urls, guardrail_namespace),
-    SamAppUrls("enable_secret", "Secret", "secret/", secret_urls, secret_namespace),
+    SamAppUrls("app_guardrail_enable", "Guardrail", "guardrail/", guardrail_urls, guardrail_namespace),
+    SamAppUrls("app_secret_enable", "Secret", "secret/", secret_urls, secret_namespace),
 ]
 
 
@@ -57,12 +57,12 @@ class TestSamApps(SmarterTestBase):
         """Test that each app's flag is a Settings field, true by default, and named after the app."""
         for sam_app in SAM_APPS:
             with self.subTest(app=sam_app.app_label):
-                self.assertEqual(sam_app.setting, f"enable_{sam_app.app_label}")
+                self.assertEqual(sam_app.setting, f"app_{sam_app.app_label}_enable")
                 self.assertIs(Settings.model_fields[sam_app.setting].default, True)
                 self.assertTrue(sam_app.is_enabled(smarter_settings))
 
     def test_env_name(self):
-        self.assertEqual(get_sam_app("enable_guardrail").env_name, "SMARTER_ENABLE_GUARDRAIL")
+        self.assertEqual(get_sam_app("app_guardrail_enable").env_name, "SMARTER_APP_GUARDRAIL_ENABLE")
 
     def test_get_sam_app_unknown(self):
         with self.assertRaises(KeyError):
@@ -76,7 +76,7 @@ class TestSamApps(SmarterTestBase):
         self.assertIsNone(sam_app_of_kind("NoSuchKind"))
 
     def test_kind_is_enabled(self):
-        settings = disabled("enable_guardrail")
+        settings = disabled("app_guardrail_enable")
         self.assertFalse(kind_is_enabled("Guardrail", settings))
         self.assertTrue(kind_is_enabled("Secret", settings))
         self.assertTrue(kind_is_enabled(SAMKinds.USER.value, settings))
@@ -84,15 +84,17 @@ class TestSamApps(SmarterTestBase):
 
     def test_raise_if_kind_disabled(self):
         """Test that a disabled kind raises, with the environment variable that enables it."""
-        settings = disabled("enable_llmtool")
+        settings = disabled("app_llmtool_enable")
         with self.assertRaises(SAMKindDisabledError) as context:
             raise_if_kind_disabled(SAMKinds.STATIC_PLUGIN.value, settings)
-        self.assertIn("SMARTER_ENABLE_LLMTOOL=true", str(context.exception))
+        self.assertIn("SMARTER_APP_LLMTOOL_ENABLE=true", str(context.exception))
         raise_if_kind_disabled(SAMKinds.STATIC_PLUGIN.value)
         raise_if_kind_disabled(SAMKinds.PROMPT.value, settings)
 
     def test_reverse_if_enabled(self):
-        url = reverse_if_enabled("enable_guardrail", GuardrailReverseNames.namespace, GuardrailReverseNames.listview)
+        url = reverse_if_enabled(
+            "app_guardrail_enable", GuardrailReverseNames.namespace, GuardrailReverseNames.listview
+        )
         self.assertIsInstance(url, str)
 
 
@@ -106,16 +108,16 @@ class TestSamAppUrlpatterns(SmarterTestBase):
 
     def test_one_disabled(self):
         """Test that a false flag leaves out that app's urls, and logs how to enable them."""
-        settings = disabled("enable_guardrail")
+        settings = disabled("app_guardrail_enable")
         with self.assertLogs("smarter.lib.manifest.sam_apps", level="INFO") as logs:
             patterns = sam_app_urlpatterns(settings, APPS_URLS, "test urls")
         namespaces = [pattern.namespace for pattern in patterns]
         self.assertEqual(namespaces, [secret_namespace])
         output = "\n".join(logs.output)
-        self.assertIn("Guardrail test urls are", output)
-        self.assertIn("SMARTER_ENABLE_GUARDRAIL=true", output)
+        self.assertIn("Guardrail test urls is", output)
+        self.assertIn("SMARTER_APP_GUARDRAIL_ENABLE=true", output)
 
     def test_all_disabled(self):
-        settings = disabled("enable_guardrail", "enable_secret")
+        settings = disabled("app_guardrail_enable", "app_secret_enable")
         patterns = sam_app_urlpatterns(settings, APPS_URLS, "test urls")
         self.assertEqual(patterns, [])

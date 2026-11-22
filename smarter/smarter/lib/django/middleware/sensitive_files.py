@@ -224,7 +224,7 @@ from django.http import (
 )
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.conf.const import SENSITIVE_FILES_AMNESTY_PATTERNS
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
@@ -247,10 +247,7 @@ else:
     )
 
 
-ALLOWED_PATTERNS = tuple(
-    pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.IGNORECASE)
-    for pattern in smarter_settings.sensitive_files_amnesty_patterns
-)
+ALLOWED_PATTERNS = SENSITIVE_FILES_AMNESTY_PATTERNS
 
 SENSITIVE_FILES = frozenset(
     {
@@ -467,7 +464,8 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
             )
 
             throttled = HttpResponse(
-                "Too many suspicious requests detected. " f"Contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} for assistance.",
+                "Too many suspicious requests detected. "
+                f"Contact {smarter_settings.platform_branding_support_email} for assistance.",
                 status=429,
                 content_type="text/plain",
             )

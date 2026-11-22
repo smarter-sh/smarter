@@ -481,41 +481,43 @@ class MyResourcesView(SmarterAuthenticatedWebView):
                 ),
                 "plugins_qty": get_plugins(user_profile=user_profile),
                 "plugins_url": reverse_if_enabled(
-                    "enable_llmtool", PluginReverseNames.namespace, PluginReverseNames.listview
+                    "app_llmtool_enable", PluginReverseNames.namespace, PluginReverseNames.listview
                 ),
                 "mcpclients_qty": get_mcpclients(user_profile=user_profile),
                 "mcpclients_url": reverse_if_enabled(
-                    "enable_mcpclient", MCPClientReverseNames.namespace, MCPClientReverseNames.listview
+                    "app_mcpclient_enable", MCPClientReverseNames.namespace, MCPClientReverseNames.listview
                 ),
                 "providers_qty": get_providers(user_profile=user_profile),
                 "providers_url": reverse_if_enabled(
-                    "enable_provider", ProviderReverseNames.namespace, ProviderReverseNames.listview
+                    "app_provider_enable", ProviderReverseNames.namespace, ProviderReverseNames.listview
                 ),
                 "guardrails_qty": get_guardrails(user_profile=user_profile),
                 "guardrails_url": reverse_if_enabled(
-                    "enable_guardrail", GuardrailReverseNames.namespace, GuardrailReverseNames.listview
+                    "app_guardrail_enable", GuardrailReverseNames.namespace, GuardrailReverseNames.listview
                 ),
                 "secrets_qty": get_secrets(user_profile=user_profile),
                 "secrets_url": reverse_if_enabled(
-                    "enable_secret", SecretReverseNames.namespace, SecretReverseNames.listview
+                    "app_secret_enable", SecretReverseNames.namespace, SecretReverseNames.listview
                 ),
                 "vectorstores_qty": get_vectorstores(user_profile=user_profile),
                 "vectorstores_url": reverse_if_enabled(
-                    "enable_vectorstore", VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
+                    "app_vectorstore_enable", VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview
                 ),
                 "custom_domains_qty": get_custom_domains(user_profile=user_profile),
                 "custom_domains_url": reverse_if_enabled(
-                    "enable_llmclient", LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview
+                    "app_llmclient_enable",
+                    LLMClientReverseNames.namespace,
+                    LLMClientReverseNames.custom_domain_listview,
                 ),
                 "llmhosts_qty": get_llmhosts(user_profile=user_profile),
                 "llmhosts_url": reverse_if_enabled(
-                    "enable_llmhost", LLMHostReverseNames.namespace, LLMHostReverseNames.listview
+                    "app_llmhost_enable", LLMHostReverseNames.namespace, LLMHostReverseNames.listview
                 ),
                 "extensions_qty": get_extensions(user_profile=user_profile),
                 # only superusers may open the console's Extensions page.
                 "extensions_url": (
                     reverse_if_enabled(
-                        "enable_llmtool", ExtensionReverseNames.namespace, ExtensionReverseNames.listview
+                        "app_llmtool_enable", ExtensionReverseNames.namespace, ExtensionReverseNames.listview
                     )
                     if user.is_superuser
                     else EXTENSIONS_DOCS_URL

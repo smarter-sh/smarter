@@ -4,7 +4,7 @@ from smarter.common.conf import smarter_settings
 from smarter.workers.celery import app
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def execute_orchestration_run(run_id: int) -> None:
     """
     Execute an Orchestrator's run, one step at a time (ADR-037).

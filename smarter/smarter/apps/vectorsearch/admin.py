@@ -12,7 +12,7 @@ from .models import (
     Vectorsearch,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class VectorsearchAdmin(SmarterCustomerModelAdmin):

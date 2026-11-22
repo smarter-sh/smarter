@@ -85,7 +85,7 @@ class TestDeleteRetiredExamples(CommandTestBase):
     def test_defaults_to_the_smarter_admin(self):
         mcpclient = self.mcpclient(self.user_profile)
         with mock.patch(f"{MODULE}.smarter_settings") as settings:
-            settings.admin_username = self.admin_user.username
+            settings.platform_admin_username = self.admin_user.username
             self.run_command("delete_retired_examples")
         self.assertFalse(MCPClient.objects.filter(pk=mcpclient.pk).exists())
 

@@ -29,7 +29,7 @@ PROVIDERS = "smarter.apps.infrastructure.providers"
 
 
 class TestProviderRegistry(InfrastructureTestBase):
-    """Test that smarter_settings.cloud_provider selects a registered provider."""
+    """Test that smarter_settings.platform_cloud_provider selects a registered provider."""
 
     def setUp(self):
         super().setUp()
@@ -41,18 +41,18 @@ class TestProviderRegistry(InfrastructureTestBase):
 
     def test_selected_by_setting(self):
         with patch(f"{PROVIDERS}.smarter_settings") as settings:
-            settings.cloud_provider = "memory"
+            settings.platform_cloud_provider = "memory"
             provider = get_provider()
             self.assertIsInstance(provider, InMemoryProvider)
             self.assertIs(get_provider(), provider)
         configure_provider(None)
         with patch(f"{PROVIDERS}.smarter_settings") as settings:
-            settings.cloud_provider = "aws"
+            settings.platform_cloud_provider = "aws"
             self.assertIsInstance(get_provider(), AWSProvider)
 
     def test_unsupported_provider(self):
         with patch(f"{PROVIDERS}.smarter_settings") as settings:
-            settings.cloud_provider = "azure"
+            settings.platform_cloud_provider = "azure"
             with self.assertRaises(InfrastructureConfigurationError) as context:
                 get_provider()
         self.assertIn("azure", str(context.exception))
@@ -62,7 +62,7 @@ class TestProviderRegistry(InfrastructureTestBase):
         register_provider("test-cloud", InMemoryProvider)
         self.addCleanup(providers._registry.pop, "test-cloud", None)  # pylint: disable=protected-access
         with patch(f"{PROVIDERS}.smarter_settings") as settings:
-            settings.cloud_provider = "test-cloud"
+            settings.platform_cloud_provider = "test-cloud"
             self.assertIsInstance(get_provider(), InMemoryProvider)
 
     def test_configure_provider(self):

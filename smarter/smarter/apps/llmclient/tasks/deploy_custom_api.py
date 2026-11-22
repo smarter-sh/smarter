@@ -61,9 +61,9 @@ logger = logging.getSmarterLogger(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def deploy_custom_api(llmclient_id: int) -> Optional[str]:
     """
@@ -100,7 +100,7 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
         task_id=task_id,
     )
 
-    if smarter_settings.llmclient_tasks_create_dns_record:
+    if smarter_settings.app_llmclient_tasks_create_dns_record:
         # the custom host's A record is a copy of the platform API domain's A record, in the
         # custom domain's own DNS zone.
         _, created = infrastructure.dns.create_domain_a_record(
@@ -109,7 +109,7 @@ def deploy_custom_api(llmclient_id: int) -> Optional[str]:
             zone_id=custom_domain.aws_hosted_zone_id,
         )
         logger.info("%s the A record of %s task_id: %s", "created" if created else "verified", custom_host, task_id)
-    if smarter_settings.llmclient_tasks_create_ingress_manifest:
+    if smarter_settings.app_llmclient_tasks_create_ingress_manifest:
         # cert-manager issues the custom host's own TLS certificate for its ingress.
         apply_ingress_manifest(custom_host)
         logger.info("applied the ingress of %s task_id: %s", custom_host, task_id)

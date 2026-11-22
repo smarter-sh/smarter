@@ -82,7 +82,7 @@ and waits for the database transaction to commit, so that a request can't cache 
 the new generation. A change made with ``QuerySet.update()`` sends no signal, so code that updates
 a column that a list shows calls :func:`~smarter.lib.django.listview.invalidate_listview_cache`
 afterwards, as the custom domain verification status and the MCPClient connection status do.
-Pages expire after ``SMARTER_LISTVIEW_CACHE_EXPIRATION`` seconds, an hour by default, which bounds
+Pages expire after ``SMARTER_SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION`` seconds, an hour by default, which bounds
 how long any other such change can go unnoticed.
 
 Adding a list

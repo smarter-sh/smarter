@@ -3,7 +3,7 @@ LLMClientDeploymentView renders an llmclient's deployment, for the "Deployment" 
 
 The tab is the last of the Prompt Engineer's Workbench's Console. It shows what a browser
 sees at a deployed llmclient's url, :class:`smarter.apps.llmclient.views.endpoints.LLMClientEndpointsView`,
-whatever the ``enable_llmclient_endpoints_page`` waffle switch, and how to deploy an llmclient that isn't.
+whatever the ``llmclient_enable_endpoints_page`` waffle switch, and how to deploy an llmclient that isn't.
 Both show the ``@smarter/llmclient-deployment`` React app's page, whose contract is
 :mod:`smarter.apps.llmclient.views.deployment_contract`. The workbench, the ``@smarter/workbench`` React
 app, renders it as a component, and fetches its data from :class:`LLMClientDeploymentView` when the tab is

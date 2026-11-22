@@ -43,7 +43,7 @@ from smarter.lib.typing import SmarterDictType, required
 if TYPE_CHECKING:
     from unittest.mock import _patch
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 LLMHOST_NAME = "test_broker_llmhost"
 

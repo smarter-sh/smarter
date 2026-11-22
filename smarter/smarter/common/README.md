@@ -18,7 +18,7 @@ Sources of configuration data vary depending on the use case, which can invariab
 2. `.env` files which can be saved anywhere inside the repo, and nothing prevents multiple .env files from being created.
 3. environment variables initialized in the form of `export VARIABLE_NAME=some-value`
 4. `terraform.tfvars` if it exists
-5. default values declared in SettingsDefaults class
+5. the default declared on each field
 
 Where possible, we use [Pydantic](https://docs.pydantic.dev/latest/) to seamlessly resolve some of these ambiguities.
 

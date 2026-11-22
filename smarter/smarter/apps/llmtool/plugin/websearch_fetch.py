@@ -392,7 +392,7 @@ def fetch_page(
     max_characters: int = 20_000,
     timeout: float = safe_http.DEFAULT_TIMEOUT,
     respect_robots_txt: bool = True,
-    cache_ttl: int = smarter_settings.cache_expiration,
+    cache_ttl: int = smarter_settings.subsystem_cache_expiration,
 ) -> FetchedPage:
     """
     Read a web page, and return its main content.

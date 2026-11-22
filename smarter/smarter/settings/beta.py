@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.utils.environment_settings import log_environment_settings
 from smarter.lib.logging import getSmarterLogger
 
 from .base import log_settings_diagnostics
@@ -38,33 +39,12 @@ apply_user_settings(globals())
 log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)
-if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
-
-    logger.debug("*" * 80)
-    logger.debug("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
-    logger.debug("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-    logger.debug("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
-    logger.debug("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
-    logger.debug("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
-    logger.debug("API_SCHEMA: %s", smarter_settings.api_schema)
-    logger.debug("ALLOWED_HOSTS: %s", smarter_settings.allowed_hosts)
-    logger.debug("SMTP_SENDER: %s", SMTP_SENDER)
-    logger.debug("SMTP_FROM_EMAIL: %s", SMTP_FROM_EMAIL)
-    logger.debug("-" * 80)
-    logger.debug("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
-    logger.debug("CSRF_COOKIE_SAMESITE: %s", CSRF_COOKIE_SAMESITE)
-    logger.debug("CSRF_COOKIE_SECURE: %s", CSRF_COOKIE_SECURE)
-    logger.debug("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
-    logger.debug("-" * 80)
-    logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
-    logger.debug("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
-    logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
-    logger.debug("*" * 80)
+if smarter_settings.platform_settings_output or "manage.py" not in sys.argv[0]:
+    log_environment_settings(logger, smarter_settings, "PLATFORM")
     if not SESSION_COOKIE_SECURE:
         logger.warning(
             "SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
         )
-        logger.debug("*" * 80)
 
 # mypy can't evaluate a computed __all__, and would then treat a star import of this
 # module as importing nothing. It skips this block, and exports every public name.

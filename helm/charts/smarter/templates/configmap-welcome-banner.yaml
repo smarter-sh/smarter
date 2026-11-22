@@ -61,7 +61,7 @@ data:
       "echo '*   - Additional admin tools: curl, wget, git, jq, less, procps, redis-cli     *'" \
       "echo '*                                                                              *'" \
       "echo '*   Example usage (copy-paste these commands into the command prompt):         *'" \
-      "echo '*   \$ mariadb -h \"\$SMARTER_MYSQL_HOST\" -u \"\$SMARTER_MYSQL_ROOT_USERNAME\" -p\"\$SMARTER_MYSQL_ROOT_PASSWORD\" \"\$SMARTER_MYSQL_DATABASE\"'" \
+      "echo '*   \$ mariadb -h \"\$SMARTER_SUBSYSTEM_SQL_HOST\" -u \"\$SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME\" -p\"\$SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD\" \"\$SMARTER_SUBSYSTEM_SQL_DATABASE\"'" \
       "echo '*   \$ aws iam get-user                                                         *'" \
       "echo '*   \$ /home/backup/backup-to-s3.sh                                             *'" \
       "echo '********************************************************************************'" \

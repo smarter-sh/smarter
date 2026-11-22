@@ -14,7 +14,7 @@ The drop zone appears over the editor only while a file is dragged over the page
 it in the editor, to check and apply. A manifest that would replace the editor's text asks first.
 
 The page is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
-``/dashboard/dropzone/``, while ``smarter_settings.enable_dropzone_manifest_apply`` is on. ``@smarter/console``
+``/dashboard/dropzone/``, while ``smarter_settings.app_dashboard_manifest_dropzone_enable`` is on. ``@smarter/console``
 renders ``@smarter/apply-manifest``'s ``ApplyManifest`` inside its frame, with the session's SAM kinds and the
 public cli api's urls. Its editor is ``@smarter/manifest-editor``'s, the editor of each resource's manifest page,
 for a new manifest: its identifying fields aren't locked, and it has no Clone or Delete. The package has no build

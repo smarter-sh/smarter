@@ -38,7 +38,7 @@ from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import VENDOR
 
-API_KEY_ENVIRONMENT_VARIABLE = "OPENAI_API_KEY"
+API_KEY_ENVIRONMENT_VARIABLE = "APP_PROVIDER_OPENAI_API_KEY"
 MAX_COMPLETION_TOKENS = 32
 """Enough for the vendor to accept or reject a request.
 

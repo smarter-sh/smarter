@@ -15,9 +15,9 @@ from django.core.management import call_command
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
+from smarter.apps.prompt.const import SMARTER_EXAMPLE_LLM_CLIENT_NAME
 from smarter.apps.prompt.management.commands import seed_chat_history
 from smarter.apps.prompt.models import Prompt
-from smarter.common.const import SMARTER_EXAMPLE_LLM_CLIENT_NAME
 
 MODULE = "smarter.apps.prompt.management.commands.seed_chat_history"
 

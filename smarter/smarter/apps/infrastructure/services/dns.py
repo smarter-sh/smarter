@@ -21,6 +21,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import LOCAL_HOSTS
 from smarter.common.const import SmarterEnvironments
 from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
@@ -179,7 +180,7 @@ class DNSService(InfrastructureService):
 
     def _refuse_local_host(self, domain: str) -> None:
         host = urlparse(f"http://{domain}").netloc
-        if host in smarter_settings.local_hosts:
+        if host in LOCAL_HOSTS:
             raise SmarterValueError(f"Domain {host} is prohibited.")
 
     def resolve_domain(self, domain: str) -> str:
@@ -442,7 +443,7 @@ class DNSService(InfrastructureService):
             zone_id=zone_id,
             name=hostname,
             record_type="A",
-            ttl=smarter_settings.llmclient_tasks_default_ttl,
+            ttl=smarter_settings.app_llmclient_tasks_default_ttl,
             values=a_record.values,
             alias=a_record.alias,
         )

@@ -33,9 +33,13 @@ holds only what applies to nearly every task.
    AWS/Route53 credentials. Fake every Kubernetes, DNS, ACM and AWS call in
    tests, and don't run commands that write to real infrastructure; hand the
    user the command instead. See `smarter-infrastructure-safety`.
-3. **Run the tests yourself**, in the container, after any change. Never ask
-   the user to re-run them. Report failures honestly, including pre-existing
-   ones.
+3. **Run the tests yourself, with `make docker-test`, in the background.** It
+   is the only way to run them: it builds the image and runs the suite in
+   shards. Verify every change with the whole suite, however small the
+   change; `make docker-test LABELS=<test module>` is only for iterating on
+   one module. Never `docker exec smarter-api ... manage.py test`: it runs on
+   one core, against stale code. Never ask the user to re-run tests. Report
+   failures honestly, including pre-existing ones.
 4. **Don't build the Sphinx docs** (about 20 minutes). Check `:doc:` targets
    by file existence, or run `skills/smarter-sphinx-docs/scripts/check-docs.sh`.
 5. **The pre-commit hooks are the lint standard** (black, flake8, isort,
@@ -123,20 +127,12 @@ Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 ## Common commands
 
 ```bash
-# The full Python suite: always sharded, in the background. Each shard runs in
-# a Docker stack of its own, from the image, so build first. Never run the
-# whole suite serially in the dev container: it takes several times longer.
-make build && make docker-test-sharded
-
-# One app or module while iterating (in the background; write the log to your
-# scratchpad). Stop Celery Beat first and start it after: its scheduled tasks
-# change the rows of running tests (make docker-test and make coverage do this
-# for you).
-docker stop smarter-beat
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter"
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.<app>"
-docker start smarter-beat
-make coverage
+# The only way to run the tests, always in the background (log to your
+# scratchpad). It builds the image, then runs each shard in a Docker stack of
+# its own. Verifying a change, any change: the whole suite.
+make docker-test
+# Iterating on one test module: one shard.
+make docker-test LABELS=smarter.apps.<app>.tests.test_<module>
 
 # Tests that touch real infrastructure are tagged `infrastructure` and skipped
 # by default. Don't run them unless the user asks.

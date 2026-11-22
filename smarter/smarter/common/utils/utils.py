@@ -44,6 +44,16 @@ LRU_MAXSIZE = 128  # Default max size for LRU caches in this module
 SENSITIVE_QUERY_PARAMETERS: tuple[str, ...] = ("session_key",)
 
 
+ENVIRONMENT_VARIABLE_PREFIX = "SMARTER_"
+"""
+The prefix of every Smarter environment variable, e.g. ``SMARTER_PLATFORM_ROOT_DOMAIN``.
+
+It is the variables' naming scheme, not branding: an operator who renames the product, with
+``SMARTER_PLATFORM_BRANDING_APP_NAME``, sets the same variables. :func:`smarter.common.conf.env.get_env`
+reads a setting from its name with or without it.
+"""
+
+
 def is_async_context():
     """
     Checks if the current context is asynchronous.
@@ -336,7 +346,7 @@ def bool_environment_variable(var_name: str, default: bool) -> bool:
         debug_mode = bool_environment_variable('DEBUG', default=False)
     """
     logger.debug("called")
-    value = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
+    value = os.environ.get(var_name) or os.environ.get(f"{ENVIRONMENT_VARIABLE_PREFIX}{var_name}")
     if value is None:
         return default
     return value.lower() in ["true", "1", "t", "y", "yes"]

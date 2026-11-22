@@ -65,7 +65,6 @@ from smarter.apps.llmclient.signals import (
     pre_verify_custom_domain,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.workers.celery import app
@@ -84,9 +83,9 @@ Status = LLMClientCustomDomain.VerificationStatusChoices
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def verify_custom_domain(
     hosted_zone_id: Optional[str] = None,
@@ -182,7 +181,7 @@ def verify_custom_domain(
                     f"Your domain {domain_name} has been verified: its DNS is delegated to Smarter, and its "
                     "TLS certificate is issued.\n\n"
                     "Your custom domain is now active and ready to use with your LLMClients.\n"
-                    f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+                    f"If you have any questions, please contact {smarter_settings.platform_branding_support_email}."
                 ),
             )
         else:
@@ -221,7 +220,7 @@ def verify_custom_domain(
             body=(
                 f"We were unable to verify your domain {domain_name}: {blocker}\n\n"
                 f"We made {max_attempts} attempts over a period of {hours} hours to verify the domain.\n"
-                f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+                f"If you have any questions, please contact {smarter_settings.platform_branding_support_email}."
             ),
         )
     post_verify_custom_domain.send(

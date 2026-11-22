@@ -37,12 +37,7 @@ from urllib.parse import urljoin
 from smarter.apps.account.models import Account, AccountContact, User, UserProfile
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_ACCOUNT_NUMBER,
-    SMARTER_ADMIN_USERNAME,
-    SMARTER_CUSTOMER_SUPPORT_EMAIL,
-    SMARTER_CUSTOMER_SUPPORT_PHONE,
-)
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.django.models.utils import assign_changed_fields
 from smarter.lib.drf.models import SmarterAuthToken
@@ -92,7 +87,7 @@ class Command(SmarterCommand):
         """Create the superuser account."""
         self.handle_begin()
 
-        username = options["username"] or SMARTER_ADMIN_USERNAME
+        username = options["username"] or smarter_settings.platform_admin_username
         email = options["email"] or f"{username}@{smarter_settings.root_api_domain}"
         password = options["password"]
 
@@ -106,17 +101,17 @@ class Command(SmarterCommand):
             {
                 "name": f"{smarter_settings.platform_name} Admin Account",
                 "description": f"automatically-generated {smarter_settings.platform_name} Admin account",
-                "company_name": smarter_settings.branding_corporate_name,
+                "company_name": smarter_settings.platform_branding_corporate_name,
                 "is_default_account": True,
-                "phone_number": smarter_settings.branding_support_phone_number,
-                "address1": smarter_settings.branding_address1,
-                "address2": smarter_settings.branding_address2,
-                "city": smarter_settings.branding_city,
-                "state": smarter_settings.branding_state,
-                "postal_code": smarter_settings.branding_postal_code,
-                "country": smarter_settings.branding_country,
-                "timezone": smarter_settings.branding_timezone,
-                "currency": smarter_settings.branding_currency,
+                "phone_number": smarter_settings.platform_branding_support_phone_number,
+                "address1": smarter_settings.platform_branding_address1,
+                "address2": smarter_settings.platform_branding_address2,
+                "city": smarter_settings.platform_branding_city,
+                "state": smarter_settings.platform_branding_state,
+                "postal_code": smarter_settings.platform_branding_postal_code,
+                "country": smarter_settings.platform_branding_country,
+                "timezone": smarter_settings.platform_branding_timezone,
+                "currency": smarter_settings.platform_branding_currency,
             },
         )
         if created or account_changed:
@@ -160,8 +155,8 @@ class Command(SmarterCommand):
         if created:
             account_contact.first_name = "Smarter"
             account_contact.last_name = "Admin"
-            account_contact.email = SMARTER_CUSTOMER_SUPPORT_EMAIL
-            account_contact.phone = SMARTER_CUSTOMER_SUPPORT_PHONE
+            account_contact.email = smarter_settings.platform_branding_support_email
+            account_contact.phone = smarter_settings.platform_branding_support_phone_number
             account_contact.save()
             self.stdout.write(
                 f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"

@@ -25,7 +25,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--username",
             type=str,
-            help="The username of the platform's superuser. Default: smarter_settings.admin_username (SMARTER_ADMIN_USERNAME), or 'admin'.",
+            help="The username of the platform's superuser. Default: smarter_settings.platform_admin_username (SMARTER_PLATFORM_ADMIN_USERNAME), or 'admin'.",
         )
         parser.add_argument(
             "--email",
@@ -35,7 +35,7 @@ class Command(SmarterCommand):
         parser.add_argument(
             "--password",
             type=str,
-            help="The password of the superuser and the example users. Default: smarter_settings.admin_password (SMARTER_ADMIN_PASSWORD), or 'smarter' when running locally.",
+            help="The password of the superuser and the example users. Default: smarter_settings.platform_admin_password (SMARTER_PLATFORM_ADMIN_PASSWORD), or 'smarter' when running locally.",
         )
 
     def upload_static_files(self) -> None:
@@ -81,6 +81,20 @@ class Command(SmarterCommand):
             logger.error("failed: %s", e)
 
     # pylint: disable=broad-except
+    def call_command_or_log(self, failure: str, name: str, **options) -> None:
+        """
+        Run one step of the initialization that may fail without stopping the others: log its failure.
+
+        :param failure: What failed, for the log, e.g. ``initialize providers``.
+        :param name: The command's name.
+        :param options: The command's options.
+        """
+        try:
+            call_command(name, **options)
+        except (Exception, SystemExit) as e:
+            logger.error("Failed to %s: %s", failure, e)
+
+    # pylint: disable=broad-except
     def handle(self, *args, **options):
         """
         Initialize the Smarter platform.
@@ -90,7 +104,7 @@ class Command(SmarterCommand):
         ``make docker-init`` run it, and nothing else.
 
         1. Create the admin user and the example users. The username and password come from
-           ``--username`` and ``--password``, or from ``smarter_settings.admin_username`` and
+           ``--username`` and ``--password``, or from ``smarter_settings.platform_admin_username`` and
            ``admin_password``, so that the init job passes no password on its command line.
         2. Initialize the Waffle switches, the Smarter project's index, the built-in Providers, the
            official extensions and the vector store providers.
@@ -106,21 +120,21 @@ class Command(SmarterCommand):
         """
         self.handle_begin()
 
-        username = options.get("username") or smarter_settings.admin_username
+        username = options.get("username") or smarter_settings.platform_admin_username
 
         email = options.get("email")
         if not email:
-            email = f"{username}@{smarter_settings.root_domain}"
+            email = f"{username}@{smarter_settings.platform_root_domain}"
             self.stdout.write(f"No email was given for the admin user {username}. Using {email}.")
 
         password = options.get("password")
-        if not password and smarter_settings.admin_password:
-            password = smarter_settings.admin_password.get_secret_value()
+        if not password and smarter_settings.platform_admin_password:
+            password = smarter_settings.platform_admin_password.get_secret_value()
         if not password:
             if smarter_settings.environment != SmarterEnvironments.LOCAL:
                 raise CommandError(
                     "An administrator password is required outside the local environment: "
-                    "set SMARTER_ADMIN_PASSWORD, or pass --password."
+                    "set SMARTER_PLATFORM_ADMIN_PASSWORD, or pass --password."
                 )
             password = "smarter"
             self.stdout.write(self.style.WARNING(f"No password provided, using the default value: {password}"))
@@ -133,7 +147,7 @@ class Command(SmarterCommand):
             "create_user",
             account_number=SMARTER_ACCOUNT_NUMBER,
             username="staff_user",
-            email=f"staff@{smarter_settings.root_domain}",
+            email=f"staff@{smarter_settings.platform_root_domain}",
             password=password,
             first_name="Staff",
             last_name="User",
@@ -143,7 +157,7 @@ class Command(SmarterCommand):
             "create_user",
             account_number=SMARTER_ACCOUNT_NUMBER,
             username="customer_user",
-            email=f"customer@{smarter_settings.root_domain}",
+            email=f"customer@{smarter_settings.platform_root_domain}",
             password=password,
             first_name="Customer",
             last_name="User",
@@ -155,7 +169,7 @@ class Command(SmarterCommand):
         # ---------------------------------------------------------------------
         fatal: list[str] = []
 
-        if smarter_settings.static_files_on_cdn:
+        if smarter_settings.platform_static_files_on_cdn:
             try:
                 # the static files, the web console's scripts among them, to the environment's S3 bucket, which
                 # its CDN serves. It adds and replaces files, and deletes none, so a page that a browser opened
@@ -168,10 +182,8 @@ class Command(SmarterCommand):
                 logger.error("Failed to upload the static files to the CDN's bucket: %s", e)
                 fatal.append("collectstatic")
 
-        try:
-            call_command("initialize_waffle")  # Initialize builtin Waffle switches for feature flagging
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize Waffle switches: %s", e)
+        # the builtin Waffle switches, for feature flagging.
+        self.call_command_or_log("initialize Waffle switches", "initialize_waffle")
 
         try:
             # the sign-in page's doodle: its theme catalog, on the current base scene, then a week of doodles.
@@ -180,17 +192,16 @@ class Command(SmarterCommand):
         except (Exception, SystemExit) as e:
             logger.error("Failed to load and plan the sign-in page's doodles: %s", e)
 
-        try:
-            # queued for the Celery worker, which downloads the repositories from GitHub: the
-            # smarter_project_* MCPClients of example-manifests read them through the platform's MCP server.
-            call_command("index_smarter_project", queue=True)
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to queue the indexing of The Smarter Project's repositories: %s", e)
-
-        try:
-            call_command("initialize_providers")  # Initialize builtin LLM providers: openai, metaai, googleia
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize providers: %s", e)
+        # queued for the Celery worker, which downloads the repositories from GitHub: the
+        # smarter_project_* MCPClients of example-manifests read them through the platform's MCP server.
+        self.call_command_or_log(
+            "queue the indexing of The Smarter Project's repositories", "index_smarter_project", queue=True
+        )
+        # the builtin LLM providers: openai, metaai, googleai, ...
+        self.call_command_or_log("initialize providers", "initialize_providers")
+        # the Tavily and Brave Search api key Secrets, which the example manifests' WebsearchPlugins
+        # and ImageSearchPlugins name.
+        self.call_command_or_log("initialize the llmtool api keys", "initialize_llmtool_api_keys")
 
         try:
             # after initialize_providers, whose Secrets, e.g. google_maps_api_key, configure the extensions.
@@ -201,17 +212,16 @@ class Command(SmarterCommand):
             logger.error("Failed to install the official extensions: %s", e)
             fatal.append("install_official_extensions")
 
-        try:
-            call_command("initialize_vectorstore_providers")  # Initialize builtin vectorstore providers: pinecone
-        except (Exception, SystemExit) as e:
-            logger.error("Failed to initialize vectorstore providers: %s", e)
+        # the managed vector databases' ApiConnections: Pinecone, Qdrant Cloud.
+        self.call_command_or_log("initialize vectorstore providers", "initialize_vectorstore_providers")
 
         try:
             # The example manifests: the community-supported collection of every kind's examples, in their
             # own repository, which load_from_github applies in the order of their dependencies. After
-            # initialize_providers, install_official_extensions and initialize_vectorstore_providers: its
-            # Proxies, Guardrails and LLMClients name the built-in Providers and their Secrets, its
-            # LLMClients the official extensions, and its Vectorstores the managed services' ApiConnections.
+            # initialize_providers, initialize_llmtool_api_keys, install_official_extensions and
+            # initialize_vectorstore_providers: its Proxies, Guardrails and LLMClients name the built-in
+            # Providers and their Secrets, its search plugins the llmtool api key Secrets, its LLMClients
+            # the official extensions, and its Vectorstores the managed services' ApiConnections.
             # The Smarter admin owns them, so every account may use them, and each account also gets its own
             # copy of the plugins and LLMClients from initialize_account. Its LLMClients are deployed outside
             # the local environment. Its CustomDomain, example.com, is applied, not verified. Its Budgets
@@ -248,7 +258,7 @@ class Command(SmarterCommand):
             # /api/v1/demos/stackademy/course-catalogue/. run_scripts runs the scripts that the repository's
             # scripts/scripts.yaml lists, before and after its manifests: Stackademy's pre script creates its
             # course database, stackademy, and its read-only users, which its SqlConnection connects to, as
-            # SMARTER_MYSQL_ROOT_USERNAME. Only here: initialize_account loads each account's copy of the
+            # SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME. Only here: initialize_account loads each account's copy of the
             # manifests without running the scripts again.
             call_command(
                 "load_from_github",

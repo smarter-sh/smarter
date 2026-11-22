@@ -47,7 +47,7 @@ logger = logging.getSmarterLogger(__name__)
 USERNAME = "username"
 # the account app's url name, in its namespace: a url name alone isn't found.
 INACTIVE_ACCOUNT_REDIRECT_URL = f"{account_namespace}:account_inactive"
-SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.root_domain}/accounts/subscription-status/"
+SUBSCRIPTION_STATUS_API_URL = f"https://api.am.{smarter_settings.platform_root_domain}/accounts/subscription-status/"
 """
 API endpoint to verify subscription status.
 

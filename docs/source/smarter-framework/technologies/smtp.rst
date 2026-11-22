@@ -50,7 +50,7 @@ Basic Usage
       from_email="support@smarter.com"
   )
 
-Each email is blind copied to the platform's admin, ``SMARTER_EMAIL_ADMIN``. The copy is added
+Each email is blind copied to the platform's admin, ``SMARTER_PLATFORM_EMAIL_ADMIN``. The copy is added
 to the SMTP envelope only, so recipients never see the admin's address. Emails that carry a
 secret, such as a password reset link, an account activation link, or a new user's password,
 pass ``bcc_admin=False``, so that only their recipient receives them.

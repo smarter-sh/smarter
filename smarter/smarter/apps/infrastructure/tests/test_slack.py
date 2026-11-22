@@ -31,7 +31,7 @@ UPLOAD_URL = "https://files.slack.com/upload/v1/abc"
 
 def slack_settings(token=SecretStr(TOKEN)) -> MagicMock:
     """Smarter_settings, with a Slack bot token."""
-    return MagicMock(slack_bot_token=token)
+    return MagicMock(subsystem_slack_bot_token=token)
 
 
 def response(body=None, status_code: int = 200) -> MagicMock:

@@ -8,7 +8,7 @@ from pydantic import Field, field_validator, model_validator
 from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import MANIFEST_KIND
 from smarter.apps.vectorsearch.models import VectorsearchSearchType
 
-# from smarter.common.conf import settings_defaults
+# from smarter.common.conf import smarter_settings
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 filename = os.path.splitext(os.path.basename(__file__))[0]

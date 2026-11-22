@@ -33,12 +33,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
-from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
+from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType
 
 SCHEMA_PATH = Path(__file__).parent / "llmclient-deployment.schema.json"
 """The committed JSON Schema of the contract."""
-SCHEMA_ID = f"{SMARTER_PROJECT_WEBSITE_URL}/schemas/llmclient-deployment.schema.json"
+SCHEMA_ID = smarter_schema_id("llmclient-deployment.schema.json")
 
 PageMode = Literal["public", "workbench"]
 """Where the page is: at the deployed LLMClient's url, or in the workbench's "Deployment" tab."""

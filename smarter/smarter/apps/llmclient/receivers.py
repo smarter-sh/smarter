@@ -9,7 +9,7 @@ from django.dispatch import receiver
 
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.utils import mask_identifier
 from smarter.lib import json, logging
 from smarter.lib.django.listview import connect_listview_cache

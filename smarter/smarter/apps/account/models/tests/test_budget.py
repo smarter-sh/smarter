@@ -38,7 +38,7 @@ from smarter.apps.dashboard.views.views.api.budgets import is_visible
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestBudget(TestAccountMixin):

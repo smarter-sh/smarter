@@ -39,7 +39,7 @@ class TestDestroyDomainARecord(SmarterTestBase):
         self.assertTrue(callable(destroy_domain_A_record.delay))
         # Celery sets queue from the task decorator's options, and its stubs don't declare it.
         queue = destroy_domain_A_record.queue  # type: ignore[attr-defined]
-        self.assertEqual(queue, smarter_settings.infrastructure_tasks_celery_task_queue)
+        self.assertEqual(queue, smarter_settings.app_infrastructure_tasks_celery_task_queue)
 
     def test_not_taskable(self):
         self.is_taskable.return_value = False

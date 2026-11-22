@@ -8409,9 +8409,9 @@ msgstr ""
 "chave de API do Smarter."
 
 #. Translators: used in packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
-msgid "The proxy endpoints are disabled. Set SMARTER_ENABLE_PROXY=true."
+msgid "The proxy endpoints are disabled. Set SMARTER_APP_PROXY_ENABLE=true."
 msgstr ""
-"Os endpoints do proxy estão desativados. Defina SMARTER_ENABLE_PROXY=true."
+"Os endpoints do proxy estão desativados. Defina SMARTER_APP_PROXY_ENABLE=true."
 
 #. Translators: used in packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
 msgid "Edit: Open the YAML manifest that defines this proxy resource"

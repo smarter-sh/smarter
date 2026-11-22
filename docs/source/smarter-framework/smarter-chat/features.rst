@@ -266,7 +266,7 @@ deployment:
        pretty-printed JSON, such as a prompt's request and response, are collapsed to their first
        line and their length: each block's **+** button expands it, and **Expand JSON** expands or
        collapses all of them. Copying the lines copies the JSON in full. The tab is right of Architecture. Present only
-       when log viewing in the browser is enabled (``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS``), and
+       when log viewing in the browser is enabled (``SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE``), and
        then selected when the Console opens. A new chat clears it.
    * - Tool Calls
      - The chat session's tool calls, each collapsed to its function's name: click one to see its
@@ -282,7 +282,7 @@ deployment:
        showing its secret once, and attaches it to the LLMClient or detaches it. An LLMClient that
        isn't deployed gets the url that it will have, and the command that deploys it. The tab is the
        far right one, and the page loads when you first open it, whatever the
-       ``enable_llmclient_endpoints_page`` waffle switch.
+       ``llmclient_enable_endpoints_page`` waffle switch.
 
 The Tool Calls and Config tabs display the configuration's diagnostic parts, which are costly for
 the platform to build, and grow with the chat session. The chat fetches them only while one of these

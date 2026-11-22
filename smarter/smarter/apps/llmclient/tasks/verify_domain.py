@@ -28,7 +28,7 @@ Configuration
 -------------
 
 Celery task behavior (retries, backoff, queue) is controlled by `smarter_settings`. The task runs in
-the infrastructure queue, smarter_settings.infrastructure_tasks_celery_task_queue.
+the infrastructure queue, smarter_settings.app_infrastructure_tasks_celery_task_queue.
 
 Logging
 -------
@@ -164,9 +164,9 @@ def check_domain(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def verify_domain(
     domain_name: str,

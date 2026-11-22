@@ -1,16 +1,50 @@
 """This module contains constants used for Pydantic Settings."""
 
 import os
+import re
 
 from dotenv import load_dotenv
 
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SMARTER_LOCAL_PORT, SmarterEnvironments
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 
-from .env import get_env
-
 THE_EMPTY_SET = [None, "", "NULL", "None", "none", "null"]
-DEFAULT_ROOT_DOMAIN = "example.com"
+
+DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
+"""The placeholder of a setting that is not set, e.g. in ``.env.example``."""
+
+LOCAL_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    f"localhost:{SMARTER_LOCAL_PORT}",
+    f"127.0.0.1:{SMARTER_LOCAL_PORT}",
+    # the React dev server of smarter-console.
+    "localhost:5173",
+    # the host of Django's test client.
+    "testserver",
+]
+"""The hosts of a developer's own machine, which are always local: the dev server, the React dev server, Django's test client."""
+
+SENSITIVE_FILES_AMNESTY_PATTERNS = (
+    re.compile(r"^/$", re.IGNORECASE),
+    re.compile(r"^/static(/.*)?$", re.IGNORECASE),
+    re.compile(r"^/api/v\d+(\.\d+)?/.+", re.IGNORECASE),
+    re.compile(r"^/api/web/.+", re.IGNORECASE),
+    re.compile(r"^/dashboard(/.*)?$", re.IGNORECASE),
+    re.compile(r"^/docs/manifest(/.*)?$", re.IGNORECASE),
+    re.compile(r"^/docs/json-schema(/.*)?$", re.IGNORECASE),
+    re.compile(r"^/config/?$", re.IGNORECASE),
+    re.compile(r"^/login/?$", re.IGNORECASE),
+    re.compile(r"^/admin/?$", re.IGNORECASE),
+)
+"""
+The paths that the sensitive files middleware never blocks, even when they end like a sensitive file, a.
+
+static set that no setting changes: the home page, static files,.
+
+the apis, the dashboard, the manifest and JSON Schema docs, an LLMClient's ``/config/``, the sign-in page
+and the admin.
+"""
 DOT_ENV_LOADED = load_dotenv()
 """True if .env file was loaded successfully."""
 
@@ -23,14 +57,16 @@ This value can be set in .env or docker-compose.yml or set as an environment var
 """
 
 __all__ = [
-    "DEFAULT_ROOT_DOMAIN",
+    "DEFAULT_MISSING_VALUE",
     "DOT_ENV_LOADED",
+    "LOCAL_HOSTS",
+    "SENSITIVE_FILES_AMNESTY_PATTERNS",
     "SERVICE_TYPE",
     "THE_EMPTY_SET",
 ]
 
-DOT_ENV_LOADED = DOT_ENV_LOADED or get_env("ENV_LOADED", False)
-if not DOT_ENV_LOADED and get_env("ENVIRONMENT", SmarterEnvironments.LOCAL) == SmarterEnvironments.LOCAL:
+_ENVIRONMENT = os.environ.get("SMARTER_ENVIRONMENT") or SmarterEnvironments.LOCAL
+if not DOT_ENV_LOADED and _ENVIRONMENT == SmarterEnvironments.LOCAL:
     print(
         SmarterFormattedText.text(
             "\n"

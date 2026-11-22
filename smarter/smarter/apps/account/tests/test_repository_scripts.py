@@ -131,10 +131,10 @@ class TestRepositoryScripts(SmarterTestBase):
     def environment(self, password: str | None) -> dict[str, str]:
         with (
             patch(f"{MODULE}.smarter_settings") as settings,
-            patch.dict(os.environ, {"PATH": "/usr/bin", "SMARTER_OPENAI_API_KEY": "sk-not-for-scripts"}),
+            patch.dict(os.environ, {"PATH": "/usr/bin", "SMARTER_APP_PROVIDER_OPENAI_API_KEY": "sk-not-for-scripts"}),
         ):
-            settings.mysql_root_username = "root"
-            settings.mysql_root_password = SecretStr(password) if password else None
+            settings.subsystem_sql_root_username = "root"
+            settings.subsystem_sql_root_password = SecretStr(password) if password else None
             return script_environment(
                 url="https://github.com/a/b", local_path="/repo", account_number="1234-5678-9012", username="admin"
             )
@@ -151,7 +151,7 @@ class TestRepositoryScripts(SmarterTestBase):
         self.assertTrue(env["SMARTER_DATABASE_PORT"].isdigit())
         self.assertEqual(env["MYSQL_PWD"], "root-pw")
         self.assertEqual(env["PATH"], "/usr/bin")
-        self.assertNotIn("SMARTER_OPENAI_API_KEY", env)
+        self.assertNotIn("SMARTER_APP_PROVIDER_OPENAI_API_KEY", env)
         self.assertNotIn("sk-not-for-scripts", env.values())
 
     def test_script_environment_without_a_password(self):

@@ -88,8 +88,8 @@ class TimestampedModel(models.Model, SmarterHelperMixin):
     HASH_SUFFIX = "x"
     HASH_FLOOR = 1000000
     _hash_regex = None
-    #: Seconds that ``get_cached_object()`` caches a row, from ``smarter_settings.cache_expiration``.
-    cache_expiration: ClassVar[int] = smarter_settings.cache_expiration
+    #: Seconds that ``get_cached_object()`` caches a row, from ``smarter_settings.subsystem_cache_expiration``.
+    cache_expiration: ClassVar[int] = smarter_settings.subsystem_cache_expiration
     #: The row's primary key, which Django adds to every concrete model. Declared, without a value,
     #: only so that type checkers know it: Django ignores a bare annotation.
     id: int

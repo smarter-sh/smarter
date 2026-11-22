@@ -27,7 +27,7 @@ Because every request passes through Smarter, Proxies also give you:
 .. note::
 
    The Smarter Proxy is included in v0.16.0 and later. It is enabled by default. Set the
-   environment variable ``SMARTER_ENABLE_PROXY=false`` to disable it.
+   environment variable ``SMARTER_APP_PROXY_ENABLE=false`` to disable it.
 
 .. seealso::
 
@@ -310,7 +310,7 @@ Built-in Proxies
 ----------------
 
 ``manage.py initialize_platform`` applies a built-in Proxy for each built-in Provider whose API
-key is configured, e.g. with the ``OPENAI_API_KEY`` environment variable. The Smarter admin owns
+key is configured, e.g. with the ``APP_PROVIDER_OPENAI_API_KEY`` environment variable. The Smarter admin owns
 them, so every account may use them. A Proxy whose Provider or API key does not exist fails to
 apply, and is reported without stopping the others. To apply them again, e.g. after adding an API
 key:

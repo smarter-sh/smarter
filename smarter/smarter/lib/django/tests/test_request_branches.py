@@ -20,8 +20,8 @@ from django.http import HttpRequest, RawPostDataException
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.request import SmarterRequestMixin, cached_property_names
 from smarter.lib.typing import required

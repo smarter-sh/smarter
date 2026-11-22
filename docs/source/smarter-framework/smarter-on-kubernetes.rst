@@ -71,7 +71,8 @@ differs.
    * - Database and cache
      - ``smarter-mariadb`` and ``smarter-redis`` containers, with local volumes.
      - MySQL or MariaDB and Redis, inside the cluster or managed by the cloud
-       (``database.type`` and the ``SMARTER_MYSQL_*`` and ``CACHES_LOCATION`` values). The
+       (``database.type``, the ``SMARTER_SQL_*`` values, ``DJANGO_CELERY_BROKER_URL``, and
+       ``DJANGO_CACHES``). The
        chart's own MariaDB and Redis are each a single pod on a ReadWriteOnce volume, so any
        eviction stops them for about a minute. Their pods tell the cluster autoscaler not to evict
        them (``cluster-autoscaler.kubernetes.io/safe-to-evict: "false"``), and their
@@ -98,7 +99,7 @@ that drops it. On a fresh install, there is no ``pre-install``
 migration: the chart's Secret doesn't exist yet, and ``smarter-job-init`` creates the database
 before it migrates.
 When it completes, it emails its whole log, with credentials redacted, to the chart's
-``databaseInit.notifyEmail``, or by default to the platform's admin, ``SMARTER_EMAIL_ADMIN``, with
+``databaseInit.notifyEmail``, or by default to the platform's admin, ``SMARTER_PLATFORM_EMAIL_ADMIN``, with
 ``manage.py email_job_log``. The email reports whether the Job succeeded, and carries the log as an
 attachment. A log larger than 5 MB would exceed the SMTP server's message size limit, so it is saved
 instead to the platform's public S3 bucket, under ``job-logs/`` with an unguessable name, and the
@@ -109,7 +110,7 @@ none.
 The Job can also post its outcome to a Slack channel, ``databaseInit.notifySlackChannel`` (empty by
 default, which posts nothing), with ``email_job_log --slack-channel``. The message says whether the
 Job succeeded, with ✅ or ❌, and the whole log, redacted, is uploaded into the message's thread, as
-the same file that the email attaches. It is posted as the bot of ``SMARTER_SLACK_BOT_TOKEN``, which
+the same file that the email attaches. It is posted as the bot of ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, which
 needs the scopes ``chat:write`` and ``files:write``, and must be a member of the channel. A bot
 without ``files:write`` posts the log's last lines in the thread instead, and the link to the log
 when it was saved to S3. Text from the log is escaped, so that a log line can't mention anyone.
@@ -118,10 +119,10 @@ every environment, and sets both jobs' channel to ``smarter``.
 
 A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
 with ``mariadb-dump``, and uploads the compressed dump to ``databaseScheduledBackup.s3Uri``, by
-default ``s3://<SMARTER_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
+default ``s3://<SMARTER_PLATFORM_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
 platform's bucket serves public files. The dump runs as a read-only account,
-``SMARTER_MYSQL_BACKUP_USERNAME`` (``smarter_backup`` by default), which the init Job creates, or
-updates, whenever ``SMARTER_MYSQL_BACKUP_PASSWORD`` is set, with ``SELECT, SHOW VIEW, TRIGGER, EVENT,
+``SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME`` (``smarter_backup`` by default), which the init Job creates, or
+updates, whenever ``SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD`` is set, with ``SELECT, SHOW VIEW, TRIGGER, EVENT,
 SHOW CREATE ROUTINE`` on the platform's database (``SHOW CREATE ROUTINE`` exists in MariaDB 11.3 and
 later; on an older server the account gets the rest). The deploy workflow reads that password from
 the GitHub secret ``SMARTER_MYSQL_BACKUP_PASSWORD``. Until it is set, the backup dumps as the root
@@ -133,7 +134,7 @@ to the end and that the archive is intact, and after uploading, that the object 
 archive's size.
 
 The backup emails its result the same way, to ``databaseScheduledBackup.notifyEmail`` or to
-``SMARTER_EMAIL_ADMIN``, with the backup's log attached, and posts it to the Slack channel
+``SMARTER_PLATFORM_EMAIL_ADMIN``, with the backup's log attached, and posts it to the Slack channel
 ``databaseScheduledBackup.notifySlackChannel``, if one is set, with the log in the message's thread.
 After a successful backup, the email and the Slack message name the backup file, its size, and its
 location in S3. The backup runs on a plain Debian image, as an init
@@ -226,8 +227,8 @@ Docker and Kubernetes Compared
    give a Docker environment real AWS credentials and a kubeconfig for a real cluster, deploying an
    LLMClient locally creates real Route53 records and applies a real Ingress to the namespace
    ``smarter-local`` of that cluster. To keep a Docker environment self-contained, leave the cloud
-   credentials out, or set ``SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD=false`` and
-   ``SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST=false``.
+   credentials out, or set ``SMARTER_APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD=false`` and
+   ``SMARTER_APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST=false``.
 
 
 How Smarter Talks to the Cluster
@@ -246,7 +247,7 @@ Ingresses, and reads Certificates and Secrets. The permissions that this require
 
 Kubernetes, DNS and certificate calls all go through one facade,
 ``smarter.apps.infrastructure.services.infrastructure``, so the cloud is a configuration choice
-(``SMARTER_CLOUD_PROVIDER``), and tests replace it with an in-memory provider.
+(``SMARTER_PLATFORM_CLOUD_PROVIDER``), and tests replace it with an in-memory provider.
 
 
 Cluster Prerequisites

@@ -69,7 +69,7 @@ class Command(SmarterCommand):
             "--username",
             type=str,
             default=None,
-            help="The owner of the example resources. Default: smarter_settings.admin_username (SMARTER_ADMIN_USERNAME).",
+            help="The owner of the example resources. Default: smarter_settings.platform_admin_username (SMARTER_PLATFORM_ADMIN_USERNAME).",
         )
 
     def delete_retired_example(self, example: RetiredExample, user_profile: UserProfile) -> bool:
@@ -98,7 +98,7 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         """Delete each retired example resource that the user owns."""
         self.handle_begin()
-        username: Optional[str] = options.get("username") or smarter_settings.admin_username
+        username: Optional[str] = options.get("username") or smarter_settings.platform_admin_username
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist as e:

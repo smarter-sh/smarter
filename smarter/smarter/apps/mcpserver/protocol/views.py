@@ -37,7 +37,7 @@ access token in an ``Authorization: Bearer`` header, and is then also served the
 that write as that user: ``create_issue``, ``comment_on_issue``, ``close_issue`` and
 ``create_pull_request``. The token is passed to the tool as a
 ``SecretStr``, and is never logged. Each client IP address may send at most
-``smarter_settings.mcpserver_rate_limit`` requests a minute: see
+``smarter_settings.app_mcpserver_rate_limit`` requests a minute: see
 :mod:`smarter.apps.mcpserver.protocol.ratelimit`.
 
 .. note::

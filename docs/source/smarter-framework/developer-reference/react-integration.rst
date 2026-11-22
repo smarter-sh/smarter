@@ -166,7 +166,7 @@ One page is not part of the console, on purpose: the page that a browser sees at
 LLMClient's own url, e.g. ``https://<name>.<account>.<api domain>/``. That host serves one
 LLMClient and its api endpoints, ``/config/`` and ``/prompt/``, and nothing else; the console
 isn't there, and a visitor has no session on it. A ``GET`` or ``HEAD`` to it receives a page about
-the LLMClient instead, while the ``enable_llmclient_endpoints_page`` waffle switch is active: its
+the LLMClient instead, while the ``llmclient_enable_endpoints_page`` waffle switch is active: its
 url, the curl commands that call it, the ways to put its chat on a web site, and its manifest.
 Django renders that page from a template, and mounts its React app, ``@smarter/llmclient-deployment``,
 with a template tag. It is the only page that does so. The Prompt Engineer's Workbench shows the

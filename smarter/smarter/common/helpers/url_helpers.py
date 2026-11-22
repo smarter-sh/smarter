@@ -1,18 +1,14 @@
-"""
-url helper functions
-"""
+"""Url helper functions."""
 
 from typing import Optional, Union
 from urllib.parse import ParseResult, parse_qs, urlparse
 
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django.validators import SmarterValidator
 
 
 def clean_url(url: str) -> str:
-    """
-    Clean the url of any query strings.
-    """
+    """Clean the url of any query strings."""
     parsed_url = urlparse(url)
     retval = parsed_url._replace(query="").geturl()
     return retval

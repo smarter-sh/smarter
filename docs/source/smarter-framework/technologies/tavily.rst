@@ -81,24 +81,24 @@ Setup
 1. **Get an API key.** Create an account at `tavily.com <https://tavily.com>`_, and copy an API
    key from its dashboard. Tavily keys begin with ``tvly-``.
 
-2. **Set the environment variable.** Set ``TAVILY_API_KEY``. As with every Smarter setting, the
-   name may also be given the ``SMARTER_`` prefix, ``SMARTER_TAVILY_API_KEY``: the two are the
-   same setting. For local development, add it to ``.env``, which ``.env.example`` documents:
+2. **Set the environment variable.** Set ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``, one of the
+   llmtool app's variables. As with every Smarter setting, the ``SMARTER_`` prefix is optional,
+   ``APP_LLMTOOL_TAVILY_API_KEY``: the two are the same setting. For local development, add it to ``.env``, which ``.env.example`` documents:
 
    .. code-block:: bash
 
-       SMARTER_TAVILY_API_KEY=tvly-...
+       SMARTER_APP_LLMTOOL_TAVILY_API_KEY=tvly-...
 
-3. **Create the Secret.** ``manage.py initialize_providers``, which ``manage.py
+3. **Create the Secret.** ``manage.py initialize_llmtool_api_keys``, which ``manage.py
    initialize_platform`` runs, stores the key as the Smarter Secret ``tavily_api_key``, owned by
    the smarter admin. It updates the Secret if it already exists, so running it again rotates
    the key.
 
    .. code-block:: bash
 
-       python manage.py initialize_providers
+       python manage.py initialize_llmtool_api_keys
 
-   If ``TAVILY_API_KEY`` is not set, or is still a placeholder, such as ``SET-ME-PLEASE`` or
+   If ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY`` is not set, or is still a placeholder, such as ``SET-ME-PLEASE`` or
    ``values.yaml``'s ``SET-ME-IN-helm/charts/smarter/values.yaml``, the command does not create
    the Secret, and lists the key in the ``[API KEYS NOT SET]`` console error that it logs at the
    end, with the other missing API keys. It never stores a placeholder as the key.
@@ -124,14 +124,14 @@ CI/CD Considerations
 secret ``TAVILY_API_KEY``. Add it in the repository's *Settings > Secrets and variables >
 Actions*. It is never committed: neither ``values.yaml`` nor any manifest contains the key.
 
-**Tests (.github/workflows/test.yml).** The workflow passes ``TAVILY_API_KEY`` to the test
-containers' ``.env``, with the other API keys. The unit tests do not call Tavily: they serve the
+**Tests (.github/workflows/test.yml).** The workflow passes the secret to the test
+containers' ``.env``, as ``APP_LLMTOOL_TAVILY_API_KEY``, with the other API keys. The unit tests do not call Tavily: they serve the
 Tavily API from a fake web host, and create a test Secret, so they pass without the GitHub
 secret.
 
 **Deployments (.github/workflows/deploy.yml).** The workflow passes the GitHub secret to the
 ``tavily-api-key`` input of ``.github/actions/deploy``, which sets the Helm value
-``env.SMARTER_TAVILY_API_KEY``. The chart's init Job, ``templates/job-init.yaml``, is a Helm
+``env.SMARTER_APP_LLMTOOL_TAVILY_API_KEY``. The chart's init Job, ``templates/job-init.yaml``, is a Helm
 ``post-install`` and ``post-upgrade`` hook, so every deployment runs ``initialize_platform``,
 which creates or updates the Secret, and applies the sample plugins. Consequently:
 
@@ -166,13 +166,13 @@ Troubleshooting
 
 ``the web search api key Secret tavily_api_key does not exist, or is not accessible``
     The plugin was applied before the Secret existed, or by a user who cannot read it. Set
-    ``TAVILY_API_KEY``, run ``manage.py initialize_providers``, and apply the plugin again.
+    ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``, run ``manage.py initialize_llmtool_api_keys``, and apply the plugin again.
 
 ``Plugin smarter_project_websearch not found for account ...``
     An LLMClient that names the plugin was applied, but the plugin was not, almost always because
     of the missing Secret above. Fix the Secret, apply the plugin again, e.g. with ``manage.py
     load_from_github --include_kind WebsearchPlugin``, and apply the LLMClient again.
 
-``TAVILY_API_KEY is not set``, and ``SMARTER_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
+``APP_LLMTOOL_TAVILY_API_KEY is not set``, and ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
     The init command found no key, or only a placeholder. Set the environment variable, or, in a
     deployment, the GitHub secret ``TAVILY_API_KEY``.

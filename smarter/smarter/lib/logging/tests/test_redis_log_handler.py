@@ -221,10 +221,10 @@ class TestRedisLogHandler(SmarterTestBase):
             patch.object(handler.RedisLogHandler, "publishing_enabled", None),
             patch("smarter.common.conf.smarter_settings") as settings,
         ):
-            settings.enable_dashboard_server_logs = False
+            settings.app_dashboard_server_logs_enable = False
             log_handler = handler.RedisLogHandler()
             self.assertFalse(log_handler.is_publishing_enabled())
-            settings.enable_dashboard_server_logs = True
+            settings.app_dashboard_server_logs_enable = True
             self.assertFalse(log_handler.is_publishing_enabled())
 
     def test_emit_failure_is_reported_by_handle_error(self):

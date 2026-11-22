@@ -27,7 +27,6 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 
 # pylint: disable=W0613
@@ -36,8 +35,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 class SecretQuerySet(SmarterQuerySetWithPermissions["Secret"]):
@@ -360,7 +358,7 @@ class Secret(MetaDataWithOwnershipModel):
 
             :meth:`encrypt` -- Uses the Fernet object to encrypt values.
         """
-        encryption_key = smarter_settings.fernet_encryption_key.get_secret_value()
+        encryption_key = smarter_settings.platform_fernet_encryption_key.get_secret_value()
         if not encryption_key:
             raise SmarterConfigurationError(
                 "Encryption key not found in settings. Please set smarter.common.conf.settings.fernet_encryption_key"

@@ -17,7 +17,7 @@ from smarter.lib import logging
 
 from .base_classes import PluginAppTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 SIGNAL_NAMES = (
     "plugin_created",

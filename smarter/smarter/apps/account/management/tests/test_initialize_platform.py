@@ -124,9 +124,9 @@ class TestInitializePlatform(CommandTestBase):
     def test_defaults(self):
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.LOCAL
-            settings.root_domain = "example.com"
-            settings.admin_username = "admin"
-            settings.admin_password = None
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "admin"
+            settings.platform_admin_password = None
             self.run_command("initialize_platform")
         self.assertEqual(
             call.call_args_list[0].kwargs, {"username": "admin", "password": "smarter", "email": "admin@example.com"}
@@ -136,9 +136,9 @@ class TestInitializePlatform(CommandTestBase):
         """Test that the admin credentials come from smarter_settings, so the init job passes none on its command line."""
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
-            settings.root_domain = "example.com"
-            settings.admin_username = "platform-admin"
-            settings.admin_password = SecretStr("from-env")
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "platform-admin"
+            settings.platform_admin_password = SecretStr("from-env")
             self.run_command("initialize_platform")
         self.assertEqual(
             call.call_args_list[0].kwargs,
@@ -148,9 +148,9 @@ class TestInitializePlatform(CommandTestBase):
     def test_arguments_override_settings(self):
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
-            settings.root_domain = "example.com"
-            settings.admin_username = "platform-admin"
-            settings.admin_password = SecretStr("from-env")
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "platform-admin"
+            settings.platform_admin_password = SecretStr("from-env")
             self.run_command("initialize_platform", username="cli-admin", password="cli-pw")
         self.assertEqual(call.call_args_list[0].kwargs["username"], "cli-admin")
         self.assertEqual(call.call_args_list[0].kwargs["password"], "cli-pw")
@@ -159,9 +159,9 @@ class TestInitializePlatform(CommandTestBase):
         """Test that a missing password outside the local environment fails, so the init job fails."""
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
-            settings.admin_username = "admin"
-            settings.admin_password = None
-            with self.assertRaisesRegex(CommandError, "SMARTER_ADMIN_PASSWORD"):
+            settings.platform_admin_username = "admin"
+            settings.platform_admin_password = None
+            with self.assertRaisesRegex(CommandError, "SMARTER_PLATFORM_ADMIN_PASSWORD"):
                 self.run_command("initialize_platform")
         call.assert_not_called()
 
@@ -169,9 +169,9 @@ class TestInitializePlatform(CommandTestBase):
         """Test that outside the local environment the example and Stackademy LLMClients are deployed."""
         with patch(f"{MODULE}.call_command") as call, patch(f"{MODULE}.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
-            settings.root_domain = "example.com"
-            settings.admin_username = "admin"
-            settings.admin_password = SecretStr("pw")
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "admin"
+            settings.platform_admin_password = SecretStr("pw")
             self.run_command("initialize_platform")
         loads = self.loads(call)
         self.assertTrue(loads[EXAMPLE_MANIFESTS_REPOSITORY_URL]["deploy"])
@@ -190,9 +190,9 @@ class TestInitializePlatform(CommandTestBase):
             patch(f"{MODULE}.logger") as logger,
         ):
             settings.environment = SmarterEnvironments.PROD
-            settings.root_domain = "example.com"
-            settings.admin_username = "admin"
-            settings.admin_password = SecretStr("pw")
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "admin"
+            settings.platform_admin_password = SecretStr("pw")
             with self.assertRaisesRegex(CommandError, "these steps failed: load_from_github$"):
                 self.run_command("initialize_platform")
         self.assertEqual(called.call_args_list[-1].args[0], "sync_infrastructure_inventory")
@@ -201,7 +201,7 @@ class TestInitializePlatform(CommandTestBase):
         )
 
     def run_with_static_files_on_cdn(self, on_cdn: bool, call):
-        """Run the command with SMARTER_STATIC_FILES_ON_CDN set, and its sub-commands patched with ``call``."""
+        """Run the command with SMARTER_PLATFORM_STATIC_FILES_ON_CDN set, and its sub-commands patched with ``call``."""
         with (
             patch(f"{MODULE}.call_command", side_effect=call) as called,
             patch(f"{MODULE}.smarter_settings") as settings,
@@ -209,10 +209,10 @@ class TestInitializePlatform(CommandTestBase):
         ):
             self.mark_console_uploaded = mark_console_uploaded
             settings.environment = SmarterEnvironments.LOCAL
-            settings.root_domain = "example.com"
-            settings.admin_username = "admin"
-            settings.admin_password = None
-            settings.static_files_on_cdn = on_cdn
+            settings.platform_root_domain = "example.com"
+            settings.platform_admin_username = "admin"
+            settings.platform_admin_password = None
+            settings.platform_static_files_on_cdn = on_cdn
             self.run_command("initialize_platform")
         return [command_name(c.args[0]) for c in called.call_args_list]
 

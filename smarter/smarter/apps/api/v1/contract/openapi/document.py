@@ -12,6 +12,8 @@ from smarter.apps.api.v1.contract.const import (
     LOCAL_PLATFORM_URL,
     OPENAPI_PATH,
     OPENAPI_VERSION,
+    PROJECT_DOCS_URL,
+    PROJECT_WEBSITE_URL,
 )
 from smarter.apps.api.v1.contract.models import (
     OpenApiComponents,
@@ -22,10 +24,6 @@ from smarter.apps.api.v1.contract.models import (
     OpenApiSecurityScheme,
     OpenApiServer,
     OpenApiServerVariable,
-)
-from smarter.common.const import (
-    SMARTER_PROJECT_DOCS_URL,
-    SMARTER_PROJECT_WEBSITE_URL,
 )
 
 from .builders import API_KEY_AUTH, merge_paths
@@ -86,9 +84,9 @@ def openapi_document() -> OpenApiDocument:
                 "has the journal's api and metadata, beside the command's data or message, or an error. "
                 "The chat api's requests and responses are the Smarter Chat api contract's, version 2. "
                 "Generated from the platform's Pydantic models by smarter.apps.api.v1.contract.openapi; "
-                f"do not edit. See {SMARTER_PROJECT_DOCS_URL}."
+                f"do not edit. See {PROJECT_DOCS_URL}."
             ),
-            contact=OpenApiContact(name="The Smarter Project", url=SMARTER_PROJECT_WEBSITE_URL),
+            contact=OpenApiContact(name="The Smarter Project", url=PROJECT_WEBSITE_URL),
             license=OpenApiLicense(name="AGPL-3.0", url="https://www.gnu.org/licenses/agpl-3.0.html"),
         ),
         servers=[

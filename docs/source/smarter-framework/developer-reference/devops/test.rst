@@ -19,17 +19,17 @@ as possible.
 Local Testing
 -----------------
 
-To run the test suite locally, use the following command from the project root:
+To run the test suite locally, from the project root:
 
 .. code-block:: console
 
-  docker exec smarter-api bash -c "python manage.py test smarter"
+  make docker-test                                                    # the whole suite
+  make docker-test LABELS=smarter.apps.account.tests.test_activation  # one module, in one shard
 
-  # or, to run tests for a specific app
-  docker exec smarter-api bash -c "python manage.py test smarter.apps.account"
-
-  # or
-  make test
+It builds the ``smarter`` image from your working tree, then runs the tests in shards, each in a
+Docker stack of its own (see `Running the Suite in Shards`_). A serial ``manage.py test`` in the
+dev container uses one CPU core, and tests the dev container's copy of the code, so it isn't how
+Smarter's tests are run.
 
 Running the Suite in Shards
 ---------------------------
@@ -45,20 +45,26 @@ the TestCases. To run one shard locally, pass the same variable:
 Several shards can't share one Docker stack. The tests write real rows without a rollback, sweep
 every test account in their teardown, clear the shared Redis cache, and send requests and Celery
 tasks to the one dev server and its workers, so two shards in one stack break each other's
-tests. ``make docker-test-sharded`` gives each shard a stack of its own, as CI gives each a runner:
+tests. ``make docker-test`` gives each shard a stack of its own, as CI gives each a runner:
 
 .. code-block:: console
 
-  make docker-test-sharded              # 8 shards
-  make docker-test-sharded SHARDS=4
+  make docker-test              # as many shards as Docker has room for
+  make docker-test SHARDS=4     # exactly four
+  make docker-test LABELS=smarter.apps.secret   # part of the suite, in one shard
 
 It dumps the local database once, starts one Compose project per shard from
 ``docker-compose.shard.yml`` (MariaDB in memory, Redis, the api and the two workers, without
 Celery Beat), loads the dump into each, runs every shard at once, and prints each shard's result
 and every failing test. The logs are in ``.test-shards/``. The stacks are removed afterwards
-(``scripts/run_test_shards.py --keep`` leaves them running). It needs the ``smarter`` image
-(``make build``), ``smarter-mariadb`` running, and about 4 GB of Docker's memory per shard: set
-Docker Desktop's memory, and CPUs, to match.
+(``scripts/run_test_shards.py --keep`` leaves them running). It builds the ``smarter`` image
+first, and needs ``smarter-mariadb`` running.
+
+Without ``SHARDS``, it asks ``docker info`` for the CPUs and memory that Docker's containers can
+use (on Docker Desktop, the VM's, from its Resources settings) and runs as many shards as they
+have room for: a shard needs about 3.75 GB of memory and one CPU, after a reserve for the dev
+stack. Memory is usually the limit, and a shard that runs out of it is killed and ends without a
+result. To run more shards, give Docker Desktop more memory and CPUs.
 
 Infrastructure Tests
 --------------------

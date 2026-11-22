@@ -1,7 +1,6 @@
 """Test SmarterAuthTokenMiniSerializer class."""
 
 from datetime import datetime, timedelta, timezone
-from logging import getLogger
 
 from dateutil.parser import isoparse
 
@@ -9,12 +8,13 @@ from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
 )
+from smarter.lib import logging
 from smarter.lib.drf.manifest.brokers.auth_token import SmarterAuthTokenMiniSerializer
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import SmarterAuthToken
 
-logger = getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterAuthTokenMiniSerializer(SmarterTestBase):

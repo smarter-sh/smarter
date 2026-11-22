@@ -20,7 +20,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smarter.common.const import SMARTER_PROJECT_BLOG_URL, SMARTER_PROJECT_DOCS_URL
+from smarter.common.conf import smarter_settings
 
 GITHUB_URL = "https://github.com"
 """GitHub's web site, the base of the links to repositories and their files."""
@@ -33,6 +33,12 @@ GITHUB_CODELOAD_URL = "https://codeload.github.com"
 
 SMARTER_PROJECT_GITHUB_ORGANIZATION = "smarter-sh"
 """The GitHub organization that owns The Smarter Project's repositories."""
+
+SMARTER_PROJECT_DOCS_URL = str(smarter_settings.platform_branding_docs_url).rstrip("/")
+"""The product's documentation, ``SMARTER_PLATFORM_BRANDING_DOCS_URL``, without a trailing slash."""
+
+SMARTER_PROJECT_BLOG_URL = str(smarter_settings.platform_branding_blog_url).rstrip("/")
+"""The product's blog, ``SMARTER_PLATFORM_BRANDING_BLOG_URL``, without a trailing slash."""
 
 SMARTER_PROJECT_DOCS_ROOT_URL = f"{SMARTER_PROJECT_DOCS_URL}/"
 """The root of the Sphinx documentation, built from the smarter repository's docs/source, which page paths are joined to."""

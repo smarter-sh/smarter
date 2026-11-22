@@ -98,7 +98,11 @@ class TestCreateSmarterAdmin(CommandTestBase):
         self.addCleanup(User.objects.filter(username=username).delete)
         self.addCleanup(SmarterAuthToken.objects.filter(user__username=username).delete)
         with (
-            patch.object(account_utils, "SMARTER_ADMIN_USERNAME", username),
+            patch.object(
+                account_utils,
+                "smarter_settings",
+                account_utils.smarter_settings.model_copy(update={"platform_admin_username": username}),
+            ),
             patch.object(account_utils.smarter_cached_objects, "_admin_user", None),
         ):
             self.run_command("create_smarter_admin", username=username)

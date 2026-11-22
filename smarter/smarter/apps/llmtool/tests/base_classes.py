@@ -27,7 +27,7 @@ DATA_PATH = os.path.join(HERE, "data")
 STATIC_PLUGIN_NAME = "test_plugin_app_static_plugin"
 """The name of the StaticPlugin in ./data/static-plugin.yaml."""
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ManifestTestsMixin(SmarterTestBase):

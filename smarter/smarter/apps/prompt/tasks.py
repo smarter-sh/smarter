@@ -25,7 +25,6 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.workers.celery import app
 
 from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
@@ -38,8 +37,7 @@ def should_log(level):
     )
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 logger_level = logger.getEffectiveLevel()
 
 # Errors that fail the same way on every retry, e.g. a value too long for its column.
@@ -52,9 +50,9 @@ PROMPT_HISTORY_PURGE_BATCH_SIZE = 1000
 @app.task(
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_prompt_history(prompt_id, request, response, messages):
     """
@@ -82,9 +80,9 @@ def create_prompt_history(prompt_id, request, response, messages):
 @app.task(
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def aggregate_prompt_history():
     """Summarize detail llmclient history into aggregate records."""
@@ -94,9 +92,9 @@ def aggregate_prompt_history():
 @app.task(
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_prompt(session_key, llmclient_id):
     """
@@ -111,9 +109,9 @@ def create_prompt(session_key, llmclient_id):
 @app.task(
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, function_args, request, response):
     """
@@ -155,9 +153,9 @@ def create_prompt_tool_call_history(prompt_id, plugin_meta_id, function_name, fu
 @app.task(
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_prompt_plugin_usage(*args, **kwargs):
     """Create plugin usage record."""
@@ -220,7 +218,7 @@ def delete_in_batches(queryset: QuerySet) -> int:
     return deleted
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def purge_prompt_history(days: Optional[int] = None) -> dict[str, int]:
     """
     Delete the prompt history older than ``days``.

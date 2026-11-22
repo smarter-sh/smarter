@@ -9,7 +9,7 @@ keystrokes and resizes go to a shell on a pseudo terminal in the server process,
 output comes back as raw bytes, so colors, job control and full screen programs work. When it
 starts, it prints the pod that runs the shell, and how the session can end. This component is
 ideal for teaching, demonstrating and debugging the platform from the inside. It is for
-superusers only, and off unless ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL`` is set. See
+superusers only, and off unless ``SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE`` is set. See
 :doc:`../../../smarter-platform/smarter-web-console`.
 
 The Terminal is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at

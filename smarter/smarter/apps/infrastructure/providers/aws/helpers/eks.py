@@ -71,7 +71,7 @@ def health_issues(resource: SmarterDictType) -> tuple[HealthIssue, ...]:
 
 class AWSEks(AWSBase):
     """
-    The AWS EKS helper: the platform's cluster, ``smarter_settings.aws_eks_cluster_name``.
+    The AWS EKS helper: the platform's cluster, ``smarter_settings.subsystem_k8s_cluster_name``.
 
     The cluster is optional. Without its name, the platform runs, but nothing is deployed to
     Kubernetes, and the first attempt to reach the cluster logs how to set it.
@@ -99,21 +99,21 @@ class AWSEks(AWSBase):
 
     def cluster_name_is_set(self) -> bool:
         """
-        Return True if ``smarter_settings.aws_eks_cluster_name`` is set.
+        Return True if ``smarter_settings.subsystem_k8s_cluster_name`` is set.
 
         If it is not, log how to set it, once per process.
         """
-        if smarter_settings.aws_eks_cluster_name:
+        if smarter_settings.subsystem_k8s_cluster_name:
             return True
         if not AWSEks._cluster_name_warned:
             AWSEks._cluster_name_warned = True
             logger.error(
                 SmarterFormattedText.banner(
-                    "[KUBERNETES DISABLED] SMARTER_AWS_EKS_CLUSTER_NAME is not set.",
+                    "[KUBERNETES DISABLED] SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME is not set.",
                     "The platform runs without it, but LLMClients and LLMHosts are not deployed to Kubernetes.",
                     "To deploy them, add the name of your AWS EKS cluster to .env, and restart the platform:",
                     "",
-                    "    SMARTER_AWS_EKS_CLUSTER_NAME=<your EKS cluster>",
+                    "    SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME=<your EKS cluster>",
                     "",
                     "The AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) must be able to",
                     "describe the cluster. See https://github.com/smarter-sh/smarter-infrastructure",
@@ -131,8 +131,8 @@ class AWSEks(AWSBase):
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         if not self.cluster_name_is_set():
-            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
-        response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)["cluster"]
+            raise AWSNotReadyError(f"{self.formatted_class_name} k8s_cluster_name is not set.")
+        response = self.client.describe_cluster(name=smarter_settings.subsystem_k8s_cluster_name)["cluster"]
         return {
             "health": response.get("health"),
             "platformVersion": response.get("platformVersion"),
@@ -151,8 +151,8 @@ class AWSEks(AWSBase):
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         if not self.cluster_name_is_set():
-            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
-        cluster_name = smarter_settings.aws_eks_cluster_name
+            raise AWSNotReadyError(f"{self.formatted_class_name} k8s_cluster_name is not set.")
+        cluster_name = smarter_settings.subsystem_k8s_cluster_name
         cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
         addon_pages = self.client.get_paginator("list_addons").paginate(clusterName=cluster_name)
         addons = []
@@ -181,7 +181,7 @@ class AWSEks(AWSBase):
 
     def get_cluster_health(self) -> ClusterHealth:
         """
-        Describe the health of the platform's EKS cluster, ``smarter_settings.aws_eks_cluster_name``.
+        Describe the health of the platform's EKS cluster, ``smarter_settings.subsystem_k8s_cluster_name``.
 
         It reads the control plane, each managed node group, each add-on with its newest version for the
         cluster's Kubernetes version, and EKS's insights, e.g. the cluster's readiness for the next
@@ -200,10 +200,10 @@ class AWSEks(AWSBase):
         if not self.ready or not self.client:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to interact with AWS EKS.")
         if not self.cluster_name_is_set():
-            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
-        cluster_name = smarter_settings.aws_eks_cluster_name
+            raise AWSNotReadyError(f"{self.formatted_class_name} k8s_cluster_name is not set.")
+        cluster_name = smarter_settings.subsystem_k8s_cluster_name
         if not cluster_name:
-            raise AWSNotReadyError(f"{self.formatted_class_name} aws_eks_cluster_name is not set.")
+            raise AWSNotReadyError(f"{self.formatted_class_name} k8s_cluster_name is not set.")
         cluster = self.client.describe_cluster(name=cluster_name)["cluster"]
         health = ClusterHealth(
             name=str(cluster.get("name", cluster_name)),
@@ -372,11 +372,11 @@ class AWSEks(AWSBase):
         """
         if not self.cluster_name_is_set():
             return False
-        cluster_name = smarter_settings.aws_eks_cluster_name
+        cluster_name = smarter_settings.subsystem_k8s_cluster_name
         region = smarter_settings.aws_region
         if not cluster_name or not region:
             logger.error(
-                "aws_eks_cluster_name and aws_region must be set to update the kubeconfig.",
+                "k8s_cluster_name and aws_region must be set to update the kubeconfig.",
             )
             return False
         command = ["aws", "eks", "update-kubeconfig", "--region", region, "--name", cluster_name]
@@ -401,7 +401,7 @@ class AWSEks(AWSBase):
         :returns: The token, and when it should no longer be used, as a :func:`time.time`.
         :raises AWSNotReadyError: If AWS is not ready, or the cluster's name or region is not set.
         """
-        cluster_name = smarter_settings.aws_eks_cluster_name
+        cluster_name = smarter_settings.subsystem_k8s_cluster_name
         region = self.aws_region
         if not self.ready or not self.aws_session or not cluster_name or not region:
             raise AWSNotReadyError(f"{self.formatted_class_name} is not ready to create an EKS token.")

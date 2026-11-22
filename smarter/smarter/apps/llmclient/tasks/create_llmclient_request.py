@@ -46,8 +46,8 @@ from smarter.apps.llmclient.signals import (
     post_create_llmclient_request,
     pre_create_llmclient_request,
 )
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -60,9 +60,9 @@ logger = logging.getSmarterLogger(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_llmclient_request(llmclient_id: int, request_data: SmarterDictType):
     """
