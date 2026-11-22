@@ -40,7 +40,9 @@ class TestDeployCustomApi(TestAccountMixin):
         # update(), rather than save(), which sends llmclient signals, and would queue real deployments.
         LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=True, custom_domain=self.custom_domain)
 
-        settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
+        settings = MagicMock(
+            app_llmclient_tasks_create_dns_record=True, app_llmclient_tasks_create_ingress_manifest=True
+        )
         infrastructure = MagicMock()
         infrastructure.dns.create_domain_a_record.return_value = ({}, True)
         for target, value in (
@@ -96,8 +98,8 @@ class TestDeployCustomApi(TestAccountMixin):
 
     def test_settings_disable_dns_and_ingress(self):
         self.verify()
-        self.smarter_settings.llmclient_tasks_create_dns_record = False
-        self.smarter_settings.llmclient_tasks_create_ingress_manifest = False
+        self.smarter_settings.app_llmclient_tasks_create_dns_record = False
+        self.smarter_settings.app_llmclient_tasks_create_ingress_manifest = False
         self.assertIsNotNone(deploy_custom_api(self.llmclient.pk))
         self.infrastructure.dns.create_domain_a_record.assert_not_called()
         self.apply_ingress_manifest.assert_not_called()

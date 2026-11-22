@@ -7,7 +7,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 from .mixins import TestAccountMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterAuthToken(TestAccountMixin):

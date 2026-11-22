@@ -105,7 +105,9 @@ class TestUndeployDeployRace(TestAccountMixin):
 
         infrastructure = MagicMock()
         infrastructure.dns.create_domain_a_record.side_effect = create_domain_a_record
-        settings = MagicMock(llmclient_tasks_create_dns_record=True, llmclient_tasks_create_ingress_manifest=True)
+        settings = MagicMock(
+            app_llmclient_tasks_create_dns_record=True, app_llmclient_tasks_create_ingress_manifest=True
+        )
         for target in (
             patch(f"{MODULE}.is_taskable", return_value=True),
             patch(f"{MODULE}.destroy_domain_A_record", side_effect=self.destroy),

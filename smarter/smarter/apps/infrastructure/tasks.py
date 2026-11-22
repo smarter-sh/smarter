@@ -19,7 +19,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-@app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
 def sync_infrastructure_inventory() -> dict[str, dict[str, int]]:
     """
     Discover the platform's Kubernetes cluster, and reconcile the ledger with it.

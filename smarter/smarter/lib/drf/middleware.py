@@ -56,13 +56,13 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.models import User
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import mask_string
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.drf.const import SMARTER_API_KEY_MAX_LIFETIME_DAYS
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
@@ -390,14 +390,14 @@ class SmarterTokenAuthenticationMiddleware(SmarterMiddlewareMixin):
 
                 return
 
-        max_age = timedelta(days=smarter_settings.smarter_api_key_max_lifetime_days)
+        max_age = timedelta(days=SMARTER_API_KEY_MAX_LIFETIME_DAYS)
 
         if token.created < timezone.now() - max_age:
 
             logger.warning(
                 "token exceeded maximum lifetime user=%s max_days=%d",
                 user,
-                smarter_settings.smarter_api_key_max_lifetime_days,
+                SMARTER_API_KEY_MAX_LIFETIME_DAYS,
             )
 
     # pylint: disable=W0613

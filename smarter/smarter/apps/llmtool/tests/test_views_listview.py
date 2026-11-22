@@ -10,7 +10,7 @@ from smarter.lib.unittest.resource_views import assert_console_page
 
 from .base_classes import PluginAppTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestPluginListView(PluginAppTestBase):

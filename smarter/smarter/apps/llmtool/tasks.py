@@ -12,8 +12,8 @@ from smarter.apps.account.utils import (
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.plugin.base import SmarterPluginError
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType, required
@@ -28,9 +28,9 @@ logger = logging.getSmarterLogger(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_plugin_selector_history(*args, **kwargs):
     """
@@ -161,9 +161,9 @@ def create_plugin_selector_history(*args, **kwargs):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_plugin_charge(*args, **kwargs):
     """
@@ -176,7 +176,7 @@ def create_plugin_charge(*args, **kwargs):
     """
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def check_extension_updates() -> list[str]:
     """
     Record the newest compatible version of every extension installed from the registry.

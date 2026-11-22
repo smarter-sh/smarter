@@ -25,7 +25,6 @@ from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.throttling import throttle_wait
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 
@@ -40,8 +39,7 @@ def should_log(level: int) -> bool:
     return waffle.switch_is_active(SmarterWaffleSwitches.VIEW_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->")
 """Matches an html comment, for :meth:`SmarterView.remove_comments`."""
@@ -471,8 +469,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView, SmarterRequestMixin):
         return redirect_and_expire_cache(path="/login/")
 
 
-@method_decorator(cache_control(max_age=smarter_settings.cache_expiration), name="dispatch")
-@method_decorator(cache_page(smarter_settings.cache_expiration), name="dispatch")
+@method_decorator(cache_control(max_age=smarter_settings.subsystem_cache_expiration), name="dispatch")
+@method_decorator(cache_page(smarter_settings.subsystem_cache_expiration), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """
     An optimized and cached web view that requires authentication.

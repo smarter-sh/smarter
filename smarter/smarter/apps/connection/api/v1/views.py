@@ -2,4 +2,4 @@
 
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)

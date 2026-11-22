@@ -31,7 +31,7 @@ from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.unittest.runner import INFRASTRUCTURE
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @tag(INFRASTRUCTURE)
@@ -147,10 +147,12 @@ class TestLLMClientTasks(TestAccountMixin):
 
     def test_verify_domain(self):
         """Test that we can verify a domain."""
-        zone = self.dns.get_zone(smarter_settings.root_domain)
+        zone = self.dns.get_zone(smarter_settings.platform_root_domain)
         if zone is None:
-            self.fail(f"Expected a DNS zone for {smarter_settings.root_domain}")
-        is_verified = verify_domain(domain_name=smarter_settings.root_domain, record_type="NS", hosted_zone_id=zone.id)
+            self.fail(f"Expected a DNS zone for {smarter_settings.platform_root_domain}")
+        is_verified = verify_domain(
+            domain_name=smarter_settings.platform_root_domain, record_type="NS", hosted_zone_id=zone.id
+        )
         self.assertTrue(is_verified)
 
     def test_create_domain_A_record(self):

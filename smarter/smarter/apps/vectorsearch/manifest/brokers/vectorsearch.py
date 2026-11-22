@@ -537,7 +537,7 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
         - :py:class:`smarter.apps.vectorsearch.manifest.enum.SAMMetadataKeys`
         - :py:class:`smarter.apps.vectorsearch.manifest.enum.SCLIResponseGet`
         - :py:class:`smarter.apps.vectorsearch.manifest.enum.SCLIResponseGetData`
-        - :py:class:`from smarter.common.conf.settings_defaults`
+        - :attr:`smarter.common.conf.settings.Settings.llm_default_system_role`
         """
         command = SmarterJournalCliCommands(self.example_manifest.__name__)
 

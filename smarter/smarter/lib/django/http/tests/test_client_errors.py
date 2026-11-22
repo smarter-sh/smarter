@@ -89,7 +89,7 @@ class TestClientErrorMessage(SmarterTestBase):
 
     def test_other_smarter_error_gives_the_fallback(self):
         """A Smarter error that isn't about the client's input, e.g. a configuration error, gives the fallback."""
-        e = SmarterConfigurationError("SMARTER_SECRET_KEY is not set.")
+        e = SmarterConfigurationError("DJANGO_SECRET_KEY is not set.")
         self.assertEqual(client_error_message(e, FALLBACK), FALLBACK)
 
     def test_other_exception_gives_the_fallback(self):

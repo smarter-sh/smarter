@@ -5,10 +5,10 @@ from unittest.mock import patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.apps.prompt.models import Prompt, PromptHistory
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.lib.mixins import ChatDbMixin
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.exceptions import SmarterValueError
 
 MODULE = "smarter.apps.provider.services.text_completion.lib.mixins"

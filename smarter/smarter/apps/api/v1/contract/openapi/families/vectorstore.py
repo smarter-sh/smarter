@@ -35,7 +35,7 @@ VECTORSTORES = ApiFamily(
     resource=namespace,
     urlconf="smarter.apps.vectorstore.api.v1.urls",
     description="The {plural}' REST reads, search, documents and maintenance. Served only when the platform "
-    "enables {plural} (SMARTER_ENABLE_VECTORSTORE).",
+    "enables {plural} (SMARTER_APP_VECTORSTORE_ENABLE).",
 )
 """The vectorstores' family.
 

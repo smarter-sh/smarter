@@ -18,7 +18,7 @@ Django Checklist
 5. Include serializers for all models
 6. Add API views and viewsets, and ensure they cover all models
 7. Add Django admin classes for all models using smarter.apps.dashboard.admin.SmarterCustomerModelAdmin
-8. Add your new settings to the topic module of :mod:`smarter.common.conf.settings` that they belong to, e.g. :class:`~smarter.common.conf.settings.llm.LLMSettings`, with a default in :mod:`smarter.common.conf.defaults` and documentation for each setting.
+8. Add your new settings to the topic module of :mod:`smarter.common.conf.settings` that they belong to, e.g. :class:`~smarter.common.conf.settings.llm.LLMSettings`, with its default declared on its ``Field`` and documentation for each setting. Its environment variable is its name in capitals, with the ``SMARTER_`` prefix, which Pydantic's ``env_prefix`` applies.
 9. Include a tasks module
 10. Include a management commands module
 11. Include signals and receivers modules.

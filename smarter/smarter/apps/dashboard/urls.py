@@ -30,7 +30,7 @@ from smarter.apps.dashboard.views.terminal_emulator import terminal_urls
 from smarter.apps.dashboard.views.views import urls as dashboard_urls
 from smarter.lib import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 app_name = namespace
 

@@ -272,19 +272,19 @@ urlpatterns = [
 ]
 
 SAM_APP_CONSOLE_URLS: list[SamAppUrls] = [
-    SamAppUrls("enable_connection", "Connection", "connection/", connection_urls, connection_namespace),
-    SamAppUrls("enable_guardrail", "Guardrail", "guardrail/", guardrail_urls, guardrail_namespace),
-    SamAppUrls("enable_llmclient", "LLMClient", "llmclient/", llmclient_urls, llmclient_namespace),
-    SamAppUrls("enable_llmhost", "LLMHost", "llmhost/", llmhost_urls, llmhost_namespace),
-    SamAppUrls("enable_llmtool", "LLMTool", "llm-tools/", llmtool_urls, llmtool_namespace),
-    SamAppUrls("enable_llmtool", "Extension", "extensions/", extension_urls, extension_urls.namespace),
-    SamAppUrls("enable_mcpclient", "MCPClient", "mcpclient/", mcp_urls, mcp_namespace),
-    SamAppUrls("enable_orchestrator", "Orchestrator", "orchestrator/", orchestrator_urls, orchestrator_namespace),
-    SamAppUrls("enable_provider", "Provider", "provider/", provider_urls, provider_namespace),
-    SamAppUrls("enable_proxy", "Proxy", "proxy/", proxy_urls, proxy_namespace),
-    SamAppUrls("enable_secret", "Secret", "secret/", secret_urls, secret_namespace),
-    SamAppUrls("enable_vectorsearch", "VectorSearch", "vectorsearch/", vectorsearch_urls, vectorsearch_namespace),
-    SamAppUrls("enable_vectorstore", "Vectorstore", "vectorstore/", vectorstore_urls, vectorstore_namespace),
+    SamAppUrls("app_connection_enable", "Connection", "connection/", connection_urls, connection_namespace),
+    SamAppUrls("app_guardrail_enable", "Guardrail", "guardrail/", guardrail_urls, guardrail_namespace),
+    SamAppUrls("app_llmclient_enable", "LLMClient", "llmclient/", llmclient_urls, llmclient_namespace),
+    SamAppUrls("app_llmhost_enable", "LLMHost", "llmhost/", llmhost_urls, llmhost_namespace),
+    SamAppUrls("app_llmtool_enable", "LLMTool", "llm-tools/", llmtool_urls, llmtool_namespace),
+    SamAppUrls("app_llmtool_enable", "Extension", "extensions/", extension_urls, extension_urls.namespace),
+    SamAppUrls("app_mcpclient_enable", "MCPClient", "mcpclient/", mcp_urls, mcp_namespace),
+    SamAppUrls("app_orchestrator_enable", "Orchestrator", "orchestrator/", orchestrator_urls, orchestrator_namespace),
+    SamAppUrls("app_provider_enable", "Provider", "provider/", provider_urls, provider_namespace),
+    SamAppUrls("app_proxy_enable", "Proxy", "proxy/", proxy_urls, proxy_namespace),
+    SamAppUrls("app_secret_enable", "Secret", "secret/", secret_urls, secret_namespace),
+    SamAppUrls("app_vectorsearch_enable", "VectorSearch", "vectorsearch/", vectorsearch_urls, vectorsearch_namespace),
+    SamAppUrls("app_vectorstore_enable", "Vectorstore", "vectorstore/", vectorstore_urls, vectorstore_namespace),
 ]
 """
 The web console pages of the SAM resource apps.
@@ -293,11 +293,11 @@ Each app's pages are mounted only if its ``smarter_settings.enable_<app>`` flag 
 :mod:`smarter.lib.manifest.sam_apps`.
 """
 
-urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_CONSOLE_URLS, "web console pages")
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_CONSOLE_URLS, "web console app")
 
 # LLMClients on their verified custom domains, which smarter.hosts doesn't match, are served by this
 # urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.
-if get_sam_app("enable_llmclient").is_enabled(smarter_settings):
+if get_sam_app("app_llmclient_enable").is_enabled(smarter_settings):
     urlpatterns += [
         path("prompt/", browser_friendly(DefaultLLMClientApiView.as_view()), name=f"{name_prefix}_chat"),
         path("config/", browser_friendly(PromptConfigView.as_view()), name=f"{name_prefix}_config"),

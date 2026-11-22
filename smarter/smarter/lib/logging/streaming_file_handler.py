@@ -13,11 +13,11 @@ when logs need to be streamed or persisted separately from the main application 
 
 To use the streaming file handler in your logging configuration::
 
-    import logging
+    from smarter.lib import logging
     from smarter.lib.logging.streaming_file_handler import StreamingFileHandler
 
     handler = StreamingFileHandler(job_id="my-job-123")
-    logger = logging.getLogger("my_job_logger")
+    logger = logging.getSmarterLogger("my_job_logger")
     logger.addHandler(handler)
     logger.info("This log will be written to a job-specific file.")
 
@@ -42,8 +42,8 @@ class StreamingFileHandler(logging.Handler):
     **Example:**
 
     >>> handler = StreamingFileHandler(job_id="my-job-123")
-    >>> import logging
-    >>> logger = logging.getLogger("my_job_logger")
+    >>> from smarter.lib import logging
+    >>> logger = logging.getSmarterLogger("my_job_logger")
     >>> logger.addHandler(handler)
     >>> logger.info("This log will be written to a job-specific file.")
 

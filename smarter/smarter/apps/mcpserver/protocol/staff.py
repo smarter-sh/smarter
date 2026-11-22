@@ -36,7 +36,6 @@ from smarter.apps.mcpserver.protocol.base import (
 )
 from smarter.apps.mcpserver.protocol.toolsets import STAFF_TOOL_CLASSES
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 
 STAFF_ENDPOINT_NAME = "smarter-operations"
 """The endpoint's name, in its initialize result and in the logs."""
@@ -145,7 +144,7 @@ class StaffEndpoint(MCPEndpointBase):
             title="Smarter Operations",
             version=SERVER_VERSION,
             description="The operations of this Smarter platform, for its staff: its health, its pod logs and its users' problems.",
-            website_url=SMARTER_PROJECT_WEBSITE_URL,
+            website_url=str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
         )
         return info
 

@@ -2,7 +2,7 @@
 URL configuration for the terminal's ticket api, in the web console's api.
 
 It is mounted at ``/api/web/dashboard/terminal/``, from :mod:`smarter.apps.dashboard.api.web.urls`.
-The route is always registered, and is a 404 while ``smarter_settings.enable_web_console_terminal``
+The route is always registered, and is a 404 while ``smarter_settings.app_dashboard_web_console_terminal_enable``
 is off, and for every signed in user but a superuser. See :func:`..enabled.require_terminal`.
 
 URL patterns:

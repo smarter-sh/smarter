@@ -15,7 +15,7 @@ from .signals import search_term_matched
 if TYPE_CHECKING:
     from nltk.corpus.reader.wordnet import WordNetCorpusReader
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 PLURAL_SUFFIXES = ("s", "es")
 """Suffixes with which a prompt's word still matches a search term's word, e.g. Gobstoppers and Gobstopper."""

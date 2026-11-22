@@ -2,8 +2,8 @@
 The Slack service: the platform's messages to Slack.
 
 Slack does not depend on a cloud: Smarter posts with the `Slack Web API <https://docs.slack.dev/apis/web-api/>`__,
-as a Slack app's bot, whose token is ``smarter_settings.slack_bot_token``
-(``SMARTER_SLACK_BOT_TOKEN``). So :class:`SlackService` is implemented by
+as a Slack app's bot, whose token is ``smarter_settings.subsystem_slack_bot_token``
+(``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``). So :class:`SlackService` is implemented by
 :class:`SlackWebApiService`, for every cloud provider. The bot needs the scopes ``chat:write``, to
 post messages, and ``files:write``, to upload files, and must be a member of the channel.
 
@@ -259,7 +259,7 @@ class SlackService(InfrastructureService):
 
 class SlackWebApiService(SlackService):
     """
-    Slack, with the Slack Web API, as the bot of ``smarter_settings.slack_bot_token``.
+    Slack, with the Slack Web API, as the bot of ``smarter_settings.subsystem_slack_bot_token``.
 
     It is ready when the token is set. In the unit tests, it is never ready, unless
     ``allow_in_tests`` is True, so that tests never post to a real workspace.
@@ -282,12 +282,12 @@ class SlackWebApiService(SlackService):
         """
         if running_unit_tests() and not self.allow_in_tests:
             return False
-        return smarter_settings.slack_bot_token is not None
+        return smarter_settings.subsystem_slack_bot_token is not None
 
     def _api(self, method: str, payload: SlackPayloadType, form: bool = False) -> SlackApiResponse:
-        token = smarter_settings.slack_bot_token
+        token = smarter_settings.subsystem_slack_bot_token
         if token is None:
-            raise SlackServiceError("smarter_settings.slack_bot_token is not configured")
+            raise SlackServiceError("smarter_settings.subsystem_slack_bot_token is not configured")
         headers = {"Authorization": f"Bearer {token.get_secret_value()}"}
         if form:
             body: Union[SlackPayloadType, bytes] = payload

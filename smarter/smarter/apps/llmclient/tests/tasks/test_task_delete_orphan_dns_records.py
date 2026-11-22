@@ -59,7 +59,7 @@ class TestDeleteOrphanDNSRecords(SmarterTestBase):
         settings = MagicMock(
             environment=SmarterEnvironments.PROD,
             environment_api_domain=DOMAIN,
-            infrastructure_tasks_celery_task_queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+            app_infrastructure_tasks_celery_task_queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
         )
         for target, value in (
             ("infrastructure", self.infrastructure),
@@ -74,7 +74,7 @@ class TestDeleteOrphanDNSRecords(SmarterTestBase):
     def test_is_a_celery_task(self):
         """Test that Celery Beat can queue it on the infrastructure queue."""
         self.assertTrue(callable(delete_orphan_dns_records.delay))
-        self.assertEqual(delete_orphan_dns_records.queue, smarter_settings.infrastructure_tasks_celery_task_queue)
+        self.assertEqual(delete_orphan_dns_records.queue, smarter_settings.app_infrastructure_tasks_celery_task_queue)
 
     def test_deletes_only_orphans(self):
         """Test that the only orphan is deleted, and nothing else in the zone is touched."""

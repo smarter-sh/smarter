@@ -12,7 +12,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.models import TimestampedModel
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestTimestampedModel(TestAccountMixin):

@@ -711,7 +711,7 @@ class TestImageSearchPlugin(PluginTestBase):
         output = "\n".join(logs.output)
         self.assertIn("no_such_secret", output)
         self.assertIn("api-dashboard.search.brave.com", output)
-        self.assertIn("SMARTER_BRAVE_SEARCH_API_KEY", output)
+        self.assertIn("SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY", output)
 
     def test_unreadable_api_key(self):
         """Test that an api key Secret that cannot be decrypted returns an empty list."""

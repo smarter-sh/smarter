@@ -10,7 +10,7 @@
 #
 # - Usage: Managed via Helm; values are set in values.yaml (workerInfrastructure),
 #   and default to those of the worker.
-# - The queue name must match env.SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE.
+# - The queue name must match env.SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE.
 #
 # Note:
 # The app.kubernetes.io/application-group label is used to identify pods to Calico
@@ -48,7 +48,6 @@ spec:
     metadata:
       annotations:
         checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}"
-        checksum/django-settings: "{{ include (print $.Template.BasePath "/secret-django-settings.yaml") . | sha256sum }}"
       labels:
         app.kubernetes.io/name: "{{ .Values.global.appName }}-worker-infrastructure"
         app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
@@ -63,7 +62,7 @@ spec:
       containers:
         - name: "{{ .Values.global.appName }}-worker-infrastructure"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=4", "--loglevel=info", "-Q", "{{ .Values.env.SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE | default "infrastructure_celery_task_queue" }}", "-E", "-n", "infrastructure@%h"]
+          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency=4", "--loglevel=info", "-Q", "{{ .Values.env.SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE | default "infrastructure_celery_task_queue" }}", "-E", "-n", "infrastructure@%h"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml ($infra.resources | default .Values.worker.resources) | nindent 12 }}
@@ -116,7 +115,6 @@ spec:
             {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
-            {{- include "smarter.userSettingsVolumeMounts" . | nindent 12 }}
             {{- with .Values.worker.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -124,7 +122,6 @@ spec:
           terminationMessagePolicy: File
       volumes:
         {{- include "smarter.writableVolumes" . | nindent 8 }}
-        {{- include "smarter.userSettingsVolumes" . | nindent 8 }}
         {{- with .Values.worker.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

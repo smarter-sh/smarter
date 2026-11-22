@@ -17,7 +17,7 @@ cookie names and element ids become frontend constants and aren't listed.
 | 1   | Foundation            | `@smarter/console` builds and runs; `/api/web/session/`; the app shell (header, sidebar, user menu, footer); sign-in and the account flows; Django serves `index.html` for migrated paths |
 | 2   | Existing React pages  | Dashboard, list pages, manifest detail pages, workbench, extensions, drop zone, terminal, passthrough are SPA routes                                                                      |
 | 3   | Docs pages            | `/docs/` pages are SPA routes; schemas, examples and `openapi.json` come from `/api/v1/`                                                                                                  |
-| 4   | Static files on a CDN | One origin; with `SMARTER_STATIC_FILES_ON_CDN`, static files on the environment's bucket and CDN, the console's page on the platform host (ADR-035, point 8)                              |
+| 4   | Static files on a CDN | One origin; with `SMARTER_PLATFORM_STATIC_FILES_ON_CDN`, static files on the environment's bucket and CDN, the console's page on the platform host (ADR-035, point 8)                     |
 | 5   | Split the repository  | Done: smarter-sh/smarter-console, released as a tarball that this repository pins; CI, npm publishing, contracts and skills follow                                                        |
 
 Phase 0 can ship to `alpha` on its own, and so can each page in phases 1 to 3.
@@ -184,7 +184,7 @@ no docs code. Next: phase 4.
 Phase 4 kept one origin (option A), rather than moving the backend to `api.<platform>`: a shared session cookie
 would have needed a parent domain that also reaches the deployed LLMClients under `*.api.platform.<root>`, every
 console request would have been cross-origin, and every install would have needed a CDN. ADR-035 point 8 now says
-so. While `SMARTER_STATIC_FILES_ON_CDN` is on, `STATIC_URL` is `cdn.<platform>/static/` and the static files are on
+so. While `SMARTER_PLATFORM_STATIC_FILES_ON_CDN` is on, `STATIC_URL` is `cdn.<platform>/static/` and the static files are on
 the environment's bucket (`smarter.lib.django.static_storage`: a year's cache for the React apps' hashed build output,
 an hour for the rest); `initialize_platform` uploads them with `collectstatic`, a fatal step, and then records the
 console's build (`mark_console_uploaded()`). The init job is a post-upgrade hook, so new pods serve pages before the
@@ -244,9 +244,9 @@ signed-in part and is the starting point.
 - **`user`:** username, email, first and last name, `isSuperuser`, `isStaff`, `profileImageUrl`,
   `userProfileCount`.
 - **`account`:** account number, name, selected user profile.
-- **`flags`** from `smarter_settings`: `enable_proxy`, `enable_vectorstore`,
-  `enable_dropzone_manifest_apply`, `enable_web_console_terminal` (and superuser),
-  `enable_dashboard_passthrough_prompt`, `enable_dashboard_server_logs`.
+- **`flags`** from `smarter_settings`: `app_proxy_enable`, `app_vectorstore_enable`,
+  `app_dashboard_manifest_dropzone_enable`, `app_dashboard_web_console_terminal_enable` (and superuser),
+  `app_dashboard_passthrough_prompt_enable`, `app_dashboard_server_logs_enable`.
 - **`flags`** from waffle switches: `enable_reactapp_debug_mode`, `enable_web_console_did_you_know`,
   `enable_web_console_onboarding_hints`, `enable_web_console_server_logs`,
   `enable_account_registration`, `enable_oauth2`, `enable_login_footer_links`, `enable_doodle`.
@@ -306,26 +306,26 @@ Each is `templates/react/<kind>-list.html` plus a `react_<kind>_list` template t
 `App.tsx` differ from guardrail's by 2 to 12 lines; they become one generic `/:kind` list route with a
 per-kind configuration. Phase 2.
 
-| Path                         | View                                          | Package                                | API                                           | Gate                  |
-| ---------------------------- | --------------------------------------------- | -------------------------------------- | --------------------------------------------- | --------------------- |
-| `/authtoken/`                | `lib/drf/views/listview/view.py:17`           | authtoken-list                         | `/api/web/authtoken/listview/`                |                       |
-| `/budget/`                   | `apps/account/views/budget/listview.py:73`    | budget-list (outlier)                  | `/api/web/account/budget/listview/`           | delete: superuser     |
-| `/connection/`               | `apps/connection/views/listview/view.py:20`   | connection-list                        | `/api/web/connection/listview/`               |                       |
-| `/llmclient/custom-domains/` | `apps/llmclient/views/listview/view.py:20`    | custom-domain-list                     | `/api/web/llmclient/custom-domains/listview/` |                       |
-| `/guardrail/`                | `apps/guardrail/views/listview/view.py:21`    | guardrail-list (reference)             | `/api/web/guardrail/listview/`                |                       |
-| `/infrastructure/`           | `apps/infrastructure/views/listview.py:110`   | infrastructure-resource-list (outlier) | `/api/web/infrastructure/listview/`           | superuser             |
-| `/workbench/`                | `apps/prompt/views/listview/view.py:27`       | llmclient-list (outlier)               | `/api/web/prompt/listview/`                   |                       |
-| `/llmhost/`                  | `apps/llmhost/views/listview/view.py:21`      | llmhost-list                           | `/api/web/llmhost/listview/`                  |                       |
-| `/llmhost/compute/`          | same file `:82`                               | llmhost-compute-list                   | `/api/web/llmhost/compute/listview/`          |                       |
-| `/llm-tools/`                | `apps/llmtool/views/listview/view.py:21`      | llmtool-list                           | `/api/web/llmtool/listview/`                  | `/plugin/*` redirects |
-| `/mcpclient/`                | `apps/mcpclient/views/listview/view.py:21`    | mcpclient-list                         | `/api/web/mcpclient/listview/`                |                       |
-| `/orchestrator/`             | `apps/orchestrator/views/listview/view.py:21` | orchestrator-list                      | `/api/web/orchestrator/listview/`             |                       |
-| `/provider/`                 | `apps/provider/views/listview/view.py:21`     | provider-list                          | `/api/web/provider/listview/`                 |                       |
-| `/proxy/`                    | `apps/proxy/views/listview/view.py:21`        | proxy-list                             | `/api/web/proxy/listview/`                    | `enable_proxy`        |
-| `/secret/`                   | `apps/secret/views/listview/view.py:21`       | secret-list                            | `/api/web/secret/listview/`                   |                       |
-| `/vectorsearch/`             | `apps/vectorsearch/views/listview/view.py:21` | vectorsearch-list                      | `/api/web/vectorsearch/listview/`             |                       |
-| `/vectorstore/`              | `apps/vectorstore/views/listview/view.py:21`  | vectorstore-list                       | `/api/web/vectorstore/listview/`              | `enable_vectorstore`  |
-| `/extensions/`               | `apps/llmtool/extension/views.py:304`         | extension-console                      | `/api/web/llmtool/extensions/`                | edit: superuser       |
+| Path                         | View                                          | Package                                | API                                           | Gate                     |
+| ---------------------------- | --------------------------------------------- | -------------------------------------- | --------------------------------------------- | ------------------------ |
+| `/authtoken/`                | `lib/drf/views/listview/view.py:17`           | authtoken-list                         | `/api/web/authtoken/listview/`                |                          |
+| `/budget/`                   | `apps/account/views/budget/listview.py:73`    | budget-list (outlier)                  | `/api/web/account/budget/listview/`           | delete: superuser        |
+| `/connection/`               | `apps/connection/views/listview/view.py:20`   | connection-list                        | `/api/web/connection/listview/`               |                          |
+| `/llmclient/custom-domains/` | `apps/llmclient/views/listview/view.py:20`    | custom-domain-list                     | `/api/web/llmclient/custom-domains/listview/` |                          |
+| `/guardrail/`                | `apps/guardrail/views/listview/view.py:21`    | guardrail-list (reference)             | `/api/web/guardrail/listview/`                |                          |
+| `/infrastructure/`           | `apps/infrastructure/views/listview.py:110`   | infrastructure-resource-list (outlier) | `/api/web/infrastructure/listview/`           | superuser                |
+| `/workbench/`                | `apps/prompt/views/listview/view.py:27`       | llmclient-list (outlier)               | `/api/web/prompt/listview/`                   |                          |
+| `/llmhost/`                  | `apps/llmhost/views/listview/view.py:21`      | llmhost-list                           | `/api/web/llmhost/listview/`                  |                          |
+| `/llmhost/compute/`          | same file `:82`                               | llmhost-compute-list                   | `/api/web/llmhost/compute/listview/`          |                          |
+| `/llm-tools/`                | `apps/llmtool/views/listview/view.py:21`      | llmtool-list                           | `/api/web/llmtool/listview/`                  | `/plugin/*` redirects    |
+| `/mcpclient/`                | `apps/mcpclient/views/listview/view.py:21`    | mcpclient-list                         | `/api/web/mcpclient/listview/`                |                          |
+| `/orchestrator/`             | `apps/orchestrator/views/listview/view.py:21` | orchestrator-list                      | `/api/web/orchestrator/listview/`             |                          |
+| `/provider/`                 | `apps/provider/views/listview/view.py:21`     | provider-list                          | `/api/web/provider/listview/`                 |                          |
+| `/proxy/`                    | `apps/proxy/views/listview/view.py:21`        | proxy-list                             | `/api/web/proxy/listview/`                    | `app_proxy_enable`       |
+| `/secret/`                   | `apps/secret/views/listview/view.py:21`       | secret-list                            | `/api/web/secret/listview/`                   |                          |
+| `/vectorsearch/`             | `apps/vectorsearch/views/listview/view.py:21` | vectorsearch-list                      | `/api/web/vectorsearch/listview/`             |                          |
+| `/vectorstore/`              | `apps/vectorstore/views/listview/view.py:21`  | vectorstore-list                       | `/api/web/vectorstore/listview/`              | `app_vectorstore_enable` |
+| `/extensions/`               | `apps/llmtool/extension/views.py:304`         | extension-console                      | `/api/web/llmtool/extensions/`                | edit: superuser          |
 
 ## 4. Manifest detail pages
 
@@ -354,7 +354,7 @@ Paths: `/authtoken/<uuid>/`, `/budget/budgets/<id>/`, `/connection/connections/s
 | `/dashboard/`                         | `apps/dashboard/views/views/dashboard.py:46`            | dashboard          | none (8 `/api/web/dashboard/` URLs)            | `/dashboard`                        | 2     |
 | `/workbench/llm-clients/<id>/prompt/` | `apps/prompt/views/.../prompt_workbench_view.py:205`    | workbench          | server-logs flag; the rest derives from `<id>` | `/workbench/llm-clients/:id/prompt` | 2     |
 | `/extensions/<slug>/`                 | `apps/llmtool/extension/views.py:321`                   | extension-console  | `canEdit` (superuser)                          | `/extensions/:slug`                 | 2     |
-| `/dashboard/dropzone/`                | `apps/dashboard/views/dropzone/view.py:45`              | manifest-dropzone  | `enable_dropzone_manifest_apply`               | `/dashboard/dropzone`               | 2     |
+| `/dashboard/dropzone/`                | `apps/dashboard/views/dropzone/view.py:45`              | manifest-dropzone  | `app_dashboard_manifest_dropzone_enable`       | `/dashboard/dropzone`               | 2     |
 | `/dashboard/terminal/`                | `apps/dashboard/views/terminal_emulator/reactapp.py:40` | terminal-emulator  | flag and superuser; WebSocket `ws/terminal/`   | `/dashboard/terminal`               | 2     |
 | `/dashboard/passthrough/`             | `apps/dashboard/views/passthrough/view.py:46`           | prompt-passthrough | flag; server-logs flag                         | `/dashboard/passthrough`            | 2     |
 

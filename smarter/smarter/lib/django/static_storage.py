@@ -1,5 +1,5 @@
 """
-The static files' storage on the environment's S3 bucket, behind its CDN, while ``SMARTER_STATIC_FILES_ON_CDN`` is on.
+The static files' storage on the environment's S3 bucket, behind its CDN, while ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on.
 
 ``collectstatic``, which ``initialize_platform`` runs on each deployment, uploads the files under ``static/``, and
 pages load them from the CDN, e.g. ``https://cdn.platform.example.com/static/``. A React app's build output under

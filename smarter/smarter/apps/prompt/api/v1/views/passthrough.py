@@ -36,7 +36,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 
@@ -46,8 +45,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 class PassthroughChatViewSet(SmarterAuthenticatedNeverCachedWebView):

@@ -10,6 +10,25 @@ presentation_app_name = gettext_noop("LLMTool")
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = HERE
 
+LLMTOOL_ENV_PREFIX = "APP_LLMTOOL_"
+"""
+The prefix of the llmtool app's environment variables, after the optional ``SMARTER_``.
+
+E.g. ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``. ``manage.py initialize_llmtool_api_keys`` stores each key as
+a Secret named without it, e.g. ``tavily_api_key``, which the plugins' manifests name.
+"""
+
+TAVILY_API_KEY_SECRET_NAME = "tavily_api_key"
+"""The Secret of the Tavily web search api key, which WebsearchPlugins such as smarter_project_websearch use."""
+
+BRAVE_SEARCH_API_KEY_SECRET_NAME = "brave_search_api_key"
+"""
+The Secret of the Brave Search api key.
+
+ImageSearchPlugins such as safe_image_search use it, and so do the Brave WebsearchPlugin samples
+such as research_assistant.
+"""
+
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
 ONE_DAY = 24 * ONE_HOUR

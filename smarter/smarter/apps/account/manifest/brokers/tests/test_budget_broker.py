@@ -31,7 +31,7 @@ from smarter.lib.manifest.parsing import parse_manifest
 from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 EXAMPLE_MANIFESTS_PATH = os.path.join(HERE, "data", "example-manifests")

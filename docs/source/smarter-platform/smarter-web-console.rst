@@ -92,7 +92,7 @@ Every Smarter AI resource type has a dedicated list page that provides a compreh
 of all resources of that type, along with their real-time state. Create, view, edit, clone, and delete
 any resource directly from the console.
 
-A platform operator can turn a resource type off, e.g. with ``SMARTER_ENABLE_GUARDRAIL=false``. Its list
+A platform operator can turn a resource type off, e.g. with ``SMARTER_APP_GUARDRAIL_ENABLE=false``. Its list
 page, its sidebar link and its docs pages are then gone from the console, and the dashboard counts its
 resources without linking to them. See :ref:`Turning resource types off <sam-app-feature-flags>`.
 
@@ -226,7 +226,7 @@ as in k9s or ``less``:
 Browsers keep :kbd:`Ctrl+W` and :kbd:`Cmd+W` to close the tab, so wrap is :kbd:`w`, as in k9s. On
 macOS, Mission Control keeps :kbd:`Ctrl+↑` and :kbd:`Ctrl+↓`: use :kbd:`Cmd+↑` and :kbd:`Cmd+↓`.
 
-The server logs are viewable while ``SMARTER_ENABLE_DASHBOARD_SERVER_LOGS`` is set and the
+The server logs are viewable while ``SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE`` is set and the
 ``enable_web_console_server_logs`` waffle switch is active.
 
 .. raw:: html
@@ -296,7 +296,7 @@ browser clears when the tab is closed, because it can show credentials, e.g. the
 
 The shell runs as the server's operating system user, with the server's environment, and so with
 every credential that the server has: the database's, the cloud provider's, and the LLM providers'
-api keys. For that reason the Terminal is off unless ``SMARTER_ENABLE_WEB_CONSOLE_TERMINAL`` is
+api keys. For that reason the Terminal is off unless ``SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE`` is
 set to ``true``, and even then only superusers see it, or can open it. The page asks the server
 for a single use ticket, which is valid for a minute, and opens its WebSocket, ``/ws/terminal/``,
 with it, so that another site's page cannot open a terminal with a superuser's session cookie.

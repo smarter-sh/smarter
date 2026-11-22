@@ -5,7 +5,7 @@ A first message has no conversation before it: the LLMClient's system prompt and
 introduction are the same for everyone, so the same message, sent to the same LLMClient,
 gets the same answer. That is most often one of the LLMClient's ``appExamplePrompts``,
 which the chat shows as suggestions and visitors send word for word. The answer is cached
-for ``smarter_settings.prompt_response_cache_expiration`` seconds, an hour by default, and a
+for ``smarter_settings.subsystem_cache_prompt_response_expiration`` seconds, an hour by default, and a
 cached answer is returned without calling the LLM, its tools, or charging for tokens.
 
 Later messages are never cached, because their answers depend on the conversation, e.g.
@@ -142,7 +142,7 @@ def cached_prompt_response_function(
     """
 
     # pylint: disable=W0613
-    @cache_results(timeout=smarter_settings.prompt_response_cache_expiration)
+    @cache_results(timeout=smarter_settings.subsystem_cache_prompt_response_expiration)
     def get_cached_prompt_response_data(key: PromptCacheKey) -> SmarterDictType:
         return produce()
 
@@ -158,7 +158,7 @@ def get_cached_prompt_response(key: PromptCacheKey) -> Optional[ChatCompletion]:
         prefixed by :data:`CACHED_RESPONSE_ID_PREFIX`; or None if the answer is not cached,
         or the cache is disabled.
     """
-    if not smarter_settings.prompt_response_cache_expiration:
+    if not smarter_settings.subsystem_cache_prompt_response_expiration:
         return None
 
     def miss() -> SmarterDictType:
@@ -190,7 +190,7 @@ def cache_prompt_response(key: PromptCacheKey, response: ChatCompletion) -> None
     :param key: The message's cache key.
     :param response: The LLM's final answer, after the output guardrails.
     """
-    if not smarter_settings.prompt_response_cache_expiration:
+    if not smarter_settings.subsystem_cache_prompt_response_expiration:
         return
     data = response.model_dump(mode="json")
     function = cached_prompt_response_function(lambda: data)

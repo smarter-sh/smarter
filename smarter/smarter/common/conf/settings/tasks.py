@@ -6,16 +6,19 @@ from typing import Optional, Union
 from pydantic import BaseModel, Field
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.defaults import settings_defaults
-from smarter.common.conf.util import before_field_validator, parse_int_setting
+from smarter.common.conf.util import (
+    before_field_validator,
+    field_default,
+    parse_int_setting,
+)
 from smarter.common.exceptions import SmarterConfigurationError
 
 
 class TaskSettings(BaseModel):
     """The Celery queues, retries and LLMClient deployment tasks."""
 
-    llmclient_tasks_create_dns_record: bool = Field(
-        settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD,
+    app_llmclient_tasks_create_dns_record: bool = Field(
+        True,
         description="True if DNS records should be created for llmclient tasks.",
         title="LLMClient Tasks Create DNS Record",
     )
@@ -26,12 +29,12 @@ class TaskSettings(BaseModel):
     For programmatically creating DNS records in AWS Route53 during LLMClient deployment.
 
     :type: bool
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD``
+    :default: ``True``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llmclient_tasks_create_dns_record")
-    def parse_llmclient_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("app_llmclient_tasks_create_dns_record")
+    def parse_app_llmclient_tasks_create_dns_record(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'llmclient_tasks_create_dns_record' field.
 
         Args:
@@ -43,14 +46,14 @@ class TaskSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_CLIENT_TASKS_CREATE_DNS_RECORD
+            return field_default(cls, "app_llmclient_tasks_create_dns_record")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate llmclient_tasks_create_dns_record: {v}")
 
-    llmclient_tasks_create_ingress_manifest: bool = Field(
-        settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST,
+    app_llmclient_tasks_create_ingress_manifest: bool = Field(
+        True,
         description="True if ingress manifests should be created for llmclient tasks.",
         title="LLMClient Tasks Create Ingress Manifest",
     )
@@ -59,12 +62,12 @@ class TaskSettings(BaseModel):
 
     For programmatically creating ingress manifests during LLMClient deployment.
     :type: bool
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST``
+    :default: ``True``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llmclient_tasks_create_ingress_manifest")
-    def parse_llmclient_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("app_llmclient_tasks_create_ingress_manifest")
+    def parse_app_llmclient_tasks_create_ingress_manifest(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'llmclient_tasks_create_ingress_manifest' field.
 
         Args:
@@ -75,14 +78,14 @@ class TaskSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST
+            return field_default(cls, "app_llmclient_tasks_create_ingress_manifest")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate llmclient_tasks_create_ingress_manifest: {v}")
 
-    llmclient_tasks_default_ttl: int = Field(
-        settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL,
+    app_llmclient_tasks_default_ttl: int = Field(
+        600,
         description="Default TTL (time to live) for DNS records created in AWS Route53 during LLMClient deployment.",
         title="LLMClient Tasks Default TTL",
         ge=0,
@@ -91,12 +94,12 @@ class TaskSettings(BaseModel):
     Default TTL (time to live) for DNS records created in AWS Route53 during LLMClient deployment.
 
     :type: int
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL``
+    :default: ``600``
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @before_field_validator("llmclient_tasks_default_ttl")
-    def parse_llmclient_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
+    @before_field_validator("app_llmclient_tasks_default_ttl")
+    def parse_app_llmclient_tasks_default_ttl(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'llmclient_tasks_default_ttl' field.
 
         Args:
@@ -105,11 +108,11 @@ class TaskSettings(BaseModel):
             int: The validated llmclient_tasks_default_ttl.
         """
         return parse_int_setting(
-            "llmclient_tasks_default_ttl", v, settings_defaults.LLM_CLIENT_TASKS_DEFAULT_TTL, minimum=0
+            "app_llmclient_tasks_default_ttl", v, field_default(cls, "app_llmclient_tasks_default_ttl"), minimum=0
         )
 
-    llmclient_tasks_celery_max_retries: int = Field(
-        settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES,
+    app_llmclient_tasks_celery_max_retries: int = Field(
+        3,
         gt=0,
         description="Maximum number of retries for llmclient tasks in Celery.",
         title="LLMClient Tasks Celery Max Retries",
@@ -118,12 +121,12 @@ class TaskSettings(BaseModel):
     Maximum number of retries for llmclient tasks in Celery.
 
     :type: int
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES``
+    :default: ``3``
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
-    @before_field_validator("llmclient_tasks_celery_max_retries")
-    def parse_llmclient_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
+    @before_field_validator("app_llmclient_tasks_celery_max_retries")
+    def parse_app_llmclient_tasks_celery_max_retries(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'llmclient_tasks_celery_max_retries' field.
 
         Args:
@@ -132,11 +135,11 @@ class TaskSettings(BaseModel):
             int: The validated llmclient_tasks_celery_max_retries.
         """
         return parse_int_setting(
-            "llmclient_tasks_celery_max_retries", v, settings_defaults.LLM_CLIENT_TASKS_CELERY_MAX_RETRIES
+            "app_llmclient_tasks_celery_max_retries", v, field_default(cls, "app_llmclient_tasks_celery_max_retries")
         )
 
-    llmclient_tasks_celery_retry_backoff: bool = Field(
-        settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF,
+    app_llmclient_tasks_celery_retry_backoff: bool = Field(
+        True,
         description="If True, enables exponential backoff for Celery task retries related to LLMClient deployment and management",
         title="LLMClient Tasks Celery Retry Backoff",
     )
@@ -144,12 +147,12 @@ class TaskSettings(BaseModel):
     If True, enables exponential backoff for Celery task retries related to LLMClient deployment and management.
 
     :type: bool
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF``
+    :default: ``True``
     :raises SmarterConfigurationError: If the value is not a boolean.
     """
 
-    @before_field_validator("llmclient_tasks_celery_retry_backoff")
-    def parse_llmclient_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
+    @before_field_validator("app_llmclient_tasks_celery_retry_backoff")
+    def parse_app_llmclient_tasks_celery_retry_backoff(cls, v: Optional[Union[bool, str]]) -> bool:
         """Validates the 'llmclient_tasks_celery_retry_backoff' field.
 
         Args:
@@ -160,14 +163,14 @@ class TaskSettings(BaseModel):
         if isinstance(v, bool):
             return v
         if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF
+            return field_default(cls, "app_llmclient_tasks_celery_retry_backoff")
         if isinstance(v, str):
             return v.lower() in ["true", "1", "t", "y", "yes"]
 
         raise SmarterConfigurationError(f"could not validate llmclient_tasks_celery_retry_backoff: {v}")
 
-    llmclient_tasks_celery_task_queue: str = Field(
-        settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE,
+    app_llmclient_tasks_celery_task_queue: str = Field(
+        "default_celery_task_queue",
         description="The Celery task queue name for llmclient tasks.",
         title="LLMClient Tasks Celery Task Queue",
     )
@@ -175,12 +178,12 @@ class TaskSettings(BaseModel):
     The Celery task queue name for llmclient tasks.
 
     :type: str
-    :default: Value from ``settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE``
+    :default: ``"default_celery_task_queue"``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("llmclient_tasks_celery_task_queue")
-    def validate_llmclient_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+    @before_field_validator("app_llmclient_tasks_celery_task_queue")
+    def validate_app_llmclient_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
         """Validates the `llmclient_tasks_celery_task_queue` field.
 
         Args:
@@ -189,15 +192,15 @@ class TaskSettings(BaseModel):
             str: The validated llmclient tasks celery task queue.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.LLM_CLIENT_TASKS_CELERY_TASK_QUEUE
+            return field_default(cls, "app_llmclient_tasks_celery_task_queue")
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(f"llmclient_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
 
         return v
 
-    infrastructure_tasks_celery_task_queue: str = Field(
-        settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE,
+    app_infrastructure_tasks_celery_task_queue: str = Field(
+        "infrastructure_celery_task_queue",
         description="The Celery task queue name for infrastructure tasks, which deploy, verify and destroy cloud, Kubernetes and DNS resources.",
         title="Infrastructure Tasks Celery Task Queue",
     )
@@ -211,12 +214,12 @@ class TaskSettings(BaseModel):
     such as prompt history, charges and budgets.
 
     :type: str
-    :default: Value from ``settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE``
+    :default: ``"infrastructure_celery_task_queue"``
     :raises SmarterConfigurationError: If the value is not a string.
     """
 
-    @before_field_validator("infrastructure_tasks_celery_task_queue")
-    def validate_infrastructure_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+    @before_field_validator("app_infrastructure_tasks_celery_task_queue")
+    def validate_app_infrastructure_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
         """Validates the `infrastructure_tasks_celery_task_queue` field.
 
         Args:
@@ -225,7 +228,7 @@ class TaskSettings(BaseModel):
             str: The validated llmclient tasks celery task queue.
         """
         if v in THE_EMPTY_SET:
-            return settings_defaults.INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE
+            return field_default(cls, "app_infrastructure_tasks_celery_task_queue")
 
         if not isinstance(v, str):
             raise SmarterConfigurationError(

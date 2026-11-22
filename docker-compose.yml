@@ -46,7 +46,7 @@ services:
         # but we can optionally set the SCHEMA build argument to something other than "APP"
         # in order to fine tune the build requirements.
         SCHEMA: APP
-        ENVIRONMENT: ${ENVIRONMENT}
+        ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
         DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- uvicorn smarter.asgi:application --host 0.0.0.0 --port 9357 --lifespan off
@@ -71,7 +71,7 @@ services:
       - SERVICE_TYPE=app
       # smarter-mariadb's MYSQL_ROOT_PASSWORD, as whom initialize_platform creates the Stackademy
       # course database, with the pre script of its scripts/scripts.yaml.
-      - SMARTER_MYSQL_ROOT_PASSWORD=smarter
+      - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD=smarter
 
   smarter-worker:
     container_name: smarter-worker
@@ -88,7 +88,7 @@ services:
         # but we can optionally set the SCHEMA build argument to something other than "APP"
         # in order to fine tune the build requirements.
         SCHEMA: APP
-        ENVIRONMENT: ${ENVIRONMENT}
+        ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
         DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
@@ -134,7 +134,7 @@ services:
         # but we can optionally set the SCHEMA build argument to something other than "APP"
         # in order to fine tune the build requirements.
         SCHEMA: APP
-        ENVIRONMENT: ${ENVIRONMENT}
+        ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
         DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
     image: smarter
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q infrastructure_celery_task_queue -E -n infrastructure@%h
@@ -177,7 +177,7 @@ services:
         # but we can optionally set the SCHEMA build argument to something other than "APP"
         # in order to fine tune the build requirements.
         SCHEMA: APP
-        ENVIRONMENT: ${ENVIRONMENT}
+        ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
         DOCKER_COLLECT_STATIC_FILES: ${DOCKER_COLLECT_STATIC_FILES}
     image: smarter
     command: celery -A smarter.workers.celerybeat beat --loglevel=info

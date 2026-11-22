@@ -101,7 +101,7 @@ class Command(SmarterCommand):
             "--username",
             type=str,
             default=None,
-            help="The owner of the renamed Connections. Default: smarter_settings.admin_username (SMARTER_ADMIN_USERNAME).",
+            help="The owner of the renamed Connections. Default: smarter_settings.platform_admin_username (SMARTER_PLATFORM_ADMIN_USERNAME).",
         )
 
     def repoint_plugins(self, renamed: RenamedConnection, user_profile: UserProfile) -> int:
@@ -165,7 +165,7 @@ class Command(SmarterCommand):
     def handle(self, *args, **options):
         """Move the plugins to the renamed Connections, then delete the old Connections and Secrets."""
         self.handle_begin()
-        username: Optional[str] = options.get("username") or smarter_settings.admin_username
+        username: Optional[str] = options.get("username") or smarter_settings.platform_admin_username
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist as e:

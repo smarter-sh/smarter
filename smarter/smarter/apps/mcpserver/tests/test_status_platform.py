@@ -34,22 +34,22 @@ class TestQueueDepths(SmarterTestBase):
         self.assertEqual(
             task_queues(),
             (
-                smarter_settings.llmclient_tasks_celery_task_queue,
-                smarter_settings.infrastructure_tasks_celery_task_queue,
+                smarter_settings.app_llmclient_tasks_celery_task_queue,
+                smarter_settings.app_infrastructure_tasks_celery_task_queue,
             ),
         )
 
     def test_depths(self):
         def declare(queue, passive):
             self.assertTrue(passive, "a queue is never created")
-            if queue == smarter_settings.infrastructure_tasks_celery_task_queue:
+            if queue == smarter_settings.app_infrastructure_tasks_celery_task_queue:
                 raise RuntimeError("no such queue")
             return mock.Mock(message_count=7)
 
         with mock.patch(CELERY_APP, self.broker(declare)):
             depths = queue_depths()
-        self.assertEqual(depths[smarter_settings.llmclient_tasks_celery_task_queue], 7)
-        self.assertIsNone(depths[smarter_settings.infrastructure_tasks_celery_task_queue], "unknown, not empty")
+        self.assertEqual(depths[smarter_settings.app_llmclient_tasks_celery_task_queue], 7)
+        self.assertIsNone(depths[smarter_settings.app_infrastructure_tasks_celery_task_queue], "unknown, not empty")
 
     def test_empty_queue_on_redis(self):
         """Kombu answers a passive declaration of an empty Redis queue with 404, which is a depth of zero."""
@@ -58,16 +58,16 @@ class TestQueueDepths(SmarterTestBase):
             with self.subTest(reply_code=not_found):
 
                 def declare(queue, passive, not_found=not_found):
-                    if queue == smarter_settings.llmclient_tasks_celery_task_queue:
+                    if queue == smarter_settings.app_llmclient_tasks_celery_task_queue:
                         raise ChannelError("NOT_FOUND - no queue", reply_code=not_found)
                     # a broker may send its reply code as a string, which queue_depths() must handle.
                     raise ChannelError("ACCESS_REFUSED", reply_code="403")  # type: ignore[arg-type]
 
                 with mock.patch(CELERY_APP, self.broker(declare)):
                     depths = queue_depths()
-                self.assertEqual(depths[smarter_settings.llmclient_tasks_celery_task_queue], 0)
+                self.assertEqual(depths[smarter_settings.app_llmclient_tasks_celery_task_queue], 0)
                 self.assertIsNone(
-                    depths[smarter_settings.infrastructure_tasks_celery_task_queue], "another refusal is unknown"
+                    depths[smarter_settings.app_infrastructure_tasks_celery_task_queue], "another refusal is unknown"
                 )
 
     def test_broker_down(self):

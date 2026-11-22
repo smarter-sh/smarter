@@ -100,7 +100,7 @@ and the repository, in its environment, and none of the platform's own credentia
 
 - ``manage.py initialize_platform`` loads the Stackademy repository for the Smarter admin, with
   ``--run_scripts``, so that its ``pre`` script creates the course database, as
-  ``SMARTER_MYSQL_ROOT_USERNAME``, before its SqlConnection is applied. Then
+  ``SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME``, before its SqlConnection is applied. Then
   ``manage.py verify_stackademy`` sends each course advisor a real prompt, and fails unless its
   plugin returned course catalogue data.
 - ``manage.py initialize_account`` loads it for each account's admin, without the Budget, which only

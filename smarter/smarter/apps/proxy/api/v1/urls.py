@@ -1,7 +1,7 @@
 """
 URL configuration for the Proxy passthrough.
 
-These are mounted at ``/api/v1/proxy/``, if ``SMARTER_ENABLE_PROXY`` is true. See
+These are mounted at ``/api/v1/proxy/``, if ``SMARTER_APP_PROXY_ENABLE`` is true. See
 :mod:`smarter.apps.proxy.api.v1.views`.
 """
 

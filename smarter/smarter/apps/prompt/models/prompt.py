@@ -8,8 +8,8 @@ from smarter.apps.account.models import (
     MetaDataWithOwnershipModelManager,
 )
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -63,7 +63,7 @@ class Prompt(MetaDataWithOwnershipModel):
         super().delete(*args, **kwargs)
 
 
-@cache_results(timeout=smarter_settings.chat_cache_expiration or 300)
+@cache_results(timeout=smarter_settings.subsystem_cache_chat_expiration or 300)
 def get_cached_prompt_by_session_key(session_key: str) -> Prompt:
     """
     Return the Prompt of a chat session.

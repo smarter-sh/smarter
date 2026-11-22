@@ -113,7 +113,6 @@ from smarter.apps.secret.urls import SecretReverseNames
 from smarter.apps.vectorsearch.urls import VectorsearchReverseNames
 from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.common.utils import snake_case
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
@@ -192,45 +191,49 @@ def sidebar_context() -> SmarterDictType:
     }
     # the SAM resource apps' lists, each only while its app is enabled. See smarter.lib.manifest.sam_apps.
     sam_app_links = [
-        ("llmhost", "enable_llmhost", (LLMHostReverseNames.namespace, LLMHostReverseNames.listview)),
-        ("llmhostcompute", "enable_llmhost", (LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview)),
-        ("mcpclients", "enable_mcpclient", (MCPClientReverseNames.namespace, MCPClientReverseNames.listview)),
+        ("llmhost", "app_llmhost_enable", (LLMHostReverseNames.namespace, LLMHostReverseNames.listview)),
+        ("llmhostcompute", "app_llmhost_enable", (LLMHostReverseNames.namespace, LLMHostReverseNames.compute_listview)),
+        ("mcpclients", "app_mcpclient_enable", (MCPClientReverseNames.namespace, MCPClientReverseNames.listview)),
         (
             "orchestrators",
-            "enable_orchestrator",
+            "app_orchestrator_enable",
             (OrchestratorReverseNames.namespace, OrchestratorReverseNames.listview),
         ),
-        ("providers", "enable_provider", (ProviderReverseNames.namespace, ProviderReverseNames.listview)),
-        ("plugins", "enable_llmtool", (PluginReverseNames.namespace, PluginReverseNames.listview)),
-        ("extensions", "enable_llmtool", (ExtensionReverseNames.namespace, ExtensionReverseNames.listview)),
-        ("connections", "enable_connection", (ConnectionReverseNames.namespace, ConnectionReverseNames.listview)),
-        ("guardrails", "enable_guardrail", (GuardrailReverseNames.namespace, GuardrailReverseNames.listview)),
-        ("secrets", "enable_secret", (SecretReverseNames.namespace, SecretReverseNames.listview)),
+        ("providers", "app_provider_enable", (ProviderReverseNames.namespace, ProviderReverseNames.listview)),
+        ("plugins", "app_llmtool_enable", (PluginReverseNames.namespace, PluginReverseNames.listview)),
+        ("extensions", "app_llmtool_enable", (ExtensionReverseNames.namespace, ExtensionReverseNames.listview)),
+        ("connections", "app_connection_enable", (ConnectionReverseNames.namespace, ConnectionReverseNames.listview)),
+        ("guardrails", "app_guardrail_enable", (GuardrailReverseNames.namespace, GuardrailReverseNames.listview)),
+        ("secrets", "app_secret_enable", (SecretReverseNames.namespace, SecretReverseNames.listview)),
         (
             "vectorsearches",
-            "enable_vectorsearch",
+            "app_vectorsearch_enable",
             (VectorsearchReverseNames.namespace, VectorsearchReverseNames.listview),
         ),
         (
             "custom_domains",
-            "enable_llmclient",
+            "app_llmclient_enable",
             (LLMClientReverseNames.namespace, LLMClientReverseNames.custom_domain_listview),
         ),
-        ("proxies", "enable_proxy", (ProxyReverseNames.namespace, ProxyReverseNames.listview)),
-        ("vectorstores", "enable_vectorstore", (VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview)),
+        ("proxies", "app_proxy_enable", (ProxyReverseNames.namespace, ProxyReverseNames.listview)),
+        (
+            "vectorstores",
+            "app_vectorstore_enable",
+            (VectorstoreReverseNames.namespace, VectorstoreReverseNames.listview),
+        ),
     ]
     for link_name, setting, url_name in sam_app_links:
         sam_app = get_sam_app(setting)
         if not sam_app.is_enabled(smarter_settings):
             continue
         context["sidebar"][link_name] = console_reverse(*url_name)
-    if smarter_settings.enable_dropzone_manifest_apply:
+    if smarter_settings.app_dashboard_manifest_dropzone_enable:
         context["sidebar"]["manifest_drop_zone"] = console_reverse(
             DashboardReverseNames.namespace,
             DropzoneReverseNames.namespace,
             DropzoneReverseNames.dropzone,
         )
-    if smarter_settings.enable_web_console_terminal:
+    if smarter_settings.app_dashboard_web_console_terminal_enable:
         # the session api gives it to superusers only. See smarter.apps.api.web.session.views.sidebar().
         context["sidebar"]["terminal"] = console_reverse(
             DashboardReverseNames.namespace,
@@ -303,12 +306,12 @@ def base(request: "HttpRequest") -> SmarterDictType:
             "dashboard": {
                 "user_email": user_email,
                 "username": username,
-                "is_proxy_enabled": smarter_settings.enable_proxy,
-                "is_vectorstore_enabled": smarter_settings.enable_vectorstore,
-                "is_file_drop_zone_enabled": smarter_settings.enable_dropzone_manifest_apply,
+                "is_proxy_enabled": smarter_settings.app_proxy_enable,
+                "is_vectorstore_enabled": smarter_settings.app_vectorstore_enable,
+                "is_file_drop_zone_enabled": smarter_settings.app_dashboard_manifest_dropzone_enable,
                 "first_name": (user_profile.user.first_name if user_profile and user_profile.user.first_name else ""),
                 "last_name": (user_profile.user.last_name if user_profile and user_profile.user.last_name else ""),
-                "product_name": SMARTER_PRODUCT_NAME,
+                "product_name": smarter_settings.platform_branding_product_name,
             }
         }
         logger.debug(
@@ -368,47 +371,51 @@ def branding(request: "HttpRequest") -> SmarterDictType:
             "branding": {
                 "canonical": request.path,
                 "root_url": root_url,
-                "corporate_name": smarter_settings.branding_corporate_name,
+                "corporate_name": smarter_settings.platform_branding_corporate_name,
                 "corporate_address": ", ".join(
                     filter(
                         None,
                         [
-                            smarter_settings.branding_address1,
-                            smarter_settings.branding_address2,
-                            smarter_settings.branding_city,
-                            smarter_settings.branding_state,
-                            smarter_settings.branding_postal_code,
-                            smarter_settings.branding_country,
+                            smarter_settings.platform_branding_address1,
+                            smarter_settings.platform_branding_address2,
+                            smarter_settings.platform_branding_city,
+                            smarter_settings.platform_branding_state,
+                            smarter_settings.platform_branding_postal_code,
+                            smarter_settings.platform_branding_country,
                         ],
                     )
                 ),
-                "corporate_currency": smarter_settings.branding_currency,
-                "corporate_timezone": smarter_settings.branding_timezone,
-                "support_email": smarter_settings.branding_support_email,
-                "contact_url": smarter_settings.branding_contact_url,
-                "primary_contact": smarter_settings.branding_primary_contact,
-                "support_hours": smarter_settings.branding_support_hours,
-                "support_phone_number": smarter_settings.branding_support_phone_number,
-                "copyright": f"© 2023-{current_year} {smarter_settings.branding_corporate_name}. All rights reserved.",
-                "og_url": smarter_settings.marketing_site_url,
+                "corporate_currency": smarter_settings.platform_branding_currency,
+                "corporate_timezone": smarter_settings.platform_branding_timezone,
+                "support_email": smarter_settings.platform_branding_support_email,
+                "contact_url": smarter_settings.platform_branding_contact_url,
+                "primary_contact": smarter_settings.platform_branding_primary_contact,
+                "support_hours": smarter_settings.platform_branding_support_hours,
+                "support_phone_number": smarter_settings.platform_branding_support_phone_number,
+                "copyright": f"© 2023-{current_year} {smarter_settings.platform_branding_corporate_name}. All rights reserved.",
+                "og_url": smarter_settings.platform_branding_marketing_site_url,
                 "canonical_url": smarter_settings.environment_url,
-                "og_image": "https://cdn.smarter.sh/cms/img/smarter_og_image.png",
-                "url_facebook": smarter_settings.branding_url_facebook,
-                "url_twitter": smarter_settings.branding_url_twitter,
-                "url_linkedin": smarter_settings.branding_url_linkedin,
-                "url_slack": smarter_settings.branding_url_slack,
-                "smarter_logo": smarter_settings.logo,
-                "smarter_product_name": SMARTER_PRODUCT_NAME,
-                "smarter_product_description": SMARTER_PRODUCT_DESCRIPTION,
-                "smarter_marketing_site_url": smarter_settings.marketing_site_url,
+                "og_image": urljoin(str(smarter_settings.platform_branding_cdn_url), "cms/img/smarter_og_image.png"),
+                "url_facebook": smarter_settings.platform_branding_url_facebook,
+                "url_twitter": smarter_settings.platform_branding_url_twitter,
+                "url_linkedin": smarter_settings.platform_branding_url_linkedin,
+                "url_slack": smarter_settings.platform_branding_url_slack,
+                "smarter_logo": smarter_settings.platform_branding_logo,
+                "smarter_app_name": smarter_settings.platform_branding_app_name,
+                "smarter_product_name": smarter_settings.platform_branding_product_name,
+                "smarter_product_description": smarter_settings.platform_branding_product_description,
+                "smarter_marketing_site_url": smarter_settings.platform_branding_marketing_site_url,
                 "smarter_home_url": "/",
-                "smarter_project_website_url": smarter_settings.smarter_project_website_url,
-                "smarter_project_cdn_url": smarter_settings.smarter_project_cdn_url,
-                "smarter_project_docs_url": smarter_settings.smarter_project_docs_url,
+                "smarter_project_website_url": str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
+                "smarter_project_cdn_url": str(smarter_settings.platform_branding_cdn_url).rstrip("/"),
+                "smarter_project_docs_url": str(smarter_settings.platform_branding_docs_url).rstrip("/"),
+                "smarter_project_blog_url": str(smarter_settings.platform_branding_blog_url).rstrip("/"),
                 "logo_url": "images/logo/smarter-crop.png",
-                "cdn_logo_url": urljoin(smarter_settings.smarter_project_cdn_url, "images/logo/smarter-crop.png"),
+                "cdn_logo_url": urljoin(
+                    str(smarter_settings.platform_branding_cdn_url).rstrip("/"), "images/logo/smarter-crop.png"
+                ),
                 "login_url": urljoin(smarter_settings.environment_url, "/login/"),
-                "learn_url": smarter_settings.smarter_project_docs_url,
+                "learn_url": str(smarter_settings.platform_branding_docs_url).rstrip("/"),
                 "workbench_exmample_url": urljoin(smarter_settings.environment_url, "/workbench/"),
             }
         }
@@ -444,10 +451,10 @@ def footer(request: "HttpRequest") -> dict[str, dict[str, Optional[Union[str, Ht
     """
     context = {
         "footer": {
-            "about_url": smarter_settings.marketing_site_url,
-            "support_url": smarter_settings.marketing_site_url,
-            "legal_url": urljoin(str(smarter_settings.marketing_site_url), "legal"),
-            "plans_url": smarter_settings.marketing_site_url,
+            "about_url": smarter_settings.platform_branding_marketing_site_url,
+            "support_url": smarter_settings.platform_branding_marketing_site_url,
+            "legal_url": urljoin(str(smarter_settings.platform_branding_marketing_site_url), "legal"),
+            "plans_url": smarter_settings.platform_branding_marketing_site_url,
             "contact_url": "https://lawrencemcdaniel.com/contact/",
         }
     }

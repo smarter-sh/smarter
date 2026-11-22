@@ -5,14 +5,17 @@ from typing import Any, Optional, Union, overload
 
 from pydantic import SecretStr
 
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.common.helpers.console_helpers import SmarterFormattedText
-from smarter.common.utils.utils import bool_environment_variable
+from smarter.common.utils.utils import (
+    ENVIRONMENT_VARIABLE_PREFIX,
+    bool_environment_variable,
+)
 from smarter.lib import json, logging
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
-DEFAULT_MISSING_VALUE = "SET-ME-PLEASE"
-VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_SETTINGS_OUTPUT", False)
+VERBOSE_CONSOLE_OUTPUT = bool_environment_variable("SMARTER_PLATFORM_SETTINGS_OUTPUT", False)
 
 EnvValueType = Union[str, bool, int, float, list[str], SmarterDictType, None]
 """
@@ -39,6 +42,103 @@ def is_missing_value(value: Any) -> bool:
         return True
     text = str(value).strip()
     return not text or text.upper().startswith("SET-ME")
+
+
+def unquoted(value: str) -> str:
+    """
+    Strip surrounding whitespace, and one pair of matching quotes, from an environment variable's value.
+
+    ``make`` exports the lines of ``.env`` that the Makefile includes as they are written, so
+    ``NAME="value"`` reaches the process with its quotes. Docker Compose and python-dotenv strip them.
+
+    :param value: The value as the environment holds it.
+    :returns: The value without its surrounding whitespace and quotes.
+    """
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1].strip()
+    return value
+
+
+def read_environment_variable(var_name: str) -> Optional[str]:
+    """
+    Read an environment variable, with or without Smarter's ``SMARTER_`` prefix.
+
+    The name without the prefix is read first, then the name with it. Surrounding whitespace and
+    quotes are stripped.
+
+    :param var_name: The variable's name, without the prefix, e.g. ``DEBUG_MODE``.
+    :returns: Its value, or None if neither name is set.
+    """
+    value = os.environ.get(var_name)
+    if not value:
+        value = os.environ.get(f"{ENVIRONMENT_VARIABLE_PREFIX}{var_name}")
+    if value is None:
+        return None
+    return unquoted(value)
+
+
+def _cast_number(var_name: str, val: str, default: Union[int, float]) -> Union[int, float]:
+    """Parse an int, or a float, like ``default``; log the variable's name, never its value, if it can't be."""
+    number_type = type(default)
+    try:
+        return number_type(val)
+    except (ValueError, TypeError):
+        logger.warning(
+            "Environment variable %s cannot be converted to %s. Using its default.",
+            var_name,
+            number_type.__name__,
+        )
+        return default
+
+
+def _cast_dict(var_name: str, val: str, default: SmarterDictType) -> SmarterDictType:
+    """Parse a JSON object; log the variable's name, never its value, if it isn't one."""
+    try:
+        parsed = json.loads(val)
+    except json.JSONDecodeError:
+        logger.warning("Environment variable %s is not valid JSON. Using its default.", var_name)
+        return default
+    if not isinstance(parsed, dict):
+        logger.warning("Environment variable %s cannot be converted to dict. Using its default.", var_name)
+        return default
+    return parsed
+
+
+def cast_environment_value(var_name: str, val: Optional[str], default: EnvValueType) -> EnvValueType:
+    """
+    Cast an environment variable's value to the type of a default value.
+
+    A string stays a string, and ``true``, ``1``, ``t``, ``y`` or ``yes`` is a True bool. An int or a float
+    is parsed, a list is split on commas, and a dict is parsed as JSON. A value that can't be cast is
+    logged, without the value, and replaced by the default.
+
+    :param var_name: The variable's name, for the log message.
+    :param val: Its value, or None if it is not set.
+    :param default: The value whose type it is cast to, and that it is replaced by if it is missing.
+    :return: The cast value.
+    """
+    if val is None:
+        return default
+    if val == DEFAULT_MISSING_VALUE:
+        return default
+    if isinstance(default, str):
+        return val.strip()
+    # bool before int: a bool is an int.
+    if isinstance(default, bool):
+        return val.lower() in ["true", "1", "t", "y", "yes"]
+    if isinstance(default, (int, float)):
+        return _cast_number(var_name, val, default)
+    if isinstance(default, list):
+        items = []
+        for item in val.split(","):
+            stripped = item.strip()
+            if stripped:
+                items.append(stripped)
+        return items
+    if isinstance(default, dict):
+        return _cast_dict(var_name, val, default)
+    return val
 
 
 @overload
@@ -102,94 +202,13 @@ def get_env(
         holds the ``SET-ME-PLEASE`` placeholder, or cannot be converted. Only a ``default`` of None returns None.
     :rtype: EnvValueType
     """
-    # pylint: disable=W0621
-
-    def cast_value(val: Optional[str], default: EnvValueType) -> EnvValueType:
-        """
-        Cast the environment variable value to the type of the default value.
-
-        :param val: The environment variable value as a string.
-        :param default: The default value to determine the target type.
-        :return: The casted value.
-        """
-        if val is None:
-            return default
-        if val == DEFAULT_MISSING_VALUE:
-            return default
-        if isinstance(default, str):
-            return val.strip() if val is not None else default
-        if isinstance(default, bool):
-            return str(val).lower() in ["true", "1", "t", "y", "yes"] if val is not None else default
-        if isinstance(default, int):
-            try:
-                return int(val) if val is not None else default
-            except (ValueError, TypeError):
-                logger.warning(
-                    "Environment variable %s value '%s' cannot be converted to int. Using default %s.",
-                    var_name,
-                    val,
-                    default,
-                )
-                return default
-        if isinstance(default, float):
-            try:
-                return float(val) if val is not None else default
-            except (ValueError, TypeError):
-                logger.warning(
-                    "Environment variable %s value '%s' cannot be converted to float. Using default %s.",
-                    var_name,
-                    val,
-                    default,
-                )
-                return default
-        if isinstance(default, list):
-            if isinstance(val, str):
-                return [item.strip() for item in val.split(",") if item.strip()] if val is not None else default
-            elif isinstance(val, list):
-                return val if val is not None else default
-            else:
-                logger.warning(
-                    "Environment variable %s value '%s' cannot be converted to list. Using default %s.",
-                    var_name,
-                    val,
-                    default,
-                )
-                return default
-        if isinstance(default, dict):
-            try:
-                if isinstance(val, str):
-                    return json.loads(val) if val is not None else default
-                elif isinstance(val, dict):
-                    return val if val is not None else default
-                else:
-                    logger.warning(
-                        "Environment variable %s value '%s' cannot be converted to dict. Using default %s.",
-                        var_name,
-                        val,
-                        default,
-                    )
-                    return default
-            except json.JSONDecodeError:
-                logger.warning(
-                    "Environment variable %s value '%s' is not valid JSON. Using default %s.",
-                    var_name,
-                    val,
-                    default,
-                )
-                return default
-        return val
-
-    retval = os.environ.get(var_name) or os.environ.get(f"SMARTER_{var_name}")
-    # Strip surrounding quotes if present
-    retval = str(retval).strip() if retval is not None else None
-    # Strip surrounding quotes if present
-    retval = str(retval).strip('"').strip("'") if retval is not None else None
+    retval = read_environment_variable(var_name)
     if retval is None and is_required:
         logger.warning("Required environment variable %s is missing.", var_name)
         print(f"{SmarterFormattedText.text(__name__)} [WARNING] Required environment variable {var_name} is missing.")
         return default
     else:
-        cast_val = cast_value(retval, default)  # type: ignore
+        cast_val = cast_environment_value(var_name, retval, default)
         log_value = cast_val if not is_secret else "****"
         if VERBOSE_CONSOLE_OUTPUT:
             msg = f"Environment variable {var_name} found. Overriding Smarter setting from environment variable: {var_name}={repr(log_value)}"
@@ -198,4 +217,10 @@ def get_env(
         return cast_val
 
 
-__all__ = ["EnvValueType", "get_env", "is_missing_value"]
+__all__ = [
+    "EnvValueType",
+    "cast_environment_value",
+    "get_env",
+    "is_missing_value",
+    "read_environment_variable",
+]

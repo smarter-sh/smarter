@@ -9,7 +9,7 @@ MariaDB in `Loki <https://grafana.com/oss/loki/>`__, which `Grafana Alloy
 before it is stored. See ``helm/charts/smarter/values.yaml``.
 
 Loki does not depend on a cloud, so :class:`LogService` is implemented by
-:class:`LokiLogService`, at ``smarter_settings.loki_url``, for every cloud provider. Tests and
+:class:`LokiLogService`, at ``smarter_settings.subsystem_logging_loki_url``, for every cloud provider. Tests and
 local development use :class:`InMemoryLogService`, installed with :func:`configure_logs`.
 
 .. code-block:: python
@@ -570,7 +570,7 @@ def _line_time(line: LogLine) -> datetime:
 
 class LokiLogService(LogService):
     """
-    The pod logs, in Loki at ``smarter_settings.loki_url``.
+    The pod logs, in Loki at ``smarter_settings.subsystem_logging_loki_url``.
 
     It is ready when the url is set. In the unit tests, it refuses to query, unless ``allow_in_tests``
     is True, e.g. with ``requests`` mocked. Loki is in the platform's namespace, so the url is a
@@ -595,10 +595,10 @@ class LokiLogService(LogService):
 
     @property
     def ready(self) -> bool:
-        """Whether the service can query: ``smarter_settings.loki_url`` is set, and it is not a unit test, unless ``allow_in_tests``."""
+        """Whether the service can query: ``smarter_settings.subsystem_logging_loki_url`` is set, and it is not a unit test, unless ``allow_in_tests``."""
         if running_unit_tests() and not self.allow_in_tests:
             return False
-        return bool(smarter_settings.loki_url)
+        return bool(smarter_settings.subsystem_logging_loki_url)
 
     def _get(self, path: str, params: dict[str, str]) -> requests.Response:
         """
@@ -608,12 +608,12 @@ class LokiLogService(LogService):
         :param params: The query string.
         :returns: The response, which is 200.
         :raises LogServiceError: If Loki could not be reached, or did not answer 200.
-        :raises InfrastructureNotReadyError: If ``smarter_settings.loki_url`` is not set.
+        :raises InfrastructureNotReadyError: If ``smarter_settings.subsystem_logging_loki_url`` is not set.
         :raises InfrastructureConfigurationError: In the unit tests, unless ``allow_in_tests``.
         """
         refuse_in_unit_tests("Loki", self.allow_in_tests)
         self.require_ready()
-        url = f"{smarter_settings.loki_url}{path}"
+        url = f"{smarter_settings.subsystem_logging_loki_url}{path}"
         try:
             response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT, allow_redirects=False)
         except requests.exceptions.RequestException as e:

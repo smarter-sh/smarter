@@ -23,13 +23,7 @@ import django
 from dotenv import load_dotenv
 
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    AUTHOR,
-    SMARTER_ORGANIZATION_WEBSITE_URL,
-    SMARTER_PRODUCT_NAME,
-    SMARTER_PROJECT_DOCS_URL,
-    SMARTER_PROJECT_WEBSITE_URL,
-)
+from smarter.common.const import AUTHOR
 from smarter.common.exceptions import SmarterConfigurationError
 
 # Load environment variables from .env file. This is necessary for the
@@ -156,12 +150,49 @@ EXAMPLE_MANIFESTS_REPOSITORY_URL = "https://github.com/smarter-sh/example-manife
 EXAMPLE_MANIFESTS_DIR = os.path.join(HERE, "_example-manifests")
 
 
+def warn_if_example_manifests_are_modified():
+    """
+    Warn when the clone of smarter-sh/example-manifests has local changes, which the docs would show.
+
+    The clone is only a copy to include from, so a change in it, e.g. a stash popped with conflicts,
+    is a mistake: its files are shown as they are, conflict markers included, and ``git pull`` can't
+    update it. Unmerged files get a warning of their own.
+    """
+    status = subprocess.run(
+        ["git", "-C", EXAMPLE_MANIFESTS_DIR, "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    lines = [line for line in status.stdout.splitlines() if line.strip()]
+    if not lines:
+        return
+    logger = sphinx_logging.getLogger(__name__)
+    # porcelain's unmerged states: both sides changed (UU, AA, DD), or one side and a deletion.
+    unmerged = [line[3:] for line in lines if line[:2] in ("UU", "AA", "DD", "AU", "UA", "DU", "UD")]
+    if unmerged:
+        logger.warning(
+            "docs.conf.warn_if_example_manifests_are_modified() %s has unresolved merge conflicts, so the docs "
+            "show their conflict markers: %s. Delete the clone, and the next build makes a new one.",
+            EXAMPLE_MANIFESTS_DIR,
+            ", ".join(unmerged),
+        )
+    else:
+        logger.warning(
+            "docs.conf.warn_if_example_manifests_are_modified() %s has local changes, which the docs show "
+            "instead of smarter-sh/example-manifests: %s. Delete the clone, and the next build makes a new one.",
+            EXAMPLE_MANIFESTS_DIR,
+            ", ".join(line[3:] for line in lines),
+        )
+
+
 def clone_example_manifests():
     """Make or update the shallow clone of smarter-sh/example-manifests that the docs include from."""
     git_dir = os.path.join(EXAMPLE_MANIFESTS_DIR, ".git")
     try:
         if os.path.isdir(git_dir):
             subprocess.run(["git", "-C", EXAMPLE_MANIFESTS_DIR, "pull", "--ff-only", "--quiet"], check=False)
+            warn_if_example_manifests_are_modified()
         elif not os.path.exists(EXAMPLE_MANIFESTS_DIR):
             subprocess.run(
                 [
@@ -195,10 +226,10 @@ html_extra_path = ["robots.txt", "llms.txt"]
 html_context = {
     # "commit": commit,
     "last_updated": last_updated,
-    "branding_company_name": smarter_settings.branding_corporate_name,
-    "branding_smarter_product_name": SMARTER_PRODUCT_NAME,
-    "smarter_project_web_site_url": SMARTER_PROJECT_WEBSITE_URL,
-    "smarter_organization_web_site_url": SMARTER_ORGANIZATION_WEBSITE_URL,
+    "branding_company_name": smarter_settings.platform_branding_corporate_name,
+    "branding_smarter_product_name": smarter_settings.platform_branding_product_name,
+    "smarter_project_web_site_url": str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
+    "smarter_organization_web_site_url": str(smarter_settings.platform_branding_contact_url).rstrip("/"),
 }
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -277,7 +308,7 @@ autodoc_use_type_comments = False
 # site, whatever platform the build's environment configures: a ROOT_DOMAIN
 # in the builder's shell (which overrides .env) must not change the sitemap's
 # urls, or the canonical links of every page.
-html_baseurl = f"{SMARTER_PROJECT_DOCS_URL}/"
+html_baseurl = str(smarter_settings.platform_branding_docs_url).rstrip("/") + "/"
 sitemap_url_scheme = "{link}"
 sitemap_filename = "sitemap.xml"
 

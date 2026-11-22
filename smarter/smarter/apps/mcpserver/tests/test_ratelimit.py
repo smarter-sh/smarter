@@ -38,7 +38,7 @@ class TestRateLimit(MCPServerTestBase):
         patcher = mock.patch(SETTINGS_PATCH)
         self.settings = patcher.start()
         self.addCleanup(patcher.stop)
-        self.settings.mcpserver_rate_limit = 3
+        self.settings.app_mcpserver_rate_limit = 3
 
     def test_limit(self):
         """A client may send the limit's number of requests in a window, and no more."""
@@ -46,14 +46,14 @@ class TestRateLimit(MCPServerTestBase):
 
     def test_limit_of_one(self):
         """With a limit of 1, only the first request of a window is allowed."""
-        self.settings.mcpserver_rate_limit = 1
+        self.settings.app_mcpserver_rate_limit = 1
         self.assertEqual([is_rate_limited(self.ip) for _ in range(2)], [False, True])
 
     def test_disabled(self):
         """A limit of 0 disables the rate limit, and an unknown address is never limited."""
-        self.settings.mcpserver_rate_limit = 0
+        self.settings.app_mcpserver_rate_limit = 0
         self.assertFalse(any(is_rate_limited(self.ip) for _ in range(10)))
-        self.settings.mcpserver_rate_limit = 1
+        self.settings.app_mcpserver_rate_limit = 1
         self.assertFalse(any(is_rate_limited(None) for _ in range(10)))
 
     def test_windows(self):

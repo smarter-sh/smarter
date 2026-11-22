@@ -7,12 +7,12 @@ Each app's ``apps.py`` declares what is particular to it, and :class:`SmarterApp
 
     class GuardrailConfig(SmarterAppConfig):
         name = "smarter.apps.guardrail"
-        verbose_name = format_lazy("{} {}", SMARTER_APP_NAME, _("Guardrail"))
-        enabled_setting = "enable_guardrail"
+        verbose_name = format_lazy("{} {}", smarter_settings.platform_branding_app_name, _("Guardrail"))
+        enabled_setting = "app_guardrail_enable"
 
 Its :meth:`~SmarterAppConfig.ready` imports the app's :attr:`~SmarterAppConfig.ready_modules`, which connects
 their signal receivers, and logs that the app is ready. A SAM resource app whose feature flag is false, e.g.
-``SMARTER_ENABLE_GUARDRAIL=false``, imports nothing and logs how to enable it. See
+``SMARTER_APP_GUARDRAIL_ENABLE=false``, imports nothing and logs how to enable it. See
 :mod:`smarter.lib.manifest.sam_apps`.
 """
 
@@ -23,6 +23,7 @@ from django.apps import AppConfig
 
 from smarter.common.conf import smarter_settings
 from smarter.common.mixins.helper_mixin import SmarterReadyState
+from smarter.common.utils.environment_settings import log_environment_variables
 from smarter.lib import logging
 from smarter.lib.manifest.sam_apps import get_sam_app
 
@@ -52,7 +53,7 @@ class SmarterAppConfig(AppConfig):
 
     enabled_setting: Optional[str] = None
     """
-    The ``smarter_settings`` flag that enables a SAM resource app, e.g. ``enable_guardrail``, or None for a core app,.
+    The ``smarter_settings`` flag that enables a SAM resource app, e.g. ``app_guardrail_enable``, or None for a core app,.
 
     which is always enabled.
     """
@@ -110,6 +111,11 @@ class SmarterAppConfig(AppConfig):
             importlib.import_module(module_name)
         self.on_ready()
         logger.debug("%s app is %s", app_title, SmarterReadyState.READY)
+        # the app's own environment variables, e.g. SMARTER_APP_LLMCLIENT_* for smarter.apps.llmclient:
+        # the setting that each sets, or the variable's own value if no setting reads it.
+        app_key = self.name.rsplit(".", 1)[-1]
+        group = f"APP_{app_key.upper()}"
+        log_environment_variables(logger, smarter_settings, group)
 
 
 __all__ = ["SmarterAppConfig"]

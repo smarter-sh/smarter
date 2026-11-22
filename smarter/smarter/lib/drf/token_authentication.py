@@ -20,7 +20,6 @@ from smarter.common.utils import mask_string
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 
 from .models import SmarterAuthToken
 from .signals import (
@@ -51,8 +50,7 @@ The Django request's attribute that keeps its token's authentication: the token,
 See :meth:`SmarterTokenAuthentication.remembered`.
 """
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 class SmarterTokenAuthenticationError(SmarterException):

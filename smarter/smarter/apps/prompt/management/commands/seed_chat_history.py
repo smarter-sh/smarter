@@ -10,11 +10,12 @@ from smarter.apps.account.utils import (
     get_cached_admin_user_for_account,
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
+from smarter.apps.prompt.const import SMARTER_EXAMPLE_LLM_CLIENT_NAME
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_LLM_CLIENT_NAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 

@@ -87,90 +87,88 @@ class TestSettings(SmarterTestBase):
     def test_aws_region(self):
         self.assertIsNotNone(smarter_settings.aws_region)
 
-    def test_aws_eks_cluster_name(self):
+    def test_k8s_cluster_name(self):
         """The cluster is optional: its name is None when it is not set, and never a placeholder."""
-        cluster_name = smarter_settings.aws_eks_cluster_name
+        cluster_name = smarter_settings.subsystem_k8s_cluster_name
         self.assertTrue(cluster_name is None or (cluster_name and not cluster_name.startswith("SET-ME")))
 
     def test_branding_corporate_name(self):
-        self.assertIsNotNone(smarter_settings.branding_corporate_name)
+        self.assertIsNotNone(smarter_settings.platform_branding_corporate_name)
 
     def test_branding_support_phone_number(self):
-        self.assertIsNotNone(smarter_settings.branding_support_phone_number)
+        self.assertIsNotNone(smarter_settings.platform_branding_support_phone_number)
 
     def test_branding_support_email(self):
-        self.assertIsNotNone(smarter_settings.branding_support_email)
+        self.assertIsNotNone(smarter_settings.platform_branding_support_email)
 
     def test_branding_address(self):
-        self.assertIsNotNone(smarter_settings.branding_address1)
+        self.assertIsNotNone(smarter_settings.platform_branding_address1)
 
     def test_branding_contact_url(self):
-        self.assertIsNotNone(smarter_settings.branding_contact_url)
+        self.assertIsNotNone(smarter_settings.platform_branding_contact_url)
 
     def test_branding_primary_contact(self):
-        self.assertIsNotNone(smarter_settings.branding_primary_contact)
+        self.assertIsNotNone(smarter_settings.platform_branding_primary_contact)
 
     def test_branding_support_hours(self):
-        self.assertIsNotNone(smarter_settings.branding_support_hours)
+        self.assertIsNotNone(smarter_settings.platform_branding_support_hours)
 
     def test_branding_url_facebook(self):
-        self.assertIsNotNone(smarter_settings.branding_url_facebook)
+        self.assertIsNotNone(smarter_settings.platform_branding_url_facebook)
 
     def test_branding_url_twitter(self):
-        self.assertIsNotNone(smarter_settings.branding_url_twitter)
+        self.assertIsNotNone(smarter_settings.platform_branding_url_twitter)
 
     def test_branding_url_linkedin(self):
-        self.assertIsNotNone(smarter_settings.branding_url_linkedin)
+        self.assertIsNotNone(smarter_settings.platform_branding_url_linkedin)
 
     def test_branding_url_slack(self):
-        self.assertIsNotNone(smarter_settings.branding_url_slack)
+        self.assertIsNotNone(smarter_settings.platform_branding_url_slack)
 
     def test_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.cache_expiration)
+        self.assertIsNotNone(smarter_settings.subsystem_cache_expiration)
 
-    def test_chat_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.chat_cache_expiration)
+    def test_cache_chat_expiration(self):
+        self.assertIsNotNone(smarter_settings.subsystem_cache_chat_expiration)
 
-    def test_listview_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.listview_cache_expiration)
+    def test_cache_listview_expiration(self):
+        self.assertIsNotNone(smarter_settings.subsystem_cache_listview_expiration)
 
-    def test_llmclient_cache_expiration(self):
-        self.assertIsNotNone(smarter_settings.llmclient_cache_expiration)
+    def test_cache_llm_client_expiration(self):
+        self.assertIsNotNone(smarter_settings.subsystem_cache_llm_client_expiration)
 
     def test_llmclient_tasks_create_dns_record(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_create_dns_record)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_create_dns_record)
 
     def test_llmclient_tasks_create_ingress_manifest(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_create_ingress_manifest)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_create_ingress_manifest)
 
     def test_llmclient_tasks_default_ttl(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_default_ttl)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_default_ttl)
 
     def test_llmclient_tasks_celery_max_retries(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_max_retries)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_celery_max_retries)
 
     def test_llmclient_tasks_celery_retry_backoff(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_retry_backoff)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_celery_retry_backoff)
 
     def test_llmclient_tasks_celery_task_queue(self):
-        self.assertIsNotNone(smarter_settings.llmclient_tasks_celery_task_queue)
+        self.assertIsNotNone(smarter_settings.app_llmclient_tasks_celery_task_queue)
 
     def test_infrastructure_tasks_celery_task_queue(self):
         """Test that infrastructure tasks have their own queue, so that they never block operational tasks."""
-        self.assertTrue(smarter_settings.infrastructure_tasks_celery_task_queue)
+        self.assertTrue(smarter_settings.app_infrastructure_tasks_celery_task_queue)
         self.assertNotEqual(
-            smarter_settings.infrastructure_tasks_celery_task_queue, smarter_settings.llmclient_tasks_celery_task_queue
+            smarter_settings.app_infrastructure_tasks_celery_task_queue,
+            smarter_settings.app_llmclient_tasks_celery_task_queue,
         )
 
     def test_plugin_max_data_results(self):
-        self.assertIsNotNone(smarter_settings.plugin_max_data_results)
+        self.assertIsNotNone(smarter_settings.app_llmtool_plugin_max_data_results)
 
     def test_mcpserver_rate_limit(self):
-        self.assertIsInstance(smarter_settings.mcpserver_rate_limit, int)
-        self.assertGreaterEqual(smarter_settings.mcpserver_rate_limit, 0)
-
-    def test_sensitive_files_amnesty_patterns(self):
-        self.assertIsNotNone(smarter_settings.sensitive_files_amnesty_patterns)
+        self.assertIsInstance(smarter_settings.app_mcpserver_rate_limit, int)
+        self.assertGreaterEqual(smarter_settings.app_mcpserver_rate_limit, 0)
 
     def test_debug_mode(self):
         self.assertIsNotNone(smarter_settings.debug_mode)
@@ -178,29 +176,23 @@ class TestSettings(SmarterTestBase):
     def test_dump_defaults(self):
         self.assertIsNotNone(smarter_settings.dump_defaults)
 
-    def test_default_missing_value(self):
-        self.assertIsNotNone(smarter_settings.default_missing_value)
-
     def test_developer_mode(self):
         self.assertIsNotNone(smarter_settings.developer_mode)
 
     def test_email_admin(self):
-        self.assertIsNotNone(smarter_settings.email_admin)
+        self.assertIsNotNone(smarter_settings.platform_email_admin)
 
     def test_environment(self):
         self.assertIsNotNone(smarter_settings.environment)
 
     def test_fernet_encryption_key(self):
-        self.assertIsNotNone(smarter_settings.fernet_encryption_key)
+        self.assertIsNotNone(smarter_settings.platform_fernet_encryption_key)
 
     def test_internal_ip_prefixes(self):
-        self.assertIsNotNone(smarter_settings.internal_ip_prefixes)
+        self.assertIsNotNone(smarter_settings.platform_internal_ip_prefixes)
 
     def test_log_level(self):
         self.assertIsNotNone(smarter_settings.log_level)
-
-    def test_local_hosts(self):
-        self.assertIsNotNone(smarter_settings.local_hosts)
 
     def test_llm_default_provider(self):
         self.assertIsNotNone(smarter_settings.llm_default_provider)
@@ -215,34 +207,34 @@ class TestSettings(SmarterTestBase):
         self.assertIsNotNone(smarter_settings.llm_default_max_tokens)
 
     def test_logo(self):
-        self.assertIsNotNone(smarter_settings.logo)
+        self.assertIsNotNone(smarter_settings.platform_branding_logo)
 
     def test_marketing_site_url(self):
-        self.assertIsNotNone(smarter_settings.marketing_site_url)
+        self.assertIsNotNone(smarter_settings.platform_branding_marketing_site_url)
 
     def test_root_domain(self):
-        self.assertIsNotNone(smarter_settings.root_domain)
+        self.assertIsNotNone(smarter_settings.platform_root_domain)
 
     def test_secret_key(self):
-        self.assertIsNotNone(smarter_settings.secret_key)
+        self.assertIsNotNone(smarter_settings.django_secret_key)
 
     def test_settings_output(self):
-        self.assertIsNotNone(smarter_settings.settings_output)
+        self.assertIsNotNone(smarter_settings.platform_settings_output)
 
     def test_shared_resource_identifier(self):
-        self.assertIsNotNone(smarter_settings.shared_resource_identifier)
+        self.assertIsNotNone(smarter_settings.platform_shared_resource_identifier)
 
     def test_social_auth_google_oauth2_key(self):
-        self.assertIsNotNone(smarter_settings.social_auth_google_oauth2_key)
+        self.assertIsNotNone(smarter_settings.subsystem_social_auth_google_oauth2_key)
 
     def test_social_auth_google_oauth2_secret(self):
-        self.assertIsNotNone(smarter_settings.social_auth_google_oauth2_secret)
+        self.assertIsNotNone(smarter_settings.subsystem_social_auth_google_oauth2_secret)
 
     def test_social_auth_github_key(self):
-        self.assertIsNotNone(smarter_settings.social_auth_github_key)
+        self.assertIsNotNone(smarter_settings.subsystem_social_auth_github_key)
 
     def test_social_auth_github_secret(self):
-        self.assertIsNotNone(smarter_settings.social_auth_github_secret)
+        self.assertIsNotNone(smarter_settings.subsystem_social_auth_github_secret)
 
     def test_social_auth_linkedin_oauth2_key(self):
         # deprecated, no longer used
@@ -253,14 +245,16 @@ class TestSettings(SmarterTestBase):
         pass
 
     def test_smtp_sender(self):
-        self.assertIsNotNone(smarter_settings.smtp_sender)
+        self.assertIsNotNone(smarter_settings.subsystem_smtp_sender)
 
     def test_smtp_from_email(self):
-        self.assertIsNotNone(smarter_settings.smtp_from_email)
+        self.assertIsNotNone(smarter_settings.subsystem_smtp_from_email)
 
     def test_smtp_host(self):
         """SMTP is optional: the host is None when neither SMTP_HOST nor AWS_REGION is set."""
-        self.assertTrue(smarter_settings.smtp_host is None or isinstance(smarter_settings.smtp_host, str))
+        self.assertTrue(
+            smarter_settings.subsystem_smtp_host is None or isinstance(smarter_settings.subsystem_smtp_host, str)
+        )
 
     def test_account_manager_api_key(self):
         self.assertTrue(
@@ -270,23 +264,30 @@ class TestSettings(SmarterTestBase):
 
     def test_slack_bot_token(self):
         self.assertTrue(
-            smarter_settings.slack_bot_token is None or isinstance(smarter_settings.slack_bot_token, SecretStr)
+            smarter_settings.subsystem_slack_bot_token is None
+            or isinstance(smarter_settings.subsystem_slack_bot_token, SecretStr)
         )
 
     def test_smtp_password(self):
-        self.assertTrue(smarter_settings.smtp_password is None or isinstance(smarter_settings.smtp_password, SecretStr))
+        self.assertTrue(
+            smarter_settings.subsystem_smtp_password is None
+            or isinstance(smarter_settings.subsystem_smtp_password, SecretStr)
+        )
 
     def test_smtp_port(self):
-        self.assertIsNotNone(smarter_settings.smtp_port)
+        self.assertIsNotNone(smarter_settings.subsystem_smtp_port)
 
     def test_smtp_use_ssl(self):
-        self.assertIsNotNone(smarter_settings.smtp_use_ssl)
+        self.assertIsNotNone(smarter_settings.subsystem_smtp_use_ssl)
 
     def test_smtp_use_tls(self):
-        self.assertIsNotNone(smarter_settings.smtp_use_tls)
+        self.assertIsNotNone(smarter_settings.subsystem_smtp_use_tls)
 
     def test_smtp_username(self):
-        self.assertTrue(smarter_settings.smtp_username is None or isinstance(smarter_settings.smtp_username, SecretStr))
+        self.assertTrue(
+            smarter_settings.subsystem_smtp_username is None
+            or isinstance(smarter_settings.subsystem_smtp_username, SecretStr)
+        )
 
     def test_stripe_live_secret_key(self):
         self.assertIsNotNone(smarter_settings.stripe_live_secret_key)
@@ -369,9 +370,6 @@ class TestSettings(SmarterTestBase):
 
     def test_environment_variables_property(self):
         self.assertIsNotNone(smarter_settings.environment_variables)
-
-    def test_smarter_api_key_max_lifetime_days_property(self):
-        self.assertIsNotNone(smarter_settings.smarter_api_key_max_lifetime_days)
 
     def test_version_property(self):
         self.assertIsNotNone(smarter_settings.version)

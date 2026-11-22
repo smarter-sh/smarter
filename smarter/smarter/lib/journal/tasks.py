@@ -119,9 +119,9 @@ def write_journal_entry(record: SAMJournalEntryRecord) -> Optional[SAMJournal]:
     bind=True,
     autoretry_for=(Exception,),
     dont_autoretry_for=NOT_RETRYABLE,
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.llmclient_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
 )
 def create_journal_entry(self, record: dict[str, JsonValue]) -> None:
     """
@@ -193,7 +193,7 @@ def queue_journal_entry(record: SAMJournalEntryRecord, sources: Sequence[SAMJour
     logger.debug("queued journal entry %s", record.key)
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def prune_journal_blobs(grace_days: int = BLOB_PRUNE_GRACE.days) -> int:
     """
     Celery task: delete the journal's blobs that no entry references.

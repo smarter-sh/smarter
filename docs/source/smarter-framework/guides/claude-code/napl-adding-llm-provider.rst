@@ -53,13 +53,13 @@ and only require an API key in ``.env``:
      - Environment Variable
      - API Key Console
    * - OpenAI *(required)*
-     - ``SMARTER_OPENAI_API_KEY``
+     - ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``
      - `platform.openai.com/api-keys <https://platform.openai.com/api-keys>`_
    * - GoogleAI
-     - ``SMARTER_GEMINI_API_KEY``
+     - ``SMARTER_APP_PROVIDER_GEMINI_API_KEY``
      - `aistudio.google.com/app/apikey <https://aistudio.google.com/app/apikey>`_
    * - MetaAI
-     - ``SMARTER_LLAMA_API_KEY``
+     - ``SMARTER_APP_PROVIDER_LLAMA_API_KEY``
      - `console.apillm.com <https://console.apillm.com/en/dashboard/api-token>`_
 
 **Additional providers** require both an API key in ``.env`` **and** a
@@ -73,19 +73,19 @@ Provider manifest applied via the CLI:
      - Environment Variable
      - API Key Console
    * - **Anthropic**
-     - ``SMARTER_ANTHROPIC_API_KEY``
+     - ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``
      - `console.anthropic.com <https://console.anthropic.com/>`_
    * - Cohere
-     - ``SMARTER_COHERE_API_KEY``
+     - ``SMARTER_APP_PROVIDER_COHERE_API_KEY``
      - `dashboard.cohere.com/api-keys <https://dashboard.cohere.com/api-keys>`_
    * - Fireworks
-     - ``SMARTER_FIREWORKS_API_KEY``
+     - ``SMARTER_APP_PROVIDER_FIREWORKS_API_KEY``
      - `fireworks.ai/api-keys <https://fireworks.ai/api-keys/>`_
    * - Mistral
-     - ``SMARTER_MISTRAL_API_KEY``
+     - ``SMARTER_APP_PROVIDER_MISTRAL_API_KEY``
      - `console.mistral.ai/api-keys <https://console.mistral.ai/api-keys/>`_
    * - TogetherAI
-     - ``SMARTER_TOGETHERAI_API_KEY``
+     - ``SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY``
      - `together.ai/settings/api-keys <https://together.ai/settings/api-keys>`_
 
 This tutorial walks through adding **Anthropic** as an additional provider.
@@ -133,7 +133,7 @@ Open the ``.env`` file at the root of your Smarter deployment and add:
 
 .. code-block:: bash
 
-   SMARTER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Restart the application so it picks up the new credential:
 
@@ -264,7 +264,7 @@ Troubleshooting
 ===============
 
 **"API key not found" on startup**
-   The ``SMARTER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or
+   The ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or
    the application was not restarted after adding it. Run ``make restart``.
 
 **Provider status shows "verification failed"**

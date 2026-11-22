@@ -61,8 +61,9 @@ class Command(SmarterCommand):
         def set_logging_level(level):
             """Set the logging level for the root logger and all its handlers."""
 
-            logging.getLogger().setLevel(level)
-            for handler in logging.getLogger().handlers:
+            root = logging.getSmarterLogger()
+            root.setLevel(level)
+            for handler in root.handlers:
                 handler.setLevel(level)
 
             for _, logger in logging.Logger.manager.loggerDict.items():

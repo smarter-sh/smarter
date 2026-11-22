@@ -5,6 +5,29 @@ Smarter is a Docker-based Django web application and REST API that is highly con
 This document outlines the various configuration options available for Smarter. The guidelines that follow assume that you are deploying Smarter using
 the `recommended approach <installation.html>`_ of AWS EKS with the provided Helm chart and Terraform modules.
 
+How the settings are initialized
+--------------------------------
+
+Each setting value originates from one of a few places: in Kubernetes, the GitHub Actions secrets, the Kubernetes
+Secrets that `smarter-infrastructure <https://github.com/smarter-sh/smarter-infrastructure>`__ creates, and
+the Helm chart's values. Locally these originate from ``.env`` and ``user-settings/settings.yaml``.
+The deploy action and the Helm release, or Docker Compose, turn these into the process's environment
+variables. ``smarter_settings`` reads each of its fields from its environment variable, else uses the default
+declared on the field, then validates and freezes its final settings. Django's settings modules derive their settings from
+``smarter_settings`` where possible, noting that your own settings ``DJANGO_*`` supersede them, and your
+``user-settings/settings.yaml`` file and its environment variables supersede them last.
+
+.. image:: ../_static/settings-data-flow.svg
+   :alt: Sources (GitHub Actions secrets, the Kubernetes Secrets mysql-smarter, mysql-root, smarter-admin,
+         aws-ses-config and smarter-django-secret-key, the Helm chart's values, .env and
+         user-settings/settings.yaml) become environment variables through the deploy action and the Helm
+         release's env Secret, or Docker Compose. smarter_settings reads each of its fields from its
+         variable, else uses the default declared on the field, and validates them. Django's settings modules,
+         base.py, base_aws.py and the environment's module, derive from smarter_settings; the user settings
+         file and DJANGO_* variables supersede them. The startup logs, the initialize commands and the web
+         console read the result.
+   :width: 100%
+
 1. AWS Infrastructure Configuration
 -----------------------------------
 
@@ -74,10 +97,12 @@ Smarter's own, in every environment.
    - **Local development** (Docker Compose, ``make run``): ``user-settings/settings.yaml``, in the repository's root.
      This is for your own computer only. The file is never built into the Docker image, and no deployed environment
      reads it.
-   - **alpha, beta, next, prod, and every other environment on AWS** (Kubernetes): ``djangoSettings`` in the Helm
-     chart's values. To change prod, change the Helm values that prod's deployment uses, never ``user-settings/``.
+   - **alpha, beta, next, prod, and every other environment on AWS** (Kubernetes): an environment variable
+     named ``DJANGO_<SETTING>`` in ``env`` in the Helm chart's values. To change prod, change the Helm values
+     that prod's deployment uses, never ``user-settings/``.
 
-Both places take the same YAML, a map of upper case setting names to values:
+The file is a YAML map of upper case setting names to values. A variable sets one setting, and a list or a
+dictionary is written as JSON:
 
 .. code-block:: yaml
 
@@ -89,20 +114,18 @@ Both places take the same YAML, a map of upper case setting names to values:
 .. code-block:: yaml
 
    # the Helm chart's values, on Kubernetes
-   djangoSettings:
-     SESSION_COOKIE_AGE: 3600
-     ADMINS:
-       - ops@example.com
+   env:
+     DJANGO_SESSION_COOKIE_AGE: "3600"
+     DJANGO_ADMINS: '["ops@example.com"]'
 
-To set one setting at a time, use an environment variable named ``DJANGO_<SETTING>``, e.g.
-``DJANGO_SESSION_COOKIE_AGE=3600``: in ``.env`` locally, or in ``env`` in the Helm chart's values on Kubernetes.
+``DJANGO_*`` variables work locally too, in ``.env``.
 
 Settings supersede each other in this order, from lowest to highest priority:
 
 1. ``smarter/settings/base.py``
 2. ``smarter/settings/base_aws.py``, in the environments on AWS
 3. the environment's own module, e.g. ``prod.py``
-4. your settings file (``user-settings/settings.yaml``, or ``djangoSettings``)
+4. your settings file, ``user-settings/settings.yaml``, locally
 5. your ``DJANGO_*`` environment variables
 
 Your value replaces Smarter's whole setting: a dictionary such as ``LOGGING`` is not merged with Smarter's. Where a
@@ -125,29 +148,29 @@ students see only the resources that it teaches. Every flag defaults to true.
 
    * - Environment variable
      - Resource kinds
-   * - ``SMARTER_ENABLE_CONNECTION``
+   * - ``SMARTER_APP_CONNECTION_ENABLE``
      - ApiConnection, SqlConnection
-   * - ``SMARTER_ENABLE_GUARDRAIL``
+   * - ``SMARTER_APP_GUARDRAIL_ENABLE``
      - Guardrail
-   * - ``SMARTER_ENABLE_LLMCLIENT``
+   * - ``SMARTER_APP_LLMCLIENT_ENABLE``
      - LLMClient, CustomDomain
-   * - ``SMARTER_ENABLE_LLMHOST``
+   * - ``SMARTER_APP_LLMHOST_ENABLE``
      - LLMHost, LLMHostCompute
-   * - ``SMARTER_ENABLE_LLMTOOL``
+   * - ``SMARTER_APP_LLMTOOL_ENABLE``
      - Plugin, ApiPlugin, ImageSearchPlugin, SkillPlugin, SqlPlugin, WebsearchPlugin, and Extensions
-   * - ``SMARTER_ENABLE_MCPCLIENT``
+   * - ``SMARTER_APP_MCPCLIENT_ENABLE``
      - MCPClient
-   * - ``SMARTER_ENABLE_ORCHESTRATOR``
+   * - ``SMARTER_APP_ORCHESTRATOR_ENABLE``
      - Orchestrator
-   * - ``SMARTER_ENABLE_PROVIDER``
+   * - ``SMARTER_APP_PROVIDER_ENABLE``
      - Provider
-   * - ``SMARTER_ENABLE_PROXY``
+   * - ``SMARTER_APP_PROXY_ENABLE``
      - Proxy
-   * - ``SMARTER_ENABLE_SECRET``
+   * - ``SMARTER_APP_SECRET_ENABLE``
      - Secret
-   * - ``SMARTER_ENABLE_VECTORSEARCH``
+   * - ``SMARTER_APP_VECTORSEARCH_ENABLE``
      - Vectorsearch
-   * - ``SMARTER_ENABLE_VECTORSTORE``
+   * - ``SMARTER_APP_VECTORSTORE_ENABLE``
      - Vectorstore
 
 A resource type that is off is off everywhere:
@@ -158,12 +181,12 @@ A resource type that is off is off everywhere:
   environment variable that turns it on, and ``smarter validate`` reports a ``disabled_kind`` error;
 - ``initialize_platform`` skips its example manifests;
 - its app connects none of its signal receivers;
-- with ``SMARTER_ENABLE_LLMCLIENT=false``, deployed LLMClients answer 404.
+- with ``SMARTER_APP_LLMCLIENT_ENABLE=false``, deployed LLMClients answer 404.
 
 Accounts, users, budgets, API keys and prompts have no flag: the platform doesn't work without them.
 
 Resources that refer to each other need their types on together: an LLMClient's plugins need
-``SMARTER_ENABLE_LLMTOOL``, a Proxy's provider ``SMARTER_ENABLE_PROVIDER``. ``manage.py check`` warns
+``SMARTER_APP_LLMTOOL_ENABLE``, a Proxy's provider ``SMARTER_APP_PROVIDER_ENABLE``. ``manage.py check`` warns
 about each such reference to a type that is off (``smarter.W003``), from the models' relations, and
 ``manage.py check --database default`` about a type that is off and still has rows in the database
 (``smarter.W004``), which nothing can read or delete through Smarter until it is on again. See
@@ -254,8 +277,6 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
      - Personal Access Token for GitHub or other services
    * - PINECONE_API_KEY
      - (optional) API key for Pinecone vector database
-   * - PINECONE_ENVIRONMENT
-     - (optional) Pinecone environment name
    * - SLACK_BOT_TOKEN
      - (optional) A Slack app's bot token, ``xoxb-...``, with the scopes ``chat:write`` and ``files:write``. The init Job and the nightly backup post their outcome and log to Slack with it. See :doc:`Smarter on Kubernetes <../smarter-framework/smarter-on-kubernetes>`
    * - SMARTER_MYSQL_BACKUP_PASSWORD
@@ -380,11 +401,11 @@ Regardless of how the configuration values were ingested, the final database con
 
   .. code-block:: ini
 
-      MYSQL_HOST: mysql.example.com
-      MYSQL_PORT: "3306"
-      MYSQL_DATABASE: smarter_platform_prod
-      MYSQL_PASSWORD: <A SECURE PASSWORD SET IN KUBERNETES SECRET OR .env FILE>
-      MYSQL_USERNAME: smarter_platform_prod
+      SMARTER_SUBSYSTEM_SQL_HOST: mysql.example.com
+      SMARTER_SUBSYSTEM_SQL_PORT: "3306"
+      SMARTER_SUBSYSTEM_SQL_DATABASE: smarter_platform_prod
+      SMARTER_SUBSYSTEM_SQL_PASSWORD: <A SECURE PASSWORD SET IN KUBERNETES SECRET OR .env FILE>
+      SMARTER_SUBSYSTEM_SQL_USER: smarter_platform_prod
 
 .. note::
 
@@ -443,7 +464,7 @@ server's file system.
 
 Static files, the web console's scripts, styles and images, are served by the server itself, with
 WhiteNoise, which needs no CDN and works on any installation. On AWS, set
-``SMARTER_STATIC_FILES_ON_CDN=true`` to serve them from the CDN instead: each deployment's
+``SMARTER_PLATFORM_STATIC_FILES_ON_CDN=true`` to serve them from the CDN instead: each deployment's
 ``initialize_platform`` uploads them to the bucket, under ``static/``, and the console's pages load
 them from ``cdn.<platform>/static/`` once that deployment's upload is done. The pages, the api and the
 session stay on the platform's own host. The deployment's AWS user needs ``s3:PutObject``,
@@ -466,7 +487,7 @@ See `Django Static Files Documentation <https://docs.djangoproject.com/en/5.2/ho
 The Smarter settings system is implemented as an immutable singleton object called `smarter_settings <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/common/conf.py>`_.
 This object contains all validated, derived, and superseding configuration values for the platform.
 The ``smarter_settings`` class enforces a consistent set of rules for initializing configuration values from multiple sources,
-including environment variables, ``.env`` files, TFVARS, and class-defined defaults. All configuration
+including environment variables, ``.env`` files, and class-defined defaults. All configuration
 values are strongly typed and validated. Where applicable, ``smarter_settings`` values take precedence over Django
 settings. You should use ``smarter_settings`` in preference to Django settings wherever possible, as Django settings
 are often initialized from values in ``smarter_settings``.
@@ -479,10 +500,32 @@ are often initialized from values in ``smarter_settings``.
 - Configuration values are initialized in the following order of precedence:
 
   1. Constructor (not recommended; prefer ``.env`` or environment variables)
-  2. ``SettingsDefaults``
-  3. ``.env`` file
-  4. Environment variables (if present and not already consumed by ``SettingsDefaults``, these are overridden by ``.env`` file values)
-  5. Default values defined in the class
+  2. Environment variables, which include the ``.env`` file's. Each field is read from its name in
+     capitals with the ``SMARTER_`` prefix, which is required: ``debug_mode`` from
+     ``SMARTER_DEBUG_MODE``. A list is comma-separated, and a boolean ``true`` or ``false``. The
+     exceptions keep the names that other tools use: ``AWS_PROFILE``, ``AWS_ACCESS_KEY_ID``,
+     ``AWS_SECRET_ACCESS_KEY``, ``AWS_REGION``, ``GITHUB_TOKEN`` and ``DJANGO_SECRET_KEY``.
+  3. The default declared on each field. A default that depends on another setting, such as the SMTP
+     sender at the root domain, is derived from that setting's value.
 
 - The ``dump`` property returns a dictionary of all configuration values, which is useful for debugging and logging.
 - Always access configuration values via the ``smarter_settings`` singleton instance when possible.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   smarter-web-console
+   django-admin
+   cli
+   extensions
+   url-patterns
+   account-management
+   user-management
+   api-keys
+   adding-an-llm-provider
+   cost-accounting
+   smarter-journal
+   mcpserver
+   user-defined-django-settings
+   security

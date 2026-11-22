@@ -18,7 +18,6 @@ from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestType
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 from .models import Prompt, PromptHistory, PromptPluginUsage, PromptToolCall
@@ -46,8 +45,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.RECEIVER_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 logger_level = logger.getEffectiveLevel()
 prefix = __name__
 
@@ -229,7 +227,7 @@ def handle_chat_completion_response_received(
         sender_name,
         prompt,
     )
-    if smarter_settings.enable_dashboard_server_logs or (logger_level == logging.DEBUG):
+    if smarter_settings.app_dashboard_server_logs_enable or (logger_level == logging.DEBUG):
         request_data = request_to_json(request) if request else None
         if isinstance(request_data, (dict, list)):
             formatted_request_data = SmarterFormattedText.json(

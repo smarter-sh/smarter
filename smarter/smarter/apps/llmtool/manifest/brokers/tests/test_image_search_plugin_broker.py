@@ -37,7 +37,7 @@ from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 API_KEY_SECRET = "test_brave_search_api_key"
 """The api key Secret named by ./data/image-search-plugin.yaml."""

@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import json
 from smarter.lib.django.request import SmarterRequestMixin
 

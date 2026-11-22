@@ -88,7 +88,7 @@ infrastructure worker over the next few minutes, and you follow it in the LLMCli
 
 All LLMClient deployment tasks run in the infrastructure queue (``infrastructure_celery_task_queue``),
 served by the ``smarter-worker-infrastructure`` Deployment. They retry on an unexpected exception with
-exponential backoff, up to ``SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES`` times.
+exponential backoff, up to ``SMARTER_APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES`` times.
 
 
 The Deployment, Step by Step
@@ -106,9 +106,9 @@ what happens in a Docker environment without cloud credentials.
 ~~~~~~~~~~~~~~~~~
 
 ``deploy_default_api`` locks the LLMClient's database row (``SELECT ... FOR UPDATE``) and, unless
-``SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD`` is false, copies the A record of the API domain to the
+``SMARTER_APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD`` is false, copies the A record of the API domain to the
 LLMClient's default host, in the API domain's zone, with a TTL of
-``SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL`` seconds (600 by default; alias records have no TTL of their
+``SMARTER_APP_LLMCLIENT_TASKS_DEFAULT_TTL`` seconds (600 by default; alias records have no TTL of their
 own). If the record already exists with the same target, it is left alone; if it exists with a
 different target, it is updated.
 
@@ -121,7 +121,7 @@ If the LLMClient is already deployed **and** its DNS is verified, the task stops
 3. The Ingress
 ~~~~~~~~~~~~~~
 
-Unless ``SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST`` is false, the task renders
+Unless ``SMARTER_APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST`` is false, the task renders
 ``smarter/apps/llmclient/k8s/ingress.yaml.tpl`` and applies it with ``kubectl apply``:
 
 .. code-block:: yaml
@@ -338,27 +338,27 @@ Configuration
    * - Environment variable
      - Default
      - Effect
-   * - ``SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD``
+   * - ``SMARTER_APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD``
      - ``true``
      - Create an A record per LLMClient. Set it to false only if DNS answers for every LLMClient host
        some other way, such as a wildcard record.
-   * - ``SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST``
+   * - ``SMARTER_APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST``
      - ``true``
      - Apply an Ingress per LLMClient. Without it, cert-manager issues no certificate, and the
        deployment skips the certificate check.
-   * - ``SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL``
+   * - ``SMARTER_APP_LLMCLIENT_TASKS_DEFAULT_TTL``
      - ``600``
      - TTL, in seconds, of the A records that are not aliases.
-   * - ``SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES``
+   * - ``SMARTER_APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES``
      - ``3``
      - Retries of a deployment task after an unexpected exception.
-   * - ``SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF``
+   * - ``SMARTER_APP_LLMCLIENT_TASKS_CELERY_RETRY_BACKOFF``
      - ``true``
      - Exponential backoff between those retries.
-   * - ``SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE``
+   * - ``SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE``
      - ``infrastructure_celery_task_queue``
      - The queue of every deployment task. The infrastructure worker must consume it.
-   * - ``SMARTER_CLOUD_PROVIDER``
+   * - ``SMARTER_PLATFORM_CLOUD_PROVIDER``
      - ``aws``
      - The provider of DNS, certificates and the kubeconfig.
 

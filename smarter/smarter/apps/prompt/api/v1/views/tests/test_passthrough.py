@@ -42,7 +42,7 @@ UPSTREAM_ERRORS = frozenset(
     name for name, obj in list(vars(openai).items()) if isinstance(obj, type) and issubclass(obj, openai.APIError)
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestPassthroughView(TestAccountMixin):

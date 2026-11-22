@@ -185,7 +185,7 @@ class LLMClientToolCounts(NamedTuple):
         return self.extensions + self.plugins + self.mcpclients
 
 
-@cache_results(timeout=smarter_settings.llmclient_cache_expiration)
+@cache_results(timeout=smarter_settings.subsystem_cache_llm_client_expiration)
 def get_cached_llmclient_tool_counts(llmclient_id: int) -> LLMClientToolCounts:
     """
     Count an LLMClient's extensions, plugins and MCPClients, the tools that it offers the LLM.

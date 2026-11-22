@@ -31,8 +31,8 @@ from smarter.apps.llmtool.extension.contract import (
     Source,
     TrustBadge,
 )
-from smarter.common.const import SMARTER_PROJECT_WEBSITE_URL
 from smarter.lib.django.pagination import ListViewPagination
+from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType, required
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 SCHEMA_PATH = Path(__file__).parent / "extension-list.schema.json"
 """The committed JSON Schema of the contract."""
-SCHEMA_ID = f"{SMARTER_PROJECT_WEBSITE_URL}/schemas/extension-list.schema.json"
+SCHEMA_ID = smarter_schema_id("extension-list.schema.json")
 
 
 class ExtensionListModel(BaseModel):

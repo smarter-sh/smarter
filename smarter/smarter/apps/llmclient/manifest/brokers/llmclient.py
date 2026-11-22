@@ -45,7 +45,7 @@ from smarter.apps.llmclient.models import (
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.mcpclient.models import MCPClient
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -741,7 +741,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         - :py:class:`smarter.apps.llmclient.manifest.enum.SAMMetadataKeys`
         - :py:class:`smarter.apps.llmclient.manifest.enum.SCLIResponseGet`
         - :py:class:`smarter.apps.llmclient.manifest.enum.SCLIResponseGetData`
-        - :py:class:`from smarter.common.conf.settings_defaults`
+        - :attr:`smarter.common.conf.settings.Settings.llm_default_system_role`
         """
 
         command = SmarterJournalCliCommands(self.example_manifest.__name__)
@@ -761,11 +761,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             subdomain=None,
             customDomain=None,
             deployed=False,
-            provider=settings_defaults.LLM_DEFAULT_PROVIDER,
-            defaultModel=settings_defaults.LLM_DEFAULT_MODEL,
-            defaultSystemRole=settings_defaults.LLM_DEFAULT_SYSTEM_ROLE,
-            defaultTemperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-            defaultMaxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+            provider=smarter_settings.llm_default_provider,
+            defaultModel=smarter_settings.llm_default_model,
+            defaultSystemRole=smarter_settings.llm_default_system_role,
+            defaultTemperature=smarter_settings.llm_default_temperature,
+            defaultMaxTokens=smarter_settings.llm_default_max_tokens,
             appName="Example LLMClient",
             appAssistant="Example Assistant",
             appWelcomeMessage="Welcome to the Example LLMClient! How can I assist you today?",

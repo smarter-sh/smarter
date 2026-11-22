@@ -12,7 +12,7 @@ Smarter uses these AWS services:
 The platform does not call these services directly. It uses the
 :doc:`infrastructure services <../infrastructure>`, which the AWS provider,
 :class:`~smarter.apps.infrastructure.providers.aws.provider.AWSProvider`, implements when
-``SMARTER_CLOUD_PROVIDER`` is ``aws``, the default:
+``SMARTER_PLATFORM_CLOUD_PROVIDER`` is ``aws``, the default:
 
 .. code-block:: python
 

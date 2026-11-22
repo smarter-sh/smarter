@@ -1,13 +1,12 @@
 """Tests for manage.py create_plugin."""
 
-from logging import getLogger
-
 from django.core.management import call_command
 
 from smarter.apps.llmtool.tests.base_classes import TestPluginClassBase
 from smarter.apps.llmtool.tests.test_setup import get_test_file_path
+from smarter.lib import logging
 
-logger = getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class ManageCommandCreatePluginTestCase(TestPluginClassBase):

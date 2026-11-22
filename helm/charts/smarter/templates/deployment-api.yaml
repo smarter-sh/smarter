@@ -58,7 +58,6 @@ spec:
     metadata:
       annotations:
         checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") $ | sha256sum }}"
-        checksum/django-settings: "{{ include (print $.Template.BasePath "/secret-django-settings.yaml") $ | sha256sum }}"
       labels:
         app.kubernetes.io/name: "{{ $name }}"
         app.kubernetes.io/component: api
@@ -116,7 +115,6 @@ spec:
             {{- toYaml $.Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" $ | nindent 12 }}
-            {{- include "smarter.userSettingsVolumeMounts" $ | nindent 12 }}
             {{- with $.Values.app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -181,7 +179,6 @@ spec:
           terminationMessagePolicy: File
       volumes:
         {{- include "smarter.writableVolumes" $ | nindent 8 }}
-        {{- include "smarter.userSettingsVolumes" $ | nindent 8 }}
         {{- with $.Values.app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

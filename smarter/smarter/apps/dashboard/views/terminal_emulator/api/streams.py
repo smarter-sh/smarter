@@ -12,7 +12,7 @@ Behavior
 --------
 
 - Uses the ``default`` Redis connection configured through ``django-redis``.
-- Verifies ``smarter_settings.enable_dashboard_server_logs`` before opening a
+- Verifies ``smarter_settings.app_dashboard_server_logs_enable`` before opening a
     stream.
 - Streams only the records at or above a minimum log level: the ``level``
     query parameter, for example ``?level=DEBUG``, or by default
@@ -437,7 +437,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     :responseheader X-Accel-Buffering: ``no`` for streaming responses.
 
     :note:
-        If ``smarter_settings.enable_dashboard_server_logs`` is false, the
+        If ``smarter_settings.app_dashboard_server_logs_enable`` is false, the
         function returns a plain-text response and does not connect to Redis.
     """
 
@@ -462,10 +462,10 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         masked_session_key,
     )
 
-    if not smarter_settings.enable_dashboard_server_logs:
+    if not smarter_settings.app_dashboard_server_logs_enable:
         return HttpResponse(
             "Log viewing in browser is disabled. Set environment variable "
-            "'SMARTER_ENABLE_DASHBOARD_SERVER_LOGS' to make log streaming visible.",
+            "'SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE' to make log streaming visible.",
             content_type="text/plain",
         )
 

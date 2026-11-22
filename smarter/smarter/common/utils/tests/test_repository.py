@@ -3,9 +3,9 @@
 import subprocess
 from unittest.mock import patch
 
-from smarter.common.const import SMARTER_PROJECT_REPOSITORY_URL
 from smarter.common.utils import repository
 from smarter.common.utils.repository import (
+    DEFAULT_REPOSITORY_URL,
     get_repository_url,
     normalize_remote_url,
     parse_git_remotes,
@@ -96,13 +96,13 @@ class TestRepository(SmarterTestBase):
         """Without a .git directory, as in the Docker image, or without git, the default is used."""
         failure = subprocess.CalledProcessError(128, ["git", "remote", "-v"])
         with patch.object(repository.subprocess, "run", side_effect=failure):
-            self.assertEqual(get_repository_url(), SMARTER_PROJECT_REPOSITORY_URL)
+            self.assertEqual(get_repository_url(), DEFAULT_REPOSITORY_URL)
         get_repository_url.cache_clear()
         with patch.object(repository.subprocess, "run", side_effect=FileNotFoundError("git")):
-            self.assertEqual(get_repository_url(), SMARTER_PROJECT_REPOSITORY_URL)
+            self.assertEqual(get_repository_url(), DEFAULT_REPOSITORY_URL)
 
     def test_get_repository_url_without_remotes(self):
         """A repository without a usable remote gets the default."""
         completed = subprocess.CompletedProcess(args=[], returncode=0, stdout="")
         with patch.object(repository.subprocess, "run", return_value=completed):
-            self.assertEqual(get_repository_url(), SMARTER_PROJECT_REPOSITORY_URL)
+            self.assertEqual(get_repository_url(), DEFAULT_REPOSITORY_URL)

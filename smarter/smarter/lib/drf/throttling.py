@@ -3,7 +3,7 @@ Request rate limits for Smarter's apis.
 
 Smarter proxies billable LLM requests, so every api is rate limited, per
 authenticated user and, for anonymous clients, per IP address. The rates are
-``smarter_settings.throttle_rate_user`` and ``smarter_settings.throttle_rate_anon``,
+``smarter_settings.app_api_throttle_rate_user`` and ``smarter_settings.app_api_throttle_rate_anon``,
 e.g. ``600/minute``. Either can be set to ``none`` to disable it.
 
 - **Django REST Framework views** are throttled by ``REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"]``.
@@ -36,7 +36,7 @@ class SmarterAnonRateThrottle(AnonRateThrottle):
     """
     Limit the request rate of each anonymous client, by IP address.
 
-    The rate is ``smarter_settings.throttle_rate_anon``. Authenticated requests are not
+    The rate is ``smarter_settings.app_api_throttle_rate_anon``. Authenticated requests are not
     limited by this throttle, but by :class:`SmarterUserRateThrottle`.
     """
 
@@ -46,16 +46,16 @@ class SmarterAnonRateThrottle(AnonRateThrottle):
         """
         Return the rate, e.g. ``120/minute``, or None if the throttle is disabled.
 
-        :returns: ``smarter_settings.throttle_rate_anon``.
+        :returns: ``smarter_settings.app_api_throttle_rate_anon``.
         """
-        return smarter_settings.throttle_rate_anon
+        return smarter_settings.app_api_throttle_rate_anon
 
 
 class SmarterUserRateThrottle(UserRateThrottle):
     """
     Limit the request rate of each authenticated user.
 
-    The rate is ``smarter_settings.throttle_rate_user``. Anonymous requests are limited by
+    The rate is ``smarter_settings.app_api_throttle_rate_user``. Anonymous requests are limited by
     IP address, at the same rate, and by :class:`SmarterAnonRateThrottle`.
     """
 
@@ -65,9 +65,9 @@ class SmarterUserRateThrottle(UserRateThrottle):
         """
         Return the rate, e.g. ``600/minute``, or None if the throttle is disabled.
 
-        :returns: ``smarter_settings.throttle_rate_user``.
+        :returns: ``smarter_settings.app_api_throttle_rate_user``.
         """
-        return smarter_settings.throttle_rate_user
+        return smarter_settings.app_api_throttle_rate_user
 
 
 CREDENTIALS_THROTTLE_RATE = "10/minute"

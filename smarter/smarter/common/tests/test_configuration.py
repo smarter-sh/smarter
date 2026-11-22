@@ -10,9 +10,7 @@ from django.test import tag
 from dotenv import load_dotenv
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.common.conf import Settings, settings_defaults
-from smarter.common.conf.services import Services
-from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.conf import Settings
 from smarter.common.utils import get_semantic_version
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import INFRASTRUCTURE
@@ -41,13 +39,13 @@ class TestConfiguration(SmarterTestBase):
         return os.path.join(self.here, filename)
 
     def test_conf_defaults(self):
-        """Test that settings == settings_defaults when no .env is in use."""
+        """Test that the settings are their fields' defaults when no .env is in use."""
         os.environ.clear()
-        mock_settings = Settings(init_info="test_conf_defaults()")
+        mock_settings = Settings()
 
-        self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
-
-        self.assertEqual(mock_settings.debug_mode, settings_defaults.DEBUG_MODE)
+        self.assertIsNone(mock_settings.aws_region)
+        self.assertFalse(mock_settings.debug_mode)
+        self.assertEqual(mock_settings.platform_root_domain, "example.com")
 
     def test_env_legal_nulls(self):
         """Test that settings handles missing .env values."""
@@ -56,9 +54,9 @@ class TestConfiguration(SmarterTestBase):
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        mock_settings = Settings(init_info="test_env_legal_nulls()")
+        mock_settings = Settings()
 
-        self.assertEqual(mock_settings.aws_region, settings_defaults.AWS_REGION)
+        self.assertIsNone(mock_settings.aws_region)
 
     def test_env_illegal_nulls(self):
         """Test that settings handles certain missing .env values."""
@@ -67,7 +65,7 @@ class TestConfiguration(SmarterTestBase):
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        Settings(init_info="test_env_illegal_nulls()")
+        Settings()
 
     def test_env_overrides(self):
         """Test that settings takes custom .env values."""
@@ -76,8 +74,8 @@ class TestConfiguration(SmarterTestBase):
         loaded = load_dotenv(env_path)
         self.assertTrue(loaded)
 
-        # aws_regions is the real region list only when AWS is reachable; otherwise AWS_REGIONS.
-        mock_settings = Settings(aws_regions=["us-west-1"], init_info="test_env_overrides()")
+        # aws_regions narrowed to one region, which aws_region must then be.
+        mock_settings = Settings(aws_regions=["us-west-1"])
 
         self.assertEqual(mock_settings.aws_region, "us-west-1")
         self.assertEqual(mock_settings.debug_mode, True)
@@ -89,7 +87,6 @@ class TestConfiguration(SmarterTestBase):
             aws_regions=["eu-west-1"],
             aws_region="eu-west-1",
             debug_mode=True,
-            init_info="test_configure_with_class_constructor()",
         )
 
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
@@ -131,16 +128,15 @@ class TestConfiguration(SmarterTestBase):
             aws_profile="test-profile",
             aws_regions=["eu-west-1"],
             aws_region="eu-west-1",
-            root_domain="test-domain.com",
-            shared_resource_identifier="TEST_shared_resource_identifier",
-            init_info="test_initialize_with_values()",
+            platform_root_domain="test-domain.com",
+            platform_shared_resource_identifier="TEST_shared_resource_identifier",
         )
         self.assertEqual(mock_settings.debug_mode, False)
         self.assertEqual(mock_settings.dump_defaults, False)
         self.assertEqual(mock_settings.aws_profile, "test-profile")
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
-        self.assertEqual(mock_settings.root_domain, "test-domain.com")
-        self.assertEqual(mock_settings.shared_resource_identifier, "TEST_shared_resource_identifier")
+        self.assertEqual(mock_settings.platform_root_domain, "test-domain.com")
+        self.assertEqual(mock_settings.platform_shared_resource_identifier, "TEST_shared_resource_identifier")
 
     def test_semantic_version(self):
         """Test that the semantic version conforms to a valid pattern."""
@@ -153,20 +149,9 @@ class TestConfiguration(SmarterTestBase):
         self.assertIsNotNone(match, f"{version} is not a valid semantic version")
 
     @tag(INFRASTRUCTURE)
-    def test_services(self):
-        """Test that the services are valid."""
-        services = Services()
-        self.assertIsNotNone(services)
-        self.assertTrue(services.enabled(services.AWS_CLI))
-        with self.assertRaises(SmarterConfigurationError):
-            services.raise_error_on_disabled(services.AWS_DYNAMODB)
-        self.assertIsInstance(services.to_dict(), dict)
-        self.assertIn(services.AWS_CLI[0], services.enabled_services())
-
-    @tag(INFRASTRUCTURE)
     def test_settings_aws_account_info(self):
         """Test that the AWS region is a region code, e.g. us-east-1, ca-central-1 or us-gov-west-1."""
-        mock_settings = Settings(init_info="test_settings_aws_account_id()")
+        mock_settings = Settings()
         aws_region = mock_settings.aws_region
         self.assertIsNotNone(aws_region)
         assert aws_region is not None

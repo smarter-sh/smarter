@@ -35,7 +35,7 @@ Chat's **Download request** button saves the chat as the JSON request that Smart
 which the Prompt Passthrough accepts as it is. See :doc:`/smarter-framework/smarter-chat/features`.
 
 The Prompt Passthrough is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
-``/dashboard/passthrough/``, while ``smarter_settings.enable_dashboard_passthrough_prompt`` is on.
+``/dashboard/passthrough/``, while ``smarter_settings.app_dashboard_passthrough_prompt_enable`` is on.
 ``@smarter/console`` renders ``@smarter/prompt-passthrough``'s ``PromptPassthrough`` inside its frame, with the
 urls of the passthrough api, ``/api/v1/prompts/passthrough/``, and of the providers api,
 ``/api/web/dashboard/passthrough/providers/``, and, while users can view their server logs, the url of the log

@@ -158,7 +158,7 @@ def index_json_schema() -> dict:
 
 def is_enabled() -> bool:
     """Return whether the registry is configured: it is disabled until its public key is set."""
-    return bool(smarter_settings.extension_registry_public_key.strip())
+    return bool(smarter_settings.app_llmtool_extension_registry_public_key.strip())
 
 
 @cache_results(ONE_HOUR)
@@ -206,15 +206,15 @@ def get_index() -> RegistryIndex:
     """
     if not is_enabled():
         raise SmarterExtensionRegistryError(
-            "the extension registry is disabled until SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY is set"
+            "the extension registry is disabled until SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY is set"
         )
-    url = smarter_settings.extension_registry_url
+    url = smarter_settings.app_llmtool_extension_registry_url
     try:
         index, signature = fetch_index_files(url)
     except SafeHttpError as e:
         raise SmarterExtensionRegistryError(f"the extension registry cannot be reached: {e}") from e
     try:
-        verify(index, signature, smarter_settings.extension_registry_public_key)
+        verify(index, signature, smarter_settings.app_llmtool_extension_registry_public_key)
     except SmarterExtensionRegistryError:
         # don't keep an index that is not authentic for an hour: the next read downloads it again.
         fetch_index_files.invalidate(url)
@@ -232,7 +232,7 @@ def get_index() -> RegistryIndex:
 
 def refresh_index() -> RegistryIndex:
     """Download the index again, rather than reading the cached copy, and return it."""
-    fetch_index_files.invalidate(smarter_settings.extension_registry_url)
+    fetch_index_files.invalidate(smarter_settings.app_llmtool_extension_registry_url)
     return get_index()
 
 

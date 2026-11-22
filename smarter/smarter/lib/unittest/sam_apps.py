@@ -20,7 +20,7 @@ def disabled_sam_apps(*settings: str, modules: tuple[str, ...] = ()) -> Iterator
     """
     Patch ``smarter_settings`` with a copy whose flags are false.
 
-    :param settings: The flags to turn off, e.g. ``enable_guardrail``.
+    :param settings: The flags to turn off, e.g. ``app_guardrail_enable``.
     :param modules: The dotted names of more modules whose ``smarter_settings`` to patch, e.g.
         ``smarter.apps.api.web.session.views``.
     :returns: The patched copy of the settings.

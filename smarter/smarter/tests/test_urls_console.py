@@ -65,10 +65,10 @@ class TestParseEnableSamApp(SmarterTestBase):
         ]
         for value, expected in cases:
             with self.subTest(value=value):
-                settings = Settings.model_validate({"enable_secret": value})
-                self.assertIs(settings.enable_secret, expected)
+                settings = Settings.model_validate({"app_secret_enable": value})
+                self.assertIs(settings.app_secret_enable, expected)
 
     def test_invalid(self):
         """Test that a value that is neither a boolean nor a string is a configuration error."""
         with self.assertRaises(SmarterConfigurationError):
-            Settings.model_validate({"enable_proxy": 3.5})
+            Settings.model_validate({"app_proxy_enable": 3.5})

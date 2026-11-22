@@ -1,7 +1,6 @@
 # pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
-import os
 import sys
 from typing import TYPE_CHECKING
 
@@ -14,13 +13,15 @@ from .base import *
 
 logger = getSmarterLogger(__name__)
 logger.debug("Loading smarter.settings.base_aws")
-default_redis_server = f"redis://:{smarter_settings.shared_resource_identifier}@{smarter_settings.shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
+default_redis_server = f"redis://:{smarter_settings.platform_shared_resource_identifier}@{smarter_settings.platform_shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
 # The cache and the Celery broker use different Redis databases, so that cache.clear()
 # can't delete the Celery queues. See CELERY_BROKER_URL in base.py.
 default_redis_location = f"{default_redis_server}/1"
 default_broker_location = f"{default_redis_server}/0"
 
-cache_location = os.getenv("CACHES_LOCATION", default_redis_location)
+# The chart's own Redis. For another, set DJANGO_CACHES, with both caches, and DJANGO_CELERY_BROKER_URL
+# (see smarter.settings.user).
+cache_location = default_redis_location
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -42,26 +43,27 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "sessions"
 
 # Celery Configuration
-CELERY_BROKER_URL = os.getenv(
-    "CELERY_BROKER_URL",
-    default_broker_location,
-)
+CELERY_BROKER_URL = default_broker_location
+# A DJANGO_CELERY_BROKER_URL moves this too: see DERIVED_SETTINGS in smarter.settings.user.
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 
-# Database: DATABASES is base.py's, from smarter_settings.mysql_*.
+# Database: DATABASES is base.py's, from smarter_settings.sql_*.
 
 # Common security settings
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_PROXY_SSL_HEADER = None
+# Traefik terminates TLS and forwards plain HTTP, with X-Forwarded-Proto set to the scheme the browser
+# used. It overwrites the header of a request from outside the VPC, so a client can't forge it. With
+# this, request.is_secure() and build_absolute_uri() reflect the browser's https.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.smarter\.sh$",
     r"^https?://[\w-]+\.platform\.smarter\.sh$",
     r"^https?://[\w-]+\.api\.smarter\.sh$",
 ]
-# settings that affect whether the browser saves cookies
-CSRF_COOKIE_SECURE = False
+# settings that affect whether the browser saves cookies. Every ingress serves HTTPS only, so the
+# browser always has a secure context for both cookies.
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "Lax"
 
 SESSION_COOKIE_SECURE = True
@@ -70,8 +72,8 @@ SESSION_COOKIE_HTTPONLY = True
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_platform_domain
 ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
-SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
-SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+SMTP_SENDER = smarter_settings.subsystem_smtp_sender or ENVIRONMENT_DOMAIN
+SMTP_FROM_EMAIL = smarter_settings.subsystem_smtp_from_email or "no-reply@" + SMTP_SENDER
 
 CORS_ALLOWED_ORIGINS += [
     f"http://{host}" for host in [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, smarter_settings.environment_cdn_domain]
@@ -85,7 +87,7 @@ CORS_ALLOWED_ORIGINS += [
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in smarter_settings.allowed_hosts]
 
-if smarter_settings.settings_output or "manage.py" not in sys.argv[0]:
+if smarter_settings.platform_settings_output or "manage.py" not in sys.argv[0]:
     cache_backend = CACHES.get("default", {}).get("BACKEND", "not configured")
     logger.debug("Cache backend: %s", json.dumps(CACHES))
     if cache_backend != "django_redis.cache.RedisCache":
