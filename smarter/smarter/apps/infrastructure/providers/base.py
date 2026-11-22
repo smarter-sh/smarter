@@ -15,7 +15,7 @@ To add a cloud, e.g. Azure:
    :class:`~smarter.apps.infrastructure.services.storage.StorageService`.
 2. Register it, in :mod:`smarter.apps.infrastructure.providers`, under its
    :class:`~smarter.apps.infrastructure.const.CloudProviders` name.
-3. Set ``SMARTER_CLOUD_PROVIDER=azure``.
+3. Set ``SMARTER_PLATFORM_CLOUD_PROVIDER=azure``.
 
 The platform does not change.
 """

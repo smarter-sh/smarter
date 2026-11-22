@@ -32,7 +32,7 @@ from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib import logging
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_PATH = os.path.join(HERE, "data")

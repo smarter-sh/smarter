@@ -124,9 +124,9 @@ class TestPromptCache(SmarterTestBase):
         self.assertEqual(get_cached_prompt_response(key).choices[0].message.content, "second")  # type: ignore[union-attr]
 
     def test_expiration_zero_disables_the_cache(self):
-        """With prompt_response_cache_expiration 0, nothing is cached or returned."""
+        """With cache_prompt_response_expiration 0, nothing is cached or returned."""
         key = self.key(llmclient_id=self.llmclient_id)
-        with patch.object(prompt_cache, "smarter_settings", MagicMock(prompt_response_cache_expiration=0)):
+        with patch.object(prompt_cache, "smarter_settings", MagicMock(subsystem_cache_prompt_response_expiration=0)):
             cache_prompt_response(key, chat_completion())
             self.assertIsNone(get_cached_prompt_response(key))
         self.assertIsNone(get_cached_prompt_response(key))
@@ -272,7 +272,7 @@ class TestProviderPromptCache(SmarterTestBase):
 
     def test_no_cache_key_without_an_llmclient_or_when_disabled(self):
         """Without an LLMClient, a message or the cache, there is no key."""
-        with patch.object(provider_module, "smarter_settings", MagicMock(prompt_response_cache_expiration=0)):
+        with patch.object(provider_module, "smarter_settings", MagicMock(subsystem_cache_prompt_response_expiration=0)):
             self.assertIsNone(self.client.first_message_cache_key())
         self.client._chat = MagicMock(spec=Prompt, llmclient=None)
         self.assertIsNone(self.client.first_message_cache_key())

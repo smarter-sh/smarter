@@ -15,17 +15,14 @@ from pydantic import SecretStr
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.provider.const import (
-    BRAVE_SEARCH_API_KEY_SECRET_NAME,
     GOOGLE_MAPS_API_KEY_SECRET_NAME,
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
-    TAVILY_API_KEY_SECRET_NAME,
+    PROVIDER_ENV_PREFIX,
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.provider.utils import initialize_secret
 from smarter.common.conf import smarter_settings
-from smarter.common.conf.const import get_env
-from smarter.common.conf.env import is_missing_value
-from smarter.common.const import SMARTER_CONTACT_EMAIL, SMARTER_CUSTOMER_SUPPORT_EMAIL
+from smarter.common.conf.env import get_env, is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
@@ -127,10 +124,10 @@ class Command(SmarterCommand):
             service_account_b64 = base64.b64encode(json.dumps(service_account_json).encode("utf-8")).decode("ascii")
             print(service_account_b64)
         """
-        svc_acct_b64 = get_env("GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
+        svc_acct_b64 = get_env("APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
         if is_missing_value(svc_acct_b64):
             self.missing_api_key(
-                "GOOGLE_SERVICE_ACCOUNT_B64",
+                "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64",
                 "Google service account credentials, for Google Cloud bearer tokens. Encode them with "
                 "./scripts/google-service-account.sh",
                 "https://console.cloud.google.com/iam-admin/serviceaccounts",
@@ -319,8 +316,8 @@ class Command(SmarterCommand):
 
         COMMON_DEFAULTS = {
             "user_profile": self.user_profile,
-            "contact_email": SMARTER_CONTACT_EMAIL,
-            "support_email": SMARTER_CUSTOMER_SUPPORT_EMAIL,
+            "contact_email": smarter_settings.platform_email_admin,
+            "support_email": smarter_settings.platform_branding_support_email,
             "tos_accepted_by": self.user_profile.user,
         }
         # a new built-in provider starts verified and active. An existing one keeps the status that its
@@ -348,7 +345,7 @@ class Command(SmarterCommand):
         else:
             secret = initialize_secret(
                 secret_string=api_key,
-                secret_name=api_key_env_var.lower(),
+                secret_name=api_key_env_var.removeprefix(PROVIDER_ENV_PREFIX).lower(),
                 description=f"API key for {name} services.",
                 user_profile=self.user_profile,
             )
@@ -407,7 +404,7 @@ class Command(SmarterCommand):
 
     def initialize_anthropic(self):
         """Initialize Anthropic provider and its models."""
-        API_KEY_ENV_VAR = "ANTHROPIC_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_ANTHROPIC_API_KEY"
         NAME = "anthropic"
         DEFAULT_MODEL = "claude-sonnet-4-6"
 
@@ -433,7 +430,7 @@ class Command(SmarterCommand):
 
     def initialize_cohere(self):
         """Initialize Cohere provider and its models."""
-        API_KEY_ENV_VAR = "COHERE_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_COHERE_API_KEY"
         NAME = "cohere"
         DEFAULT_MODEL = "command-a-03-2025"
 
@@ -456,7 +453,7 @@ class Command(SmarterCommand):
 
     def initialize_fireworks(self):
         """Initialize Fireworks provider and its models."""
-        API_KEY_ENV_VAR = "FIREWORKS_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_FIREWORKS_API_KEY"
         NAME = "fireworks"
         DEFAULT_MODEL = "accounts/fireworks/models/gpt-oss-120b"
 
@@ -479,7 +476,7 @@ class Command(SmarterCommand):
 
     def initialize_googleai(self):
         """Initialize Google AI provider and its models."""
-        API_KEY_ENV_VAR = "GEMINI_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_GEMINI_API_KEY"
         NAME = "googleai"
         DEFAULT_MODEL = "gemini-flash-latest"
 
@@ -506,7 +503,7 @@ class Command(SmarterCommand):
     def initialize_google_maps(self):
         """Initialize Google Maps provider."""
         NAME = "google maps"
-        API_KEY_ENV_VAR = "GOOGLE_MAPS_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_GOOGLE_MAPS_API_KEY"
         API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
 
         api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
@@ -525,67 +522,9 @@ class Command(SmarterCommand):
             user_profile=self.user_profile,
         )
 
-    def initialize_tavily(self):
-        """
-        Initialize the Tavily web search api key Secret.
-
-        WebsearchPlugins whose search provider is Tavily, such as the sample smarter_project_websearch,
-        read their api key from this Secret. Unlike the provider api keys, a missing key is not
-        stored: the Secret is skipped, so that applying the plugin reports the missing Secret.
-        """
-        NAME = "tavily"
-        API_KEY_ENV_VAR = "TAVILY_API_KEY"
-
-        # placeholders, such as .env.example's SET-ME-PLEASE, and helm/charts/smarter/values.yaml's
-        # SET-ME-IN-helm/charts/smarter/values.yaml, which a deployment without the key falls back to.
-        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
-        if is_missing_value(api_key):
-            self.missing_api_key(
-                API_KEY_ENV_VAR,
-                f"web search: the {TAVILY_API_KEY_SECRET_NAME} Secret of WebsearchPlugins such as "
-                "smarter_project_websearch",
-                "https://app.tavily.com/home",
-            )
-            return
-
-        initialize_secret(
-            secret_string=api_key,
-            secret_name=TAVILY_API_KEY_SECRET_NAME,
-            description=f"API key for {NAME} web search.",
-            user_profile=self.user_profile,
-        )
-
-    def initialize_brave_search(self):
-        """
-        Initialize the Brave Search api key Secret.
-
-        ImageSearchPlugins, such as safe_image_search, and the Brave WebsearchPlugin samples, such
-        as research_assistant, read their api key from this Secret. As with Tavily, a missing key
-        is not stored. An ImageSearchPlugin without it returns no images, and logs how to create it.
-        """
-        NAME = "brave search"
-        API_KEY_ENV_VAR = "BRAVE_SEARCH_API_KEY"
-
-        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
-        if is_missing_value(api_key):
-            self.missing_api_key(
-                API_KEY_ENV_VAR,
-                f"image and web search: the {BRAVE_SEARCH_API_KEY_SECRET_NAME} Secret of ImageSearchPlugins such as "
-                "safe_image_search, and of the Brave WebsearchPlugin samples",
-                "https://api-dashboard.search.brave.com/app/keys",
-            )
-            return
-
-        initialize_secret(
-            secret_string=api_key,
-            secret_name=BRAVE_SEARCH_API_KEY_SECRET_NAME,
-            description=f"API key for {NAME}.",
-            user_profile=self.user_profile,
-        )
-
     def initialize_metaai(self):
         """Initialize Meta AI provider and its models."""
-        API_KEY_ENV_VAR = "LLAMA_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_LLAMA_API_KEY"
         NAME = "metaai"
         DEFAULT_MODEL = "muse-spark-1.3-contributor"
 
@@ -608,7 +547,7 @@ class Command(SmarterCommand):
 
     def initialize_mistral(self):
         """Initialize Mistral provider and its models."""
-        API_KEY_ENV_VAR = "MISTRAL_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_MISTRAL_API_KEY"
         NAME = "mistral"
         DEFAULT_MODEL = "mistral-medium-latest"
 
@@ -632,7 +571,7 @@ class Command(SmarterCommand):
 
     def initialize_openai(self):
         """Initialize OpenAI provider and its models."""
-        API_KEY_ENV_VAR = "OPENAI_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_OPENAI_API_KEY"
         NAME = "openai"
         DEFAULT_MODEL = "gpt-6-luna"
 
@@ -655,7 +594,7 @@ class Command(SmarterCommand):
 
     def initialize_togetheria(self):
         """Initialize TogetherAI provider and its models."""
-        API_KEY_ENV_VAR = "TOGETHERAI_API_KEY"
+        API_KEY_ENV_VAR = "APP_PROVIDER_TOGETHERAI_API_KEY"
         NAME = "togetherai"
         DEFAULT_MODEL = "openai/gpt-oss-120b"
 
@@ -753,8 +692,6 @@ class Command(SmarterCommand):
             self.initialize_google_service_account()
             self.initialize_googleai()
             self.initialize_google_maps()
-            self.initialize_tavily()
-            self.initialize_brave_search()
             self.initialize_metaai()
             self.initialize_mistral()
             self.initialize_openai()

@@ -56,7 +56,7 @@ ARG SCHEMA=APP
 # from .env file. This is used to control which environment we're building the image for, and therefore
 # which dependencies we install and which settings are used.
 ARG ENVIRONMENT=local
-ENV ENVIRONMENT=$ENVIRONMENT
+ENV SMARTER_ENVIRONMENT=$ENVIRONMENT
 
 
 ############################## install system packages #################################
@@ -238,7 +238,7 @@ RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 # the local environment without SECRET_KEY, so it gets a throwaway random key that exists only
 # for this RUN step, as collectstatic does below.
 WORKDIR /home/smarter_user/smarter
-RUN SMARTER_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+RUN DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
       python manage.py compilemessages --ignore=react --ignore=node_modules --ignore=static --ignore=staticfiles
 WORKDIR /home/smarter_user/
 
@@ -308,7 +308,7 @@ RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
         echo "Error: smarter/static/react is missing or empty" >&2; ls -lha smarter/static; exit 1; \
       fi; \
-      SMARTER_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+      DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
         python manage.py collectstatic --noinput; \
     else \
       echo "Skipping collectstatic"; \

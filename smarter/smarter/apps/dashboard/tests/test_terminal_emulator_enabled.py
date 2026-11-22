@@ -25,7 +25,7 @@ class TestServerLogsEnabled(SmarterTestBase):
 
     def check(self, setting: bool, switch: bool) -> bool:
         with (
-            patch(f"{MODULE}.smarter_settings", MagicMock(enable_dashboard_server_logs=setting)),
+            patch(f"{MODULE}.smarter_settings", MagicMock(app_dashboard_server_logs_enable=setting)),
             patch(f"{MODULE}.switch_is_active", return_value=switch) as switch_is_active,
         ):
             result = server_logs_enabled()
@@ -68,7 +68,7 @@ class TestTerminalEnabled(SmarterTestBase):
 
     def test_follows_the_setting(self):
         for setting in (True, False):
-            with patch(f"{MODULE}.smarter_settings", MagicMock(enable_web_console_terminal=setting)):
+            with patch(f"{MODULE}.smarter_settings", MagicMock(app_dashboard_web_console_terminal_enable=setting)):
                 self.assertIs(terminal_enabled(), setting)
 
 

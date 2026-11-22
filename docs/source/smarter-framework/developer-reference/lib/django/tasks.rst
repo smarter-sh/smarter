@@ -19,9 +19,9 @@ Basic Usage
 
   @app.task(
       autoretry_for=(Exception,),
-      retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-      max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-      queue=smarter_settings.llmclient_tasks_celery_task_queue,
+      retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+      max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+      queue=smarter_settings.app_llmclient_tasks_celery_task_queue,
   )
   def long_running_task(*args, **kwargs):
         # Your long-running task logic here
@@ -38,9 +38,9 @@ Queues
 Every task runs in one of two queues, each served by its own Celery worker. Choose the queue in the
 task's ``@app.task(queue=...)``:
 
-- ``smarter_settings.llmclient_tasks_celery_task_queue``: **operational** tasks, which record what
+- ``smarter_settings.app_llmclient_tasks_celery_task_queue``: **operational** tasks, which record what
   happens on the platform, such as prompt history, charges and budgets. They must be quick.
-- ``smarter_settings.infrastructure_tasks_celery_task_queue``: **infrastructure** tasks, which
+- ``smarter_settings.app_infrastructure_tasks_celery_task_queue``: **infrastructure** tasks, which
   deploy, verify or destroy cloud, Kubernetes or DNS resources, and can take minutes.
 
 A task that waits for something outside Smarter, such as a certificate or a DNS record, must never
@@ -48,7 +48,7 @@ A task that waits for something outside Smarter, such as a certificate or a DNS 
 
 .. code-block:: python
 
-  @app.task(queue=smarter_settings.infrastructure_tasks_celery_task_queue)
+  @app.task(queue=smarter_settings.app_infrastructure_tasks_celery_task_queue)
   def wait_for_certificate(hostname: str, attempt: int = 0):
       if not certificate_is_issued(hostname):
           if attempt + 1 < MAX_ATTEMPTS:

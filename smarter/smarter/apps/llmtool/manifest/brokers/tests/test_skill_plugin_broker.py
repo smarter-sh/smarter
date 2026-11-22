@@ -24,7 +24,7 @@ from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 
 from .base_classes.edge_cases import PluginBrokerEdgeCasesMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods

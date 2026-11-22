@@ -48,7 +48,7 @@ class TestRetargetIngresses(TestAccountMixin):
         self.apply_ingress_manifest = apply_patcher.start()
         self.addCleanup(apply_patcher.stop)
         settings = retarget_ingresses.smarter_settings.model_copy(
-            update={"llmclient_tasks_create_ingress_manifest": True}
+            update={"app_llmclient_tasks_create_ingress_manifest": True}
         )
         settings_patcher = patch(f"{MODULE}.smarter_settings", settings)
         settings_patcher.start()
@@ -93,7 +93,7 @@ class TestRetargetIngresses(TestAccountMixin):
         self.assertEqual(retarget_ingresses.retarget_llmclient_ingresses(), [])
         self.kubernetes.ready = True
         settings = retarget_ingresses.smarter_settings.model_copy(
-            update={"llmclient_tasks_create_ingress_manifest": False}
+            update={"app_llmclient_tasks_create_ingress_manifest": False}
         )
         with patch(f"{MODULE}.smarter_settings", settings):
             self.assertEqual(retarget_ingresses.retarget_llmclient_ingresses(), [])

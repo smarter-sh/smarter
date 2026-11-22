@@ -30,7 +30,7 @@ class TestSamAppChecks(SmarterTestBase):
 
     def test_disabled_dependency(self):
         """Test that an enabled app's relation to a disabled app's model is a warning, with the flags to set."""
-        with disabled_sam_apps("enable_provider", "enable_llmtool") as settings:
+        with disabled_sam_apps("app_provider_enable", "app_llmtool_enable") as settings:
             warnings = disabled_dependency_warnings(settings)
         objects = [warning.obj for warning in warnings]
         self.assertIn(Proxy, objects)
@@ -44,14 +44,14 @@ class TestSamAppChecks(SmarterTestBase):
         """Test that a disabled app's rows are a warning, and an enabled app's aren't."""
         # the test database's platform has the built-in providers. See initialize_providers.
         self.assertTrue(Provider.objects.exists())
-        with disabled_sam_apps("enable_provider") as settings:
+        with disabled_sam_apps("app_provider_enable") as settings:
             warnings = disabled_app_rows_warnings(settings)
         self.assertEqual([warning.id for warning in warnings], [DISABLED_APP_HAS_ROWS_ID])
         self.assertIn("Provider", warnings[0].msg)
 
     def test_registered(self):
         """Test that manage.py check runs the dependency check, and the rows check only with --database."""
-        with disabled_sam_apps("enable_provider"):
+        with disabled_sam_apps("app_provider_enable"):
             messages = run_checks()
             database_messages = run_checks(databases=["default"])
         ids = [message.id for message in messages]

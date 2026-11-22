@@ -33,10 +33,10 @@ cache_prefix = f"{__name__}."
 verbose_logger = WaffleSwitchedLoggerWrapper(logger, should_log_verbose)
 
 
-@cache_results(timeout=smarter_settings.cache_expiration)
+@cache_results(timeout=smarter_settings.subsystem_cache_expiration)
 def _get_tags_by_model_and_pk(model_label: str, pk: int) -> list[str]:
     """
-    Return the tag names of a MetaDataModel instance, cached for ``smarter_settings.cache_expiration``.
+    Return the tag names of a MetaDataModel instance, cached for ``smarter_settings.subsystem_cache_expiration``.
 
     :func:`tags_changed` invalidates it.
 

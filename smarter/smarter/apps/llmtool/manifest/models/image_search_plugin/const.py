@@ -40,7 +40,7 @@ CREDENTIALS_HELP = (
     "An ImageSearchPlugin requires a Brave Search API key, stored in a Smarter Secret. "
     "1) Sign up at https://api-dashboard.search.brave.com, subscribe to a plan that includes image search, "
     "and create an api key at https://api-dashboard.search.brave.com/app/keys. "
-    "2) Set SMARTER_BRAVE_SEARCH_API_KEY in .env, and run 'python manage.py initialize_providers', or apply a "
+    "2) Set SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY in .env, and run 'python manage.py initialize_llmtool_api_keys', or apply a "
     f"Secret manifest named {DEFAULT_API_KEY_SECRET_NAME}. "
     "See https://api-dashboard.search.brave.com/app/documentation/image-search/get-started"
 )

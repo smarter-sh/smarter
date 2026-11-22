@@ -2,7 +2,7 @@
 URL configuration for the web console's Terminal page.
 
 The routes are always registered, and are a 404 while
-``smarter_settings.enable_web_console_terminal`` is off, and for every signed in user but a
+``smarter_settings.app_dashboard_web_console_terminal_enable`` is off, and for every signed in user but a
 superuser. See :func:`.enabled.require_terminal`. The terminal's ticket api is in the web
 console's api, at ``/api/web/dashboard/terminal/ticket/``: see :mod:`.api.urls`. The terminal's
 WebSocket is routed in :mod:`smarter.consumers`.
@@ -25,7 +25,7 @@ from .names import DashboardTerminalReverseNames
 from .reactapp import TerminalEmulatorView
 
 app_name = terminal_namespace
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 urlpatterns = [
@@ -36,9 +36,13 @@ urlpatterns = [
     ),
 ]
 
-(logger.debug if smarter_settings.enable_web_console_terminal else logger.info)(
-    "Terminal app is %s. Set env `SMARTER_ENABLE_WEB_CONSOLE_TERMINAL=%s` to %s it.",
-    SmarterReadyState.READY if smarter_settings.enable_web_console_terminal else SmarterReadyState.NOT_READY,
-    "false" if smarter_settings.enable_web_console_terminal else "true",
-    "disable" if smarter_settings.enable_web_console_terminal else "enable",
+(logger.debug if smarter_settings.app_dashboard_web_console_terminal_enable else logger.info)(
+    "Terminal app is %s. Set env `SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE=%s` to %s it.",
+    (
+        SmarterReadyState.READY
+        if smarter_settings.app_dashboard_web_console_terminal_enable
+        else SmarterReadyState.NOT_READY
+    ),
+    "false" if smarter_settings.app_dashboard_web_console_terminal_enable else "true",
+    "disable" if smarter_settings.app_dashboard_web_console_terminal_enable else "enable",
 )

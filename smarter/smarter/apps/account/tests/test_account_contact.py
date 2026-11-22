@@ -184,7 +184,7 @@ class TestAccountContactEmails(TestAccountMixin):
 
     def test_welcome_email_links_to_the_slack_setting(self):
         self.contact().send_welcome_email()
-        self.assertIn(str(smarter_settings.branding_url_slack), self.sent()["body"])
+        self.assertIn(str(smarter_settings.platform_branding_url_slack), self.sent()["body"])
 
     def test_slack_invitation_in_every_language(self):
         contact = self.contact()
@@ -195,7 +195,7 @@ class TestAccountContactEmails(TestAccountMixin):
                 body = self.sent()["body"]
                 self.assertIn(greeting, body)
                 self.assertIn(f'<html lang="{language}">', body)
-                self.assertIn(str(smarter_settings.branding_url_slack), body)
+                self.assertIn(str(smarter_settings.platform_branding_url_slack), body)
                 self.assertTrue(self.sent()["html"])
                 subjects.add(self.sent()["subject"])
         self.assertEqual(len(subjects), len(GREETINGS))

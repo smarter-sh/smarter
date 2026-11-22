@@ -168,9 +168,15 @@ class TestWebAppManifest(SmarterTestBase):
         self.assertEqual(manifest["start_url"], "/")
 
     def test_the_templates_link_it_from_the_platforms_origin(self):
-        """The base template links the same-origin manifest, never {% static %}'s, which may be the CDN's."""
+        """
+        The base template links the same-origin manifest, never {% static %}'s, which may be the CDN's.
+
+        It reverses the name with ``as``, which doesn't raise on the hosts whose urlconf doesn't serve it.
+        """
         template = (settings.BASE_DIR / "templates" / "base.html").read_text(encoding="utf-8")
-        self.assertIn("{% url 'site_webmanifest' %}", template)
+        self.assertIn("{% url 'site_webmanifest' as site_webmanifest_url %}", template)
+        self.assertIn('href="{{ site_webmanifest_url }}', template)
+        self.assertNotIn("{% url 'site_webmanifest' %}", template)
         self.assertNotIn("{% static 'site.webmanifest' %}", template)
 
     def test_default_src_covers_the_manifest(self):

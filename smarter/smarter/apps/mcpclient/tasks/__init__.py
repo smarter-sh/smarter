@@ -32,7 +32,7 @@ logger = logging.getSmarterLogger(
 )
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def refresh_mcpclient(mcpclient_id: int) -> Optional[str]:
     """
     Connect to an MCPClient's MCP server, refresh its catalog, and record the result.
@@ -65,7 +65,7 @@ def refresh_mcpclient(mcpclient_id: int) -> Optional[str]:
     return mcpclient.status
 
 
-@app.task(queue=smarter_settings.llmclient_tasks_celery_task_queue)
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
 def refresh_mcpclients() -> int:
     """
     Queue :func:`refresh_mcpclient` for every active MCPClient.

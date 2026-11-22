@@ -24,7 +24,7 @@ LOAD_BALANCER = ["192.0.2.10"]
 def settings(environment: str) -> MagicMock:
     return MagicMock(
         environment=environment,
-        root_domain="example.com",
+        platform_root_domain="example.com",
         root_platform_domain="platform.example.com",
         root_api_domain="api.platform.example.com",
         root_proxy_domain="proxy.example.com",

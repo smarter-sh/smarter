@@ -22,6 +22,7 @@ from pydantic import SecretStr
 
 import smarter.settings.base as base_settings
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -54,7 +55,7 @@ class TestEnvironmentSettings(SmarterTestBase):
         super().tearDown()
 
     def test_base_aws(self):
-        """Base_aws uses redis for caching and celery, mysql, and secure, HttpOnly session cookies."""
+        """Base_aws uses redis, mysql, secure cookies, and trusts Traefik's X-Forwarded-Proto."""
         module = fresh_import("smarter.settings.base_aws")
         self.assertEqual(module.CACHES["default"]["BACKEND"], "django_redis.cache.RedisCache")
         self.assertEqual(module.SESSION_ENGINE, "django.contrib.sessions.backends.cache")
@@ -63,7 +64,8 @@ class TestEnvironmentSettings(SmarterTestBase):
         self.assertEqual(module.DATABASES["default"]["ENGINE"], "django.db.backends.mysql")
         self.assertTrue(module.SESSION_COOKIE_SECURE)
         self.assertTrue(module.SESSION_COOKIE_HTTPONLY)
-        self.assertIsNone(module.SECURE_PROXY_SSL_HEADER)
+        self.assertTrue(module.CSRF_COOKIE_SECURE)
+        self.assertEqual(module.SECURE_PROXY_SSL_HEADER, ("HTTP_X_FORWARDED_PROTO", "https"))
         self.assertTrue(all(origin.startswith("https://") for origin in module.CSRF_TRUSTED_ORIGINS))
         self.assertIn(f"https://{module.ENVIRONMENT_DOMAIN}", module.CORS_ALLOWED_ORIGINS)
         self.assertIn("CACHES", module.__all__)
@@ -71,21 +73,27 @@ class TestEnvironmentSettings(SmarterTestBase):
 
     def test_cache_and_broker_use_different_redis_databases(self):
         """The cache's Redis database, which cache.clear() flushes, must not hold the Celery queues."""
-        env = {k: v for k, v in os.environ.items() if k not in ("CACHES_LOCATION", "CELERY_BROKER_URL")}
-        with patch.dict(os.environ, env, clear=True):
-            module = fresh_import("smarter.settings.base_aws")
+        module = fresh_import("smarter.settings.base_aws")
         self.assertTrue(module.CACHES["default"]["LOCATION"].endswith(":6379/1"))
         self.assertTrue(module.CELERY_BROKER_URL.endswith(":6379/0"))
         self.assertNotEqual(base_settings.CACHES["default"]["LOCATION"], base_settings.CELERY_BROKER_URL)
 
+    def test_redis_is_not_read_from_unprefixed_variables(self):
+        """CACHES_LOCATION and CELERY_BROKER_URL are not Smarter's variables: only DJANGO_* ones set settings."""
+        env = {
+            "CACHES_LOCATION": "redis://:pw@redis.example.test:6379/1",
+            "CELERY_BROKER_URL": "redis://:pw@redis.example.test:6379/0",
+        }
+        with patch.dict(os.environ, env):
+            module = fresh_import("smarter.settings.base_aws")
+        self.assertNotIn("redis.example.test", module.CACHES["default"]["LOCATION"])
+        self.assertNotIn("redis.example.test", module.CELERY_BROKER_URL)
+
     def test_sessions_have_their_own_redis_database(self):
         """Cache.clear() on the default cache must not log users out."""
-        env = {k: v for k, v in os.environ.items() if k != "CACHES_LOCATION"}
-        env["CACHES_LOCATION"] = "redis://:pw@redis.example.test:6379/1"
-        with patch.dict(os.environ, env, clear=True):
-            module = fresh_import("smarter.settings.base_aws")
+        module = fresh_import("smarter.settings.base_aws")
         self.assertEqual(module.SESSION_CACHE_ALIAS, "sessions")
-        self.assertEqual(module.CACHES["sessions"]["LOCATION"], "redis://:pw@redis.example.test:6379/2")
+        self.assertTrue(module.CACHES["sessions"]["LOCATION"].endswith(":6379/2"))
         self.assertEqual(base_settings.SESSION_CACHE_ALIAS, "sessions")
         locations = {
             base_settings.CACHES["default"]["LOCATION"],
@@ -196,7 +204,6 @@ class TestUserSettingsInEveryEnvironment(SmarterTestBase):
         with self.assertLogs("smarter.settings.prod", level=logging.DEBUG) as captured:
             self.load("prod", "", {"DJANGO_SESSION_COOKIE_SECURE": "false"})
         messages = [record.getMessage() for record in captured.records]
-        self.assertTrue([message for message in messages if message.endswith("SESSION_COOKIE_SECURE: False")])
         self.assertTrue([message for message in messages if "SESSION_COOKIE_SECURE should be set to True" in message])
 
     def test_no_setting_is_assigned_after_the_user_settings(self):
@@ -256,13 +263,13 @@ class TestBaseSettings(SmarterTestBase):
             vars(module).update(saved)
 
     def _reload_base_with_secret_key(self, secret_key: str) -> tuple[SmarterDictType, list[str]]:
-        """Re-execute base.py with the given smarter_settings.secret_key, capturing every log message it emits."""
+        """Re-execute base.py with the given smarter_settings.django_secret_key, capturing every log message it emits."""
         with (
             patch.dict(os.environ),
             patch.object(sys, "argv", ["uvicorn", "smarter.asgi:application"]),
             patch(
                 "smarter.common.conf.smarter_settings",
-                smarter_settings.model_copy(update={"secret_key": SecretStr(secret_key)}),
+                smarter_settings.model_copy(update={"django_secret_key": SecretStr(secret_key)}),
             ),
             patch("logging.config.dictConfig"),
             self.assertLogs("smarter.settings.base", level=logging.DEBUG) as captured,
@@ -280,9 +287,9 @@ class TestBaseSettings(SmarterTestBase):
 
     def test_randomized_secret_key_is_never_logged(self):
         """A missing SECRET_KEY is replaced with a random value, with a warning that does not include it."""
-        namespace, messages = self._reload_base_with_secret_key(smarter_settings.default_missing_value)
+        namespace, messages = self._reload_base_with_secret_key(DEFAULT_MISSING_VALUE)
         secret_key = namespace["SECRET_KEY"]
-        self.assertNotEqual(secret_key, smarter_settings.default_missing_value)
+        self.assertNotEqual(secret_key, DEFAULT_MISSING_VALUE)
         self.assertEqual(len(secret_key), 64)
         self.assertTrue(
             [message for message in messages if message.endswith("SECRET_KEY not set. Using a randomized value.")]

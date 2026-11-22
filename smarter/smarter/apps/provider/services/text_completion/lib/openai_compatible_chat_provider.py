@@ -971,7 +971,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         :returns: The key, or None if the prompt is not the conversation's first message,
             or the cache is disabled.
         """
-        if not smarter_settings.prompt_response_cache_expiration:
+        if not smarter_settings.subsystem_cache_prompt_response_expiration:
             return None
         llmclient = getattr(self.prompt, "llmclient", None)
         if llmclient is None or not self.input_text or not isinstance(self.messages, list):

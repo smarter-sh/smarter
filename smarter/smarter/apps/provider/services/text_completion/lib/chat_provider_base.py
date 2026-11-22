@@ -33,7 +33,6 @@ from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 from .internal_keys import _InternalKeys
@@ -49,8 +48,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 EXAMPLE_PROMPTS_HEADING = "Some example prompts to get you started:"
 """The heading of the example prompts message, as Smarter Chat displays it (in English)."""
@@ -423,14 +421,14 @@ class SmarterChatProviderBase(ChatDbMixin):
         :raises SmarterConfigurationError: Always.
         """
         env_var = BUILTIN_PROVIDER_API_KEY_ENV_VARS.get(
-            str(self.provider_name), f"{str(self.provider_name).upper()}_API_KEY"
+            str(self.provider_name), f"APP_PROVIDER_{str(self.provider_name).upper()}_API_KEY"
         )
         message = (
             f"The {self.provider_name} Provider has no API key. Add SMARTER_{env_var} to .env, restart the "
             "platform, and run: docker exec smarter-api python manage.py initialize_providers. "
             "Or set the Provider's API key Secret in the web console."
         )
-        base_logger.error(
+        logger.error(
             SmarterFormattedText.banner(
                 f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
                 "To set it, add the key to .env, restart the platform, and run:",

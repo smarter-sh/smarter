@@ -4,6 +4,7 @@
 from unittest.mock import patch
 
 from smarter.apps.account.oauth import github_oauth_enabled, google_oauth_enabled
+from smarter.common.conf.const import DEFAULT_MISSING_VALUE
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -15,8 +16,8 @@ class TestOAuthProviders(SmarterTestBase):
     @patch("smarter.apps.account.oauth.settings")
     @patch("smarter.apps.account.oauth.waffle.switch_is_active", return_value=True)
     def test_is_google_oauth_enabled_key_missing(self, mock_switch, mock_settings, mock_smarter_settings, mock_logger):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = ""
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = ""
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
         self.assertFalse(google_oauth_enabled(), "Expected is_google_oauth_enabled to be False when key is missing.")
         mock_logger.debug.assert_called()
 
@@ -27,8 +28,8 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_google_oauth_enabled_secret_missing(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = ""
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = ""
         self.assertFalse(google_oauth_enabled(), "Expected is_google_oauth_enabled to be False when secret is missing.")
         mock_logger.debug.assert_called()
 
@@ -36,15 +37,16 @@ class TestOAuthProviders(SmarterTestBase):
     @patch("smarter.apps.account.oauth.smarter_settings")
     @patch("smarter.apps.account.oauth.settings")
     @patch("smarter.apps.account.oauth.waffle.switch_is_active", return_value=True)
-    def test_is_google_oauth_enabled_key_missing_default_missing_value(
+    def test_is_google_oauth_enabled_key_missing_placeholder(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = "MISSING"
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
-        mock_smarter_settings.default_missing_value = "MISSING"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = (
+            DEFAULT_MISSING_VALUE
+        )
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
         self.assertFalse(
             google_oauth_enabled(),
-            "Expected is_google_oauth_enabled to be False when key is missing and default_missing_value is set.",
+            "Expected is_google_oauth_enabled to be False when key is missing as the SET-ME-PLEASE placeholder.",
         )
         mock_logger.debug.assert_called()
 
@@ -52,15 +54,16 @@ class TestOAuthProviders(SmarterTestBase):
     @patch("smarter.apps.account.oauth.smarter_settings")
     @patch("smarter.apps.account.oauth.settings")
     @patch("smarter.apps.account.oauth.waffle.switch_is_active", return_value=True)
-    def test_is_google_oauth_enabled_secret_missing_default_missing_value(
+    def test_is_google_oauth_enabled_secret_missing_placeholder(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "MISSING"
-        mock_smarter_settings.default_missing_value = "MISSING"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = (
+            DEFAULT_MISSING_VALUE
+        )
         self.assertFalse(
             google_oauth_enabled(),
-            "Expected is_google_oauth_enabled to be False when secret is missing and default_missing_value is set.",
+            "Expected is_google_oauth_enabled to be False when secret is missing as the SET-ME-PLEASE placeholder.",
         )
         mock_logger.debug.assert_called()
 
@@ -71,8 +74,8 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_google_oauth_enabled_backend_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
         mock_settings.AUTHENTICATION_BACKENDS = [
             "social_core.backends.google.GoogleOAuth2",
             "other.backend",
@@ -86,8 +89,8 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_google_oauth_enabled_backend_not_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_google_oauth2_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_google_oauth2_secret.get_secret_value.return_value = "secret"
         mock_settings.AUTHENTICATION_BACKENDS = [
             "other.backend",
         ]
@@ -101,8 +104,8 @@ class TestOAuthProviders(SmarterTestBase):
     @patch("smarter.apps.account.oauth.settings")
     @patch("smarter.apps.account.oauth.waffle.switch_is_active", return_value=True)
     def test_is_github_oauth_enabled_key_missing(self, mock_switch, mock_settings, mock_smarter_settings, mock_logger):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = ""
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = ""
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = "secret"
         self.assertFalse(github_oauth_enabled(), "Expected is_github_oauth_enabled to be False when key is missing.")
         mock_logger.debug.assert_called()
 
@@ -113,38 +116,34 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_github_oauth_enabled_secret_missing(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = ""
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = ""
         self.assertFalse(github_oauth_enabled(), "Expected is_github_oauth_enabled to be False when secret is missing.")
         mock_logger.debug.assert_called()
 
     @patch("smarter.apps.account.oauth.logger")
     @patch("smarter.apps.account.oauth.smarter_settings")
     @patch("smarter.apps.account.oauth.settings")
-    def test_is_github_oauth_enabled_key_missing_default_missing_value(
-        self, mock_settings, mock_smarter_settings, mock_logger
-    ):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = "MISSING"
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "secret"
-        mock_smarter_settings.default_missing_value = "MISSING"
+    def test_is_github_oauth_enabled_key_missing_placeholder(self, mock_settings, mock_smarter_settings, mock_logger):
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = DEFAULT_MISSING_VALUE
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = "secret"
         self.assertFalse(
             github_oauth_enabled(),
-            "Expected is_github_oauth_enabled to be False when key is missing and default_missing_value is set.",
+            "Expected is_github_oauth_enabled to be False when key is missing as the SET-ME-PLEASE placeholder.",
         )
         mock_logger.debug.assert_called()
 
     @patch("smarter.apps.account.oauth.logger")
     @patch("smarter.apps.account.oauth.smarter_settings")
     @patch("smarter.apps.account.oauth.settings")
-    def test_is_github_oauth_enabled_secret_missing_default_missing_value(
+    def test_is_github_oauth_enabled_secret_missing_placeholder(
         self, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "MISSING"
-        mock_smarter_settings.default_missing_value = "MISSING"
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = DEFAULT_MISSING_VALUE
         self.assertFalse(
             github_oauth_enabled(),
-            "Expected is_github_oauth_enabled to be False when secret is missing and default_missing_value is set.",
+            "Expected is_github_oauth_enabled to be False when secret is missing as the SET-ME-PLEASE placeholder.",
         )
         mock_logger.debug.assert_called()
 
@@ -155,8 +154,8 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_github_oauth_enabled_backend_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = "secret"
         mock_settings.AUTHENTICATION_BACKENDS = [
             "social_core.backends.github.GithubOAuth2",
             "other.backend",
@@ -170,8 +169,8 @@ class TestOAuthProviders(SmarterTestBase):
     def test_is_github_oauth_enabled_backend_not_found(
         self, mock_switch, mock_settings, mock_smarter_settings, mock_logger
     ):
-        mock_smarter_settings.social_auth_github_key.get_secret_value.return_value = "key"
-        mock_smarter_settings.social_auth_github_secret.get_secret_value.return_value = "secret"
+        mock_smarter_settings.subsystem_social_auth_github_key.get_secret_value.return_value = "key"
+        mock_smarter_settings.subsystem_social_auth_github_secret.get_secret_value.return_value = "secret"
         mock_settings.AUTHENTICATION_BACKENDS = [
             "other.backend",
         ]

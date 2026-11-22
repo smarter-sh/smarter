@@ -207,8 +207,8 @@ def script_environment(url: str, local_path: str, account_number: str, username:
     ``SMARTER_USERNAME``                 The user that owns them.
     ``SMARTER_DATABASE_HOST``            The host of the platform's database server.
     ``SMARTER_DATABASE_PORT``            Its port.
-    ``SMARTER_DATABASE_ADMIN_USERNAME``  Its administrator, ``smarter_settings.mysql_root_username``.
-    ``MYSQL_PWD``                        The administrator's password, ``smarter_settings.mysql_root_password``,
+    ``SMARTER_DATABASE_ADMIN_USERNAME``  Its administrator, ``smarter_settings.subsystem_sql_root_username``.
+    ``MYSQL_PWD``                        The administrator's password, ``smarter_settings.subsystem_sql_root_password``,
                                          where the MariaDB and MySQL clients read it. Missing if it is not set.
     ===================================  ==================================================================
 
@@ -233,11 +233,11 @@ def script_environment(url: str, local_path: str, account_number: str, username:
             "SMARTER_USERNAME": username,
             "SMARTER_DATABASE_HOST": str(database.get("HOST") or "localhost"),
             "SMARTER_DATABASE_PORT": str(database.get("PORT") or 3306),
-            "SMARTER_DATABASE_ADMIN_USERNAME": smarter_settings.mysql_root_username,
+            "SMARTER_DATABASE_ADMIN_USERNAME": smarter_settings.subsystem_sql_root_username,
         }
     )
-    if smarter_settings.mysql_root_password is not None:
-        env["MYSQL_PWD"] = smarter_settings.mysql_root_password.get_secret_value()
+    if smarter_settings.subsystem_sql_root_password is not None:
+        env["MYSQL_PWD"] = smarter_settings.subsystem_sql_root_password.get_secret_value()
     return env
 
 

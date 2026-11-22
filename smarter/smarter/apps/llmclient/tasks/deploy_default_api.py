@@ -65,7 +65,6 @@ from smarter.apps.llmclient.signals import (
     pre_verify_domain,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.exceptions import SmarterException
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -96,9 +95,9 @@ CERTIFICATE_MAX_ATTEMPTS = 30
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True):
     """
@@ -201,7 +200,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
             return None
 
         domain_name = llmclient.default_host
-        if smarter_settings.llmclient_tasks_create_dns_record:
+        if smarter_settings.app_llmclient_tasks_create_dns_record:
             _, created = infrastructure.dns.create_domain_a_record(
                 hostname=domain_name, api_host_domain=llmclient.base_api_domain
             )
@@ -235,7 +234,7 @@ def deploy_default_api(llmclient_id: int, with_domain_verification: bool = True)
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
-    if not smarter_settings.llmclient_tasks_create_ingress_manifest:
+    if not smarter_settings.app_llmclient_tasks_create_ingress_manifest:
         logger.info(
             "llmclient_tasks_create_ingress_manifest is set to False. Skipping creation of ingress manifest for llmclient %s at domain %s task_id: %s",
             llmclient.name,
@@ -323,9 +322,9 @@ def _deployment_failed(llmclient_id: int, with_domain_verification: bool, task_i
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=smarter_settings.llmclient_tasks_celery_retry_backoff,
-    max_retries=smarter_settings.llmclient_tasks_celery_max_retries,
-    queue=smarter_settings.infrastructure_tasks_celery_task_queue,
+    retry_backoff=smarter_settings.app_llmclient_tasks_celery_retry_backoff,
+    max_retries=smarter_settings.app_llmclient_tasks_celery_max_retries,
+    queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def continue_default_api_deployment(
     llmclient_id: int,
@@ -462,7 +461,7 @@ def continue_default_api_deployment(
         f"Your llmclient, {llmclient.name}, has been deployed to {llmclient.url}. "
         f"It is now activated and able to respond to prompts.\n\n"
         f"If you also created a custom domain for your llmclient then you'll be separately notified once it has been verified. "
-        f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
+        f"If you have any questions, please contact {smarter_settings.platform_branding_support_email}."
     )
     AccountContact.send_email_to_primary_contact(
         account=llmclient.user_profile.cached_account, subject=subject, body=body

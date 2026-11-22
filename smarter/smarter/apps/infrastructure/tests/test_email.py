@@ -30,13 +30,13 @@ MODULE = "smarter.apps.infrastructure.services.email"
 def smtp_settings(**overrides) -> MagicMock:
     settings = MagicMock(
         smtp_is_configured=True,
-        smtp_from_email="smarter@example.com",
-        smtp_host="smtp.example.com",
-        smtp_port=587,
-        smtp_use_tls=True,
-        smtp_username=SecretStr("user"),
-        smtp_password=SecretStr("password"),
-        email_admin="admin@example.com",
+        subsystem_smtp_from_email="smarter@example.com",
+        subsystem_smtp_host="smtp.example.com",
+        subsystem_smtp_port=587,
+        subsystem_smtp_use_tls=True,
+        subsystem_smtp_username=SecretStr("user"),
+        subsystem_smtp_password=SecretStr("password"),
+        platform_email_admin="admin@example.com",
     )
     for key, value in overrides.items():
         setattr(settings, key, value)
@@ -223,7 +223,9 @@ class TestSMTPEmailService(InfrastructureTestBase):
         self.assertEqual(self.server.sendmail.call_args.args[1], ["a@example.com"])
 
     def test_without_tls(self):
-        with patch(f"{MODULE}.smarter_settings", smtp_settings(smtp_use_tls=False, email_admin=None)):
+        with patch(
+            f"{MODULE}.smarter_settings", smtp_settings(subsystem_smtp_use_tls=False, platform_email_admin=None)
+        ):
             self.assertTrue(self.email.send_email("Hello", "Hi", "a@example.com"))
         self.server.starttls.assert_not_called()
 
@@ -233,7 +235,11 @@ class TestSMTPEmailService(InfrastructureTestBase):
             self.assertFalse(self.email.send_email("Hello", "Hi", "a@example.com"))
 
     def test_incomplete_configuration(self):
-        for overrides in ({"smtp_from_email": None}, {"smtp_host": None}, {"smtp_password": None}):
+        for overrides in (
+            {"subsystem_smtp_from_email": None},
+            {"subsystem_smtp_host": None},
+            {"subsystem_smtp_password": None},
+        ):
             with self.subTest(**overrides), patch(f"{MODULE}.smarter_settings", smtp_settings(**overrides)):
                 self.assertFalse(self.email.send_email("Hello", "Hi", "a@example.com"))
         self.server.sendmail.assert_not_called()
@@ -258,8 +264,8 @@ class TestSMTPEmailService(InfrastructureTestBase):
         # the recipient is masked: the banner is written to the logs.
         self.assertIn("'Welcome' was not sent to: a****@example.com", banner)
         self.assertNotIn("a@example.com", banner)
-        self.assertIn("SMARTER_SMTP_USERNAME", banner)
-        self.assertIn("SMARTER_SMTP_PASSWORD", banner)
+        self.assertIn("SMARTER_SUBSYSTEM_SMTP_USERNAME", banner)
+        self.assertIn("SMARTER_SUBSYSTEM_SMTP_PASSWORD", banner)
 
     def test_nothing_is_sent_from_unit_tests(self):
         """By default, SMTP is not ready in the unit tests, so that tests never email real people."""
@@ -290,7 +296,7 @@ class TestAdminBcc(InfrastructureTestBase):
         ):
             with (
                 self.subTest(email_admin=email_admin),
-                patch(f"{MODULE}.smarter_settings", smtp_settings(email_admin=email_admin)),
+                patch(f"{MODULE}.smarter_settings", smtp_settings(platform_email_admin=email_admin)),
             ):
                 self.assertEqual(EmailService.admin_bcc(recipients), expected)
 

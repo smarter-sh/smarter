@@ -1,9 +1,9 @@
 """Test :mod:`smarter.lib.logging.filters`."""
 
 import asyncio
-import logging
 
 from smarter.common.utils import mask_identifier
+from smarter.lib import logging
 from smarter.lib.logging.filters import (
     AccessLogQueryFilter,
     AsyncioShieldedCancelFilter,
@@ -64,12 +64,12 @@ class TestAccessLogQueryFilter(SmarterTestBase):
 
     def test_uvicorn_access_logger_is_configured(self):
         """Settings.LOGGING attaches the filter to the uvicorn.access logger itself."""
-        filters = logging.getLogger("uvicorn.access").filters
+        filters = logging.getSmarterLogger("uvicorn.access").filters
         self.assertTrue(any(isinstance(f, AccessLogQueryFilter) for f in filters))
 
     def test_uvicorn_access_log_line_is_masked(self):
         """A record logged the way uvicorn logs it reaches the handlers with the key masked."""
-        access_logger = logging.getLogger("uvicorn.access")
+        access_logger = logging.getSmarterLogger("uvicorn.access")
         path = f"/config/?session_key={SESSION_KEY}"
         with self.assertLogs("uvicorn.access", level="INFO") as captured:
             access_logger.info(ACCESS_LOG_FORMAT, "127.0.0.1:1", "POST", path, "1.1", 200)
@@ -127,7 +127,7 @@ class TestAsyncioShieldedCancelFilter(SmarterTestBase):
 
     def test_asyncio_logger_is_configured(self):
         """Settings.LOGGING attaches the filter to the asyncio logger."""
-        filters = logging.getLogger("asyncio").filters
+        filters = logging.getSmarterLogger("asyncio").filters
         self.assertTrue(any(isinstance(f, AsyncioShieldedCancelFilter) for f in filters))
 
     def test_real_shielded_cancel_is_not_logged(self):

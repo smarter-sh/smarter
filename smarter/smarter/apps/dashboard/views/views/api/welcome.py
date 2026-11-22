@@ -193,8 +193,8 @@ def welcome_response(user: User) -> WelcomeApiResponse:
         urls=WelcomeUrls(
             weather=weather_llmclient_url(user),
             llmclients=reverse(PromptReverseNames.namespace, PromptReverseNames.listview),
-            docs=str(smarter_settings.smarter_project_docs_url),
-            project=str(smarter_settings.smarter_project_website_url),
+            docs=str(smarter_settings.platform_branding_docs_url).rstrip("/"),
+            project=str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
         ),
     )
 

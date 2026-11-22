@@ -48,7 +48,7 @@ class TestHostPatterns(SmarterTestBase):
             f"stackademy.3141-5926-5359.{API_DOMAIN.replace('.', 'x', 1)}",
             "stackademy.3141-5926-5359.example.com",
             # the api domain without the platform subdomain.
-            f"stackademy.3141-5926-5359.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+            f"stackademy.3141-5926-5359.{smarter_settings.api_subdomain}.{smarter_settings.platform_root_domain}",
         ):
             with self.subTest(hostname=hostname):
                 pattern = matching_host(hostname)

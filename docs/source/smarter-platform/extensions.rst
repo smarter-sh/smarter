@@ -206,10 +206,10 @@ Two settings, in your environment or Helm values, configure the registry:
 
    * - Setting
      - Meaning
-   * - ``SMARTER_EXTENSION_REGISTRY_URL``
+   * - ``SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_URL``
      - The url of the registry's signed index. The default is the Smarter Extension registry,
        ``https://smarter-sh.github.io/extensions-registry/index.json``.
-   * - ``SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY``
+   * - ``SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY``
      - The registry's Ed25519 public key, base64, which verifies the index's signature. It is
        public, not a secret. While it is empty, the registry is disabled.
 

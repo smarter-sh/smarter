@@ -45,7 +45,7 @@ application = HealthzASGIMiddleware(
     )
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 logger.debug("smarter is using django.core.asgi with ASGIStaticFilesHandler for static files.")
 logger.debug("ASGI application: %s", application)
 logger.debug("static_root: %s", settings.STATIC_ROOT)

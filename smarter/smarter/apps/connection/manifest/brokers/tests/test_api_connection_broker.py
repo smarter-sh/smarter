@@ -27,7 +27,7 @@ from smarter.lib.typing import required
 
 from .base_classes.connection_base import TestSmarterConnectionBrokerBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):

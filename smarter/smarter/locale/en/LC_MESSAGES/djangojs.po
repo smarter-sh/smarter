@@ -7625,7 +7625,7 @@ msgid ""
 msgstr ""
 
 #. Translators: used in packages/smarter-proxy-list/src/components/Toolbar/Component.tsx
-msgid "The proxy endpoints are disabled. Set SMARTER_ENABLE_PROXY=true."
+msgid "The proxy endpoints are disabled. Set SMARTER_APP_PROXY_ENABLE=true."
 msgstr ""
 
 #. Translators: used in packages/smarter-proxy-list/src/components/Toolbar/Component.tsx

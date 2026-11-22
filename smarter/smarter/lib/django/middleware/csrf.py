@@ -396,7 +396,7 @@ class SmarterCsrfViewMiddleware(CsrfViewMiddleware, SmarterRequestMixin):
 
         host = request.get_host()
 
-        if host.startswith(tuple(smarter_settings.internal_ip_prefixes)):
+        if host.startswith(tuple(smarter_settings.platform_internal_ip_prefixes)):
             # internal IP bypass
             return None
 

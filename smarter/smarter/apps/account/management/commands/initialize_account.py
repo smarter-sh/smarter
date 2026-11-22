@@ -226,7 +226,7 @@ class Command(SmarterCommand):
                 self.initialize_account(
                     account_number=account_number,
                     username=smarter_admin_user_profile.user.username,
-                    email=f"{account_number}_admin@{smarter_settings.root_domain}",
+                    email=f"{account_number}_admin@{smarter_settings.platform_root_domain}",
                     password=None,
                     company_name=account.company_name,
                 )
@@ -306,12 +306,12 @@ class Command(SmarterCommand):
             raise CommandError(msg)
         email = options.get("email")
         if not email:
-            email = f"{username}@{smarter_settings.root_domain}"
+            email = f"{username}@{smarter_settings.platform_root_domain}"
             msg = f"No email provided, using the default value: {email}"
             self.stdout.write(self.style.WARNING(msg))
             logger.warning(msg)
         if not SmarterValidator.is_valid_email(email):
-            email = f"{username}@{smarter_settings.root_domain}"
+            email = f"{username}@{smarter_settings.platform_root_domain}"
             msg = f"No email provided, using the default value: {email}"
             self.stdout.write(self.style.WARNING(msg))
             logger.warning(msg)

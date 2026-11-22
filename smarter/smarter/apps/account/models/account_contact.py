@@ -416,7 +416,7 @@ class AccountContact(TimestampedModel):
         """
         Send the Slack invitation email to this account contact.
 
-        The email invites the contact to the Slack workspace of ``smarter_settings.branding_url_slack``,
+        The email invites the contact to the Slack workspace of ``smarter_settings.platform_branding_url_slack``,
         unless the contact's email address unsubscribed. When it is sent, :attr:`slack_invited_at`
         records when, on every contact with the same email address, so that a person who is a
         contact of several accounts is invited once.

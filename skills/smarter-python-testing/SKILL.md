@@ -7,33 +7,36 @@ description: Use when writing, fixing, or running Smarter's Django unit tests, o
 
 ## Where tests run
 
-Tests run inside the `smarter-api` Docker container, against its MariaDB,
-Redis, and live dev server on port 9357. The host has no runnable test
-environment.
+Tests run in Docker, never on the host, which has no runnable test
+environment. There is one way to run them, `make docker-test`, in the
+background, with its output in your scratchpad:
 
 ```console
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient"
-docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter.apps.llmclient.tests.test_custom_domain_views"
+make docker-test                                                    # verifying a change: the whole suite
+make docker-test LABELS=smarter.apps.llmclient.tests.test_custom_domain_views   # iterating on one module
 ```
 
-- **The container has no bind mount of the source.** Sync your edited files
-  first, or you're testing stale code. See `smarter-docker-environment`.
-- **Stop Celery Beat while tests run** (`docker stop smarter-beat`, then
-  `docker start smarter-beat` afterwards); `make docker-test` and
-  `make coverage` do this themselves. The tests share the database with the
-  Celery workers and don't roll back their rows, so a scheduled task changes a
-  running test's data: `reconcile_vectorstores` once overwrote a test
-  vectorstore's `ready` with `provisioning`, failing
-  `test_undeploy_and_deploy` at random. In the local containers it would also
-  send the test's resources to the real Kubernetes cluster. Keep the workers
-  running; tests queue tasks with `.delay()`. CI stops Beat the same way.
+It builds the image from your working tree, then runs the tests in shards,
+each in a Docker stack of its own (see [Sharded runs](#sharded-runs)). The
+whole suite runs in as many shards as Docker has room for; `LABELS` runs in one.
+
+- **Verify every change with the whole suite.** No threshold, no exceptions:
+  not for a one-line fix, not for a rename, not for "just the apps I
+  touched". `LABELS` is for iterating on one test module, never for
+  verifying.
+- **Never `docker exec smarter-api ... manage.py test`.** It runs on one core,
+  against the dev container's stale copy of the code (it has no bind mount),
+  with Celery Beat changing the rows of running tests. The user has called
+  this out repeatedly. The only exception is the `infrastructure`-tagged
+  tests, and only when the user asks (see
+  [Real infrastructure](#real-infrastructure-never-by-default)).
+- **There is no sync step.** `make docker-test` builds the image from the host's
+  tree, so it always tests the code you edited.
 - **Run the tests yourself, every time.** Don't ask the user to re-run. Run long
   suites in the background, with output written to a log file in your
   scratchpad, and read the summary at the end.
-- **Run the modules you touched, not the full suite.** The full
-  `manage.py test smarter` and `make coverage` take long and make billable LLM
-  calls; the user runs them when the work is finished. Run them only when asked,
-  and say in your summary that you left them to the user.
+- **`make coverage` runs serially**: run it only when the user asks for a
+  coverage report.
 - A log that stops partway through usually means an earlier session ran out of
   context. It doesn't mean the tests crashed.
 - **Save the complete output, then grep it with `-a`.** Smarter's logs contain
@@ -43,8 +46,12 @@ docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.
   `grep -a`, rather than piping the test run straight into `grep`. A
   coverage report alone is not a result: always confirm the pass and fail counts.
 
+  `make docker-test` does this for you: each shard's whole output is in
+  `.test-shards/shard-<n>.log`, and its report lists every `FAIL:` and
+  `ERROR:`. To read a shard's log yourself:
+
   ```console
-  docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py test smarter --noinput > /tmp/test.log 2>&1; grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' /tmp/test.log"
+  grep -aE '^Ran |^OK|^FAILED|^(ERROR|FAIL):' .test-shards/shard-1.log
   ```
 
 ## Decide what to test from the user's path, not from your code
@@ -212,6 +219,8 @@ make coverage
 #   with smarter-beat stopped while it runs
 ```
 
+### Sharded runs
+
 CI's `python` job (`.github/workflows/test.yml`) runs the same command as eight
 shards on eight runners, each with `SMARTER_TEST_SHARD=<n>/8` (see
 `smarter/lib/unittest/runner.py`: every shard discovers the whole suite, and
@@ -219,25 +228,18 @@ TestCases are never split). The `python-report` job combines the shards'
 coverage data and uploads one `coverage.xml` to Codecov. To reproduce one
 shard locally, pass the same variable to `docker exec -e`.
 
-For a full local run, `make docker-test-sharded` (`SHARDS=8` by default,
-`scripts/run_test_shards.py`) runs every shard at once, each in a Docker stack
+`make docker-test` (`scripts/run_test_shards.py`) runs every shard at once, each in a Docker stack
 of its own (`docker-compose.shard.yml`, a copy of the local database, no Beat),
 and prints each shard's result and the failing tests; logs in `.test-shards/`.
 Never run two shards in the one dev stack: the tests share its database,
-Redis, dev server and workers without rollback, and break each other. It needs
-about 4 GB of Docker's memory per shard. Run it in the background, like any
-long suite.
-
-**Prefer the sharded full suite to a serial run of several apps.** Eight shards
-run the whole suite about five times faster than one process, so once a change
-touches more than one or two test modules, `make docker-test-sharded` is
-quicker than `manage.py test smarter.apps.a smarter.apps.b ...` in the dev
-container, and it checks everything, not only the apps you guessed. A serial
-run of five or six apps can pass ten minutes and hit the Bash timeout. The
-shard stacks run the **image**, not the dev container that
-`sync-changed-files.sh` updates, so run `make build` first, in the same
-background command: `make build && make docker-test-sharded`. Keep the single
-module runs in the dev container for quick iteration on one test file.
+Redis, dev server and workers without rollback, and break each other. It
+chooses the number of shards itself, from `docker info`'s CPUs and memory
+(`ideal_shards()`: about 3.75 GB and 1 CPU per shard, after a reserve for the
+dev stack), and prints it on its first line. Don't pass `SHARDS=`: a number
+larger than Docker has room for runs out of memory, and shards killed that way
+end without a result. With `LABELS`, it runs one shard. The shards run the
+whole suite several times faster than one process runs a few apps, and they
+check everything, not only the apps you guessed.
 
 Don't use `manage.py test --parallel` instead: Django's parallel runner pickles
 each failure's traceback, and with this suite it fails with "cannot pickle
@@ -252,8 +254,8 @@ A full run takes a long time, so to raise coverage efficiently:
    describe/get, management commands) are the cheapest wins.
 3. Test behavior through the public interface: the broker, the view, the
    command, the task function. Don't call private helpers just to touch lines.
-4. Run only the modules you touched while iterating, and the sharded full suite
-   (`make build && make docker-test-sharded`) to verify. Do one full coverage run at
+4. Iterate with `make docker-test LABELS=<module>`, and verify with the
+   whole suite (`make docker-test`). Do one full coverage run at
    the end.
 
 ## Reporting

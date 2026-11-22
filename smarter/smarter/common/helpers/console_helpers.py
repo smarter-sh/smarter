@@ -61,7 +61,7 @@ class SmarterFormattedText:
 
         Example::
 
-            logger.error(SmarterFormattedText.banner("SMTP is not configured.", "Set SMARTER_SMTP_USERNAME in .env."))
+            logger.error(SmarterFormattedText.banner("SMTP is not configured.", "Set SMARTER_SUBSYSTEM_SMTP_USERNAME in .env."))
 
         :param title: The first line of the banner.
         :param lines: Further lines, e.g. instructions.

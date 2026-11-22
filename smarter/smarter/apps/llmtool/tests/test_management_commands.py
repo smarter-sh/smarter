@@ -24,7 +24,7 @@ from smarter.lib import logging
 
 from .base_classes import STATIC_PLUGIN_NAME, PluginAppTestBase, get_data_path
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 STATIC_FILE = get_data_path("static-plugin.yaml")
 STATIC_MODIFIED_FILE = get_data_path("static-plugin-modified.yaml")

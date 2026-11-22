@@ -37,7 +37,7 @@ from smarter.lib.django.views import (
 )
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 @method_decorator(login_required, name="dispatch")

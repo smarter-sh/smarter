@@ -33,7 +33,7 @@ from smarter.lib.unittest.log_capture import WrappedLoggerCapture
 
 from .base_classes import PluginAppTestBase, get_test_data
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 TASK_PATCH = "smarter.apps.llmtool.receivers.plugin.create_plugin_selector_history"
 RECEIVER_MODULES = (

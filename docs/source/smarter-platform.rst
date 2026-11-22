@@ -25,25 +25,5 @@ The Smarter platform's fundamental building blocks to this extent are:
    :caption: Platform Administration Guide
 
    smarter-platform/installation
-   smarter-platform/smarter-web-console
-   smarter-platform/django-admin
-   smarter-platform/extensions
-   smarter-platform/prerequisites
-   smarter-platform/trouble-shooting
-   smarter-platform/cloud-infrastructure
-   smarter-platform/url-patterns
-   smarter-platform/account-management
-   smarter-platform/user-management
-   smarter-platform/cli
-   smarter-platform/api-keys
-   smarter-platform/adding-an-llm-provider
-   smarter-platform/cost-accounting
-   smarter-platform/smarter-journal
-   smarter-platform/mcpserver
    smarter-platform/configuration
-   smarter-platform/user-defined-django-settings
-   smarter-platform/security
-   smarter-platform/backup-and-restore
-   smarter-platform/updates
-   smarter-platform/troubleshooting
-   smarter-platform/security-faq
+   smarter-platform/trouble-shooting

@@ -1,7 +1,6 @@
 """Test :mod:`smarter.lib.unittest.log_capture`."""
 
-import logging
-
+from smarter.lib import logging
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.log_capture import WrappedLoggerCapture
@@ -19,7 +18,7 @@ class TestWrappedLoggerCapture(SmarterTestBase):
     def setUp(self):
         super().setUp()
         # a condition that is always off: the capture must ignore it.
-        self.logger = WaffleSwitchedLoggerWrapper(logging.getLogger("smarter.test.log_capture"), lambda level: False)
+        self.logger = logging.getSmarterLogger("smarter.test.log_capture", condition_func=lambda level: False)
         self.capture = WrappedLoggerCapture(self, self.logger)
 
     def test_captures_every_level_with_the_prefix(self):

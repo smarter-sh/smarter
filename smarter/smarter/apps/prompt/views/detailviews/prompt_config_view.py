@@ -83,7 +83,6 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.logging.redis_log_handler import session_key_context, valid_session_key
 from smarter.lib.typing import SmarterDictType
 
@@ -95,8 +94,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def should_log_verbose(level):
@@ -104,7 +102,7 @@ def should_log_verbose(level):
     return smarter_settings.verbose_logging
 
 
-verbose_logger = WaffleSwitchedLoggerWrapper(base_logger, should_log_verbose)
+verbose_logger = logging.getSmarterLogger(__name__, condition_func=should_log_verbose)
 
 
 class PromptConfigView(SmarterOptionallyAuthenticatedApiView):

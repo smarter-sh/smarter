@@ -13,7 +13,8 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import SmarterCachedObjects, smarter_cached_objects
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_ADMIN_USERNAME
+from smarter.common.conf import smarter_settings
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -30,7 +31,7 @@ class TestSmarterCachedObjects(SmarterTestBase):
 
     def test_smarter_admin(self):
         self.assertIsInstance(smarter_cached_objects.smarter_admin, User)
-        self.assertEqual(smarter_cached_objects.smarter_admin.username, SMARTER_ADMIN_USERNAME)
+        self.assertEqual(smarter_cached_objects.smarter_admin.username, smarter_settings.platform_admin_username)
 
     def test_smarter_admin_user_profile(self):
         self.assertIsInstance(smarter_cached_objects.smarter_admin_user_profile, UserProfile)
@@ -43,7 +44,7 @@ class TestSmarterCachedObjects(SmarterTestBase):
         """A fresh instance loads the admin user, then re-queries it on the next access."""
         cached_objects = SmarterCachedObjects()
         admin_user = cached_objects.admin_user
-        self.assertEqual(admin_user.username, SMARTER_ADMIN_USERNAME)
+        self.assertEqual(admin_user.username, smarter_settings.platform_admin_username)
         self.assertTrue(admin_user.is_superuser)
         self.assertEqual(cached_objects.admin_user, admin_user)
 
@@ -164,7 +165,7 @@ class TestGetCachedUserForUsername(TestAccountMixin):
             utils.get_cached_user_for_username(username="notfound")
 
     def test_smarter_admin(self):
-        user = utils.get_cached_user_for_username(username=SMARTER_ADMIN_USERNAME)
+        user = utils.get_cached_user_for_username(username=smarter_settings.platform_admin_username)
         self.assertEqual(user, smarter_cached_objects.admin_user)
 
 

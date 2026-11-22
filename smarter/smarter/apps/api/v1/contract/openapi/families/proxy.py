@@ -19,7 +19,7 @@ PROXIES = ApiFamily(
     resource=SAMKinds.PROXY.value,
     urlconf="smarter.apps.proxy.api.v1.urls",
     description="The {plural} that the user may use. Served only when the platform enables {plural} "
-    "(SMARTER_ENABLE_PROXY).",
+    "(SMARTER_APP_PROXY_ENABLE).",
     mount=namespace,
     resources="Proxies",
 )

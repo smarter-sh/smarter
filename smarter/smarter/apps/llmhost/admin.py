@@ -14,7 +14,7 @@ from .models import LLMHost, LLMHostCompute, LLMHostEvent
 from .services.compute import ComputeProvisioner
 from .services.exceptions import LLMHostComputeError
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class LLMHostAdmin(SmarterCustomerModelAdmin):

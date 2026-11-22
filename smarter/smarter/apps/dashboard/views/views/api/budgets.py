@@ -29,7 +29,7 @@ from smarter.lib import logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 from smarter.lib.typing import SmarterDictType
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 DEFAULT_PERIODS = 12
 MAX_PERIODS = 120

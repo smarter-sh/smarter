@@ -61,7 +61,6 @@ from smarter.apps.dashboard.views.views.api.welcome import (
 )
 from smarter.apps.llmtool.extension.registry import update_count
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.lib import logging
 from smarter.lib.django.i18n import console_languages
 from smarter.lib.django.waffle import SmarterWaffleSwitches, switch_is_active
@@ -81,40 +80,40 @@ def branding() -> ConsoleBranding:
     :returns: The branding that the console shows.
     """
     address_parts = [
-        smarter_settings.branding_address1,
-        smarter_settings.branding_address2,
-        smarter_settings.branding_city,
-        smarter_settings.branding_state,
-        smarter_settings.branding_postal_code,
-        smarter_settings.branding_country,
+        smarter_settings.platform_branding_address1,
+        smarter_settings.platform_branding_address2,
+        smarter_settings.platform_branding_city,
+        smarter_settings.platform_branding_state,
+        smarter_settings.platform_branding_postal_code,
+        smarter_settings.platform_branding_country,
     ]
     corporate_address = ", ".join(part for part in address_parts if part)
-    corporate_name = smarter_settings.branding_corporate_name
+    corporate_name = smarter_settings.platform_branding_corporate_name
     current_year = datetime.now().year
-    marketing_site_url = str(smarter_settings.marketing_site_url or "")
+    marketing_site_url = str(smarter_settings.platform_branding_marketing_site_url or "")
     legal_url = ""
     if marketing_site_url:
         legal_url = urljoin(marketing_site_url, "legal")
-    cdn_url = str(smarter_settings.smarter_project_cdn_url)
+    cdn_url = str(smarter_settings.platform_branding_cdn_url).rstrip("/")
     return ConsoleBranding(
-        product_name=SMARTER_PRODUCT_NAME,
-        product_description=SMARTER_PRODUCT_DESCRIPTION,
+        product_name=smarter_settings.platform_branding_product_name,
+        product_description=smarter_settings.platform_branding_product_description,
         corporate_name=corporate_name,
         corporate_address=corporate_address,
-        support_email=smarter_settings.branding_support_email or "",
-        support_phone_number=smarter_settings.branding_support_phone_number or "",
-        support_hours=smarter_settings.branding_support_hours or "",
-        primary_contact=smarter_settings.branding_primary_contact or "",
-        contact_url=str(smarter_settings.branding_contact_url or ""),
+        support_email=smarter_settings.platform_branding_support_email or "",
+        support_phone_number=smarter_settings.platform_branding_support_phone_number or "",
+        support_hours=smarter_settings.platform_branding_support_hours or "",
+        primary_contact=smarter_settings.platform_branding_primary_contact or "",
+        contact_url=str(smarter_settings.platform_branding_contact_url or ""),
         copyright=f"© 2023-{current_year} {corporate_name}. All rights reserved.",
-        url_facebook=str(smarter_settings.branding_url_facebook or ""),
-        url_twitter=str(smarter_settings.branding_url_twitter or ""),
-        url_linkedin=str(smarter_settings.branding_url_linkedin or ""),
-        url_slack=str(smarter_settings.branding_url_slack or ""),
+        url_facebook=str(smarter_settings.platform_branding_url_facebook or ""),
+        url_twitter=str(smarter_settings.platform_branding_url_twitter or ""),
+        url_linkedin=str(smarter_settings.platform_branding_url_linkedin or ""),
+        url_slack=str(smarter_settings.platform_branding_url_slack or ""),
         logo_url=urljoin(cdn_url, LOGO_PATH),
         marketing_site_url=marketing_site_url,
-        project_website_url=str(smarter_settings.smarter_project_website_url),
-        project_docs_url=str(smarter_settings.smarter_project_docs_url),
+        project_website_url=str(smarter_settings.platform_branding_marketing_site_url).rstrip("/"),
+        project_docs_url=str(smarter_settings.platform_branding_docs_url).rstrip("/"),
         legal_url=legal_url,
         environment_url=str(smarter_settings.environment_url),
     )
@@ -170,21 +169,21 @@ def flags(user: Optional[User]) -> ConsoleFlags:
     """
     is_superuser = user is not None and user.is_superuser
     return ConsoleFlags(
-        connection=smarter_settings.enable_connection,
-        guardrail=smarter_settings.enable_guardrail,
-        llmclient=smarter_settings.enable_llmclient,
-        llmhost=smarter_settings.enable_llmhost,
-        llmtool=smarter_settings.enable_llmtool,
-        mcpclient=smarter_settings.enable_mcpclient,
-        orchestrator=smarter_settings.enable_orchestrator,
-        provider=smarter_settings.enable_provider,
-        proxy=smarter_settings.enable_proxy,
-        secret=smarter_settings.enable_secret,
-        vectorsearch=smarter_settings.enable_vectorsearch,
-        vectorstore=smarter_settings.enable_vectorstore,
-        manifest_drop_zone=smarter_settings.enable_dropzone_manifest_apply,
+        connection=smarter_settings.app_connection_enable,
+        guardrail=smarter_settings.app_guardrail_enable,
+        llmclient=smarter_settings.app_llmclient_enable,
+        llmhost=smarter_settings.app_llmhost_enable,
+        llmtool=smarter_settings.app_llmtool_enable,
+        mcpclient=smarter_settings.app_mcpclient_enable,
+        orchestrator=smarter_settings.app_orchestrator_enable,
+        provider=smarter_settings.app_provider_enable,
+        proxy=smarter_settings.app_proxy_enable,
+        secret=smarter_settings.app_secret_enable,
+        vectorsearch=smarter_settings.app_vectorsearch_enable,
+        vectorstore=smarter_settings.app_vectorstore_enable,
+        manifest_drop_zone=smarter_settings.app_dashboard_manifest_dropzone_enable,
         terminal=terminal_enabled() and is_superuser,
-        passthrough=smarter_settings.enable_dashboard_passthrough_prompt,
+        passthrough=smarter_settings.app_dashboard_passthrough_prompt_enable,
         server_logs=server_logs_enabled(),
         did_you_know=switch_is_active(SmarterWaffleSwitches.ENABLE_WEB_CONSOLE_DID_YOU_KNOW),
         react_debug_mode=switch_is_active(SmarterWaffleSwitches.ENABLE_REACTAPP_DEBUG_MODE),

@@ -87,22 +87,22 @@ host_patterns = patterns(
     host(r"localhost:9357", smarter_console_urls, name="localhost"),  # for http://localhost:9357/
     host(r"127.0.0.1:9357", smarter_console_urls, name="127001"),  # for http://127.0.0.1:9357/
     host(
-        rf"{smarter_settings.platform_subdomain}.{smarter_settings.root_domain}",
+        rf"{smarter_settings.platform_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_console_urls,
         name=smarter_settings.platform_subdomain,
     ),  # for https://platform.example.com/
     host(
-        rf"{SmarterEnvironments.ALPHA}.{smarter_settings.platform_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.ALPHA}.{smarter_settings.platform_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_console_urls,
         name=f"{SmarterEnvironments.ALPHA}_{smarter_settings.platform_subdomain}",
     ),  # for https://alpha.platform.example.com/
     host(
-        rf"{SmarterEnvironments.BETA}.{smarter_settings.platform_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.BETA}.{smarter_settings.platform_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_console_urls,
         name=f"{SmarterEnvironments.BETA}_{smarter_settings.platform_subdomain}",
     ),  # for https://beta.platform.example.com/
     host(
-        rf"{SmarterEnvironments.NEXT}.{smarter_settings.platform_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.NEXT}.{smarter_settings.platform_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_console_urls,
         name=f"{SmarterEnvironments.NEXT}_{smarter_settings.platform_subdomain}",
     ),  # for https://next.platform.example.com/
@@ -112,22 +112,22 @@ host_patterns = patterns(
     host(r"api.localhost:9357", smarter_api_urls, name="api_localhost"),  # for http://api.localhost:9357/
     host(r"api.127.0.0.1:9357", smarter_api_urls, name="api_127001"),  # for http://api.127.0.0.1:9357/
     host(
-        rf"{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"{smarter_settings.api_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_api_urls,
         name=smarter_settings.api_subdomain,
     ),  # for https://api.platform.example.com/
     host(
-        rf"{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.ALPHA}.{smarter_settings.api_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_api_urls,
         name=f"{SmarterEnvironments.ALPHA}_{smarter_settings.api_subdomain}",
     ),  # for https://alpha.api.platform.example.com/
     host(
-        rf"{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.BETA}.{smarter_settings.api_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_api_urls,
         name=f"{SmarterEnvironments.BETA}_{smarter_settings.api_subdomain}",
     ),  # for https://beta.api.platform.example.com/
     host(
-        rf"{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.root_domain}",
+        rf"{SmarterEnvironments.NEXT}.{smarter_settings.api_subdomain}.{smarter_settings.platform_root_domain}",
         smarter_api_urls,
         name=f"{SmarterEnvironments.NEXT}_{smarter_settings.api_subdomain}",
     ),  # for https://next.api.platform.example.com/

@@ -15,7 +15,7 @@ from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAuthenticatedListAPIView,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 faux_dict = {
     "message": "This is a test JSON response. This data is static, and it is not real.",
     "status": "success",

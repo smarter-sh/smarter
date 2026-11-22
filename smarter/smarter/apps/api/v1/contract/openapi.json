@@ -28461,7 +28461,7 @@
       "name": "mcpclients"
     },
     {
-      "description": "The vectorstores' REST reads, search, documents and maintenance. Served only when the platform enables vectorstores (SMARTER_ENABLE_VECTORSTORE).",
+      "description": "The vectorstores' REST reads, search, documents and maintenance. Served only when the platform enables vectorstores (SMARTER_APP_VECTORSTORE_ENABLE).",
       "name": "vectorstores"
     },
     {
@@ -28477,7 +28477,7 @@
       "name": "providers"
     },
     {
-      "description": "The Proxies that the user may use. Served only when the platform enables Proxies (SMARTER_ENABLE_PROXY).",
+      "description": "The Proxies that the user may use. Served only when the platform enables Proxies (SMARTER_APP_PROXY_ENABLE).",
       "name": "proxies"
     },
     {

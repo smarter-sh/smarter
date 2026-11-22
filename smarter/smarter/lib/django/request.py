@@ -37,11 +37,9 @@ from smarter.apps.account.utils import (
     account_number_from_url,
     get_cached_admin_user_for_account,
 )
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
-from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_IS_INTERNAL_API_REQUEST,
-)
+from smarter.common.const import SMARTER_IS_INTERNAL_API_REQUEST
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.common.utils import (
@@ -55,7 +53,6 @@ from smarter.lib.django import waffle
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 # Match netloc: llmclient_name.account_number.api.environment_api_domain
@@ -100,8 +97,7 @@ def should_log(level: int) -> bool:
     return waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 SmarterRequestType = Optional[Union[RestFrameworkRequest, HttpRequest, ASGIRequest, MagicMock]]
 """Type alias for all Smarter request types."""

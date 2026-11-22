@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """
 Stripe API integration for smarter account management.
+
 see: https://dj-stripe.dev/dj-stripe/2.7/usage/webhooks/
 """
 
@@ -10,7 +11,7 @@ see: https://dj-stripe.dev/dj-stripe/2.7/usage/webhooks/
 # from djstripe import webhooks
 
 
-# logger = logging.getLogger(__name__)
+# logger = logging.getSmarterLogger(__name__)
 
 
 # @webhooks.handler("customer")

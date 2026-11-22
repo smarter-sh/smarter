@@ -22,9 +22,9 @@ class TestLiveness(SmarterTestBase):
         return app
 
     def test_broker_url(self):
-        with mock.patch.dict(os.environ, {"CELERY_BROKER_URL": "redis://broker:6379/0"}):
+        with mock.patch.dict(os.environ, {"DJANGO_CELERY_BROKER_URL": "redis://broker:6379/0"}):
             self.assertEqual(liveness.broker_url(), "redis://broker:6379/0")
-        with mock.patch.dict(os.environ, {"CELERY_BROKER_URL": ""}):
+        with mock.patch.dict(os.environ, {"DJANGO_CELERY_BROKER_URL": ""}):
             self.assertEqual(liveness.broker_url(), liveness.DEFAULT_BROKER_URL)
 
     def test_ping_worker_answered(self):

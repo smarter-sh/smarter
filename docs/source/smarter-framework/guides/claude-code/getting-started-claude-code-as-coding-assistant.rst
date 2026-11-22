@@ -64,7 +64,7 @@ Open the Smarter deployment ``.env`` file and add the Anthropic key:
 
 .. code-block:: bash
 
-   SMARTER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 If you use a deployment helper, add the value there instead.
 
@@ -178,7 +178,7 @@ Prompt the model with a coding task.
 Step 7: Installation Verification checklist
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``SMARTER_ANTHROPIC_API_KEY`` exists in ``.env``.
+- ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` exists in ``.env``.
 - ``smarter apply`` exits without manifest errors.
 - ``smarter describe provider anthropic-opus`` returns ``verified: true``.
 - The provider is visible in the Smarter console.
@@ -256,7 +256,7 @@ Troubleshooting
 
 **Problem: Verification failed**
 
-- Verify ``SMARTER_ANTHROPIC_API_KEY`` is present in ``.env``.
+- Verify ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` is present in ``.env``.
 - Restart Smarter after changing ``.env`` using your deployment workflow. The repository does not include a ``make restart`` target; for local Docker deployments use ``docker compose restart``.
 - Confirm the API key is active and has not been revoked.
 - Ensure network access can reach ``https://api.anthropic.com``.

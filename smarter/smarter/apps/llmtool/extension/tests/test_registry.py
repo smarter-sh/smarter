@@ -96,7 +96,9 @@ class RegistryTestMixin(ExtensionTestMixin):
     def serve(self, server: RegistryServer, public_key: str):
         """Serve ``server``'s registry, verified with ``public_key``."""
         registry.fetch_index_files.invalidate(INDEX_URL)
-        settings = SimpleNamespace(extension_registry_url=INDEX_URL, extension_registry_public_key=public_key)
+        settings = SimpleNamespace(
+            app_llmtool_extension_registry_url=INDEX_URL, app_llmtool_extension_registry_public_key=public_key
+        )
         for patcher in (
             patch.object(registry, "smarter_settings", settings),
             patch.object(registry, "fetch", server.fetch),

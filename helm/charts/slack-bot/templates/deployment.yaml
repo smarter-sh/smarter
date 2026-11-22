@@ -115,13 +115,13 @@ spec:
               value: {{ required "slackBot.agentUrl is required" .Values.agentUrl | quote }}
             - name: SMARTER_SLACK_BOT_TIMEOUT
               value: {{ .Values.timeout | quote }}
-            - name: SMARTER_SLACK_BOT_TOKEN
+            - name: SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: "{{ .Values.global.appName }}-env"
-                  key: SMARTER_SLACK_BOT_TOKEN
-            - name: SMARTER_SLACK_APP_TOKEN
+                  key: SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
+            - name: SMARTER_SUBSYSTEM_SLACK_APP_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: "{{ .Values.global.appName }}-env"
-                  key: SMARTER_SLACK_APP_TOKEN
+                  key: SMARTER_SUBSYSTEM_SLACK_APP_TOKEN

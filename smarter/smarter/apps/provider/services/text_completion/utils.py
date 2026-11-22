@@ -7,8 +7,10 @@ import sys  # libraries for error management
 import traceback  # libraries for error management
 from typing import Optional, Union
 
+from smarter.apps.provider.services.text_completion.const import (
+    LANGCHAIN_MESSAGE_HISTORY_ROLES,
+)
 from smarter.common.conf import smarter_settings
-from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import (  # library for interacting with JSON data https://www.json.org/json-en.html
     json,
@@ -16,7 +18,6 @@ from smarter.lib import (  # library for interacting with JSON data https://www.
 )
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 from .const import OpenAIMessageKeys
@@ -35,8 +36,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PROMPT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 def http_response_factory(status: int, body, debug_mode: bool = False) -> Union[list, SmarterDictType]:

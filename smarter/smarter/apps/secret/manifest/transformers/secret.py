@@ -35,7 +35,6 @@ from smarter.common.mixins import SmarterHelperMixin
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.typing import SmarterDictType
@@ -47,8 +46,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.ACCOUNT_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1

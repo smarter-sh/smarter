@@ -34,170 +34,226 @@
 ## are consumed and set automatically in the Smarter app deployment templates.
 # -----------------------------------------------------------------------------
 env:
-  AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are optional: prefer serviceAccount.awsRoleArn
   # (IRSA). Static keys win over the role, so set them only for a cluster without IRSA.
-  AWS_REGION: "ca-central-1"
-  CACHES_LOCATION: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  CELERY_RESULT_BACKEND: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  DEBUG_MODE: "false"
+  AWS_REGION: "us-east-1"
+  # ///////////////////////////////////////////////////////////////////////////////////////////////
+  # DJANGO_<SETTING> sets the Django setting <SETTING>, e.g. DJANGO_SESSION_COOKIE_AGE: "3600", after
+  # everything in smarter/smarter/settings/ (smarter.settings.user). A JSON value sets a list or a dict.
+  # WARNING: each one is a hammer. It replaces Smarter's value outright, and nothing derived from the
+  # old value is computed again. Only the type is checked, never the meaning: a wrong value can stop
+  # every pod, or quietly weaken the platform's security. Prefer a SMARTER_* variable where one exists,
+  # and try the change in alpha before prod.
+  DJANGO_AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
+  # Also the workers' liveness probe's broker, and RedBeat's Redis. The cache is the chart's own Redis,
+  # databases 1 and 2: for another, set DJANGO_CACHES, as JSON, with its default and sessions caches.
+  DJANGO_CELERY_BROKER_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # smarter_settings.django_secret_key, Django's SECRET_KEY. The deploy action sets it from the
+  # smarter-django-secret-key Kubernetes Secret that smarter-infrastructure creates.
+  DJANGO_SECRET_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DJANGO_SETTINGS_MODULE: "smarter.settings.prod"
+
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  DUMP_DEFAULTS: "False"
-  ENVIRONMENT: "prod"
-  NAMESPACE: "smarter-platform-prod"
-  SECRET_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_ADMIN_EMAIL: "admin@example.com"
-  SMARTER_ADMIN_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_ADMIN_USERNAME: "admin"
-  SMARTER_ANTHROPIC_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_AWS_EKS_CLUSTER_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_ADDRESS1: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_ADDRESS2: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_CITY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_STATE: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_POSTAL_CODE: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_COUNTRY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_CURRENCY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_TIMEZONE: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_CONTACT_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_CORPORATE_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_SUPPORT_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_PRIMARY_CONTACT: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_SUPPORT_HOURS: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRANDING_SUPPORT_PHONE_NUMBER: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_BRAVE_SEARCH_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_CACHE_EXPIRATION: "60"
-  SMARTER_CHAT_CACHE_EXPIRATION: "5"
-  SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_ENABLE_DASHBOARD_SERVER_LOGS: true
-  SMARTER_ENABLE_MANIFEST_DROPZONE: true
-  # one flag per SAM resource app: false turns its resource types off everywhere (pages, api, cli).
-  SMARTER_ENABLE_CONNECTION: true
-  SMARTER_ENABLE_GUARDRAIL: true
-  SMARTER_ENABLE_LLMCLIENT: true
-  SMARTER_ENABLE_LLMHOST: true
-  SMARTER_ENABLE_LLMTOOL: true
-  SMARTER_ENABLE_MCPCLIENT: true
-  SMARTER_ENABLE_ORCHESTRATOR: true
-  SMARTER_ENABLE_PROVIDER: true
-  SMARTER_ENABLE_PROXY: true
-  SMARTER_ENABLE_SECRET: true
-  SMARTER_ENABLE_VECTORSEARCH: true
-  SMARTER_ENABLE_VECTORSTORE: true
-  # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
-  # pages load them from its CDN, cdn.<platform>. It needs AWS. false: the server serves them.
-  SMARTER_STATIC_FILES_ON_CDN: false
-  # The Smarter Extension registry's base64 Ed25519 public key. This is a
-  # public key, not a secret. An empty value disables the registry.
-  SMARTER_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
-  SMARTER_EXTENSION_REGISTRY_URL: "https://smarter-sh.github.io/extensions-registry/index.json"
-  SMARTER_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   # Optional. The platform's GitHub token, smarter_settings.github_token: SkillPlugin skill downloads
   # (any token), and the bug reports that Smarter Sysadmin opens (a classic ghp_ token with the
   # public_repo scope). Without it, create_bug_report says bug reports are not configured.
   GITHUB_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_INTERNAL_IP_PREFIXES: "192.168."
-  SMARTER_LISTVIEW_CACHE_EXPIRATION: "3600"
-  SMARTER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_LLM_CLIENT_CACHE_EXPIRATION: "300"
-  SMARTER_LLM_CLIENT_TASKS_CELERY_MAX_RETRIES: "3"
-  SMARTER_LLM_CLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
-  SMARTER_LLM_CLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
-  SMARTER_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
-  SMARTER_LLM_CLIENT_TASKS_CREATE_DNS_RECORD: "True"
-  SMARTER_LLM_CLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
-  SMARTER_LLM_CLIENT_TASKS_DEFAULT_TTL: "600"
-  # The Loki of the loki subchart, which the MCPServer's staff-only log tools query.
-  # Set it to "" with loki.enabled: false.
-  SMARTER_LOKI_URL: "http://smarter-loki:3100"
-  SMARTER_LOGIN_URL: "https://platform.example.com/login/"
-  SMARTER_LOGO: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MARKETING_SITE_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MISTRAL_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MYSQL_BACKUP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml" # the read-only account for the nightly backup. Unset: the backup dumps as root
-  SMARTER_MYSQL_BACKUP_USERNAME: "smarter_backup"
-  SMARTER_MYSQL_DATABASE: "smarter_platform_prod"
-  SMARTER_MYSQL_HOST: "mysql"
-  SMARTER_MYSQL_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MYSQL_PORT: "3306"
-  SMARTER_MYSQL_ROOT_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_MYSQL_ROOT_USERNAME: "root"
-  SMARTER_MCPSERVER_RATE_LIMIT: "1200"
-  SMARTER_MYSQL_USER: "smarter_platform_prod"
-  SMARTER_NAMESPACE: "smarter-platform-alpha"
-  SMARTER_OPENAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_PINECONE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SUBDOMAIN: "platform"
-  SMARTER_PINECONE_ENVIRONMENT: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_PLUGIN_MAX_DATA_RESULTS: "50"
-  SMARTER_ROOT_DOMAIN: "example.com"
-  SMARTER_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SENSITIVE_FILES_AMNESTY_PATTERNS: "^/dashboard/account/password-reset-link/[^/]+/[^/]+/$,^/api(/.*)?$,^/admin(/.*)?$,^/plugin(/.*)?$,^/docs/manifest(/.*)?$,^/docs/json-schema(/.*)?$,.*stackademy.*,^/\\.well-known/acme-challenge(/.*)?$"
-  SMARTER_SETTINGS_OUTPUT: "false"
+
+  # ///////////////////////////////////////////////////////////////////////////////////////////////
+  # SMARTER_<SETTING> sets the Smarter api setting <SETTING> for smarter_settings.
+  # e.g. SMARTER_PLATFORM_ROOT_DOMAIN: "example.com" sets smarter_settings.platform_root_domain (smarter.common.conf).
+  # Each one is validated when the pods start, and feeds every Django setting that Smarter derives
+  # from it, e.g. ALLOWED_HOSTS and the CORS and CSRF origins from the domains. A list is
+  # comma-separated, a boolean "true" or "false". To keep a setting's default, leave its key out, as
+  # the commented-out examples below are. A SET-ME placeholder or an empty string is a value: replace
+  # every placeholder with yours, or delete its line. Prefer one of these over a DJANGO_* variable
+  # whenever both could make the change. The prefix is required: PLATFORM_ROOT_DOMAIN sets nothing.
+  # The exceptions keep the names that other tools use: AWS_*, GITHUB_TOKEN and DJANGO_SECRET_KEY.
+  # See https://docs.smarter.sh, Configuration.
+
+  # smarter_settings.log_level: DEBUG, INFO, WARNING, ERROR or CRITICAL. Without it, DEBUG in
+  # debug mode, and INFO otherwise.
+  SMARTER_LOG_LEVEL: "INFO"
+  SMARTER_DEBUG_MODE: "false"
+  SMARTER_DUMP_DEFAULTS: "false"
+  SMARTER_ENVIRONMENT: "prod"
+  SMARTER_PLATFORM_CLOUD_PROVIDER: "aws"
+  SMARTER_PLATFORM_EMAIL_ADMIN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_INTERNAL_IP_PREFIXES: "192.168."
+  SMARTER_PLATFORM_ROOT_DOMAIN: "example.com"
+  SMARTER_PLATFORM_S3_BUCKET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_SETTINGS_OUTPUT: "false"
+  SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER: "smarter"
+  # true: initialize_platform uploads the static files to the environment's S3 bucket on each deployment, and
+  # pages load them from its CDN, cdn.<platform>. It needs AWS. false: the server serves them.
+  SMARTER_PLATFORM_STATIC_FILES_ON_CDN: false
+
+  # The platform is at <SMARTER_PLATFORM_SUBDOMAIN>.<SMARTER_PLATFORM_ROOT_DOMAIN>.
+  SMARTER_PLATFORM_SUBDOMAIN: "platform"
+  SMARTER_PLATFORM_ADMIN_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_ADMIN_USERNAME: "admin"
+
+  SMARTER_PLATFORM_BRANDING_ADDRESS1: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_ADDRESS2: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_APP_NAME: "Smarter"
+  SMARTER_PLATFORM_BRANDING_BLOG_URL: "https://blog.smarter.sh"
+  SMARTER_PLATFORM_BRANDING_CDN_URL: "https://cdn.smarter.sh"
+  SMARTER_PLATFORM_BRANDING_CITY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_CONTACT_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_CORPORATE_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_COUNTRY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_CURRENCY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_DOCS_URL: "https://docs.smarter.sh"
+  SMARTER_PLATFORM_BRANDING_LOGO: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_MARKETING_SITE_URL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_POSTAL_CODE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_PRIMARY_CONTACT: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_PRODUCT_DESCRIPTION: "An open source, no-code AI authoring platform designed for instructional use."
+  SMARTER_PLATFORM_BRANDING_PRODUCT_NAME: "The Smarter Project"
+  SMARTER_PLATFORM_BRANDING_STATE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_SUPPORT_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_SUPPORT_HOURS: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_SUPPORT_PHONE_NUMBER: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_PLATFORM_BRANDING_TIMEZONE: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # Optional links in the page footer and emails, each a full https:// url. Left out: Smarter's own.
+  # SMARTER_PLATFORM_BRANDING_URL_FACEBOOK: "https://facebook.com/example"
+  # SMARTER_PLATFORM_BRANDING_URL_LINKEDIN: "https://www.linkedin.com/company/example"
+  # SMARTER_PLATFORM_BRANDING_URL_SLACK: "https://join.slack.com/t/example"
+  # SMARTER_PLATFORM_BRANDING_URL_TWITTER: "https://x.com/example"
+
+  # Smarter Subsystem configuration
+  # -----------------------------------------------------------------------------------------------
+  SMARTER_SUBSYSTEM_LOGGING_LOKI_URL: "http://smarter-loki:3100"
+
+  SMARTER_SUBSYSTEM_CACHE_CHAT_EXPIRATION: "5"
+  SMARTER_SUBSYSTEM_CACHE_EXPIRATION: "60"
+  SMARTER_SUBSYSTEM_CACHE_LISTVIEW_EXPIRATION: "3600"
+  SMARTER_SUBSYSTEM_CACHE_LLM_CLIENT_EXPIRATION: "300"
+  # The Kubernetes cluster that hosts the platform (e.g. its EKS cluster on AWS), where Smarter deploys
+  # LLMClients and LLMHosts, and the release's namespace, which the chart's api Service is created in.
+  SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_K8S_NAMESPACE: "smarter-platform-prod"
+
   # The Slack app's tokens, which only the optional Slack bot reads (slackBot.enabled).
-  SMARTER_SLACK_APP_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SLACK_BOT_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SMTP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SMTP_SENDER: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SMTP_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_GITHUB_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_GITHUB_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMTP_HOST: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMTP_PORT: "587"
-  SMTP_USE_SSL: "false"
-  SMTP_USE_TLS: "true"
+  SMARTER_SUBSYSTEM_SLACK_APP_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN: "SET-ME-IN-helm/charts/smarter/values.yaml"
+
+  SMARTER_SUBSYSTEM_SMTP_FROM_EMAIL: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SMTP_HOST: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SMTP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SMTP_PORT: "587"
+  SMARTER_SUBSYSTEM_SMTP_SENDER: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SMTP_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SMTP_USE_SSL: "false"
+  SMARTER_SUBSYSTEM_SMTP_USE_TLS: "true"
+
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET: "SET-ME-IN-helm/charts/smarter/values.yaml"
+
+  SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml" # the read-only account for the nightly backup. Unset: the backup dumps as root
+  SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME: "smarter_backup"
+  SMARTER_SUBSYSTEM_SQL_DATABASE: "smarter_platform_prod"
+  SMARTER_SUBSYSTEM_SQL_HOST: "mysql"
+  SMARTER_SUBSYSTEM_SQL_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SQL_PORT: "3306"
+  SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME: "root"
+  SMARTER_SUBSYSTEM_SQL_USER: "smarter_platform_prod"
 
 
-# -----------------------------------------------------------------------------
-## @param djangoSettings Your own Django settings, which supersede Smarter's.
-##
-## WARNING: each one is a hammer. It replaces Smarter's value outright, however
-## carefully that value was built per environment (the database, the caches,
-## storage, allowed hosts, CORS and CSRF origins, cookie security, the Content
-## Security Policy), and nothing derived from the old value is computed again.
-## Only the type is checked, never the meaning: a wrong value can stop every
-## pod, or quietly weaken the platform's security. Read how Smarter sets the
-## setting in smarter/smarter/settings/ first, prefer a SMARTER_* variable in
-## env where one exists, and try the change in alpha before prod.
-##
-## A map of Django setting names, in upper case, to values. Each one replaces
-## Smarter's value of that setting in every environment: whatever
-## smarter/settings/base.py, base_aws.py and the environment's module (e.g.
-## prod.py) set. A dictionary, such as LOGGING or CACHES, replaces Smarter's
-## whole dictionary: it is not merged. A DJANGO_<SETTING> variable in env above
-## supersedes the same setting here.
-##
-## The chart writes the map to the Secret <appName>-django-settings, and mounts
-## it read-only in the api, worker, beat, init and migrate pods, at
-## /home/smarter_user/user-settings/settings.yaml. A change rolls the api,
-## worker and beat pods. It is a Secret, so a value may be a password.
-##
-## Example:
-##   djangoSettings:
-##     SESSION_COOKIE_AGE: 3600
-##     ADMINS:
-##       - ops@example.com
-##
-## See https://docs.smarter.sh, Configuration, User-Defined Django Settings.
-# -----------------------------------------------------------------------------
-djangoSettings: {}
 
+  # Smarter App configuration
+  # -----------------------------------------------------------------------------------------------
+
+  # One group per app, in alphabetical order. Each SAM resource app has a SMARTER_APP_<APP>_ENABLE
+  # flag: false turns its resource types off everywhere (pages, api, cli). Warning: there are
+  # dependencies between them. For example, turning off LLMClient also turns off LLMHost and LLMTool,
+  # because the client is the host's only user, and the tool is the client's only user.
+
+  SMARTER_APP_API_THROTTLE_RATE_ANON: "120/minute"
+  SMARTER_APP_API_THROTTLE_RATE_USER: "600/minute"
+
+  SMARTER_APP_CONNECTION_ENABLE: true
+
+  # dashboard: the web console's own features.
+  SMARTER_APP_DASHBOARD_MANIFEST_DROPZONE_ENABLE: true
+  SMARTER_APP_DASHBOARD_PASSTHROUGH_PROMPT_ENABLE: true
+  SMARTER_APP_DASHBOARD_SERVER_LOGS_ENABLE: true
+  SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE: false
+
+  SMARTER_APP_GUARDRAIL_ENABLE: true
+
+  # infrastructure: the cloud-agnostic service layer, whose Celery queue the other apps' infrastructure
+  # tasks use too.
+  SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
+
+  # llmclient: deploying LLMClients: its Celery tasks' DNS records, ingresses, retries and queue.
+  SMARTER_APP_LLMCLIENT_ENABLE: true
+  SMARTER_APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES: "3"
+  SMARTER_APP_LLMCLIENT_TASKS_CELERY_RETRY_BACKOFF: "True"
+  SMARTER_APP_LLMCLIENT_TASKS_CELERY_TASK_QUEUE: "default_celery_task_queue"
+  SMARTER_APP_LLMCLIENT_TASKS_CREATE_DNS_RECORD: "True"
+  SMARTER_APP_LLMCLIENT_TASKS_CREATE_INGRESS_MANIFEST: "True"
+  SMARTER_APP_LLMCLIENT_TASKS_DEFAULT_TTL: "600"
+
+  # llmhost: self-hosted models. The IAM role and the subnets (comma-separated) of the EKS node groups
+  # that Smarter creates for LLMHosts. Needed with SMARTER_APP_LLMHOST_ENABLE on AWS, e.g.
+  # smarter-infrastructure's node role and the cluster's private subnets.
+  SMARTER_APP_LLMHOST_ENABLE: true
+  # SMARTER_APP_LLMHOST_NODE_ROLE_ARN: "arn:aws:iam::123456789012:role/eks-node-role"
+  # SMARTER_APP_LLMHOST_NODE_SUBNET_IDS: "subnet-0123456789abcdef0,subnet-0fedcba9876543210"
+
+  # llmtool: plugins and extensions.
+  SMARTER_APP_LLMTOOL_ENABLE: true
+  # The search plugins' keys, which manage.py initialize_llmtool_api_keys stores as the Secrets
+  # tavily_api_key and brave_search_api_key: web search (Tavily), and image search and the Brave web
+  # search samples (Brave Search). A plugin without its key fails, and says which Secret is missing.
+  SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # The Smarter Extension registry's base64 Ed25519 public key. This is a
+  # public key, not a secret. An empty value disables the registry.
+  SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
+  SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_URL: "https://smarter-sh.github.io/extensions-registry/index.json"
+  SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS: "50"
+  SMARTER_APP_LLMTOOL_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+
+  SMARTER_APP_MCPCLIENT_ENABLE: true
+
+  # mcpserver: the platform's MCP server.
+  SMARTER_APP_MCPSERVER_RATE_LIMIT: "1200"
+
+  SMARTER_APP_ORCHESTRATOR_ENABLE: true
+
+  # provider: the built-in LLM Providers. manage.py initialize_providers stores each key as a Secret,
+  # named without SMARTER_APP_PROVIDER_ (e.g. openai_api_key), for the Providers and the weather extension
+  # (Google Maps). A Provider without its key still exists, and its prompts fail with instructions.
+  SMARTER_APP_PROVIDER_ENABLE: true
+  SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_MISTRAL_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_OPENAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+
+  SMARTER_APP_PROXY_ENABLE: true
+  SMARTER_APP_SECRET_ENABLE: true
+  SMARTER_APP_VECTORSEARCH_ENABLE: true
+
+  # vectorstore: the managed vector databases, which manage.py initialize_vectorstore_providers
+  # connects. Qdrant Cloud needs both of its values.
+  SMARTER_APP_VECTORSTORE_ENABLE: true
+  SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
+  # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_API_KEY: "your-qdrant-cloud-api-key"
+  # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_URL: "https://xyz-example.us-east-1-0.aws.cloud.qdrant.io:6333"
 
 # -----------------------------------------------------------------------------
 # Global Configuration
@@ -423,21 +479,21 @@ databaseInit:
   # post-install/post-upgrade Job: create db + user, migrate, initialize platform. Also a pre-upgrade Job
   # that migrates before the rollout (job-migrate.yaml), so that new pods never run without their schema.
   enabled: true
-  notifyEmail: "" # the Job emails its log here when it completes. Empty: smarter_settings.email_admin
+  notifyEmail: "" # the Job emails its log here when it completes. Empty: smarter_settings.platform_email_admin
   # the Slack channel, e.g. smarter, that the Job also posts its outcome to, with its log in the message's
-  # thread. Empty: don't post. Needs env.SMARTER_SLACK_BOT_TOKEN, and a bot with the scopes chat:write and
+  # thread. Empty: don't post. Needs env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN, and a bot with the scopes chat:write and
   # files:write that is a member of the channel.
   notifySlackChannel: ""
 
 databaseScheduledBackup:
   enabled: true
   schedule: "0 2 * * *" # Every day at 2am UTC
-  notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.email_admin
+  notifyEmail: ""        # the Job emails the backup's result and log here. Empty: smarter_settings.platform_email_admin
   # the Slack channel, e.g. smarter, that the Job also posts the backup's result to, with its log in the
-  # message's thread. Empty: don't post. Needs env.SMARTER_SLACK_BOT_TOKEN, and a bot with the scopes
+  # message's thread. Empty: don't post. Needs env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN, and a bot with the scopes
   # chat:write and files:write that is a member of the channel.
   notifySlackChannel: ""
-  # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_S3_BUCKET>/backups/sql.
+  # where backups are uploaded, e.g. s3://my-private-bucket/backups/sql. Empty: s3://<env.SMARTER_PLATFORM_S3_BUCKET>/backups/sql.
   # Use a private bucket: the backup is a full copy of the database. The environment bucket that
   # serves static assets is often public-read, so don't rely on the default there.
   s3Uri: ""
@@ -467,8 +523,8 @@ serviceAccount:
 # -----------------------------------------------------------------------------
 # A single pod that answers questions in a Slack workspace with a deployed
 # LLMClient, through its chat api. It connects to Slack with Socket Mode, so it
-# needs no Ingress. It reads env.SMARTER_SLACK_BOT_TOKEN and
-# env.SMARTER_SLACK_APP_TOKEN. Enable it in one environment only: two bots with
+# needs no Ingress. It reads env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN and
+# env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN. Enable it in one environment only: two bots with
 # the same Slack app would each receive part of the messages. The deploy workflow
 # enables it in prod only, when the repository secrets SLACK_BOT_TOKEN,
 # SLACK_APP_TOKEN and SLACK_BOT_AGENT_URL are set.
@@ -480,11 +536,11 @@ slackBot:
   agentUrl: ""
 
 externalDatabase:
-  host: ""        # Will use .Values.env.SMARTER_MYSQL_HOST if empty
-  port: 3306      # Will use .Values.env.SMARTER_MYSQL_PORT if empty
-  database: ""    # Will use .Values.env.SMARTER_MYSQL_DATABASE if empty
-  username: ""    # Will use .Values.env.SMARTER_MYSQL_USER if empty
-  password: ""    # Will use .Values.env.SMARTER_MYSQL_PASSWORD if empty
+  host: ""        # Will use .Values.env.SMARTER_SUBSYSTEM_SQL_HOST if empty
+  port: 3306      # Will use .Values.env.SMARTER_SUBSYSTEM_SQL_PORT if empty
+  database: ""    # Will use .Values.env.SMARTER_SUBSYSTEM_SQL_DATABASE if empty
+  username: ""    # Will use .Values.env.SMARTER_SUBSYSTEM_SQL_USER if empty
+  password: ""    # Will use .Values.env.SMARTER_SUBSYSTEM_SQL_PASSWORD if empty
 
 mysql:
   enabled: false

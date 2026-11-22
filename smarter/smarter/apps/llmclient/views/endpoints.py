@@ -6,7 +6,7 @@ A browser that opens one of them, or the LLMClient's default url, instead receiv
 LLMClient and The Smarter Project: what its url is and how it works, the curl commands that call the
 endpoints, the ways to put its chat on a web site, the LLMClient's manifest, without the personal
 information in it, and how to build one. The page is served only while the
-``enable_llmclient_endpoints_page`` waffle switch is active.
+``llmclient_enable_endpoints_page`` waffle switch is active.
 
 The Prompt Engineer's Workbench shows the same content, whatever the switch, in the "Deployment" tab of
 its Console: see
@@ -53,7 +53,6 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptResult,
 )
 from smarter.common.conf import smarter_settings
-from smarter.common.const import SMARTER_PRODUCT_DESCRIPTION, SMARTER_PRODUCT_NAME
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
@@ -102,7 +101,7 @@ API_KEY_YAML = """spec:
   apiKey: <API-KEY-NAME>"""
 """The part of an LLMClient's manifest that attaches an api key to it, by the key's name."""
 
-SWITCH_COMMAND = "python manage.py waffle_switch enable_llmclient_endpoints_page off"
+SWITCH_COMMAND = "python manage.py waffle_switch llmclient_enable_endpoints_page off"
 """The command that turns off the page at deployed LLMClients' urls, which the page shows administrators."""
 
 LOGO_PATH = "images/logo/smarter-crop.png"
@@ -405,11 +404,11 @@ def deployment_page(llmclient: LLMClient) -> LLMClientDeploymentPage:
         ),
         links=DeploymentLinks(
             api_keys_url=api_keys_url(),
-            marketing_site_url=str(smarter_settings.marketing_site_url),
-            docs_url=str(smarter_settings.smarter_project_docs_url),
-            logo_url=urljoin(str(smarter_settings.smarter_project_cdn_url), LOGO_PATH),
-            product_name=SMARTER_PRODUCT_NAME,
-            product_description=SMARTER_PRODUCT_DESCRIPTION,
+            marketing_site_url=str(smarter_settings.platform_branding_marketing_site_url),
+            docs_url=str(smarter_settings.platform_branding_docs_url).rstrip("/"),
+            logo_url=urljoin(str(smarter_settings.platform_branding_cdn_url).rstrip("/"), LOGO_PATH),
+            product_name=smarter_settings.platform_branding_product_name,
+            product_description=smarter_settings.platform_branding_product_description,
         ),
     )
 
@@ -457,7 +456,7 @@ def browser_friendly(api_view: Callable[..., HttpResponseBase]) -> Callable[...,
     """
     Wrap a deployed LLMClient's api view, so that a GET or HEAD receives :class:`LLMClientEndpointsView`.
 
-    Only while the ``enable_llmclient_endpoints_page`` switch is active. Every other request, including a
+    Only while the ``llmclient_enable_endpoints_page`` switch is active. Every other request, including a
     GET while it is inactive, goes to the api view. The wrapper keeps the api view's attributes, e.g. ``csrf_exempt``.
 
     .. code-block:: python

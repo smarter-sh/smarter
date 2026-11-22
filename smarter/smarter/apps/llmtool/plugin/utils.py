@@ -12,7 +12,6 @@ from smarter.apps.llmtool.models import PluginDataValueError, PluginMeta
 from smarter.lib import logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
-from smarter.lib.logging import WaffleSwitchedLoggerWrapper
 from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase
@@ -23,8 +22,7 @@ def should_log(level):
     return waffle.switch_is_active(SmarterWaffleSwitches.PLUGIN_LOGGING)
 
 
-base_logger = logging.getLogger(__name__)
-logger = WaffleSwitchedLoggerWrapper(base_logger, should_log)
+logger = logging.getSmarterLogger(__name__, condition_func=should_log)
 
 
 class Plugins:
@@ -111,7 +109,7 @@ class Plugins:
             return plugin_controller.plugin
         # pylint: disable=W0718
         except Exception as e:
-            base_logger.warning(
+            logger.warning(
                 "skipping plugin %s (id: %s) for %s, which cannot be loaded: %s",
                 plugin_meta.name,
                 plugin_meta.id,  # type: ignore[reportAttributeAccessIssue]

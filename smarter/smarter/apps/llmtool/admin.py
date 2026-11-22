@@ -29,7 +29,7 @@ from .models import (
     PluginSelectorHistory,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 # Register your models here.

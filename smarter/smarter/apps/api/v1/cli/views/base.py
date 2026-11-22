@@ -28,10 +28,7 @@ from smarter.apps.api.signals import (
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.common.const import (
-    SMARTER_BUG_REPORT_URL,
-    SMARTER_CUSTOMER_SUPPORT_EMAIL,
-)
+from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -66,8 +63,8 @@ logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.
 
 BUG_REPORT = (
     "Encountered an unexpected error. "
-    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
-    f"and/or report to {SMARTER_BUG_REPORT_URL}."
+    f"This is a bug. Please contact {smarter_settings.platform_branding_support_email} "
+    f"and/or report to {smarter_settings.repository_url}/issues."
 )
 """The note that an error response's description ends with, when the error is a bug in the platform."""
 
@@ -356,7 +353,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 raise APIV1CLIViewBadRequestError(
                     f"Could not find broker for {self.manifest_kind or '<-- Missing -->'} manifest."
                 )
-            # a kind whose SAM app is disabled, e.g. with SMARTER_ENABLE_GUARDRAIL=false, has no broker.
+            # a kind whose SAM app is disabled, e.g. with SMARTER_APP_GUARDRAIL_ENABLE=false, has no broker.
             if self.manifest_kind:
                 raise_if_kind_disabled(self.manifest_kind)
         return self._BrokerClass

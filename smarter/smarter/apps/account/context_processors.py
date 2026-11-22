@@ -9,7 +9,7 @@ from smarter.lib.django.shortcuts import reverse
 
 from .models import UserProfile
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 def base(request):

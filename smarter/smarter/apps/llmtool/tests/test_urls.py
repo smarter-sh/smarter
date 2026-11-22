@@ -26,7 +26,7 @@ from smarter.apps.llmtool.views.listview.view import PluginListView
 from smarter.lib import logging
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-logger = logging.getLogger(__name__)
+logger = logging.getSmarterLogger(__name__)
 
 
 class TestPluginUrls(SmarterTestBase):

@@ -6,8 +6,8 @@ from urllib.parse import urlencode
 from smarter.apps.api.v1.cli.tests.base_class import ApiV1CliTestBase
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib import logging
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.django.waffle import SmarterWaffleSwitches

@@ -2,11 +2,6 @@
 
 import os
 
-from smarter.common.const import (
-    SMARTER_PLATFORM_DEFAULT_SUBDOMAIN,
-    SMARTER_PROJECT_ROOT_DOMAIN,
-)
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 SAM_SCHEMA_DIR = os.path.join(HERE, "sam")
@@ -43,10 +38,23 @@ The document's ``info.version``: the version of the api, not of the platform.
 The platform's version changes with every release, which would make the committed document stale.
 """
 
-DEFAULT_PLATFORM_URL = f"https://{SMARTER_PLATFORM_DEFAULT_SUBDOMAIN}.{SMARTER_PROJECT_ROOT_DOMAIN}"
+DEFAULT_PLATFORM_URL = "https://platform.smarter.sh"
 """The default of the document's ``platform`` server variable.
 
-Each Smarter installation has its own.
+Each Smarter installation has its own. The document is committed, and the SDKs copy it, so this
+example is fixed, not the running platform's own url.
+"""
+
+PROJECT_DOCS_URL = "https://docs.smarter.sh"
+"""The Smarter Project's documentation, which the document's description names.
+
+Fixed, as :data:`DEFAULT_PLATFORM_URL` is, so that the committed document is the same on every platform.
+"""
+
+PROJECT_WEBSITE_URL = "https://smarter.sh"
+"""The Smarter Project's website, the document's ``info.contact`` url.
+
+Fixed, as :data:`PROJECT_DOCS_URL` is.
 """
 
 LOCAL_PLATFORM_URL = "http://localhost:9357"

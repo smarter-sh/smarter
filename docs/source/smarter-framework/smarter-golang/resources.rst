@@ -130,7 +130,7 @@ Vectorstores
    }
 
 Documents are split, embedded and loaded asynchronously, and only once the vectorstore is deployed.
-The platform serves these endpoints when ``SMARTER_ENABLE_VECTORSTORE`` is true.
+The platform serves these endpoints when ``SMARTER_APP_VECTORSTORE_ENABLE`` is true.
 
 Vectorsearches
 --------------
@@ -282,7 +282,7 @@ provider's own SDK, with ``client.Proxies.BaseURL("openai")`` as its base url an
 
 The error matches ``smarter.ErrPaymentRequired`` (402) when a budget has locked the proxy, its
 provider, your user profile or your account. The platform serves proxies when
-``SMARTER_ENABLE_PROXY`` is true.
+``SMARTER_APP_PROXY_ENABLE`` is true.
 
 Endpoints the SDK does not wrap
 -------------------------------

@@ -34,7 +34,7 @@ from smarter.apps.llmtool.models import (
 from smarter.apps.llmtool.plugin.static import StaticPlugin
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import settings_defaults
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -638,11 +638,11 @@ class SAMStaticPluginBroker(SAMPluginBaseBroker):
                 ],
             ),
             prompt=SAMPluginCommonSpecPrompt(
-                provider=settings_defaults.LLM_DEFAULT_PROVIDER,
+                provider=smarter_settings.llm_default_provider,
                 systemRole="You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com). Whenever possible you should defer to the tool calls provided for additional information about everlasting gobstoppers.",
-                model=settings_defaults.LLM_DEFAULT_MODEL,
-                temperature=settings_defaults.LLM_DEFAULT_TEMPERATURE,
-                maxTokens=settings_defaults.LLM_DEFAULT_MAX_TOKENS,
+                model=smarter_settings.llm_default_model,
+                temperature=smarter_settings.llm_default_temperature,
+                maxTokens=smarter_settings.llm_default_max_tokens,
             ),
             data=SAMPluginStaticSpecData(
                 staticData={

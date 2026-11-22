@@ -1361,7 +1361,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    Proxies: ``/api/v1/proxy/``.
 
-   The platform serves these endpoints only when ``SMARTER_ENABLE_PROXY`` is true.
+   The platform serves these endpoints only when ``SMARTER_APP_PROXY_ENABLE`` is true.
 
    Extends ``SmarterAPIResource``, and has its methods.
 
@@ -1633,7 +1633,7 @@ The client's resource families, e.g. ``client.guardrails``. Every method returns
 
    Vectorstores: ``/api/v1/vectorstores/``, and the manifest api's ``Vectorstore`` kind.
 
-   The platform serves these endpoints only when ``SMARTER_ENABLE_VECTORSTORE`` is true.
+   The platform serves these endpoints only when ``SMARTER_APP_VECTORSTORE_ENABLE`` is true.
 
    Extends ``SmarterKindResource``, and has its methods.
 
