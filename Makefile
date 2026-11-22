@@ -189,7 +189,7 @@ docker-init: ## Initialize MariaDB and create the smarter database
 	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && \
 	docker exec smarter-api bash -c "\
 		python manage.py reset_cache && \
-		python manage.py makemigrations && python manage.py migrate && \
+		python manage.py migrate && \
 		python manage.py initialize_platform" && \
 	docker exec smarter-mariadb mariadb -u root -psmarter -e "GRANT ALL PRIVILEGES ON *.* TO 'smarter'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
 	docker exec smarter-mariadb mariadb -u smarter -psmarter -e 'UPDATE smarter.llmclient_llmclient SET deployed = 0;'
