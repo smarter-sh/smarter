@@ -915,16 +915,17 @@ MIDDLEWARE = [
     #
     "django.contrib.sessions.middleware.SessionMiddleware",
     #
-    # activates the web console's language for each request, from the
-    # language cookie (set by django.views.i18n.set_language) or else
-    # the browser's Accept-Language header. It must come after
-    # SessionMiddleware and before CommonMiddleware.
-    # -------------------------------
-    "django.middleware.locale.LocaleMiddleware",
-    # -------------------------------
-    #
     #
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    #
+    # replaces django.middleware.locale.LocaleMiddleware. It activates the
+    # web console's language for each request, from the language cookie
+    # (set by smarter.apps.account.language.set_language), or else, for a
+    # signed-in user, the language they last chose, or else the browser's
+    # Accept-Language header. It must come after AuthenticationMiddleware,
+    # whose request.user it reads, and before CommonMiddleware.
+    # -------------------------------
+    "smarter.apps.account.middleware.SmarterLocaleMiddleware",
     #
     # replaces rest_framework.authentication.TokenAuthentication
     # for api-key token authentication. Adds waffle-switched enable,
@@ -1552,6 +1553,17 @@ whose catalogs are in ``locale/pt_BR``. A browser that asks for ``pt-BR``, or
 for any other variant of Portuguese (``pt``, ``pt-PT``), gets it.
 
 See: https://docs.djangoproject.com/en/6.0/ref/settings/#languages
+"""
+
+LANGUAGE_COOKIE_AGE = 60 * 60 * 24 * 365
+"""
+The age of the language cookie, in seconds: one year.
+
+Django's default is None, a cookie that the browser deletes when it closes, so the web console would
+forget the user's choice of language, and fall back to the browser's. A signed-in user's choice is also
+kept in their profile; see :mod:`smarter.apps.account.language`.
+
+See: https://docs.djangoproject.com/en/6.0/ref/settings/#language-cookie-age
 """
 
 LOCALE_PATHS = [

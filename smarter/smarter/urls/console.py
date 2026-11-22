@@ -17,6 +17,7 @@ from waffle import get_waffle_switch_model
 
 from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.language import set_language
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.views.budget import urls as budget_urls
 from smarter.apps.account.views.budget.const import namespace as budget_namespace
@@ -178,6 +179,7 @@ class ConsoleReverseNames:
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
     csp_report = to_snake_case(CspReportView.__name__)
+    site_webmanifest = "site_webmanifest"
 
 
 urlpatterns = [
@@ -227,6 +229,19 @@ urlpatterns = [
     path("healthz/", HealthzView.as_view(), name=f"{name_prefix}_healthz"),
     path("readiness/", ReadinessView.as_view(), name=f"{name_prefix}_readiness"),
     path(CSP_REPORT_PATH.lstrip("/"), CspReportView.as_view(), name=ConsoleReverseNames.csp_report),
+    # the web app manifest, from the platform's own origin, never the static files' CDN: a browser
+    # resolves the manifest's start_url, "/", against the manifest's url, and ignores a start_url on
+    # another origin than the page's. Its icons, /static/..., are then the pods' too. The policy's
+    # default-src 'self' covers it, so it needs no manifest-src.
+    path(
+        "site.webmanifest",
+        serve,
+        {
+            "path": "site.webmanifest",
+            "document_root": settings.STATIC_ROOT,
+        },
+        name=ConsoleReverseNames.site_webmanifest,
+    ),
     re_path(
         r"^apple-touch-icon\.png$",
         serve,
@@ -244,10 +259,11 @@ urlpatterns = [
         },
     ),
     # -----------------------------------
-    # internationalization: the language menu posts to i18n/setlang/, and every page
+    # internationalization: the language menu posts to i18n/setlang/, which also remembers a
+    # signed-in user's choice in their profiles, and every page
     # loads the React apps' message catalog (the djangojs domain) from jsi18n/.
     # -----------------------------------
-    path("i18n/", include("django.conf.urls.i18n")),
+    path("i18n/setlang/", set_language, name="set_language"),
     path("jsi18n/", JavaScriptCatalog.as_view(domain="djangojs"), name="javascript-catalog"),
     # -----------------------------------
     # routes for 3rd party apps
