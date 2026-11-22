@@ -45,6 +45,58 @@ The rest of data/ stays the image's own, read from the image.
 {{- end }}
 
 {{/*
+The init container that holds a pod of a fresh install until its database is migrated.
+
+On an install, Helm starts the Deployments' pods as soon as it creates them, but the database, its
+user and its schema are created later, by the post-install init Job (job-init.yaml). Without this,
+the api answers 500 and the Celery workers and beat crash and restart until the Job has migrated.
+This container runs `manage.py migrate --check`, which fails while the database is missing,
+unreachable or has unapplied migrations, every 10 seconds until it passes, so that the pod's own
+containers start on a migrated database.
+
+Only on an install: on an upgrade, the pre-upgrade Job (job-migrate.yaml) has already migrated
+before the rollout, so new pods don't wait, and don't pay for a Django start of their own. The next
+upgrade's pods have no init container.
+
+  {{- include "smarter.waitForDatabase" . | nindent 6 }}   (in a pod's spec, at its initContainers' level)
+*/}}
+{{- define "smarter.waitForDatabase" -}}
+{{- if .Release.IsInstall -}}
+initContainers:
+  - name: "{{ .Values.global.appName }}-wait-for-database"
+    image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+    imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        until python manage.py migrate --check > /dev/null 2>&1; do
+          echo "Waiting for the init job to create and migrate the database..."
+          sleep 10
+        done
+        echo "The database is migrated."
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "50m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    # the platform's environment, from the Secret in secret-env.yaml, for the database's credentials.
+    envFrom:
+      - secretRef:
+          name: "{{ .Values.global.appName }}-env"
+    env:
+      - name: PYTHONUNBUFFERED
+        value: "1"
+    securityContext:
+      {{- toYaml .Values.global.containerSecurityContext | nindent 6 }}
+    volumeMounts:
+      {{- include "smarter.writableVolumeMounts" . | nindent 6 }}
+{{- end }}
+{{- end }}
+
+{{/*
 The names of the api's Deployments, and of their Services, HorizontalPodAutoscalers and
 PodDisruptionBudgets, comma-separated: <appName>-api, and while app.legacyName.enabled is true,
 <appName> too, the name that they had before.

@@ -97,7 +97,12 @@ the rollout finishes, the previous release's pods run against the new schema, wh
 migration that removes or renames a column needs two releases: one that stops reading it, then one
 that drops it. On a fresh install, there is no ``pre-install``
 migration: the chart's Secret doesn't exist yet, and ``smarter-job-init`` creates the database
-before it migrates.
+before it migrates. Meanwhile the pods of the app, the Celery workers and beat wait in an init
+container that retries ``manage.py migrate --check`` every 10 seconds, so that they start on a
+migrated database, rather than answering errors and restarting until the Job is done. The init
+container is rendered only on an install, so an upgrade's pods start without it.
+``smarter-job-init`` runs once: a failed step fails it, and Kubernetes doesn't retry it
+(``backoffLimit: 0``). The next deployment runs it again.
 When it completes, it emails its whole log, with credentials redacted, to the chart's
 ``databaseInit.notifyEmail``, or by default to the platform's admin, ``SMARTER_PLATFORM_EMAIL_ADMIN``, with
 ``manage.py email_job_log``. The email reports whether the Job succeeded, and carries the log as an
