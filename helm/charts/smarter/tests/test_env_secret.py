@@ -13,6 +13,7 @@ They need only the standard library. Run them from the repository's root:
 """
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -23,6 +24,8 @@ TEMPLATE_PATH = CHART_PATH / "templates" / "secret-env.yaml"
 
 HELPERS_PATH = CHART_PATH / "templates" / "_helpers.tpl"
 MARIADB_SECRET_PATH = CHART_PATH / "templates" / "secret-mariadb.yaml"
+MIGRATE_JOB_PATH = CHART_PATH / "templates" / "job-migrate.yaml"
+MIGRATE_SECRET_PATH = CHART_PATH / "templates" / "secret-env-migrate.yaml"
 
 OPTIONAL_KEYS = ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
 
@@ -108,6 +111,55 @@ class TestEnvironment(unittest.TestCase):
         for key in ("mariadb-root-password", "mariadb-password", "mariadb-replication-password"):
             with self.subTest(key=key):
                 self.assertIn(f"  {key}:", template)
+
+
+class TestMigrateEnvironment(unittest.TestCase):
+    """
+    The pre-upgrade migrate Job runs with the new release's settings, not the previous release's.
+
+    Helm applies secret-env.yaml only after the pre-upgrade hooks. v0.46.16 renamed SECRET_KEY to
+    DJANGO_SECRET_KEY, and its migrate Job, which read secret-env.yaml's Secret, failed with
+    "DJANGO_SECRET_KEY is not set" and stopped the deploy.
+    """
+
+    @staticmethod
+    def hook_weight(template: str) -> int:
+        """
+        Return a hook template's helm.sh/hook-weight.
+
+        :param template: The template's text.
+        :returns: Its weight.
+        """
+        match = re.search(r'"helm\.sh/hook-weight": "(-?\d+)"', template)
+        if match is None:
+            raise AssertionError("the template has no hook weight")
+        weight = int(match.group(1))
+        return weight
+
+    def test_job_reads_the_hook_secret(self):
+        """The Job's envFrom names the hook Secret, not the release's env Secret."""
+        job = MIGRATE_JOB_PATH.read_text(encoding="utf-8")
+        self.assertIn('name: "{{ .Values.global.appName }}-env-migrate"', job)
+        self.assertNotIn('name: "{{ .Values.global.appName }}-env"\n', job)
+
+    def test_hook_secret_has_the_platform_settings(self):
+        """The hook Secret is built by smarter.env, like the env Secret, so it has the new release's names."""
+        secret = MIGRATE_SECRET_PATH.read_text(encoding="utf-8")
+        self.assertIn('name: "{{ .Values.global.appName }}-env-migrate"', secret)
+        self.assertIn('include "smarter.env" . | fromYaml', secret)
+
+    def test_hook_secret_is_created_before_the_job(self):
+        """Both are pre-upgrade hooks, and the Secret's lower weight makes Helm create it first."""
+        secret = MIGRATE_SECRET_PATH.read_text(encoding="utf-8")
+        job = MIGRATE_JOB_PATH.read_text(encoding="utf-8")
+        for template in (secret, job):
+            self.assertIn('"helm.sh/hook": pre-upgrade', template)
+        self.assertLess(self.hook_weight(secret), self.hook_weight(job))
+
+    def test_hook_secret_is_replaced_on_each_upgrade(self):
+        """A failed upgrade's copy is replaced by the next upgrade's, and a passing upgrade deletes it."""
+        secret = MIGRATE_SECRET_PATH.read_text(encoding="utf-8")
+        self.assertIn('"helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded', secret)
 
 
 if __name__ == "__main__":

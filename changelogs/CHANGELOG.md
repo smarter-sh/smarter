@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.17](https://github.com/smarter-sh/smarter/compare/v0.46.16...v0.46.17) (2026-11-22)
+
+### Bug Fixes
+
+* **helm:** migrate with the new release's settings, not the old ([defd1cd](https://github.com/smarter-sh/smarter/commit/defd1cdb2f21dac1a2c8d6e069d19789552e9cef))
+
+## [0.46.17-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.16...v0.46.17-alpha.1) (2026-11-22)
+
+### Bug Fixes
+
+* **helm:** migrate with the new release's settings, not the old ([defd1cd](https://github.com/smarter-sh/smarter/commit/defd1cdb2f21dac1a2c8d6e069d19789552e9cef))
+
 ## [0.46.16](https://github.com/smarter-sh/smarter/compare/v0.46.15...v0.46.16) (2026-11-22)
 
 ### Bug Fixes
