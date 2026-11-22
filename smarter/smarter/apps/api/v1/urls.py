@@ -141,4 +141,4 @@ Each app's endpoints are mounted only if its ``smarter_settings.enable_<app>`` f
 :mod:`smarter.lib.manifest.sam_apps`.
 """
 
-urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_API_URLS, "API endpoints")
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_API_URLS, "API")

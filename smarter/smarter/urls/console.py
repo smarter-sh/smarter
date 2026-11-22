@@ -293,7 +293,7 @@ Each app's pages are mounted only if its ``smarter_settings.enable_<app>`` flag 
 :mod:`smarter.lib.manifest.sam_apps`.
 """
 
-urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_CONSOLE_URLS, "web console pages")
+urlpatterns += sam_app_urlpatterns(smarter_settings, SAM_APP_CONSOLE_URLS, "web console app")
 
 # LLMClients on their verified custom domains, which smarter.hosts doesn't match, are served by this
 # urlconf. Deployed LLMClients' default hosts are served by smarter.urls.llmclients.

@@ -114,7 +114,7 @@ class TestSamAppUrlpatterns(SmarterTestBase):
         namespaces = [pattern.namespace for pattern in patterns]
         self.assertEqual(namespaces, [secret_namespace])
         output = "\n".join(logs.output)
-        self.assertIn("Guardrail test urls are", output)
+        self.assertIn("Guardrail test urls is", output)
         self.assertIn("SMARTER_APP_GUARDRAIL_ENABLE=true", output)
 
     def test_all_disabled(self):

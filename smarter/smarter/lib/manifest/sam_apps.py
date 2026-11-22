@@ -246,7 +246,7 @@ def sam_app_urlpatterns(settings: FeatureSettings, apps_urls: list[SamAppUrls], 
         sam_app = get_sam_app(app_urls.setting)
         if not sam_app.is_enabled(settings):
             logger.info(
-                "%s %s are %s. Set env `%s=true` to enable.",
+                "%s %s is %s. Set env `%s=true` to enable.",
                 app_urls.label,
                 description,
                 SmarterReadyState.NOT_READY,
@@ -255,7 +255,7 @@ def sam_app_urlpatterns(settings: FeatureSettings, apps_urls: list[SamAppUrls], 
             continue
         pattern = path(app_urls.prefix, include(app_urls.urls, namespace=app_urls.namespace))
         patterns.append(pattern)
-        logger.debug("%s %s are %s.", app_urls.label, description, SmarterReadyState.READY)
+        logger.debug("%s %s is %s.", app_urls.label, description, SmarterReadyState.READY)
     return patterns
 
 
