@@ -36,10 +36,12 @@ class TestI18nSettings(SmarterTestBase):
         self.assertTrue(settings.USE_I18N)
 
     def test_locale_middleware_order(self):
-        """LocaleMiddleware comes after SessionMiddleware and before CommonMiddleware."""
+        """SmarterLocaleMiddleware comes after AuthenticationMiddleware and before CommonMiddleware."""
         middleware = list(settings.MIDDLEWARE)
-        locale = middleware.index("django.middleware.locale.LocaleMiddleware")
+        locale = middleware.index("smarter.apps.account.middleware.SmarterLocaleMiddleware")
+        self.assertNotIn("django.middleware.locale.LocaleMiddleware", middleware)
         self.assertLess(middleware.index("django.contrib.sessions.middleware.SessionMiddleware"), locale)
+        self.assertLess(middleware.index("django.contrib.auth.middleware.AuthenticationMiddleware"), locale)
         self.assertLess(locale, middleware.index("django.middleware.common.CommonMiddleware"))
 
     def test_i18n_context_processor(self):

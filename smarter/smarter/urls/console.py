@@ -17,6 +17,7 @@ from waffle import get_waffle_switch_model
 
 from smarter.apps.account import urls as account_urls
 from smarter.apps.account.const import namespace as account_namespace
+from smarter.apps.account.language import set_language
 from smarter.apps.account.urls import AccountReverseNames
 from smarter.apps.account.views.budget import urls as budget_urls
 from smarter.apps.account.views.budget.const import namespace as budget_namespace
@@ -244,10 +245,11 @@ urlpatterns = [
         },
     ),
     # -----------------------------------
-    # internationalization: the language menu posts to i18n/setlang/, and every page
+    # internationalization: the language menu posts to i18n/setlang/, which also remembers a
+    # signed-in user's choice in their profiles, and every page
     # loads the React apps' message catalog (the djangojs domain) from jsi18n/.
     # -----------------------------------
-    path("i18n/", include("django.conf.urls.i18n")),
+    path("i18n/setlang/", set_language, name="set_language"),
     path("jsi18n/", JavaScriptCatalog.as_view(domain="djangojs"), name="javascript-catalog"),
     # -----------------------------------
     # routes for 3rd party apps
