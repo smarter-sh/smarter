@@ -32,7 +32,8 @@
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
 {{- if .Values.databaseScheduledBackup.enabled }}
-{{- $backupPassword := .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
+{{- $env := include "smarter.env" . | fromYaml }}
+{{- $backupPassword := $env.SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD | default "" }}
 {{- $useBackupAccount := and $backupPassword (not (hasPrefix "SET-ME" $backupPassword)) }}
 apiVersion: batch/v1
 kind: CronJob
@@ -139,14 +140,14 @@ spec:
               # The passwords and AWS keys are read from the Secret in secret-env.yaml.
               env:
                 - name: SMARTER_SUBSYSTEM_SQL_HOST
-                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_HOST | quote }}
+                  value: {{ $env.SMARTER_SUBSYSTEM_SQL_HOST | quote }}
                 - name: SMARTER_SUBSYSTEM_SQL_PORT
-                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_PORT | default "3306" | quote }}
+                  value: {{ $env.SMARTER_SUBSYSTEM_SQL_PORT | default "3306" | quote }}
                 - name: SMARTER_SUBSYSTEM_SQL_DATABASE
-                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_DATABASE | quote }}
+                  value: {{ $env.SMARTER_SUBSYSTEM_SQL_DATABASE | quote }}
                 {{- if $useBackupAccount }}
                 - name: SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME
-                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
+                  value: {{ $env.SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME | default "smarter_backup" | quote }}
                 - name: SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD
                   valueFrom:
                     secretKeyRef:
@@ -155,7 +156,7 @@ spec:
                       optional: true
                 {{- else }}
                 - name: SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME
-                  value: {{ .Values.env.SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME | quote }}
+                  value: {{ $env.SMARTER_SUBSYSTEM_SQL_ROOT_USERNAME | quote }}
                 - name: SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
                   valueFrom:
                     secretKeyRef:
@@ -164,7 +165,7 @@ spec:
                       optional: true
                 {{- end }}
                 - name: SMARTER_PLATFORM_S3_BUCKET
-                  value: {{ .Values.env.SMARTER_PLATFORM_S3_BUCKET | default "" | quote }}
+                  value: {{ $env.SMARTER_PLATFORM_S3_BUCKET | default "" | quote }}
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
                     secretKeyRef:
@@ -178,7 +179,7 @@ spec:
                       key: AWS_SECRET_ACCESS_KEY
                       optional: true
                 - name: AWS_REGION
-                  value: {{ .Values.env.AWS_REGION | quote }}
+                  value: {{ $env.AWS_REGION | quote }}
                 - name: BACKUP_SUMMARY_FILE
                   value: /job/backup-summary.txt
                 {{- with .Values.databaseScheduledBackup }}
