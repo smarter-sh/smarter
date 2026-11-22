@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.15](https://github.com/smarter-sh/smarter/compare/v0.46.14...v0.46.15) (2026-11-22)
+
+### Bug Fixes
+
+* **account:** stop creating the staff_user example user ([4eebe02](https://github.com/smarter-sh/smarter/commit/4eebe02368a93b844cc94e48c5706dd62992fc46))
+* **helm:** hold a fresh install's pods for its database, run init once ([8df9a41](https://github.com/smarter-sh/smarter/commit/8df9a41af3f6a1aa855ccf30b638b1d008c6dac5))
+* **settings:** set each logged environment variable off with a dash ([63e1e8c](https://github.com/smarter-sh/smarter/commit/63e1e8c74a0ef5796b7854771af7030217802122))
+
 ## [0.46.15-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.14...v0.46.15-alpha.1) (2026-11-22)
 
 ### Bug Fixes
