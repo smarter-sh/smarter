@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.13...v0.46.14-alpha.1) (2026-11-22)
+
+### Bug Fixes
+
+* **settings:** group env vars by platform, subsystem and app ([1a4ed07](https://github.com/smarter-sh/smarter/commit/1a4ed078f40006ac03fff66d00e666a58957ced9))
+
 ## [0.46.13](https://github.com/smarter-sh/smarter/compare/v0.46.12...v0.46.13) (2026-11-22)
 
 ### Bug Fixes
