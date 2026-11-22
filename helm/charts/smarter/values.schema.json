@@ -237,6 +237,20 @@
         "WARNING": { "type": "string" }
       }
     },
+    "infrastructureSecrets": {
+      "type": "object",
+      "description": "The Kubernetes Secrets that smarter-infrastructure creates, and the env variables that their keys set.",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      }
+    },
     "externalDatabase": {
       "type": "object",
       "properties": {

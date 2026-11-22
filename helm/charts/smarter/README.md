@@ -10,22 +10,26 @@ AI resource management and orchestration platform.
 
 ## Quickstart
 
+On a cluster that [smarter-infrastructure](https://github.com/smarter-sh/smarter-infrastructure)
+built, install into the environment's namespace, e.g. `smarter-platform-prod`:
+
 ```bash
-helm upgrade --install --force smarter oci://ghcr.io/smarter-sh/charts/smarter \
-  --version 0.14.0-alpha.1 \
+helm upgrade --install smarter oci://ghcr.io/smarter-sh/charts/smarter \
+  --version <chart-version> \
   --timeout 900s \
-  --namespace smarter-prod \
-  --create-namespace \
-  --set env.SMARTER_SUBSYSTEM_SQL_HOST=your-mysql-host \
-  --set env.SMARTER_SUBSYSTEM_SQL_PASSWORD=your-password \
-  --set env.SMARTER_APP_PROVIDER_OPENAI_API_KEY=your-key \
-  --set env.DJANGO_SECRET_KEY=your-django-secret \
-  --set env.SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY=your-fernet-key \
-  --values values.yaml
+  --namespace smarter-platform-prod \
+  --values my-values.yaml
 ```
 
+The chart reads the database, administrator, email and Django credentials from the Kubernetes Secrets
+that smarter-infrastructure creates in that namespace (`infrastructureSecrets` in values.yaml), and
+derives the settings module, the Celery broker, the namespace and the S3 bucket. Your values file sets
+the rest: the domain, the environment, the cluster, the IAM roles and your API keys. On another
+cluster, also set the database's `env.SMARTER_SUBSYSTEM_SQL_*` values and `env.DJANGO_SECRET_KEY`.
+
 See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml)
-for all available configuration options.
+for all available configuration options. A value left at its `SET-ME` placeholder is left out of the
+pods' environment, so Smarter's own default applies.
 
 The chart stores `env` in a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/),
 `<global.appName>-env`, and every pod reads it with `envFrom`, so passwords and API keys aren't written
