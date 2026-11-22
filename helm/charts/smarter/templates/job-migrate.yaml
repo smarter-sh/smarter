@@ -17,9 +17,10 @@
 #   the database and its user, then migrates, while the new pods wait for it in their
 #   init container (smarter.waitForDatabase in _helpers.tpl). On an upgrade, job-init.yaml's
 #   migrate then finds nothing to do.
-# - The Job reads the previous release's Secret, since Helm applies the new one after
-#   pre-upgrade hooks. That is enough to migrate: the database's user and password change
-#   only in job-init.yaml, after the rollout.
+# - The Job reads the new release's settings, from secret-env-migrate.yaml, a pre-upgrade
+#   hook Secret that Helm creates just before it. Not from secret-env.yaml: Helm applies that
+#   one only after the pre-upgrade hooks, so the Job would run the new image with the
+#   previous release's settings, and fail on every setting the release renamed.
 # - The older pods run against the new schema until the rollout replaces them. That is safe
 #   for additive migrations. A removal or a rename needs two releases: one whose code stops
 #   reading the column, then one that drops it.
@@ -79,10 +80,10 @@ spec:
             - manage.py
             - migrate
             - --no-input
-          # the platform's environment, from the Secret in secret-env.yaml (the previous release's: see above)
+          # the new release's environment, from the hook Secret in secret-env-migrate.yaml (see above)
           envFrom:
             - secretRef:
-                name: "{{ .Values.global.appName }}-env"
+                name: "{{ .Values.global.appName }}-env-migrate"
           env:
             - name: PYTHONUNBUFFERED
               value: "1"

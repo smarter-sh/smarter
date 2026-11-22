@@ -47,6 +47,16 @@ The **Tests** workflow (`.github/workflows/test.yml`, on pull requests to `main`
 | `python (shard N of 8)` | One eighth of the Django test suite, built from scratch in its own containers. |
 | `python-report`         | Fails whenever any shard failed. Never the cause: find the shard that failed.  |
 
+`python-report` also fails, before anything else, with `Ruleset <id> of main requires the status check
+'<name>'`, when a ruleset requires a check other than itself (`scripts/required_checks.py`). It must be
+main's only required check. When the shards are skipped (the `fingerprint` job found the suite's files
+unchanged, or passed before), the matrix reports one check named `python (shard ${{ matrix.shard }} of 8)`,
+never the eight real names, so a ruleset that requires `python (shard 1 of 8)` leaves the pull request
+"Expected — Waiting for status to be reported" forever. A pull request that is **stuck**, rather than
+failed, is that: list main's rules with `gh api repos/smarter-sh/smarter/rules/branches/main`, and hand
+the user the command that removes the extra rule (`gh api -X DELETE repos/smarter-sh/smarter/rulesets/<id>`,
+when it is the ruleset's only rule). Never change a ruleset yourself.
+
 A shard's failure is either a test failure (`FAILED (failures=…, errors=…)`), or the platform failing
 to start before the tests ran (no `Ran N tests` line: read the shard's setup steps, e.g. migrations,
 `initialize_platform`, or _Install the web console_, which fails when the release that

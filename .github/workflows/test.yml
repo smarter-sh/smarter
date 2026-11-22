@@ -95,7 +95,12 @@ name: Tests
 #------------------------------------------------------------------------------
 # The first step of the pipeline (see build.yml): every pull request to main
 # runs the tests before it can be merged. python-report is main's required
-# status check, so a pull request that fails it can't be merged.
+# status check, so a pull request that fails it can't be merged. It must be
+# the only one: never require a shard, e.g. "python (shard 1 of 8)", in a
+# ruleset. When the shards are skipped (see fingerprint), the matrix reports
+# one check named after its template, never the eight real names, and a pull
+# request that requires them waits forever. python-report fails, and names
+# the ruleset, when one does (scripts/required_checks.py).
 # A new push to the pull request cancels the run in progress.
 #
 # A pull request whose head commit's message contains a CI skip tag, such as
@@ -770,6 +775,8 @@ jobs:
   #   a failed shard's data would understate it.
   # - It fails when any shard failed, so that it can stand for all of them as
   #   a required status check.
+  # - It fails first when a ruleset of the base branch requires any other
+  #   status check, e.g. a shard by name (scripts/required_checks.py).
   # - When every shard passed, it saves the pass marker (see fingerprint).
   #   When the shards were skipped because these files passed before, it
   #   says so, and passes.
@@ -780,15 +787,24 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      # python-report must be the only required check of the base branch
+      # (see the next comment). A ruleset that requires a shard by name
+      # leaves a pull request whose shards were skipped waiting forever,
+      # with no error anywhere, so this fails, and names the ruleset.
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Check the base branch's required status checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.base_ref || 'main' }}
+        run: python3 -I scripts/required_checks.py --branch "$BRANCH" --allow python-report
+
       - name: Passed before
         if: needs.fingerprint.outputs.python-passed == 'true'
         shell: bash
         run: |
           echo "The files the Python tests depend on are unchanged from the base branch, or passed in an earlier run, so the shards were skipped." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Checkout code
-        if: needs.python.result != 'skipped'
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Download the shards' results
         if: needs.python.result != 'skipped'
