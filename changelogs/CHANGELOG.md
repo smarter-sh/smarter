@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.21-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.20...v0.46.21-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **settings:** log the last four characters of secret settings ([69eeae7](https://github.com/smarter-sh/smarter/commit/69eeae7740dd3a1ec22a4645f6f9751c05d75d65))
+* **startup:** show DRF and Pydantic versions on the startup banner ([a41a680](https://github.com/smarter-sh/smarter/commit/a41a680a24072cb3adcf61cffdba70d219f349bd))
+
 ## [0.46.20](https://github.com/smarter-sh/smarter/compare/v0.46.19...v0.46.20) (2026-11-23)
 
 ### Bug Fixes
