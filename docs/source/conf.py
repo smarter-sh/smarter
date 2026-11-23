@@ -20,6 +20,7 @@ REPO_ROOT = os.path.abspath(os.path.join(SMARTER_ROOT, "../"))
 sys.path.insert(0, SMARTER_ROOT)
 
 import django
+import django.conf
 from dotenv import load_dotenv
 
 from smarter.common.conf import smarter_settings
@@ -65,7 +66,9 @@ importlib.import_module(django.conf.settings.ROOT_HOSTCONF)
 # an issue.
 ###############################################################################
 from pygments.lexer import inherit
-from pygments.lexers.jsx import TsxLexer
+
+# typeshed's Pygments stubs declare only JsxLexer in pygments.lexers.jsx; TsxLexer is there at runtime.
+from pygments.lexers.jsx import TsxLexer  # pyright: ignore[reportAttributeAccessIssue]
 from pygments.token import Keyword, Operator, Punctuation, Text, Whitespace
 from sphinx.addnodes import pending_xref
 from sphinx.domains.python import PythonDomain
@@ -125,11 +128,14 @@ project = "Smarter Documentation"
 copyright = f"2023 - {datetime.now().year}"
 author = AUTHOR
 
-# The latest release's tag, e.g. v0.36.25, shown in every page's title. It is deliberately not
-# Sphinx's ``release``, and not in rst_epilog: Sphinx re-reads every page when either changes,
-# which is every release, and every switch between main and alpha, whose tags differ.
-# html_title only makes Sphinx rewrite the HTML, which is far quicker than reading the pages.
-smarter_release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+# The latest release's major and minor version, e.g. v0.36 for the tag v0.36.25 (or
+# v0.36.25-alpha.2), shown in every page's title. Only major.minor, because a change to
+# html_title makes Sphinx rewrite every page's HTML, and the publish upload every page: with the
+# patch version that was every release, and every switch between main and alpha, whose tags
+# differ. It is deliberately not Sphinx's ``release``, and not in rst_epilog: Sphinx re-reads every
+# page when either changes, which is far slower than rewriting the HTML.
+smarter_full_release = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], text=True).strip()
+smarter_release = ".".join(smarter_full_release.split(".")[:2])
 
 
 try:
@@ -522,8 +528,34 @@ def return_network_docs(app, env):  # pylint: disable=unused-argument
     return list(_docnames_read_before_fork)
 
 
+###############################################################################
+# The landing page shows the full release tag, e.g. v0.46.18, as the
+# |smarter-version| substitution. It is defined for that one page, not in
+# rst_epilog, so that a new release makes Sphinx re-read only the landing page
+# rather than every page. Its source doesn't change from release to release, so
+# the incremental build is told to re-read it whenever the tag does.
+###############################################################################
+LANDING_DOCNAME = "index"
+
+
+def define_landing_page_version(app, docname, source):  # pylint: disable=unused-argument
+    """Define the ``|smarter-version|`` substitution in the landing page's source."""
+    if docname == LANDING_DOCNAME:
+        source[0] += f"\n\n.. |smarter-version| replace:: {smarter_full_release}\n"
+
+
+def reread_landing_page_on_new_release(app, env, added, changed, removed):  # pylint: disable=unused-argument
+    """Return the landing page as outdated when the release tag differs from the one it was read with."""
+    if getattr(env, "smarter_landing_release", None) == smarter_full_release:
+        return []
+    env.smarter_landing_release = smarter_full_release
+    return [LANDING_DOCNAME]
+
+
 def setup(app):
     """Register this configuration's Sphinx event handlers."""
+    app.connect("source-read", define_landing_page_version)
+    app.connect("env-get-outdated", reread_landing_page_on_new_release)
     app.connect("doctree-read", resolve_builtins_exactly)
     # sphinxcontrib_django's handler runs at the default priority, 500.
     app.connect("autodoc-process-docstring", honor_hide_value, priority=600)
