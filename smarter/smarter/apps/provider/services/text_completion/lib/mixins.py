@@ -508,6 +508,7 @@ class ChatDbMixin(AccountMixin):
         completion_tokens: int,
         prompt_tokens: int,
         total_tokens: int,
+        charge_owner: bool = True,
     ):
         """
         Insert a new charge record for the current account and prompt session.
@@ -526,10 +527,11 @@ class ChatDbMixin(AccountMixin):
             The number of prompt tokens used.
         total_tokens : int
             The total number of tokens used.
-        model : str
-            The model name or identifier (e.g., "gpt-4").
-        reference : str
-            An external reference or identifier for the charge (e.g., request ID).
+        charge_owner : bool
+            Whether to charge the user and the account too, which every model call's completion charge
+            does. A plugin's or a tool's charge, whose tokens are the completion's, is charged to the
+            tool's own resources only, so that a model call's tokens are counted once for the user and
+            the account.
 
         Raises
         ------
@@ -546,8 +548,6 @@ class ChatDbMixin(AccountMixin):
                 completion_tokens=42,
                 prompt_tokens=58,
                 total_tokens=100,
-                model="gpt-4",
-                reference="req-12345"
             )
         """
         if not isinstance(self.user_profile, UserProfile):
@@ -557,8 +557,9 @@ class ChatDbMixin(AccountMixin):
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
 
-        resource_locators.append(self.user_profile.record_locator)
-        resource_locators.append(self.user_profile.account.record_locator)
+        if charge_owner:
+            resource_locators.append(self.user_profile.record_locator)
+            resource_locators.append(self.user_profile.account.record_locator)
 
         # the same for every charge, so read once rather than per resource locator.
         provider_name = getattr(self, "provider_name", None)

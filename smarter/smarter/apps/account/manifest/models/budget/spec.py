@@ -86,12 +86,22 @@ class SAMBudgetSpecConfig(SmarterBasePydanticModel):
     periodicLimit: Decimal = Field(
         default=Decimal("0"),
         ge=0,
-        description=f"{class_identifier}.periodicLimit: the most that may be spent in a billing period. 0 means no limit.",
+        max_digits=14,
+        decimal_places=2,
+        description=(
+            f"{class_identifier}.periodicLimit: the most that may be spent in a billing period, in USD to the cent, "
+            "or in tokens. 0 means no limit."
+        ),
     )
     absoluteLimit: Decimal = Field(
         default=Decimal("0"),
         ge=0,
-        description=f"{class_identifier}.absoluteLimit: the most that may be spent in total, from when the budget is attached. 0 means no limit.",
+        max_digits=14,
+        decimal_places=2,
+        description=(
+            f"{class_identifier}.absoluteLimit: the most that may be spent in total, from when the budget is attached, "
+            "in USD to the cent, or in tokens. 0 means no limit."
+        ),
     )
     duration: int = Field(
         default=0,

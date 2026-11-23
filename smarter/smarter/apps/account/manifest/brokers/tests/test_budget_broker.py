@@ -14,7 +14,10 @@ from smarter.apps.account.manifest.brokers.budget import (
     SAMBudgetBrokerError,
 )
 from smarter.apps.account.manifest.models.budget.model import SAMBudget
-from smarter.apps.account.manifest.models.budget.spec import SAMBudgetSpecResource
+from smarter.apps.account.manifest.models.budget.spec import (
+    SAMBudgetSpecConfig,
+    SAMBudgetSpecResource,
+)
 from smarter.apps.account.models import Budget
 from smarter.apps.llmclient.models import LLMClient
 from smarter.common.utils import get_readonly_yaml_file
@@ -201,6 +204,23 @@ class TestSmarterBudgetBroker(TestSAMBrokerBaseClass):
         ):
             with self.subTest(fields=fields), self.assertRaises((SAMValidationError, ValidationError, ValueError)):
                 SAMBudgetSpecResource(**fields)
+
+    def test_limits_are_to_the_cent(self):
+        """
+        Test that a limit with more than two decimal places is refused.
+
+        The database keeps limits to the cent, so 0.0005 was saved as 0.00, which means no limit.
+        """
+        SAMBudgetSpecConfig(periodicLimit=Decimal("0.01"), absoluteLimit=Decimal("100.25"))
+        with self.assertRaises(ValidationError):
+            SAMBudgetSpecConfig(periodicLimit=Decimal("0.0005"))
+        with self.assertRaises(ValidationError):
+            SAMBudgetSpecConfig(absoluteLimit=Decimal("1.001"))
+        text = self.manifest_text().replace("periodicLimit: 10.00", "periodicLimit: 0.0005")
+        self.assertIn("periodicLimit: 0.0005", text)
+        with self.assertRaises((SAMValidationError, ValidationError)):
+            self.broker_for(text).apply(self.request, **self.kwargs)
+        self.assertFalse(Budget.objects.filter(name=self.budget_name).exists())
 
     def test_example_manifests(self):
         """Test that the example Budget manifests are valid, with unique names, and detached: they list no resources."""

@@ -35,6 +35,7 @@ Technical Reference
    account/commands
    account/const
    account/hierarchy
+   account/llm_price_catalog
    account/models
    account/receivers
    account/repository_owners
