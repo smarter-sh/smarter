@@ -621,7 +621,10 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Create the database.
 
-        A self-hosted server takes a minute or two to become ready: follow it with describe.
+        A self-hosted server takes a minute or two to become ready: follow it with describe. A deploy
+        whose database can't be reached or created, e.g. because a managed service refuses the
+        connection's api key, is an error, with the reason, rather than a success whose describe says
+        ``failed``.
         """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         vectorstore = self.owned_vectorstore(command)
@@ -631,6 +634,13 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             raise SAMVectorstoreBrokerError(
                 f"Failed to deploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
+        # reconcile() records a failure in the status rather than raising it, e.g. a refused api key.
+        if vectorstore.status == VectorstoreStatus.FAILED:
+            raise SAMVectorstoreBrokerError(
+                f"Failed to deploy {self.kind} {self.name}: {vectorstore.status_message}",
+                thing=self.kind,
+                command=command,
+            )
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
 
