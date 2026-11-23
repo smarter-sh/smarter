@@ -7,8 +7,13 @@ It is designed for long term storage of auditable platform data, and is optimize
 Enabling the Smarter Journal
 ----------------------------
 
-The Smarter Journal is enabled from the admin console at run-time from the DJANGO-WAFFLE `Switches` page.
-It is not necessary to restart any services when enabling or disabling the journal.
+The Smarter Journal is on by default: a new platform's ``enable_journal`` waffle switch is on, so it
+keeps an audit trail of every api command and prompt from the start. The web console's dashboard
+shows its latest commands, such as apply, deploy and delete, in Recent Activity, and
+``GET /api/v1/journal/`` lists its entries. Turn it off, or on again, at run-time in the Django admin's
+DJANGO-WAFFLE `Switches` page. It is not necessary to restart any services when enabling or disabling
+the journal. ``manage.py initialize_waffle`` creates only the switches that don't exist, so a platform
+whose journal was turned off keeps it off.
 
 .. raw:: html
 

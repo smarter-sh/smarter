@@ -384,8 +384,11 @@ class SmarterWaffleSwitches:
         ),
         ENABLE_JOURNAL: SmarterWaffleSwitch(
             name=ENABLE_JOURNAL,
-            comment="Enables the Smarter Journal feature.",
-            default=False,
+            comment=(
+                "Enables the Smarter Journal feature, the audit trail of every api command and prompt. On by default, "
+                "so that a new platform keeps one from the start."
+            ),
+            default=True,
         ),
         ENABLE_OAUTH2: SmarterWaffleSwitch(
             name=ENABLE_OAUTH2,
