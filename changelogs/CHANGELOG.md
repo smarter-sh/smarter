@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.4](https://github.com/smarter-sh/smarter/compare/v0.47.3...v0.47.4) (2026-11-23)
+
+### Bug Fixes
+
+* **account:** refuse a budget limit that isn't to the cent ([dc73c8c](https://github.com/smarter-sh/smarter/commit/dc73c8cac1936ca2f7c1d6b944c81f659bf8b382))
+* **account:** say a budget's daily limit, not its dayly limit ([3444806](https://github.com/smarter-sh/smarter/commit/34448067c5778da4f88482fff6bfbd9f238a8b79))
+* **account:** start every platform with its default models' prices ([6c071a5](https://github.com/smarter-sh/smarter/commit/6c071a5377e35c9c026f1de83d11ff21d51d7a85))
+* **provider:** charge a model call's tokens once per resource ([961a552](https://github.com/smarter-sh/smarter/commit/961a552798f748175ed5e0127c90c9bfcc00ec31))
+
+## [0.47.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.3...v0.47.4-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **account:** refuse a budget limit that isn't to the cent ([dc73c8c](https://github.com/smarter-sh/smarter/commit/dc73c8cac1936ca2f7c1d6b944c81f659bf8b382))
+* **account:** say a budget's daily limit, not its dayly limit ([3444806](https://github.com/smarter-sh/smarter/commit/34448067c5778da4f88482fff6bfbd9f238a8b79))
+* **account:** start every platform with its default models' prices ([6c071a5](https://github.com/smarter-sh/smarter/commit/6c071a5377e35c9c026f1de83d11ff21d51d7a85))
+* **provider:** charge a model call's tokens once per resource ([961a552](https://github.com/smarter-sh/smarter/commit/961a552798f748175ed5e0127c90c9bfcc00ec31))
+
 ## [0.47.3](https://github.com/smarter-sh/smarter/compare/v0.47.2...v0.47.3) (2026-11-23)
 
 ### Bug Fixes

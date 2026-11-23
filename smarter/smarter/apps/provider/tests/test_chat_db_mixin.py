@@ -151,6 +151,20 @@ class TestChatDbMixin(TestAccountMixin):
         )
         self.assertEqual(self.tasks["create_charge"].delay.call_count, 3)
 
+    def test_insert_charge_without_the_owner(self):
+        """A plugin's or a tool's charge, charge_owner=False, is queued for its own resources only."""
+        mixin = self.mixin(prompt=self.prompt)
+        mixin.db_insert_charge(
+            resource_locators=["pluginmeta:test", "apiconnection:test"],
+            charge_type="plugin",
+            completion_tokens=1,
+            prompt_tokens=2,
+            total_tokens=3,
+            charge_owner=False,
+        )
+        charged = [call.kwargs["resource_locator"] for call in self.tasks["create_charge"].delay.call_args_list]
+        self.assertEqual(charged, ["pluginmeta:test", "apiconnection:test"])
+
     def test_insert_charge_errors(self):
         """A charge needs resource locators and a prompt."""
         with self.assertRaises(SmarterValueError):

@@ -61,6 +61,8 @@ class TestInitializePlatform(CommandTestBase):
         first_load = names.index("load_from_github")
         for dependency in ("initialize_providers", "install_official_extensions", "initialize_vectorstore_providers"):
             self.assertLess(names.index(dependency), first_load)
+        # the built-in providers' default models are priced right after the providers are created.
+        self.assertEqual(names.index("initialize_llm_prices"), names.index("initialize_providers") + 1)
         self.assertLess(len(names) - 1 - names[::-1].index("load_from_github"), names.index("verify_stackademy"))
         # the retired examples are deleted after the example manifests are loaded, for their owner.
         retired = names.index("delete_retired_examples")

@@ -870,7 +870,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         content = f"LLM responded with the following error: {error_message}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
 
-    def _insert_charge_by_type(self, resource_locators: list[str], charge_type: str) -> None:
+    def _insert_charge_by_type(self, resource_locators: list[str], charge_type: str, charge_owner: bool = True) -> None:
         """
         Insert a charge record based on the charge type.
 
@@ -878,8 +878,12 @@ class SmarterChatProviderBase(ChatDbMixin):
         uses the internal db_insert_charge method to create a charge
         record in the database.
 
+        :param resource_locators: The resources to charge.
+        :type resource_locators: list[str]
         :param charge_type: The type of charge (e.g., prompt completion, tool, plugin).
         :type charge_type: str
+        :param charge_owner: Whether to charge the user and the account too. See ``db_insert_charge``.
+        :type charge_owner: bool
 
         :returns: None
         :rtype: None
@@ -896,6 +900,7 @@ class SmarterChatProviderBase(ChatDbMixin):
             completion_tokens=self.completion_tokens,
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
+            charge_owner=charge_owner,
         )
 
 

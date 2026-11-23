@@ -14,6 +14,7 @@ manage.py Commands
    commands/delete_retired_examples
    commands/get_accounts
    commands/initialize_account
+   commands/initialize_llm_prices
    commands/initialize_platform
    commands/load_from_github
    commands/merge_duplicate_users
