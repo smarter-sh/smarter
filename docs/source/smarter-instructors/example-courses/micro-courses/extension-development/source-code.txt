@@ -188,7 +188,7 @@ Installing, Loading and Publishing
    * - The web console
      - Superusers browse the registry, install, upload, configure, enable, update, roll back and
        uninstall on two React pages, whose api is typed by Pydantic models exported as a JSON
-       Schema. :doc:`/smarter-platform/extensions`.
+       Schema. :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/extensions`.
      - `extension/views.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/views.py>`__,
        `extension/contract.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/contract.py>`__,
        `smarter-extension-console/ <https://github.com/smarter-sh/smarter/tree/v0.42.10/smarter/react/packages/smarter-extension-console>`__

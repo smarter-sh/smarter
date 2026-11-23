@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 880" width="1250" height="880" role="img" aria-labelledby="t d">
+<title id="t">Who may do what in AWS</title>
+<desc id="d">The platform's pods (smarter-api, the Celery workers, beat and the init Job) run as the ServiceAccount smarter, which EKS's OIDC provider maps to the IAM role &lt;namespace&gt;-smarter-irsa, with short-lived credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 buckets. The nightly backup runs as smarter-backup, whose role &lt;namespace&gt;-smarter-backup-irsa may only write to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1250" height="880" rx="14" fill="#F6F8FA"/>
+<text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Who may do what in AWS</text>
+<text x="625.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">EKS gives each ServiceAccount short-lived credentials for its own IAM role; only email still uses a key</text>
+<text x="28" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · Pods</text>
+<rect x="28" y="98" width="230" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<text x="290" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · runs as</text>
+<rect x="290" y="98" width="210" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<text x="532" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · which assumes</text>
+<rect x="532" y="98" width="250" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<text x="814" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">4 · which may</text>
+<rect x="814" y="98" width="408" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="148" width="230" height="95" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M28,157 a9,9 0 0 1 9,-9 h212 a9,9 0 0 1 9,9 v17 h-230 z" fill="#2980B9"/>
+<text x="40" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">The platform's pods</text>
+<text x="40" y="190" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">smarter-api</text>
+<text x="40" y="207" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">Celery workers and beat</text>
+<text x="40" y="224" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the init Job</text>
+<rect x="290" y="148" width="210" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M290,157 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="302" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter</text>
+<text x="302" y="190" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ServiceAccount</text>
+<text x="302" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">annotated with its role</text>
+<text x="302" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">by the Helm chart</text>
+<rect x="532" y="156" width="250" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M532,165 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#FBEFFF"/>
+<text x="544" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">&lt;namespace&gt;-smarter-irsa</text>
+<text x="544" y="198" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM role</text>
+<text x="544" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">this environment only</text>
+<rect x="814" y="123" width="408" height="146" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M814,132 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
+<text x="826" y="141" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">AWS</text>
+<text x="826" y="165" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Route53: records and hosted zones, for deployed</text>
+<text x="826" y="182" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMClients and custom domains</text>
+<text x="826" y="199" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ACM: request and delete certificates</text>
+<text x="826" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">EKS: read the cluster; LLMHost node groups, only</text>
+<text x="826" y="233" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">with this environment's tag and name prefix</text>
+<text x="826" y="250" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">S3: this environment's static and exports buckets</text>
+<rect x="814" y="300" width="408" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M814,309 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
+<text x="826" y="318" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Kubernetes (RBAC, not IAM)</text>
+<text x="826" y="342" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a Role in its own namespace: deployed LLMClients'</text>
+<text x="826" y="359" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Deployments, Services, Ingresses, Secrets</text>
+<text x="826" y="376" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">cluster-wide: read-only (nodes, metrics, volumes)</text>
+<rect x="28" y="500" width="230" height="61" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M28,509 a9,9 0 0 1 9,-9 h212 a9,9 0 0 1 9,9 v17 h-230 z" fill="#2980B9"/>
+<text x="40" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">The nightly backup</text>
+<text x="40" y="542" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">CronJob smarter-mysql-backup</text>
+<rect x="290" y="490" width="210" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M290,499 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="302" y="508" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-backup</text>
+<text x="302" y="532" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ServiceAccount</text>
+<text x="302" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its own ServiceAccount</text>
+<rect x="532" y="490" width="250" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M532,499 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#FBEFFF"/>
+<text x="544" y="508" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">&lt;namespace&gt;-smarter-backup-irsa</text>
+<text x="544" y="532" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM role</text>
+<text x="544" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">write-only</text>
+<rect x="814" y="491" width="408" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M814,500 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
+<text x="826" y="509" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">AWS</text>
+<text x="826" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">S3: put and list under backups/sql/, in the private</text>
+<text x="826" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">backup bucket. It can't read or delete a backup.</text>
+<path d="M258,195.5 L288,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M500,196.0 L530,195.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M782,195.5 L812,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M258,530.5 L288,529.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M500,529.5 L530,529.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M782,529.5 L812,530.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M395.0,244 L395.0,376 L800,376 L800,347.5 L812,347.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<rect x="290" y="392" width="492" height="62" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="306" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#24292F" text-anchor="start">How a pod gets its credentials (IRSA)</text>
+<text x="306" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">EKS's OIDC provider signs the ServiceAccount's token; STS exchanges it for</text>
+<text x="306" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">credentials that expire within hours. A role trusts exactly one ServiceAccount.</text>
+<rect x="28" y="606" width="1194" height="2" fill="#CF222E" fill-opacity="0.3"/>
+<text x="28" y="634" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#CF222E" text-anchor="start">Still on access keys: two IAM users, each with one narrow job</text>
+<text x="28" y="654" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Their secret keys are in the Terraform state. Rotate a key by tainting its aws_iam_access_key and applying.</text>
+<rect x="28" y="668" width="230" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,677 a9,9 0 0 1 9,-9 h212 a9,9 0 0 1 9,9 v17 h-230 z" fill="#FFF1E5"/>
+<text x="40" y="686" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">GitHub Actions</text>
+<text x="40" y="710" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">its secrets</text>
+<text x="40" y="728" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Build and Deploy</text>
+<text x="40" y="745" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">workflows</text>
+<rect x="290" y="676" width="210" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M290,685 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#FFEBE9"/>
+<text x="302" y="694" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">&lt;namespace&gt;-deploy</text>
+<text x="302" y="718" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM user · access key</text>
+<text x="302" y="736" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one per environment</text>
+<rect x="532" y="677" width="690" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M532,686 a9,9 0 0 1 9,-9 h672 a9,9 0 0 1 9,9 v17 h-690 z" fill="#E7F6EC"/>
+<text x="544" y="695" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Deploys</text>
+<text x="544" y="719" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ECR: push and read this environment's image</text>
+<text x="544" y="736" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">EKS: helm and kubectl in this environment's namespace only  ·  SES: the "deployed" email</text>
+<rect x="28" y="781" width="230" height="78" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M28,790 a9,9 0 0 1 9,-9 h212 a9,9 0 0 1 9,9 v17 h-230 z" fill="#2980B9"/>
+<text x="40" y="799" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">The platform's pods</text>
+<text x="40" y="823" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">read the SMTP password from</text>
+<text x="40" y="840" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the Secret aws-ses-config</text>
+<rect x="290" y="780" width="210" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M290,789 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#FFEBE9"/>
+<text x="302" y="798" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">&lt;namespace&gt;_smtp_user</text>
+<text x="302" y="822" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM user · access key</text>
+<text x="302" y="840" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its SES SMTP password</text>
+<rect x="532" y="790" width="690" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M532,799 a9,9 0 0 1 9,-9 h672 a9,9 0 0 1 9,9 v17 h-690 z" fill="#E7F6EC"/>
+<text x="544" y="808" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Sends email</text>
+<text x="544" y="832" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">SES: SendRawEmail, and nothing else</text>
+<path d="M258,716.0 L288,715.5" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<path d="M500,715.5 L530,716.0" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<path d="M258,820.0 L288,819.5" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<path d="M500,819.5 L530,820.5" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+</svg>

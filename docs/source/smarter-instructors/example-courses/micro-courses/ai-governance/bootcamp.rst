@@ -104,7 +104,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 6
      - 45
      - **Lecture 4: Money and access.** :doc:`Budgets </smarter-resources/smarter-budget>` per
-       user, application and account; :doc:`cost accounting </smarter-platform/cost-accounting>`;
+       user, application and account; :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>`;
        accounts, roles and API keys; encrypted :doc:`Secrets </smarter-resources/smarter-secret>`.
        Who should be able to do what. Pre-reading: "Governing it with git" in the case study
        `Stackademy Online Coding Academy <https://smarter.sh/case-studies/stackademy>`__, on
@@ -118,7 +118,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 8
      - 45
      - **Lecture 5: Audit and accountability.** The :doc:`journal
-       </smarter-platform/smarter-journal>` and :doc:`Prompt </smarter-resources/smarter-prompt>`
+       </smarter-platform/system-administration/costs-and-auditing/smarter-journal>` and :doc:`Prompt </smarter-resources/smarter-prompt>`
        records: who asked what, which model answered, which tools ran and which guardrails
        intervened, with each guardrail event's severity, rationale and review status. What a
        regulator, an auditor or a court would ask for. Privacy of the audit trail itself.
@@ -357,7 +357,7 @@ Recommended Texts
   2024). A clear-eyed account of what AI can and cannot do.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-prompt` and
-  :doc:`/smarter-platform/security`.
+  :doc:`/smarter-platform/system-administration/security`.
 
 Further Study
 -------------

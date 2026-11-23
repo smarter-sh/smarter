@@ -154,7 +154,7 @@ the SVG.
 The settings diagram, `docs/source/_static/settings-data-flow.svg`, at the top of
 `docs/source/smarter-platform/configuration.rst`, shows how the settings are
 initialized: from the sources (GitHub Actions secrets, Kubernetes Secrets, the
-Helm chart, `.env`, the user settings file), through the environment and
+Helm chart, `.env`, the overrides file), through the environment and
 `smarter_settings`, to Django's settings. [scripts/settings-diagram.py](scripts/settings-diagram.py)
 draws it. Update it when that flow changes, e.g. a new source, or a settings
 module, and read the rendered PNG the same way:
@@ -162,6 +162,20 @@ module, and read the rendered PNG the same way:
 ```console
 skills/smarter-sphinx-docs/scripts/settings-diagram.py
 rsvg-convert -w 1875 docs/source/_static/settings-data-flow.svg -o <scratchpad>/settings.png
+```
+
+The three diagrams of the security page,
+`docs/source/smarter-platform/system-administration/security.rst`, are in
+`docs/source/_static/security/`: the network traffic, the pod network policies
+(Calico) and the AWS identities (IRSA and the remaining IAM users).
+[scripts/security-diagrams.py](scripts/security-diagrams.py) draws them, one
+function each. They describe smarter-infrastructure's Terraform and the Helm
+chart, so update them when the VPC, the ingress, a network policy or an IAM
+role changes, and read each rendered PNG:
+
+```console
+skills/smarter-sphinx-docs/scripts/security-diagrams.py
+rsvg-convert -w 1875 docs/source/_static/security/network-traffic.svg -o <scratchpad>/network-traffic.png
 ```
 
 - **List only what's published.** Check each package on its registry before you

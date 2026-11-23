@@ -54,7 +54,7 @@ and labor and productivity.
 Each course plan lists every record, price and manifest that it uses under *Smarter in the Source
 Code*.
 
-**Read.** :doc:`/smarter-platform/cost-accounting`, :doc:`/smarter-resources/smarter-budget`,
+**Read.** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`, :doc:`/smarter-resources/smarter-budget`,
 :doc:`/smarter-resources/smarter-provider`, :doc:`/smarter-resources/smarter-llmhost`, `Django and
 httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
 <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__.
@@ -75,7 +75,7 @@ httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
 
    A model without a price in Smarter's ``LLMPrices`` table is recorded with its tokens, at no
    cost, so budgets that measure cost do not see it. Load the prices of the models that the class
-   will use before the first lab, as described in :doc:`/smarter-platform/cost-accounting`, or
+   will use before the first lab, as described in :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`, or
    use budgets that measure tokens.
 
 **Course plans.** Three complete, ready-to-teach plans, each with a schedule, graded assignments

@@ -1,5 +1,5 @@
-Getting Started
-======================
+Recommended Learning Materials
+==============================
 
 Following is a curated list of resources to help you get started with the principal technologies
 used in the Smarter Framework. The authors of the Smarter Project personally vouch for the veracity

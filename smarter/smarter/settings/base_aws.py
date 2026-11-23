@@ -20,7 +20,7 @@ default_redis_location = f"{default_redis_server}/1"
 default_broker_location = f"{default_redis_server}/0"
 
 # The chart's own Redis. For another, set DJANGO_CACHES, with both caches, and DJANGO_CELERY_BROKER_URL
-# (see smarter.settings.user).
+# (see smarter.settings.overrides).
 cache_location = default_redis_location
 CACHES = {
     "default": {
@@ -44,7 +44,7 @@ SESSION_CACHE_ALIAS = "sessions"
 
 # Celery Configuration
 CELERY_BROKER_URL = default_broker_location
-# A DJANGO_CELERY_BROKER_URL moves this too: see DERIVED_SETTINGS in smarter.settings.user.
+# A DJANGO_CELERY_BROKER_URL override moves this too: see DERIVED_SETTINGS in smarter.settings.overrides.
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 

@@ -16,42 +16,57 @@
 #   - Administrator privileges (for some installations and symlinks)
 #
 # Actions performed:
-#   - Verifies essential packages and libraries
+#   - Installs Python 3.14, Docker with Compose v2, and the native build libraries via apt
 #   - Ensures docker-compose symlink exists
-#   - Installs development dependencies (gcc, python, go, node, nvm, awscli, kubectl, etc.)
+#   - Installs awscli, kubectl, helm, go and k9s via snap, and Node.js 24 via nvm
 #
 # Exit codes:
 #   0 — Success
 #   1 — Missing prerequisite or failed installation
 #
 ###############################################################################
-sudo apt-get install -y \
-	build-essential \
-	golang \
-	nodejs npm \
-	docker.io docker-compose \
-	awscli \
-	kubectl \
-	libblis-dev zlib1g-dev libzstd-dev libopenblas-dev libffi-dev libssl-dev \
-	libxml2-dev libxslt1-dev sqlite3 libmariadb-dev libgeos-dev mysql-client jq
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 sudo apt-get update
-sudo apt update
-sudo apt install software-properties-common -y
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install python3.14-venv python3.14-full python3.14-dev -y
-sudo apt-get install libmariadb-dev-compat libmariadb-dev -y
+sudo apt-get install -y software-properties-common curl
 
+# Python 3.14, from the deadsnakes PPA
+sudo add-apt-repository -y ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install -y python3.14-venv python3.14-dev
+
+# Docker, with the Compose v2 plugin. The Makefile calls both "docker compose" and
+# "docker-compose", so link the plugin to the second name too.
+sudo apt-get install -y docker.io docker-compose-v2
+if [ ! -e /usr/local/bin/docker-compose ]; then
+	sudo ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+fi
+
+# Native libraries that the local Python virtual environment builds against
+sudo apt-get install -y \
+	build-essential \
+	libblis-dev zlib1g-dev libzstd-dev libopenblas-dev libffi-dev libssl-dev \
+	libxml2-dev libxslt1-dev sqlite3 libmariadb-dev libmariadb-dev-compat libgeos-dev mysql-client jq
+
+# Tools that Ubuntu's archive doesn't carry, or carries in versions too old for Smarter
+sudo snap install aws-cli --classic
+sudo snap install kubectl --classic
+sudo snap install helm --classic
+sudo snap install go --classic
 sudo snap install k9s
 
-cp .zshrc.example ~/.zshrc
-source ~/.zshrc
-echo $PATH
+# Node.js 24 or later, through nvm (the archive's nodejs is older)
+export NVM_DIR="$HOME/.nvm"
+if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+fi
+. "$NVM_DIR/nvm.sh"
+nvm install 24
+nvm alias default 24
 
-# NVM (Node Version Manager) is not available via apt. Install manually:
-# curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-# Then restart your shell and use nvm to install/manage Node.js versions.
+echo ""
+echo "[INFO] Merge the settings you need from $SCRIPT_DIR/.zshrc.example into your ~/.zshrc,"
+echo "       then open a new shell. It is a template, not a replacement for your own ~/.zshrc."
 
 echo ""
 echo "=============================================="
@@ -82,5 +97,8 @@ aws --version
 
 echo "kubectl:"
 kubectl version --client
+
+echo "helm:"
+helm version --short
 
 echo "=============================================="

@@ -7,8 +7,8 @@ language can be generated from it rather than written by hand:
 - a **JSON Schema and an example manifest for every SAM kind**, which describe the manifests that
   the API accepts and returns, and
 - an **OpenAPI 3.1 document** of the apis that the :doc:`Smarter CLI <../smarter-cli>` and the
-  :doc:`Python <../smarter-python>`, :doc:`Node.js <../smarter-nodejs>` and
-  :doc:`Go <../smarter-golang>` SDKs call.
+  :doc:`Python </smarter-framework/smarter-sdks/smarter-python>`, :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and
+  :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>` SDKs call.
 
 Both are generated from the platform's Pydantic models, so they can't drift from what the platform
 actually does. This page is the technical reference, written for SDK authors and for backend
@@ -85,7 +85,7 @@ The few routes that the document leaves out are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_ROUTES`, each with the reason: web console
 actions, whose clients use manifests instead, passthroughs to LLM providers' own apis, and routes
 that aren't implemented yet. The families that it leaves out, the views that the platform's unit
-tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/mcpserver>`,
+tests call, and the endpoints of the :doc:`MCPServer </smarter-platform/system-administration/tools/mcpserver>`,
 whose protocol the Model Context Protocol specification defines, are listed in
 :data:`~smarter.apps.api.v1.contract.openapi.routes.UNDOCUMENTED_URLCONFS`.
 

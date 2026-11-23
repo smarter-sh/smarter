@@ -130,7 +130,7 @@ Tenants and Isolation
 Every account's LLMClients run in the same pods, with the same database, and share the same Ingress
 controller and load balancer. Isolation between tenants is enforced by the application: each
 resource belongs to an account, and a request for a deployed LLMClient is authenticated with that
-LLMClient's :doc:`API keys <../../smarter-platform/api-keys>`. An LLMClient that has no active API key
+LLMClient's :doc:`API keys <../../smarter-platform/system-administration/accounts-and-access/api-keys>`. An LLMClient that has no active API key
 is **public**: anyone who knows its URL can prompt it, and its prompts are billed to its account.
 Make sure your customers know this before they deploy.
 
@@ -154,7 +154,7 @@ Monitoring and Logs
 -------------------
 
 Deployment tasks log through Smarter's logger, behind `waffle <https://waffle.readthedocs.io/>`__
-switches that you turn on in the :doc:`Django admin <../../smarter-platform/django-admin>`:
+switches that you turn on in the :doc:`Django admin <../../smarter-platform/system-administration/tools/django-admin>`:
 
 - ``log_tasks``: every Celery task;
 - ``log_llmclient``: LLMClient deployment, undeployment and deletion;
@@ -316,8 +316,4 @@ Upgrades and Restores
   ``maxUnavailable: 0``, so deployed LLMClients stay reachable. It then runs the init Job, which
   migrates the database and deploys the built-in LLMClients again; those that are already deployed and
   verified need no new resources.
-- Restoring the database (see :doc:`Backup and Restore <../../smarter-platform/backup-and-restore>`)
-  restores the ``deployed`` and status fields, but not the cluster or DNS. A restored LLMClient that
-  is marked deployed is not redeployed automatically. After restoring into a new cluster, undeploy and
-  redeploy the LLMClients that must be reachable, in batches, so cert-manager and the CA aren't
-  flooded.
+- To restore the database, see :doc:`Backup and Restore </smarter-platform/system-administration/operations/backup-and-restore>`.

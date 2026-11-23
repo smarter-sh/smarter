@@ -6,5 +6,5 @@
 MCPServer: Public Tools
 =======================
 
-This page moved to :doc:`MCPServer <mcpserver>`, which describes the MCPServer's public and
-staff-only tools: see `MCPServer: Public Tools <mcpserver.html#public-tools>`__.
+This page moved to :doc:`MCPServer <system-administration/tools/mcpserver>`, which describes the MCPServer's public and
+staff-only tools: see `MCPServer: Public Tools <system-administration/tools/mcpserver.html#public-tools>`__.

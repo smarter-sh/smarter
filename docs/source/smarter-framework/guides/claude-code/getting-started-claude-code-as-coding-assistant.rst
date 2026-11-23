@@ -39,7 +39,7 @@ Before you begin, make sure you are ready to complete the Claude Code integratio
 - You are comfortable authoring YAML provider manifests.
 
 If you want a deeper reference for provider manifests, see
-:doc:`/smarter-platform/adding-an-llm-provider`.
+:doc:`/smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`.
 
 Step-by-Step
 ------------
@@ -281,6 +281,6 @@ Troubleshooting
 
 .. seealso::
 
-   - :doc:`/smarter-platform/adding-an-llm-provider`
+   - :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`
    - :doc:`/smarter-framework/guides/claude-code/claude-code-with-smarter`
    - :doc:`/external-links/claude-reference`

@@ -163,7 +163,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - **Trust and operations.** Extensions run with the platform's own access, unsandboxed. The
        registry's signature and sha256 checks, and what they do and don't protect. Updates,
        rollbacks and errors on the web console's Extensions pages
-       (:doc:`/smarter-platform/extensions`), and the signals that log every tool call.
+       (:doc:`/smarter-platform/system-administration/llm-providers-and-extensions/extensions`), and the signals that log every tool call.
    * - 4
      - Live session 4
      - Capstone presentations (about 6 minutes each, with 2 minutes of questions), and a course
@@ -447,7 +447,7 @@ Recommended Texts
 - **Required:** :doc:`/smarter-framework/extensions/lifecycle` and
   :doc:`/smarter-framework/extensions/testing`, in week 3.
 - **Required:** :doc:`/smarter-framework/extensions/publishing` and
-  :doc:`/smarter-platform/extensions`, in week 4.
+  :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/extensions`, in week 4.
 - **Reference:** Luciano Ramalho, *Fluent Python* (2nd edition, O'Reilly, 2022), on classes,
   type hints and packages.
 - **Reference:** Chip Huyen, *AI Engineering* (O'Reilly, 2025), on how tools and agents fit into

@@ -1,7 +1,7 @@
 Smarter APIs, SDKs and Integrations
 ===================================
 
-Everything that you can do in the :doc:`web console <../smarter-platform/smarter-web-console>`, you
+Everything that you can do in the :doc:`web console <../smarter-platform/system-administration/tools/smarter-web-console>`, you
 can also do from your own software, and a deployed LLMClient's chat can appear on web sites that
 aren't built with Smarter at all. This section documents the pieces that make that possible. They
 come in three layers, and each layer is built from the one before it:
@@ -11,7 +11,7 @@ come in three layers, and each layer is built from the one before it:
 2. :ref:`The SDKs and developer tools <apis-and-sdks-sdks>` are for programmers, as the APIs are.
    They are clients of the APIs, generated from their contract: libraries for Python, Node.js and
    Go, the ``smarter`` command-line program, and the VS Code extension.
-3. :ref:`The website integrations <apis-and-sdks-integrations>` are for people who generally don't
+3. :doc:`The integrations </smarter-framework/smarter-integrations>` are for people who generally don't
    program against Smarter: the owners and administrators of a WordPress, Drupal or Shopify site, a
    Google Tag Manager container, or a documentation site. Each one adds a deployed LLMClient's chat
    to their site from a settings screen.
@@ -62,13 +62,13 @@ SDKs and Developer Tools
 
    * - SDK or tool
      - What it is
-   * - :doc:`Smarter Python SDK <smarter-python>`
+   * - :doc:`Smarter Python SDK </smarter-framework/smarter-sdks/smarter-python>`
      - A Python library, ``pip install smarter-api``, for applications, services, notebooks, tests
        and automation. The reference implementation of every Smarter SDK.
-   * - :doc:`Smarter Node.js SDK <smarter-nodejs>`
+   * - :doc:`Smarter Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs>`
      - A TypeScript library for Node.js, ``npm install @smarter.sh/api``, for web back ends, serverless
        functions, services and automation.
-   * - :doc:`Smarter Go SDK <smarter-golang>`
+   * - :doc:`Smarter Go SDK </smarter-framework/smarter-sdks/smarter-golang>`
      - A Go module, ``go get github.com/smarter-sh/smarter-golang``, for services, Kubernetes
        operators, infrastructure tooling and automation.
    * - :doc:`Smarter CLI <smarter-cli>`
@@ -80,6 +80,8 @@ SDKs and Developer Tools
 The CLI and the SDKs are clients of the OpenAPI contract, and nothing else: none of them has access
 to the platform that your own software doesn't have.
 
+The SDKs have a section of their own, :doc:`Smarter SDKs </smarter-framework/smarter-sdks>`.
+
 Smarter's SDKs follow the same design, whatever their language. The Python SDK was the first of
 them, and is the reference implementation: the Node.js and Go SDKs have its features, resources,
 verbs and errors, number their architecture decisions as it does, and are tested against the same
@@ -88,33 +90,14 @@ recorded responses of the platform.
 
 .. _apis-and-sdks-integrations:
 
-Website Integrations
---------------------
+Integrations
+------------
 
-The website integrations bring a deployed LLMClient to sites that are built on other platforms.
-They don't call the Smarter API themselves. Each one is built on :doc:`Smarter Chat
-<smarter-chat>`'s embed script, one ``<script>`` tag that any web page can use, and writes that tag
-for you from a settings screen, so a site owner needs no code and no knowledge of Smarter beyond
-the address of their LLMClient.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 30 70
-
-   * - Integration
-     - What it is
-   * - :doc:`Smarter Chat for WordPress <smarter-wordpress>`
-     - A WordPress plugin that adds the chat to a WordPress site: a launcher on every page, a block
-       and a shortcode.
-   * - :doc:`Smarter Chat for Drupal <smarter-drupal>`
-     - A Drupal module that adds the chat to a Drupal site: a launcher on every page, and a block.
-   * - :doc:`Smarter Chat for Shopify <smarter-shopify>`
-     - A Shopify app whose theme app extension adds the chat to a store, from the theme editor.
-   * - :doc:`Smarter Chat for Google Tag Manager <smarter-gtm>`
-     - A tag template that adds the chat to any site with a Google Tag Manager container.
-   * - :doc:`Smarter Chat for Documentation Sites <smarter-docs-sites>`
-     - Plugins for Docusaurus, MkDocs and Sphinx, and a recipe for VitePress, that add the chat to
-       every page of a documentation site.
+The integrations for WordPress, Drupal, Shopify, Google Tag Manager and documentation sites bring a
+deployed LLMClient's chat to sites that are built on other platforms. They don't call the Smarter API
+themselves: each one writes the tag of :doc:`Smarter Chat <smarter-chat>`'s embed script from a
+settings screen. They have a section of their own, :doc:`Smarter Integrations
+</smarter-framework/smarter-integrations>`.
 
 
 .. _apis-and-sdks-design-goals:
@@ -249,9 +232,9 @@ Start from the contract, not from the platform's code:
    :ref:`smarter-openapi-generating-a-client`.
 3. Test that every kind's example manifest parses with its generated model, and that every request
    that the SDK sends is an operation of ``openapi.json``.
-4. Follow the design goals above, and the :doc:`Python SDK <smarter-python>` as the reference
+4. Follow the design goals above, and the :doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python>` as the reference
    implementation, from its configuration lookup to its exception hierarchy. The
-   :doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>` SDKs show how its design
+   :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>` SDKs show how its design
    translates into other languages.
 
 
@@ -265,20 +248,7 @@ Start from the contract, not from the platform's code:
 
 .. toctree::
    :maxdepth: 1
-   :caption: SDKs and Developer Tools
+   :caption: Developer Tools
 
-   smarter-python
-   smarter-nodejs
-   smarter-golang
    smarter-cli
    vs-code-extension
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Website Integrations
-
-   smarter-wordpress
-   smarter-drupal
-   smarter-shopify
-   smarter-gtm
-   smarter-docs-sites

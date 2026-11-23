@@ -477,4 +477,4 @@ Sources
   blog.smarter.sh
 - :doc:`/smarter-framework/developer-reference/react-integration/doodle`
 - :doc:`/smarter-resources/smarter-llmclient` and :doc:`/smarter-resources/smarter-guardrail`
-- :doc:`/smarter-platform/django-admin`
+- :doc:`/smarter-platform/system-administration/tools/django-admin`

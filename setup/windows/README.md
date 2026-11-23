@@ -9,6 +9,12 @@ environment completely up and running.
 
 Use setup.ps1 to automate installation where possible.
 
+The Makefile runs its recipes with bash, so `make init`, `make build` and the other
+targets need a bash shell. The simplest way to get one is WSL 2 with Ubuntu, where
+[../ubuntu/setup.sh](../ubuntu/setup.sh) sets up everything, and Docker Desktop's WSL
+integration gives it Docker. setup.ps1 is for working natively in Windows, e.g. for VS
+Code's Python type checking, and for the tools you run from PowerShell.
+
 ### Developer Environment IDE
 
 | Package             | Description                                 |
@@ -16,7 +22,6 @@ Use setup.ps1 to automate installation where possible.
 | VS Code             | Extensible integrated developer environment |
 | Visual Studio Build | C/C++ build tools (MSVC, Windows SDK)       |
 | nvm-windows         | Node Version Manager for Windows            |
-| Homebrew (optional) | Package manager for Windows (alternative)   |
 
 ### Build, Deploy & Management Tools
 
@@ -25,6 +30,8 @@ Use setup.ps1 to automate installation where possible.
 | Docker Desktop | Docker, docker-compose and docker CLI           |
 | AWS CLI        | AWS CLI for managing AWS services               |
 | kubectl        | Kubernetes CLI for cluster management           |
+| Helm           | Kubernetes package manager (Smarter's chart)    |
+| Git            | Version control, with Git Bash                  |
 | Go             | Go programming language (Smarter CLI)           |
 | jq             | Command-line JSON processor for CI-CD           |
 | Node.js        | Node.js runtime (JS tooling and ReactJS builds) |

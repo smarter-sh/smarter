@@ -405,8 +405,8 @@ Recommended Texts
 - **Required:** the OWASP Top 10 lists and the `OWASP Cheat Sheet Series
   <https://cheatsheetseries.owasp.org/>`__ (SSRF, secrets management, Django), throughout.
 - **Reference:** Corey Ball, *Hacking APIs* (No Starch Press, 2022).
-- **Smarter documentation:** :doc:`/smarter-platform/security`,
-  :doc:`/smarter-platform/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/security`,
+  :doc:`/smarter-platform/system-administration/security/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-secret`, :doc:`/adr/016-security` and
   :doc:`/smarter-framework/smarter-on-kubernetes`.
 

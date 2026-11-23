@@ -48,9 +48,9 @@ Where to Start
      - :doc:`Embedding Smarter Chat <smarter-chat/embedding>`, then the
        `README <https://github.com/smarter-sh/smarter-console/blob/main/packages/smarter.sh-chat/README.md>`__ for a quick reference
    * - Adding it to a WordPress, Drupal, Shopify or documentation site, or with Google Tag Manager
-     - The plugin's page: :doc:`WordPress <smarter-wordpress>`, :doc:`Drupal <smarter-drupal>`,
-       :doc:`Shopify <smarter-shopify>`, :doc:`Google Tag Manager <smarter-gtm>`,
-       :doc:`documentation sites <smarter-docs-sites>`
+     - The plugin's page: :doc:`WordPress </smarter-framework/smarter-integrations/smarter-wordpress>`, :doc:`Drupal </smarter-framework/smarter-integrations/smarter-drupal>`,
+       :doc:`Shopify </smarter-framework/smarter-integrations/smarter-shopify>`, :doc:`Google Tag Manager </smarter-framework/smarter-integrations/smarter-gtm>`,
+       :doc:`documentation sites </smarter-framework/smarter-integrations/smarter-docs-sites>`
    * - Writing React code in Smarter Chat, for the web console or the npm package
      - :doc:`Developing Smarter Chat <smarter-chat/development>`, then
        :doc:`How the Web Console Hosts It <smarter-chat/web-console-hosting>`

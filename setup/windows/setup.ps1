@@ -17,7 +17,7 @@
 # Actions performed:
 #   - Verifies essential packages and libraries
 #   - Ensures docker-compose symlink exists
-#   - Installs development dependencies (gcc, python, go, node, nvm, awscli, kubectl, etc.)
+#   - Installs development dependencies (python, git, go, node, nvm, awscli, kubectl, helm, etc.)
 #
 # Exit codes:
 #   0 — Success
@@ -32,18 +32,20 @@
 # Ensure script runs as Administrator
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "You do not have Administrator rights to run this script! Please re-run as Administrator."
-    break
+    exit 1
 }
 
 # Update winget
 winget upgrade --all --accept-source-agreements --accept-package-agreements
 
 # Install core tools
-winget install -e --id Python.Python.3
+winget install -e --id Python.Python.3.14
+winget install -e --id Git.Git
 winget install -e --id GoLang.Go
 winget install -e --id OpenJS.NodeJS.LTS
 winget install -e --id AWS.AWSCLI
 winget install -e --id Kubernetes.kubectl
+winget install -e --id Helm.Helm
 winget install -e --id derailed.k9s
 
 # Install Docker Desktop (includes Docker Compose)
@@ -75,7 +77,7 @@ python -m pip install --upgrade pip
 # Example: Install scientific Python stack (optional, if needed)
 # python -m pip install numpy scipy pandas matplotlib
 
-Write-Host "\nSmarter development environment setup complete!\n"
+Write-Host "`nSmarter development environment setup complete!`n"
 
 Write-Host "`n=============================================="
 Write-Host " Smarter Project — Installed Packages Summary"
@@ -98,6 +100,12 @@ aws --version
 
 Write-Host "kubectl:"
 kubectl version --client --output=yaml
+
+Write-Host "helm:"
+helm version --short
+
+Write-Host "git:"
+git --version
 
 Write-Host "Docker:"
 docker --version

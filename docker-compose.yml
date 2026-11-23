@@ -63,9 +63,9 @@ services:
     env_file:
       - ./.env
     volumes:
-      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
-      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
-      - ./user-settings:/home/smarter_user/user-settings:ro
+      # the local overrides file, overrides/settings.yaml, read-only. Its values overwrite
+      # Smarter's Django settings. See smarter/smarter/settings/overrides.py.
+      - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=app
@@ -99,9 +99,9 @@ services:
     env_file:
       - ./.env
     volumes:
-      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
-      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
-      - ./user-settings:/home/smarter_user/user-settings:ro
+      # the local overrides file, overrides/settings.yaml, read-only. Its values overwrite
+      # Smarter's Django settings. See smarter/smarter/settings/overrides.py.
+      - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
@@ -145,9 +145,9 @@ services:
     env_file:
       - ./.env
     volumes:
-      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
-      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
-      - ./user-settings:/home/smarter_user/user-settings:ro
+      # the local overrides file, overrides/settings.yaml, read-only. Its values overwrite
+      # Smarter's Django settings. See smarter/smarter/settings/overrides.py.
+      - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
@@ -188,9 +188,9 @@ services:
     env_file:
       - ./.env
     volumes:
-      # the user's own Django settings, user-settings/settings.yaml, read-only. They supersede
-      # Smarter's settings in every environment. See smarter/smarter/settings/user.py.
-      - ./user-settings:/home/smarter_user/user-settings:ro
+      # the local overrides file, overrides/settings.yaml, read-only. Its values overwrite
+      # Smarter's Django settings. See smarter/smarter/settings/overrides.py.
+      - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=beat

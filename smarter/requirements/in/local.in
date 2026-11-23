@@ -68,6 +68,7 @@ sphinx_contributors                 # Sphinx GitHub contributors list
 sphinx-design                       # Adds drop downs and other fancy styling
 sphinx-contributors                 # lists the people who have contributed to this GitHub repo
 sphinx-sitemap                      # site map generator
+sphinx-reredirects                  # Redirects from the URLs of pages that moved
 
 
 # Dockerfile requirements

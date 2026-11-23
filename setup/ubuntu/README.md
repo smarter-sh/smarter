@@ -18,10 +18,11 @@ and compiler and linker flags.
 | k9s     | Kubernetes ASCII console admin software         |
 | awscli  | AWS CLI for managing AWS services               |
 | kubectl | Kubernetes CLI for cluster management           |
+| helm    | Kubernetes package manager (Smarter's chart)    |
 | Docker  | Docker daemon, docker-compose and docker CLI    |
 | go      | Go programming language (Smarter CLI)           |
 | node    | Node.js runtime (JS tooling and ReactJS builds) |
-| nvm     | Node Version Manager                            |
+| nvm     | Node Version Manager (installs Node.js 24)      |
 | jq      | Command-line JSON processor for CI-CD           |
 
 ### Python Virtual Environment Dependencies

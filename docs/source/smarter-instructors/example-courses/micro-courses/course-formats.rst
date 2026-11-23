@@ -198,7 +198,7 @@ Adapt these to your institution's rules, and state them on the first day.
   assignment says otherwise, and must say how they used them in a short note with each
   submission. They are graded on their understanding, so expect to be asked to explain any line
   that they turn in. The :doc:`agentic-development` course takes this further.
-- **Evidence of process.** Smarter's :doc:`journal </smarter-platform/smarter-journal>` records
+- **Evidence of process.** Smarter's :doc:`journal </smarter-platform/system-administration/costs-and-auditing/smarter-journal>` records
   every prompt and tool call, so prompt engineering and AI application assignments can ask for
   the conversation that produced a result. Tell students that their prompts are recorded.
 - **Submissions.** Manifests, code, documents and design notes are submitted in a Git repository,
