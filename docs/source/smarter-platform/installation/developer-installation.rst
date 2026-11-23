@@ -1,7 +1,7 @@
 :orphan:
 
-Developer Setup Guide
-=======================
+Developer Installation Guide
+============================
 
 Smarter follows opinionated code style policies for most of the
 technologies in this repo. With that in mind, following is how to
@@ -31,13 +31,30 @@ are installed in your local environment:
 - git: 2.x or later
 - make: 3.8 or later
 
-You should also review and execute the following script to ensure that you have
-all of the necessary macOS system dependencies for building Python packages.
+The repository has a setup script for each operating system, in
+`setup/ <https://github.com/smarter-sh/smarter/tree/main/setup>`__, that installs these and the
+native libraries that the local Python virtual environment builds against. Read the script and the
+README beside it before you run it.
 
-.. code:: console
+.. list-table::
+   :header-rows: 1
 
-  bash ./scripts/install-macos-python-build-deps.sh
+   * - Operating system
+     - Script
+     - Run it with
+   * - macOS
+     - `setup/macos/setup.sh <https://github.com/smarter-sh/smarter/blob/main/setup/macos/setup.sh>`__
+     - ``bash setup/macos/setup.sh``
+   * - Debian or Ubuntu
+     - `setup/ubuntu/setup.sh <https://github.com/smarter-sh/smarter/blob/main/setup/ubuntu/setup.sh>`__
+     - ``bash setup/ubuntu/setup.sh``
+   * - Windows
+     - `setup/windows/setup.ps1 <https://github.com/smarter-sh/smarter/blob/main/setup/windows/setup.ps1>`__
+     - ``powershell -File setup\windows\setup.ps1``, as Administrator
 
+The macOS and Ubuntu folders also have a ``.zshrc.example``, with the paths and compiler and linker
+flags that the virtual environment's native packages need. Merge what you need into your own
+``~/.zshrc`` rather than replacing it.
 
 Lastly, if you work on cloud infrastructure then you’ll also need these:
 
@@ -56,7 +73,7 @@ Launch the Smarter Platform
 
    make init    # initialize dev environment, build & init docker.
    make build   # builds and configures all docker containers
-   make run     # runs all docker containers and starts a local web server on port 8000
+   make run     # runs all docker containers and starts a local web server on port 9357
 
 
 Work With Source Code

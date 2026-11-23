@@ -31,7 +31,7 @@ Developer Onboarding: the Development Environment
 An eight-minute walkthrough of getting Smarter's development environment up and running from its
 source code, for anyone who wants to change that code. Up and Running in Less Than 10 Minutes, above,
 runs the pre-built images from Docker Hub instead. See the
-:doc:`/smarter-framework/guides/developer-setup`.
+:doc:`/smarter-platform/installation/developer-installation`.
 
 .. raw:: html
 
