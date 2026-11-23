@@ -40,8 +40,9 @@ First steps
 Are you new to Smarter? This is the place to start.
 
 - **From scratch:** :doc:`Why Smarter <smarter-overview>` | :doc:`Prerequisites <smarter-platform/prerequisites>` | :doc:`Quick Start <smarter-platform/installation/quick-start>`
-- **Tutorials:** `Tutorials on the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__ | :doc:`Video tutorials <external-links/youtube>`
-- **Your first application:** :doc:`Manifests <smarter-framework/smarter-manifests>` | :doc:`LLMClient <smarter-resources/smarter-llmclient>` | :doc:`Example manifests <smarter-framework/smarter-manifests/example-manifests>`
+- **Tutorial, Your First AI Application:** `Part 1: A chatbot in the workbench <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__ | `Part 2: The YAML manifest <https://blog.smarter.sh/2026/11/23/first-ai-application-part-2-yaml-manifest/>`__ | `Part 3: Calling a REST API <https://blog.smarter.sh/2026/11/23/first-ai-application-part-3-rest-api/>`__ | `Part 4: Querying a SQL database <https://blog.smarter.sh/2026/11/23/first-ai-application-part-4-sql-database/>`__ | `Part 5: Guardrails <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__
+- **Advanced tutorials:** `Build a Smarter Extension in Python <https://blog.smarter.sh/2026/11/01/smarter-extension-cookiecutter-how-to/>`__
+- **More tutorials:** `Tutorials on the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__ | :doc:`Video tutorials <external-links/youtube>`
 - **Teaching AI:** :doc:`Instructor Guide <smarter-instructor>` | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>`
 
 Getting help
@@ -73,7 +74,9 @@ help you find what you need:
   :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` are for trainers,
   teachers and the people who run a training program.
 - Tutorials, which take you by the hand through building something, are published on
-  `the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__, and the
+  `the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__. Start with
+  `Your First AI Application <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__,
+  which builds one application, a course advisor, part by part. The
   :doc:`case studies <case-studies/index>` follow real problems all the way to a working
   solution.
 
