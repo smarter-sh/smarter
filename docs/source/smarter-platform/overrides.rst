@@ -64,7 +64,7 @@ The same code applies both: :mod:`smarter.settings.overrides`. ``DJANGO_*`` vari
 ``.env``.
 
 How overrides overwrite Smarter's settings
--------------------------------------
+------------------------------------------
 
 Django reads one settings module, named by ``DJANGO_SETTINGS_MODULE``: ``smarter.settings.local`` on your
 computer, ``smarter.settings.prod`` in prod, and so on. Each of those modules builds on the ones before it,

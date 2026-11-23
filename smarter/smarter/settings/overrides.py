@@ -1,7 +1,7 @@
 """
 Overrides: Django settings that the deployment passes to the process, which overwrite Smarter's.
 
-Smarter's settings modules compute every Django setting from ``smarter_settings``. The deployment
+Smarter's settings modules compute most Django settings from ``smarter_settings``. The deployment
 can overwrite any of them at startup, without a change to Smarter's code. Nobody who uses the
 platform can: an override exists only in the process's environment, or in a file mounted into the
 container, both of which the deployment controls.
