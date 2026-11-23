@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.5...v0.47.6-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **llmclient:** charge workbench prompts to the user who sends them ([2fad7e5](https://github.com/smarter-sh/smarter/commit/2fad7e5f0468e5f5e5df5dcd7e20ef65888d0c77))
+
 ## [0.47.5](https://github.com/smarter-sh/smarter/compare/v0.47.4...v0.47.5) (2026-11-23)
 
 ### Bug Fixes
