@@ -12,6 +12,10 @@ from typing import Optional
 
 from langchain_core.embeddings import Embeddings
 
+from smarter.apps.vectorstore.deployment import TRUE
+from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
+    SAMVectorstoreCondition,
+)
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.exceptions import SmarterException
 from smarter.lib.typing import SmarterDictType
@@ -25,6 +29,18 @@ class VectorStoreBackendError(SmarterException):
 
 class VectorStoreBackendConnectionError(VectorStoreBackendError):
     """The vector database cannot be reached."""
+
+
+class VectorStoreBackendRejectedError(VectorStoreBackendError):
+    """
+    The vector database refused a request, and would refuse it again, e.g. an invalid dimension or a full quota.
+
+    A deploy that meets it fails at once, rather than retrying.
+    """
+
+
+class VectorStoreBackendCredentialsError(VectorStoreBackendRejectedError):
+    """The vector database refused the api key, or there is none to send."""
 
 
 @dataclass
@@ -78,16 +94,50 @@ class SmarterVectorstoreBackend(ABC):
         return self.vectorstore.index_name or self.vectorstore.default_index_name()
 
     # --- lifecycle --------------------------------------------------------------
+    def check_credentials(self) -> str:
+        """
+        Check, quickly, that the database accepts the vectorstore's credentials.
+
+        By default it asks whether the index exists, which a managed service answers only with a valid api key.
+
+        :returns: What was found, for a person.
+        :raises VectorStoreBackendCredentialsError: If the database refuses them.
+        :raises VectorStoreBackendConnectionError: If the database can't be reached, which may pass.
+        """
+        self.exists()
+        return "The database accepted the api key."
+
     def provision(self) -> None:
         """Create the database's infrastructure, if Smarter runs it.
 
         It returns without waiting for it.
         """
 
+    def infrastructure_conditions(self) -> list[SAMVectorstoreCondition]:
+        """
+        The conditions of the infrastructure that Smarter runs, e.g. a self-hosted server's volume and pod.
+
+        A managed service has none.
+
+        :returns: One condition per part of the infrastructure, in the order that they become ready.
+        """
+        return []
+
     def infrastructure_ready(self) -> tuple[bool, str]:
         """Whether the infrastructure that Smarter runs is ready, and why not.
 
         A managed service always is.
+        """
+        for condition in self.infrastructure_conditions():
+            if condition.status != TRUE:
+                return False, condition.message
+        return True, ""
+
+    def index_ready(self) -> tuple[bool, str]:
+        """
+        Whether the index or collection, which exists, is ready to use, and why not.
+
+        By default it is as soon as it exists. Pinecone initializes a new index for a minute or two.
         """
         return True, ""
 
@@ -178,5 +228,7 @@ __all__ = [
     "SmarterVectorstoreBackend",
     "SnapshotInfo",
     "VectorStoreBackendConnectionError",
+    "VectorStoreBackendCredentialsError",
     "VectorStoreBackendError",
+    "VectorStoreBackendRejectedError",
 ]

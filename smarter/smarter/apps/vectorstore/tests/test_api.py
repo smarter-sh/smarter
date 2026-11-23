@@ -170,4 +170,11 @@ class TestVectorstoreApi(VectorstoreTestBase):
             self.request("post", url(Names.undeploy_by_hashed_id, hashed_id=hashed_id))["status"], "stopped"
         )
         data = self.request("post", url(Names.deploy_by_hashed_id, hashed_id=hashed_id), status=HTTPStatus.ACCEPTED)
-        self.assertEqual(data["status"], "ready")
+        self.assertEqual(data["status"], "provisioning")
+        self.assertEqual([c["type"] for c in data["conditions"]], ["Credentials", "Index"])
+        self.assertEqual((data["attempt"], data["maxAttempts"], data["nextRetryAt"]), (0, 80, None))
+        (vectorstore_id, deployment_id), _ = self.deploy_task.call_args
+        self.assertEqual(vectorstore_id, self.vectorstore.pk)
+        self.vectorstore_service.deployment_step(deployment_id)
+        status = self.request("get", url(Names.status_by_hashed_id, hashed_id=hashed_id))
+        self.assertEqual(status["status"], "ready")

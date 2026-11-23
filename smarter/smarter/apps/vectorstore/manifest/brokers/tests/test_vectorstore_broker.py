@@ -8,6 +8,10 @@ from django.http import HttpRequest
 from qdrant_client import QdrantClient
 
 from smarter.apps.account.tests.factories import mortal_user_factory
+from smarter.apps.vectorstore.backends import (
+    QdrantBackend,
+    VectorStoreBackendCredentialsError,
+)
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import (
     SAMVectorstoreBroker,
     SAMVectorstoreBrokerError,
@@ -17,6 +21,7 @@ from smarter.apps.vectorstore.models import (
     VectorstoreMeta,
     VectorstoreStatus,
 )
+from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
 from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -77,6 +82,15 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
     def data(self, response) -> SmarterDictType:
         return json.loads(response.content.decode("utf-8"))["data"]
 
+    def deploy(self) -> SmarterDictType:
+        """Deploy, as the cli does, then make the deploy task's check, and return what deploy returned."""
+        data = self.data(self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs))
+        vectorstore = VectorstoreMeta.objects.get(name=self.vs_name)
+        (vectorstore_id, deployment_id), _ = self.deploy_task.call_args
+        self.assertEqual(vectorstore_id, vectorstore.pk)
+        self.assertIsNone(VectorstoreService(vectorstore).deployment_step(deployment_id))
+        return data
+
     def test_apply(self):
         """Test that apply creates the Vectorstore, without creating its database."""
         response = self.broker.apply(self.request, **self.kwargs)
@@ -105,17 +119,34 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
 
     def test_lifecycle(self):
-        """Test deploy, describe, logs, undeploy and delete."""
+        """Test deploy, which returns at once, provisioning, describe as the deploy ends, logs, undeploy and delete."""
         self.apply()
-        data = self.data(self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs))
-        self.assertEqual(data["status"]["vectorstoreStatus"], "ready", data["status"])
-        self.assertTrue(data["status"]["apiKeySecret"].startswith("vectorstore_"))
+        status = self.deploy()["status"]
+        self.assertEqual(status["vectorstoreStatus"], "provisioning", status)
+        self.assertEqual(status["message"], "Deploying.")
+        self.assertTrue(status["apiKeySecret"].startswith("vectorstore_"))
+        self.assertEqual(
+            [(c["type"], c["status"]) for c in status["conditions"]], [("Credentials", "True"), ("Index", "Unknown")]
+        )
+        self.assertEqual((status["attempt"], status["maxAttempts"], status["lastError"]), (0, 80, None))
         self.assertEqual(len(self.kubernetes.applied), 1)
 
         described = self.data(self.broker_for(self.manifest_text()).describe(self.request, **self.kwargs))
         self.assertEqual(described["kind"], "Vectorstore")
         self.assertEqual(described["spec"]["embeddings"]["model"], "test-embedding")
-        self.assertEqual(described["status"]["vectorCount"], 0)
+        status = described["status"]
+        self.assertEqual(status["vectorstoreStatus"], "ready")
+        self.assertEqual(status["vectorCount"], 0)
+        self.assertEqual(
+            [(c["type"], c["status"], c["reason"]) for c in status["conditions"]],
+            [
+                ("Credentials", "True", "Accepted"),
+                ("Volume", "True", "Bound"),
+                ("Server", "True", "Ready"),
+                ("Index", "True", "Ready"),
+            ],
+        )
+        self.assertEqual((status["attempt"], status["nextRetryAt"]), (1, None))
 
         logs = self.data(self.broker_for(self.manifest_text()).logs(self.request, **self.kwargs))
         self.assertIn("vectorstore=", logs["logs"])
@@ -127,25 +158,25 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
         self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
 
-    def test_a_failed_deploy_is_an_error(self):
-        """A database that can't be reached or created fails the deploy, with the reason, e.g. a refused api key."""
+    def test_a_refused_api_key_is_an_error(self):
+        """An api key that the database refuses fails the deploy at once, with the reason, and queues nothing."""
         self.apply()
-        refusal = (
-            "Vector Store Backend Connection Error: Pinecone is unreachable: [401 UNAUTHENTICATED] Invalid API key"
-        )
-        with patch(
-            "smarter.apps.vectorstore.manifest.brokers.vectorstore.VectorstoreService.reconcile",
-            autospec=True,
-            side_effect=lambda service: service.set_status(VectorstoreStatus.FAILED, refusal),
-        ):
-            with self.assertRaisesRegex(SAMVectorstoreBrokerError, "401 UNAUTHENTICATED"):
+        refusal = VectorStoreBackendCredentialsError("Pinecone refused the api key: (401) Invalid API key")
+        with patch.object(QdrantBackend, "check_credentials", side_effect=refusal):
+            with self.assertRaisesRegex(SAMVectorstoreBrokerError, "Invalid API key"):
                 self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs)
-        self.assertEqual(VectorstoreMeta.objects.get(name=self.vs_name).status, VectorstoreStatus.FAILED)
+        self.deploy_task.assert_not_called()
+        status = self.data(self.broker_for(self.manifest_text()).describe(self.request, **self.kwargs))["status"]
+        self.assertEqual(status["vectorstoreStatus"], "failed")
+        self.assertIn("Invalid API key", status["message"])
+        self.assertIn("Invalid API key", status["lastError"])
+        self.assertEqual(status["conditions"][0]["type"], "Credentials")
+        self.assertEqual((status["conditions"][0]["status"], status["conditions"][0]["reason"]), ("False", "Refused"))
 
     def test_immutable_while_deployed(self):
         """Test that a deployed Vectorstore's storage cannot change, and its embeddings model may, reloading its documents."""
         vectorstore = self.apply()
-        self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs)
+        self.deploy()
         with self.assertRaisesRegex(SAMVectorstoreBrokerError, "selfHosted.storage"):
             self.apply(storage="2Gi")
 

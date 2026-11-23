@@ -7,7 +7,9 @@ The broker converts between Vectorstore manifests and the
 CLI commands for Vectorstores:
 
 - ``apply``: create or update the Vectorstore. It does not create the database.
-- ``deploy``: create the database: a self-hosted Qdrant server, or a managed index.
+- ``deploy``: create the database: a self-hosted Qdrant server, or a managed index. It returns at
+  once, provisioning, and a Celery task creates the database. Follow it with ``describe``, whose
+  status has the deploy's conditions, attempts and last error.
 - ``undeploy``: stop serving. A self-hosted server's data is kept.
 - ``delete``: destroy the database and all of its data, unless deletionProtection is enabled,
   then delete the Vectorstore.
@@ -31,6 +33,7 @@ from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,
 )
+from smarter.apps.vectorstore.deployment import VectorstoreDeploymentState
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
     SAMVectorstoreMetadata,
@@ -265,6 +268,7 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             tags=vectorstore.tags_list,
             annotations=vectorstore.annotations,
         )
+        deployment = VectorstoreDeploymentState.of(vectorstore)
         status = SAMVectorstoreStatus(
             accountNumber=required(
                 vectorstore.user_profile.account.account_number, "vectorstore.user_profile.account.account_number"
@@ -285,6 +289,11 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             lastCheckedAt=vectorstore.last_checked_at,
             lastSnapshotAt=vectorstore.last_snapshot_at,
             lastMaintenanceAt=vectorstore.last_maintenance_at,
+            conditions=deployment.conditions,
+            attempt=deployment.attempt if deployment.id else None,
+            maxAttempts=deployment.maxAttempts if deployment.id else None,
+            nextRetryAt=deployment.nextRetryAt,
+            lastError=deployment.lastError,
         )
         model = SAMVectorstore(
             apiVersion=self.api_version, kind=self.kind, metadata=meta, spec=self.spec_of(vectorstore), status=status
@@ -619,12 +628,12 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Create the database.
+        """Create the database, in a Celery task, and return at once, provisioning.
 
-        A self-hosted server takes a minute or two to become ready: follow it with describe. A deploy
-        whose database can't be reached or created, e.g. because a managed service refuses the
-        connection's api key, is an error, with the reason, rather than a success whose describe says
-        ``failed``.
+        A Pinecone index takes a minute or two to initialize, and a self-hosted server several, so the
+        task creates the database, and checks it until it is ready: follow it with describe, whose
+        status has the deploy's conditions, attempts and last error. What can be checked at once is
+        an error now: an inactive Vectorstore, or an api key that the database refuses.
         """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         vectorstore = self.owned_vectorstore(command)
@@ -634,13 +643,6 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             raise SAMVectorstoreBrokerError(
                 f"Failed to deploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
-        # reconcile() records a failure in the status rather than raising it, e.g. a refused api key.
-        if vectorstore.status == VectorstoreStatus.FAILED:
-            raise SAMVectorstoreBrokerError(
-                f"Failed to deploy {self.kind} {self.name}: {vectorstore.status_message}",
-                thing=self.kind,
-                command=command,
-            )
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
 
