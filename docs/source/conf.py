@@ -60,6 +60,8 @@ for _noisy_logger in ("urllib3", "requests_cache", "github"):
 # "<app> API is READY" lines again, once per worker. Forked workers inherit them loaded.
 importlib.import_module(django.conf.settings.ROOT_HOSTCONF)
 
+import sphinx_sitemap
+
 ###############################################################################
 # Patch the get_field_type function in sphinxcontrib_django to be more robust
 # and return "Unknown" instead of raising an exception when it encounters
@@ -552,8 +554,36 @@ def reread_landing_page_on_new_release(app, env, added, changed, removed):  # py
     return [LANDING_DOCNAME]
 
 
+###############################################################################
+# sphinx_sitemap adds a page to the sitemap when the build writes it (the
+# html-page-context event). The publish workflow restores the previous build
+# and rebuilds incrementally, so the sitemap listed only the pages that changed,
+# a few dozen of more than a thousand, and search engines found only those.
+# Before sphinx_sitemap writes the file, queue every other page of the site,
+# with sphinx_sitemap's own function, so that its urls, excludes and lastmod
+# are the same as for a page written in this build.
+###############################################################################
+def complete_sitemap(app, exception):
+    """Add the pages that this build didn't write to sphinx_sitemap's queue."""
+    links = getattr(app.env.app, "sitemap_links", None)
+    if exception or links is None or app.builder.format != "html":
+        return
+    written = []
+    while not links.empty():
+        written.append(links.get_nowait())
+    for item in written:
+        links.put(item)
+    written_pages = {link for link, _ in written}
+    suffix = app.builder.config.html_file_suffix or ".html"
+    for docname in sorted(app.env.found_docs):
+        if docname + suffix not in written_pages:
+            sphinx_sitemap.add_html_link(app, docname, None, None, None)
+
+
 def setup(app):
     """Register this configuration's Sphinx event handlers."""
+    # sphinx_sitemap writes the sitemap at the default priority, 500.
+    app.connect("build-finished", complete_sitemap, priority=400)
     app.connect("source-read", define_landing_page_version)
     app.connect("env-get-outdated", reread_landing_page_on_new_release)
     app.connect("doctree-read", resolve_builtins_exactly)
