@@ -15,6 +15,11 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores.utils import maximal_marginal_relevance
 from pinecone import Pinecone
 from pinecone.db_control.models import ServerlessSpec
+from pinecone.exceptions import (
+    ForbiddenException,
+    PineconeApiException,
+    UnauthorizedException,
+)
 
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.common.conf import smarter_settings
@@ -25,15 +30,42 @@ from .base import (
     SmarterVectorstoreBackend,
     SnapshotInfo,
     VectorStoreBackendConnectionError,
+    VectorStoreBackendCredentialsError,
     VectorStoreBackendError,
+    VectorStoreBackendRejectedError,
 )
 
 TEXT_KEY = "text"
+DONT_WAIT = -1
+"""The ``timeout`` that makes Pinecone's create_index and delete_index return at once, rather than wait."""
+REJECTED_STATUSES = (400, 403, 422)
+"""Pinecone's http statuses for a request that it would refuse again, e.g. an invalid dimension or a full quota."""
+
+
+def pinecone_error(action: str, error: Exception) -> VectorStoreBackendError:
+    """
+    Return the backend error of an exception from Pinecone, by whether retrying could help.
+
+    :param action: What failed, e.g. ``create the index``.
+    :param error: Pinecone's exception.
+    :returns: A :class:`~.base.VectorStoreBackendCredentialsError` for a refused api key, a
+        :class:`~.base.VectorStoreBackendRejectedError` for another request that Pinecone would refuse
+        again, and a :class:`~.base.VectorStoreBackendConnectionError` for anything else, e.g. a
+        timeout or a 5xx, which may pass.
+    """
+    message = f"Pinecone could not {action}: {error}"
+    if isinstance(error, UnauthorizedException):
+        return VectorStoreBackendCredentialsError(f"Pinecone refused the api key: {error}")
+    if isinstance(error, ForbiddenException):
+        return VectorStoreBackendRejectedError(message)
+    if isinstance(error, PineconeApiException) and error.status_code in REJECTED_STATUSES:
+        return VectorStoreBackendRejectedError(message)
+    return VectorStoreBackendConnectionError(message)
 
 
 if TYPE_CHECKING:
     # Pinecone.Index()'s return type, which pinecone imports only for type checkers, as here.
-    from pinecone.db_data import _Index as Index
+    from pinecone import GrpcIndex, Index
 
 
 class PineconeBackend(SmarterVectorstoreBackend):
@@ -52,14 +84,14 @@ class PineconeBackend(SmarterVectorstoreBackend):
     ):
         super().__init__(vectorstore, embeddings)
         self._client = client
-        self._index: Optional["Index"] = None
+        self._index: Optional["Index | GrpcIndex"] = None
 
     @property
     def client(self) -> Pinecone:
         """
         The Pinecone client, created when it is first used, with the API key of the vectorstore's ApiConnection.
 
-        :raises VectorStoreBackendConnectionError: If the vectorstore has no ApiConnection with an API key.
+        :raises VectorStoreBackendCredentialsError: If the vectorstore has no ApiConnection with an API key.
         """
         if self._client is None:
             connection = self.vectorstore.connection
@@ -67,28 +99,40 @@ class PineconeBackend(SmarterVectorstoreBackend):
             if connection and connection.api_key:
                 api_key = connection.api_key.get_secret()
             if not api_key:
-                raise VectorStoreBackendConnectionError(
+                raise VectorStoreBackendCredentialsError(
                     f"Vectorstore {self.vectorstore.name} has no ApiConnection with a Pinecone API key."
                 )
             self._client = Pinecone(api_key=api_key)
         return self._client
 
     @property
-    def index(self) -> "Index":
+    def index(self) -> "Index | GrpcIndex":
         """The Pinecone index, created when it is first used."""
         if self._index is None:
             self._index = self.client.Index(name=self.index_name)
         return self._index
 
     # --- lifecycle --------------------------------------------------------------
-    def infrastructure_ready(self) -> tuple[bool, str]:
-        """Whether the index is ready.
-
-        Pinecone takes a little while to initialize a new one.
+    def check_credentials(self) -> str:
         """
-        if not self.exists():
-            return True, ""
-        status = self.client.describe_index(self.index_name).status
+        Check that Pinecone accepts the api key, by asking whether the index exists.
+
+        :returns: What was found, for a person.
+        :raises VectorStoreBackendCredentialsError: If Pinecone refuses the api key.
+        :raises VectorStoreBackendConnectionError: If Pinecone can't be reached.
+        """
+        self.exists()
+        return "Pinecone accepted the api key."
+
+    def index_ready(self) -> tuple[bool, str]:
+        """Whether the index, which exists, is ready.
+
+        Pinecone takes a minute or two to initialize a new one.
+        """
+        try:
+            status = self.client.describe_index(self.index_name).status
+        except Exception as e:
+            raise pinecone_error("describe the index", e) from e
         if isinstance(status, dict):
             ready = status.get("ready")
         else:
@@ -101,34 +145,46 @@ class PineconeBackend(SmarterVectorstoreBackend):
         """
         Whether the Pinecone index exists.
 
+        :raises VectorStoreBackendCredentialsError: If Pinecone refuses the api key.
         :raises VectorStoreBackendConnectionError: If Pinecone is unreachable.
         """
         try:
             return self.client.has_index(self.index_name)
         except Exception as e:
-            raise VectorStoreBackendConnectionError(f"Pinecone is unreachable: {e}") from e
+            raise pinecone_error("find the index", e) from e
 
     def create(self) -> None:
         """
         Create a serverless Pinecone index, in the cloud and region of the spec's ``pinecone``.
 
-        It is tagged with the platform's name and the vectorstore's id, and has deletion protection if the vectorstore has.
+        It is tagged with the platform's name and the vectorstore's id, and has deletion protection if the
+        vectorstore has. It returns at once: Pinecone initializes the index for a minute or two, which
+        :meth:`index_ready` reports, rather than holding a request or a worker while it does.
+
+        :raises VectorStoreBackendError: If Pinecone did not create it, as :func:`pinecone_error` classifies it.
         """
         spec = self.vectorstore.spec or {}
         config = spec.get("pinecone") or {}
-        self.client.create_index(
-            name=self.index_name,
-            spec=ServerlessSpec(cloud=config.get("cloud", "aws"), region=config.get("region", "us-east-1")),
-            dimension=self.vectorstore.dimension,
-            metric=self.vectorstore.metric,
-            deletion_protection="enabled" if self.vectorstore.deletion_protection else "disabled",
-            tags={"created_by": smarter_settings.platform_name, "vectorstore": str(self.vectorstore.pk)},
-        )
+        try:
+            self.client.create_index(
+                name=self.index_name,
+                spec=ServerlessSpec(cloud=config.get("cloud", "aws"), region=config.get("region", "us-east-1")),
+                dimension=self.vectorstore.dimension,
+                metric=self.vectorstore.metric,
+                deletion_protection="enabled" if self.vectorstore.deletion_protection else "disabled",
+                tags={"created_by": smarter_settings.platform_name, "vectorstore": str(self.vectorstore.pk)},
+                timeout=DONT_WAIT,
+            )
+        except Exception as e:
+            raise pinecone_error("create the index", e) from e
 
     def drop(self) -> None:
-        """Delete the Pinecone index, if it exists, and its data."""
+        """Delete the Pinecone index, if it exists, and its data.
+
+        It returns at once, while Pinecone deletes the index.
+        """
         if self.exists():
-            self.client.delete_index(self.index_name)
+            self.client.delete_index(self.index_name, timeout=DONT_WAIT)
         self._index = None
 
     def stats(self) -> SmarterDictType:
@@ -297,9 +353,11 @@ class PineconeBackend(SmarterVectorstoreBackend):
     def restore_snapshot(self, name: str) -> None:
         """Replace the index with a new one from the backup.
 
-        Pinecone requires that the index is deleted first.
+        Pinecone requires that the index is deleted first, so this waits until it is.
         """
-        self.drop()
+        if self.exists():
+            self.client.delete_index(self.index_name)
+        self._index = None
         self.client.create_index_from_backup(
             name=self.index_name,
             backup_id=name,

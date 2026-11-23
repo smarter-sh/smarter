@@ -6,13 +6,16 @@ Nothing reaches a real cluster or service:
 - :class:`FakeKubernetes` replaces the Kubernetes service, with :func:`configure_kubernetes`. The
   smarter-api container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
   be deployed without it.
+- The deploy task is never queued: ``deploy_vectorstore.delay`` is patched for each test, and
+  :meth:`VectorstoreTestBase.deploy_now` runs its checks in the test instead. A queued task would
+  run in a worker, which has neither the fake cluster nor the in-memory database.
 - The Qdrant backend uses an in-memory QdrantClient, which supports everything but snapshots.
 - Embeddings are LangChain's deterministic fake.
 """
 
 import os
 from typing import Optional
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import yaml
 from langchain_core.embeddings import DeterministicFakeEmbedding
@@ -24,6 +27,7 @@ from smarter.apps.connection.models import ApiConnection
 from smarter.apps.provider.models import Provider
 from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore.backends import QdrantBackend
+from smarter.apps.vectorstore.deployment import VectorstoreDeploymentState
 from smarter.apps.vectorstore.kubernetes import QdrantKubernetes, configure_kubernetes
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
@@ -52,6 +56,7 @@ class FakeKubernetes:
         self.applied: list[str] = []
         self.deleted: list[tuple[list[str], str]] = []
         self.statefulset: Optional[SmarterDictType] = {"status": {"readyReplicas": 1}}
+        self.volume_claim: Optional[SmarterDictType] = {"status": {"phase": "Bound"}}
         self.pods: list[SmarterDictType] = []
         self.fail_apply: Optional[str] = None
 
@@ -61,6 +66,8 @@ class FakeKubernetes:
         self.applied.append(manifest)
 
     def get_resource(self, kind: str, name: str, namespace: str) -> Optional[SmarterDictType]:
+        if kind == "persistentvolumeclaim":
+            return self.volume_claim
         return self.statefulset
 
     def list_resources(self, kind: str, namespace: str, selector: Optional[str] = None) -> list[SmarterDictType]:
@@ -78,6 +85,7 @@ class VectorstoreTestBase(TestAccountMixin):
     """Fixtures of the vectorstore app's tests: a Provider, an ApiConnection, and a fake cluster."""
 
     kubernetes: FakeKubernetes
+    deploy_task: MagicMock
     provider: Provider
     secret: Secret
     connection: ApiConnection
@@ -122,6 +130,10 @@ class VectorstoreTestBase(TestAccountMixin):
     def setUp(self):
         super().setUp()
         self.kubernetes.reset()
+        # patched for each test, since some tests' cleanups stop every patch.
+        patcher = patch("smarter.apps.vectorstore.tasks.deploy_vectorstore.delay")
+        self.deploy_task = patcher.start()
+        self.addCleanup(patcher.stop)
 
     def spec(self, **overrides) -> SmarterDictType:
         """A self-hosted Qdrant spec, with overrides."""
@@ -173,10 +185,23 @@ class VectorstoreTestBase(TestAccountMixin):
         )
         return VectorstoreService(vectorstore, backend=backend, embeddings=DeterministicFakeEmbedding(size=DIMENSION))
 
+    @staticmethod
+    def deploy_now(service: VectorstoreService, max_checks: int = 1) -> VectorstoreDeploymentState:
+        """
+        Deploy, and make the deploy task's checks in the test, until the deploy ends or ``max_checks``.
+
+        :returns: The deploy's state.
+        """
+        state = service.deploy()
+        for _ in range(max_checks):
+            if service.deployment_step(state.id) is None:
+                break
+        return service.deployment
+
     def ready_service(self, name: str, **spec_overrides) -> VectorstoreService:
         """A deployed, ready, vectorstore's service."""
         service = self.service(self.new_vectorstore(name, **spec_overrides))
-        service.deploy()
+        self.deploy_now(service)
         self.assertEqual(service.vectorstore.status, "ready", service.vectorstore.status_message)
         return service
 

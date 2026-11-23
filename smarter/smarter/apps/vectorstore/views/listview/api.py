@@ -35,6 +35,7 @@ STATE_FIELDS: SmarterDictType = {
     "api_key_secret": None,
     "vector_count": 0,
     "stats": {},
+    "deployment": {},
     "deployed_at": None,
     "last_checked_at": None,
     "last_snapshot_at": None,

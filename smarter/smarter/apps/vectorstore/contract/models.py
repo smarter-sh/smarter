@@ -25,6 +25,11 @@ from smarter.apps.account.contract.models import (
     MetaDataApiAnnotations,
 )
 from smarter.apps.account.serializers import user_can_delete
+from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
+    SAMVectorstoreCondition,
+    VectorstoreConditionStatusValue,
+    VectorstoreConditionTypeValue,
+)
 
 if TYPE_CHECKING:
     from smarter.apps.vectorstore.backends.base import SearchResult
@@ -84,6 +89,40 @@ A test fails if the two differ.
 """
 
 
+class VectorstoreApiCondition(AccountApiModel):
+    """
+    One of the things that a vectorstore's database needs before it is ready, and whether it has it.
+
+    The same as the Vectorstore manifest's ``status.conditions``: see
+    :class:`smarter.apps.vectorstore.manifest.models.vectorstore.status.SAMVectorstoreCondition`.
+    """
+
+    type: VectorstoreConditionTypeValue = Field(..., description="Credentials, Volume, Server or Index.")
+    status: VectorstoreConditionStatusValue = Field(
+        ..., description="True if it is met, False if it isn't, Unknown before it is checked."
+    )
+    reason: str = Field(..., description="One word, e.g. Bound or ImagePullBackOff.")
+    message: str = Field(..., description="What was found, for a person.")
+    last_transition_time: Optional[datetime] = Field(None, description="When its status last changed.")
+
+    @classmethod
+    def from_condition(cls, condition: SAMVectorstoreCondition) -> "VectorstoreApiCondition":
+        """
+        The contract's model of a condition.
+
+        :param condition: The condition, as the deploy recorded it.
+        :returns: The model.
+        """
+        model = cls(
+            type=condition.type,
+            status=condition.status,
+            reason=condition.reason,
+            message=condition.message,
+            last_transition_time=condition.lastTransitionTime,
+        )
+        return model
+
+
 class VectorstoreApiVectorstore(AccountApiModel):
     """A vectorstore: a :class:`smarter.apps.vectorstore.models.VectorstoreMeta`.
 
@@ -133,6 +172,15 @@ class VectorstoreApiVectorstore(AccountApiModel):
     last_checked_at: Optional[datetime] = Field(None, description="When its status was last checked.")
     last_snapshot_at: Optional[datetime] = Field(None, description="When its last snapshot was taken.")
     last_maintenance_at: Optional[datetime] = Field(None, description="When its maintenance last ran.")
+    conditions: list[VectorstoreApiCondition] = Field(
+        default_factory=list, description="What its database needs to be ready, as of its last deploy or check."
+    )
+    attempt: Optional[int] = Field(None, description="The number of checks that its last deploy has made.")
+    max_attempts: Optional[int] = Field(None, description="The checks that a deploy makes before it fails.")
+    next_retry_at: Optional[datetime] = Field(None, description="When a deploy in progress checks again.")
+    last_error: Optional[str] = Field(
+        None, description="The last error of its last deploy, which may have been retried since."
+    )
 
     @classmethod
     def from_model(cls, vectorstore: "VectorstoreMeta", user: object = None) -> "VectorstoreApiVectorstore":
@@ -150,11 +198,14 @@ class VectorstoreApiVectorstore(AccountApiModel):
         from django.urls import reverse
 
         from smarter.apps.dashboard.resource_detail import resource_detail_url
+        from smarter.apps.vectorstore.deployment import VectorstoreDeploymentState
         from smarter.apps.vectorstore.manifest.models.vectorstore.const import (
             MANIFEST_KIND as VECTORSTORE_KIND,
         )
         from smarter.apps.vectorstore.urls import VectorstoreReverseNames
 
+        deployment = VectorstoreDeploymentState.of(vectorstore)
+        conditions = [VectorstoreApiCondition.from_condition(condition) for condition in deployment.conditions]
         return cls(
             id=vectorstore.pk,
             hashed_id=vectorstore.hashed_id,
@@ -195,6 +246,11 @@ class VectorstoreApiVectorstore(AccountApiModel):
             last_checked_at=vectorstore.last_checked_at,
             last_snapshot_at=vectorstore.last_snapshot_at,
             last_maintenance_at=vectorstore.last_maintenance_at,
+            conditions=conditions,
+            attempt=deployment.attempt if deployment.id else None,
+            max_attempts=deployment.maxAttempts if deployment.id else None,
+            next_retry_at=deployment.nextRetryAt,
+            last_error=deployment.lastError,
         )
 
 
@@ -406,6 +462,7 @@ __all__ = [
     "VECTORSTORE_API_MODELS",
     "VectorstoreApiAddText",
     "VectorstoreApiBackend",
+    "VectorstoreApiCondition",
     "VectorstoreApiDocument",
     "VectorstoreApiDocumentDeleted",
     "VectorstoreApiDocumentSource",
