@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.3](https://github.com/smarter-sh/smarter/compare/v0.47.2...v0.47.3) (2026-11-23)
+
+### Bug Fixes
+
+* **llmclient:** keep a deployed llmclient deployed when it is applied ([beebdba](https://github.com/smarter-sh/smarter/commit/beebdbab78d9afd3fb52200f0edf898971a8c041))
+* **llmclient:** report a local platform's deployed url on localhost ([9dbf87d](https://github.com/smarter-sh/smarter/commit/9dbf87da3f9b66ca23024d9970e743acff5b595b))
+
 ## [0.47.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.2...v0.47.3-alpha.1) (2026-11-23)
 
 ### Bug Fixes
