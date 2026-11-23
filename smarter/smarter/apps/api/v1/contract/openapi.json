@@ -12761,7 +12761,7 @@
               }
             ],
             "default": "0",
-            "description": "Budget.spec.config.absoluteLimit: the most that may be spent in total, from when the budget is attached. 0 means no limit.",
+            "description": "Budget.spec.config.absoluteLimit: the most that may be spent in total, from when the budget is attached, in USD to the cent, or in tokens. 0 means no limit.",
             "title": "Absolutelimit"
           },
           "action": {
@@ -12818,7 +12818,7 @@
               }
             ],
             "default": "0",
-            "description": "Budget.spec.config.periodicLimit: the most that may be spent in a billing period. 0 means no limit.",
+            "description": "Budget.spec.config.periodicLimit: the most that may be spent in a billing period, in USD to the cent, or in tokens. 0 means no limit.",
             "title": "Periodiclimit"
           },
           "unit": {
