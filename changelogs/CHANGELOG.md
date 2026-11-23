@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.6...v0.47.7-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **docs:** list every page in the sitemap after an incremental build ([f60aec0](https://github.com/smarter-sh/smarter/commit/f60aec0b894a42f68725e087a538e5f62c74916b))
+* **settings:** indent the startup environment log by two spaces ([ed6f71f](https://github.com/smarter-sh/smarter/commit/ed6f71f5b93791be8f218ccf8a55e14cdf72181d))
+
 ## [0.47.6](https://github.com/smarter-sh/smarter/compare/v0.47.5...v0.47.6) (2026-11-23)
 
 ### Bug Fixes
