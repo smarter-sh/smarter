@@ -38,6 +38,7 @@ if TYPE_CHECKING:
         VectorstoreMeta,
         VectorstoreSnapshot,
     )
+    from smarter.apps.vectorstore.service import DocumentsAdded
 
 
 VectorstoreApiBackend = Literal["qdrant", "pinecone"]
@@ -339,6 +340,25 @@ class VectorstoreApiDocumentsAdded(AccountApiModel):
         ..., description="Whether the new documents are queued to be loaded. Only a ready vectorstore loads them."
     )
     message: str = Field(..., description="Why the documents are not queued, if they aren't.")
+
+    @classmethod
+    def from_result(cls, result: "DocumentsAdded") -> "VectorstoreApiDocumentsAdded":
+        """
+        The contract's model of the documents that a request added.
+
+        :param result: What :meth:`smarter.apps.vectorstore.service.VectorstoreService.add_documents` returned.
+        :returns: The model.
+        """
+        message = ""
+        if not result.queued:
+            message = "The vectorstore is not ready. Its documents are loaded once it is deployed."
+        model = cls(
+            documents=[VectorstoreApiDocument.from_model(row) for row in result.added],
+            duplicates=[VectorstoreApiDocument.from_model(row) for row in result.duplicates],
+            queued=result.queued,
+            message=message,
+        )
+        return model
 
 
 class VectorstoreApiDocumentDeleted(AccountApiModel):

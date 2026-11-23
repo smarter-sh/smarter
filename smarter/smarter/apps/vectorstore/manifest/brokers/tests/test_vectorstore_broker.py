@@ -2,12 +2,18 @@
 """Test SAMVectorstoreBroker."""
 
 import os
+from http import HTTPStatus
 from unittest.mock import PropertyMock, patch
+from urllib.parse import urlencode
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest
+from django.urls import reverse
 from qdrant_client import QdrantClient
+from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.factories import mortal_user_factory
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.vectorstore.backends import (
     QdrantBackend,
     VectorStoreBackendCredentialsError,
@@ -188,6 +194,70 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         delay.assert_called_once_with(document.pk)
         document.refresh_from_db()
         self.assertEqual(document.status, VectorstoreDocumentStatus.PENDING)
+
+    def cli_documents(self, data=None, kind: str = "Vectorstore", **params) -> tuple[int, SmarterDictType]:
+        """POST the cli's documents command, as the smarter cli does: multipart, with an api key."""
+        path = reverse(f"{ApiV1CliReverseViews.namespace}{ApiV1CliReverseViews.documents}", kwargs={"kind": kind})
+        query = urlencode({"name": self.vs_name, **params})
+        client = APIClient()
+        response = client.post(
+            f"{path}?{query}", data=data or {}, format="multipart", HTTP_AUTHORIZATION=f"Token {self.token_key}"
+        )
+        return response.status_code, response.json()
+
+    def test_documents_command(self):
+        """Test the cli's documents command: list, add before a deploy, duplicates, load once deployed, and remove."""
+        self.apply()
+        status, body = self.cli_documents()
+        self.assertEqual(status, HTTPStatus.OK, body)
+        self.assertEqual(body["data"]["documents"], [])
+        self.assertEqual(body["message"], f"Vectorstore {self.vs_name} has no documents.")
+
+        handbook = SimpleUploadedFile(
+            "handbook.md", b"# Refunds\n\nWithin 30 days. " * 20, content_type="text/markdown"
+        )
+        status, body = self.cli_documents({"files": [handbook], "text": "The FAQ. " * 30, "name": "faq"})
+        self.assertEqual(status, HTTPStatus.OK, body)
+        data = body["data"]
+        self.assertEqual(sorted(d["name"] for d in data["added"]), ["faq", "handbook.md"])
+        self.assertFalse(data["queued"])
+        self.assertIn("loaded once it is deployed and ready", body["message"])
+        self.load_task.assert_not_called()
+
+        status, body = self.cli_documents({"text": "The FAQ. " * 30, "metadata": '{"source": "faq"}'})
+        self.assertEqual(status, HTTPStatus.OK, body)
+        self.assertEqual([d["name"] for d in body["data"]["duplicates"]], ["faq"])
+        self.assertEqual(
+            body["message"], f"Added no documents to Vectorstore {self.vs_name}. 1 document was already in it."
+        )
+        self.assertEqual(len(body["data"]["documents"]), 2)
+
+        self.deploy()
+        self.assertEqual(self.load_task.call_count, 2, "the documents that waited are loaded once the deploy is ready")
+
+        status, body = self.cli_documents(remove="handbook.md")
+        self.assertEqual(status, HTTPStatus.OK, body)
+        self.assertEqual(body["data"]["removed"]["name"], "handbook.md")
+        self.assertEqual(body["data"]["removed"]["status"], "deleting")
+        self.assertEqual(body["message"], f"Vectorstore {self.vs_name} is removing handbook.md.")
+        self.delete_task.assert_called_once()
+
+    def test_documents_command_errors(self):
+        """Test the documents command's refusals: an unknown document, adding and removing at once, bad metadata."""
+        self.apply()
+        cases: tuple[tuple[SmarterDictType, dict[str, str], str], ...] = (
+            ({}, {"remove": "missing.md"}, "has no document missing.md"),
+            ({"text": "Hello. " * 10}, {"remove": "faq"}, "not both"),
+            ({"text": "Hello. " * 10, "metadata": "[1]"}, {}, "metadata must be a JSON object"),
+        )
+        for data, params, reason in cases:
+            with self.subTest(reason=reason):
+                status, body = self.cli_documents(data, **params)
+                self.assertEqual(status, HTTPStatus.BAD_REQUEST, body)
+                self.assertIn(reason, body["error"]["description"])
+        status, body = self.cli_documents(kind="Secret")
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED, body)
+        self.assertIn("documents() not implemented", body["error"]["description"])
 
     def test_get_and_example(self):
         self.apply()

@@ -86,6 +86,7 @@ SAMJournalApiCommand = Literal[
     "validate",
     "whoami",
     "resources",
+    "documents",
 ]
 """A journal entry's ``command``: the choices of ``SAMJournal.command``.
 
