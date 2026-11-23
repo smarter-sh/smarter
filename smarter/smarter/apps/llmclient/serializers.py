@@ -20,6 +20,9 @@ from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCPCLIENT_KIND,
 )
+from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
+    MANIFEST_KIND as VECTORSEARCH_KIND,
+)
 from smarter.lib.django.serializers import related_rows
 from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
@@ -33,6 +36,7 @@ from .models import (
     LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
+    LLMClientVectorsearches,
     get_cached_llmclient_tool_counts,
 )
 
@@ -94,7 +98,8 @@ class LLMClientConfigSerializer(serializers.ModelSerializer):
         configuration api reads it on every page load.
 
         :param obj: The LLMClient.
-        :returns: The length of :meth:`LLMClientSerializer.get_tools`: its extensions, plugins and MCPClients.
+        :returns: The length of :meth:`LLMClientSerializer.get_tools`: its extensions, plugins, MCPClients and
+            Vectorsearches.
         :rtype: int
         """
         return get_cached_llmclient_tool_counts(obj.id).total  # type: ignore[arg-type]
@@ -276,6 +281,17 @@ class LLMClientMCPClientMiniSerializer(SmarterCamelCaseSerializer):
     name = serializers.CharField(source="mcpclient.name", read_only=True)
 
 
+class LLMClientVectorsearchMiniSerializer(SmarterCamelCaseSerializer):
+    """A Vectorsearch of an LLMClient: the link's id, and the Vectorsearch's name."""
+
+    # pylint: disable=C0115
+    class Meta:
+        model = LLMClientVectorsearches
+        fields = ("id", "name")
+
+    name = serializers.CharField(source="vectorsearch.name", read_only=True)
+
+
 class LLMClientGuardrailMiniSerializer(SmarterCamelCaseSerializer):
     """A Guardrail of an LLMClient: the link's id, and the Guardrail's name."""
 
@@ -312,8 +328,8 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     """
     An LLMClient: every model field, its owner, its related resources, and its computed hosts and urls.
 
-    Every field is read-only. The related resources (extensions, plugins, MCPClients, guardrails,
-    custom domains and api keys) are serialized as nested lists.
+    Every field is read-only. The related resources (extensions, plugins, MCPClients, Vectorsearches,
+    guardrails, custom domains and api keys) are serialized as nested lists.
     """
 
     # DRF lets a subclass replace a declared field with another kind; the base declares a CharField.
@@ -322,6 +338,7 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
     extensions = serializers.SerializerMethodField()
     plugins = serializers.SerializerMethodField()
     mcpclients = serializers.SerializerMethodField()
+    vectorsearches = serializers.SerializerMethodField()
     guardrails = serializers.SerializerMethodField()
     tools = serializers.SerializerMethodField()
     custom_domains = serializers.SerializerMethodField()
@@ -392,6 +409,16 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
         rows = related_rows(obj, "llmclientmcpclients_set", LLMClientMCPClients, "mcpclient")
         return LLMClientMCPClientMiniSerializer(rows, many=True).data
 
+    def get_vectorsearches(self, obj: LLMClient):
+        """
+        Return the LLMClient's Vectorsearches.
+
+        :param obj: The LLMClient.
+        :returns: One ``{"id", "name"}`` per :class:`~smarter.apps.llmclient.models.LLMClientVectorsearches` row.
+        """
+        rows = related_rows(obj, "llmclientvectorsearches_set", LLMClientVectorsearches, "vectorsearch")
+        return LLMClientVectorsearchMiniSerializer(rows, many=True).data
+
     def get_guardrails(self, obj: LLMClient):
         """
         Return the LLMClient's guardrails.
@@ -404,12 +431,12 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
 
     def get_tools(self, obj: LLMClient):
         """
-        The tools that the LLMClient offers the LLM: its extensions, plugins and MCPClients.
+        The tools that the LLMClient offers the LLM: its extensions, plugins, MCPClients and Vectorsearches.
 
         Guardrails are left out: they constrain a prompt, but the LLM can't call them.
 
         :param obj: The LLMClient.
-        :returns: One ``{"id", "name", "kind"}`` per extension, plugin and MCPClient, in that
+        :returns: One ``{"id", "name", "kind"}`` per extension, plugin, MCPClient and Vectorsearch, in that
             order. ``id`` is the link row's id, and ``kind`` is ``Extension`` or the linked resource's
             manifest kind.
         :rtype: list[dict]
@@ -418,6 +445,7 @@ class LLMClientSerializer(MetaDataWithOwnershipModelSerializer):
             ("Extension", self.get_extensions(obj)),
             (PLUGIN_KIND, self.get_plugins(obj)),
             (MCPCLIENT_KIND, self.get_mcpclients(obj)),
+            (VECTORSEARCH_KIND, self.get_vectorsearches(obj)),
         )
         tools = []
         for kind, items in items_by_kind:
@@ -628,6 +656,7 @@ __all__ = [
     "LLMClientPluginSerializer",
     "LLMClientPluginMiniSerializer",
     "LLMClientMCPClientMiniSerializer",
+    "LLMClientVectorsearchMiniSerializer",
     "LLMClientGuardrailMiniSerializer",
     "LLMClientExtensionsSerializer",
     "LLMClientCustomDomainSerializer",

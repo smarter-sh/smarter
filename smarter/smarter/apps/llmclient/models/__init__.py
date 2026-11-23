@@ -10,6 +10,7 @@ from .llmclient_helper import LLMClientHelper
 from .llmclient_mcpclient import LLMClientMCPClients
 from .llmclient_plugin import LLMClientPlugin
 from .llmclient_requests import LLMClientRequests
+from .llmclient_vectorsearch import LLMClientVectorsearches
 from .utils import (
     get_cached_llmclient_by_request,
     get_cached_llmclient_tool_counts,
@@ -25,6 +26,7 @@ __all__ = [
     "LLMClientRequests",
     "LLMClientGuardrails",
     "LLMClientMCPClients",
+    "LLMClientVectorsearches",
     "LLMClient",
     "LLMClientHelper",
     "get_cached_llmclient_by_request",

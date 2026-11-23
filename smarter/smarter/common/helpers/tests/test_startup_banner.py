@@ -2,8 +2,10 @@
 
 import io
 import os
+import platform
 from unittest.mock import patch
 
+import django
 from django.test import override_settings
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -45,6 +47,24 @@ class TestStartupBanner(SmarterTestBase):
         self.assertTrue(facts["database"].startswith("mysql://"))
         self.assertIn(facts["debug"], ("ON", "OFF"))
         self.assertIn("python", facts["runtime"])
+
+    def test_runtime_lists_python_django_drf_and_pydantic(self):
+        """The runtime line shows the installed versions of Python, Django, DRF and Pydantic."""
+        import pydantic  # pylint: disable=import-outside-toplevel
+        import rest_framework  # pylint: disable=import-outside-toplevel
+
+        runtime = dict(banner_facts())["runtime"]
+        self.assertIn(f"python {platform.python_version()}", runtime)
+        self.assertIn(f"django {django.get_version()}", runtime)
+        self.assertIn(f"drf {rest_framework.VERSION}", runtime)
+        self.assertIn(f"pydantic {pydantic.VERSION}", runtime)
+
+    def test_runtime_shows_unknown_for_a_version_it_cannot_read(self):
+        """A version that can't be read is shown as unknown, and the rest of the line is still shown."""
+        with patch(f"{MODULE}._pydantic_version", side_effect=ImportError("no pydantic")):
+            runtime = dict(banner_facts())["runtime"]
+        self.assertIn("pydantic unknown", runtime)
+        self.assertIn("django ", runtime)
 
     def test_banner_never_shows_a_password(self):
         with override_settings(CELERY_BROKER_URL="redis://:hunter2@broker:6379/1"):

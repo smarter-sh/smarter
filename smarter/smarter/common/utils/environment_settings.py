@@ -8,7 +8,8 @@ are the ``SMARTER_PLATFORM_*`` environment variables, the ``subsystem_*`` fields
 branding doesn't change.
 
 :func:`get_environment_settings` returns a group's settings with values that are safe to log, and
-:func:`log_environment_settings` logs them. Neither ever shows a secret, nor PII.
+:func:`log_environment_settings` logs them. Neither ever shows a whole secret, nor PII: a secret
+shows only its last four characters, which is enough to tell which key is in use.
 """
 
 import os
@@ -22,6 +23,9 @@ from .utils import ENVIRONMENT_VARIABLE_PREFIX, mask_email, mask_identifier
 ENVIRONMENT_VARIABLE_LOG_INDENT = " " * 4
 """What :func:`log_environment_variables` puts in front of each variable, after the logger's prefix."""
 
+SECRET_VISIBLE_CHARACTERS = 4
+"""How many of a secret's last characters the log shows, e.g. ``****IAUA``, as a chat's prompt configuration does."""
+
 
 class SmarterDebugLogger(Protocol):  # pylint: disable=too-few-public-methods
     """A logger, or a wrapper of one such as Smarter's ``WaffleSwitchedLoggerWrapper``: anything with ``debug``."""
@@ -32,9 +36,11 @@ class SmarterDebugLogger(Protocol):  # pylint: disable=too-few-public-methods
 
 def environment_setting_log_value(field_name: str, value: object) -> str:
     """
-    Return how one setting is shown in the log: never a secret, nor PII.
+    Return how one setting is shown in the log: never a whole secret, nor PII.
 
-    A ``SecretStr`` is ``set`` or ``not set``. An email address is masked, and so is a person's name
+    A ``SecretStr`` shows only its last :data:`SECRET_VISIBLE_CHARACTERS` characters, e.g.
+    ``****IAUA``, which tells an operator which key is in use without revealing it, or ``not set``.
+    A secret no longer than that is masked entirely. An email address is masked, and so is a person's name
     (a field that ends in ``primary_contact``). A list's compiled patterns are their patterns.
     Anything else is its ``str()``.
 
@@ -48,7 +54,10 @@ def environment_setting_log_value(field_name: str, value: object) -> str:
     )
 
     if isinstance(value, SecretStr):
-        return "not set" if is_missing_value(value) else "set"
+        if is_missing_value(value):
+            return "not set"
+        masked = mask_identifier(value.get_secret_value(), visible=SECRET_VISIBLE_CHARACTERS)
+        return masked
     if value is None:
         return "None"
     if "email" in field_name:
@@ -109,8 +118,8 @@ def get_environment_variables(
 
     It scans the environment for ``SMARTER_<group>_*``, and ``<group>_*``, which
     :func:`smarter.common.conf.env.get_env` reads too. A variable that a field of ``settings`` reads
-    shows the field's value, which is what the platform runs with, and a ``SecretStr`` is only set or
-    not set; any other variable shows its own value. Every secret is a field: e.g. the apps' api keys,
+    shows the field's value, which is what the platform runs with, and a ``SecretStr`` only its last
+    four characters; any other variable shows its own value. Every secret is a field: e.g. the apps' api keys,
     :class:`smarter.common.conf.settings.app_keys.AppKeySettings`.
 
     **Example:**
