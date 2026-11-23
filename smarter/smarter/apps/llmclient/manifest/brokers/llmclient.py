@@ -422,6 +422,10 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         for key, value in original_config.items():
             if isinstance(value, list):
                 config_dump[str(self.to_snake_case(key))] = value
+        # a manifest without deployed keeps the llmclient's deployed state, so that applying a deployed
+        # llmclient's manifest again doesn't undeploy it. A new llmclient is then not deployed.
+        if config_dump.get("deployed") is None:
+            config_dump.pop("deployed", None)
         styles = self.manifest.spec.config.styles
         config_dump["styles"] = styles.model_dump(mode="json", exclude_none=True) if styles else {}
         retval = {
