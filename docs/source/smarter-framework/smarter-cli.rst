@@ -34,6 +34,7 @@ interact with Smarter resources. The general format is:
     delete      Permanently delete a Smarter resource
     deploy      Deploy a resource
     describe    Return a manifest for the resource kind
+    documents   List, add or remove a resource's documents
     get         Generate a list of Smarter resources
     help        Help about any command
     json-schema Retrieve the JSON Schema of a resource kind's manifest
@@ -94,6 +95,11 @@ is a single request to the platform's cli api, ``/api/v1/cli/``.
   billable infrastructure, such as an LLMHostCompute's node group.
   CustomDomains and LLMHostComputes can't be undeployed yet.
 - **logs** returns the log data of a resource.
+- **documents** lists, adds or removes the documents of a Vectorstore:
+  ``smarter documents vectorstore <name>`` lists them, ``--add <file>``
+  (repeatable) and ``--url <url>`` upload documents, with optional
+  ``--metadata '<json>'``, and ``--remove <document>`` removes one, by its id
+  or name. Only the Vectorstore's owner may add or remove documents.
 - **manifest** generates an example manifest of a kind, as yaml.
 - **json-schema** returns the JSON Schema that manifests of a kind are
   validated against, for editors such as VS Code.
@@ -119,7 +125,7 @@ Related API endpoints
 Every command posts to one route of the platform's cli api, under
 ``/api/v1/cli/``: ``apply/``, ``validate/``, ``get/<kind>/``,
 ``describe/<kind>/``, ``delete/<kind>/``, ``deploy/<kind>/``,
-``undeploy/<kind>/``, ``logs/<kind>/``, ``example-manifest/<kind>/``,
+``undeploy/<kind>/``, ``logs/<kind>/``, ``documents/<kind>/``, ``example-manifest/<kind>/``,
 ``json-schema/<kind>/``, ``prompt/<name>/``, ``prompt/config/<name>/``,
 ``resources/``, ``status/``, ``version/`` and ``whoami/``. Their requests and
 responses are documented in the platform's :doc:`OpenAPI document

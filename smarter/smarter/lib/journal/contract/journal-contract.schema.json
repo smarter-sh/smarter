@@ -172,7 +172,8 @@
             "undeploy",
             "validate",
             "whoami",
-            "resources"
+            "resources",
+            "documents"
           ],
           "title": "Command",
           "type": "string"

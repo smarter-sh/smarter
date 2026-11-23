@@ -34,6 +34,7 @@ from smarter.apps.vectorstore.models import (
 )
 from smarter.apps.vectorstore.service import VectorstoreService, VectorstoreServiceError
 from smarter.apps.vectorstore.signals import vectorstore_status_changed
+from smarter.apps.vectorstore.sources import DocumentSource
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.typing import SmarterDictType
 
@@ -263,6 +264,48 @@ class TestVectorstoreService(VectorstoreTestBase):
         service.delete_document(document)
         self.assertFalse(VectorstoreDocument.objects.filter(pk=document.pk).exists())
         self.assertEqual(service.refresh_stats()["vector_count"], 0)
+
+    def test_add_documents(self):
+        """Test that new documents are queued to load in a ready vectorstore, and that duplicates are not added again."""
+        service = self.ready_service("test_service_add_documents")
+        sources = [
+            DocumentSource("guide.txt", None, TEXT, "text/plain", "text"),
+            DocumentSource("copy.txt", None, TEXT, "text/plain", "text"),
+            DocumentSource("other.txt", None, "Another document. " * 20, "text/plain", "text"),
+        ]
+        result = service.add_documents(sources, metadata={"team": "a"})
+        self.assertEqual([d.name for d in result.added], ["guide.txt", "other.txt"])
+        self.assertEqual([d.name for d in result.duplicates], ["guide.txt"])
+        self.assertTrue(result.queued)
+        self.assertEqual([c.args[0] for c in self.load_task.call_args_list], [d.pk for d in result.added])
+        self.assertEqual(result.added[0].metadata, {"team": "a"})
+
+    def test_documents_wait_for_the_deploy(self):
+        """Test that documents added before a deploy wait, and are queued as soon as the deploy is ready."""
+        service = self.service(self.new_vectorstore("test_service_documents_wait"))
+        result = service.add_documents([DocumentSource("guide.txt", None, TEXT, "text/plain", "text")])
+        self.assertFalse(result.queued)
+        self.load_task.assert_not_called()
+        self.deploy_now(service)
+        self.assertEqual(service.vectorstore.status, VectorstoreStatus.READY)
+        self.load_task.assert_called_once_with(result.added[0].pk)
+
+    def test_find_and_remove_documents(self):
+        """Test that a document is found by its id or its name, and that removing it queues the task that does."""
+        service = self.ready_service("test_service_find_documents")
+        first, _ = service.add_document(name="guide.txt", text=TEXT)
+        second, _ = service.add_document(name="guide.txt", text="A second guide. " * 20)
+        third, _ = service.add_document(name="faq.txt", text="Questions. " * 20)
+        self.assertEqual(service.find_document(str(third.pk)), third)
+        self.assertEqual(service.find_document("faq.txt"), third)
+        with self.assertRaisesRegex(VectorstoreServiceError, "several documents named guide.txt"):
+            service.find_document("guide.txt")
+        with self.assertRaisesRegex(VectorstoreServiceError, "has no document missing.txt"):
+            service.find_document("missing.txt")
+        self.assertEqual(service.find_document(str(first.pk)), first)
+        removed = service.remove_document(second)
+        self.assertEqual(removed.status, VectorstoreDocumentStatus.DELETING)
+        self.delete_task.assert_called_once_with(second.pk)
 
     def test_load_failure(self):
         service = self.ready_service("test_service_load_failure")

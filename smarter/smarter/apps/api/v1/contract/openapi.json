@@ -1026,6 +1026,95 @@
         ],
         "description": "The response of apply."
       },
+      "CliApiDocuments": {
+        "additionalProperties": true,
+        "description": "The ``data`` of a ``documents`` response: a Vectorstore's documents after the command, and what it changed.\n\nWithout files, text or a url, the command lists the documents. With them, it adds them, and with\n``remove``, it removes one. Each document is the REST api's\n:class:`~smarter.apps.vectorstore.contract.models.VectorstoreApiDocument`.",
+        "properties": {
+          "added": {
+            "description": "The documents that were added.",
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "documents": {
+            "description": "The Vectorstore's documents, newest first, after the command.",
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "duplicates": {
+            "description": "The documents that weren't added, because the Vectorstore has one with the same content.",
+            "items": {
+              "$ref": "#/components/schemas/VectorstoreApiDocument"
+            },
+            "title": "Duplicates",
+            "type": "array"
+          },
+          "queued": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Whether the added documents are queued to be loaded. A Vectorstore that isn't ready loads them once its deploy is ready.",
+            "title": "Queued"
+          },
+          "removed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VectorstoreApiDocument"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The document that is being removed, with its chunks, in the background."
+          },
+          "vectorstore": {
+            "description": "The Vectorstore's name.",
+            "title": "Vectorstore",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vectorstore",
+          "documents"
+        ],
+        "title": "CliApiDocuments",
+        "type": "object"
+      },
+      "CliApiDocumentsResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SAMJournalApiEnvelope"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/CliApiDocuments"
+              },
+              "message": {
+                "description": "A human-readable summary of the result.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "The response of documents."
+      },
       "CliApiErrorResponse": {
         "allOf": [
           {
@@ -14034,7 +14123,8 @@
               "undeploy",
               "validate",
               "whoami",
-              "resources"
+              "resources",
+              "documents"
             ],
             "title": "Command",
             "type": "string"
@@ -14153,7 +14243,8 @@
               "undeploy",
               "validate",
               "whoami",
-              "resources"
+              "resources",
+              "documents"
             ],
             "title": "Command",
             "type": "string"
@@ -24189,6 +24280,104 @@
           }
         },
         "summary": "Describe a resource",
+        "tags": [
+          "manifests"
+        ]
+      }
+    },
+    "/cli/documents/{kind}/": {
+      "post": {
+        "description": "List, add or remove the documents of a resource that has them, a Vectorstore. Without a body or remove, it lists them, for anyone who may read the Vectorstore. With files, text or a url, it adds them: their text is extracted now, and they are loaded in the background, once the Vectorstore is ready. With remove, it removes one, in the background. Only the Vectorstore's owner, an account admin, may add or remove documents. Other kinds answer 501.",
+        "operationId": "documents",
+        "parameters": [
+          {
+            "description": "The resource's kind, as it is written in a manifest, e.g. Guardrail. Case-insensitive.",
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SAMKind"
+            }
+          },
+          {
+            "description": "The resource's name, its manifest's metadata.name.",
+            "in": "query",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Remove this document, and its chunks: its id, or its name, e.g. its file name or url.",
+            "in": "query",
+            "name": "remove",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "files": {
+                    "description": "Files to add, up to 50 MiB each: PDF, text, Markdown, CSV, JSON, YAML or HTML.",
+                    "items": {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "metadata": {
+                    "description": "A JSON object, stored with every chunk of every document that is added.",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the text's document. By default, text.",
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "Text to add, as a document.",
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "A public http or https url of a page or file to add.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "description": "Documents to add. Without them, and without remove, the command lists the documents.",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliApiDocumentsResponse"
+                }
+              }
+            },
+            "description": "Success."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliApiErrorResponse"
+                }
+              }
+            },
+            "description": "An error, e.g. 400 for an invalid manifest, 401 or 403 without a valid api key, 404 for a resource that does not exist."
+          }
+        },
+        "summary": "A resource's documents",
         "tags": [
           "manifests"
         ]

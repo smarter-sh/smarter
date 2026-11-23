@@ -38,6 +38,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiJournalMetadata,
     PromptChatApiMessage,
 )
+from smarter.apps.vectorstore.contract.models import VectorstoreApiDocument
 
 # ------------------------------------------------------------------------------
 # the data of cli responses
@@ -283,6 +284,34 @@ class RestApiErrorResponse(BaseModel):
     detail: str = Field(..., description="A human-readable description of the error.")
 
 
+class CliApiDocuments(CliApiModel):
+    """
+    The ``data`` of a ``documents`` response: a Vectorstore's documents after the command, and what it changed.
+
+    Without files, text or a url, the command lists the documents. With them, it adds them, and with
+    ``remove``, it removes one. Each document is the REST api's
+    :class:`~smarter.apps.vectorstore.contract.models.VectorstoreApiDocument`.
+    """
+
+    vectorstore: str = Field(..., description="The Vectorstore's name.")
+    documents: list[VectorstoreApiDocument] = Field(
+        ..., description="The Vectorstore's documents, newest first, after the command."
+    )
+    added: list[VectorstoreApiDocument] = Field(default_factory=list, description="The documents that were added.")
+    duplicates: list[VectorstoreApiDocument] = Field(
+        default_factory=list,
+        description="The documents that weren't added, because the Vectorstore has one with the same content.",
+    )
+    queued: Optional[bool] = Field(
+        None,
+        description="Whether the added documents are queued to be loaded. A Vectorstore that isn't ready loads them "
+        "once its deploy is ready.",
+    )
+    removed: Optional[VectorstoreApiDocument] = Field(
+        None, description="The document that is being removed, with its chunks, in the background."
+    )
+
+
 CLI_API_MODELS: tuple[type[BaseModel], ...] = (
     CliApiApplied,
     CliApiValidation,
@@ -293,6 +322,7 @@ CLI_API_MODELS: tuple[type[BaseModel], ...] = (
     CliApiWhoami,
     CliApiPromptBody,
     CliApiPrompt,
+    CliApiDocuments,
     RestApiErrorResponse,
 )
 """The models of the cli api's response data whose JSON Schema the OpenAPI document includes.
@@ -473,6 +503,7 @@ class OpenApiDocument(OpenApiModel):
 __all__ = [
     "CLI_API_MODELS",
     "CliApiApplied",
+    "CliApiDocuments",
     "CliApiGet",
     "CliApiGetItems",
     "CliApiGetMetadata",

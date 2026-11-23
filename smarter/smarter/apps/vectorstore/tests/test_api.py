@@ -13,6 +13,7 @@ from smarter.apps.account.tests.factories import (
     factory_account_teardown,
 )
 from smarter.apps.llmtool.plugin.safe_http import SafeResponse
+from smarter.apps.vectorstore import sources
 from smarter.apps.vectorstore.api.v1 import views
 from smarter.apps.vectorstore.api.v1.urls import VectorstoreApiV1ReverseViews as Names
 from smarter.apps.vectorstore.models import VectorstoreDocument, VectorstoreMeta
@@ -100,7 +101,7 @@ class TestVectorstoreApi(VectorstoreTestBase):
             headers={"content-type": "text/html"},
             content=b"<p>A web page.</p>",
         )
-        with patch.object(views, "fetch", return_value=response) as fetch:
+        with patch.object(sources, "fetch", return_value=response) as fetch:
             data = self.request("post", path, {"url": "https://example.com/page.html"}, status=HTTPStatus.ACCEPTED)
         fetch.assert_called_once()
         self.assertEqual(data["documents"][0]["source"], "url")

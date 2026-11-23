@@ -19,6 +19,7 @@ from django.core.management.base import CommandError
 from smarter.apps.account.management.commands.load_from_github import (
     Command,
     RepositoryManifest,
+    load_ignore_spec,
 )
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.repository_owners import (
@@ -442,15 +443,41 @@ class TestLoadFromGithub(TestAccountMixin):
             os.chmod(filespec, 0o755)  # nosec B103
         return root
 
-    def test_scripts_folder_holds_no_manifests(self):
-        """Test that a manifest in the top-level scripts folder is not applied, but one in a nested scripts folder is."""
+    def test_scripts_folder_is_ignored_by_smarterignore(self):
+        """Test that the scripts folder is like any other unless .smarterignore lists it, as /scripts/ does."""
+        files = {
+            f"{SCRIPTS_FOLDER}/s.yaml": manifest("Secret", "in_scripts"),
+            "plugins/scripts/p.yaml": manifest("SqlPlugin", "nested"),
+        }
+        root = self.repo(files)
+        paths = [m.path for m in Command(stdout=StringIO()).find_manifests(root)]
+        self.assertEqual(paths, [f"{SCRIPTS_FOLDER}/s.yaml", "plugins/scripts/p.yaml"])
+        root = self.repo({**files, ".smarterignore": f"/{SCRIPTS_FOLDER}/\n"})
+        self.assertEqual([m.path for m in Command(stdout=StringIO()).find_manifests(root)], ["plugins/scripts/p.yaml"])
+
+    def test_smarterignore(self):
+        """Test that the files that .smarterignore lists, with gitignore's patterns, are not applied."""
+        ignore = "# the tutorials' readers build these\n/tutorials/\n*.example.yaml\n!keep.example.yaml\n"
         root = self.repo(
             {
-                f"{SCRIPTS_FOLDER}/s.yaml": manifest("Secret", "in_scripts"),
-                "plugins/scripts/p.yaml": manifest("SqlPlugin", "nested"),
+                ".smarterignore": ignore,
+                "tutorials/first-ai-application/part-1/course-advisor.yaml": manifest("LLMClient", "course_advisor"),
+                "plugins/tutorials/p.yaml": manifest("SqlPlugin", "nested"),
+                "secrets/s.yaml": manifest("Secret", "s"),
+                "secrets/s.example.yaml": manifest("Secret", "example"),
+                "secrets/keep.example.yaml": manifest("Secret", "kept"),
             }
         )
-        self.assertEqual([m.path for m in Command(stdout=StringIO()).find_manifests(root)], ["plugins/scripts/p.yaml"])
+        out = StringIO()
+        paths = [m.path for m in Command(stdout=out).find_manifests(root)]
+        self.assertEqual(paths, ["secrets/keep.example.yaml", "secrets/s.yaml", "plugins/tutorials/p.yaml"])
+        self.assertIn("Ignored 2 files that the repository's .smarterignore lists.", out.getvalue())
+
+    def test_no_smarterignore(self):
+        """Test that a repository without a .smarterignore has every manifest applied."""
+        root = self.repo({"tutorials/t.yaml": manifest("Secret", "t")})
+        self.assertIsNone(load_ignore_spec(root))
+        self.assertEqual([m.path for m in Command(stdout=StringIO()).find_manifests(root)], ["tutorials/t.yaml"])
 
     def test_scripts_run_before_and_after_the_manifests(self):
         """Test that --run_scripts runs the pre scripts, then applies the manifests, then runs the post scripts."""

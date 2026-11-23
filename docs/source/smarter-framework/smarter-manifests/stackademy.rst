@@ -64,6 +64,12 @@ other.
      - Not manifests: the scripts that a platform runs when it loads the repository, listed in
        ``scripts.yaml``. ``create-course-database.sh`` runs ``stackademy.sql``, which creates
        the course database, its ``courses`` table and its read-only users.
+   * - ``tutorials/``
+     - The finished files of each part of a tutorial, e.g. ``first-ai-application/part-1/`` to
+       ``part-6/`` for `Your First AI Application <https://blog.smarter.sh/category/tutorials/>`__,
+       and the files that a part needs, such as Part 6's student handbook. The repository's
+       ``.smarterignore`` keeps a platform from applying them: the tutorial's readers build these
+       resources themselves.
 
 Its pre-commit hooks check every manifest against the JSON Schema of its kind, which the Smarter
 platform publishes, before each commit, and a GitHub Actions workflow runs them on every pull request.
@@ -90,8 +96,21 @@ the order of their kinds' dependencies, :meth:`SAMKinds.apply_order()
 plugins, LLMClients, and Budgets last. It fills in manifest templates with the platform's own scheme and domain, and an
 LLMClient that is already deployed stays deployed.
 
+A repository's ``.smarterignore``, at its root, lists the files that are never applied, with
+gitignore's patterns and rules: a pattern without a slash matches at any depth, a leading slash
+anchors it to the repository's root, a trailing slash matches a folder and everything in it,
+``**`` matches any number of folders, ``!`` includes again what an earlier pattern excluded, and
+``#`` starts a comment. Stackademy's lists its scripts folder, and its tutorials, whose manifests are
+what their readers build, step by step, and a platform that already had them would spoil it.
+
+.. code-block:: text
+
+   # .smarterignore
+   /scripts/
+   /tutorials/
+
 A repository may also hold scripts, for what a manifest can't describe, such as the course
-database. They are in its top-level ``scripts/`` folder, which holds no manifests, and its
+database. They are in its top-level ``scripts/`` folder, which its ``.smarterignore`` lists, and its
 ``scripts/scripts.yaml`` lists the scripts to run, each with a ``stage``: ``pre``, before the
 manifests are applied, or ``post``, after they are applied and the LLMClients deployed. A script
 receives the platform's database server and its administrator, the owner's account and username,
