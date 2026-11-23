@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.1...v0.47.2-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **vectorstore:** queue waiting documents when a deploy is ready ([1416e42](https://github.com/smarter-sh/smarter/commit/1416e42f0c399b118615adfd6c4faad0bf91b198))
+
 ## [0.47.1](https://github.com/smarter-sh/smarter/compare/v0.47.0...v0.47.1) (2026-11-23)
 
 ### Bug Fixes
