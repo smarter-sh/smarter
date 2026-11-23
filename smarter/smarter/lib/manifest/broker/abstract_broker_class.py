@@ -1921,6 +1921,21 @@ class AbstractBroker(ABC, SmarterRequestMixin, Generic[ModelT, MetaModelT]):
             message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
         )
 
+    def documents(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """List, add or remove a resource's documents.
+
+        Only a kind that holds documents, a Vectorstore, implements it.
+
+        :param request: The HTTP request object, with any documents to add.
+        :param args: Additional positional arguments.
+        :param kwargs: Additional keyword arguments.
+        :return: A SmarterJournaledJsonResponse with the resource's documents.
+        :raises SAMBrokerErrorNotImplemented: For every other kind.
+        """
+        raise SAMBrokerErrorNotImplemented(
+            message="documents() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DOCUMENTS
+        )
+
     @abstractmethod
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """Undeploy a resource.
@@ -2611,6 +2626,16 @@ class BrokerNotImplemented(AbstractBroker):
         :param kwargs: Passed through.
         """
         return super().logs(request, *args, **kwargs)
+
+    def documents(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        Delegate to :meth:`AbstractBroker.documents`.
+
+        :param request: The request.
+        :param args: Passed through.
+        :param kwargs: Passed through.
+        """
+        return super().documents(request, *args, **kwargs)
 
     def undeploy(self, request: SmarterRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

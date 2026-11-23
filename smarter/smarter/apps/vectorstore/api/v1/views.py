@@ -33,7 +33,7 @@ from django.http import Http404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, fetch
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,
 )
@@ -50,20 +50,11 @@ from smarter.apps.vectorstore.contract.models import (
     VectorstoreApiStatus,
     VectorstoreApiVectorstore,
 )
-from smarter.apps.vectorstore.extract import (
-    MAX_DOCUMENT_BYTES,
-    VectorstoreExtractionError,
-)
-from smarter.apps.vectorstore.models import (
-    VectorstoreDocument,
-    VectorstoreDocumentSource,
-    VectorstoreDocumentStatus,
-    VectorstoreMeta,
-    VectorstoreSnapshot,
-    VectorstoreStatus,
-)
+from smarter.apps.vectorstore.extract import VectorstoreExtractionError
+from smarter.apps.vectorstore.models import VectorstoreMeta, VectorstoreSnapshot
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
 from smarter.apps.vectorstore.service import VectorstoreService
+from smarter.apps.vectorstore.sources import request_metadata, request_sources
 from smarter.common.exceptions import SmarterException
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -268,64 +259,26 @@ class VectorstoreDocumentsView(VectorstoreViewBase):
         response = VectorstoreApiDocuments(documents=[VectorstoreApiDocument.from_model(row) for row in documents])
         return Response(response.model_dump(mode="json"))
 
-    def post(self, request: Request, *args, **kwargs):  # pylint: disable=too-many-locals
+    def post(self, request: Request, *args, **kwargs):
         """
         Add documents, and queue them to be loaded.
 
         Files, as multipart/form-data, are read, and their text extracted, now. The files
         themselves are not kept. Optional ``metadata``, a JSON object, is stored with each chunk.
+        See :mod:`smarter.apps.vectorstore.sources`.
         """
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.vectorstore.tasks import load_vectorstore_document
-
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
         service = self.get_service(vectorstore)
-        data = request.data
-        metadata = None
-        if isinstance(data, Mapping):
-            metadata = data.get("metadata")
-        if metadata is not None and not isinstance(metadata, dict):
-            return error("metadata must be a JSON object.")
-        added: list[VectorstoreDocument] = []
-        existing: list[VectorstoreDocument] = []
+        data = request.data if isinstance(request.data, Mapping) else {}
         try:
-            for name, data, text, content_type, source in self.sources(request):
-                document, created = service.add_document(
-                    name=name, data=data, text=text, content_type=content_type, source=source, metadata=metadata
-                )
-                if created:
-                    added.append(document)
-                else:
-                    existing.append(document)
+            metadata = request_metadata(data)
+            result = service.add_documents(request_sources(request.FILES, data), metadata=metadata)
         except (VectorstoreExtractionError, SafeHttpError, ValueError) as e:
             return error(str(e))
-        if not added and not existing:
+        if not result.added and not result.duplicates:
             return error("Provide files, as multipart/form-data, or JSON with text or url.")
-        queued = vectorstore.status == VectorstoreStatus.READY
-        if queued:
-            for document in added:
-                load_vectorstore_document.delay(document.pk)
-        response = VectorstoreApiDocumentsAdded(
-            documents=[VectorstoreApiDocument.from_model(row) for row in added],
-            duplicates=[VectorstoreApiDocument.from_model(row) for row in existing],
-            queued=queued,
-            message="" if queued else "The vectorstore is not ready. Its documents are loaded once it is deployed.",
-        )
+        response = VectorstoreApiDocumentsAdded.from_result(result)
         return Response(response.model_dump(mode="json"), status=HTTPStatus.ACCEPTED)
-
-    @staticmethod
-    def sources(request: Request):
-        """The documents of a request: uploaded files, text, or a URL."""
-        for upload in request.FILES.getlist("files") or request.FILES.getlist("file"):
-            if upload.size > MAX_DOCUMENT_BYTES:
-                raise ValueError(f"{upload.name} is larger than {MAX_DOCUMENT_BYTES // (1024 * 1024)} MiB.")
-            yield upload.name, upload.read(), None, upload.content_type, VectorstoreDocumentSource.UPLOAD
-        data: SmarterDictType = request.data if isinstance(request.data, dict) else {}
-        if data.get("text"):
-            yield data.get("name") or "text", None, str(data["text"]), "text/plain", VectorstoreDocumentSource.TEXT
-        if data.get("url"):
-            response = fetch(str(data["url"]), max_bytes=MAX_DOCUMENT_BYTES)
-            yield response.url, response.content, None, response.content_type, VectorstoreDocumentSource.URL
 
 
 class VectorstoreDocumentView(VectorstoreViewBase):
@@ -340,9 +293,6 @@ class VectorstoreDocumentView(VectorstoreViewBase):
         :returns: The document's name and status, 202 Accepted.
         :raises Http404: If the vectorstore or the document does not exist, or the user does not own it.
         """
-        # pylint: disable=import-outside-toplevel
-        from smarter.apps.vectorstore.tasks import delete_vectorstore_document
-
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
         document_id = kwargs.get("document_id")
         if document_id is None:
@@ -350,9 +300,7 @@ class VectorstoreDocumentView(VectorstoreViewBase):
         document = vectorstore.documents.filter(pk=document_id).first()  # type: ignore[attr-defined]
         if document is None:
             raise Http404("Document not found")
-        document.status = VectorstoreDocumentStatus.DELETING
-        document.save(update_fields=["status", "updated_at"])
-        delete_vectorstore_document.delay(document.pk)
+        document = self.get_service(vectorstore).remove_document(document)
         response = VectorstoreApiDocumentDeleted(document=document.name, status=document.status)  # type: ignore[arg-type]
         return Response(response.model_dump(mode="json"), status=HTTPStatus.ACCEPTED)
 

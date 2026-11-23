@@ -30,6 +30,8 @@ on the manifest's schedule, prunes them to its retention, and retries documents 
 
 import hashlib
 import secrets
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
 
@@ -84,6 +86,7 @@ from .signals import (
     vectorstore_destroyed,
     vectorstore_status_changed,
 )
+from .sources import DocumentSource
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.VECTORSTORE_LOGGING])
 
@@ -95,6 +98,15 @@ STUCK_AFTER = timedelta(minutes=30)
 
 class VectorstoreServiceError(SmarterException):
     """A vectorstore operation is not possible, e.g. destroying a protected database."""
+
+
+@dataclass(frozen=True)
+class DocumentsAdded:
+    """The result of :meth:`VectorstoreService.add_documents`."""
+
+    added: list[VectorstoreDocument]
+    duplicates: list[VectorstoreDocument]
+    queued: bool
 
 
 NOT_RETRYABLE = (VectorStoreBackendRejectedError, VectorstoreServiceError)
@@ -388,6 +400,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             return self.check_again(str(e))
         if status == VectorstoreStatus.READY:
             self.finish_deployment()
+            self.queue_pending_documents()
             return None
         return self.check_again(vectorstore.status_message)
 
@@ -435,8 +448,9 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         try:
             provision = state.in_progress and not state.provisioned
             status = self.advance_deployment(provision=provision)
-            if status == VectorstoreStatus.READY:
+            if status == VectorstoreStatus.READY and state.in_progress:
                 self.finish_deployment()
+                self.queue_pending_documents()
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.warning("%s: %s", vectorstore, e)
             self.record_error(e)
@@ -622,6 +636,107 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         if document.chunk_count and self.vectorstore.status == VectorstoreStatus.READY:
             self.backend.delete(document.chunk_ids())
         document.delete()
+
+    def add_documents(
+        self, sources: Iterable[DocumentSource], metadata: Optional[SmarterDictType] = None
+    ) -> DocumentsAdded:
+        """
+        Add documents, and queue the new ones to be loaded, if the vectorstore is ready.
+
+        A document whose text the vectorstore already has is a duplicate, and is not added again.
+        The documents of a vectorstore that isn't ready are loaded once its deploy is ready.
+
+        :param sources: The documents, e.g. from :func:`smarter.apps.vectorstore.sources.request_sources`.
+        :param metadata: Stored with every chunk of every document.
+        :returns: The documents added, the duplicates, and whether the new ones were queued.
+        :raises smarter.apps.vectorstore.extract.VectorstoreExtractionError: If a document's text can't be extracted.
+        """
+        added: list[VectorstoreDocument] = []
+        duplicates: list[VectorstoreDocument] = []
+        for source in sources:
+            document, created = self.add_document(
+                name=source.name,
+                data=source.data,
+                text=source.text,
+                content_type=source.content_type,
+                source=source.source,
+                metadata=metadata,
+            )
+            if created:
+                added.append(document)
+            else:
+                duplicates.append(document)
+        queued = self.vectorstore.status == VectorstoreStatus.READY
+        if queued:
+            self.queue_loads(added)
+        result = DocumentsAdded(added=added, duplicates=duplicates, queued=queued)
+        return result
+
+    @staticmethod
+    def queue_loads(documents: Iterable[VectorstoreDocument]) -> int:
+        """
+        Queue the Celery task that loads each document.
+
+        :param documents: The documents.
+        :returns: The number queued.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import load_vectorstore_document
+
+        count = 0
+        for document in documents:
+            load_vectorstore_document.delay(document.pk)
+            count += 1
+        return count
+
+    def queue_pending_documents(self) -> int:
+        """
+        Queue the documents that wait to be loaded, e.g. those added before the vectorstore was deployed.
+
+        :returns: The number queued.
+        """
+        pending = self.vectorstore.documents.filter(status=VectorstoreDocumentStatus.PENDING)  # type: ignore[attr-defined]
+        count = self.queue_loads(pending)
+        if count:
+            logger.info("%s: queued %s pending documents.", self.vectorstore, count)
+        return count
+
+    def find_document(self, reference: str) -> VectorstoreDocument:
+        """
+        Find one of the vectorstore's documents, by its id, or its name.
+
+        :param reference: The document's id, or its name, e.g. a file name or url.
+        :returns: The document.
+        :raises VectorstoreServiceError: If no document, or more than one, has that name.
+        """
+        documents = self.vectorstore.documents.all()  # type: ignore[attr-defined]
+        if reference.isdigit():
+            document = documents.filter(pk=int(reference)).first()
+            if document is not None:
+                return document
+        named = list(documents.filter(name=reference)[:2])
+        if not named:
+            raise VectorstoreServiceError(f"Vectorstore {self.vectorstore.name} has no document {reference}.")
+        if len(named) > 1:
+            raise VectorstoreServiceError(
+                f"Vectorstore {self.vectorstore.name} has several documents named {reference}. Name one by its id."
+            )
+        return named[0]
+
+    def remove_document(self, document: VectorstoreDocument) -> VectorstoreDocument:
+        """
+        Mark a document deleting, and queue the Celery task that removes it and its chunks.
+
+        :param document: The document.
+        :returns: The document, deleting.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import delete_vectorstore_document
+
+        document.status = VectorstoreDocumentStatus.DELETING
+        document.save(update_fields=["status", "updated_at"])
+        delete_vectorstore_document.delay(document.pk)
+        return document
 
     def search(  # pylint: disable=too-many-positional-arguments,too-many-arguments
         self,

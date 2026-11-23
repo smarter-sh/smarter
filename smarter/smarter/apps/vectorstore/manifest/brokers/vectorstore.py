@@ -13,6 +13,7 @@ CLI commands for Vectorstores:
 - ``undeploy``: stop serving. A self-hosted server's data is kept.
 - ``delete``: destroy the database and all of its data, unless deletionProtection is enabled,
   then delete the Vectorstore.
+- ``documents``: list its documents, add documents to it (files, text or a url), or remove one.
 - ``describe``, ``get``, ``logs`` and ``example_manifest``.
 
 Account admins, i.e. staff, may apply, deploy, undeploy and delete their own Vectorstores.
@@ -20,20 +21,26 @@ Anyone may describe and get the Vectorstores that are shared with them.
 """
 
 import datetime
+from collections.abc import Mapping
 from typing import List, Optional, Type
 
 from django.db import transaction
 from django.http import HttpRequest
+from django.utils.datastructures import MultiValueDict
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.api.v1.contract.models import CliApiDocuments
 from smarter.apps.connection.models import ApiConnection
+from smarter.apps.llmtool.plugin.safe_http import SafeHttpError
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.provider.models import Provider
 from smarter.apps.vectorstore.caching import (
     invalidate_all_cached_vectorstores_for_user_profile,
 )
+from smarter.apps.vectorstore.contract.models import VectorstoreApiDocument
 from smarter.apps.vectorstore.deployment import VectorstoreDeploymentState
+from smarter.apps.vectorstore.extract import VectorstoreExtractionError
 from smarter.apps.vectorstore.manifest.models.vectorstore.const import MANIFEST_KIND
 from smarter.apps.vectorstore.manifest.models.vectorstore.metadata import (
     SAMVectorstoreMetadata,
@@ -55,7 +62,16 @@ from smarter.apps.vectorstore.models import (
     VectorstoreStatus,
 )
 from smarter.apps.vectorstore.serializers import VectorstoreSerializer
-from smarter.apps.vectorstore.service import VectorstoreService
+from smarter.apps.vectorstore.service import (
+    DocumentsAdded,
+    VectorstoreService,
+    VectorstoreServiceError,
+)
+from smarter.apps.vectorstore.sources import (
+    request_files,
+    request_metadata,
+    request_sources,
+)
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -83,6 +99,22 @@ logger = logging.getSmarterLogger(
 )
 
 MAX_RESULTS = 1000
+
+
+def count_documents(count: int) -> str:
+    """
+    A number of documents, for a person: no documents, 1 document, 2 documents.
+
+    :param count: The number.
+    :returns: The number, with the word.
+    """
+    if count == 0:
+        return "no documents"
+    if count == 1:
+        return "1 document"
+    return f"{count} documents"
+
+
 IMMUTABLE_WHILE_DEPLOYED = {
     # what cannot change once the database exists, because it would no longer match it.
     "backend": lambda spec: spec.backend,
@@ -569,13 +601,12 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
         """
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
-        from smarter.apps.connection.models import ApiConnection
-        from smarter.apps.provider.models import Provider
         from smarter.apps.secret.models import Secret
 
-        connection_id = instance.connection_id
-        embeddings_provider_id = instance.embeddings_provider_id
-        api_key_secret_id = instance.api_key_secret_id
+        # Django's foreign key columns, which type checkers don't see.
+        connection_id = instance.connection_id  # type: ignore[attr-defined]
+        embeddings_provider_id = instance.embeddings_provider_id  # type: ignore[attr-defined]
+        api_key_secret_id = instance.api_key_secret_id  # type: ignore[attr-defined]
         return [
             (
                 SAMKinds.API_CONNECTION.value,
@@ -661,6 +692,91 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             ) from e
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
+
+    def documents(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
+        """
+        List the Vectorstore's documents, add documents to it, or remove one, as the cli's ``documents`` command does.
+
+        - Without files, text or a url, and without ``remove``, it lists them, for anyone who may read the Vectorstore.
+        - With files (multipart/form-data ``files``), ``text`` or ``url``, it adds them, with optional
+          ``metadata``, as :mod:`smarter.apps.vectorstore.sources` reads them. They are loaded in the background,
+          once the Vectorstore is ready.
+        - With the query parameter ``remove``, a document's id or name, it removes that document, in the background.
+
+        Adding and removing require an account admin who owns the Vectorstore. A request that it can't
+        carry out, e.g. a file without text, or a name that no document has, is an error with its reason.
+
+        :param request: The request.
+        :returns: The Vectorstore's documents after the command, and what it changed, as
+            :class:`~smarter.apps.api.v1.contract.models.CliApiDocuments`.
+        """
+        command = SmarterJournalCliCommands(self.documents.__name__)
+        files = getattr(request, "FILES", None) or MultiValueDict()
+        # a DRF request's data, else a Django request's form.
+        raw_data = getattr(request, "data", None)
+        if raw_data is None:
+            raw_data = request.POST
+        data = raw_data if isinstance(raw_data, Mapping) else {}
+        remove = request.GET.get("remove")
+        adding = bool(request_files(files) or data.get("text") or data.get("url"))
+        if remove and adding:
+            raise SAMVectorstoreBrokerError(
+                "Add documents, or remove one, but not both.", thing=self.kind, command=command
+            )
+        if remove or adding:
+            vectorstore = self.owned_vectorstore(command)
+        else:
+            readable = self.vectorstore
+            if readable is None:
+                raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
+            vectorstore = readable
+        service = VectorstoreService(vectorstore)
+        added: Optional[DocumentsAdded] = None
+        removed = None
+        try:
+            if remove:
+                removed = service.remove_document(service.find_document(remove))
+            elif adding:
+                added = service.add_documents(request_sources(files, data), metadata=request_metadata(data))
+        except (VectorstoreServiceError, VectorstoreExtractionError, SafeHttpError, ValueError) as e:
+            # the client's request, which it can correct: a 400, with the reason.
+            raise SAMVectorstoreBrokerError(str(e), thing=self.kind, command=command) from None
+        documents = vectorstore.documents.order_by("-created_at")  # type: ignore[attr-defined]
+        result = CliApiDocuments(
+            vectorstore=vectorstore.name,
+            documents=[VectorstoreApiDocument.from_model(row) for row in documents],
+            added=[VectorstoreApiDocument.from_model(row) for row in added.added] if added else [],
+            duplicates=[VectorstoreApiDocument.from_model(row) for row in added.duplicates] if added else [],
+            queued=added.queued if added else None,
+            removed=VectorstoreApiDocument.from_model(removed) if removed else None,
+        )
+        message = self.documents_message(vectorstore.name, len(result.documents), added, removed)
+        self.cache_invalidations()
+        return self.json_response_ok(command=command, data=result.model_dump(mode="json"), message=message)
+
+    @staticmethod
+    def documents_message(name: str, count: int, added: Optional[DocumentsAdded], removed) -> str:
+        """
+        Say what the ``documents`` command did.
+
+        :param name: The Vectorstore's name.
+        :param count: The number of its documents.
+        :param added: What was added, if anything.
+        :param removed: The document being removed, if any.
+        :returns: A sentence or two.
+        """
+        if removed is not None:
+            return f"Vectorstore {name} is removing {removed.name}."
+        if added is None:
+            return f"Vectorstore {name} has {count_documents(count)}."
+        message = f"Added {count_documents(len(added.added))} to Vectorstore {name}."
+        duplicates = len(added.duplicates)
+        if duplicates:
+            verb = "was" if duplicates == 1 else "were"
+            message += f" {count_documents(duplicates)} {verb} already in it."
+        if added.added and not added.queued:
+            message += " They are loaded once it is deployed and ready."
+        return message
 
     def logs(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """A self-hosted Qdrant server's recent logs."""

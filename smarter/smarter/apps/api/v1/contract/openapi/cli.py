@@ -113,6 +113,38 @@ PROMPT_BODY = OpenApiRequestBody(
 )
 
 
+REMOVE_PARAMETER = OpenApiParameter(
+    name="remove",
+    in_="query",
+    required=False,
+    description="Remove this document, and its chunks: its id, or its name, e.g. its file name or url.",
+    schema_={"type": "string"},
+)
+DOCUMENTS_BODY = OpenApiRequestBody(
+    description="Documents to add. Without them, and without remove, the command lists the documents.",
+    required=False,
+    content={
+        "multipart/form-data": OpenApiMediaType(
+            schema_={
+                "type": "object",
+                "properties": {
+                    "files": {
+                        "type": "array",
+                        "items": {"type": "string", "format": "binary"},
+                        "description": "Files to add, up to 50 MiB each: PDF, text, Markdown, CSV, JSON, YAML or HTML.",
+                    },
+                    "url": {"type": "string", "description": "A public http or https url of a page or file to add."},
+                    "text": {"type": "string", "description": "Text to add, as a document."},
+                    "name": {"type": "string", "description": "The name of the text's document. By default, text."},
+                    "metadata": {
+                        "type": "string",
+                        "description": "A JSON object, stored with every chunk of every document that is added.",
+                    },
+                },
+            }
+        ),
+    },
+)
 MANIFEST_BODY = OpenApiRequestBody(
     description="A SAM manifest, as YAML or as JSON.",
     required=True,
@@ -267,6 +299,19 @@ def cli_paths() -> dict[str, OpenApiPathItem]:
             TAG_DEPLOYMENT,
             "CliApiMessageResponse",
             parameters=by_name,
+        ),
+        cli_path("documents/{kind}/"): operation(
+            "documents",
+            "A resource's documents",
+            "List, add or remove the documents of a resource that has them, a Vectorstore. Without a body or "
+            "remove, it lists them, for anyone who may read the Vectorstore. With files, text or a url, it adds "
+            "them: their text is extracted now, and they are loaded in the background, once the Vectorstore is "
+            "ready. With remove, it removes one, in the background. Only the Vectorstore's owner, an account "
+            "admin, may add or remove documents. Other kinds answer 501.",
+            TAG_MANIFESTS,
+            "CliApiDocumentsResponse",
+            parameters=[*by_name, REMOVE_PARAMETER],
+            request_body=DOCUMENTS_BODY,
         ),
         cli_path("status/"): operation(
             "status",

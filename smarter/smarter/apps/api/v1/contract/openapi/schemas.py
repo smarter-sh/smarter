@@ -16,6 +16,7 @@ from smarter.apps.api.v1.contract.const import JSON_SCHEMA_DIALECT
 from smarter.apps.api.v1.contract.models import (
     CLI_API_MODELS,
     CliApiApplied,
+    CliApiDocuments,
     CliApiGet,
     CliApiPrompt,
     CliApiResource,
@@ -153,6 +154,7 @@ def cli_schemas() -> tuple[dict[str, OpenApiSchema], list[str]]:
     schemas["CliApiVersionResponse"] = envelope(ref(CliApiVersion.__name__), "The response of version.")
     schemas["CliApiWhoamiResponse"] = envelope(ref(CliApiWhoami.__name__), "The response of whoami.")
     schemas["CliApiPromptResponse"] = envelope(ref(CliApiPrompt.__name__), "The response of prompt.")
+    schemas["CliApiDocumentsResponse"] = envelope(ref(CliApiDocuments.__name__), "The response of documents.")
     schemas["CliApiResourcesResponse"] = envelope(
         {"type": "array", "items": ref(CliApiResource.__name__)}, "The response of resources."
     )

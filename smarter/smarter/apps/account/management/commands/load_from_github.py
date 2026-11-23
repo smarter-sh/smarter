@@ -23,6 +23,7 @@ import tempfile
 from dataclasses import dataclass
 from typing import Optional
 
+import pathspec
 import yaml
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -80,6 +81,32 @@ MANIFEST_EXTENSIONS = (".yaml", ".yml", TEMPLATE_EXTENSION)
 
 Other files, e.g. a README, are ignored.
 """
+IGNORE_FILE = ".smarterignore"
+"""A repository's list of the files that are never applied, as gitignore-style patterns, at its root.
+
+For example, ``/scripts/`` keeps the repository's scripts folder out, ``/tutorials/`` the manifests of a
+tutorial, which its readers build themselves, and ``*.example.yaml`` examples. See :func:`load_ignore_spec`.
+"""
+
+
+def load_ignore_spec(local_path: str) -> Optional[pathspec.GitIgnoreSpec]:
+    """
+    Return the patterns of a repository's ``.smarterignore``, if it has one.
+
+    They are gitignore's patterns, with its rules, which pathspec implements: a pattern without a slash
+    matches at any depth, a leading slash anchors it to the repository's root, a trailing slash matches
+    a folder and everything in it, ``**`` matches any number of folders, ``!`` includes again what an
+    earlier pattern excluded, and ``#`` starts a comment.
+
+    :param local_path: The repository's clone.
+    :returns: The patterns, or None if the repository has no ``.smarterignore``.
+    """
+    filespec = os.path.join(local_path, IGNORE_FILE)
+    if not os.path.isfile(filespec):
+        return None
+    with open(filespec, encoding="utf-8") as f:
+        spec = pathspec.GitIgnoreSpec.from_lines(f)
+    return spec
 
 
 @dataclass(frozen=True)
@@ -117,6 +144,9 @@ class Command(SmarterCommand):
     - A manifest is a ``*.yaml``, ``*.yml`` or ``*.yaml.tpl`` file whose ``apiVersion`` is a Smarter
       api version. Other files, and hidden files and folders, e.g. ``.github/`` and
       ``.pre-commit-config.yaml``, are ignored.
+    - A repository's ``.smarterignore`` lists, with gitignore-style patterns, the files that are never
+      applied, e.g. ``/scripts/`` for its scripts, or ``/tutorials/`` for the manifests that a tutorial's
+      readers build themselves.
     - A manifest template, ``*.yaml.tpl``, is filled in with this platform's scheme and domain, e.g.
       the Stackademy ApiConnection, whose ``baseUrl`` is the platform that applies it.
     - An LLMClient that exists keeps its ``deployed`` value, and an LLMClient that needs an extension
@@ -363,10 +393,10 @@ class Command(SmarterCommand):
         :rtype: list[RepositoryManifest]
         """
         retval: list[RepositoryManifest] = []
+        ignore_spec = load_ignore_spec(local_path)
+        ignored = 0
         for root, directories, files in os.walk(local_path):
-            directories[:] = sorted(
-                d for d in directories if not d.startswith(".") and not (root == local_path and d == SCRIPTS_FOLDER)
-            )
+            directories[:] = sorted(d for d in directories if not d.startswith("."))
             for file in sorted(files):
                 if file.startswith(".") or not file.endswith(MANIFEST_EXTENSIONS):
                     continue
@@ -374,6 +404,9 @@ class Command(SmarterCommand):
                     continue
                 filespec = os.path.join(root, file)
                 path = os.path.relpath(filespec, local_path)
+                if ignore_spec is not None and ignore_spec.match_file(path):
+                    ignored += 1
+                    continue
                 with open(filespec, encoding="utf-8") as f:
                     text = f.read()
                 if file.endswith(TEMPLATE_EXTENSION):
@@ -393,6 +426,8 @@ class Command(SmarterCommand):
                         path=path, filespec=filespec, kind=str(manifest["kind"]), name=name, manifest=manifest
                     )
                 )
+        if ignored:
+            self.stdout.write(f"Ignored {ignored} files that the repository's {IGNORE_FILE} lists.")
         return sorted(retval, key=self.apply_order_key)
 
     def apply_order_key(self, item: RepositoryManifest) -> tuple[int, int, str]:
