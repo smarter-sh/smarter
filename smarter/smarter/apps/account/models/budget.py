@@ -88,6 +88,15 @@ class BudgetPeriod(models.TextChoices):
     MONTH = "month", "Month"
 
 
+BUDGET_PERIOD_ADJECTIVES: dict[str, str] = {
+    BudgetPeriod.HOUR: "hourly",
+    BudgetPeriod.DAY: "daily",
+    BudgetPeriod.WEEK: "weekly",
+    BudgetPeriod.MONTH: "monthly",
+}
+"""Each :class:`BudgetPeriod` as an adjective, e.g. for a lock's reason: the daily limit, not the dayly limit."""
+
+
 class BudgetUnit(models.TextChoices):
     """What a budget's limits measure."""
 
@@ -545,7 +554,8 @@ class ResourceConstraint(TimestampedModel):
         elif budget.periodic_limit and periodic_actual >= budget.periodic_limit:
             actual, limit = periodic_actual, budget.periodic_limit
             expiration_date = period_ends
-            reason = f"Budget {budget.name}: the {budget.period}ly limit of {budget.format_amount(limit)} has been reached ({budget.format_amount(actual)} this {budget.period}). It renews at {period_ends:%Y-%m-%d %H:%M %Z}."
+            period_adjective = BUDGET_PERIOD_ADJECTIVES[budget.period]
+            reason = f"Budget {budget.name}: the {period_adjective} limit of {budget.format_amount(limit)} has been reached ({budget.format_amount(actual)} this {budget.period}). It renews at {period_ends:%Y-%m-%d %H:%M %Z}."
 
         expires_at = self.expires_at
         if reason and expires_at:
