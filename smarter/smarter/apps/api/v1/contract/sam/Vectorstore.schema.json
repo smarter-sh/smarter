@@ -21,6 +21,64 @@
       "title": "SAMDependency",
       "type": "object"
     },
+    "SAMVectorstoreCondition": {
+      "description": "One of the things that a Vectorstore's database needs before it is ready, and whether it has it.\n\nA deploy has several independent points of failure, e.g. a refused api key, a volume that isn't\nbound, or a server whose image can't be pulled. Each is a condition, as in Kubernetes: its\n``status`` is ``True`` when it is met, ``False`` when it isn't, and ``Unknown`` before it is\nchecked. A Pinecone or Qdrant Cloud Vectorstore has the conditions ``Credentials`` and ``Index``,\nand a self-hosted one also ``Volume`` and ``Server``.\n\nRead only.",
+      "properties": {
+        "lastTransitionTime": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.condition.lastTransitionTime: when its status last changed.",
+          "title": "Lasttransitiontime"
+        },
+        "message": {
+          "default": "",
+          "description": "Vectorstore.status.condition.message: what was found, for a person.",
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "default": "",
+          "description": "Vectorstore.status.condition.reason: one word, e.g. Bound or ImagePullBackOff.",
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "description": "Vectorstore.status.condition.status: True if it is met, False if it isn't, Unknown before it is checked.",
+          "enum": [
+            "True",
+            "False",
+            "Unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "type": {
+          "description": "Vectorstore.status.condition.type: Credentials, Volume, Server or Index.",
+          "enum": [
+            "Credentials",
+            "Volume",
+            "Server",
+            "Index"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "status"
+      ],
+      "title": "SAMVectorstoreCondition",
+      "type": "object"
+    },
     "SAMVectorstoreEmbeddings": {
       "description": "Vectorstore.spec.embeddings: how documents and queries are turned into vectors.",
       "properties": {
@@ -413,6 +471,27 @@
           "description": "Vectorstore.status.apiKeySecret: the Secret with a self-hosted database's API key.",
           "title": "Apikeysecret"
         },
+        "attempt": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.attempt: the number of checks that its last deploy has made.",
+          "title": "Attempt"
+        },
+        "conditions": {
+          "description": "Vectorstore.status.conditions: what its database needs to be ready, as of its last deploy or check.",
+          "items": {
+            "$ref": "#/$defs/SAMVectorstoreCondition"
+          },
+          "title": "Conditions",
+          "type": "array"
+        },
         "created": {
           "description": "The date in which this resource was created. Read only.",
           "format": "date-time",
@@ -495,6 +574,19 @@
           "description": "Vectorstore.status.lastCheckedAt: when its status was last checked. Read only.",
           "title": "Lastcheckedat"
         },
+        "lastError": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.lastError: the last error of its last deploy, which may have been retried since.",
+          "title": "Lasterror"
+        },
         "lastMaintenanceAt": {
           "anyOf": [
             {
@@ -523,6 +615,19 @@
           "description": "Vectorstore.status.lastSnapshotAt: when its last snapshot was taken. Read only.",
           "title": "Lastsnapshotat"
         },
+        "maxAttempts": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.maxAttempts: the checks that a deploy makes before it fails.",
+          "title": "Maxattempts"
+        },
         "message": {
           "anyOf": [
             {
@@ -533,7 +638,7 @@
             }
           ],
           "default": null,
-          "description": "Vectorstore.status.message: why, if it failed.",
+          "description": "Vectorstore.status.message: what is happening, e.g. what a deploy waits for, or why it failed.",
           "title": "Message"
         },
         "modified": {
@@ -541,6 +646,20 @@
           "format": "date-time",
           "title": "Modified",
           "type": "string"
+        },
+        "nextRetryAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Vectorstore.status.nextRetryAt: when a deploy in progress checks again.",
+          "title": "Nextretryat"
         },
         "recordLocator": {
           "description": "recordLocator[String]: An optional identifier used to locate the resource record associated with this manifest. Read only.",

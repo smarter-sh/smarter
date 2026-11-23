@@ -1,13 +1,14 @@
 """
 Celery tasks of the vectorstore app.
 
+- :func:`deploy_vectorstore`: create a vectorstore's database, and check it until it is ready.
+  Queued by ``deploy``. Each run checks once, and queues itself again, rather than waiting.
 - :func:`load_vectorstore_document`: split, embed and load a document. Queued when a document
   is added.
 - :func:`delete_vectorstore_document`: remove a document's chunks, then the document.
 - :func:`snapshot_vectorstore`: take a snapshot, or backup, on request.
-- :func:`reconcile_vectorstores`: Celery Beat, every few minutes. Bring deployed vectorstores to
-  ready, e.g. create a self-hosted server's collection once it has started, and record their
-  status and statistics.
+- :func:`reconcile_vectorstores`: Celery Beat, every few minutes. Check deployed vectorstores,
+  record their status, conditions and statistics, and take over a deploy whose task was lost.
 - :func:`maintain_vectorstores`: Celery Beat, hourly. Take snapshots on each manifest's schedule,
   prune them to its retention, and queue documents whose task was lost again.
 """
@@ -35,6 +36,38 @@ QUEUE = smarter_settings.app_llmclient_tasks_celery_task_queue
 # snapshots and reconciliation manage vector databases, which can take minutes, so they run
 # in the infrastructure queue, and never block the operational tasks of QUEUE.
 INFRASTRUCTURE_QUEUE = smarter_settings.app_infrastructure_tasks_celery_task_queue
+
+
+@app.task(queue=INFRASTRUCTURE_QUEUE)
+def deploy_vectorstore(vectorstore_id: int, deployment_id: str) -> Optional[str]:
+    """
+    Make one check of a vectorstore's deploy, and queue the next one, until the deploy ends.
+
+    The first check creates the database's infrastructure, e.g. a self-hosted server, and each
+    check records the deploy's conditions, creates the index once the infrastructure is ready, and
+    says when to check again: every few seconds while it waits, and later after each error in a
+    row. A check never waits, so a deploy that takes many minutes never holds a worker. See
+    :meth:`smarter.apps.vectorstore.service.VectorstoreService.deployment_step`.
+
+    :param vectorstore_id: The vectorstore's id.
+    :param deployment_id: The deploy's id. A deploy that another deploy replaced stops.
+    :returns: The vectorstore's status after the check, or None if it does not exist.
+    """
+    vectorstore = (
+        VectorstoreMeta.objects.select_related("user_profile", "connection", "api_key_secret")
+        .filter(pk=vectorstore_id)
+        .first()
+    )
+    if vectorstore is None:
+        logger.warning("vectorstore %s does not exist.", vectorstore_id)
+        return None
+    service = VectorstoreService(vectorstore)
+    countdown = service.deployment_step(deployment_id)
+    if countdown is not None:
+        deploy_vectorstore.apply_async(
+            kwargs={"vectorstore_id": vectorstore_id, "deployment_id": deployment_id}, countdown=countdown
+        )
+    return service.vectorstore.status
 
 
 @app.task(queue=QUEUE)
@@ -123,6 +156,7 @@ def maintain_vectorstores() -> SmarterDictType:
 
 __all__ = [
     "delete_vectorstore_document",
+    "deploy_vectorstore",
     "load_vectorstore_document",
     "maintain_vectorstores",
     "reconcile_vectorstores",
