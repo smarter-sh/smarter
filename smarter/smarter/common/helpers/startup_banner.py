@@ -125,6 +125,38 @@ def _database_url() -> str:
     return f"{vendor}://{db.get('USER', '')}@{db.get('HOST', '')}{port}/{db.get('NAME', '')}"
 
 
+def _pydantic_version() -> str:
+    """Return the installed Pydantic's version."""
+    import pydantic  # pylint: disable=import-outside-toplevel
+
+    return pydantic.VERSION
+
+
+def _drf_version() -> str:
+    """Return the installed Django REST Framework's version."""
+    import rest_framework  # pylint: disable=import-outside-toplevel
+
+    return rest_framework.VERSION
+
+
+def runtime_summary() -> str:
+    """
+    Return the versions of Python, Django, Django REST Framework and Pydantic, for the banner's runtime line.
+
+    :returns: E.g. ``python 3.14.10  ·  django 6.0.10  ·  drf 3.16.1  ·  pydantic 2.14.3``.
+    """
+    from smarter.common.conf import (  # pylint: disable=import-outside-toplevel
+        smarter_settings,
+    )
+
+    python = _safe(platform.python_version)
+    django = _safe(lambda: smarter_settings.django_version)
+    drf = _safe(_drf_version)
+    pydantic = _safe(_pydantic_version)
+    summary = f"python {python}  ·  django {django}  ·  drf {drf}  ·  pydantic {pydantic}"
+    return summary
+
+
 def banner_facts() -> list[tuple[str, str]]:
     """
     Return the configuration that the banner lists, as (label, value) pairs.
@@ -146,10 +178,7 @@ def banner_facts() -> list[tuple[str, str]]:
         ("broker", mask_url(_safe(lambda: settings.CELERY_BROKER_URL))),
         ("log level", _safe(lambda: smarter_settings.log_level_name)),
         ("debug", "ON" if getattr(settings, "DEBUG", False) else "OFF"),
-        (
-            "runtime",
-            f"python {_safe(platform.python_version)}  ·  django {_safe(lambda: smarter_settings.django_version)}",
-        ),
+        ("runtime", runtime_summary()),
     ]
 
 

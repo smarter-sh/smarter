@@ -15,6 +15,7 @@ from .llmclient_extension import LLMClientExtensions
 from .llmclient_helper import LLMClientHelper
 from .llmclient_mcpclient import LLMClientMCPClients
 from .llmclient_plugin import LLMClientPlugin
+from .llmclient_vectorsearch import LLMClientVectorsearches
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.LLM_CLIENT_LOGGING])
 
@@ -178,17 +179,18 @@ class LLMClientToolCounts(NamedTuple):
     extensions: int
     plugins: int
     mcpclients: int
+    vectorsearches: int = 0
 
     @property
     def total(self) -> int:
         """All of the LLMClient's tools."""
-        return self.extensions + self.plugins + self.mcpclients
+        return self.extensions + self.plugins + self.mcpclients + self.vectorsearches
 
 
 @cache_results(timeout=smarter_settings.subsystem_cache_llm_client_expiration)
 def get_cached_llmclient_tool_counts(llmclient_id: int) -> LLMClientToolCounts:
     """
-    Count an LLMClient's extensions, plugins and MCPClients, the tools that it offers the LLM.
+    Count an LLMClient's extensions, plugins, MCPClients and Vectorsearches, the tools that it offers the LLM.
 
     Smarter Chat's configuration api reads these counts on every page load, for ``total_tools``,
     ``plugins.meta_data.total_plugins`` and ``extensions.meta_data.total_extensions``. They are
@@ -210,6 +212,9 @@ def get_cached_llmclient_tool_counts(llmclient_id: int) -> LLMClientToolCounts:
         extensions=LLMClientExtensions.objects.filter(llmclient_id=llmclient_id).exclude(extension__slug="").count(),
         plugins=LLMClientPlugin.objects.filter(llmclient_id=llmclient_id).exclude(plugin_meta__name="").count(),
         mcpclients=LLMClientMCPClients.objects.filter(llmclient_id=llmclient_id).exclude(mcpclient__name="").count(),
+        vectorsearches=LLMClientVectorsearches.objects.filter(llmclient_id=llmclient_id)
+        .exclude(vectorsearch__name="")
+        .count(),
     )
 
 

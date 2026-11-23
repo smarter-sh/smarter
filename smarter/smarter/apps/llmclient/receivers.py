@@ -31,6 +31,7 @@ from .models import (
     LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
+    LLMClientVectorsearches,
     invalidate_cached_llmclient_by_hosts,
 )
 from .models.utils import invalidate_cached_llmclient_tool_counts
@@ -170,7 +171,7 @@ def llmclient_tools_changed(sender, instance, **kwargs):
     invalidate_cached_llmclient_tool_counts(getattr(instance, "llmclient_id", None))
 
 
-for _tool_link in (LLMClientPlugin, LLMClientExtensions, LLMClientMCPClients):
+for _tool_link in (LLMClientPlugin, LLMClientExtensions, LLMClientMCPClients, LLMClientVectorsearches):
     post_save.connect(
         llmclient_tools_changed, sender=_tool_link, dispatch_uid=f"{module_prefix}.{_tool_link.__name__}.post_save"
     )

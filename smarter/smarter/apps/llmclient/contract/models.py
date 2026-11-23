@@ -40,6 +40,7 @@ if TYPE_CHECKING:
         LLMClientGuardrails,
         LLMClientMCPClients,
         LLMClientPlugin,
+        LLMClientVectorsearches,
     )
 
 
@@ -166,6 +167,25 @@ class LLMClientApiMCPClientRef(AccountApiModel):
         return cls(id=link.pk, name=link.mcpclient.name)
 
 
+class LLMClientApiVectorsearchRef(AccountApiModel):
+    """A Vectorsearch of an LLMClient, in the LLMClient's own response: the LLMClientVectorsearches' id, and the Vectorsearch's name."""
+
+    id: int = Field(..., description="LLMClientVectorsearches.id.")
+    name: str = Field(..., description="The Vectorsearch's name, Vectorsearch.name.")
+
+    @classmethod
+    def from_model(cls, link: "LLMClientVectorsearches") -> "LLMClientApiVectorsearchRef":
+        """
+        The contract's reference to a Vectorsearch of an LLMClient.
+
+        :param link: The row, whose ``vectorsearch`` should be fetched with it.
+        :type link: smarter.apps.llmclient.models.LLMClientVectorsearches
+        :returns: The model.
+        :rtype: LLMClientApiVectorsearchRef
+        """
+        return cls(id=link.pk, name=link.vectorsearch.name)
+
+
 class LLMClientApiGuardrailRef(AccountApiModel):
     """A Guardrail of an LLMClient, in the LLMClient's own response: the LLMClientGuardrails' id, and the Guardrail's name."""
 
@@ -185,17 +205,21 @@ class LLMClientApiGuardrailRef(AccountApiModel):
         return cls(id=link.pk, name=link.guardrail.name)
 
 
-LLMClientApiToolKind = Literal["Extension", "Plugin", "MCPClient", "Guardrail"]
+LLMClientApiToolKind = Literal["Extension", "Plugin", "MCPClient", "Vectorsearch", "Guardrail"]
 """What adds a tool to an LLMClient's prompts: an extension, or the linked resource's manifest kind."""
 
 LLMClientApiToolRef = Union[
-    LLMClientApiExtension, LLMClientApiPluginRef, LLMClientApiMCPClientRef, LLMClientApiGuardrailRef
+    LLMClientApiExtension,
+    LLMClientApiPluginRef,
+    LLMClientApiMCPClientRef,
+    LLMClientApiVectorsearchRef,
+    LLMClientApiGuardrailRef,
 ]
 """A reference to what adds tools to an LLMClient: each has an ``id`` and a ``name``."""
 
 
 class LLMClientApiTool(AccountApiModel):
-    """Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail."""
+    """Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient, Vectorsearch or guardrail."""
 
     id: int = Field(..., description="The link row's id: LLMClientExtensions, LLMClientPlugin, ... .id.")
     name: str = Field(..., description="The extension's slug, or the linked resource's name.")
@@ -301,11 +325,12 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
     extensions: list[LLMClientApiExtension] = Field(..., description="The LLMClient's extensions.")
     plugins: list[LLMClientApiPluginRef] = Field(..., description="The LLMClient's plugins.")
     mcpclients: list[LLMClientApiMCPClientRef] = Field(..., description="The LLMClient's MCPClients.")
+    vectorsearches: list[LLMClientApiVectorsearchRef] = Field(..., description="The LLMClient's Vectorsearches.")
     guardrails: list[LLMClientApiGuardrailRef] = Field(..., description="The LLMClient's guardrails.")
     tools: list[LLMClientApiTool] = Field(
         ...,
-        description="Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and "
-        "guardrails, in that order.",
+        description="Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients, "
+        "Vectorsearches and guardrails, in that order.",
     )
     custom_domains: list[LLMClientApiCustomDomain] = Field(
         ..., description="The LLMClient's custom domain, as a list of none or one."
@@ -384,6 +409,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             LLMClientGuardrails,
             LLMClientMCPClients,
             LLMClientPlugin,
+            LLMClientVectorsearches,
         )
 
         extensions = [
@@ -400,6 +426,12 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             LLMClientApiMCPClientRef.from_model(row)
             for row in LLMClientMCPClients.objects.filter(llmclient=llmclient).select_related("mcpclient")
         ]
+        vectorsearches = [
+            LLMClientApiVectorsearchRef.from_model(row)
+            for row in LLMClientVectorsearches.objects.filter(llmclient=llmclient)
+            .select_related("vectorsearch")
+            .order_by("vectorsearch__name")
+        ]
         guardrails = [
             LLMClientApiGuardrailRef.from_model(row)
             for row in LLMClientGuardrails.objects.filter(llmclient=llmclient).select_related("guardrail")
@@ -409,6 +441,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             ("Extension", extensions),
             ("Plugin", plugins),
             ("MCPClient", mcpclients),
+            ("Vectorsearch", vectorsearches),
             ("Guardrail", guardrails),
         )
         tools = []
@@ -439,6 +472,7 @@ class LLMClientApiLLMClient(LLMClientApiOrmModel):
             extensions=extensions,
             plugins=plugins,
             mcpclients=mcpclients,
+            vectorsearches=vectorsearches,
             guardrails=guardrails,
             tools=tools,
             custom_domains=[LLMClientApiCustomDomain.from_model(row) for row in custom_domains],

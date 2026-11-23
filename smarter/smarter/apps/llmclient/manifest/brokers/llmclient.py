@@ -41,10 +41,12 @@ from smarter.apps.llmclient.models import (
     LLMClientGuardrails,
     LLMClientMCPClients,
     LLMClientPlugin,
+    LLMClientVectorsearches,
 )
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.apps.mcpclient.models import MCPClient
+from smarter.apps.vectorsearch.models import Vectorsearch
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import logging
@@ -508,6 +510,12 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             link.guardrail.name
             for link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related("guardrail")
         ]
+        vectorsearch_names = [
+            link.vectorsearch.name
+            for link in LLMClientVectorsearches.objects.filter(llmclient=self.llmclient)
+            .select_related("vectorsearch")
+            .order_by("vectorsearch__name")
+        ]
 
         # spec.apiKey is the SmarterAuthToken's name, which is what apply() looks it up by.
         api_key = self.llmclient_api_key.api_key.name if self.llmclient_api_key else None
@@ -530,6 +538,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             extensions=extension_slugs or None,
             guardrails=guardrail_names or None,
             mcpClients=mcpclient_names or None,
+            vectorsearches=vectorsearch_names or None,
             apiKey=api_key,
         )
         status = SAMLLMClientStatus(
@@ -825,6 +834,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             extensions=["calculator", "date-calculator", "weather"],
             guardrails=["pii_redaction_input", "prompt_injection_keyword_input", "moderation_output"],
             mcpClients=["deepwiki"],
+            vectorsearches=["example_vectorsearch"],
             apiKey="snake_case_api_key_name",
         )
         status = SAMLLMClientStatus(
@@ -1210,6 +1220,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         self.llmclient.name,
                     )
 
+            # LLMClientVectorsearches: add what's missing, remove what's in the model but not in the manifest
+            # -------------
+            vectorsearches_changed = self.apply_vectorsearches(command)
+            relations_changed = relations_changed or vectorsearches_changed
+
             self.touch_when_relations_changed(relations_changed=relations_changed, llmclient_saved=changed)
 
             # done! return the response. Django will take care of committing the transaction
@@ -1299,6 +1314,63 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             .first()
         )
 
+    def resolve_vectorsearch(self, name: str) -> Optional[Vectorsearch]:
+        """
+        Return the Vectorsearch named ``name`` that this broker's user may use.
+
+        The user's own Vectorsearch takes precedence over one that is shared with them.
+
+        :param name: The name of the Vectorsearch.
+        :returns: The Vectorsearch, or ``None`` if the user has none by that name.
+        :rtype: Optional[Vectorsearch]
+        """
+        if not self.user_profile:
+            return None
+        own = Vectorsearch.objects.filter(name=name, user_profile=self.user_profile).first()
+        if own is not None:
+            return own
+        shared = (
+            Vectorsearch.objects.filter(name=name)
+            .with_read_permission_for(self.user_profile.user)  # type: ignore[attr-defined]
+            .order_by("-updated_at")
+            .first()
+        )
+        return shared
+
+    def apply_vectorsearches(self, command: SmarterJournalCliCommands) -> bool:
+        """
+        Link the LLMClient to the Vectorsearches that its manifest's ``spec.vectorsearches`` lists, and only those.
+
+        :param command: The journal command, for errors.
+        :returns: True if a Vectorsearch was linked or unlinked.
+        :raises SAMBrokerErrorNotFound: If a listed Vectorsearch doesn't exist, or isn't shared with the user.
+        """
+        changed = False
+        vectorsearch_names = []
+        if self.manifest and self.manifest.spec:
+            vectorsearch_names = self.manifest.spec.vectorsearches or []
+        links = LLMClientVectorsearches.objects.filter(llmclient=self.llmclient).select_related("vectorsearch")
+        for link in links:
+            if link.vectorsearch.name not in vectorsearch_names:
+                link.delete()
+                changed = True
+                logger.debug("detached Vectorsearch %s from LLMClient %s", link.vectorsearch.name, self.name)
+        for vectorsearch_name in vectorsearch_names:
+            vectorsearch = self.resolve_vectorsearch(vectorsearch_name)
+            if vectorsearch is None:
+                raise SAMBrokerErrorNotFound(
+                    f"Vectorsearch {vectorsearch_name} not found, or not shared with {self.user_profile}",
+                    thing=self.kind,
+                    command=command,
+                )
+            _, created = LLMClientVectorsearches.objects.get_or_create(
+                llmclient=self.llmclient, vectorsearch=vectorsearch
+            )
+            if created:
+                changed = True
+                logger.debug("attached Vectorsearch %s to LLMClient %s", vectorsearch.name, self.name)
+        return changed
+
     def prompt(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
         Not supported: the CLI does not prompt an LLMClient.
@@ -1367,7 +1439,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         """Return the resources that an LLMClient uses.
 
         Its Provider, which ``spec.config.provider`` names, or the default Provider; the plugins, MCPClients,
-        Guardrails and Extensions that it lists; its Custom Domain; and the api key that its url requires.
+        Guardrails, Vectorsearches and Extensions that it lists; its Custom Domain; and the api key that its url requires.
         An Extension is not a SAM kind, so it is a leaf of :meth:`dependency_tree`.
 
         :param instance: The LLMClient.
@@ -1375,19 +1447,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         :return: The resources that it uses. The plugins have their own kinds.
         :rtype: SAMDependents
         """
+        # The models that this module already imports are used as they are. These are imported here,
+        # where they are used.
         # pylint: disable=import-outside-toplevel
         from smarter.apps.api.v1.manifests.enum import SAMKinds
-        from smarter.apps.guardrail.models import Guardrail
-        from smarter.apps.llmclient.models import (
-            LLMClientAPIKey,
-            LLMClientCustomDomain,
-            LLMClientExtensions,
-            LLMClientGuardrails,
-            LLMClientMCPClients,
-            LLMClientPlugin,
-        )
-        from smarter.apps.llmtool.models import Extension, PluginMeta
-        from smarter.apps.mcpclient.models import MCPClient
+        from smarter.apps.llmclient.models import LLMClientCustomDomain
         from smarter.apps.provider.manifest.brokers.provider import SAMProviderBroker
 
         def linked(link_model, field: str):
@@ -1398,8 +1462,16 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             (None, PluginMeta.objects.filter(id__in=linked(LLMClientPlugin, "plugin_meta_id"))),
             (SAMKinds.MCP_CLIENT.value, MCPClient.objects.filter(id__in=linked(LLMClientMCPClients, "mcpclient_id"))),
             (SAMKinds.GUARDRAIL.value, Guardrail.objects.filter(id__in=linked(LLMClientGuardrails, "guardrail_id"))),
+            (
+                SAMKinds.VECTORSEARCH.value,
+                Vectorsearch.objects.filter(id__in=linked(LLMClientVectorsearches, "vectorsearch_id")),
+            ),
             (Extension.__name__, Extension.objects.filter(id__in=linked(LLMClientExtensions, "extension_id"))),
-            (SAMKinds.CUSTOM_DOMAIN.value, rows_with_pk(LLMClientCustomDomain.objects, instance.custom_domain_id)),
+            # custom_domain_id is the column of the custom_domain foreign key, which Django adds at runtime.
+            (
+                SAMKinds.CUSTOM_DOMAIN.value,
+                rows_with_pk(LLMClientCustomDomain.objects, instance.custom_domain_id),  # type: ignore[attr-defined]
+            ),
             (SAMKinds.AUTH_TOKEN.value, SmarterAuthToken.objects.filter(pk__in=linked(LLMClientAPIKey, "api_key_id"))),
         ]
 
