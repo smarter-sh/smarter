@@ -4,63 +4,14 @@
 The Smarter Project Documentation
 =================================
 
-.. image:: https://img.shields.io/badge/Website-smarter.sh-darkorange
-   :target: https://smarter.sh
-   :alt: Project Website
+Everything you need to know about Smarter |smarter-version|.
 
-.. image:: https://img.shields.io/badge/Community-20%2B%20Contributors-blue?logo=github
-   :target: contributors.html
-   :alt: Made with ❤️ by Contributors
-
-.. image:: https://img.shields.io/badge/Community-Discussions-blue?logo=github
-   :target: https://github.com/smarter-sh/smarter/discussions
-   :alt: Forums
-
-.. image:: https://img.shields.io/badge/Slack-The%20Smarter%20Project-4A154B?logo=slack&logoColor=white
-   :target: https://join.slack.com/t/thesmarterproject/shared_invite/zt-4f0t6v46q-e2c5Of4hS4fBr_XwfQARCw
-   :alt: Slack
-
-.. image:: https://img.shields.io/badge/YouTube-Tutorials-red?logo=youtube
-   :target: https://www.youtube.com/@project-smarter
-   :alt: Video Tutorials
-
-.. image:: https://img.shields.io/docker/pulls/mcdaniel0073/smarter.svg?logo=docker&label=Docker
-   :target: https://hub.docker.com/r/mcdaniel0073/smarter
-   :alt: DockerHub
-
-.. image:: https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/project-smarter
-   :target: https://artifacthub.io/packages/search?repo=project-smarter
-   :alt: ArtifactHub
-
-.. image:: https://img.shields.io/badge/Contribute-Good%20First%20Issues-success?logo=github
-   :target: https://github.com/smarter-sh/smarter/labels/good%20first%20issue
-   :alt: Contribute
-
-.. image:: https://img.shields.io/badge/Support-GitHub%20Sponsors-ff69b4?logo=githubsponsors
-   :target: https://github.com/sponsors/lpm0073
-   :alt: Donate
-
-.. image:: https://img.shields.io/badge/License-AGPL--3.0-blue?logo=gnu
-   :target: https://www.gnu.org/licenses/agpl-3.0
-   :alt: AGPL-3 License
-
-
-The Smarter Project is an open source, cloud-native :doc:`platform <smarter-platform>` and
-:doc:`developer framework <smarter-framework>` for building sophisticated AI applications
-**without writing a single line of Python**. An application that searches the web, queries your
-databases, calls your APIs, uses the tools of any MCP server, and defends itself against prompt
-injection and data leaks is described in one short YAML file, and deployed with one command.
-
-Smarter is also a complete **platform for teaching AI**. Companies use it to train and retrain
-their employees, and universities and bootcamps use it to teach their students. The
-:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` includes
-:ref:`23 ready-to-teach courses <ai-training-courses>`, from prompt engineering for
-non-programmers to Kubernetes for platform engineers. Most come as a one-day bootcamp, a
-two-week online course and a four-week online course.
-
-.. raw:: html
-
-   <iframe style="width: 100%; aspect-ratio: 16 / 9; border: 0;" src="https://www.youtube.com/embed/u82i4m7a6VQ" title="The Smarter Project" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+Smarter is an open source platform for building governed, production AI applications **without
+writing code**: an application that searches the web, queries your databases, calls your APIs,
+uses any MCP server and defends itself against prompt injection is created with one short
+YAML manifest. Smarter is also a complete **platform for teaching AI**, with
+:doc:`23 ready-to-teach courses <smarter-instructors/example-courses/index>` for corporate
+training, universities and bootcamps.
 
 .. admonition:: Quick Start: up and running on your desktop in about 10 minutes
    :class: tip
@@ -83,374 +34,159 @@ two-week online course and a four-week online course.
    instructions with screenshots, or watch `Up and Running in Less Than 10 Minutes
    <https://youtu.be/El8L6zgGyRU>`__, which follows the same steps.
 
-.. _ai-training-courses:
-
-AI training for your whole workforce
-------------------------------------
-
-Most organizations now need nearly every employee to work with AI, and need some of them to build
-it. Smarter gives a training program a real platform to teach on, and a library of courses to
-teach with. Learners build working AI applications from the first hour, on the same software that
-can run them in production afterwards.
-
-**23 free courses, 66 turnkey course plans.** The
-:doc:`Free Course Catalog <smarter-instructors/example-courses/index>` has 20
-:doc:`micro courses <smarter-instructors/example-courses/micro-courses>`, each in
-:doc:`three formats <smarter-instructors/example-courses/micro-courses/course-formats>`: an eight-hour classroom
-bootcamp, a two-week online course and a four-week online course. Its
-:doc:`master classes <smarter-instructors/example-courses/master-classes>` go deeper: the 18-hour
-:doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>`,
-:doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>` and
-:doc:`Python Programming with Agentic AI Master Class <smarter-instructors/example-courses/master-classes/python-agentic-ai>`
-each run over three days in a classroom or six weeks online. The online formats pair 30-minute recorded
-lectures with a weekly 90-minute live session, so they fit around a working week. Every plan has
-a schedule, graded assignments with rubrics, capstone projects, a reading list and the technical
-prerequisites. A trainer can take a plan, set the dates, and teach it.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 75
-
-   * - Who is learning
-     - Courses
-   * - **Every employee** (no programming)
-     - :doc:`Prompt Engineering <smarter-instructors/example-courses/micro-courses/prompt-engineering>`,
-       :doc:`AI Applications <smarter-instructors/example-courses/micro-courses/ai-applications>`
-   * - **Leaders, managers, risk and compliance** (no programming)
-     - :doc:`AI Governance <smarter-instructors/example-courses/micro-courses/ai-governance>`,
-       :doc:`AI Economics <smarter-instructors/example-courses/micro-courses/ai-economics>`
-   * - **Software engineers**
-     - :doc:`Agentic Development <smarter-instructors/example-courses/micro-courses/agentic-development>`,
-       :doc:`Backend <smarter-instructors/example-courses/micro-courses/backend-development>`,
-       :doc:`Front End <smarter-instructors/example-courses/micro-courses/frontend-development>`,
-       :doc:`Full Stack <smarter-instructors/example-courses/micro-courses/full-stack-development>`,
-       :doc:`API Design <smarter-instructors/example-courses/micro-courses/api-design>`,
-       :doc:`Extension Development <smarter-instructors/example-courses/micro-courses/extension-development>`,
-       :doc:`AI Features in Software <smarter-instructors/example-courses/micro-courses/ai-features>`,
-       :doc:`Secure Software <smarter-instructors/example-courses/micro-courses/secure-software>`,
-       :doc:`Software Quality <smarter-instructors/example-courses/micro-courses/software-quality>`,
-       :doc:`Software Architecture <smarter-instructors/example-courses/micro-courses/software-architecture>`,
-       :doc:`Django Master Class <smarter-instructors/example-courses/master-classes/django-master-class>`,
-       :doc:`AI Application Development Master Class <smarter-instructors/example-courses/master-classes/ai-application-development>`,
-       :doc:`Python Programming with Agentic AI Master Class <smarter-instructors/example-courses/master-classes/python-agentic-ai>`,
-       :doc:`Documentation with Sphinx <smarter-instructors/example-courses/micro-courses/sphinx-documentation>`,
-       :doc:`Open Source <smarter-instructors/example-courses/micro-courses/open-source>`
-   * - **Platform, cloud and machine learning engineers**
-     - :doc:`Docker <smarter-instructors/example-courses/micro-courses/docker>`,
-       :doc:`Kubernetes <smarter-instructors/example-courses/micro-courses/kubernetes>`,
-       :doc:`Infrastructure as Code <smarter-instructors/example-courses/micro-courses/infrastructure-as-code>`,
-       :doc:`Self-Hosted Models <smarter-instructors/example-courses/micro-courses/self-hosted-models>`
-
-Smarter is built to be run for a group of learners:
-
-- **Run it locally or for everyone at once.** Learners can run Smarter on their own laptops with
-  Docker, or use one shared instance that your team hosts on Kubernetes, which costs around $350
-  USD a month in the cloud. The variable cost per learner is well under a dollar a month, so a
-  shared instance costs about the same for 30 learners as for 300.
-- **No licenses and no seat counts.** Smarter is open source, so every employee can use it, and
-  keep using it after the course ends.
-- **Predictable model spending.** A :doc:`Budget <smarter-resources/smarter-budget>` caps what each
-  learner, cohort or department can spend. Learners never hold your provider API keys.
-- **Cohorts kept apart.** Each cohort, department or team can have its own
-  :doc:`Account <smarter-resources/smarter-account>`, with its own users, resources and budgets.
-- **Training that follows your policies.** :doc:`Guardrails <smarter-resources/smarter-guardrail>`
-  keep personal data and secrets out of prompts. Every prompt is recorded, so trainers can
-  review how a learner reached an answer. With :doc:`LLMHost <smarter-resources/smarter-llmhost>`,
-  courses can use open models on your own cluster, so prompts never leave your network.
-- **From the classroom to production.** The manifests that learners write in class run unchanged
-  on a production cluster. A capstone project can become an application that their team uses.
-
-Browse the :doc:`Free Course Catalog <smarter-instructors/example-courses/index>`, then read the
-:doc:`Smarter Instructor Guide <smarter-instructor>`. It covers installing Smarter, setting up a
-class, and managing cost and privacy.
-
-No code. Just a manifest.
--------------------------
-
-Until now, an AI application that combines retrieval, tool calling, and safety controls has been a
-software project: Python code for every API client, database query, and MCP session, glue code to
-route tool calls, and custom middleware to filter what goes in and out of the model. That code has
-to be written, tested, secured, and maintained by engineers, and every change to the application is
-a change to the code.
-
-Smarter replaces all of it with a :doc:`Smarter Manifest (SAM) <smarter-framework/smarter-manifests>`,
-a plain `YAML <https://en.wikipedia.org/wiki/YAML>`__ file that declares **what** an application is,
-rather than programming **how** it works. Every :doc:`Resource <smarter-resources>` in Smarter, from an
-:doc:`Account <smarter-resources/smarter-account>` to an :doc:`LLMClient <smarter-resources/smarter-llmclient>`
-to a :doc:`Guardrail <smarter-resources/smarter-guardrail>`, is created the same way:
-
-.. code-block:: console
-
-   smarter apply -f my-ai-application.yaml
-
-This changes who can build AI applications, and how fast:
-
-- **No programming required.** Prompt engineers, business analysts, and product managers can build,
-  read, and change production AI applications themselves. The manifest is the application.
-- **Sophistication is a list, not a project.** Giving an application web search, a SQL database,
-  an MCP server, or a prompt injection guardrail means adding one line to its manifest.
-- **One way to do everything.** There is no resource-specific SDK to learn and no API convention to
-  memorize. If you can write one manifest, you can write them all, and apply them from the web
-  console, the CLI, the REST API or the Python SDK alike.
-- **Infrastructure as code for AI.** Manifests are versioned, diffed, reviewed in pull requests, and
-  deployed from CI/CD, like the rest of your infrastructure.
-
-Every way to reach external data
---------------------------------
-
-An LLM is only as useful as the information it can get to. Smarter connects your AI applications
-to external data through every approach in use today. Each one is a :doc:`Resource <smarter-resources>`
-that you declare in a manifest, and none of them requires you to write code:
-
-- **Remote APIs**: an :doc:`API Plugin <smarter-resources/llmtool/plugin/api>` calls your REST
-  services, and authenticates with credentials that are stored as
-  :doc:`Secrets <smarter-resources/smarter-secret>`, which the model never sees.
-- **Remote SQL**: a :doc:`SQL Plugin <smarter-resources/llmtool/plugin/sql>` runs parameterized
-  queries against your databases through a managed :doc:`Connection <smarter-resources/smarter-connection>`.
-- **MCP servers**: an :doc:`MCPClient <smarter-resources/smarter-mcpclient>` gives your application
-  the tools of any server in the Model Context Protocol ecosystem.
-- **The web**: a :doc:`WebsearchPlugin <smarter-resources/llmtool/plugin/websearch>` searches the web
-  and reads the pages it finds.
-- **Expertise**: a :doc:`SkillPlugin <smarter-resources/llmtool/plugin/skill>` packages instructions
-  and reference material that teach a model how to do a specific job well.
-- **Your own documents**: a :doc:`Vectorstore <smarter-resources/smarter-vectorstore>` provides
-  semantic search over your PDFs, manuals and other proprietary content. Smarter runs the vector
-  database for you, Qdrant on your own Kubernetes cluster, or Pinecone or Qdrant Cloud, loads and
-  removes your documents, and takes scheduled snapshots.
-
-Governed from the first prompt
-------------------------------
-
-Instructions in a system prompt are requests, not controls. A Smarter
-:doc:`Guardrail <smarter-resources/smarter-guardrail>` is a deterministic software control that
-inspects every message on its way to the model, and every reply on its way back. Guardrails
-moderate abusive and unsafe content, redact personal data and leaked secrets, and stop
-prompt injection, jailbreaks, and code injection from bad actors, whatever the model would
-have done. Like everything else in Smarter, a guardrail is declared in a manifest and
-added to an application by name, with no code. Every intervention is recorded, so each :doc:`Prompt <smarter-resources/smarter-prompt>`
-can be traced back through the guardrail checks, tool calls, and model connection that
-produced it, to the :doc:`Account <smarter-resources/smarter-account>` and budget that authorized it.
-
-Contained by design
--------------------
-
-There is growing concern about AI agents that go rogue: agents that run code they were never
-meant to run, reach systems they were never meant to reach, and break out of the sandboxes that
-were supposed to contain them. Smarter was designed from the start on the assumption that a model
-will eventually try to do something it should not. It does not rely on the model to behave. It
-makes the dangerous actions impossible:
-
-- **No code execution.** Smarter never runs code written by a model, or by a third party, on its
-  own servers. A :doc:`SkillPlugin <smarter-resources/llmtool/plugin/skill>` provides instructions,
-  not programs, and Smarter rejects any :doc:`MCPClient <smarter-resources/smarter-mcpclient>`
-  that would launch an MCP server as a local process. Remote MCP servers run on their own
-  infrastructure, not on yours.
-- **Nowhere to escape to.** In production, Smarter runs on
-  :doc:`private VPC networks <smarter-platform/system-administration/security>` wherever possible, and
-  `Calico <https://www.tigera.io/project-calico/>`_ network policies on Kubernetes control which
-  ports and services each workload can reach. Containers run as a non-root user. A model cannot
-  open a connection that the network will not carry, so breaking out is not a matter of clever
-  prompting. It is not technically possible.
-- **Hardened outbound requests.** When a plugin fetches a web page, it uses https on port 443
-  only, to public addresses only, with every redirect validated. A model cannot direct Smarter
-  to reach your internal network or your cloud provider's instance metadata.
-- **Role-based access at every layer**, from Kubernetes and the cloud account, to the
-  :doc:`Account <smarter-resources/smarter-account>` and user, to each individual Resource.
-  A model can use only the plugins, MCP clients, and connections that its manifest names,
-  and a manifest can name only the Resources that its author is permitted to use.
-- **Credentials that nobody holds.** API keys and passwords are stored as encrypted
-  :doc:`Secrets <smarter-resources/smarter-secret>`, and are applied by the platform when it
-  makes a request. They never appear in a prompt, and they are never handed out to people
-  either: developers who call a provider's API directly, with the OpenAI, Anthropic, or Google
-  SDK that they already know, do so unchanged through a :doc:`Proxy <smarter-resources/smarter-proxy>`,
-  with a Smarter API key in place of the provider's. Smarter adds the provider's key, restricts
-  the endpoints that may be used, and charges every token to the person who used it.
-- **Guardrails on both sides of the model**, which stop prompt injection and jailbreaks on the way
-  in, and stop leaked secrets and personal data on the way out.
-- **Budgets and a complete audit trail.** Every request is authorized against the
-  :doc:`budgets <smarter-resources/smarter-budget>` of the user, account, and resources that it
-  would be charged to, and every prompt, tool call, and guardrail
-  intervention is recorded in the :doc:`Smarter Journal <smarter-framework/developer-reference/smarter-journal>`.
-
-See :doc:`Security <smarter-platform/system-administration/security>` for details.
-
-Composed like an orchestra
---------------------------
-
-These capabilities are designed to work together, and you conduct them from the manifest. A single
-:doc:`LLMClient <smarter-resources/smarter-llmclient>` manifest combines a model from any
-:doc:`provider <smarter-resources/smarter-provider>` with the plugins, MCP clients, and guardrails
-that it needs, simply by listing them by name. Each piece plays its own part, and Smarter handles
-the tool calling, authentication, guardrail enforcement, and auditing in between. For example, a research analyst can search
-the web, read PDF reports, and have its citations checked before they reach the user. A
-customer support agent can draft on-brand replies behind nine guardrails for safety and privacy.
-A data analyst can answer business questions in SQL, check syntax against the database's own
-documentation over MCP, and never leak personal data. When one application is not enough, an
-:doc:`Orchestrator <smarter-resources/smarter-orchestrator>` coordinates several LLMClients in
-sequential, parallel, supervisor/worker, routing, and voting/debate workflows, and it too is
-just a manifest.
-
-Smarter ships with built-in LLMClients like these, so that you can see the whole ensemble at work
-on a fresh installation, and then copy the manifests to start your own.
-
-Built for teams
----------------
-
-AI applications are built by teams, not individuals, so Smarter builds ownership and sharing into
-every Resource. Each LLMClient, Plugin, MCPClient, Guardrail, Secret, and Connection is owned by the
-person who created it, and is shared automatically with everyone in the same
-:doc:`Account <smarter-resources/smarter-account>`. Teammates can reuse each other's plugins,
-MCP clients, and guardrails in their own manifests by name, without copying them, and credentials
-stay in :doc:`Secrets <smarter-resources/smarter-secret>` rather than in anyone's manifest. Resources that Smarter provides are shared with every account, so
-your team can start from a library of ready-made building blocks. Permissions are enforced by the
-platform itself, in every query, for the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`,
-the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`CLI <smarter-platform/system-administration/tools/cli>`
-alike. Every token is charged to the person, the application, and the account that used it, and
-:doc:`Budgets <smarter-resources/smarter-budget>` set spending limits, in dollars or in tokens, per
-hour, day, week or month, and in total, on anything that spends: a user, a whole account, an
-application, a provider, a proxy, or a GPU node group. When a limit is reached, requests are refused
-with your own message, in the chat window, until the limit renews, and a Budget vs Actual chart on
-the dashboard shows where the money goes. It is always clear who built what, who can change it,
-and who is paying for it.
-
-Runs at scale, on your infrastructure
--------------------------------------
-
-Smarter runs wherever you do. Start with a single
-`Docker <https://hub.docker.com/r/mcdaniel0073/smarter>`_ container on your laptop, then go to
-production on `Kubernetes <https://kubernetes.io/>`_ with the
-`Smarter Helm chart <https://artifacthub.io/packages/helm/project-smarter/smarter>`_, where the
-application servers and background workers scale horizontally and automatically with demand.
-The same manifests that you wrote on your laptop run unchanged in a production cluster that
-serves your whole organization. There is no managed-service dependency and no vendor lock-in.
-You own the deployment, the data, and the infrastructure that it runs on.
-
-That includes the models. With :doc:`LLMHost <smarter-resources/smarter-llmhost>`, you deploy
-freely downloadable models, such as Llama, Qwen, Gemma, Mistral or gpt-oss, to your Kubernetes
-cluster with one manifest, served by vLLM, SGLang, TGI, llama.cpp or Ollama. Smarter adds the GPU
-or CPU nodes that a model needs, removes them when it no longer does, and monitors its health.
-LLMClients use a self-hosted model the same way as a commercial one, and your prompts never leave
-your network.
-
-Open to your own software
--------------------------
-
-Everything that you can do in the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`, your
-own software can do too. The :doc:`Smarter API <smarter-framework/smarter-api>` applies manifests,
-reads every resource, chats with your LLMClients, and streams their progress, and the official
-clients have no access to the platform that your code doesn't have.
-
-.. code-block:: python
-
-   from smarter import Smarter
-
-   client = Smarter()  # SMARTER_API_KEY, or the smarter cli's ~/.smarter/config.yaml
-
-   client.manifests.apply("my-ai-application.yaml")
-   llmclient = client.llm_clients.find("customer_support")
-   print(client.llm_clients.prompt(llmclient.id, "Where is my order #1234?").text)
-
-- **A published, typed contract.** Every Smarter platform describes its API in an
-  :doc:`OpenAPI 3.1 document <smarter-framework/smarter-openapi>`, with a JSON Schema for every
-  manifest kind, all generated from the same Pydantic models that the platform itself runs on, and
-  tested against its real responses. Generate a client in any language from it.
-- **Official SDKs and tools.** The :doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python>`
-  (``pip install smarter-api``), the :doc:`Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs>`
-  (``npm install @smarter.sh/api``), the :doc:`Go SDK </smarter-framework/smarter-sdks/smarter-golang>`, the
-  :doc:`CLI <smarter-framework/smarter-cli>`, a
-  `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_,
-  and a :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat
-  to any web page. Each follows the same :doc:`design <smarter-framework/apis-and-sdks>`.
-- **Your existing code, unchanged.** Software written with the OpenAI, Anthropic, or Google SDK
-  calls its provider through a :doc:`Proxy <smarter-resources/smarter-proxy>`, with a Smarter API
-  key in place of the provider's, and gains Smarter's governance and cost accounting.
-
-At a glance
+First steps
 -----------
 
-- **Get started** | :doc:`smarter-platform/installation/quick-start` | :doc:`smarter-platform/prerequisites` | :doc:`smarter-platform/trouble-shooting` | `Tutorial <https://docs.smarter.sh/learn/>`__
-- **Teaching and training** | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` | :doc:`Instructor Guide <smarter-instructor>` | :doc:`Course formats <smarter-instructors/example-courses/micro-courses/course-formats>`
+Are you new to Smarter? This is the place to start.
 
-  - 23 free courses for employees, managers, developers and platform engineers, with plans for a one-day bootcamp, a two-week online course and a four-week online course, and three 18-hour master classes, on Django, on AI application development, and on Python programming with agentic AI.
-  - Per-learner budgets, separate accounts for each cohort, and a record of every prompt, on learners' laptops or on one shared Kubernetes instance.
+- **From scratch:** :doc:`Why Smarter <smarter-overview>` | :doc:`Prerequisites <smarter-platform/prerequisites>` | :doc:`Quick Start <smarter-platform/installation/quick-start>`
+- **Tutorials:** `Tutorials on the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__ | :doc:`Video tutorials <external-links/youtube>`
+- **Your first application:** :doc:`Manifests <smarter-framework/smarter-manifests>` | :doc:`LLMClient <smarter-resources/smarter-llmclient>` | :doc:`Example manifests <smarter-framework/smarter-manifests/example-manifests>`
+- **Teaching AI:** :doc:`Instructor Guide <smarter-instructor>` | :doc:`Free Course Catalog <smarter-instructors/example-courses/index>`
 
-- **Platform**
+Getting help
+------------
 
-  - A :doc:`proxy server <smarter-resources/smarter-proxy>` that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
-  - Build every :doc:`AI resource <smarter-resources>` with declarative :doc:`YAML manifests <smarter-framework/smarter-manifests>`, with no Python programming, much as you would with `Kubernetes <https://kubernetes.io/>`_.
-  - Manage resources with the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, the :doc:`command-line interface <smarter-platform/system-administration/tools/cli>`, and the :doc:`Python </smarter-framework/smarter-sdks/smarter-python>`, :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>` SDKs.
-  - An open, typed :doc:`OpenAPI 3.1 contract <smarter-framework/smarter-openapi>`, served by every platform, to generate clients in any language.
-  - Built for teams: every resource has an owner, and is shared with everyone in the owner's :doc:`Account <smarter-resources/smarter-account>`.
-  - Runs at scale on Kubernetes, with automatic horizontal scaling of application servers and background workers.
-  - Built-in :doc:`logging <smarter-framework/developer-reference/smarter-journal>`, :doc:`cost accounting <smarter-platform/system-administration/costs-and-auditing/cost-accounting>`, and :doc:`security <smarter-platform/system-administration/security>`.
+Having trouble? We'd like to help.
 
-- **Knowledge and tools**
+- Try :doc:`Trouble Shooting <smarter-platform/trouble-shooting>`, which has answers to many
+  common problems.
+- Looking for specific information? Try the :ref:`genindex` or the :ref:`modindex`.
+- Ask the community, or the @Smarter Developer bot, on :doc:`Slack <slack>`, or in
+  `GitHub Discussions <https://github.com/smarter-sh/smarter/discussions>`__.
+- Report bugs in Smarter in the `issue tracker <https://github.com/smarter-sh/smarter/issues>`__.
 
-  - :doc:`API <smarter-resources/llmtool/plugin/api>`, :doc:`SQL <smarter-resources/llmtool/plugin/sql>`, :doc:`Websearch <smarter-resources/llmtool/plugin/websearch>`, :doc:`Skill <smarter-resources/llmtool/plugin/skill>`, and :doc:`Static <smarter-resources/llmtool/plugin/static>` :doc:`Plugins <smarter-resources/smarter-llmtool>`.
-  - :doc:`MCPClients <smarter-resources/smarter-mcpclient>` for the Model Context Protocol ecosystem.
-  - :doc:`Vectorstores <smarter-resources/smarter-vectorstore>` for semantic search over your own content.
+How the documentation is organized
+----------------------------------
 
-- **Trust and safety**
+Smarter has a lot of documentation, organized by who it is written for. Knowing the parts will
+help you find what you need:
 
-  - Input and output :doc:`Guardrails <smarter-resources/smarter-guardrail>` for moderation, self-harm, personal data, data subject requests, leaked secrets, profanity, fabricated citations, prompt injection, jailbreaks, and code injection.
-  - End-to-end audit, from each :doc:`Prompt <smarter-resources/smarter-prompt>` back to the Account that authorized it.
-  - Spending limits with :doc:`Budgets <smarter-resources/smarter-budget>`, on users, accounts, applications, providers, and GPU infrastructure, with budget versus actual charts.
+- The :doc:`Platform Administration Guide <smarter-platform>` covers installing, configuring,
+  securing and operating a Smarter platform, on a laptop or on Kubernetes.
+- :doc:`Resources <smarter-resources>` has one page for each kind of resource that a manifest can
+  declare, such as an LLMClient, a Plugin or a Guardrail: what it is for, a complete example
+  manifest, and its technical reference.
+- The :doc:`Developer Framework <smarter-framework>` is for programmers: the APIs, SDKs and
+  integrations, extending Smarter with your own tools, and developing Smarter itself.
+- The :doc:`Instructor Guide <smarter-instructor>` and the
+  :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` are for trainers,
+  teachers and the people who run a training program.
+- Tutorials, which take you by the hand through building something, are published on
+  `the Smarter blog <https://blog.smarter.sh/category/tutorials/>`__, and the
+  :doc:`case studies <case-studies/index>` follow real problems all the way to a working
+  solution.
 
-- **Models and workflows**
+Teaching and training
+---------------------
 
-  - Works with many :doc:`AI model providers <smarter-resources/smarter-provider>`, including `OpenAI <https://developers.openai.com/api/reference/overview/>`_, `Google AI <https://ai.google.dev/api>`_, `Meta AI <https://developers.facebook.com/docs/>`_, and `DeepSeek <https://api-docs.deepseek.com/>`_, as well as open models that you host on your own Kubernetes cluster with :doc:`LLMHost <smarter-resources/smarter-llmhost>`.
-  - Multi-agent workflows with :doc:`Orchestrator <smarter-resources/smarter-orchestrator>`.
-  - A :doc:`prompt engineering workbench <smarter-framework/smarter-chat>` for testing applications before you deploy them.
+Smarter gives a training program a real platform to teach on, and a library of courses to teach
+with, for every employee from non-programmers to platform engineers:
 
-- **Developer framework**
+- **Courses:** :doc:`Free Course Catalog <smarter-instructors/example-courses/index>` | :doc:`Micro courses <smarter-instructors/example-courses/micro-courses>` | :doc:`Master classes <smarter-instructors/example-courses/master-classes>` | :doc:`Course formats <smarter-instructors/example-courses/micro-courses/course-formats>`
+- **Running a class:** :doc:`Instructor Guide <smarter-instructor>` | :doc:`Accounts for cohorts <smarter-resources/smarter-account>` | :doc:`Budgets for learners <smarter-resources/smarter-budget>`
+- **In practice:** :doc:`Case studies <case-studies/index>` | :ref:`AI training for your whole workforce <ai-training-courses>`
 
-  - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
-  - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
-  - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - :doc:`APIs, SDKs and integrations <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python </smarter-framework/smarter-sdks/smarter-python>` (``pip install smarter-api``), :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and :doc:`chat integrations </smarter-framework/smarter-integrations>` for WordPress, Drupal, Shopify, Google Tag Manager and documentation sites.
+Manifests
+---------
 
+Every resource in Smarter is declared in a Smarter Application Manifest (SAM), a YAML file that
+says **what** an application is, and applied with one command:
 
-Usage
-------
+- **The basics:** :doc:`Smarter manifests <smarter-framework/smarter-manifests>` | :doc:`Example manifests <smarter-framework/smarter-manifests/example-manifests>` | :doc:`Manifest templates <smarter-framework/smarter-manifests/manifest-templates>`
+- **Reference:** :doc:`JSON Schemas <external-links/json-schemas>` | :doc:`Manifest examples <external-links/manifest-reference>` | :doc:`Pydantic models <smarter-framework/smarter-manifests/pydantic-models>` | :doc:`Validation <smarter-framework/smarter-manifests/validation-strategy>`
+- **Under the hood:** :doc:`The broker model <smarter-framework/smarter-broker-model>` | :doc:`Error handling <smarter-framework/smarter-manifests/error-handling>`
 
-**1. Create a Smarter manifest**
+AI applications
+---------------
 
-This built-in LLMClient is a complete, governed AI application. It combines a SkillPlugin, an
-MCPClient, and four guardrails, and it contains no code.
+An LLMClient combines a model from any provider with the tools and guardrails it needs, by name:
 
-.. literalinclude:: /_example-manifests/smarter/llm-clients/llmclient-data-analyst.yaml
-   :language: yaml
-   :caption: Example Smarter Manifest
+- **LLMClients:** :doc:`LLMClient <smarter-resources/smarter-llmclient>` | :doc:`Providers <smarter-resources/smarter-provider>` | :doc:`Prompts <smarter-resources/smarter-prompt>` | :doc:`Prompt engineering workbench <smarter-framework/smarter-chat>`
+- **Workflows:** :doc:`Orchestrator <smarter-resources/smarter-orchestrator>`
+- **Your own models:** :doc:`LLMHost <smarter-resources/smarter-llmhost>` | :doc:`Adding an LLM provider <smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider>`
+- **Your own domain:** :doc:`Custom Domain <smarter-resources/smarter-custom-domain>`
 
-From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/llm-clients/llmclient-data-analyst.yaml>`__ in the :doc:`example manifests repository </smarter-framework/smarter-manifests/example-manifests>`.
+Knowledge and tools
+-------------------
 
+An LLM is only as useful as the information it can get to. Smarter connects your applications to
+it, with no code:
 
-**2. Apply the Manifest**
+- **Plugins:** :doc:`Overview <smarter-resources/smarter-llmtool>` | :doc:`API <smarter-resources/llmtool/plugin/api>` | :doc:`SQL <smarter-resources/llmtool/plugin/sql>` | :doc:`Websearch <smarter-resources/llmtool/plugin/websearch>` | :doc:`Skill <smarter-resources/llmtool/plugin/skill>` | :doc:`Static <smarter-resources/llmtool/plugin/static>`
+- **MCP:** :doc:`MCPClient <smarter-resources/smarter-mcpclient>`
+- **Your data:** :doc:`Connection <smarter-resources/smarter-connection>` | :doc:`Vectorstore <smarter-resources/smarter-vectorstore>` | :doc:`Vector search <smarter-resources/smarter-vectorsearch>`
+- **Extensions:** :doc:`Overview <smarter-framework/smarter-extensions>` | :doc:`Developer guide <smarter-framework/extensions/developer-guide>` | :doc:`Testing <smarter-framework/extensions/testing>` | :doc:`Publishing <smarter-framework/extensions/publishing>` | :doc:`Lifecycle <smarter-framework/extensions/lifecycle>`
 
-.. code-block:: console
+Trust, safety and cost
+----------------------
 
-   smarter apply -f llmclient-data-analyst.yaml
+Smarter does not rely on the model to behave. Every message to a model, and every reply, passes
+through controls that you declare in a manifest, and every token is charged to someone:
 
-**3. Interact**
+- **Controls:** :doc:`Guardrail <smarter-resources/smarter-guardrail>` | :doc:`Secret <smarter-resources/smarter-secret>` | :doc:`Proxy <smarter-resources/smarter-proxy>`
+- **Spending:** :doc:`Budget <smarter-resources/smarter-budget>` | :doc:`Cost accounting <smarter-platform/system-administration/costs-and-auditing/cost-accounting>`
+- **Audit:** :doc:`The Smarter Journal <smarter-platform/system-administration/costs-and-auditing/smarter-journal>` | :doc:`Costs and auditing <smarter-platform/system-administration/costs-and-auditing>`
+- **Security:** :doc:`Overview <smarter-platform/system-administration/security>` | :doc:`Security FAQ <smarter-platform/system-administration/security/security-faq>`
 
-.. raw:: html
+Accounts and teams
+------------------
 
-   <div style="text-align: center;">
-     <video src="https://cdn.smarter.sh/videos/read-the-docs2.mp4"
-            autoplay loop muted playsinline
-            style="width: 100%; height: auto; display: block; margin: 0; border-radius: 0;">
-       Sorry, your browser doesn't support embedded videos.
-     </video>
-     <div style="font-size: 0.95em; color: #666; margin-top: 0.5em;">
-       <em>Smarter Prompt Engineering Workbench Demo</em>
-     </div>
-   </div>
-   <br/>
+Every resource has an owner, and is shared with everyone in the owner's account:
 
+- **Accounts:** :doc:`Account <smarter-resources/smarter-account>` | :doc:`Accounts and access <smarter-platform/system-administration/accounts-and-access>` | :doc:`Account management <smarter-platform/system-administration/accounts-and-access/account-management>`
+- **People and keys:** :doc:`User management <smarter-platform/system-administration/accounts-and-access/user-management>` | :doc:`API keys <smarter-platform/system-administration/accounts-and-access/api-keys>` | :doc:`AuthToken <smarter-resources/smarter-authtoken>`
 
+Interfaces
+----------
 
+Everything you can do in the web console, your own software can do too:
+
+- **Tools:** :doc:`Web console <smarter-platform/system-administration/tools/smarter-web-console>` | :doc:`CLI <smarter-framework/smarter-cli>` | :doc:`VS Code extension <smarter-framework/vs-code-extension>` | :doc:`Django admin <smarter-platform/system-administration/tools/django-admin>`
+- **The API:** :doc:`Smarter API <smarter-framework/smarter-api>` | :doc:`Authentication <smarter-framework/smarter-api/authentication>` | :doc:`Chat API <smarter-framework/smarter-api/chat>` | :doc:`OpenAPI contract <smarter-framework/smarter-openapi>` | :doc:`API reference <external-links/openapi>`
+- **SDKs:** :doc:`Overview <smarter-framework/apis-and-sdks>` | :doc:`Python <smarter-framework/smarter-sdks/smarter-python>` | :doc:`Node.js <smarter-framework/smarter-sdks/smarter-nodejs>` | :doc:`Go <smarter-framework/smarter-sdks/smarter-golang>`
+- **Chat on your site:** :doc:`React component <smarter-framework/smarter-chat/embedding>` | :doc:`WordPress <smarter-framework/smarter-integrations/smarter-wordpress>` | :doc:`Drupal <smarter-framework/smarter-integrations/smarter-drupal>` | :doc:`Shopify <smarter-framework/smarter-integrations/smarter-shopify>` | :doc:`Google Tag Manager <smarter-framework/smarter-integrations/smarter-gtm>` | :doc:`Documentation sites <smarter-framework/smarter-integrations/smarter-docs-sites>`
+
+Installation and operations
+---------------------------
+
+Smarter runs wherever you do, from one Docker container on a laptop to a Kubernetes cluster that
+serves your whole organization:
+
+- **Install:** :doc:`Overview <smarter-platform/installation>` | :doc:`Quick Start <smarter-platform/installation/quick-start>` | :doc:`Developer installation <smarter-platform/installation/developer-installation>` | :doc:`Production deployment <smarter-platform/installation/production-deployment>`
+- **Configure:** :doc:`Configuration <smarter-platform/configuration>` | :doc:`Overrides <smarter-platform/overrides>` | :doc:`Cloud infrastructure <smarter-platform/cloud-infrastructure>` | :doc:`URL patterns <smarter-platform/url-patterns>`
+- **Operate:** :doc:`System administration <smarter-platform/system-administration>` | :doc:`Updates <smarter-platform/system-administration/operations/updates>` | :doc:`Backup and restore <smarter-platform/system-administration/operations/backup-and-restore>` | :doc:`Smarter on Kubernetes <smarter-framework/smarter-on-kubernetes>` | :doc:`Trouble Shooting <smarter-platform/trouble-shooting>`
+- **MCP servers:** :doc:`Operations MCP server <smarter-platform/smarter-operations-mcp-server>` | :doc:`Project MCP server <smarter-platform/smarter-project-mcp-server>`
+
+The developer framework
+-----------------------
+
+For when you do want to write code: Smarter is built on Django, Django REST Framework and
+Pydantic, and its framework is yours to build on:
+
+- **Start here:** :doc:`Getting started <smarter-framework/getting-started>` | :doc:`Architecture <smarter-framework/architecture>` | :doc:`Extensibility <smarter-framework/extensibility>`
+- **Reference:** :doc:`Developer reference <smarter-framework/developer-reference>` | :doc:`Django <smarter-framework/developer-reference/lib/django>` | :doc:`DRF <smarter-framework/developer-reference/lib/drf>` | :doc:`Settings <smarter-framework/developer-reference/smarter-settings>`
+- **Technologies:** :doc:`Overview <smarter-framework/technologies>` | :doc:`Python <smarter-framework/technologies/python>` | :doc:`Pydantic <smarter-framework/technologies/pydantic>` | :doc:`Docker <smarter-framework/technologies/docker>` | :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` | :doc:`AWS <smarter-framework/technologies/aws>`
+
+The Smarter open-source project
+-------------------------------
+
+Learn how Smarter itself is developed, and how you can contribute:
+
+- **Community:** :doc:`Contributing <smarter-framework/guides/contributing>` | :doc:`Code of conduct <smarter-framework/guides/code-of-conduct>` | :doc:`Contributors <contributors>` | :doc:`Slack <slack>` | :doc:`Support Smarter <external-links/support-smarter>`
+- **How it's built:** :doc:`Developer guidelines <smarter-framework/guides/developer-guidelines>` | :doc:`Feature checklist <smarter-framework/guides/developer-feature-checklist>` | :doc:`Documentation <smarter-framework/guides/documentation>` | :doc:`Developing with Claude Code <smarter-framework/guides/claude-code>`
+- **Design decisions:** :doc:`Architecture Decision Records <adr>` | :doc:`12-factor app <smarter-framework/guides/12-factor-app>`
+- **Smarter over time:** :doc:`Semantic versioning <smarter-framework/guides/semantic-versioning>` | `Release notes <https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md>`__ | `Release announcements <https://blog.smarter.sh/>`__
 
 .. toctree::
+   :hidden:
+   :maxdepth: 1
+   :caption: Getting Started
+
+   smarter-overview
+
+.. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: Teaching and Training
 
@@ -459,12 +195,14 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
    case-studies/index
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: Community
 
    slack
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: Smarter Docs
 
@@ -475,6 +213,7 @@ From `llm-clients/llmclient-data-analyst.yaml <https://github.com/smarter-sh/exa
    contributors
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: External Resources
 

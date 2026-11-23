@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.19-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.18...v0.46.19-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **llmclient:** refresh cached answers when apply changes what it uses ([0a31d9e](https://github.com/smarter-sh/smarter/commit/0a31d9e5a517ba1f1d5926a3b4e1a55bbeefbe1b))
+* **llmtool:** stop failed applies leaving plugins that never load ([93552fa](https://github.com/smarter-sh/smarter/commit/93552fae3158465db477b12f82e208294975c1ec))
+
 ## [0.46.18](https://github.com/smarter-sh/smarter/compare/v0.46.17...v0.46.18) (2026-11-23)
 
 ### Bug Fixes
