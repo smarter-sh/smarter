@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.46.20-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.19...v0.46.20-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **guardrail:** stop the llm_judge system message from judging safety ([bf147a9](https://github.com/smarter-sh/smarter/commit/bf147a9fc7aebae31280a93077934839e287c6f0))
+
 ## [0.46.19](https://github.com/smarter-sh/smarter/compare/v0.46.18...v0.46.19) (2026-11-23)
 
 ### Bug Fixes
