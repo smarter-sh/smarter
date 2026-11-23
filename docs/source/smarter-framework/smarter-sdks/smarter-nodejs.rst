@@ -2,16 +2,16 @@ Smarter Node.js SDK
 ===================
 
 The Smarter Node.js SDK is the official JavaScript and TypeScript library of the
-:doc:`Smarter API <smarter-api>`. It is to Smarter what the ``openai`` package is to the OpenAI API:
+:doc:`Smarter API </smarter-framework/smarter-api>`. It is to Smarter what the ``openai`` package is to the OpenAI API:
 one ``npm install`` gives your Node.js software typed, complete access to your own Smarter platform,
-whether it runs on your laptop or on :doc:`Kubernetes <smarter-on-kubernetes>`.
+whether it runs on your laptop or on :doc:`Kubernetes </smarter-framework/smarter-on-kubernetes>`.
 
 Use it to build custom software that is tightly integrated with your Smarter resources, without
 customizing or forking the Smarter platform: a web back end that chats with your
-:doc:`LLMClients <../smarter-resources/smarter-llmclient>`, a CI/CD job that applies your
-:doc:`manifests <smarter-manifests>`, a serverless function that loads documents into a
-:doc:`Vectorstore <../smarter-resources/smarter-vectorstore>`, or a service that calls the tools of
-your :doc:`MCP servers <../smarter-resources/smarter-mcpclient>`.
+:doc:`LLMClients </smarter-resources/smarter-llmclient>`, a CI/CD job that applies your
+:doc:`manifests </smarter-framework/smarter-manifests>`, a serverless function that loads documents into a
+:doc:`Vectorstore </smarter-resources/smarter-vectorstore>`, or a service that calls the tools of
+your :doc:`MCP servers </smarter-resources/smarter-mcpclient>`.
 
 .. code-block:: console
 
@@ -41,7 +41,7 @@ camelCase names (``client.llmClients``, ``exampleManifest()``), promises, and ``
 The SDK or the CLI?
 -------------------
 
-The SDK and the :doc:`Smarter CLI <smarter-cli>` manage the same resources, through the same API.
+The SDK and the :doc:`Smarter CLI </smarter-framework/smarter-cli>` manage the same resources, through the same API.
 The difference is how you use them.
 
 .. list-table::
@@ -66,19 +66,19 @@ no other setup.
 What It Covers
 --------------
 
-- **Every resource kind**, through the same brokered :doc:`manifest API <smarter-api/cli>` that the
+- **Every resource kind**, through the same brokered :doc:`manifest API </smarter-framework/smarter-api/cli>` that the
   CLI uses: ``apply``, ``validate``, ``get``, ``describe``, ``delete``, ``deploy``, ``undeploy`` and
   ``logs``.
 - **Prompts and conversations**: prompt an LLMClient, hold a multi-turn chat that keeps its session,
-  and stream a prompt's progress as it runs, exactly as :doc:`Smarter Chat <smarter-chat>` does.
+  and stream a prompt's progress as it runs, exactly as :doc:`Smarter Chat </smarter-framework/smarter-chat>` does.
 - **Resource actions**: evaluate a Guardrail, call an MCP server's tools, add documents to and
   search a Vectorstore, plan and deploy an LLMHost, discover open-weight models, read the chat
-  history and the :doc:`Smarter Journal <smarter-api/smarter-journal>`, and call an LLM provider
+  history and the :doc:`Smarter Journal </smarter-framework/smarter-api/smarter-journal>`, and call an LLM provider
   through a Proxy.
 - **The platform's own models**: a TypeScript type of every manifest kind, generated from the
   platform's JSON Schemas, and Zod schemas of the
-  :doc:`Smarter Chat API contract <smarter-chat/api-contract>`, the Smarter Journal contract, the
-  :doc:`Django-React integration <developer-reference/react-integration>` contract and every REST
+  :doc:`Smarter Chat API contract </smarter-framework/smarter-chat/api-contract>`, the Smarter Journal contract, the
+  :doc:`Django-React integration </smarter-framework/developer-reference/react-integration>` contract and every REST
   response.
 
 

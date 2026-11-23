@@ -7,8 +7,8 @@ on Windows, macOS and Linux. It is separately managed in
 It is a lightweight command-line UI for interacting with the `Smarter
 API <../smarter/smarter/apps/api/v0/cli/>`__.
 
-To use the same API from your own software, see the :doc:`Python <smarter-python>`,
-:doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>` SDKs, which also read the cli's
+To use the same API from your own software, see the :doc:`Python </smarter-framework/smarter-sdks/smarter-python>`,
+:doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>` SDKs, which also read the cli's
 configuration file.
 
 Installation

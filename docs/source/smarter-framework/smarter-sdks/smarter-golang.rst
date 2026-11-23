@@ -1,17 +1,17 @@
 Smarter Go SDK
 ==============
 
-The Smarter Go SDK is the official Go library of the :doc:`Smarter API <smarter-api>`. It is to
+The Smarter Go SDK is the official Go library of the :doc:`Smarter API </smarter-framework/smarter-api>`. It is to
 Smarter what ``openai-go`` is to the OpenAI API: one ``go get`` gives your Go software typed,
 complete access to your own Smarter platform, whether it runs on your laptop or on
-:doc:`Kubernetes <smarter-on-kubernetes>`.
+:doc:`Kubernetes </smarter-framework/smarter-on-kubernetes>`.
 
 Use it to build custom software that is tightly integrated with your Smarter resources, without
 customizing or forking the Smarter platform: a service that chats with your
-:doc:`LLMClients <../smarter-resources/smarter-llmclient>`, a Kubernetes operator or CI/CD job that
-applies your :doc:`manifests <smarter-manifests>`, a pipeline that loads documents into a
-:doc:`Vectorstore <../smarter-resources/smarter-vectorstore>`, or a tool that calls the tools of
-your :doc:`MCP servers <../smarter-resources/smarter-mcpclient>`.
+:doc:`LLMClients </smarter-resources/smarter-llmclient>`, a Kubernetes operator or CI/CD job that
+applies your :doc:`manifests </smarter-framework/smarter-manifests>`, a pipeline that loads documents into a
+:doc:`Vectorstore </smarter-resources/smarter-vectorstore>`, or a tool that calls the tools of
+your :doc:`MCP servers </smarter-resources/smarter-mcpclient>`.
 
 .. code-block:: console
 
@@ -49,7 +49,7 @@ for ``errors.Is`` and ``errors.As``.
 The SDK or the CLI?
 -------------------
 
-The SDK and the :doc:`Smarter CLI <smarter-cli>` manage the same resources, through the same API,
+The SDK and the :doc:`Smarter CLI </smarter-framework/smarter-cli>` manage the same resources, through the same API,
 and both are written in Go. The difference is how you use them.
 
 .. list-table::
@@ -74,22 +74,22 @@ The SDK reads the CLI's configuration file exactly as the CLI does, so a develop
 What It Covers
 --------------
 
-- **Every resource kind**, through the same brokered :doc:`manifest API <smarter-api/cli>` that the
+- **Every resource kind**, through the same brokered :doc:`manifest API </smarter-framework/smarter-api/cli>` that the
   CLI uses: ``Apply``, ``Validate``, ``Get``, ``Describe``, ``Delete``, ``Deploy``, ``Undeploy`` and
   ``Logs``.
 - **Prompts and conversations**: prompt an LLMClient, hold a multi-turn chat that keeps its session,
-  and stream a prompt's progress as it runs, exactly as :doc:`Smarter Chat <smarter-chat>` does.
+  and stream a prompt's progress as it runs, exactly as :doc:`Smarter Chat </smarter-framework/smarter-chat>` does.
 - **Resource actions**: evaluate a Guardrail, call an MCP server's tools, add documents to and
   search a Vectorstore, run a Vectorsearch, plan and deploy an LLMHost, discover open-weight models,
-  read the chat history and the :doc:`Smarter Journal <smarter-api/smarter-journal>`, and call an
+  read the chat history and the :doc:`Smarter Journal </smarter-framework/smarter-api/smarter-journal>`, and call an
   LLM provider through a Proxy.
-- **Extensions**: read the platform's :doc:`extensions <../smarter-platform/extensions>` and the
+- **Extensions**: read the platform's :doc:`extensions </smarter-platform/system-administration/llm-providers-and-extensions/extensions>` and the
   extension registry, and, as a superuser, install, configure, enable, update and uninstall them.
 - **Your own account**: read the tokens and cost of your LLM requests, and export your data.
 - **The platform's own models**: a Go struct of every manifest kind, in the ``sam`` package,
   generated from the platform's JSON Schemas, and the
-  :doc:`Smarter Chat API contract <smarter-chat/api-contract>`, the Smarter Journal contract and the
-  :doc:`Django-React integration <developer-reference/react-integration>` contract.
+  :doc:`Smarter Chat API contract </smarter-framework/smarter-chat/api-contract>`, the Smarter Journal contract and the
+  :doc:`Django-React integration </smarter-framework/developer-reference/react-integration>` contract.
 
 
 Where to Start

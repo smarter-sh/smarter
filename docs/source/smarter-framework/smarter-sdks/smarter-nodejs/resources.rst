@@ -20,25 +20,25 @@ are for superusers only.
    * - ``client.manifests``
      - Any kind, through the manifest API. See :doc:`Manifests <manifests>`.
    * - ``client.llmClients``
-     - :doc:`LLMClients <../../smarter-resources/smarter-llmclient>`: ``prompt()``, ``chat()``,
+     - :doc:`LLMClients </smarter-resources/smarter-llmclient>`: ``prompt()``, ``chat()``,
        ``stream()``, ``config()``, ``providerRequest()``, their ``plugins()``, ``functions()``, ``apiKeys()`` and
        ``customDomains()``, and ``deploy()``. An LLMClient's ``tools`` list everything that it adds
        to a prompt: its functions, plugins, MCPClients (``mcpclients``) and guardrails
        (``guardrails``). See :doc:`Prompts and Chat <chat>`.
    * - ``client.guardrails``
-     - :doc:`Guardrails <../../smarter-resources/smarter-guardrail>`: ``evaluate()`` and ``events()``.
+     - :doc:`Guardrails </smarter-resources/smarter-guardrail>`: ``evaluate()`` and ``events()``.
    * - ``client.mcpClients``
-     - :doc:`MCPClients <../../smarter-resources/smarter-mcpclient>`: ``tools()``, ``refresh()`` and
+     - :doc:`MCPClients </smarter-resources/smarter-mcpclient>`: ``tools()``, ``refresh()`` and
        ``callTool()``.
    * - ``client.vectorstores``
-     - :doc:`Vectorstores <../../smarter-resources/smarter-vectorstore>`: ``status()``, ``deploy()``,
+     - :doc:`Vectorstores </smarter-resources/smarter-vectorstore>`: ``status()``, ``deploy()``,
        ``documents()``, ``addText()``, ``addUrl()``, ``addFiles()``, ``deleteDocument()``,
        ``search()``, ``snapshots()``, ``createSnapshot()`` and ``restore()``.
    * - ``client.llmHosts``
      - LLMHosts: ``status()``, ``logs()``, ``plan()``, ``deploy()``, ``undeploy()``, ``report()``,
        ``discover()`` and ``discoverManifest()``.
    * - ``client.orchestrators``
-     - :doc:`Orchestrators <../../smarter-resources/smarter-orchestrator>`, multi-agent workflows
+     - :doc:`Orchestrators </smarter-resources/smarter-orchestrator>`, multi-agent workflows
        over LLMClients: ``run()`` starts a run toward an objective, which the platform executes in
        the background, ``runStatus()`` reads it until ``isRunDone(run)``, and ``runs()`` lists the
        newest.
@@ -46,9 +46,9 @@ are for superusers only.
      - Read them, and manage them with manifests. A plugin's manifest kind is its class, e.g.
        ``SqlPlugin``, which ``client.plugins`` looks up for you. ``plugins.retrieveManifest(id)``
        reads a plugin's manifest by its id. ``vectorsearches.run()`` runs a
-       :doc:`Vectorsearch <../../smarter-resources/smarter-vectorsearch>`.
+       :doc:`Vectorsearch </smarter-resources/smarter-vectorsearch>`.
    * - ``client.extensions``
-     - The platform's :doc:`extensions <../../smarter-platform/extensions>` and the extension
+     - The platform's :doc:`extensions </smarter-platform/system-administration/llm-providers-and-extensions/extensions>` and the extension
        registry: ``list()``, ``registry()``, ``retrieve()``, and for superusers ``checkUpdates()``,
        ``install()``, ``upload()``, ``configure()``, ``enable()``, ``disable()``, ``update()``,
        ``rollback()``, ``setAvailability()`` and ``uninstall()``.
@@ -60,7 +60,7 @@ are for superusers only.
      - The chat sessions, their tool calls and their plugin uses, newest first: the user's own, their
        account's users' for an account admin, and every one for a superuser.
    * - ``client.journal``
-     - The :doc:`Smarter Journal <../smarter-api/smarter-journal>`, page by page. Superusers only.
+     - The :doc:`Smarter Journal </smarter-framework/smarter-api/smarter-journal>`, page by page. Superusers only.
    * - ``client.providers``
      - The LLM providers that the platform is configured for, and their models.
    * - ``client.proxies``
@@ -123,13 +123,13 @@ results further; the Vectorsearch's own ``metadataFilter`` wins where both name 
    for (const hit of found.results) console.log(hit.score, hit.text, hit.metadata);
 
 The platform answers 400 (``BadRequestError``) when the Vectorsearch is disabled, and 402
-(``PaymentRequiredError``) when a :doc:`budget <../../smarter-resources/smarter-budget>` forbids the
+(``PaymentRequiredError``) when a :doc:`budget </smarter-resources/smarter-budget>` forbids the
 search.
 
 Extensions
 ----------
 
-:doc:`Extensions <../../smarter-platform/extensions>` add tools to the LLMClients that use them.
+:doc:`Extensions </smarter-platform/system-administration/llm-providers-and-extensions/extensions>` add tools to the LLMClients that use them.
 Every user reads the extensions that their account may use; a superuser also sees their settings, and
 manages them. An extension is installed disabled: configure its settings, then enable it.
 
@@ -157,7 +157,7 @@ Token usage and data exports
 ----------------------------
 
 Every user may read the tokens and cost of their own LLM requests, the series that the web console's
-dashboard charts (see :doc:`Cost Accounting <../../smarter-platform/cost-accounting>`), one point per
+dashboard charts (see :doc:`Cost Accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>`), one point per
 hour, day or month. Its points are snake_case, as the platform sends them.
 
 .. code-block:: typescript

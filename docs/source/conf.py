@@ -285,6 +285,15 @@ MOVED_PAGES = {
     "smarter-platform/updates": SYSTEM_ADMINISTRATION + "/operations/updates",
     "smarter-platform/backup-and-restore": SYSTEM_ADMINISTRATION + "/operations/backup-and-restore",
     "smarter-platform/troubleshooting": "smarter-platform/trouble-shooting",
+    "smarter-framework/smarter-python": "smarter-framework/smarter-sdks/smarter-python",
+    "smarter-framework/smarter-nodejs": "smarter-framework/smarter-sdks/smarter-nodejs",
+    "smarter-framework/smarter-golang": "smarter-framework/smarter-sdks/smarter-golang",
+    "smarter-framework/smarter-wordpress": "smarter-framework/smarter-integrations/smarter-wordpress",
+    "smarter-framework/smarter-drupal": "smarter-framework/smarter-integrations/smarter-drupal",
+    "smarter-framework/smarter-shopify": "smarter-framework/smarter-integrations/smarter-shopify",
+    "smarter-framework/smarter-gtm": "smarter-framework/smarter-integrations/smarter-gtm",
+    "smarter-framework/smarter-docs-sites": "smarter-framework/smarter-integrations/smarter-docs-sites",
+    "smarter-framework/guides/developer-setup": "smarter-platform/installation/developer-installation",
 }
 
 

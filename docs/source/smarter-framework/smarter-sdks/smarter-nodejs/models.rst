@@ -21,7 +21,7 @@ prompt history and a token usage series (``total_tokens``), so ``JSON.stringify(
 SAM types
 ---------
 
-The SDK has a TypeScript type of every :doc:`manifest <../smarter-manifests>` kind, e.g.
+The SDK has a TypeScript type of every :doc:`manifest </smarter-framework/smarter-manifests>` kind, e.g.
 ``SAMLLMClient``, ``SAMGuardrail`` and ``SAMSecret``. ``SAMKinds`` maps each kind to its type, and
 ``SAM_KINDS`` lists the kinds.
 
@@ -53,14 +53,14 @@ schemas, with the platform's model names:
    * - SDK schemas
      - Platform contract
    * - ``PromptChatApi...``
-     - The :doc:`Smarter Chat API contract <../smarter-chat/api-contract>`, version 2: an LLMClient's
+     - The :doc:`Smarter Chat API contract </smarter-framework/smarter-chat/api-contract>`, version 2: an LLMClient's
        configuration (``PromptChatApiConfig``), the prompt API's request and response, and the
        prompt's progress events.
    * - ``SAMJournalApi...``, ``JournalEntry``, ``JournalPage``
-     - The :doc:`Smarter Journal <../smarter-api/smarter-journal>` contract: the envelope of every
+     - The :doc:`Smarter Journal </smarter-framework/smarter-api/smarter-journal>` contract: the envelope of every
        journaled response, its error body, and a journal entry.
    * - ``ViteManifest``, ``ReactAppAssets``
-     - The :doc:`Django-React integration <../developer-reference/react-integration>` contract: a
+     - The :doc:`Django-React integration </smarter-framework/developer-reference/react-integration>` contract: a
        React app's Vite manifest, and the assets that a template includes, for tools that build React
        apps for a Smarter platform.
 

@@ -2,14 +2,14 @@ Smarter Chat for Documentation Sites
 ====================================
 
 A documentation site is where a product's users ask questions, and a Smarter
-:doc:`LLMClient <../smarter-resources/smarter-llmclient>` with the docs in a
-:doc:`vectorstore <../smarter-resources/smarter-vectorstore>` can answer them on the page. One setting
+:doc:`LLMClient </smarter-resources/smarter-llmclient>` with the docs in a
+:doc:`vectorstore </smarter-resources/smarter-vectorstore>` can answer them on the page. One setting
 adds its chat button to every page of a site built with Docusaurus, MkDocs (with any theme, including
 Material for MkDocs), Sphinx (with any html theme, including Read the Docs' and Furo) or VitePress.
 The chat renders in its own Shadow DOM, so the site's theme can't break it, and it survives the
 client-side navigation of Docusaurus, Material and VitePress.
 
-Each integration writes the tag of the :doc:`embed script <smarter-chat/embedding>` of
+Each integration writes the tag of the :doc:`embed script </smarter-framework/smarter-chat/embedding>` of
 ``@smarter.sh/ui-chat``, with the same options, and fails the site's build if the chatbot's url is
 missing or invalid. Their source is
 `github.com/smarter-sh/smarter-docs-site-generators <https://github.com/smarter-sh/smarter-docs-site-generators>`__.
@@ -99,7 +99,7 @@ The same options in every integration, named in its own style (``apiKey`` in Jav
      - The deployed LLMClient's url.
    * - ``apiKey``
      -
-     - Only for an LLMClient that has :doc:`api keys <../smarter-platform/api-keys>`. It is public in
+     - Only for an LLMClient that has :doc:`api keys </smarter-platform/system-administration/accounts-and-access/api-keys>`. It is public in
        the pages.
    * - ``position``
      - ``bottom-right``

@@ -2,8 +2,8 @@ Developing the SDK
 ==================
 
 The SDK's source is `github.com/smarter-sh/smarter-nodejs <https://github.com/smarter-sh/smarter-nodejs>`__.
-It follows the platform's practices and :doc:`architecture decisions <../../adr>`, and the
-`Python SDK <https://docs.smarter-python.smarter.sh/project/contributing.html>`__, which is the reference implementation: the same
+It follows the platform's practices and :doc:`architecture decisions </adr>`, and the
+:doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python/development>`, which is the reference implementation: the same
 features, the same tests, the same recorded responses, the same pre-commit hooks, semantic
 versioning and conventional commits. Its own decisions are recorded in its ``doc/adr/`` folder,
 numbered as the Python SDK's, and its Agent Skills in ``skills/`` describe how it is developed, for
@@ -57,7 +57,7 @@ Keeping in step with the platform
    * - Command
      - What it refreshes
    * - ``make contracts``
-     - The platform's :doc:`api contract <../smarter-api/api-contract>`, from a checkout of the
+     - The platform's :doc:`api contract </smarter-framework/smarter-api/api-contract>`, from a checkout of the
        platform beside the SDK (``../smarter``): the JSON Schema and example manifest of every SAM
        kind, the api's OpenAPI document, and the chat and journal contracts' JSON Schemas and
        examples. ``SMARTER_REF=<ref>`` reads them at a commit or tag, e.g. ``origin/main``.

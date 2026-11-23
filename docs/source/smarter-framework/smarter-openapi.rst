@@ -11,7 +11,7 @@ Smarter describes the whole :doc:`Smarter API <smarter-api>` this way, in one Op
 ``openapi.json``. Beside it, the platform publishes a JSON Schema and an example manifest for every
 :doc:`SAM <smarter-manifests>` kind. Together, these files are the *contract* between a Smarter
 platform and its clients: the :doc:`Smarter CLI <smarter-cli>`, the
-:doc:`Python <smarter-python>`, :doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>`
+:doc:`Python </smarter-framework/smarter-sdks/smarter-python>`, :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>`
 SDKs, the :doc:`VS Code Extension <vs-code-extension>`, and any software that you write yourself.
 
 The document is generated from the platform's own Pydantic models, and the platform's tests check
@@ -115,14 +115,14 @@ The Python SDK copies the contract from a checkout of the platform, at a commit 
 with datamodel-code-generator (``make sam-models``). Its tests parse every kind's committed example
 with its generated model, and check that every cli request that it sends is an operation of
 ``openapi.json``. No running platform is needed. See
-`Contributing to the Python SDK <https://docs.smarter-python.smarter.sh/project/contributing.html>`__.
+:doc:`Developing the Python SDK </smarter-framework/smarter-sdks/smarter-python/development>`.
 
-The :doc:`Node.js SDK <smarter-nodejs>` and the :doc:`Go SDK <smarter-golang>` copy the same files
+The :doc:`Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs>` and the :doc:`Go SDK </smarter-framework/smarter-sdks/smarter-golang>` copy the same files
 the same way, and run the same tests. The Node.js SDK generates its TypeScript types from the SAM
 schemas with json-schema-to-typescript, and validates manifests against them with Ajv. The Go SDK
 generates its ``sam`` package with a small generator of its own, which reads the subset of JSON
-Schema that Pydantic writes. See :doc:`Developing the Node.js SDK <smarter-nodejs/development>` and
-:doc:`Developing the Go SDK <smarter-golang/development>`.
+Schema that Pydantic writes. See :doc:`Developing the Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs/development>` and
+:doc:`Developing the Go SDK </smarter-framework/smarter-sdks/smarter-golang/development>`.
 
 Some generators read only OpenAPI 3.0. oapi-codegen, for Go, is one of them: it rejects the 3.1
 forms of ``exclusiveMinimum`` and ``exclusiveMaximum``. For those, generate types from the SAM

@@ -541,6 +541,6 @@ Sources
   :doc:`/smarter-resources/llmtool/how-tools-work`
 - :doc:`/smarter-resources/smarter-connection`, :doc:`/smarter-resources/smarter-secret`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-guardrail`
-- :doc:`/smarter-framework/smarter-chat/embedding` and :doc:`/smarter-framework/smarter-wordpress`
+- :doc:`/smarter-framework/smarter-chat/embedding` and :doc:`/smarter-framework/smarter-integrations/smarter-wordpress`
 - :doc:`The Stackademy page </smarter-framework/smarter-manifests/stackademy>`
 - :doc:`shadow-ai`, for how Stackademy found its departments' AI projects, and rebuilt the first chatbot first

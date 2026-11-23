@@ -6,7 +6,7 @@ A client needs a Smarter API key and the url of your Smarter platform. Every opt
 
 1. the options of ``smarter.NewClient(...)``,
 2. environment variables,
-3. the :doc:`Smarter CLI's <../smarter-cli>` configuration file, ``~/.smarter/config.yaml``,
+3. the :doc:`Smarter CLI's </smarter-framework/smarter-cli>` configuration file, ``~/.smarter/config.yaml``,
 4. the defaults: the ``prod`` environment of ``platform.smarter.sh``.
 
 This is the lookup of every Smarter SDK and of the CLI itself, so the same environment configures
@@ -29,7 +29,7 @@ API keys
 
 An API key belongs to a user of an account, and the SDK can do whatever that user can do. Create
 one in the web console, or with a ``SmarterAuthToken`` manifest. See
-:doc:`Authentication <../smarter-api/authentication>`. Keep it out of your source code: use an
+:doc:`Authentication </smarter-framework/smarter-api/authentication>`. Keep it out of your source code: use an
 environment variable or a secret manager.
 
 Environment variables

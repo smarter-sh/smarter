@@ -10,7 +10,7 @@ to a response. An optional number or boolean is a pointer (``smarter.Deref`` rea
 SAM structs
 -----------
 
-The ``sam`` package has a struct of every :doc:`manifest <../smarter-manifests>` kind, e.g.
+The ``sam`` package has a struct of every :doc:`manifest </smarter-framework/smarter-manifests>` kind, e.g.
 ``sam.LLMClient``, ``sam.Guardrail`` and ``sam.Secret``, and the structs of their parts.
 ``sam.Kinds`` maps each kind to a function that returns a new struct of the kind.
 
@@ -46,14 +46,14 @@ The platform publishes the contracts of its APIs as Pydantic models, and the SDK
    * - SDK structs
      - Platform contract
    * - ``PromptChatAPI...``
-     - The :doc:`Smarter Chat API contract <../smarter-chat/api-contract>`, version 2: an LLMClient's
+     - The :doc:`Smarter Chat API contract </smarter-framework/smarter-chat/api-contract>`, version 2: an LLMClient's
        configuration (``PromptChatAPIConfig``), the prompt API's request and response, and the
        prompt's progress events.
    * - ``SAMJournalAPI...``, ``JournalEntry``, ``JournalPage``
-     - The :doc:`Smarter Journal <../smarter-api/smarter-journal>` contract: the envelope of every
+     - The :doc:`Smarter Journal </smarter-framework/smarter-api/smarter-journal>` contract: the envelope of every
        journaled response, its error body, and a journal entry.
    * - ``ViteManifest``, ``ReactAppAssets``
-     - The :doc:`Django-React integration <../developer-reference/react-integration>` contract: a
+     - The :doc:`Django-React integration </smarter-framework/developer-reference/react-integration>` contract: a
        React app's Vite manifest, and the assets that a template includes, for tools that build React
        apps for a Smarter platform.
 

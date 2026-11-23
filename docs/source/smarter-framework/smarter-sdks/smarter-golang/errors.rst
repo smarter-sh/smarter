@@ -5,8 +5,8 @@ Errors
 ------
 
 Every error that the SDK returns matches ``smarter.ErrSmarter`` with ``errors.Is``. The
-`Python SDK's <https://docs.smarter-python.smarter.sh/guide/errors.html>`__ exception hierarchy, which follows the platform's own
-rule (:doc:`ADR-012 <../../adr/012-error-handling>`), becomes Go's sentinel errors and error types:
+:doc:`Python SDK's </smarter-framework/smarter-sdks/smarter-python/errors>` exception hierarchy, which follows the platform's own
+rule (:doc:`ADR-012 </adr/012-error-handling>`), becomes Go's sentinel errors and error types:
 
 .. list-table::
    :header-rows: 1
@@ -51,7 +51,7 @@ keep working through your own ``fmt.Errorf("...: %w", err)``.
        fmt.Println("something else went wrong:", err)
    }
 
-``ErrPaymentRequired`` is a :doc:`budget's <../../smarter-resources/smarter-budget>` refusal: a
+``ErrPaymentRequired`` is a :doc:`budget's </smarter-resources/smarter-budget>` refusal: a
 budget that reached its limit has locked the account, the user profile or the resource that the
 request would charge, e.g. a Vectorsearch or a Proxy. Retrying won't help until the budget allows
 charges again, in its next period or after an admin raises its limit, so the SDK never retries it.

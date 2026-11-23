@@ -2,9 +2,9 @@ Developing the SDK
 ==================
 
 The SDK's source is `github.com/smarter-sh/smarter-golang <https://github.com/smarter-sh/smarter-golang>`__.
-It follows the platform's practices and :doc:`architecture decisions <../../adr>`, the
-`Python SDK <https://docs.smarter-python.smarter.sh/project/contributing.html>`__, which is the reference implementation, and the
-:doc:`Smarter CLI <../smarter-cli>`, which is also written in Go: the same features, the same tests,
+It follows the platform's practices and :doc:`architecture decisions </adr>`, the
+:doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python/development>`, which is the reference implementation, and the
+:doc:`Smarter CLI </smarter-framework/smarter-cli>`, which is also written in Go: the same features, the same tests,
 the same recorded responses, the CLI's Go hooks (gofmt, go vet, goimports, golangci-lint),
 semantic versioning and conventional commits. Its own decisions are recorded in its ``doc/adr/``
 folder, numbered as the Python SDK's, and its Agent Skills in ``skills/`` describe how it is
@@ -45,7 +45,7 @@ Keeping in step with the platform
    * - Command
      - What it refreshes
    * - ``make contracts``
-     - The platform's :doc:`api contract <../smarter-api/api-contract>`, from a checkout of the
+     - The platform's :doc:`api contract </smarter-framework/smarter-api/api-contract>`, from a checkout of the
        platform beside the SDK (``../smarter``): the JSON Schema and example manifest of every SAM
        kind, the api's OpenAPI document, and the chat and journal contracts' JSON Schemas and
        examples. ``SMARTER_REF=<ref>`` reads them at a commit or tag, e.g. ``origin/main``.

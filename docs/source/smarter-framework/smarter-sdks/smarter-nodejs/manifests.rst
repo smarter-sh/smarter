@@ -1,9 +1,9 @@
 Manifests
 =========
 
-Every Smarter resource is declared in a :doc:`Smarter Application Manifest <../smarter-manifests>`
-(SAM), and the SDK writes resources exactly as the :doc:`CLI <../smarter-cli>` does: through the
-brokered :doc:`manifest API <../smarter-api/cli>`. The platform's broker for the manifest's kind
+Every Smarter resource is declared in a :doc:`Smarter Application Manifest </smarter-framework/smarter-manifests>`
+(SAM), and the SDK writes resources exactly as the :doc:`CLI </smarter-framework/smarter-cli>` does: through the
+brokered :doc:`manifest API </smarter-framework/smarter-api/cli>`. The platform's broker for the manifest's kind
 validates it with the kind's Pydantic models and applies its business rules, so a manifest that the
 CLI accepts, the SDK accepts, and the other way round.
 

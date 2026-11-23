@@ -2,14 +2,14 @@ Smarter Chat for Shopify
 ========================
 
 Smarter Chat for Shopify puts your Smarter chatbot, a deployed
-:doc:`LLMClient <../smarter-resources/smarter-llmclient>`, on a Shopify store, from the theme editor:
+:doc:`LLMClient </smarter-resources/smarter-llmclient>`, on a Shopify store, from the theme editor:
 a chat button in a corner of every page of the storefront, and a **Smarter Chat** block for any
 section. The chat renders in its own Shadow DOM, so the theme can't break it, and its look comes
-from the LLMClient's manifest. With :doc:`plugins <../smarter-resources/smarter-llmtool>` that read
+from the LLMClient's manifest. With :doc:`plugins </smarter-resources/smarter-llmtool>` that read
 your catalog, shipping and policies, it can answer shoppers' questions.
 
 It is a Shopify app with one theme app extension and no server, which writes the tag of the
-:doc:`embed script <smarter-chat/embedding>` of ``@smarter.sh/ui-chat``. Its source is
+:doc:`embed script </smarter-framework/smarter-chat/embedding>` of ``@smarter.sh/ui-chat``. Its source is
 `github.com/smarter-sh/smarter-shopify <https://github.com/smarter-sh/smarter-shopify>`__.
 
 
@@ -39,7 +39,7 @@ Add the Chat to the Store
 3. Or, in any section, **Add block → Apps → Smarter Chat**, for the chat in a page, e.g. a Contact
    page, with its own height.
 
-An api key, which an LLMClient needs only if it has :doc:`api keys <../smarter-platform/api-keys>`,
+An api key, which an LLMClient needs only if it has :doc:`api keys </smarter-platform/system-administration/accounts-and-access/api-keys>`,
 is public in the storefront: use a key dedicated to the store.
 
 

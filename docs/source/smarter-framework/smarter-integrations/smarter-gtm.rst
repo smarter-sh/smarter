@@ -2,12 +2,12 @@ Smarter Chat for Google Tag Manager
 ===================================
 
 Smarter Chat for Google Tag Manager is a tag template that puts your Smarter chatbot, a deployed
-:doc:`LLMClient <../smarter-resources/smarter-llmclient>`, on any site that has a
+:doc:`LLMClient </smarter-resources/smarter-llmclient>`, on any site that has a
 `Google Tag Manager <https://tagmanager.google.com>`__ web container, whatever the site is built
 with: a chat button in a corner of the page, or the chat in an element of the page. Marketing and
 analytics teams can add it, and change it, without a developer or a release of the site.
 
-The template loads the :doc:`embed script <smarter-chat/embedding>` of ``@smarter.sh/ui-chat`` from
+The template loads the :doc:`embed script </smarter-framework/smarter-chat/embedding>` of ``@smarter.sh/ui-chat`` from
 jsDelivr, in GTM's sandbox, with three narrow permissions. Its source is
 `github.com/smarter-sh/smarter-gtm-template <https://github.com/smarter-sh/smarter-gtm-template>`__.
 
@@ -34,7 +34,7 @@ The template's permissions are: inject scripts from
 It reads no cookies and sends nothing itself. The **Embed script version** field (Advanced) is the
 version that the template is tested with; set a range, such as ``1.0``, to follow patch releases.
 
-An api key, which an LLMClient needs only if it has :doc:`api keys <../smarter-platform/api-keys>`, is
+An api key, which an LLMClient needs only if it has :doc:`api keys </smarter-platform/system-administration/accounts-and-access/api-keys>`, is
 public in the page: use a key dedicated to the site.
 
 

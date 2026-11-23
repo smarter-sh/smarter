@@ -5,8 +5,8 @@ Errors
 ------
 
 Every error that the SDK throws is a ``SmarterError``, so one ``instanceof`` test catches them all.
-The classes, their names and their hierarchy are the `Python SDK's <https://docs.smarter-python.smarter.sh/guide/errors.html>`__,
-which follows the platform's own rule (:doc:`ADR-012 <../../adr/012-error-handling>`).
+The classes, their names and their hierarchy are the :doc:`Python SDK's </smarter-framework/smarter-sdks/smarter-python/errors>`,
+which follows the platform's own rule (:doc:`ADR-012 </adr/012-error-handling>`).
 
 .. code-block:: text
 

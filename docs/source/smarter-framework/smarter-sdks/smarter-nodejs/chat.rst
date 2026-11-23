@@ -1,13 +1,13 @@
 Prompts and Chat
 ================
 
-An :doc:`LLMClient <../../smarter-resources/smarter-llmclient>` is prompted through its prompt API,
-the same API that :doc:`Smarter Chat <../smarter-chat>` uses. The platform runs the whole prompt: it
+An :doc:`LLMClient </smarter-resources/smarter-llmclient>` is prompted through its prompt API,
+the same API that :doc:`Smarter Chat </smarter-framework/smarter-chat>` uses. The platform runs the whole prompt: it
 selects plugins, calls the LLM, runs the tools that the LLM calls, applies the
-:doc:`Guardrails <../../smarter-resources/smarter-guardrail>`, and saves the chat session's history.
+:doc:`Guardrails </smarter-resources/smarter-guardrail>`, and saves the chat session's history.
 Your code receives the result.
 
-The SDK always reads version 2 of the :doc:`Smarter Chat API contract <../smarter-chat/api-contract>`,
+The SDK always reads version 2 of the :doc:`Smarter Chat API contract </smarter-framework/smarter-chat/api-contract>`,
 whose Zod schemas are exported as ``PromptChatApiConfig``, ``PromptChatApiPromptResponse``, and so
 on. Their fields are the contract's own names, e.g. ``session_key``.
 

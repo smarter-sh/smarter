@@ -2,11 +2,11 @@ Smarter Chat for Drupal
 =======================
 
 Smarter Chat for Drupal is a Drupal module, ``smarter_chat``, that puts your Smarter chatbot, a
-deployed :doc:`LLMClient <../smarter-resources/smarter-llmclient>`, on a Drupal site: a chat button in
+deployed :doc:`LLMClient </smarter-resources/smarter-llmclient>`, on a Drupal site: a chat button in
 a corner of every page, and a **Smarter Chat** block for any region. The chat renders in its own
 Shadow DOM, so your theme can't break it, and its look comes from the LLMClient's manifest.
 
-The module is a settings form around the :doc:`embed script <smarter-chat/embedding>` of
+The module is a settings form around the :doc:`embed script </smarter-framework/smarter-chat/embedding>` of
 ``@smarter.sh/ui-chat``, which visitors' browsers load from jsDelivr, or from your site. Its source
 is `github.com/smarter-sh/smarter-drupal <https://github.com/smarter-sh/smarter-drupal>`__. It needs
 Drupal 10.3 or 11.
@@ -40,7 +40,7 @@ Configuration Management
 
 The settings are configuration, ``smarter_chat.settings``, so they deploy with
 ``drush config:export`` and ``config:import``. An api key, which an LLMClient needs only if it has
-:doc:`api keys <../smarter-platform/api-keys>`, is public in the page anyway, but it shouldn't be
+:doc:`api keys </smarter-platform/system-administration/accounts-and-access/api-keys>`, is public in the page anyway, but it shouldn't be
 in git either: set it in ``settings.php``, which Drupal applies without exporting it:
 
 .. code-block:: php

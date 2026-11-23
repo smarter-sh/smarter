@@ -42,7 +42,7 @@ All three are clients of the same :doc:`Smarter API <smarter-api>`, and apply th
 
    * - VS Code Extension
      - :doc:`Smarter CLI <smarter-cli>`
-     - :doc:`Smarter Python SDK <smarter-python>`
+     - :doc:`Smarter Python SDK </smarter-framework/smarter-sdks/smarter-python>`
    * - For **writing** manifests: errors as you type, completion, help.
      - For people at a terminal, and shell scripts.
      - For your own software: applications, services, tests.
