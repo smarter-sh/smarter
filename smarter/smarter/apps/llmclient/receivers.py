@@ -10,9 +10,11 @@ from django.dispatch import receiver
 from smarter.apps.llmtool.models import PluginMeta
 from smarter.apps.llmtool.signals import plugin_deleting
 from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.conf import smarter_settings
 from smarter.common.utils import mask_identifier
 from smarter.lib import json, logging
 from smarter.lib.django.listview import connect_listview_cache
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.manifest.broker import AbstractBroker
 
@@ -154,10 +156,13 @@ def llmclient_deleted(sender, instance: LLMClient, **kwargs):
     # the task is passed the account number, read now, because the llmclient may be deleted
     # with its account, which then no longer exists when the task runs. It is queued when the
     # deletion is committed, so that a deletion that is rolled back deletes no resources.
+    # the task destroys the A record of the default host, which in local Docker differs from the
+    # host of the default url.
+    api_url = SmarterValidator.urlify(llmclient.default_host, environment=smarter_settings.environment)
     kwargs = {
         "name": llmclient.name,
         "account_number": llmclient.user_profile.account.account_number,  # type: ignore[union-attr]
-        "api_url": llmclient.default_url,
+        "api_url": api_url,
     }
     transaction.on_commit(lambda: delete_default_api.delay(**kwargs))
 

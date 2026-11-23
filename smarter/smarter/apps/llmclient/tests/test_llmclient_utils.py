@@ -89,6 +89,19 @@ class TestGetCachedLLMClientByRequest(TestAccountMixin):
             get_cached_llmclient_by_request(self.request())
             self.assertEqual(helper.call_count, len(LLMCLIENT_HOST_PATHS) + 1)
 
+    def test_invalidate_the_default_url_host(self):
+        """The default url's host, a localhost domain in local Docker, is invalidated too, not only the DNS host."""
+        with patch(HELPER) as helper:
+            helper.return_value.llmclient = self.llmclient
+            get_cached_llmclient_by_request(self.request())
+            with (
+                patch.object(LLMClient, "default_host", new=f"other.{self.host}"),
+                patch.object(LLMClient, "default_url_host", new=self.host),
+            ):
+                invalidate_cached_llmclient_by_hosts(self.llmclient)
+            get_cached_llmclient_by_request(self.request())
+            self.assertEqual(helper.call_count, 2)
+
     def test_invalidate_tolerates_an_llmclient_without_hosts(self):
         llmclient = MagicMock(spec=LLMClient)
         type(llmclient).default_host = property(lambda self: (_ for _ in ()).throw(ValueError("no account")))

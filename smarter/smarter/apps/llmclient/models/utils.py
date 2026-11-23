@@ -151,16 +151,17 @@ def get_cached_llmclient_by_request(request: HttpRequest) -> Optional[LLMClient]
 
 def invalidate_cached_llmclient_by_hosts(llmclient: LLMClient) -> None:
     """
-    Invalidate the cached resolution of an LLMClient's own hosts, its default host and its custom.
+    Invalidate the cached resolution of an LLMClient's own hosts, e.g. after it is renamed or deleted.
 
-    domain, e.g. after it is renamed or deleted.
+    Its hosts are its default host, its default url's host, which differs from the default host in
+    local Docker, and its custom domain's host.
 
     :param llmclient: The LLMClient.
     :type llmclient: LLMClient
     """
     resolver = _llmclient_id_resolver()
     hosts = set()
-    for attribute in ("default_host", "custom_host"):
+    for attribute in ("default_host", "default_url_host", "custom_host"):
         try:
             host = getattr(llmclient, attribute)
         # pylint: disable=broad-exception-caught
