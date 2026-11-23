@@ -65,7 +65,7 @@ Technical Prerequisites
 - **Required:** working in a terminal with common Linux commands, and Git.
 - **Required:** familiarity with `The Twelve-Factor App <https://12factor.net/>`__.
 - **Required by the first live session:** Docker, and Smarter running from source as described
-  in :doc:`/smarter-framework/guides/developer-setup`.
+  in :doc:`/smarter-platform/installation/developer-installation`.
 - **Helpful:** Redis, Celery, and reading React and TypeScript.
 
 Schedule
@@ -323,7 +323,7 @@ Recommended Texts
   2020), free at `cosmicpython.com <https://www.cosmicpython.com/>`__.
 - **Smarter documentation:** :doc:`/adr`, :doc:`/smarter-framework/guides/12-factor-app`,
   :doc:`/smarter-framework/guides/developer-guidelines`, :doc:`/smarter-platform/url-patterns`
-  and :doc:`/smarter-platform/security`.
+  and :doc:`/smarter-platform/system-administration/security`.
 
 Further Study
 -------------

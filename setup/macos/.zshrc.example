@@ -33,8 +33,8 @@ export PATH="$PATH:/usr/local/bin/docker-compose"
 # 3. Python Configuration
 # -------------------------
 # Use Homebrew Python 3.14 as default
-alias python="/usr/local/bin/python3.14"
-alias python3="/usr/local/bin/python3.14"
+alias python="/opt/homebrew/bin/python3.14"
+alias python3="/opt/homebrew/bin/python3.14"
 export LDFLAGS="-L/opt/homebrew/opt/python@3.14/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/python@3.14/include"
 export PKG_CONFIG_PATH="/opt/homebrew/opt/python@3.14/lib/pkgconfig"
@@ -78,23 +78,23 @@ export NPY_DISTUTILS_APPEND_FLAGS=1  # For SciPy pip installs
 # BLIS is a high-performance library for basic linear algebra operations.
 # It accelerates matrix and vector math, and is used by numpy, scipy, and
 # other scientific Python packages for fast computations.
-export LDFLAGS="$LDFLAGS -L/usr/local/opt/blis/lib"
+export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/blis/lib"
 
 # zlib
 # -----
 # zlib is a widely used compression library for reading and writing compressed
 # data (such as .gz files). It is required by Python, git, and many other tools
 # for handling compressed streams and files.
-export LDFLAGS="$LDFLAGS -L/usr/local/opt/zlib/lib"
-export CPPFLAGS="$CPPFLAGS -I/usr/local/opt/zlib/include"
+export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/zlib/lib"
+export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/zlib/include"
 
 # zstd
 # -----
 # Zstandard (zstd) is a modern, fast compression algorithm and library. It
 # provides high compression ratios and speed, and is used by many modern tools
 # for compressing and decompressing files efficiently.
-export LDFLAGS="$LDFLAGS -L/opt/homebrew/Cellar/zstd/1.5.7/lib"
-export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/Cellar/zstd/1.5.7/include"
+export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/zstd/lib"
+export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/zstd/include"
 # openblas
 # -----
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/homebrew/opt/openblas/lib/pkgconfig"
@@ -119,10 +119,10 @@ export MYSQLCLIENT_LDFLAGS=$(/opt/homebrew/opt/mysql-client/bin/mysql_config --l
 
 # 9. Crypto/SSL Libraries
 # -----------------------
-export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/openssl@1.1/lib"
-export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/openssl@1.1/include"
-export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"
-export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/homebrew/opt/openssl@1.1/lib/pkgconfig"
+export LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/openssl@3/lib"
+export CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/openssl@3/include"
+export PATH="/opt/homebrew/opt/openssl@3/bin:$PATH"
+export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/homebrew/opt/openssl@3/lib/pkgconfig"
 
 # 10. XML/XSLT/Security Libraries
 # ------------------------------

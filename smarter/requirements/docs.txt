@@ -524,6 +524,7 @@ sphinx==9.2.0
     #   sphinx-autodoc-typehints
     #   sphinx-copybutton
     #   sphinx-design
+    #   sphinx-reredirects
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
@@ -532,6 +533,8 @@ sphinx-autodoc-typehints==3.17.5
 sphinx-copybutton==0.5.2
     # via -r smarter/requirements/in/docs.in
 sphinx-design==0.7.0
+    # via -r smarter/requirements/in/docs.in
+sphinx-reredirects==1.1.0
     # via -r smarter/requirements/in/docs.in
 sphinx-rtd-theme==3.1.0
     # via -r smarter/requirements/in/docs.in

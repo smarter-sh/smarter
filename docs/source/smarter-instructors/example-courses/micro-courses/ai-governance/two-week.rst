@@ -91,14 +91,14 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 4 (30 min)
      - **Money and access.** :doc:`Budgets </smarter-resources/smarter-budget>`,
-       :doc:`cost accounting </smarter-platform/cost-accounting>`, accounts, roles, API keys and
+       :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>`, accounts, roles, API keys and
        :doc:`Secrets </smarter-resources/smarter-secret>`. Pre-reading: "Governing it with git" in
        the case study `Stackademy Online Coding Academy
        <https://smarter.sh/case-studies/stackademy>`__, on history, review and undo for an
        assistant's manifests, and on why only a platform administrator may apply a Budget.
    * - 2
      - Lecture 5 (30 min)
-     - **Audit and accountability.** The :doc:`journal </smarter-platform/smarter-journal>` and
+     - **Audit and accountability.** The :doc:`journal </smarter-platform/system-administration/costs-and-auditing/smarter-journal>` and
        :doc:`Prompt </smarter-resources/smarter-prompt>` records, and what auditors and regulators
        ask for.
    * - 2
@@ -338,7 +338,7 @@ Recommended Texts
   fairness and safety research.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-prompt`,
-  :doc:`/smarter-platform/smarter-journal` and :doc:`/smarter-platform/security`.
+  :doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal` and :doc:`/smarter-platform/system-administration/security`.
 
 Further Study
 -------------

@@ -33,24 +33,25 @@ class PlatformSettings(BaseModel):
     :raises SmarterConfigurationError: If the value is not an http or https url.
     """
 
-    user_settings_file: str = Field(
-        "/home/smarter_user/user-settings/settings.yaml",
-        description="The path of the YAML file of the user's own Django settings, which supersede Smarter's.",
-        examples=["/home/smarter_user/user-settings/settings.yaml"],
-        title="User Settings File",
+    overrides_file: str = Field(
+        "/home/smarter_user/overrides/settings.yaml",
+        description="The path of the YAML file of overrides, which overwrite Smarter's Django settings.",
+        examples=["/home/smarter_user/overrides/settings.yaml"],
+        title="Overrides File",
     )
     """
-    The path of the user settings file: a YAML mapping of Django setting names to values, which supersede.
+    The path of the overrides file: a YAML mapping of Django setting names to values, which.
 
-    every value in ``smarter.settings``.
+    overwrite every value in ``smarter.settings``.
 
-    :mod:`smarter.settings.user` reads the file, from this same environment variable, before
-    ``smarter_settings`` is used for anything else. A missing file is not an error: there are no user
-    settings. Locally, Docker Compose mounts ``user-settings/`` from the repository's root here. The Helm
-    chart mounts no file: on Kubernetes, user settings are ``DJANGO_*`` variables in its ``env``.
+    :mod:`smarter.settings.overrides` reads the file, from this same environment variable, before
+    ``smarter_settings`` is used for anything else. A missing file is not an error: there are no
+    overrides from a file. Locally, Docker Compose mounts ``overrides/`` from the repository's root
+    here. The Helm chart mounts no file: on Kubernetes, the deployment's overrides are
+    ``DJANGO_*`` variables in the chart's ``env``.
 
     :type: str
-    :default: ``"/home/smarter_user/user-settings/settings.yaml"``
+    :default: ``"/home/smarter_user/overrides/settings.yaml"``
     """
 
     @before_field_validator("subsystem_logging_loki_url")

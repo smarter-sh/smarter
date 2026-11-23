@@ -53,7 +53,7 @@ Technical Prerequisites
 - **Required:** Git and GitHub: clone, branch, commit, push and pull requests.
 - **Required:** Node.js 24 or later and npm, and the command line.
 - **Required by week 3:** Docker, and Smarter installed from source, following the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`.
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`.
 - **Helpful:** TypeScript basics, JSON and REST APIs.
 
 Schedule

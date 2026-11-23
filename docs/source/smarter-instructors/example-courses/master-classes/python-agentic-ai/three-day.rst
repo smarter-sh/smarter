@@ -84,7 +84,7 @@ Technical Prerequisites
   for a screenshot of the session.
 - **Required before day 1:** Docker Desktop or Docker Engine with Compose, at least 16 GB of
   memory, and Smarter running from source as described in
-  :doc:`/smarter-framework/guides/developer-setup`, with one of its Django apps' tests run in
+  :doc:`/smarter-platform/installation/developer-installation`, with one of its Django apps' tests run in
   the container.
 - **Helpful:** Django, Docker and Pydantic, which Smarter's code uses throughout, and the sum of
   a geometric series, from any calculus text. Students new to coding agents can take

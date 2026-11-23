@@ -426,7 +426,7 @@ Recommended Texts
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
   :doc:`/smarter-resources/smarter-llmtool`, :doc:`/smarter-resources/smarter-vectorstore`,
   :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-orchestrator` and
-  :doc:`/smarter-platform/cost-accounting`.
+  :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
 
 Further Study
 -------------

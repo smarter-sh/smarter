@@ -20,7 +20,7 @@ from smarter.lib.logging import getSmarterLogger
 
 from .base import *
 from .base import log_settings_diagnostics
-from .user import apply_user_settings
+from .overrides import apply_overrides
 
 logger = getSmarterLogger(__name__)
 
@@ -69,10 +69,11 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "lax"
 
 environment_name = os.path.basename(__file__).replace(".py", "")
-# The user's own Django settings supersede every setting above: the user settings file, then
-# DJANGO_* environment variables. No setting is assigned below this line, and the settings are
-# logged only below it, so that the log shows the values that Django runs with.
-apply_user_settings(globals())
+# The deployment's overrides overwrite every setting above: the overrides file, then
+# DJANGO_* environment variables (the Helm chart's env on Kubernetes, .env locally). No setting is
+# assigned below this line, and the settings are logged only below it, so that the log shows the
+# values that Django runs with.
+apply_overrides(globals())
 log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)

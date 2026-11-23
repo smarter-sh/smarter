@@ -102,7 +102,7 @@ policy. Good faith means that you:
 ## Hardening Your Installation
 
 Operators of a Smarter installation should also read the
-[security documentation](https://docs.smarter.sh/smarter-platform/security.html).
+[security documentation](https://docs.smarter.sh/smarter-platform/system-administration/security.html).
 In particular:
 
 - set `DJANGO_SECRET_KEY` to a long, random value that every pod shares;

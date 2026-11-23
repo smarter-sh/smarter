@@ -122,32 +122,8 @@ when it was saved to S3. Text from the log is escaped, so that a log line can't 
 Slack, like email, never changes the Job's outcome. The deploy workflow passes the bot token to
 every environment, and sets both jobs' channel to ``smarter``.
 
-A CronJob, ``smarter-mysql-backup``, backs up the database every night (``databaseScheduledBackup``),
-with ``mariadb-dump``, and uploads the compressed dump to ``databaseScheduledBackup.s3Uri``, by
-default ``s3://<SMARTER_PLATFORM_S3_BUCKET>/backups/sql``. Point ``s3Uri`` at a private bucket when the
-platform's bucket serves public files. The dump runs as a read-only account,
-``SMARTER_SUBSYSTEM_SQL_BACKUP_USERNAME`` (``smarter_backup`` by default), which the init Job creates, or
-updates, whenever ``SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD`` is set, with ``SELECT, SHOW VIEW, TRIGGER, EVENT,
-SHOW CREATE ROUTINE`` on the platform's database (``SHOW CREATE ROUTINE`` exists in MariaDB 11.3 and
-later; on an older server the account gets the rest). The deploy workflow reads that password from
-the GitHub secret ``SMARTER_MYSQL_BACKUP_PASSWORD``. Until it is set, the backup dumps as the root
-account. The backup's container receives only what it needs: the database's host, port and name, the
-backup account, the S3 location and the AWS credentials, and the root password only when there is no
-backup account. The password reaches ``mariadb-dump`` in a temporary option file, not on its command
-line. Before uploading, the backup checks that the dump ran
-to the end and that the archive is intact, and after uploading, that the object in S3 has the
-archive's size.
-
-The backup emails its result the same way, to ``databaseScheduledBackup.notifyEmail`` or to
-``SMARTER_PLATFORM_EMAIL_ADMIN``, with the backup's log attached, and posts it to the Slack channel
-``databaseScheduledBackup.notifySlackChannel``, if one is set, with the log in the message's thread.
-After a successful backup, the email and the Slack message name the backup file, its size, and its
-location in S3. The backup runs on a plain Debian image, as an init
-container, which installs only the MariaDB client and a pinned AWS CLI
-(``databaseScheduledBackup.awsCliVersion``), whose download it verifies against the AWS CLI team's
-PGP signature. The email is sent by a second container, from the Smarter image, which passes that
-summary to ``email_job_log --summary``. A failed backup is retried in a new pod, up to twice, and
-each attempt sends its own email.
+A CronJob, ``smarter-mysql-backup``, backs up the database to S3 every night. See
+:doc:`Backup and Restore </smarter-platform/system-administration/operations/backup-and-restore>`.
 
 An optional Deployment, ``smarter-slack-bot`` (``slackBot.enabled``, ``false`` by default), answers
 questions in a Slack workspace with a deployed LLMClient. See :doc:`smarter-on-kubernetes/slack-bot`.

@@ -22,7 +22,7 @@ and apply without writing any code:
   `six example budgets <https://github.com/smarter-sh/example-manifests/tree/main/smarter/budgets>`__
   include a monthly allowance for each student and a daily limit on one provider.
 - **Access that follows ownership.** Every resource belongs to an
-  :doc:`account and a user </smarter-platform/account-management>`, and every query is
+  :doc:`account and a user </smarter-platform/system-administration/accounts-and-access/account-management>`, and every query is
   `filtered by owner <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/metadata_with_ownership.py>`__.
   Provider keys and passwords are encrypted :doc:`Secrets </smarter-resources/smarter-secret>`,
   never shown to users or models.
@@ -30,7 +30,7 @@ and apply without writing any code:
   `guardrail event <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/models/guardrail.py>`__
   with its severity, confidence, rationale and review status; every prompt, tool call and plugin
   selection is recorded with the person and account that asked; and the
-  :doc:`journal </smarter-platform/smarter-journal>` records every change to a resource.
+  :doc:`journal </smarter-platform/system-administration/costs-and-auditing/smarter-journal>` records every change to a resource.
 - **Data that stays in the network.** With :doc:`LLMHost </smarter-resources/smarter-llmhost>`,
   open models run on the organization's own cluster, so a class can compare the governance of a
   commercial model with that of a self-hosted one.
@@ -59,8 +59,8 @@ explainability; human oversight and incident response; and vendor and model risk
 Each course plan lists every manifest and file that it uses under *Smarter in the Source Code*.
 
 **Read.** :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-resources/smarter-budget`,
-:doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-platform/cost-accounting`,
-:doc:`/smarter-platform/smarter-journal`, :doc:`/smarter-platform/security`, `Django and httpx: An
+:doc:`/smarter-resources/smarter-prompt`, :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
+:doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal`, :doc:`/smarter-platform/system-administration/security`, `Django and httpx: An
 LLM Proxy That Keeps Provider API Keys Away From Callers
 <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Smarter's Ownership Model: One
 Base Class for Owning, Sharing and Tracking AI Resources

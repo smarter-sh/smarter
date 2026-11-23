@@ -1,7 +1,7 @@
 Smarter Types
 =============
 
-The platform and the :doc:`Smarter Python SDK <../smarter-python>` must agree on which kinds of
+The platform and the :doc:`Smarter Python SDK </smarter-framework/smarter-sdks/smarter-python>` must agree on which kinds of
 :doc:`manifest <../smarter-manifests>` exist, which commands the :doc:`cli api <../smarter-api/cli>`
 has, and what the :doc:`Smarter Journal <smarter-journal>` records. Both take these definitions from
 one package, `smarter-types <https://pypi.org/project/smarter-types/>`__, which is plain Python, with

@@ -79,7 +79,7 @@ Technical Prerequisites
 - **Required:** the basics of relational databases and SQL.
 - **Required by the first live session:** Docker Desktop or Docker Engine with Compose, Node.js
   LTS, Python 3.12 or later, a code editor, at least 16 GB of memory, and Smarter running from
-  source as described in :doc:`/smarter-framework/guides/developer-setup`.
+  source as described in :doc:`/smarter-platform/installation/developer-installation`.
 - **Required by the first live session:** an OpenAI API key with credit, set in Smarter's
   ``.env``, and a prompt answered in Smarter's LLMClient workbench.
 - **Helpful:** reading TypeScript, Django, and the Model-View-Controller pattern. Students new to

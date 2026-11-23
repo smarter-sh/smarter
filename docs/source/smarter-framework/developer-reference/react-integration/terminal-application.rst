@@ -10,7 +10,7 @@ output comes back as raw bytes, so colors, job control and full screen programs 
 starts, it prints the pod that runs the shell, and how the session can end. This component is
 ideal for teaching, demonstrating and debugging the platform from the inside. It is for
 superusers only, and off unless ``SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE`` is set. See
-:doc:`../../../smarter-platform/smarter-web-console`.
+:doc:`../../../smarter-platform/system-administration/tools/smarter-web-console`.
 
 The Terminal is a page of the single-page console (:doc:`ADR-035 </adr/035-single-page-app>`), at
 ``/dashboard/terminal/``. ``@smarter/console`` renders ``@smarter/terminal-emulator``'s ``TerminalEmulator``

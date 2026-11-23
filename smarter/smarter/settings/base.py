@@ -1174,9 +1174,9 @@ The authentication backends for Smarter, including social authentication.
 Google's and GitHub's, and Django's model backend. Smarter additionally implements its own
 key-based REST API authentication backend.
 
-An operator sets their own with ``DJANGO_AUTHENTICATION_BACKENDS``, comma-separated, e.g. the
+A deployment overrides them with ``DJANGO_AUTHENTICATION_BACKENDS``, comma-separated, e.g. the
 multitenant backends in ``smarter.lib.social_core.backends.multitenant`` (see
-:mod:`smarter.settings.user`).
+:mod:`smarter.settings.overrides`).
 
 See:
 
@@ -2124,7 +2124,7 @@ TAGGIT_CASE_INSENSITIVE = True
 """
 Whether taggit treats tags as case insensitive, e.g. "Tag" and "tag" as the same tag.
 
-``DJANGO_TAGGIT_CASE_INSENSITIVE=false`` turns it off (see :mod:`smarter.settings.user`).
+``DJANGO_TAGGIT_CASE_INSENSITIVE=false`` turns it off (see :mod:`smarter.settings.overrides`).
 """
 
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
@@ -2155,27 +2155,28 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
     Log the platform's diagnostics, and the settings that every environment shares, outside of manage.py.
 
     Each environment's module calls it with its ``globals()``, after
-    :func:`smarter.settings.user.apply_user_settings`, so that the log shows the values that Django
-    runs with, the user's own settings included, rather than this module's.
+    :func:`smarter.settings.overrides.apply_overrides`, so that the log shows the values that Django
+    runs with, the deployment's overrides included, rather than this module's. The log entries are named
+    after the caller, the environment's module, e.g. ``smarter.settings.prod``.
 
     :param settings: The environment's settings module's namespace.
     """
     if not (smarter_settings.platform_settings_output or "manage.py" not in sys.argv[0]):
         return
-    logger.debug("=" * 80)
-    logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18))
-    logger.debug("=" * 80)
-    logger.debug("Django settings module: %s", os.environ.get("DJANGO_SETTINGS_MODULE"))
+    logger.debug("=" * 80, stacklevel=2)
+    logger.debug("%s Settings diagnostics information %s", "=" * (40 - 17), "=" * (40 - 18), stacklevel=2)
+    logger.debug("=" * 80, stacklevel=2)
+    logger.debug("Django settings module: %s", os.environ.get("DJANGO_SETTINGS_MODULE"), stacklevel=2)
 
     try:
         with open("/proc/uptime", encoding="utf-8") as f:
             uptime_seconds = float(f.readline().split()[0])
             uptime_str = time.strftime("%H:%M:%S", time.gmtime(uptime_seconds))
-            logger.debug("Container uptime: %s", uptime_str)
+            logger.debug("Container uptime: %s", uptime_str, stacklevel=2)
     except FileNotFoundError:
-        logger.warning("Container uptime not available")
+        logger.warning("Container uptime not available", stacklevel=2)
     except OSError as e:
-        logger.error("Error reading container uptime: %s", e)
+        logger.error("Error reading container uptime: %s", e, stacklevel=2)
 
     log_resource_limits(logger)
 
@@ -2183,18 +2184,18 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
         debian_version = "not found"
         with open("/etc/debian_version", encoding="utf-8") as f:
             debian_version = f.read().strip()
-        logger.debug("Debian v%s %s", debian_version, os.uname().version)
+        logger.debug("Debian v%s %s", debian_version, os.uname().version, stacklevel=2)
     except FileNotFoundError:
-        logger.error("Debian version file not found")
+        logger.error("Debian version file not found", stacklevel=2)
     except OSError as e:
-        logger.error("Error reading Debian version: %s", e)
+        logger.error("Error reading Debian version: %s", e, stacklevel=2)
 
-    logger.debug("Python v%s", sys.version)
+    logger.debug("Python v%s", sys.version, stacklevel=2)
     from django import get_version
 
-    logger.debug("Django v%s", get_version())
-    logger.debug("Smarter v%s", smarter_version)
-    logger.debug("Storages backend: %s", default_storage_backend(settings))
+    logger.debug("Django v%s", get_version(), stacklevel=2)
+    logger.debug("Smarter v%s", smarter_version, stacklevel=2)
+    logger.debug("Storages backend: %s", default_storage_backend(settings), stacklevel=2)
 
     if smarter_settings.smtp_is_configured:
         logger.debug(
@@ -2203,14 +2204,15 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
             settings["SMTP_PORT"],
             settings["SMTP_USE_SSL"],
             settings["SMTP_USE_TLS"],
+            stacklevel=2,
         )
     else:
-        logger.warning("SMTP server not configured")
+        logger.warning("SMTP server not configured", stacklevel=2)
     if smarter_settings.aws_is_configured:
-        logger.debug("AWS credentials detected")
+        logger.debug("AWS credentials detected", stacklevel=2)
     else:
-        logger.warning("AWS credentials not found.")
-    logger.debug("=" * 80)
+        logger.warning("AWS credentials not found.", stacklevel=2)
+    logger.debug("=" * 80, stacklevel=2)
 
 
 # mypy can't evaluate a computed __all__, and would then treat a star import of this
