@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.2-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.47.2-alpha.2...v0.47.2-alpha.3) (2026-11-23)
+
+### Bug Fixes
+
+* bump smarter-console to v1.1.15 ([c1aa6c3](https://github.com/smarter-sh/smarter/commit/c1aa6c31404b2e4fd4ffea1c844babd53776d4a3))
+
 ## [0.47.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.47.2-alpha.1...v0.47.2-alpha.2) (2026-11-23)
 
 ### Bug Fixes
