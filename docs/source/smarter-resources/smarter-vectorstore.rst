@@ -68,6 +68,8 @@ Lifecycle
    smarter apply -f qdrant-self-hosted.yaml           # create or update the Vectorstore
    smarter deploy vectorstore example_knowledge_base   # create its database, in the background
    smarter describe vectorstore example_knowledge_base # its status, conditions, vector count and snapshots
+   smarter documents vectorstore example_knowledge_base --add manual.pdf  # add a document
+   smarter documents vectorstore example_knowledge_base                   # its documents, and their status
    smarter logs vectorstore example_knowledge_base     # a self-hosted Qdrant server's logs
    smarter undeploy vectorstore example_knowledge_base # stop serving; its data is kept
    smarter delete vectorstore example_knowledge_base   # destroy its database and data
@@ -190,8 +192,20 @@ Pinecone project, or Qdrant Cloud cluster, never collide.
 Documents
 ---------
 
-Documents are added through the REST API, ``/api/v1/vectorstores/<hashed id>/documents/``, or, in
-bulk, with ``manage.py load_vectorstore_documents --name <vectorstore> --path <file or folder>``.
+Documents are added in the web console, in the Documents section of a Vectorstore's details,
+where files can be dropped or chosen and a public url added, each document's status followed as
+it loads, and a document removed, or with the ``smarter`` cli's ``documents`` command:
+
+.. code-block:: console
+
+   smarter documents vectorstore example_knowledge_base --add manual.pdf --add faq.md
+   smarter documents vectorstore example_knowledge_base --url https://example.com/faq.html
+   smarter documents vectorstore example_knowledge_base --remove faq.md
+
+They can also be added through the REST API,
+``/api/v1/vectorstores/<hashed id>/documents/``, or, in bulk, with
+``manage.py load_vectorstore_documents --name <vectorstore> --path <file or folder>``. Only a
+Vectorstore's owner may add or remove its documents. Anyone it is shared with may see them.
 
 .. code-block:: console
 
@@ -206,8 +220,9 @@ bulk, with ``manage.py load_vectorstore_documents --name <vectorstore> --path <f
 
 A document's text is extracted when it is added, and kept in Smarter's database. The original
 file is never written to file storage, so proprietary documents do not end up in a public bucket.
-A document whose text is already in the Vectorstore is not added again. The documents are then
-loaded by Celery: split into chunks of ``embeddings.chunkSize`` characters, embedded, and loaded
+A document whose text is already in the Vectorstore is not added again. Documents may be added
+before the Vectorstore is deployed: they wait, and are loaded as soon as its deploy is ready. The
+documents are loaded by Celery: split into chunks of ``embeddings.chunkSize`` characters, embedded, and loaded
 with deterministic ids, so that a document can be loaded again, or removed, cleanly. Every chunk's
 metadata records its document, page and position, and the document's own metadata. PDFs must
 have text: a scanned PDF needs OCR first. Documents may be up to 50 MiB.

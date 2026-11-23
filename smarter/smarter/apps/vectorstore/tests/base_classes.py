@@ -6,7 +6,9 @@ Nothing reaches a real cluster or service:
 - :class:`FakeKubernetes` replaces the Kubernetes service, with :func:`configure_kubernetes`. The
   smarter-api container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
   be deployed without it.
-- The deploy task is never queued: ``deploy_vectorstore.delay`` is patched for each test, and
+- No Celery task is queued: ``deploy_vectorstore.delay``, ``load_vectorstore_document.delay`` and
+  ``delete_vectorstore_document.delay`` are patched for each test (as ``deploy_task``, ``load_task``
+  and ``delete_task``), and
   :meth:`VectorstoreTestBase.deploy_now` runs its checks in the test instead. A queued task would
   run in a worker, which has neither the fake cluster nor the in-memory database.
 - The Qdrant backend uses an in-memory QdrantClient, which supports everything but snapshots.
@@ -86,6 +88,8 @@ class VectorstoreTestBase(TestAccountMixin):
 
     kubernetes: FakeKubernetes
     deploy_task: MagicMock
+    load_task: MagicMock
+    delete_task: MagicMock
     provider: Provider
     secret: Secret
     connection: ApiConnection
@@ -133,6 +137,12 @@ class VectorstoreTestBase(TestAccountMixin):
         # patched for each test, since some tests' cleanups stop every patch.
         patcher = patch("smarter.apps.vectorstore.tasks.deploy_vectorstore.delay")
         self.deploy_task = patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch("smarter.apps.vectorstore.tasks.load_vectorstore_document.delay")
+        self.load_task = patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch("smarter.apps.vectorstore.tasks.delete_vectorstore_document.delay")
+        self.delete_task = patcher.start()
         self.addCleanup(patcher.stop)
 
     def spec(self, **overrides) -> SmarterDictType:
