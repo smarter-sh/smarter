@@ -380,6 +380,18 @@ Deploy a Smarter LLMClient using the Smarter CLI. For example:
     -o, --output_format string   output format: json, yaml (default "json")
     -v, --verbose                verbose output
 
+A deployed LLMClient answers at its url, which ``smarter describe llmclient <name>`` shows as
+``status.url``. On a platform in AWS, Smarter creates the url's DNS record, its Kubernetes
+ingress and its TLS certificate, which take a few minutes. On a platform that runs in Docker on
+your own computer, the url is a localhost url, e.g.
+``http://stackademy-sql.3141-5926-5359.api.localhost:9357/``, which every browser resolves to your
+computer, so it works as soon as the LLMClient is deployed, without DNS. ``smarter undeploy
+llmclient <name>`` takes it offline again.
+
+A manifest's ``spec.config.prompt.deployed`` can deploy or undeploy an LLMClient too: ``true``
+deploys it, and ``false`` undeploys it. Leave it out to keep the LLMClient as it is, so that
+applying a deployed LLMClient's manifest again, e.g. to change its system prompt, doesn't take it
+offline.
 
 
 Updating
@@ -390,6 +402,8 @@ Update a Smarter LLMClient using the Smarter CLI. For example:
 .. code-block:: bash
 
   smarter apply -f path/to/llmclient-manifest.yaml
+
+An LLMClient that is deployed stays deployed, unless the manifest says ``deployed: false``.
 
 
 Deleting

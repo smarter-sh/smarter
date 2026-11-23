@@ -7,7 +7,6 @@ mocked: no Route53 record is read or destroyed.
 
 import threading
 from unittest.mock import MagicMock, patch
-from urllib.parse import urlparse
 
 from django.db import connection
 
@@ -45,7 +44,8 @@ class TestUndeployDefaultApi(TestAccountMixin):
 
         destroy_domain_A_record.assert_called_once()
         kwargs = destroy_domain_A_record.call_args.kwargs
-        self.assertEqual(kwargs["hostname"], urlparse(self.llmclient.default_url).netloc)
+        # the A record is the default host's, which in local Docker isn't the default url's host.
+        self.assertEqual(kwargs["hostname"], self.llmclient.default_host)
         self.assertEqual(kwargs["api_host_domain"], smarter_settings.environment_api_domain)
 
         llmclient = LLMClient.objects.get(pk=self.llmclient.pk)
