@@ -189,6 +189,9 @@ class Command(SmarterCommand):
         )
         # the builtin LLM providers: openai, metaai, googleai, ...
         self.call_command_or_log("initialize providers", "initialize_providers")
+        # the prices of the built-in providers' default models, so that charges have a cost, and budgets
+        # that measure cost see them. Existing prices, e.g. an operator's, are kept.
+        self.call_command_or_log("initialize LLM prices", "initialize_llm_prices")
         # the Tavily and Brave Search api key Secrets, which the example manifests' WebsearchPlugins
         # and ImageSearchPlugins name.
         self.call_command_or_log("initialize the llmtool api keys", "initialize_llmtool_api_keys")

@@ -184,6 +184,25 @@ class TestBudget(TestAccountMixin):
         self.assertEqual(len(self.signals["released"]), 1)
         self.assertTrue(charge_authorization(self.locator))
 
+    def test_lock_reason_names_the_period(self):
+        """Test that a lock's reason names each period as an adjective: a daily limit, not a dayly one."""
+        expected = {
+            BudgetPeriod.HOUR: "hourly limit",
+            BudgetPeriod.DAY: "daily limit",
+            BudgetPeriod.WEEK: "weekly limit",
+            BudgetPeriod.MONTH: "monthly limit",
+        }
+        for period, words in expected.items():
+            with self.subTest(period=period):
+                budget = self.budget(period=period, periodic_limit=Decimal("1.00"))
+                budget.attach(self.locator)
+                self.charge(cost="2.00")
+                lock = ResourceLock.objects.get(resource_locator=self.locator)
+                self.assertIn(words, lock.reason)
+                budget.delete()
+                ResourceLock.objects.filter(resource_locator=self.locator).delete()
+                Charge.objects.filter(resource_locator=self.locator).delete()
+
     def test_tokens_and_absolute_limit(self):
         """Test a budget of tokens over the life of the resource, which does not expire with the period."""
         budget = self.budget(unit=BudgetUnit.TOKENS, absolute_limit=Decimal(1000))

@@ -750,11 +750,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             request=request,
             response=response,
         )
-        resource_locators = [self.provider_record_locator()]
-        if isinstance(self.prompt, Prompt) and self.prompt.llmclient:
-            resource_locators.append(self.prompt.llmclient.record_locator)
-        resource_locators.extend(extra_resource_locators or [])
-        self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value)
+        # the model call's tokens were charged to the provider, the llmclient, the user and the account
+        # as its completion. The tool's charge goes to the tool's own resources, e.g. an MCPClient,
+        # so that those tokens are counted once for each resource.
+        resource_locators = list(extra_resource_locators or [])
+        if resource_locators:
+            self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value, charge_owner=False)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
         )
@@ -777,13 +778,14 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             plugin=plugin,
             input_text=self.input_text,
         )
-        resource_locators = [self.provider_record_locator()]
-        resource_locators.append(self.prompt.llmclient.record_locator)  # type: ignore[union-attr]
-        resource_locators.append(plugin.plugin_meta.record_locator)  # type: ignore[union-attr]
+        # the model call's tokens were charged to the provider, the llmclient, the user and the account
+        # as its completion. The plugin's charge goes to the plugin and its connection only, so that
+        # those tokens are counted once for each resource.
+        resource_locators = [plugin.plugin_meta.record_locator]  # type: ignore[union-attr]
         if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
             resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
 
-        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value)
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value, charge_owner=False)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):

@@ -93,6 +93,16 @@ Each charge has a ``total_cost``, in USD, that budgets which measure cost compar
   have no price costs nothing, so budgets that measure cost do not see it until a price is added.
   Prices are not applied retroactively.
 
+  A new platform starts with the prices of the built-in providers' default models, e.g. OpenAI's
+  gpt-6-luna and Anthropic's claude-sonnet-4-6, from the price catalog
+  ``smarter/apps/account/data/llm_prices.yaml``, which ``manage.py initialize_llm_prices`` loads,
+  and ``initialize_platform`` runs. The catalog records each model's input and output price, as its
+  provider publishes it, with the page that published it, and stores one blended price, of three
+  input tokens to one output token: ``(3 × input + output) / 4``. Each model is priced for
+  completion, plugin and tool charges alike. A price that exists is never changed, so set your own
+  prices, and those of other models, in the Django admin's LLM prices, without markup or with
+  yours.
+
 - **LLMHost compute** is charged hourly, by Celery Beat, at the compute's ``price_per_hour`` for
   each of its ready nodes. A compute without a price is not charged.
 
@@ -103,7 +113,10 @@ A Budget is a set of spending limits, which is enforced on each of the resources
 to. A budget can be attached to anything that has a record locator, for example a user, an account,
 an LLMClient, a Provider, a Proxy, an LLMHostCompute, a plugin, a connection or an MCPClient. A charge
 is created for each resource that took part in a request, so a budget sees its resource's share of
-the spending.
+the spending. Each model call is charged once, as a completion, to its provider, its LLMClient, its
+user and their account. When the model calls a plugin or an MCP server's tool, that call's tokens are
+also charged, as a plugin or tool charge, to the plugin and its connection, or to the MCPClient, and
+to nothing else, so that no resource counts the same tokens twice.
 
 .. list-table:: Budget settings
    :header-rows: 1
