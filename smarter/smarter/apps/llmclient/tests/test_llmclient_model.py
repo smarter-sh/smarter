@@ -2,6 +2,7 @@
 
 import warnings
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 from django.urls import get_urlconf, set_urlconf
 
@@ -24,6 +25,8 @@ from smarter.apps.llmclient.models import (
 from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
+from smarter.common.conf import smarter_settings
+from smarter.lib.django.validators import SmarterValidator
 
 
 class TestLLMClientModel(TestAccountMixin):
@@ -50,6 +53,42 @@ class TestLLMClientModel(TestAccountMixin):
         settings = MagicMock(environment_api_dns_domain="alpha.api.example.com")
         with patch("smarter.apps.llmclient.models.llmclient.smarter_settings", settings):
             self.assertEqual(self.llmclient.base_api_domain, "alpha.api.example.com")
+
+    def test_default_url_is_on_the_platforms_api_domain(self):
+        """
+        The default url's host is on the platform's api domain, and the default host on its DNS domain.
+
+        In local Docker, they differ: the default url is a localhost url, which the platform answers
+        on the computer that runs it, while the default host, in the developers' shared DNS zone,
+        is for the A record, the ingress and the certificate.
+        """
+        account_number = self.llmclient.user_profile.account.account_number
+        name = self.llmclient.rfc1034_compliant_name
+        url_host = f"{name}.{account_number}.{smarter_settings.environment_api_domain}"
+        dns_host = f"{name}.{account_number}.{smarter_settings.environment_api_dns_domain}"
+        self.assertEqual(self.llmclient.default_url_host, url_host)
+        self.assertEqual(urlparse(self.llmclient.default_url).netloc, url_host)
+        self.assertEqual(self.llmclient.default_host, dns_host)
+
+    def test_default_url_in_aws(self):
+        """In an AWS environment, the api domain is in DNS, so the default url's host is the default host."""
+        settings = MagicMock(
+            environment="alpha",
+            environment_api_domain="alpha.api.example.com",
+            environment_api_dns_domain="alpha.api.example.com",
+        )
+        with patch("smarter.apps.llmclient.models.llmclient.smarter_settings", settings):
+            self.assertEqual(self.llmclient.default_url_host, self.llmclient.default_host)
+            self.assertEqual(urlparse(self.llmclient.default_url).netloc, self.llmclient.default_host)
+            self.assertTrue(self.llmclient.default_url.startswith("https://"))
+
+    def test_mode_of_the_default_url_and_the_default_host(self):
+        """A request to the default url, or to the default host, is in default mode."""
+        self.assertEqual(self.llmclient.mode(self.llmclient.default_url), LLMClient.Modes.DEFAULT)
+        default_host_url = SmarterValidator.urlify(
+            self.llmclient.default_host, environment=smarter_settings.environment
+        )
+        self.assertEqual(self.llmclient.mode(default_host_url), LLMClient.Modes.DEFAULT)
 
     def test_mode_of_an_unrelated_url(self):
         """A url that isn't the LLMClient's default, sandbox or custom url is of unknown mode."""
