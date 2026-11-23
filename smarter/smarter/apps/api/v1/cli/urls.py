@@ -21,6 +21,8 @@ Endpoints
      - Deploy a resource
    * - /api/v1/cli/logs/
      - Get logs for a resource
+   * - /api/v1/cli/documents/
+     - List, add or remove a Vectorstore's documents
    * - /api/v1/cli/delete/
      - Delete a resource
    * - /api/v1/cli/status/
@@ -41,6 +43,7 @@ from .views.apply import ApiV1CliApplyApiView
 from .views.delete import ApiV1CliDeleteApiView
 from .views.deploy import ApiV1CliDeployApiView
 from .views.describe import ApiV1CliDescribeApiView
+from .views.documents import ApiV1CliDocumentsApiView
 from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
@@ -100,6 +103,7 @@ class ApiV1CliReverseViews:
     describe = to_snake_case(ApiV1CliDescribeApiView.__name__)
     get = to_snake_case(ApiV1CliGetApiView.__name__)
     logs = to_snake_case(ApiV1CliLogsApiView.__name__)
+    documents = to_snake_case(ApiV1CliDocumentsApiView.__name__)
     example_manifest = to_snake_case(ApiV1CliManifestApiView.__name__)
     status = to_snake_case(ApiV1CliStatusApiView.__name__)
     json_schema = to_snake_case(ApiV1CliSchemaApiView.__name__)
@@ -120,6 +124,7 @@ urlpatterns = [
     path("describe/<str:kind>/", ApiV1CliDescribeApiView.as_view(), name=ApiV1CliReverseViews.describe),
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name=ApiV1CliReverseViews.get),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name=ApiV1CliReverseViews.logs),
+    path("documents/<str:kind>/", ApiV1CliDocumentsApiView.as_view(), name=ApiV1CliReverseViews.documents),
     path("example-manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name=ApiV1CliReverseViews.example_manifest),
     path("json-schema/<str:kind>/", ApiV1CliSchemaApiView.as_view(), name=ApiV1CliReverseViews.json_schema),
     # Legacy path, still requested without a trailing slash by smarter-vscode-yaml.

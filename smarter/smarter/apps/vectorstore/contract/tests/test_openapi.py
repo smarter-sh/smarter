@@ -39,6 +39,18 @@ class TestVectorstoreOpenApi(OpenApiResponseMixin, VectorstoreTestBase):
         self.assertValidResponse(template, method, response.json(), status)
         return response.json()
 
+    def test_cli_documents(self):
+        """The cli's documents command, listing and adding, against the cli api's operation."""
+        path = f"/api/v1/cli/documents/Vectorstore/?name={self.vectorstore.name}"
+        template = "/cli/documents/{kind}/"
+        response = self.client.post(path, data={}, format="multipart")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse(template, "post", response.json(), HTTPStatus.OK)
+        response = self.client.post(path, data={"text": "Answers. " * 40, "name": "faq"}, format="multipart")
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content)
+        self.assertValidResponse(template, "post", response.json(), HTTPStatus.OK)
+        self.assertEqual(response.json()["data"]["added"][0]["name"], "faq")
+
     def test_reads(self):
         self.call("get", "/vectorstores/", HTTPStatus.OK)
         self.call("get", "/vectorstores/{id}/", HTTPStatus.OK)

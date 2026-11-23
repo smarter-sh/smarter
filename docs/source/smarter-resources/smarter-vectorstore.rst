@@ -68,6 +68,8 @@ Lifecycle
    smarter apply -f qdrant-self-hosted.yaml           # create or update the Vectorstore
    smarter deploy vectorstore example_knowledge_base   # create its database, in the background
    smarter describe vectorstore example_knowledge_base # its status, conditions, vector count and snapshots
+   smarter documents vectorstore example_knowledge_base --add manual.pdf  # add a document
+   smarter documents vectorstore example_knowledge_base                   # its documents, and their status
    smarter logs vectorstore example_knowledge_base     # a self-hosted Qdrant server's logs
    smarter undeploy vectorstore example_knowledge_base # stop serving; its data is kept
    smarter delete vectorstore example_knowledge_base   # destroy its database and data
@@ -192,7 +194,15 @@ Documents
 
 Documents are added in the web console, in the Documents section of a Vectorstore's details,
 where files can be dropped or chosen and a public url added, each document's status followed as
-it loads, and a document removed. They can also be added through the REST API,
+it loads, and a document removed, or with the ``smarter`` cli's ``documents`` command:
+
+.. code-block:: console
+
+   smarter documents vectorstore example_knowledge_base --add manual.pdf --add faq.md
+   smarter documents vectorstore example_knowledge_base --url https://example.com/faq.html
+   smarter documents vectorstore example_knowledge_base --remove faq.md
+
+They can also be added through the REST API,
 ``/api/v1/vectorstores/<hashed id>/documents/``, or, in bulk, with
 ``manage.py load_vectorstore_documents --name <vectorstore> --path <file or folder>``. Only a
 Vectorstore's owner may add or remove its documents. Anyone it is shared with may see them.
