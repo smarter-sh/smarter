@@ -19,17 +19,13 @@
 # Actions performed:
 #   - Verifies Xcode Command Line Tools, Homebrew, Docker Desktop
 #   - Ensures docker-compose symlink exists
-#   - Installs development dependencies (gcc, python, go, node, nvm, awscli, kubectl, etc.)
+#   - Installs development dependencies (gcc, python, go, node, nvm, awscli, kubectl, helm, etc.)
 #
 # Exit codes:
 #   0 — Success
 #   1 — Missing prerequisite or failed installation
 #
 ###############################################################################
-
-# open "macappstore://itunes.apple.com/app/id497799835"
-xcode-select --install
-
 
 # Verify prerequisites: Xcode, Homebrew, Docker Desktop
 echo "[INFO] Verifying required tools..."
@@ -67,7 +63,7 @@ if [ ! -L "/usr/local/bin/docker-compose" ]; then
 	echo -e "\033[0;34m[INFO]\033[0m Creating symlink for docker-compose in /usr/local/bin..."
 	sudo ln -sf "/Applications/Docker.app/Contents/Resources/cli-plugins/docker-compose" "/usr/local/bin/docker-compose"
 	if [ $? -eq 0 ]; then
-		echo -e "\033[0;32m[OK]\033[0m Symlink created: /usr/local/bin/docker-compose -> /Applications/Docker.app/Contents/Resources/bin/docker-compose"
+		echo -e "\033[0;32m[OK]\033[0m Symlink created: /usr/local/bin/docker-compose -> /Applications/Docker.app/Contents/Resources/cli-plugins/docker-compose"
 	else
 		echo -e "\033[0;31m[ERROR]\033[0m Failed to create symlink for docker-compose."
 		exit 1
@@ -79,7 +75,7 @@ fi
 brew update
 brew upgrade
 brew install gcc python@3.14 go node nvm
-brew install awscli kubectl
+brew install awscli kubectl helm
 brew install blis zlib zstd openblas libffi openssl libxml2 libxslt sqlite mariadb-connector-c geos mysql-client jq k9s
 
 echo ""
@@ -116,6 +112,9 @@ aws --version
 
 echo "kubectl:"
 kubectl version --client
+
+echo "helm:"
+helm version --short
 
 echo "Other Homebrew packages:"
 brew list --versions blis zlib zstd openblas libffi openssl libxml2 libxslt sqlite mariadb-connector-c geos mysql-client jq k9s
