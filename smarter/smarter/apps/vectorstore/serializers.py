@@ -43,7 +43,8 @@ class VectorstoreSerializer(MetaDataWithOwnershipModelSerializer):
     class Meta:
         model = VectorstoreMeta
         kind = VECTORSTORE_KIND
-        fields = "__all__"
+        # the deploy's progress is shown, modeled, by the REST api and the manifest's status.
+        exclude = ["deployment"]
 
     def get_fields(self):
         """Return the serializer's fields, all read-only."""

@@ -21,6 +21,7 @@ from smarter.apps.vectorstore.contract.models import (
     VectorstoreApiStatusValue,
     VectorstoreApiVectorstore,
 )
+from smarter.apps.vectorstore.deployment import VectorstoreDeploymentState
 from smarter.apps.vectorstore.models import (
     VectorstoreDocument,
     VectorstoreMeta,
@@ -33,6 +34,8 @@ from smarter.apps.vectorstore.serializers import (
 )
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
 from smarter.lib.typing import required
+
+DEPLOYMENT_KEYS = ("conditions", "attempt", "maxAttempts", "nextRetryAt", "lastError")
 
 
 def serialized(serializer) -> dict:
@@ -69,7 +72,14 @@ class TestVectorstoreContractModels(VectorstoreTestBase):
     def test_vectorstore_is_the_serializers_output(self):
         self.vectorstore.refresh_from_db()
         model = VectorstoreApiVectorstore.from_model(self.vectorstore)
-        self.assertEqual(model.model_dump(mode="json"), serialized(VectorstoreSerializer(self.vectorstore)))
+        dumped = model.model_dump(mode="json")
+        # the deploy's progress, which the serializer never had, comes from the deployment state.
+        deployment = {key: dumped.pop(key) for key in DEPLOYMENT_KEYS}
+        self.assertEqual(dumped, serialized(VectorstoreSerializer(self.vectorstore)))
+        state = VectorstoreDeploymentState.of(self.vectorstore)
+        self.assertEqual((deployment["attempt"], deployment["maxAttempts"]), (state.attempt, state.maxAttempts))
+        self.assertEqual([c["type"] for c in deployment["conditions"]], [c.type for c in state.conditions])
+        self.assertEqual([c["lastTransitionTime"] is not None for c in deployment["conditions"]], [True] * 4)
         self.assertEqual(
             VectorstoreApiVectorstore.from_model(self.vectorstore, self.admin_user).can_delete,
             user_can_delete(self.vectorstore, "Vectorstore", self.admin_user),

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.1](https://github.com/smarter-sh/smarter/compare/v0.47.0...v0.47.1) (2026-11-23)
+
+### Bug Fixes
+
+* **vectorstore:** deploy in a retrying Celery task, with conditions ([2f775ba](https://github.com/smarter-sh/smarter/commit/2f775ba9f64729db6a3f4fea63f62a6837f07a90))
+
+## [0.47.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.0...v0.47.1-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **vectorstore:** deploy in a retrying Celery task, with conditions ([2f775ba](https://github.com/smarter-sh/smarter/commit/2f775ba9f64729db6a3f4fea63f62a6837f07a90))
+
 ## [0.47.0](https://github.com/smarter-sh/smarter/compare/v0.46.20...v0.47.0) (2026-11-23)
 
 ### Features

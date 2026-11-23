@@ -66,8 +66,8 @@ Lifecycle
 .. code-block:: console
 
    smarter apply -f qdrant-self-hosted.yaml           # create or update the Vectorstore
-   smarter deploy vectorstore example_knowledge_base   # create its database
-   smarter describe vectorstore example_knowledge_base # its status, vector count and snapshots
+   smarter deploy vectorstore example_knowledge_base   # create its database, in the background
+   smarter describe vectorstore example_knowledge_base # its status, conditions, vector count and snapshots
    smarter logs vectorstore example_knowledge_base     # a self-hosted Qdrant server's logs
    smarter undeploy vectorstore example_knowledge_base # stop serving; its data is kept
    smarter delete vectorstore example_knowledge_base   # destroy its database and data
@@ -83,13 +83,13 @@ may describe and search them.
    * - pending
      - Applied, but not deployed.
    * - provisioning
-     - Deployed. Waiting for the database: a new self-hosted Qdrant server takes a minute or two to start.
+     - Deployed. Waiting for the database: a new Pinecone index takes a minute or two to initialize, and a self-hosted Qdrant server several minutes to start. See its conditions.
    * - ready
      - Serving. Documents can be loaded and searched.
    * - stopped
      - Undeployed. A self-hosted server's volume, and so its data, is kept, and a managed index is left as it is. Deploy it again to resume.
    * - failed
-     - See its status message. Celery Beat keeps checking, so a transient error clears itself.
+     - The deploy gave up, or a check of a ready database failed. See its status message and ``lastError``. Celery Beat keeps checking a deployed database, so a transient error clears itself.
    * - deleting
      - Its database is being destroyed.
 
@@ -99,6 +99,62 @@ Delete it, and apply it again, to change them. Its embeddings model can change: 
 then loaded again.
 
 A database with ``index.deletionProtection: true`` cannot be destroyed until it is disabled.
+
+Deploying
+~~~~~~~~~
+
+Creating a vector database takes minutes, and has several independent points of failure: the
+managed service must accept the api key, a self-hosted server needs a volume, an image and a pod
+that starts, and the index must be created and initialized. So ``smarter deploy`` returns at
+once, ``provisioning``, and a Celery task creates the database in the background:
+
+- **What can be checked at once is checked by deploy itself**: a Vectorstore that isn't active,
+  or an api key that Pinecone or Qdrant Cloud refuses, is an error now, not a deploy that fails
+  minutes later.
+- **The task checks the database every 15 seconds** while it waits, e.g. for a volume to be
+  provisioned, without holding a worker between checks.
+- **An error is retried**, after a wait that doubles with each error in a row, up to 5 minutes,
+  e.g. a timeout, or a cluster that is briefly unavailable. An error that retrying can't fix, e.g.
+  a refused api key, or a request that the service rejects, fails the deploy at once.
+- **The deploy fails after 80 checks**, about 20 minutes, with what it was still waiting for.
+
+Follow a deploy with ``smarter describe``. Its ``status`` shows the deploy's progress:
+
+.. code-block:: yaml
+
+   status:
+     vectorstoreStatus: provisioning
+     message: "ImagePullBackOff: Back-off pulling image qdrant/qdrant:v1.99.0-unprivileged"
+     conditions:
+       - type: Credentials
+         status: "True"
+         reason: Accepted
+         message: Smarter generated the server's api key.
+       - type: Volume
+         status: "True"
+         reason: Bound
+         message: The volume is bound.
+       - type: Server
+         status: "False"
+         reason: ImagePullBackOff
+         message: "ImagePullBackOff: Back-off pulling image qdrant/qdrant:v1.99.0-unprivileged"
+       - type: Index
+         status: Unknown
+         reason: Pending
+         message: The index is created once the database is ready.
+     attempt: 6
+     maxAttempts: 80
+     nextRetryAt: "2026-11-23T16:05:15Z"
+     lastError: null
+
+Each condition is one thing that the database needs, as in Kubernetes: ``True`` when it is met,
+``False`` when it isn't, with a one-word ``reason``, and ``Unknown`` before it is checked. Its
+``lastTransitionTime`` says how long it has been so. A Pinecone or Qdrant Cloud Vectorstore has the
+conditions ``Credentials`` and ``Index``, and a self-hosted one also ``Volume`` and ``Server``.
+``lastError`` is the deploy's last error, which may have been retried since. The REST api's
+vectorstore, which the web console shows, has the same fields.
+
+A new deploy replaces one in progress, and ``undeploy`` ends it.
 
 Self-Hosted Qdrant
 ~~~~~~~~~~~~~~~~~~
@@ -174,9 +230,10 @@ Maintenance and Snapshots
 
 Celery Beat runs two tasks:
 
-- ``reconcile_vectorstores``, every 5 minutes: it brings deployed databases to ready, e.g. it
-  creates a new self-hosted server's collection once the server has started, and records each
-  database's status and vector count.
+- ``reconcile_vectorstores``, every 5 minutes: it checks each deployed database, records its
+  status, conditions and vector count, and creates an index that has gone missing. It leaves a
+  deploy in progress to its own task, unless that task was lost, e.g. in a worker's restart, and
+  then it finishes the deploy itself.
 - ``maintain_vectorstores``, hourly: for each ready database, it takes a snapshot if one is due,
   every ``maintenance.snapshotIntervalHours``, deletes the oldest beyond
   ``maintenance.snapshotRetention``, and queues again the documents whose loading was interrupted.
@@ -201,6 +258,7 @@ Technical Reference
    smarter-vectorstore/backends
    smarter-vectorstore/caching
    smarter-vectorstore/commands
+   smarter-vectorstore/deployment
    smarter-vectorstore/documents
    smarter-vectorstore/kubernetes
    smarter-vectorstore/manifest

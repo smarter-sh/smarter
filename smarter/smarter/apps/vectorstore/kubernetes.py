@@ -39,6 +39,7 @@ STORAGE_PATH = "/qdrant/storage"
 SNAPSHOTS_PATH = f"{STORAGE_PATH}/snapshots"
 API_KEY_ENV = "QDRANT__SERVICE__API_KEY"
 UNPRIVILEGED_UID = 1000
+VOLUME_CLAIM_TEMPLATE = "storage"
 STOP_KINDS = ["statefulset", "service", "secret"]
 DESTROY_KINDS = STOP_KINDS + ["persistentvolumeclaim"]
 
@@ -70,13 +71,14 @@ def unprivileged(image: str) -> str:
     return image
 
 
-@dataclass
+@dataclass(frozen=True)
 class QdrantObservation:
-    """The state of a self-hosted Qdrant server."""
+    """The state of a self-hosted Qdrant server, or of its volume."""
 
     exists: bool
     ready: bool
     message: str
+    reason: str = ""
 
 
 class QdrantKubernetes:
@@ -130,7 +132,7 @@ class QdrantKubernetes:
             },
         }
         volume_claim: SmarterDictType = {
-            "metadata": {"name": "storage", "labels": self.labels},
+            "metadata": {"name": VOLUME_CLAIM_TEMPLATE, "labels": self.labels},
             "spec": {
                 "accessModes": ["ReadWriteOnce"],
                 "resources": {"requests": {"storage": config.get("storage") or DEFAULT_STORAGE}},
@@ -166,7 +168,7 @@ class QdrantKubernetes:
                 "runAsUser": UNPRIVILEGED_UID,
                 "allowPrivilegeEscalation": False,
             },
-            "volumeMounts": [{"name": "storage", "mountPath": STORAGE_PATH}],
+            "volumeMounts": [{"name": VOLUME_CLAIM_TEMPLATE, "mountPath": STORAGE_PATH}],
         }
         statefulset = {
             "apiVersion": "apps/v1",
@@ -201,14 +203,47 @@ class QdrantKubernetes:
         except Exception as e:
             raise VectorstoreKubernetesError(f"Kubernetes rejected Vectorstore {self.vectorstore.name}: {e}") from e
 
+    @property
+    def volume_claim_name(self) -> str:
+        """The name of the server's PersistentVolumeClaim, which its StatefulSet creates: storage-<name>-0."""
+        return f"{VOLUME_CLAIM_TEMPLATE}-{self.name}-0"
+
+    def observe_volume(self) -> QdrantObservation:
+        """
+        Whether the Qdrant server's volume exists, and is bound.
+
+        A claim stays Pending while its storage class provisions a volume, e.g. an AWS EBS volume, or
+        forever if none can be provisioned.
+
+        :returns: The volume's state, with its claim's phase as the reason.
+        """
+        claim = self.kubernetes.get_resource("persistentvolumeclaim", self.volume_claim_name, self.namespace)
+        if not claim:
+            return QdrantObservation(
+                exists=False, ready=False, reason="NotFound", message="Waiting for the volume claim to be created."
+            )
+        status = claim.get("status") or {}
+        phase = status.get("phase") or "Pending"
+        if phase == "Bound":
+            return QdrantObservation(exists=True, ready=True, reason=phase, message="The volume is bound.")
+        if phase == "Lost":
+            return QdrantObservation(
+                exists=True, ready=False, reason=phase, message="The volume claim lost its volume."
+            )
+        return QdrantObservation(
+            exists=True, ready=False, reason=phase, message="Waiting for a volume to be provisioned."
+        )
+
     def observe(self) -> QdrantObservation:
-        """Whether the Qdrant server exists, and is ready."""
+        """Whether the Qdrant server exists, and is ready, with the reason if it isn't."""
         statefulset = self.kubernetes.get_resource("statefulset", self.name, self.namespace)
         if not statefulset:
-            return QdrantObservation(exists=False, ready=False, message="The Qdrant server does not exist.")
+            return QdrantObservation(
+                exists=False, ready=False, reason="NotFound", message="The Qdrant server does not exist."
+            )
         status = statefulset.get("status") or {}
         if (status.get("readyReplicas") or 0) >= 1:
-            return QdrantObservation(exists=True, ready=True, message="The Qdrant server is ready.")
+            return QdrantObservation(exists=True, ready=True, reason="Ready", message="The Qdrant server is ready.")
         for pod in self.kubernetes.list_resources("pods", self.namespace, self.selector):
             pod_status = pod.get("status") or {}
             container_statuses = pod_status.get("containerStatuses") or []
@@ -216,10 +251,10 @@ class QdrantKubernetes:
                 state = container.get("state") or {}
                 waiting = state.get("waiting") or {}
                 if waiting.get("reason") in ("CrashLoopBackOff", "ImagePullBackOff", "ErrImagePull"):
-                    return QdrantObservation(
-                        exists=True, ready=False, message=f"{waiting['reason']}: {waiting.get('message', '')}".strip()
-                    )
-        return QdrantObservation(exists=True, ready=False, message="The Qdrant server is starting.")
+                    reason = waiting["reason"]
+                    message = f"{reason}: {waiting.get('message', '')}".strip()
+                    return QdrantObservation(exists=True, ready=False, reason=reason, message=message)
+        return QdrantObservation(exists=True, ready=False, reason="Starting", message="The Qdrant server is starting.")
 
     def stop(self) -> bool:
         """Delete the Qdrant server, but not its volume, so that its data survives."""

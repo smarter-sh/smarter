@@ -1,5 +1,7 @@
 """Test self-hosted Qdrant on Kubernetes: :mod:`smarter.apps.vectorstore.kubernetes`."""
 
+from typing import Optional
+
 import yaml
 
 from smarter.apps.vectorstore.kubernetes import (
@@ -11,6 +13,7 @@ from smarter.apps.vectorstore.kubernetes import (
     VectorstoreKubernetesError,
     unprivileged,
 )
+from smarter.lib.typing import SmarterDictType
 
 from .base_classes import VectorstoreTestBase
 
@@ -81,8 +84,10 @@ class TestQdrantKubernetes(VectorstoreTestBase):
         qdrant = self.qdrant()
         self.kubernetes.statefulset = None
         self.assertFalse(qdrant.observe().exists)
+        self.assertEqual(qdrant.observe().reason, "NotFound")
         self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
         self.assertEqual(qdrant.observe().message, "The Qdrant server is starting.")
+        self.assertEqual(qdrant.observe().reason, "Starting")
         self.kubernetes.pods = [
             {
                 "status": {
@@ -95,5 +100,25 @@ class TestQdrantKubernetes(VectorstoreTestBase):
         observation = qdrant.observe()
         self.assertFalse(observation.ready)
         self.assertIn("ImagePullBackOff", observation.message)
+        self.assertEqual(observation.reason, "ImagePullBackOff")
         self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
         self.assertTrue(qdrant.observe().ready)
+        self.assertEqual(qdrant.observe().reason, "Ready")
+
+    def test_observe_volume(self):
+        """Test the observation of the server's volume claim: missing, pending, lost and bound."""
+        qdrant = self.qdrant()
+        self.assertEqual(qdrant.volume_claim_name, f"storage-{qdrant.name}-0")
+        cases: tuple[tuple[Optional[SmarterDictType], bool, str], ...] = (
+            (None, False, "NotFound"),
+            ({"status": {"phase": "Pending"}}, False, "Pending"),
+            ({"status": {}}, False, "Pending"),
+            ({"status": {"phase": "Lost"}}, False, "Lost"),
+            ({"status": {"phase": "Bound"}}, True, "Bound"),
+        )
+        for claim, ready, reason in cases:
+            with self.subTest(claim=claim):
+                self.kubernetes.volume_claim = claim
+                observation = qdrant.observe_volume()
+                self.assertEqual((observation.ready, observation.reason), (ready, reason))
+                self.assertEqual(observation.exists, claim is not None)
