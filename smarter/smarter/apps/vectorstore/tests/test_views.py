@@ -105,6 +105,8 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.assertEqual(
             (clone.index_name, clone.endpoint_url, clone.deployed_at, clone.api_key_secret), ("", "", None, None)
         )
+        self.assertTrue(service.vectorstore.deployment)
+        self.assertEqual(clone.deployment, {}, "a clone has none of the original's deploy")
         self.assertEqual(clone.spec["embeddings"], service.vectorstore.spec["embeddings"])
         conflict = self.client.post(web_url(WebNames.clone, vectorstore_id=service.vectorstore.pk, new_name=name))
         self.assertEqual(conflict.status_code, 409)

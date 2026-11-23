@@ -1,15 +1,34 @@
 """Test the vectorstore service layer: :mod:`smarter.apps.vectorstore.service`."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.utils import timezone
+from httpx import Headers
+from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 
-from smarter.apps.vectorstore.backends import QdrantBackend
+from smarter.apps.vectorstore.backends import (
+    QdrantBackend,
+    VectorStoreBackendCredentialsError,
+    VectorStoreBackendRejectedError,
+)
+from smarter.apps.vectorstore.deployment import (
+    CREDENTIALS,
+    DEPLOY_CHECK_INTERVAL,
+    FALSE,
+    INDEX,
+    SERVER,
+    TRUE,
+    UNKNOWN,
+    VOLUME,
+    VectorstoreDeploymentState,
+)
 from smarter.apps.vectorstore.models import (
     PAGE_BREAK,
     VectorstoreDocument,
     VectorstoreDocumentStatus,
+    VectorstoreMeta,
     VectorstoreSnapshot,
     VectorstoreStatus,
 )
@@ -39,42 +58,176 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertEqual(repr(service.backend), f"<{service.backend.__class__.__name__} vectorstore={name}>")
 
     def test_deploy_self_hosted(self):
-        """Test that deploy applies the server, generates its API key, and creates the collection once it is ready."""
+        """Test that deploy queues the deploy task, whose check applies the server and creates the collection."""
         service = self.service(self.new_vectorstore("test_service_deploy"))
         received = []
         handler = lambda sender, **kwargs: received.append(kwargs["status"])  # noqa: E731
         vectorstore_status_changed.connect(handler)
         self.addCleanup(vectorstore_status_changed.disconnect, handler)
-        service.deploy()
+        state = service.deploy()
         vectorstore = service.vectorstore
-        self.assertEqual(vectorstore.status, VectorstoreStatus.READY)
-        self.assertEqual(len(self.kubernetes.applied), 1)
+        self.assertEqual(vectorstore.status, VectorstoreStatus.PROVISIONING)
+        self.deploy_task.assert_called_once_with(vectorstore.pk, state.id)
+        self.assertEqual(self.kubernetes.applied, [], "deploy itself creates nothing")
         self.assertIsNotNone(vectorstore.api_key_secret)
         self.assertTrue(vectorstore.api_key_secret.name.startswith("vectorstore_"))  # type: ignore[union-attr]
+        self.assertEqual(self.conditions(service), {CREDENTIALS: (TRUE, "Accepted"), INDEX: (UNKNOWN, "Pending")})
+
+        self.assertIsNone(service.deployment_step(state.id))
+        self.assertEqual(vectorstore.status, VectorstoreStatus.READY)
+        self.assertEqual(len(self.kubernetes.applied), 1)
         self.assertIn(vectorstore.kubernetes_name, vectorstore.endpoint_url)
         self.assertEqual(vectorstore.index_name, vectorstore.default_index_name())
         self.assertIsNotNone(vectorstore.deployed_at)
         self.assertTrue(service.backend.exists())
         self.assertEqual(received, [VectorstoreStatus.PROVISIONING, VectorstoreStatus.READY])
+        self.assertEqual(
+            self.conditions(service),
+            {
+                CREDENTIALS: (TRUE, "Accepted"),
+                VOLUME: (TRUE, "Bound"),
+                SERVER: (TRUE, "Ready"),
+                INDEX: (TRUE, "Ready"),
+            },
+        )
+        stored = VectorstoreDeploymentState.of(VectorstoreMeta.objects.get(pk=vectorstore.pk))
+        self.assertEqual([c.type for c in stored.conditions], [CREDENTIALS, VOLUME, SERVER, INDEX])
+        self.assertEqual((stored.attempt, stored.provisioned, stored.in_progress), (1, True, False))
 
-    def test_provisioning_until_ready(self):
-        """Test that a server that is starting stays provisioning, and reconcile makes it ready once it has started."""
-        service = self.service(self.new_vectorstore("test_service_provisioning"))
+    @staticmethod
+    def conditions(service: VectorstoreService) -> dict[str, tuple[str, str]]:
+        """The deploy's conditions, as {type: (status, reason)}."""
+        return {c.type: (c.status, c.reason) for c in service.deployment.conditions}
+
+    def test_waits_for_the_volume_then_the_server(self):
+        """Test that each check records what the server waits for, and checks again every few seconds."""
+        service = self.service(self.new_vectorstore("test_service_waits"))
+        self.kubernetes.volume_claim = {"status": {"phase": "Pending"}}
         self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
-        service.deploy()
+        state = service.deploy()
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL)
         self.assertEqual(service.vectorstore.status, VectorstoreStatus.PROVISIONING)
+        self.assertEqual(service.vectorstore.status_message, "Waiting for a volume to be provisioned.")
+        self.assertEqual(self.conditions(service)[VOLUME], (FALSE, "Pending"))
+        self.assertIsNotNone(service.deployment.nextRetryAt)
         self.assertFalse(service.backend.exists())
-        self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
-        self.assertEqual(service.reconcile(), VectorstoreStatus.READY)
-        self.assertTrue(service.backend.exists())
 
-    def test_deploy_failure_and_inactive(self):
-        service = self.service(self.new_vectorstore("test_service_failure"))
-        self.kubernetes.fail_apply = "quota exceeded"
-        with self.assertRaises(Exception):
-            service.deploy()
+        self.kubernetes.volume_claim = {"status": {"phase": "Bound"}}
+        self.kubernetes.pods = [
+            {"status": {"containerStatuses": [{"state": {"waiting": {"reason": "ImagePullBackOff", "message": "x"}}}]}}
+        ]
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL)
+        self.assertEqual(self.conditions(service)[VOLUME], (TRUE, "Bound"))
+        self.assertEqual(self.conditions(service)[SERVER], (FALSE, "ImagePullBackOff"))
+        self.assertEqual(len(self.kubernetes.applied), 1, "the server is applied once")
+
+        self.kubernetes.pods = []
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
+        self.assertIsNone(service.deployment_step(state.id))
+        self.assertEqual(service.vectorstore.status, VectorstoreStatus.READY)
+        self.assertEqual(service.deployment.attempt, 3)
+
+    def test_errors_are_retried_with_backoff(self):
+        """Test that an error is recorded, and checked again later after each error in a row, until it passes."""
+        service = self.service(self.new_vectorstore("test_service_backoff"))
+        state = service.deploy()
+        self.kubernetes.fail_apply = "the api server timed out"
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL * 2)
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL * 4)
+        vectorstore = service.vectorstore
+        self.assertEqual(vectorstore.status, VectorstoreStatus.PROVISIONING)
+        self.assertTrue(vectorstore.status_message.startswith("Retrying in 60s, after check 2 of 80"))
+        self.assertIn("the api server timed out", str(service.deployment.lastError))
+        self.kubernetes.fail_apply = None
+        self.assertIsNone(service.deployment_step(state.id))
+        self.assertEqual(vectorstore.status, VectorstoreStatus.READY)
+        self.assertEqual(service.deployment.consecutiveErrors, 0)
+
+    def test_a_deploy_gives_up(self):
+        """Test that a deploy fails after its last check, with what it was waiting for."""
+        service = self.service(self.new_vectorstore("test_service_gives_up"))
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
+        state = service.deploy()
+        service.deployment.maxAttempts = 2
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL)
+        self.assertIsNone(service.deployment_step(state.id))
         self.assertEqual(service.vectorstore.status, VectorstoreStatus.FAILED)
+        self.assertEqual(
+            service.vectorstore.status_message, "Deploy failed after 2 checks: The Qdrant server is starting."
+        )
+        self.assertFalse(service.deployment.in_progress)
+
+    def test_a_refused_api_key_fails_at_once(self):
+        """Test that an api key that the database refuses fails the deploy now, without queuing the task."""
+        vectorstore = self.new_vectorstore("test_service_refused", hosting="managed", selfHosted=None)
+        client = MagicMock()
+        client.collection_exists.side_effect = UnexpectedResponse(401, "Unauthorized", b"", Headers())
+        service = self.service(vectorstore, client=client)
+        with self.assertRaisesRegex(VectorStoreBackendCredentialsError, "Qdrant refused the api key"):
+            service.deploy()
+        self.deploy_task.assert_not_called()
+        self.assertEqual(vectorstore.status, VectorstoreStatus.FAILED)
+        self.assertIsNone(vectorstore.deployed_at, "Celery Beat leaves it alone")
+        self.assertEqual(self.conditions(service)[CREDENTIALS], (FALSE, "Refused"))
+
+    def test_an_unreachable_database_is_checked_again(self):
+        """Test that a database that can't be reached yet is no error for deploy, and the task checks it again."""
+        vectorstore = self.new_vectorstore("test_service_unreachable", hosting="managed", selfHosted=None)
+        client = MagicMock(wraps=QdrantClient(location=":memory:"))
+        client.collection_exists.side_effect = TimeoutError("timed out")
+        service = self.service(vectorstore, client=client)
+        state = service.deploy()
+        self.assertEqual(self.conditions(service)[CREDENTIALS], (UNKNOWN, "Unreachable"))
+        self.assertEqual(service.deployment_step(state.id), DEPLOY_CHECK_INTERVAL * 2)
+        client.collection_exists.side_effect = None
+        client.collection_exists.return_value = False
+        self.assertIsNone(service.deployment_step(state.id))
+        self.assertEqual(vectorstore.status, VectorstoreStatus.READY)
+        self.assertEqual(self.conditions(service)[CREDENTIALS], (TRUE, "Accepted"))
+
+    def test_a_rejected_request_fails_at_once(self):
+        """Test that a request that the database would refuse again, e.g. a full quota, fails the deploy."""
+        service = self.service(self.new_vectorstore("test_service_rejected"))
+        state = service.deploy()
+        with patch.object(service.backend, "create", side_effect=VectorStoreBackendRejectedError("quota exceeded")):
+            self.assertIsNone(service.deployment_step(state.id))
+        self.assertEqual(service.vectorstore.status, VectorstoreStatus.FAILED)
+        self.assertTrue(service.vectorstore.status_message.startswith("Deploy failed: "))
         self.assertIn("quota exceeded", service.vectorstore.status_message)
+        self.assertIn("quota exceeded", str(service.deployment.lastError))
+
+    def test_a_replaced_or_undeployed_deploy_stops(self):
+        """Test that the task of a deploy that another deploy replaced, or that was undeployed, does nothing."""
+        service = self.service(self.new_vectorstore("test_service_replaced"))
+        first = service.deploy()
+        second = service.deploy()
+        self.assertIsNone(service.deployment_step(first.id))
+        self.assertEqual(service.deployment.attempt, 0)
+        service.undeploy()
+        self.assertIsNone(service.deployment_step(second.id))
+        self.assertFalse(service.deployment.in_progress)
+        self.assertEqual(self.kubernetes.applied, [])
+
+    def test_reconcile_leaves_a_deploy_to_its_task_until_it_stalls(self):
+        """Test that Celery Beat's reconcile doesn't check a deploy in progress, but takes over one that lost its task."""
+        service = self.service(self.new_vectorstore("test_service_reconcile"))
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
+        state = service.deploy()
+        service.deployment_step(state.id)
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
+        self.assertEqual(service.reconcile(), VectorstoreStatus.PROVISIONING)
+        service.deployment.nextRetryAt = timezone.now() - timedelta(hours=1)
+        self.assertEqual(service.reconcile(), VectorstoreStatus.READY)
+        self.assertFalse(service.deployment.in_progress)
+        self.assertIsNotNone(service.vectorstore.last_checked_at)
+
+    def test_reconcile_failure_and_inactive(self):
+        """Test that reconcile marks a ready database failed when it can't be reached, and deploy refuses an inactive one."""
+        service = self.ready_service("test_service_failure")
+        with patch.object(service.backend, "exists", side_effect=RuntimeError("connection reset")):
+            self.assertEqual(service.reconcile(), VectorstoreStatus.FAILED)
+        self.assertEqual(service.vectorstore.status_message, "connection reset")
+        self.assertEqual(service.reconcile(), VectorstoreStatus.READY)
         inactive = self.service(self.new_vectorstore("test_service_inactive"))
         inactive.vectorstore.is_active = False
         with self.assertRaises(VectorstoreServiceError):

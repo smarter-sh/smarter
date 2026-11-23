@@ -18,7 +18,9 @@ from .base import (
     SmarterVectorstoreBackend,
     SnapshotInfo,
     VectorStoreBackendConnectionError,
+    VectorStoreBackendCredentialsError,
     VectorStoreBackendError,
+    VectorStoreBackendRejectedError,
 )
 from .pinecone import PineconeBackend
 from .qdrant import QdrantBackend
@@ -59,6 +61,8 @@ __all__ = [
     "SmarterVectorstoreBackend",
     "SnapshotInfo",
     "VectorStoreBackendConnectionError",
+    "VectorStoreBackendCredentialsError",
     "VectorStoreBackendError",
+    "VectorStoreBackendRejectedError",
     "get_backend",
 ]

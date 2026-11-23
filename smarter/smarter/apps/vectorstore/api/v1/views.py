@@ -201,7 +201,10 @@ class VectorstoreDeployView(VectorstoreViewBase):
         """
         Deploy the vectorstore: create its database, and, if self-hosted, its server.
 
-        Invalidates the owner's cached vectorstores.
+        It returns at once, provisioning, and a Celery task creates the database: follow its
+        ``conditions``, ``attempt`` and ``lastError`` with the vectorstore's status. An inactive
+        vectorstore, or an api key that the database refuses, is a 400 now. Invalidates the owner's
+        cached vectorstores.
 
         :param request: The request.
         :param kwargs: The url's arguments: ``hashed_id`` or ``vectorstore_id``.

@@ -7,11 +7,15 @@ the management commands all go through it.
 
 **Lifecycle**
 
-- :meth:`~VectorstoreService.deploy`: create the database. A self-hosted Qdrant server takes a
-  minute or two to start, so the collection is created by :meth:`~VectorstoreService.reconcile`
-  once it is reachable.
-- :meth:`~VectorstoreService.reconcile`: Celery Beat runs it every few minutes. It creates a
-  missing index or collection, and records the status and statistics.
+- :meth:`~VectorstoreService.deploy`: check the api key, and queue the deploy task, which creates
+  the database. A Pinecone index takes a minute or two to initialize, and a self-hosted Qdrant
+  server needs a volume and a pod, so the task checks again every few seconds, with
+  :meth:`~VectorstoreService.deployment_step`, records each condition, retries after errors, and
+  fails the deploy after an error that retrying can't fix, or too many checks. See
+  :mod:`smarter.apps.vectorstore.deployment`.
+- :meth:`~VectorstoreService.reconcile`: Celery Beat runs it every few minutes. It checks deployed
+  databases, creates a missing index or collection, records the status and statistics, and takes
+  over a deploy whose task was lost.
 - :meth:`~VectorstoreService.undeploy`: stop serving. A self-hosted server's volume, and so its
   data, is kept, and a managed index is left as it is.
 - :meth:`~VectorstoreService.destroy`: delete the database and its data, unless
@@ -44,7 +48,17 @@ from .backends import (
     SEARCH_TYPES,
     SearchResult,
     SmarterVectorstoreBackend,
+    VectorStoreBackendCredentialsError,
+    VectorStoreBackendRejectedError,
     get_backend,
+)
+from .deployment import (
+    CREDENTIALS,
+    FALSE,
+    INDEX,
+    TRUE,
+    UNKNOWN,
+    VectorstoreDeploymentState,
 )
 from .embeddings import get_embeddings
 from .extract import extract_text
@@ -83,6 +97,10 @@ class VectorstoreServiceError(SmarterException):
     """A vectorstore operation is not possible, e.g. destroying a protected database."""
 
 
+NOT_RETRYABLE = (VectorStoreBackendRejectedError, VectorstoreServiceError)
+"""The errors that fail a deploy at once, because retrying wouldn't help, e.g. a refused api key."""
+
+
 class VectorstoreService:  # pylint: disable=too-many-public-methods
     """
     The operations of one vectorstore.
@@ -103,6 +121,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         self.vectorstore = vectorstore
         self._embeddings = embeddings
         self._backend = backend
+        self._deployment: Optional[VectorstoreDeploymentState] = None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} vectorstore={self.vectorstore.name}>"
@@ -169,13 +188,29 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
     # -------------------------------------------------------------------------
     # lifecycle
     # -------------------------------------------------------------------------
-    def deploy(self) -> None:
+    @property
+    def deployment(self) -> VectorstoreDeploymentState:
+        """The progress of the vectorstore's last deploy, read when it is first used."""
+        if self._deployment is None:
+            self._deployment = VectorstoreDeploymentState.of(self.vectorstore)
+        return self._deployment
+
+    def save_deployment(self) -> None:
+        """Save the progress of the vectorstore's deploy."""
+        self.deployment.save_to(self.vectorstore)
+
+    def start_deployment(self) -> VectorstoreDeploymentState:
         """
-        Create the database.
+        Begin a deploy: check what can be checked at once, and record a new deploy, provisioning.
 
-        A self-hosted server is created now, and its collection once it is reachable.
+        It doesn't create anything: :meth:`deployment_step` does, in the deploy task. It checks that the
+        vectorstore is active, and that its database accepts its api key, so that a refused key is
+        an error now, rather than a deploy that fails minutes later. A database that can't be reached
+        isn't an error yet: the deploy task tries again.
 
-        :raises VectorstoreServiceError: if the vectorstore is inactive.
+        :returns: The new deploy's state.
+        :raises VectorstoreServiceError: If the vectorstore is inactive.
+        :raises VectorStoreBackendRejectedError: If the database refuses its api key, which fails the deploy.
         """
         vectorstore = self.vectorstore
         if not vectorstore.is_active:
@@ -184,26 +219,204 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             vectorstore.index_name = vectorstore.default_index_name()
         if vectorstore.is_self_hosted:
             self.ensure_api_key()
+        state = VectorstoreDeploymentState.start()
+        self._deployment = state
         try:
-            self.backend.provision()
-        except Exception as e:
-            self.set_status(VectorstoreStatus.FAILED, f"Deploy failed: {e}")
+            message = self.backend.check_credentials()
+        except NOT_RETRYABLE as e:
+            self.record_error(e)
+            self.fail_deployment(f"Deploy failed: {e}")
             raise
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # e.g. a timeout: the deploy task checks again.
+            state.set_condition(CREDENTIALS, UNKNOWN, "Unreachable", str(e))
+            state.lastError = str(e)
+        else:
+            state.set_condition(CREDENTIALS, TRUE, "Accepted", message)
+        state.set_condition(INDEX, UNKNOWN, "Pending", "The index is created once the database is ready.")
+        vectorstore.deployed_at = timezone.now()
+        vectorstore.save(update_fields=["index_name", "deployed_at", "updated_at"])
+        self.save_deployment()
+        self.set_status(VectorstoreStatus.PROVISIONING, "Deploying.")
+        return state
+
+    def deploy(self) -> VectorstoreDeploymentState:
+        """
+        Deploy the vectorstore: begin a deploy, and queue the deploy task, which creates the database.
+
+        It returns at once, provisioning. The task
+        :func:`~smarter.apps.vectorstore.tasks.deploy_vectorstore` is queued once the current
+        transaction commits, and checks the database until it is ready, or the deploy fails. Its
+        progress is in :attr:`deployment`, which the manifest's status shows.
+
+        :returns: The new deploy's state.
+        :raises VectorstoreServiceError: If the vectorstore is inactive.
+        :raises VectorStoreBackendRejectedError: If the database refuses its api key.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import deploy_vectorstore
+
+        state = self.start_deployment()
+        vectorstore_id = self.vectorstore.pk
+        deployment_id = state.id
+        transaction.on_commit(lambda: deploy_vectorstore.delay(vectorstore_id, deployment_id))
+        return state
+
+    def record_error(self, error: Exception) -> None:
+        """
+        Record an error of the vectorstore's deploy, and the condition that it shows, if any.
+
+        :param error: The error.
+        """
+        state = self.deployment
+        state.lastError = str(error)
+        state.consecutiveErrors += 1
+        if isinstance(error, VectorStoreBackendCredentialsError):
+            state.set_condition(CREDENTIALS, FALSE, "Refused", str(error))
+        self.save_deployment()
+
+    def fail_deployment(self, message: str) -> None:
+        """
+        End the vectorstore's deploy, failed.
+
+        :param message: Why, for a person.
+        """
+        state = self.deployment
+        state.finishedAt = timezone.now()
+        state.nextRetryAt = None
+        self.save_deployment()
+        self.set_status(VectorstoreStatus.FAILED, message)
+
+    def finish_deployment(self) -> None:
+        """End the vectorstore's deploy, if one is in progress, e.g. when it is undeployed."""
+        state = self.deployment
+        if not state.in_progress:
+            return
+        state.finishedAt = timezone.now()
+        state.nextRetryAt = None
+        self.save_deployment()
+
+    def advance_deployment(self, provision: bool = False) -> str:
+        """
+        Bring the database one step closer to ready, and record its conditions.
+
+        It creates the infrastructure, if ``provision``, observes it, creates the index or
+        collection once the infrastructure is ready, and checks that the index is ready. Nothing in
+        it waits: what isn't ready yet is recorded, and checked again by the next call.
+
+        :param provision: Create the infrastructure that Smarter runs, e.g. a self-hosted server.
+        :returns: The status: provisioning, or ready.
+        :raises Exception: Whatever the backend raises, e.g. a database that can't be reached.
+        """
+        vectorstore = self.vectorstore
+        state = self.deployment
+        if provision:
+            self.provision()
+        infrastructure = self.backend.infrastructure_conditions()
+        for condition in infrastructure:
+            state.set_condition(condition.type, condition.status, condition.reason, condition.message)
+        for condition in infrastructure:
+            if condition.status != TRUE:
+                self.save_deployment()
+                self.set_status(VectorstoreStatus.PROVISIONING, condition.message)
+                return vectorstore.status
+        exists = self.backend.exists()
+        credentials = state.condition(CREDENTIALS)
+        if credentials is None or credentials.status != TRUE:
+            state.set_condition(CREDENTIALS, TRUE, "Accepted", "The database accepted the api key.")
+        if not exists:
+            self.backend.create()
+            logger.info("created %s of %s", vectorstore.index_name, vectorstore)
+        ready, message = self.backend.index_ready()
+        if not ready:
+            state.set_condition(INDEX, FALSE, "Initializing", message)
+            self.save_deployment()
+            self.set_status(VectorstoreStatus.PROVISIONING, message)
+            return vectorstore.status
+        state.set_condition(INDEX, TRUE, "Ready", f"{vectorstore.index_name} is ready.")
+        state.consecutiveErrors = 0
+        self.save_deployment()
+        self.refresh_stats()
+        self.set_status(VectorstoreStatus.READY, "")
+        return vectorstore.status
+
+    def provision(self) -> None:
+        """Create the database's infrastructure, without waiting for it, and record where it is reached."""
+        vectorstore = self.vectorstore
+        self.backend.provision()
         if vectorstore.is_self_hosted:
             vectorstore.endpoint_url = self.backend.kubernetes.endpoint  # type: ignore[attr-defined]
         elif vectorstore.connection:
             vectorstore.endpoint_url = vectorstore.connection.base_url or ""
-        vectorstore.deployed_at = timezone.now()
-        vectorstore.save(update_fields=["index_name", "endpoint_url", "deployed_at", "updated_at"])
-        self.set_status(VectorstoreStatus.PROVISIONING, "Deployed. Waiting for the database.")
+        vectorstore.save(update_fields=["endpoint_url", "updated_at"])
+        self.deployment.provisioned = True
+        self.save_deployment()
         vectorstore_deployed.send(sender=self.__class__, vectorstore=vectorstore)
-        self.reconcile()
+
+    def deployment_step(self, deployment_id: str) -> Optional[int]:
+        """
+        Make one check of a deploy, as the deploy task does, and say when to check again.
+
+        A deploy that another deploy replaced, or that was undeployed, does nothing. An error that
+        retrying can't fix, e.g. a refused api key, fails the deploy at once. Any other error is
+        recorded, and checked again after a wait that doubles with each error in a row. The deploy
+        fails after :data:`~smarter.apps.vectorstore.deployment.DEPLOY_MAX_ATTEMPTS` checks.
+
+        :param deployment_id: The id of the deploy that the task runs.
+        :returns: The seconds until the next check, or None if the deploy has ended.
+        """
+        vectorstore = self.vectorstore
+        state = self.deployment
+        if state.id != deployment_id or not state.in_progress:
+            logger.info("%s: deploy %s was replaced, or has ended.", vectorstore, deployment_id)
+            return None
+        if vectorstore.status != VectorstoreStatus.PROVISIONING:
+            logger.info("%s is %s: deploy %s has ended.", vectorstore, vectorstore.status, deployment_id)
+            self.finish_deployment()
+            return None
+        state.attempt += 1
+        state.nextRetryAt = None
+        try:
+            status = self.advance_deployment(provision=not state.provisioned)
+        except NOT_RETRYABLE as e:
+            self.record_error(e)
+            self.fail_deployment(f"Deploy failed: {e}")
+            return None
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.warning("%s: check %s of %s: %s", vectorstore, state.attempt, state.maxAttempts, e)
+            self.record_error(e)
+            return self.check_again(str(e))
+        if status == VectorstoreStatus.READY:
+            self.finish_deployment()
+            return None
+        return self.check_again(vectorstore.status_message)
+
+    def check_again(self, reason: str) -> Optional[int]:
+        """
+        Schedule the deploy's next check, or fail the deploy if it has made all of its checks.
+
+        :param reason: What the deploy waits for, or its last error.
+        :returns: The seconds until the next check, or None if the deploy failed.
+        """
+        state = self.deployment
+        if state.attempt >= state.maxAttempts:
+            self.fail_deployment(f"Deploy failed after {state.attempt} checks: {reason}")
+            return None
+        seconds = state.backoff()
+        state.nextRetryAt = timezone.now() + timedelta(seconds=seconds)
+        self.save_deployment()
+        if state.consecutiveErrors:
+            message = f"Retrying in {seconds}s, after check {state.attempt} of {state.maxAttempts}: {reason}"
+            self.set_status(VectorstoreStatus.PROVISIONING, message)
+        return seconds
 
     def reconcile(self) -> str:
         """
-        Bring a deployed database to ready: create its index or collection once it is reachable.
+        Check a deployed database, record its status, conditions and statistics, and create a missing index.
 
-        It records the status, and the database's statistics. It never raises.
+        Celery Beat runs it every few minutes, as a safety net. It leaves a deploy in progress to the
+        deploy task, unless the deploy lost its task, and then it takes the deploy over. An error
+        marks the vectorstore failed, until a later check succeeds. It never raises.
 
         :returns: the status.
         """
@@ -216,22 +429,17 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             return vectorstore.status
         if vectorstore.status == VectorstoreStatus.FAILED and not vectorstore.deployed_at:
             return vectorstore.status
+        state = self.deployment
+        if state.in_progress and not state.is_stalled():
+            return vectorstore.status
         try:
-            ready, message = self.backend.infrastructure_ready()
-            if not ready:
-                self.set_status(VectorstoreStatus.PROVISIONING, message)
-                return vectorstore.status
-            if not self.backend.exists():
-                self.backend.create()
-                logger.info(
-                    "created %s of %s",
-                    vectorstore.index_name,
-                    vectorstore,
-                )
-            self.refresh_stats()
-            self.set_status(VectorstoreStatus.READY, "")
+            provision = state.in_progress and not state.provisioned
+            status = self.advance_deployment(provision=provision)
+            if status == VectorstoreStatus.READY:
+                self.finish_deployment()
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.warning("%s: %s", vectorstore, e)
+            self.record_error(e)
             self.set_status(VectorstoreStatus.FAILED, str(e))
         finally:
             vectorstore.last_checked_at = timezone.now()
@@ -256,6 +464,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         A self-hosted server is deleted, but its volume and data are kept.
         """
         self.backend.stop()
+        self.finish_deployment()
         self.set_status(VectorstoreStatus.STOPPED, "Undeployed. Its data is kept. Deploy it again to resume.")
 
     def destroy(self) -> None:
@@ -269,6 +478,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             raise VectorstoreServiceError(
                 f"Vectorstore {vectorstore.name} has deletionProtection. Disable it, and apply, to destroy it."
             )
+        self.finish_deployment()
         self.set_status(VectorstoreStatus.DELETING, "Destroying the database.")
         try:
             self.backend.destroy()

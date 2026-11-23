@@ -2,12 +2,21 @@
 
 from unittest.mock import MagicMock
 
+from pinecone.exceptions import (
+    ForbiddenException,
+    PineconeApiException,
+    UnauthorizedException,
+)
+
 from smarter.apps.vectorstore.backends import (
     PineconeBackend,
     VectorStoreBackendConnectionError,
+    VectorStoreBackendCredentialsError,
     VectorStoreBackendError,
+    VectorStoreBackendRejectedError,
     get_backend,
 )
+from smarter.apps.vectorstore.backends.pinecone import DONT_WAIT, pinecone_error
 
 from .base_classes import VectorstoreTestBase
 
@@ -42,23 +51,50 @@ class TestPineconeBackend(VectorstoreTestBase):
         self.assertEqual((kwargs["spec"].cloud, kwargs["spec"].region), ("gcp", "europe-west4"))
         self.assertEqual((kwargs["dimension"], kwargs["metric"]), (32, "cosine"))
         self.assertEqual(kwargs["deletion_protection"], "enabled")
+        self.assertEqual(kwargs["timeout"], DONT_WAIT, "it never waits for Pinecone to initialize the index")
+        client.create_index.side_effect = PineconeApiException("dimension must be positive", 400)
+        with self.assertRaises(VectorStoreBackendRejectedError):
+            backend.create()
 
     def test_lifecycle(self):
         backend, client = self.backend()
         client.has_index.return_value = True
+        self.assertEqual(backend.check_credentials(), "Pinecone accepted the api key.")
+        self.assertEqual(backend.infrastructure_ready(), (True, ""), "Pinecone runs the infrastructure")
+        self.assertEqual(backend.infrastructure_conditions(), [])
         client.describe_index.return_value.status = {"ready": False}
-        self.assertEqual(backend.infrastructure_ready(), (False, "Pinecone is initializing the index."))
+        self.assertEqual(backend.index_ready(), (False, "Pinecone is initializing the index."))
         client.describe_index.return_value.status = {"ready": True}
-        self.assertTrue(backend.infrastructure_ready()[0])
+        self.assertTrue(backend.index_ready()[0])
+        client.describe_index.side_effect = UnauthorizedException("Invalid API key")
+        with self.assertRaises(VectorStoreBackendCredentialsError):
+            backend.index_ready()
         client.Index.return_value.describe_index_stats.return_value = {"total_vector_count": 7, "dimension": 32}
         self.assertEqual(backend.stats()["vector_count"], 7)
         backend.delete(["a", "b"])
         client.Index.return_value.delete.assert_called_once_with(ids=["a", "b"])
         backend.drop()
-        client.delete_index.assert_called_once_with(backend.index_name)
-        client.has_index.side_effect = RuntimeError("401")
+        client.delete_index.assert_called_once_with(backend.index_name, timeout=DONT_WAIT)
+        client.has_index.side_effect = RuntimeError("connection reset")
         with self.assertRaises(VectorStoreBackendConnectionError):
             backend.exists()
+        client.has_index.side_effect = UnauthorizedException("Invalid API key")
+        with self.assertRaisesRegex(VectorStoreBackendCredentialsError, "Pinecone refused the api key"):
+            backend.check_credentials()
+
+    def test_errors(self):
+        """Test that Pinecone's errors are classified by whether retrying could help."""
+        cases = (
+            (UnauthorizedException("Invalid API key"), VectorStoreBackendCredentialsError),
+            (ForbiddenException("Quota exceeded"), VectorStoreBackendRejectedError),
+            (PineconeApiException("Unprocessable", 422), VectorStoreBackendRejectedError),
+            (PineconeApiException("Not found", 404), VectorStoreBackendConnectionError),
+            (PineconeApiException("Unavailable", 503), VectorStoreBackendConnectionError),
+            (TimeoutError("timed out"), VectorStoreBackendConnectionError),
+        )
+        for error, expected in cases:
+            with self.subTest(error=error):
+                self.assertIs(type(pinecone_error("create the index", error)), expected)
 
     def test_backups(self):
         """Test that snapshots are Pinecone backups, and that restoring replaces the index."""
@@ -74,7 +110,7 @@ class TestPineconeBackend(VectorstoreTestBase):
         client.delete_backup.assert_called_once_with(backup_id="bk-1")
         client.has_index.return_value = True
         backend.restore_snapshot("bk-1")
-        client.delete_index.assert_called_once()
+        client.delete_index.assert_called_once_with(backend.index_name)  # waits: the backup needs the name
         self.assertEqual(client.create_index_from_backup.call_args.kwargs["backup_id"], "bk-1")
         client.create_backup.side_effect = RuntimeError("Backups require a paid plan")
         with self.assertRaisesRegex(VectorStoreBackendError, "paid plan"):
@@ -155,5 +191,5 @@ class TestPineconeBackend(VectorstoreTestBase):
             "test_pinecone_no_key", backend="pinecone", hosting="managed", selfHosted=None
         )
         vectorstore.connection = None
-        with self.assertRaises(VectorStoreBackendConnectionError):
+        with self.assertRaises(VectorStoreBackendCredentialsError):
             _ = PineconeBackend(vectorstore).client

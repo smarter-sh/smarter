@@ -4,11 +4,12 @@ They are called directly, i.e. synchronously.
 """
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.utils import timezone
 
 from smarter.apps.vectorstore import tasks
+from smarter.apps.vectorstore.deployment import DEPLOY_CHECK_INTERVAL
 from smarter.apps.vectorstore.models import (
     VectorstoreDocument,
     VectorstoreDocumentStatus,
@@ -22,8 +23,22 @@ class TestVectorstoreTasks(VectorstoreTestBase):
     """Test the tasks, with the test's service in place of the default one."""
 
     def patch_service(self, service):
-        """Make the tasks use the test's service: its in-memory Qdrant and fake embeddings."""
-        patcher = patch.object(tasks, "VectorstoreService", side_effect=lambda vectorstore: service)
+        """
+        Make the tasks use the test's service, with its in-memory Qdrant and fake embeddings, for its vectorstore.
+
+        Any other vectorstore in the database, e.g. a developer's, gets a service that does nothing, so that
+        the scheduled tasks, which run for every vectorstore, neither count it nor reach its database.
+        """
+
+        def service_for(vectorstore):
+            if vectorstore.pk == service.vectorstore.pk:
+                return service
+            idle = MagicMock()
+            idle.maintain.return_value = {"retry": []}
+            idle.reconcile.return_value = vectorstore.status
+            return idle
+
+        patcher = patch.object(tasks, "VectorstoreService", side_effect=service_for)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -44,12 +59,32 @@ class TestVectorstoreTasks(VectorstoreTestBase):
         document, _ = service.add_document(name="a.txt", text="text " * 50)
         self.assertIsNone(tasks.load_vectorstore_document(document.pk))
 
+    def test_deploy(self):
+        """Test that the deploy task checks once, and queues itself again until the vectorstore is ready."""
+        service = self.service(self.new_vectorstore("test_tasks_deploy"))
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
+        state = service.deploy()
+        self.patch_service(service)
+        pk = service.vectorstore.pk
+        with patch.object(tasks.deploy_vectorstore, "apply_async") as again:
+            self.assertEqual(tasks.deploy_vectorstore(pk, state.id), VectorstoreStatus.PROVISIONING)
+            again.assert_called_once_with(
+                kwargs={"vectorstore_id": pk, "deployment_id": state.id}, countdown=DEPLOY_CHECK_INTERVAL
+            )
+            again.reset_mock()
+            self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
+            self.assertEqual(tasks.deploy_vectorstore(pk, state.id), VectorstoreStatus.READY)
+            again.assert_not_called()
+            self.assertIsNone(tasks.deploy_vectorstore(0, state.id))
+
     def test_reconcile(self):
-        """Test that reconcile brings a provisioning vectorstore to ready, once its server has started."""
+        """Test that reconcile takes over a deploy that lost its task, and brings it to ready."""
         service = self.service(self.new_vectorstore("test_tasks_reconcile"))
         self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
-        service.deploy()
+        self.deploy_now(service)
         self.assertEqual(service.vectorstore.status, VectorstoreStatus.PROVISIONING)
+        service.deployment.nextRetryAt = timezone.now() - timedelta(hours=1)
+        service.save_deployment()
         self.patch_service(service)
         self.kubernetes.statefulset = {"status": {"readyReplicas": 1}}
         result = tasks.reconcile_vectorstores()
