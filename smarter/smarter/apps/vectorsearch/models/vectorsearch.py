@@ -30,9 +30,10 @@ class Vectorsearch(MetaDataWithOwnershipModel):
     execute a semantic search against a single VectorstoreMeta. It does not
     itself hold embeddings/documents -- it references a VectorstoreMeta for
     that -- and it does not generate text. Combine a Vectorsearch with a
-    Smarter LLMClient to build a RAG pipeline: the top-k results returned
-    by the Vectorsearch are injected into the LLMClient's system prompt
-    at inference time.
+    Smarter LLMClient to build a RAG pipeline: an LLMClient that lists it in
+    its manifest's ``spec.vectorsearches`` offers it to the LLM as a search
+    tool, which the LLM calls with a query of its own, and answers from the
+    top-k passages that it returns. See :mod:`smarter.apps.vectorsearch.toolkit`.
     """
 
     vectorstore = models.ForeignKey(

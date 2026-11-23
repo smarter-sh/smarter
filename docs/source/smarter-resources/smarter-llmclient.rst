@@ -180,6 +180,23 @@ Smarter knows these rules for every OpenAI model that it offers, and applies the
   that it doesn't know, from the provider's errors, and answers without the tools of a model that
   can't use them, rather than fail.
 
+Searching Your Documents
+------------------------
+
+An LLMClient answers from your own documents, such as manuals, handbooks and policies, through the
+:doc:`Vectorsearches <smarter-vectorsearch>` that its manifest lists in ``spec.vectorsearches``. Each
+is offered to the model as a search tool of its own, which the model calls with a query of its own
+when a question needs the documents, and answers from the passages that the search returns.
+
+.. code-block:: yaml
+
+  spec:
+    vectorsearches:
+      - stackademy_handbook
+
+A Vectorsearch searches one :doc:`Vectorstore <smarter-vectorstore>`, with its own search settings.
+See :doc:`Using a Vectorsearch in an LLMClient <smarter-vectorsearch>`.
+
 Styling the Chat
 ----------------
 

@@ -123,6 +123,7 @@ class PromptListApiView(SmarterListApiView):
         "llmclientextensions_set__extension",
         "llmclientplugin_set__plugin_meta",
         "llmclientmcpclients_set__mcpclient",
+        "llmclientvectorsearches_set__vectorsearch",
         "llmclientguardrails_set__guardrail",
         "llmclientapikey_set__api_key",
     )

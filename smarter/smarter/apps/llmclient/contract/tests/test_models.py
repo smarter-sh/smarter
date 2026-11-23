@@ -42,6 +42,9 @@ from smarter.apps.llmtool.models import Extension, PluginMeta
 from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
     MANIFEST_KIND as MCPCLIENT_KIND,
 )
+from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
+    MANIFEST_KIND as VECTORSEARCH_KIND,
+)
 from smarter.lib.drf.models import SmarterAuthToken
 
 NAME = "test_llmclient_contract_models"
@@ -106,9 +109,10 @@ class TestLLMClientContractModels(TestAccountMixin):
                 self.assertEqual(list(get_args(literal)), choices(model, field))
 
     def test_tool_kinds(self):
-        """A tool's kind is Extension, or the manifest kind of a plugin, MCPClient or guardrail."""
+        """A tool's kind is Extension, or the manifest kind of a plugin, MCPClient, Vectorsearch or guardrail."""
         self.assertEqual(
-            list(get_args(LLMClientApiToolKind)), ["Extension", PLUGIN_KIND, MCPCLIENT_KIND, GUARDRAIL_KIND]
+            list(get_args(LLMClientApiToolKind)),
+            ["Extension", PLUGIN_KIND, MCPCLIENT_KIND, VECTORSEARCH_KIND, GUARDRAIL_KIND],
         )
 
     def test_llmclient_is_the_serializers_output(self):

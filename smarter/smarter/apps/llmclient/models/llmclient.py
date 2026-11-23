@@ -989,7 +989,7 @@ class LLMClient(MetaDataWithOwnershipModel):
         """
         Clone the LLMClient instance, creating a new instance with the same configuration.
 
-        The clone has the same plugins, MCPClients, guardrails and extensions, except those that
+        The clone has the same plugins, MCPClients, guardrails, Vectorsearches and extensions, except those that
         its owner may not use: see :meth:`clone_links`.
 
         :param new_name: Optional new name for the cloned LLMClient. If not provided, the name will be suffixed with "-copy".
@@ -1014,12 +1014,12 @@ class LLMClient(MetaDataWithOwnershipModel):
 
     def clone_links(self, clone: "LLMClient") -> None:
         """
-        Link a clone of this LLMClient to the same plugins, MCPClients, guardrails and extensions.
+        Link a clone of this LLMClient to the same plugins, MCPClients, guardrails, Vectorsearches and extensions.
 
         A clone may belong to another user, e.g. a built-in LLMClient of the Smarter admin that a
         user clones into their own account. It is linked only to the resources that its owner
-        may use, as ``smarter apply`` would allow: plugins, MCPClients and guardrails that its
-        owner may read, and extensions that are available to its owner's account.
+        may use, as ``smarter apply`` would allow: plugins, MCPClients, guardrails and Vectorsearches
+        that its owner may read, and extensions that are available to its owner's account.
 
         :param clone: The clone, which has no links yet.
         """
@@ -1028,12 +1028,14 @@ class LLMClient(MetaDataWithOwnershipModel):
         from .llmclient_guardrail import LLMClientGuardrails
         from .llmclient_mcpclient import LLMClientMCPClients
         from .llmclient_plugin import LLMClientPlugin
+        from .llmclient_vectorsearch import LLMClientVectorsearches
 
         user = clone.user_profile.user
         links = (
             (LLMClientPlugin, "plugin_meta"),
             (LLMClientMCPClients, "mcpclient"),
             (LLMClientGuardrails, "guardrail"),
+            (LLMClientVectorsearches, "vectorsearch"),
         )
         for link_model, field in links:
             for link in link_model.objects.filter(llmclient=self).select_related(field):
