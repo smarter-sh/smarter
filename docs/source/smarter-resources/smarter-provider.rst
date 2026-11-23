@@ -35,7 +35,7 @@ register themselves and self-onboard their models directly.
 
     - :doc:`Smarter Installation Guide <../smarter-platform/installation>`
     - :doc:`OpenAI Getting Started Guide <../smarter-framework/guides/openai-api-getting-started-guide>`
-    - :doc:`Adding an LLM Provider <../smarter-platform/adding-an-llm-provider>`
+    - :doc:`Adding an LLM Provider <../smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider>`
 
 Technical Reference
 -------------------

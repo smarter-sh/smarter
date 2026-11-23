@@ -132,7 +132,7 @@ Beyond the Twelve Factors
        hooks and versions loaded side by side. New LLM providers that speak the OpenAI protocol
        are added with a Provider manifest, not code. New clouds implement the ``CloudProvider``
        interface. :doc:`ADR 024 </adr/024-broker-model>`,
-       :doc:`/smarter-framework/extensibility`, :doc:`/smarter-platform/adding-an-llm-provider`.
+       :doc:`/smarter-framework/extensibility`, :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`.
      - `api/v1/cli/brokers.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/api/v1/cli/brokers.py>`__,
        `llmtool/plugin/base.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/base.py>`__,
        `llmtool/extension/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/extension>`__,
@@ -153,12 +153,12 @@ Beyond the Twelve Factors
        `llmtool/manifest/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/llmtool/manifest/models>`__
    * - Multi-tenancy
      - Every resource belongs to an account and a user, and every query is scoped by them.
-       :doc:`/smarter-platform/account-management`.
+       :doc:`/smarter-platform/system-administration/accounts-and-access/account-management`.
      - `account/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/account/models>`__
    * - Auditability
      - Every command sent through the API or CLI (apply, describe, delete, deploy and the rest) is
        written to a journal with its request, response and user.
-       :doc:`/smarter-platform/smarter-journal`.
+       :doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal`.
      - `lib/journal/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/models.py>`__
    * - API first
      - The CLI and the web console are clients of the same versioned REST API.

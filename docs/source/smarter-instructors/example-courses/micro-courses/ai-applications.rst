@@ -46,7 +46,7 @@ see them and argue about them:
 - An Orchestrator coordinates several LLMClients with one of six `strategies
   <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/orchestrator/enum.py>`__:
   sequential, parallel, supervisor, router, voting and debate.
-- Every request is :doc:`charged </smarter-platform/cost-accounting>` with its tokens, so students
+- Every request is :doc:`charged </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` with its tokens, so students
   can compare one assistant with a workflow of several by cost and latency, as well as quality.
 
 **What the course covers.** The anatomy of an AI application, and how each part appears as a

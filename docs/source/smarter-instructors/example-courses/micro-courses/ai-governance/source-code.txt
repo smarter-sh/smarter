@@ -65,7 +65,7 @@ Money and Access
        `account-monthly-cap.yaml <https://github.com/smarter-sh/example-manifests/blob/main/smarter/budgets/account-monthly-cap.yaml>`__
    * - Cost accounting
      - Every model call is a charge with its tokens and cost, attributed to the user, the
-       application and the account. :doc:`/smarter-platform/cost-accounting`.
+       application and the account. :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
      - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__
    * - Ownership
      - Every resource belongs to an account and a user, and every query is filtered by them, so
@@ -104,5 +104,5 @@ Audit and Accountability
    * - Changes to resources
      - Every command sent through the API or the CLI (apply, describe, delete, deploy and the
        rest), with its request, its response and its user.
-       :doc:`/smarter-platform/smarter-journal`.
+       :doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal`.
      - `lib/journal/models.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/lib/journal/models.py>`__

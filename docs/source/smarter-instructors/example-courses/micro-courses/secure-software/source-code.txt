@@ -77,7 +77,7 @@ Secrets and Outbound Requests
        validated before import: size, file count, expanded size, links and path traversal. The
        registry's index is signed with Ed25519 and verified on every read, each downloaded archive
        is checked against its signed sha256, and each publisher has a trust badge that only the
-       Smarter team can change. :doc:`/smarter-platform/extensions`.
+       Smarter team can change. :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/extensions`.
      - `llmtool/extension/archive.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/archive.py>`__,
        `llmtool/extension/registry.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/extension/registry.py>`__,
        `extensions-registry <https://github.com/smarter-sh/extensions-registry>`__
@@ -144,5 +144,5 @@ Secure Development
      - `smarter-infrastructure-safety/SKILL.md <https://github.com/smarter-sh/smarter/blob/main/skills/smarter-infrastructure-safety/SKILL.md>`__
    * - Disclosure
      - A private address for vulnerability reports, and a policy that only the latest version is
-       supported. :doc:`/smarter-platform/security-faq`.
+       supported. :doc:`/smarter-platform/system-administration/security/security-faq`.
      - `SECURITY.md <https://github.com/smarter-sh/smarter/blob/main/SECURITY.md>`__

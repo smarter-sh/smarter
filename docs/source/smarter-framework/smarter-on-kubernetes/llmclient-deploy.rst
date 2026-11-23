@@ -12,7 +12,7 @@ can chat with it. **Deploying** it gives it its own public hostname, for example
 
 where ``stackademy`` is the LLMClient's name, ``3141-5926-5359`` is its account number, and
 ``api.platform.example.com`` is the environment's API domain (``smarter_settings.environment_api_domain``).
-A deployed LLMClient authenticates its callers with :doc:`API keys <../../smarter-platform/api-keys>`
+A deployed LLMClient authenticates its callers with :doc:`API keys <../../smarter-platform/system-administration/accounts-and-access/api-keys>`
 instead of the Django session, and can be the backend of
 :doc:`Smarter Chat <../smarter-chat>` on any web page.
 

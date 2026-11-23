@@ -6,5 +6,5 @@
 MCPServer: Staff-Only Tools
 ===========================
 
-This page moved to :doc:`MCPServer <mcpserver>`, which describes the MCPServer's public and
-staff-only tools: see `MCPServer: Staff-Only Tools <mcpserver.html#staff-only-tools>`__.
+This page moved to :doc:`MCPServer <system-administration/tools/mcpserver>`, which describes the MCPServer's public and
+staff-only tools: see `MCPServer: Staff-Only Tools <system-administration/tools/mcpserver.html#staff-only-tools>`__.

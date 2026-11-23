@@ -139,11 +139,11 @@ ENVIRONMENT_MODULES = ("local", "alpha", "beta", "next", "prod")
 """The settings modules that DJANGO_SETTINGS_MODULE names, one per environment."""
 
 
-class TestUserSettingsInEveryEnvironment(SmarterTestBase):
+class TestOverridesInEveryEnvironment(SmarterTestBase):
     """
-    The user's own settings supersede Smarter's in every environment: base.py, base_aws.py and the environment's module.
+    The deployment's overrides overwrite Smarter's settings in every environment: base.py, base_aws.py and the environment's module.
 
-    Each test re-executes an environment's module, with a user settings file and DJANGO_* variables of its
+    Each test re-executes an environment's module, with an overrides file and DJANGO_* variables of its
     own, then restores the module's namespace.
     """
 
@@ -164,7 +164,7 @@ class TestUserSettingsInEveryEnvironment(SmarterTestBase):
     def load(self, environment: str, file_text: str, environ: dict[str, str]) -> SmarterDictType:
         """Re-execute an environment's settings module with this file and these variables, and return its settings."""
         self.settings_file.write_text(file_text, encoding="utf-8")
-        variables = {"SMARTER_USER_SETTINGS_FILE": str(self.settings_file), **environ}
+        variables = {"SMARTER_OVERRIDES_FILE": str(self.settings_file), **environ}
         module = sys.modules.get(f"smarter.settings.{environment}")
         saved = dict(vars(module)) if module else None
         try:
@@ -200,14 +200,14 @@ class TestUserSettingsInEveryEnvironment(SmarterTestBase):
                 self.assertIs(settings["CSRF_COOKIE_SECURE"], True)
 
     def test_the_log_shows_the_values_django_runs_with(self):
-        """The environment's module logs its settings after the user's own: here, prod's warning about an insecure cookie."""
+        """The environment's module logs its settings after the overrides: here, prod's warning about an insecure cookie."""
         with self.assertLogs("smarter.settings.prod", level=logging.DEBUG) as captured:
             self.load("prod", "", {"DJANGO_SESSION_COOKIE_SECURE": "false"})
         messages = [record.getMessage() for record in captured.records]
         self.assertTrue([message for message in messages if "SESSION_COOKIE_SECURE should be set to True" in message])
 
-    def test_no_setting_is_assigned_after_the_user_settings(self):
-        """In each environment's module, apply_user_settings() comes after every assignment of a setting."""
+    def test_no_setting_is_assigned_after_the_overrides(self):
+        """In each environment's module, apply_overrides() comes after every assignment of a setting."""
         for environment in ENVIRONMENT_MODULES:
             with self.subTest(environment=environment):
                 path = Path(base_settings.__file__).parent / f"{environment}.py"
@@ -215,9 +215,9 @@ class TestUserSettingsInEveryEnvironment(SmarterTestBase):
                 statements = tree.body
                 call_index = None
                 for index, statement in enumerate(statements):
-                    if ast.unparse(statement) == "apply_user_settings(globals())":
+                    if ast.unparse(statement) == "apply_overrides(globals())":
                         call_index = index
-                self.assertIsNotNone(call_index, f"{path.name} doesn't call apply_user_settings(globals()).")
+                self.assertIsNotNone(call_index, f"{path.name} doesn't call apply_overrides(globals()).")
                 assert call_index is not None
                 self.assertEqual(ast.unparse(statements[call_index + 1]), "log_settings_diagnostics(globals())")
                 for statement in statements[call_index + 1 :]:

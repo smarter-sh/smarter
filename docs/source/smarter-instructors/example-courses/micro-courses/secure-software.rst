@@ -69,7 +69,7 @@ scanning and code review; and responsible disclosure and incident response.
 Each course plan lists every file that it uses, defense by defense, under *Smarter in the Source
 Code*.
 
-**Read.** :doc:`/smarter-platform/security`, :doc:`/smarter-platform/security-faq`,
+**Read.** :doc:`/smarter-platform/system-administration/security`, :doc:`/smarter-platform/system-administration/security/security-faq`,
 :doc:`/smarter-resources/smarter-guardrail`, :doc:`ADR 016 on security </adr/016-security>`, `Django
 and httpx: An LLM Proxy That Keeps Provider API Keys Away From Callers
 <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__, `Django Multi-Tenancy Without

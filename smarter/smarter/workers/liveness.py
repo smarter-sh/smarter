@@ -15,7 +15,7 @@ answers. A worker that doesn't answer is stuck, and Kubernetes restarts it.
 It imports neither Django nor the platform's tasks, so it starts in a fraction of a second and
 uses little memory, every time the probe runs. It reads the broker's url from the
 ``DJANGO_CELERY_BROKER_URL`` environment variable, which every pod of the chart has, and which also
-sets Django's ``CELERY_BROKER_URL`` (see :mod:`smarter.settings.user`).
+overrides Django's ``CELERY_BROKER_URL`` (see :mod:`smarter.settings.overrides`).
 
 .. code-block:: console
 

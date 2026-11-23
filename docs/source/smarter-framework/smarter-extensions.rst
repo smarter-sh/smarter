@@ -5,7 +5,7 @@ A Smarter LLM Tool Extension is a Python package that adds tools to the LLMs of 
 has its own tools, settings, documentation, assets and lifecycle, and a platform administrator
 installs it at run time, from the web console's Extensions page, by uploading it or from the Smarter Extension registry. See
 :doc:`extensibility` for how Extensions differ from Plugins, and
-:doc:`../smarter-platform/extensions` for how administrators manage them.
+:doc:`../smarter-platform/system-administration/llm-providers-and-extensions/extensions` for how administrators manage them.
 
 These pages are for the developers who build Extensions. They follow one example from start to
 finish: the official weather Extension, whose ``get_weather`` tool is the tool that the

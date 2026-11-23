@@ -56,7 +56,7 @@ Technical Prerequisites
   the :doc:`front end course <../frontend-development>`.
 - **Required:** Git, the command line, Docker basics, HTTP and JSON.
 - **Required:** Smarter installed from source and running before the bootcamp (see the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`), with a screenshot of
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`), with a screenshot of
   ``docker ps`` sent beforehand.
 - **Helpful:** TypeScript, and the browser's network panel.
 

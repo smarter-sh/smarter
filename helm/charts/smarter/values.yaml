@@ -38,8 +38,8 @@ env:
   # (IRSA). Static keys win over the role, so set them only for a cluster without IRSA.
   AWS_REGION: "us-east-1"
   # ///////////////////////////////////////////////////////////////////////////////////////////////
-  # DJANGO_<SETTING> sets the Django setting <SETTING>, e.g. DJANGO_SESSION_COOKIE_AGE: "3600", after
-  # everything in smarter/smarter/settings/ (smarter.settings.user). A JSON value sets a list or a dict.
+  # DJANGO_<SETTING> overrides the Django setting <SETTING>, e.g. DJANGO_SESSION_COOKIE_AGE: "3600", after
+  # everything in smarter/smarter/settings/ (smarter.settings.overrides). A JSON value sets a list or a dict.
   # WARNING: each one is a hammer. It replaces Smarter's value outright, and nothing derived from the
   # old value is computed again. Only the type is checked, never the meaning: a wrong value can stop
   # every pod, or quietly weaken the platform's security. Prefer a SMARTER_* variable where one exists,

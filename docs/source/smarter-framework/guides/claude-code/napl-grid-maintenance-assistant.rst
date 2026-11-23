@@ -354,7 +354,7 @@ Troubleshooting
 .. seealso::
 
    - :doc:`claude-code-getting-started-guide`
-   - :doc:`/smarter-platform/adding-an-llm-provider`
+   - :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`
    - :doc:`/smarter-resources/smarter-llmclient`
    - :doc:`/smarter-resources/smarter-llmtool`
    - :doc:`/smarter-framework/smarter-cli`

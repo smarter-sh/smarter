@@ -126,7 +126,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 4
      - Lecture 10
      - **Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>`, warnings,
-       limits, :doc:`cost accounting </smarter-platform/cost-accounting>` and chargeback.
+       limits, :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` and chargeback.
    * - 4
      - Lecture 11
      - **Market structure.** Falling prices, open versus closed models, the data center build-out
@@ -402,7 +402,7 @@ Recommended Texts
 - **Optional:** Ajay Agrawal, Joshua Gans and Avi Goldfarb, *Power and Prediction: The Disruptive
   Economics of Artificial Intelligence* (Harvard Business Review Press, 2022), on system-level
   change.
-- **Smarter documentation:** :doc:`/smarter-platform/cost-accounting`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-provider`,
   :doc:`/smarter-resources/smarter-llmhost` and :doc:`kubernetes <../kubernetes>` (for the
   infrastructure figures).

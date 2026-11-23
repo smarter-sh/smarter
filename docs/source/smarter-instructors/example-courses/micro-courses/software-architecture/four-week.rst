@@ -146,7 +146,7 @@ The file references in the lectures are listed in full under `Principles in the 
        manifests into DNS records, certificates and ingresses, followed in "One deploy, end to
        end" and "Waiting without blocking" in the case study `What Happens When You Click Deploy
        <https://smarter.sh/case-studies/deploy>`__. Observability with logs and the
-       :doc:`journal </smarter-platform/smarter-journal>`.
+       :doc:`journal </smarter-platform/system-administration/costs-and-auditing/smarter-journal>`.
    * - 4
      - Lecture 11
      - **Zero trust and architecture for AI.** :doc:`ADR 016 </adr/016-security>`: every call
@@ -445,7 +445,7 @@ Recommended Texts
   Architecture: The Hard Parts* (O'Reilly, 2021).
 - **Smarter documentation:** :doc:`/adr`, :doc:`/smarter-framework/smarter-broker-model`,
   :doc:`/smarter-framework/guides/12-factor-app`, :doc:`/smarter-platform/cloud-infrastructure`,
-  :doc:`/smarter-platform/security` and :doc:`/smarter-framework/smarter-on-kubernetes`.
+  :doc:`/smarter-platform/system-administration/security` and :doc:`/smarter-framework/smarter-on-kubernetes`.
 
 Further Study
 -------------

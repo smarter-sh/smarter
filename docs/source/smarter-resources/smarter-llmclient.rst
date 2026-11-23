@@ -29,7 +29,7 @@ behavior, and other runtime characteristics. Because every aspect of an
 LLMClient is declaratively configured, developers can easily customize and
 deploy specialized AI applications without modifying framework code.
 
-LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../smarter-platform/cli>`.
+LLMClients are managed using the :doc:`Smarter command-line interface (CLI) <../smarter-platform/system-administration/tools/cli>`.
 
 .. seealso::
 
@@ -74,11 +74,11 @@ be edited, in a new tab. The tree is the LLMClient broker's ``dependency_tree()`
 
 The workbench's Console has a Deployment tab, its far right one, for what comes after
 deploying: the LLMClient's status and url, where to go from here, with the integrations that put its
-chat on a web site (:doc:`WordPress <../smarter-framework/smarter-wordpress>`,
-:doc:`Drupal <../smarter-framework/smarter-drupal>`, :doc:`Shopify <../smarter-framework/smarter-shopify>`,
+chat on a web site (:doc:`WordPress </smarter-framework/smarter-integrations/smarter-wordpress>`,
+:doc:`Drupal </smarter-framework/smarter-integrations/smarter-drupal>`, :doc:`Shopify </smarter-framework/smarter-integrations/smarter-shopify>`,
 the :doc:`npm package and any html page <../smarter-framework/smarter-chat/embedding>`), how to secure
 its url, these commands, how its chat sessions work, and its manifest. The tab lists the account's
-:doc:`api keys <../smarter-platform/api-keys>`, creates one, showing its secret once, and attaches
+:doc:`api keys <../smarter-platform/system-administration/accounts-and-access/api-keys>`, creates one, showing its secret once, and attaches
 it to the LLMClient, which then requires it, or detaches it. Attaching a key there is the same as
 naming it in the manifest's ``spec.apiKey`` and applying it: an LLMClient has one api key, and the
 others are detached. Only the LLMClient's owner or an account admin can attach a key, and only an

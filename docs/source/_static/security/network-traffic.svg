@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 990" width="1250" height="990" role="img" aria-labelledby="t d">
+<title id="t">How traffic reaches Smarter, and leaves it</title>
+<desc id="d">Users and clients on the internet resolve each host name in Route53, which has one record per host and no wildcard, and connect to one AWS Network Load Balancer in the VPC's public subnets, on ports 80 and 443 only. The load balancer passes the TCP connection, with the proxy protocol, to Traefik in the private subnets, which terminates TLS with a cert-manager certificate from Let's Encrypt, redirects HTTP to HTTPS, sets HSTS and CORS, and forwards plain HTTP to the smarter-api pods on port 8000. Calico, on every node, enforces the platform namespace's network policies: default deny, so only the platform's pods reach MariaDB and Redis. The pods leave the VPC through a NAT gateway, to LLM providers, APIs and AWS's public endpoints, and reach S3 through a gateway endpoint that keeps that traffic inside AWS.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1250" height="990" rx="14" fill="#F6F8FA"/>
+<text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">How traffic reaches Smarter, and leaves it</text>
+<text x="625.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">one load balancer in, one NAT gateway out; TLS ends at Traefik; Calico polices the traffic between pods</text>
+<text x="28" y="96" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">The internet</text>
+<rect x="28" y="102" width="200" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="150" width="200" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,159 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#FFF1E5"/>
+<text x="40" y="168" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Users and clients</text>
+<text x="40" y="192" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https://&lt;host&gt;</text>
+<text x="40" y="210" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the web console</text>
+<text x="40" y="227" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">embedded Smarter Chat</text>
+<text x="40" y="244" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">smarter CLI and the SDKs</text>
+<rect x="28" y="340" width="200" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,349 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#FFF1E5"/>
+<text x="40" y="358" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Route53</text>
+<text x="40" y="382" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">DNS</text>
+<text x="40" y="400" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one record per host,</text>
+<text x="40" y="417" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no wildcard</text>
+<rect x="28" y="470" width="200" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,479 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#FFF1E5"/>
+<text x="40" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Let's Encrypt</text>
+<text x="40" y="512" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ACME</text>
+<text x="40" y="530" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a certificate per host,</text>
+<text x="40" y="547" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">by DNS-01 challenge</text>
+<rect x="250" y="86" width="972" height="680" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="262" y="105" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">AWS VPC · 192.168.0.0/20</text>
+<rect x="266" y="124" width="200" height="626" rx="10" fill="#FFFFFF" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="278" y="143" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">Public subnets</text>
+<rect x="482" y="124" width="724" height="626" rx="10" fill="#FFFFFF" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="494" y="143" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">Private subnets</text>
+<text x="494" y="159" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">the nodes, and the cluster's API: no public IP</text>
+<rect x="280" y="170" width="172" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M280,179 a9,9 0 0 1 9,-9 h154 a9,9 0 0 1 9,9 v17 h-172 z" fill="#EAEEF2"/>
+<text x="292" y="188" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Load balancer</text>
+<text x="292" y="212" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">AWS NLB</text>
+<text x="292" y="230" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ports 80 and 443 only</text>
+<text x="292" y="247" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">passes TCP, with the</text>
+<text x="292" y="264" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">proxy protocol</text>
+<rect x="280" y="600" width="172" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M280,609 a9,9 0 0 1 9,-9 h154 a9,9 0 0 1 9,9 v17 h-172 z" fill="#EAEEF2"/>
+<text x="292" y="618" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">NAT gateway</text>
+<text x="292" y="642" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">egress</text>
+<text x="292" y="660" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the nodes' only way</text>
+<text x="292" y="677" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">out to the internet</text>
+<rect x="498" y="170" width="210" height="250" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="510" y="189" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">namespace traefik</text>
+<rect x="510" y="206" width="186" height="147" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M510,215 a9,9 0 0 1 9,-9 h168 a9,9 0 0 1 9,9 v17 h-186 z" fill="#2980B9"/>
+<text x="522" y="224" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">Traefik</text>
+<text x="522" y="248" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">ingress controller</text>
+<text x="522" y="266" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">terminates TLS</text>
+<text x="522" y="283" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">301: HTTP to HTTPS</text>
+<text x="522" y="300" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">HSTS · CORS · access log</text>
+<text x="522" y="317" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">forwards plain HTTP,</text>
+<text x="522" y="334" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">with X-Forwarded-Proto</text>
+<rect x="724" y="170" width="466" height="400" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="736" y="189" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">namespace smarter-platform-prod</text>
+<text x="736" y="205" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Calico: default deny</text>
+<rect x="740" y="226" width="210" height="113" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M740,235 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#2980B9"/>
+<text x="752" y="244" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-api</text>
+<text x="752" y="268" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">Django · :8000</text>
+<text x="752" y="286" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">rejects unknown hosts (400)</text>
+<text x="752" y="303" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">rate limits · CSRF</text>
+<text x="752" y="320" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">API keys · sessions</text>
+<rect x="740" y="410" width="210" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M740,419 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="752" y="428" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Workers and beat</text>
+<text x="752" y="452" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">smarter-worker*</text>
+<text x="752" y="470" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Celery tasks: LLM calls,</text>
+<text x="752" y="487" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">DNS, certificates, email</text>
+<rect x="968" y="226" width="206" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M968,235 a9,9 0 0 1 9,-9 h188 a9,9 0 0 1 9,9 v17 h-206 z" fill="#E7F6EC"/>
+<text x="980" y="244" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">MariaDB</text>
+<text x="980" y="268" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">:3306</text>
+<text x="980" y="286" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the platform's database</text>
+<rect x="968" y="350" width="206" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M968,359 a9,9 0 0 1 9,-9 h188 a9,9 0 0 1 9,9 v17 h-206 z" fill="#E7F6EC"/>
+<text x="980" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Redis</text>
+<text x="980" y="392" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">:6379</text>
+<text x="980" y="410" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">sessions, cache, Celery</text>
+<rect x="498" y="600" width="210" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M498,609 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="510" y="618" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">S3 gateway endpoint</text>
+<text x="510" y="642" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">S3 and image pulls stay</text>
+<text x="510" y="659" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">inside AWS's network</text>
+<rect x="1020" y="596" width="170" height="96" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M1020,605 a9,9 0 0 1 9,-9 h152 a9,9 0 0 1 9,9 v17 h-170 z" fill="#2980B9"/>
+<text x="1032" y="614" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">Calico</text>
+<text x="1032" y="638" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">calico-system</text>
+<text x="1032" y="656" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">enforces the network</text>
+<text x="1032" y="673" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">policies on every node</text>
+<path d="M1105.0,594 L1105.0,572" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<rect x="266" y="810" width="300" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M266,819 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#FFF1E5"/>
+<text x="278" y="828" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">LLM providers, APIs, MCP servers</text>
+<text x="278" y="852" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">the internet</text>
+<text x="278" y="870" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">and AWS's public endpoints</text>
+<text x="278" y="887" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">HTTPS, from the pods</text>
+<rect x="598" y="810" width="260" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M598,819 a9,9 0 0 1 9,-9 h242 a9,9 0 0 1 9,9 v17 h-260 z" fill="#FFF1E5"/>
+<text x="610" y="828" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Amazon S3</text>
+<text x="610" y="852" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the environment's buckets:</text>
+<text x="610" y="869" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">static files, backups, exports</text>
+<path d="M228,226.5 L278,226.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="254" y="218.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="middle" font-style="italic">443 · 80</text>
+<path d="M452,226.5 L470,226.5 L470,279.5 L508,279.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M696,249.5 L738,249.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M950,268.5 L966,268.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M950,300.5 L958,300.5 L958,389.5 L966,389.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M950,452.0 L962,452.0 L962,401.5 L966,401.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M128.0,263 L128.0,338" fill="none" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="134" y="322" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">looks up the host</text>
+<path d="M228,518.0 L603.0,518.0 L603.0,355" fill="none" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="595.0" y="510.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end" font-style="italic">certificates, through cert-manager</text>
+<path d="M1000,570 L1000,720 L472,720 L472,648.0 L452,648.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="760" y="714" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="middle" font-style="italic">HTTPS out, from any pod</text>
+<path d="M790,570 L790,639.0 L710,639.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M366.0,696 L366.0,808" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M603.0,678 L603.0,808" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="930" width="1194" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,950 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="92" y="954" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a request from the internet</text>
+<path d="M292.7,950 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="336.7" y="954" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the platform's own traffic</text>
+<path d="M531.3,950 h34" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="575.3" y="954" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">DNS and certificates</text>
+<path d="M733.3,950 h34" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<text x="777.3" y="954" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">Calico's network policies</text>
+<rect x="965.8" y="942" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
+<text x="1009.8" y="954" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the VPC, a subnet or a namespace</text>
+</svg>

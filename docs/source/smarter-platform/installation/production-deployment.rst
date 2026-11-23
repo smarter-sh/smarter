@@ -220,7 +220,7 @@ your values file holds only the settings below.
         - ``env.DJANGO_<SETTING>``
         - Any setting of Django, or of a Django package that Smarter uses:
           `Django's settings reference <https://docs.djangoproject.com/en/6.0/ref/settings/>`__. Yours
-          replaces Smarter's value outright; read :doc:`../user-defined-django-settings` first.
+          replaces Smarter's value outright; read :doc:`../overrides` first.
       * - The chart's own options
         - top-level keys, e.g. ``app``, ``hpa``, ``worker``, ``beat``, ``databaseInit``,
           ``databaseScheduledBackup``, ``slackBot``

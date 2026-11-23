@@ -19,13 +19,13 @@ Measuring Cost
        self-hosted compute: the account, the user, the session, the provider, the model, the
        prompt, completion and total tokens, and the cost in USD. A charge is created for every
        resource that took part, so the same request is seen by the user's, the application's
-       and the account's budgets. :doc:`/smarter-platform/cost-accounting`.
+       and the account's budgets. :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
      - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__
    * - Prices
      - A price is USD per million tokens, markup included, for each combination of charge type,
        provider and model. A model without a price costs nothing, so the instructor loads the
        prices of the class's models before Lab 1, as shown in
-       :doc:`/smarter-platform/cost-accounting`.
+       :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
      - `account/models/llm_prices.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/llm_prices.py>`__
        (``cost_of()``)
    * - Totals for a period

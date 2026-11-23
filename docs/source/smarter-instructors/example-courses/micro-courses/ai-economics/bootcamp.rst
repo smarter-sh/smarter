@@ -114,7 +114,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
      - 45
      - **Lecture 5: Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>` on
        users, applications, accounts and providers; warnings and hard limits;
-       :doc:`cost accounting </smarter-platform/cost-accounting>` and chargeback to departments.
+       :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` and chargeback to departments.
        The six example budgets, from a student allowance to
        a GPU budget.
    * - 9
@@ -347,7 +347,7 @@ Recommended Texts
   chapters 1 to 3.
 - **Reference:** J.R. Storment and Mike Fuller, *Cloud FinOps* (2nd edition, O'Reilly, 2023), on
   managing variable cloud costs, which applies directly to model charges.
-- **Smarter documentation:** :doc:`/smarter-platform/cost-accounting`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
   :doc:`/smarter-resources/smarter-budget` and :doc:`/smarter-resources/smarter-provider`.
 
 Further Study

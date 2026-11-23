@@ -13,7 +13,7 @@ from smarter.lib.logging import getSmarterLogger
 
 from .base import log_settings_diagnostics
 from .base_aws import *
-from .user import apply_user_settings
+from .overrides import apply_overrides
 
 logger = getSmarterLogger(__name__)
 
@@ -34,10 +34,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # see: https://python-social-auth.readthedocs.io/en/latest/configuration/settings.html
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 
-# The user's own Django settings supersede every setting above: the user settings file, then
-# DJANGO_* environment variables. No setting is assigned below this line, and the settings are
-# logged only below it, so that the log shows the values that Django runs with.
-apply_user_settings(globals())
+# The deployment's overrides overwrite every setting above: the overrides file, then
+# DJANGO_* environment variables (the Helm chart's env on Kubernetes, .env locally). No setting is
+# assigned below this line, and the settings are logged only below it, so that the log shows the
+# values that Django runs with.
+apply_overrides(globals())
 log_settings_diagnostics(globals())
 
 logger.debug("Loading smarter.settings.%s", environment_name)

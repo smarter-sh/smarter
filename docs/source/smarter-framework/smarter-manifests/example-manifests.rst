@@ -32,7 +32,7 @@ of resource.
    * - ``smarter/mcp-clients/``
      - :doc:`MCPClients </smarter-resources/smarter-mcpclient>` for public MCP servers, and, as
        :doc:`manifest templates <manifest-templates>`, ``*.yaml.tpl``, for the
-       built-in MCPClients of the platform's own :doc:`MCPServer </smarter-platform/mcpserver>`.
+       built-in MCPClients of the platform's own :doc:`MCPServer </smarter-platform/system-administration/tools/mcpserver>`.
    * - ``smarter/proxies/``
      - :doc:`Proxies </smarter-resources/smarter-proxy>`, one per built-in Provider.
    * - ``smarter/llmhosts/``, ``smarter/llmhost-computes/``
@@ -65,7 +65,7 @@ manifest that fails is reported, and doesn't stop the others.
   that every account may use its resources, and deploys its LLMClients, except in the local
   environment. It does so after ``manage.py initialize_providers``,
   ``manage.py install_official_extensions`` and ``manage.py initialize_vectorstore_providers``,
-  whose Providers, Secrets and :doc:`Extensions </smarter-platform/extensions>` the examples use,
+  whose Providers, Secrets and :doc:`Extensions </smarter-platform/system-administration/llm-providers-and-extensions/extensions>` the examples use,
   and before the :doc:`Stackademy example project <stackademy>`. The example CustomDomain is applied
   without starting its verification.
 - ``manage.py initialize_account`` gives each account its own copy of the example plugins and

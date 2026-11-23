@@ -96,7 +96,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 2
      - Lecture 5 (30 min)
      - **Controlling spending.** :doc:`Budgets </smarter-resources/smarter-budget>`, warnings and
-       limits, :doc:`cost accounting </smarter-platform/cost-accounting>` and chargeback.
+       limits, :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` and chargeback.
    * - 2
      - Lecture 6 (30 min)
      - **The bigger picture.** Falling prices, the data center build-out, vendor concentration,
@@ -327,7 +327,7 @@ Recommended Texts
 - **Required:** J.R. Storment and Mike Fuller, *Cloud FinOps* (2nd edition, O'Reilly, 2023),
   chapters on the FinOps lifecycle and unit economics, in week 2.
 - **Optional:** Ethan Mollick, *Co-Intelligence* (Portfolio, 2024), on AI and work.
-- **Smarter documentation:** :doc:`/smarter-platform/cost-accounting`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-provider` and
   :doc:`/smarter-resources/smarter-llmhost`.
 

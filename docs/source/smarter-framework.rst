@@ -23,9 +23,70 @@ the platform and those clients share.
    :width: 100%
    :class: img-bottom-margin
 
+At the center of the framework is declarative resource management: a manifest declares what a
+resource should be, and the :doc:`Smarter Broker Model <smarter-framework/smarter-broker-model>`
+makes it so. Smarter is built on Kubernetes, Docker, Django, React, TypeScript and Pydantic.
 
-The Smarter Ecosystem
----------------------
+
+Architecture
+------------
+
+How the platform is built, and how it runs: its layers, the broker that turns each manifest into a
+running resource, and how it runs on Kubernetes, or in Docker on a developer's computer.
+
+.. toctree::
+   :maxdepth: 1
+
+   smarter-framework/architecture
+   smarter-framework/smarter-broker-model
+   smarter-framework/smarter-on-kubernetes
+
+
+APIs, SDKs and Integrations
+---------------------------
+
+Every way to work with a Smarter platform from your own code and tools: manifests, the REST API and
+its OpenAPI contract, the CLI, the SDKs, Smarter Chat, and the website integrations built on it.
+
+.. toctree::
+   :maxdepth: 1
+
+   smarter-framework/apis-and-sdks
+   smarter-framework/smarter-sdks
+   smarter-framework/smarter-chat
+   smarter-framework/smarter-integrations
+
+
+Extending Smarter
+-----------------
+
+Adding tools that LLMClients can call: Plugins, which are manifests, and Extensions, which are
+Python packages installed at run time.
+
+.. toctree::
+   :maxdepth: 1
+
+   smarter-framework/extensibility
+   smarter-framework/smarter-extensions
+
+
+Developing Smarter
+------------------
+
+For contributors to Smarter itself: the developer guides, the reference of its Python code, and the
+technologies it is built on, and recommended material for learning them.
+
+.. toctree::
+   :maxdepth: 1
+
+   smarter-framework/guides
+   smarter-framework/developer-reference
+   smarter-framework/technologies
+   smarter-framework/getting-started
+
+
+Open-Source Packages
+--------------------
 
 All of these packages are open source, and their source is in the
 `smarter-sh <https://github.com/smarter-sh>`__ organization on GitHub.
@@ -87,16 +148,16 @@ same resources, verbs and errors in every language.
      - What it is
    * - ``smarter-api``
      - `PyPI <https://pypi.org/project/smarter-api/>`__
-     - The :doc:`Python SDK <smarter-framework/smarter-python>`, ``pip install smarter-api``, and the
+     - The :doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python>`, ``pip install smarter-api``, and the
        reference implementation of every Smarter SDK. Its own documentation is at
        `docs.smarter-python.smarter.sh <https://docs.smarter-python.smarter.sh/>`__.
    * - ``smarter-golang``
      - `Go modules <https://pkg.go.dev/github.com/smarter-sh/smarter-golang>`__
-     - The :doc:`Go SDK <smarter-framework/smarter-golang>`,
+     - The :doc:`Go SDK </smarter-framework/smarter-sdks/smarter-golang>`,
        ``go get github.com/smarter-sh/smarter-golang``.
    * - ``@smarter.sh/api``
      - `GitHub <https://github.com/smarter-sh/smarter-nodejs>`__
-     - The :doc:`Node.js SDK <smarter-framework/smarter-nodejs>`, for JavaScript and TypeScript.
+     - The :doc:`Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs>`, for JavaScript and TypeScript.
 
 Shared Python Libraries
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +203,7 @@ Chat and Web Components
      - The :doc:`web console's dashboard widgets <smarter-framework/developer-reference/react-integration>`,
        which `smarter.sh <https://smarter.sh/>`__ also uses.
 
-The :ref:`website integrations <apis-and-sdks-integrations>` for WordPress, Drupal, Shopify, Google
+The :doc:`integrations </smarter-framework/smarter-integrations>` for WordPress, Drupal, Shopify, Google
 Tag Manager, and Docusaurus, MkDocs and Sphinx documentation sites are built on Smarter Chat's
 embed script, and add a deployed LLMClient's chat to a site from a settings screen.
 
@@ -164,8 +225,8 @@ Running the Platform
      - :doc:`Smarter on Kubernetes <smarter-framework/smarter-on-kubernetes>`,
        ``helm install smarter oci://ghcr.io/smarter-sh/charts/smarter``.
 
-Extending Smarter
-~~~~~~~~~~~~~~~~~
+Extensions
+~~~~~~~~~~
 
 Smarter is extended in two ways, with :doc:`Plugins and Extensions <smarter-framework/extensibility>`:
 Plugins are YAML manifests that configure Smarter's built-in tool patterns, and
@@ -174,41 +235,3 @@ administrators install at run time, from the signed index in
 `smarter-sh/extensions-registry <https://github.com/smarter-sh/extensions-registry>`__. Ready-made
 manifests for every kind are in
 `smarter-sh/example-manifests <https://github.com/smarter-sh/example-manifests>`__.
-
-
-How the Framework Fits Together
--------------------------------
-
-At the center of the framework is declarative resource management. A manifest declares what a
-resource should be, and the :doc:`Smarter Broker Model <smarter-framework/smarter-broker-model>`
-makes it so. Teams focus on application design and business logic rather than deployment mechanics
-and platform integration.
-
-The manifests, the API, its OpenAPI contract, the CLI, the SDKs and the website integrations are
-grouped under :doc:`Smarter APIs, SDKs and Integrations <smarter-framework/apis-and-sdks>`, which
-also presents the design goals that the APIs and SDKs share.
-
-Smarter is built on proven open-source technologies, including Kubernetes, Docker, Django, React,
-TypeScript, and Pydantic, and extends them with standardized APIs, automation, and developer
-tooling designed for AI applications.
-
-This section of the documentation is the technical reference for the framework, including its
-:doc:`architecture <smarter-framework/architecture>`, specifications, APIs, command-line tools,
-SDKs, and supporting technologies.
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Technical Reference
-
-   smarter-framework/getting-started
-   smarter-framework/architecture
-   smarter-framework/extensibility
-   smarter-framework/smarter-extensions
-   smarter-framework/guides
-   smarter-framework/apis-and-sdks
-   smarter-framework/smarter-broker-model
-   smarter-framework/smarter-chat
-   smarter-framework/smarter-on-kubernetes
-   smarter-framework/developer-reference
-   smarter-framework/technologies
