@@ -41,8 +41,6 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
-from urllib.parse import urlparse
-
 from django.db import transaction
 
 from smarter.apps.llmclient.models import LLMClient
@@ -138,7 +136,8 @@ def undeploy_default_api(llmclient_id: int):
             )
             return None
 
-        hostname = urlparse(llmclient.default_url).netloc
+        # the A record is the default host's, which in local Docker differs from the default url's host.
+        hostname = llmclient.default_host
         destroy_domain_A_record(
             hostname=hostname, api_host_domain=smarter_settings.environment_api_domain, task_id=task_id
         )

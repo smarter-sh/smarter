@@ -3,6 +3,7 @@
 
 import copy
 import os
+from unittest.mock import patch
 
 from django.http import HttpRequest
 from pydantic_core import ValidationError
@@ -290,6 +291,59 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.broker.apply(self.request, **self.kwargs)
         self.llmclient.refresh_from_db()
         self.assertEqual(set(self.llmclient.tags.names()), set(self.manifest.metadata.tags or []))
+
+    def apply_to_a_deployed_llmclient(self, broker: SAMLLMClientBroker) -> LLMClient:
+        """
+        Apply a broker's manifest to the test LLMClient, deployed, and return the LLMClient as saved.
+
+        The deploy and undeploy tasks that a change of deployed queues are patched where the
+        receivers import them, so that nothing reaches a worker.
+        """
+        self.broker.apply(self.request, **self.kwargs)
+        # update(), rather than save(), which would queue a real deployment.
+        LLMClient.objects.filter(pk=self.llmclient.pk).update(deployed=True)
+        with (
+            patch("smarter.apps.llmclient.receivers.deploy_default_api") as deploy_task,
+            patch("smarter.apps.llmclient.receivers.undeploy_default_api") as undeploy_task,
+        ):
+            broker.apply(self.request, **self.kwargs)
+        self.deploy_task = deploy_task
+        self.undeploy_task = undeploy_task
+        llmclient = LLMClient.objects.get(pk=self.llmclient.pk)
+        return llmclient
+
+    def test_apply_without_deployed_keeps_a_deployed_llmclient_deployed(self):
+        """A manifest that leaves out deployed, applied again to a deployed LLMClient, doesn't undeploy it."""
+        manifest = copy.deepcopy(required(self.manifest_data, "manifest_data"))
+        manifest["spec"]["config"]["prompt"].pop("deployed", None)
+        broker = SAMLLMClientBroker(self.request, manifest=parse_manifest(manifest))
+        self.assertIsNone(required(broker.manifest, "broker.manifest").spec.config.prompt.deployed)
+        llmclient = self.apply_to_a_deployed_llmclient(broker)
+        self.assertTrue(llmclient.deployed)
+        self.undeploy_task.delay.assert_not_called()
+
+    def test_apply_with_deployed_null_keeps_a_deployed_llmclient_deployed(self):
+        """Deployed: null is the same as leaving it out."""
+        llmclient = self.apply_to_a_deployed_llmclient(self.broker_with_prompt(deployed=None))
+        self.assertTrue(llmclient.deployed)
+
+    def test_apply_with_deployed_false_undeploys(self):
+        """Deployed: false, which the test manifest says, undeploys a deployed LLMClient, as smarter undeploy does."""
+        llmclient = self.apply_to_a_deployed_llmclient(self.broker_with_prompt(deployed=False))
+        self.assertFalse(llmclient.deployed)
+        self.undeploy_task.delay.assert_called_once_with(llmclient_id=llmclient.pk)
+
+    def test_apply_without_deployed_creates_an_llmclient_that_is_not_deployed(self):
+        """A new LLMClient whose manifest leaves out deployed is not deployed."""
+        manifest = copy.deepcopy(required(self.manifest_data, "manifest_data"))
+        manifest["spec"]["config"]["prompt"].pop("deployed", None)
+        manifest["metadata"]["name"] = f"not_deployed_{self.hash_suffix}"
+        broker = SAMLLMClientBroker(self.request, manifest=parse_manifest(manifest))
+        broker.apply(self.request, **self.kwargs)
+        llmclient = required(broker.llmclient, "broker.llmclient")
+        self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
+        llmclient.refresh_from_db()
+        self.assertFalse(llmclient.deployed)
 
     def test_apply(self):
         """

@@ -64,9 +64,14 @@ class SAMLLMClientSpecConfigPrompt(AbstractSAMSpecBase):
             f"{class_identifier}.custom_domain[str]. Optional. The custom domain to use for the llmclient. Example: example.com"
         ),
     )
-    deployed: bool = Field(
-        default=False,
-        description=f"{class_identifier}.deployed[bool]. Required. Whether the llmclient is deployed. Deployed means that the llmclient is available for use outside the Smarter Prompt Engineer Workbench. Published llmclients have their own subdomain, Kubernetes ingress, and TLS/SSL certificate.",
+    deployed: Optional[bool] = Field(
+        default=None,
+        description=(
+            f"{class_identifier}.deployed[bool]. Optional. Whether the llmclient is deployed. Deployed means that "
+            "the llmclient is available for use outside the Smarter Prompt Engineer Workbench, at its own url. "
+            "true deploys it and false undeploys it, as smarter deploy and smarter undeploy do. Leave it out to "
+            "keep the llmclient's deployed state as it is, e.g. when a deployed llmclient's manifest is applied again."
+        ),
     )
     provider: Optional[str] = Field(
         None,
