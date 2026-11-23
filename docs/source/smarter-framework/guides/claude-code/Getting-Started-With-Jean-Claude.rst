@@ -399,7 +399,7 @@ Anthropic's side — wait a minute and retry. For persistent issues, check the
 .. seealso::
 
    - :doc:`/smarter-framework/smarter-cli`
-   - :doc:`/smarter-platform/api-keys`
+   - :doc:`/smarter-platform/system-administration/accounts-and-access/api-keys`
    - :doc:`/smarter-resources/smarter-provider`
    - :doc:`/smarter-resources/provider/manifest`
    - :doc:`/smarter-resources/provider/api`

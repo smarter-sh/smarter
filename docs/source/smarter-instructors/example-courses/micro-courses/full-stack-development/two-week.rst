@@ -55,7 +55,7 @@ Technical Prerequisites
   :doc:`front end <../frontend-development>` courses.
 - **Required:** Git and GitHub, the command line, Docker basics, HTTP and JSON.
 - **Required before Live session 1:** Smarter installed from source (see the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`).
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`).
 - **Helpful:** TypeScript, and the browser's network panel.
 
 Schedule

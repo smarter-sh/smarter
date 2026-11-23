@@ -15,4 +15,4 @@ Developer Guides
    guides/openai-json-examples
    guides/claude-code
 
-See also :doc:`guides/developer-setup`.
+See also :doc:`/smarter-platform/installation/developer-installation`.

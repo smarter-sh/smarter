@@ -98,10 +98,10 @@ out.append('<title id="t">How Smarter initializes its settings</title>')
 out.append(
     '<desc id="d">Deployment sources (GitHub Actions secrets, the Kubernetes Secrets that '
     "smarter-infrastructure creates, and the Helm chart's values) and local sources (.env and "
-    "user-settings/settings.yaml) become the process's environment variables, through the deploy "
+    "overrides/settings.yaml) become the process's environment variables, through the deploy "
     "action and the Helm release's env Secret, or Docker Compose. smarter_settings reads each of its "
-    "fields from its variable, else uses the default declared on the field, and validates them. Django's settings modules derive their settings from smarter_settings, then the user's own "
-    "settings file and DJANGO_* variables supersede them. The startup logs, the initialize commands, and "
+    "fields from its variable, else uses the default declared on the field, and validates them. Django's settings modules derive their settings from smarter_settings, then the overrides "
+    "file and DJANGO_* variables overwrite them. The startup logs, the initialize commands, and "
     "the web console read the result.</desc>"
 )
 out.append(
@@ -170,14 +170,14 @@ box(
     code="./.env",
 )
 box(
-    "usersettings",
+    "overrides",
     x,
     600,
     w,
-    "User settings file",
-    ["your own Django settings, in YAML", "local development only"],
+    "Overrides file",
+    ["Django overrides, in YAML", "local development only"],
     "source",
-    code="user-settings/settings.yaml",
+    code="overrides/settings.yaml",
 )
 
 # --- 2 · Delivery -----------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ box(
     500,
     w,
     "Docker Compose",
-    ["env_file: .env, in every container", "mounts user-settings/ read-only"],
+    ["env_file: .env, in every container", "mounts overrides/ read-only"],
     code="docker-compose.yml",
 )
 
@@ -274,14 +274,14 @@ box(
     code="DJANGO_SETTINGS_MODULE",
 )
 box(
-    "user",
+    "apply",
     x,
     272,
     w,
-    "apply_user_settings",
-    ["④ user-settings/settings.yaml", "⑤ DJANGO_* variables", "each supersedes all before it"],
+    "apply_overrides",
+    ["④ overrides/settings.yaml", "⑤ DJANGO_* variables", "each supersedes all before it"],
     "django",
-    code="smarter.settings.user",
+    code="smarter.settings.overrides",
 )
 box(
     "runtime",
@@ -318,7 +318,7 @@ arrow(
 ex, ey = right("dotenv")
 cx, cy = left("compose", -10)
 arrow([(ex, ey), (ex + 22, ey), (ex + 22, cy), (cx, cy)])
-ux, uy = right("usersettings")
+ux, uy = right("overrides")
 cx2, cy2 = left("compose", 14)
 arrow([(ux, uy), (ux + 22, uy), (ux + 22, cy2), (cx2, cy2)], dashed=True)
 
@@ -336,24 +336,26 @@ arrow([bottom("envsource"), top("settings")])
 arrow([right("environ", -20), left("django", -20)])
 # DJANGO_* variables supersede
 jx = right("environ")[0] + 20
-arrow([right("environ", 26), (jx, right("environ", 26)[1]), (jx, left("user", -12)[1]), left("user", -12)], dashed=True)
-text(jx - 4, left("user", -12)[1] - 6, "DJANGO_*", size=10.5, fill=MUTED, anchor="end", italic=True)
+arrow(
+    [right("environ", 26), (jx, right("environ", 26)[1]), (jx, left("apply", -12)[1]), left("apply", -12)], dashed=True
+)
+text(jx - 4, left("apply", -12)[1] - 6, "DJANGO_*", size=10.5, fill=MUTED, anchor="end", italic=True)
 # smarter_settings feeds the settings modules and the runtime
 sx, sy = right("settings", -30)
 arrow([(sx, sy), (sx + 40, sy), (sx + 40, left("django", 30)[1]), left("django", 30)])
 arrow([right("settings", 30), left("runtime", 60)])
 # Django chain
-arrow([bottom("django"), top("user")])
-arrow([bottom("user"), top("runtime")])
-# the user settings file, mounted locally
-usb = bottom("usersettings")
-rx_ = BOXES["user"][0] + BOXES["user"][2]
-uy_ = right("user", 12)[1]
+arrow([bottom("django"), top("apply")])
+arrow([bottom("apply"), top("runtime")])
+# the overrides file, mounted locally
+usb = bottom("overrides")
+rx_ = BOXES["apply"][0] + BOXES["apply"][2]
+uy_ = right("apply", 12)[1]
 arrow([(usb[0], usb[1]), (usb[0], 752), (rx_ + 14, 752), (rx_ + 14, uy_), (rx_ + 2, uy_)], dashed=True)
 text(
     620,
     746,
-    "locally, user-settings/ is mounted into each container, where apply_user_settings reads it (④)",
+    "locally, overrides/ is mounted into each container, where apply_overrides reads it (④)",
     size=10.5,
     fill=MUTED,
     anchor="middle",
@@ -372,7 +374,7 @@ text(
 text(
     44,
     834,
-    "Django:  ① base.py  →  ② base_aws.py  →  ③ the environment's module  →  ④ the user settings file  →  ⑤ DJANGO_* variables",
+    "Django:  ① base.py  →  ② base_aws.py  →  ③ the environment's module  →  ④ the overrides file  →  ⑤ DJANGO_* variables",
     size=11.5,
 )
 out.append(f'<path d="M{W - 250},806 h34" stroke="{GREY}" stroke-width="1.6" marker-end="url(#head)"/>')

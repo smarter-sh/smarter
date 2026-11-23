@@ -152,7 +152,7 @@ one of two methods, depending on what you will teach.
 
 In either case you need an `OpenAI API key <https://platform.openai.com/api-keys>`__, because
 OpenAI is the one provider that Smarter requires. Keys for Google, Meta, Anthropic and others are
-optional. See :doc:`smarter-platform/adding-an-llm-provider`.
+optional. See :doc:`smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`.
 
 Quick Start
 ~~~~~~~~~~~
@@ -189,7 +189,7 @@ From Source
 
 ``docker ps`` should list the ``smarter-api``, ``smarter-worker``, ``smarter-beat``,
 ``smarter-mariadb`` and ``smarter-redis`` containers. The
-:doc:`Developer Setup Guide <smarter-framework/guides/developer-setup>` explains each part of the
+:doc:`Developer Installation Guide <smarter-platform/installation/developer-installation>` explains each part of the
 environment, and :doc:`smarter-platform/trouble-shooting` covers the common problems. This
 eight-minute developer onboarding video walks through the whole setup, and makes a good first
 assignment for a software development course.
@@ -218,7 +218,7 @@ A First Look Around
 ~~~~~~~~~~~~~~~~~~~
 
 Smarter installs with a library of built-in example resources, so that there is something to explore on a
-fresh installation. Before you plan a lesson, open the :doc:`web console <smarter-platform/smarter-web-console>`
+fresh installation. Before you plan a lesson, open the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`
 and try a few of the built-in LLMClients in the workbench: ``simple``, ``calculator``,
 ``weather``, ``research_analyst``, ``data_analyst`` and ``customer_support`` show a progression
 from a bare model to a completely styled, governed application with plugins, MCP servers and guardrails. Their
@@ -270,7 +270,7 @@ once they start changing code.
 Accounts and Users
 ~~~~~~~~~~~~~~~~~~
 
-Smarter places an :doc:`Account <smarter-platform/account-management>` above its users. Every
+Smarter places an :doc:`Account <smarter-platform/system-administration/accounts-and-access/account-management>` above its users. Every
 resource that a user creates is shared with everyone in the same account, and accounts cannot see
 each other's resources at all. This maps naturally onto a classroom:
 
@@ -280,8 +280,8 @@ each other's resources at all. This maps naturally onto a classroom:
   example for individually graded assignments.
 
 On a shared instance, create accounts, users and API keys with ``manage.py`` commands in the
-``smarter-api`` container (see :doc:`smarter-platform/user-management` and
-:doc:`smarter-platform/api-keys`):
+``smarter-api`` container (see :doc:`smarter-platform/system-administration/accounts-and-access/user-management` and
+:doc:`smarter-platform/system-administration/accounts-and-access/api-keys`):
 
 .. code-block:: console
 
@@ -335,7 +335,7 @@ baseline cost further.
 
 - **Cost accounting.** Every token is charged to the user, LLMClient and account that used it, and
   the dashboard's Budget vs Actual chart shows where the money goes. See
-  :doc:`smarter-platform/cost-accounting`.
+  :doc:`smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
 
 On a shared instance, students never hold your provider keys. Smarter stores them as encrypted
 :doc:`Secrets <smarter-resources/smarter-secret>` and applies them itself, and a
@@ -346,7 +346,7 @@ Privacy and Academic Integrity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Smarter records every :doc:`Prompt <smarter-resources/smarter-prompt>`, tool call and guardrail
-intervention in its :doc:`journal <smarter-platform/smarter-journal>`. That is valuable for
+intervention in its :doc:`journal <smarter-platform/system-administration/costs-and-auditing/smarter-journal>`. That is valuable for
 teaching, because you can review how a student arrived at an answer, not just the answer. It also
 means that you should:
 

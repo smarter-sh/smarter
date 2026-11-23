@@ -18,9 +18,10 @@ prioritization sequence:
 
 .. note::
 
-    You can also set any Django setting from a ``DJANGO_<SETTING>`` environment variable, or `.env`
-    file variable, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``: see :mod:`smarter.settings.user`. The
-    secret key is ``DJANGO_SECRET_KEY``, which ``smarter_settings.django_secret_key`` reads and validates.
+    A deployment can also override any Django setting with a ``DJANGO_<SETTING>`` environment
+    variable, from the Helm chart's ``env`` or ``.env``, e.g. ``DJANGO_SESSION_COOKIE_AGE=3600``: see
+    :mod:`smarter.settings.overrides`. The secret key is ``DJANGO_SECRET_KEY``, which
+    ``smarter_settings.django_secret_key`` reads and validates.
 
 .. warning::
 

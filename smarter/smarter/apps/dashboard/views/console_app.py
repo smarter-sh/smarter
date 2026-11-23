@@ -1,11 +1,11 @@
 """
 The single-page console's page: Django answers each path that has moved into the console with its index.html.
 
-``@smarter/console`` is built by Vite into ``static/react/@smarter/console/``, and ``collectstatic`` copies it
-into ``STATIC_ROOT``, as it does every React app's build. Until the console moves to its own host (phase 4 of
-ADR-035), Django serves its ``index.html`` at the paths of the pages that have moved, e.g. ``/login/``, and the
+The console is built in smarter-sh/smarter-console, and ``make console`` installs its pinned release into
+``static/react/@smarter/console/``, which ``collectstatic`` copies into ``STATIC_ROOT``. The console and the api
+share one origin (ADR-035), so Django serves its ``index.html`` at the console's paths, e.g. ``/login/``, and the
 console's router shows the page. A path keeps its url name, so that emails, settings and templates that reverse
-it keep working. See ``docs/spa-migration.md``.
+it keep working.
 
 While ``SMARTER_PLATFORM_STATIC_FILES_ON_CDN`` is on, the page's scripts and styles come from the environment's CDN: the
 page's ``/static/`` urls become ``STATIC_URL``'s, and the scripts load their chunks relative to themselves. The page

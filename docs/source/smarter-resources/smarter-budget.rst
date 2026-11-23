@@ -36,7 +36,7 @@ resource's spending against its budget.
 
 .. seealso::
 
-   - :doc:`Cost Accounting <../smarter-platform/cost-accounting>`: pricing, and how budgets are enforced.
+   - :doc:`Cost Accounting <../smarter-platform/system-administration/costs-and-auditing/cost-accounting>`: pricing, and how budgets are enforced.
    - :doc:`Budget example manifests <account/sam/example-manifests/budget>`
 
 Technical Reference

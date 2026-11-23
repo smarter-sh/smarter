@@ -27,6 +27,7 @@ and compiler and linker flags.
 | k9s            | Kubernetes ASCII console admin software         |
 | awscli         | AWS CLI for managing AWS services               |
 | kubectl        | Kubernetes CLI for cluster management           |
+| helm           | Kubernetes package manager (Smarter's chart)    |
 | Docker Desktop | Docker, docker-compose and docker CLI           |
 | jq             | Command-line JSON processor for CI-CD           |
 | go             | Go programming language (Smarter CLI)           |

@@ -234,7 +234,8 @@ def sam_app_urlpatterns(settings: FeatureSettings, apps_urls: list[SamAppUrls], 
     Return the url patterns of the SAM resource apps whose feature flag is true.
 
     Logs, for each one, whether its urls are mounted, and the environment variable that mounts them
-    when they aren't.
+    when they aren't. The log entries are named after the caller, the urlconf whose urls they are,
+    e.g. ``smarter.apps.api.v1.urls``, rather than after this function.
 
     :param settings: The settings that hold the ``enable_<app>`` flags, normally ``smarter_settings``.
     :param apps_urls: The apps' urls and the flag that mounts each one.
@@ -251,11 +252,12 @@ def sam_app_urlpatterns(settings: FeatureSettings, apps_urls: list[SamAppUrls], 
                 description,
                 SmarterReadyState.NOT_READY,
                 sam_app.env_name,
+                stacklevel=2,
             )
             continue
         pattern = path(app_urls.prefix, include(app_urls.urls, namespace=app_urls.namespace))
         patterns.append(pattern)
-        logger.debug("%s %s is %s.", app_urls.label, description, SmarterReadyState.READY)
+        logger.debug("%s %s is %s.", app_urls.label, description, SmarterReadyState.READY, stacklevel=2)
     return patterns
 
 

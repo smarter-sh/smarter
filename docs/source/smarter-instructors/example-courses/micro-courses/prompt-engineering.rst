@@ -16,7 +16,7 @@ Students see the result straight away in the prompt engineering
 shows, beside the chat, the configuration, every request sent to the model, every tool call,
 which plugins were selected, and the server's logs. The same prompt can be tried against several
 providers and models by changing two lines, and Smarter records the tokens and the
-:doc:`cost </smarter-platform/cost-accounting>` of every request, so a comparison is measured, not
+:doc:`cost </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` of every request, so a comparison is measured, not
 guessed. This one-minute video shows Smarter used in a classroom to teach advanced LLM prompting
 techniques.
 

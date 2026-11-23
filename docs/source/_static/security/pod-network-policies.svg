@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 842" width="1250" height="842" role="img" aria-labelledby="t d">
+<title id="t">Which pods may talk to which</title>
+<desc id="d">In the platform's namespace, a default-deny policy blocks all ingress and egress. Traefik, in its own namespace, may reach the application's pods on port 8000 only. The application's pods (smarter-api, the Celery workers, beat, the init Job and the bastion) may reach each other, MariaDB on 3306, Redis on 6379, Loki on 3100 and 9095, DNS in kube-system on 53, and the internet on 443, 80, 465, 587 and 3306. MariaDB and Redis accept connections only from the application's pods. A pod in another namespace, or one without the chart's labels, can reach nothing.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1250" height="842" rx="14" fill="#F6F8FA"/>
+<text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Which pods may talk to which</text>
+<text x="625.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">Calico enforces the namespace's network policies on every node: default deny, then only these paths</text>
+<rect x="28" y="179" width="190" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,188 a9,9 0 0 1 9,-9 h172 a9,9 0 0 1 9,9 v17 h-190 z" fill="#FFF1E5"/>
+<text x="40" y="197" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Traefik</text>
+<text x="40" y="221" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">namespace traefik</text>
+<text x="40" y="239" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">may reach the app's</text>
+<text x="40" y="256" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">pods on :8000 only</text>
+<rect x="28" y="620" width="190" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,629 a9,9 0 0 1 9,-9 h172 a9,9 0 0 1 9,9 v17 h-190 z" fill="#FFEBE9"/>
+<text x="40" y="638" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Any other pod</text>
+<text x="40" y="662" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">no policy allows it</text>
+<text x="40" y="680" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">in another namespace, or</text>
+<text x="40" y="697" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">without the chart's labels</text>
+<rect x="250" y="86" width="690" height="630" rx="10" fill="#FFFFFF" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="262" y="105" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">namespace smarter-platform-prod</text>
+<text x="262" y="121" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">policy default-deny-all: no ingress, no egress, unless allowed below</text>
+<rect x="272" y="150" width="340" height="440" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="284" y="169" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">application-group: smarter</text>
+<text x="284" y="185" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">may reach each other</text>
+<rect x="292" y="196" width="300" height="61" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M292,205 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#2980B9"/>
+<text x="304" y="214" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-api</text>
+<text x="304" y="238" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the app server, :8000</text>
+<rect x="292" y="271" width="300" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M292,280 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="304" y="289" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Celery workers</text>
+<text x="304" y="313" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">smarter-worker,</text>
+<text x="304" y="330" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">smarter-worker-infrastructure</text>
+<rect x="292" y="363" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M292,372 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="304" y="381" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Celery beat</text>
+<text x="304" y="405" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the scheduler</text>
+<rect x="292" y="438" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M292,447 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="304" y="456" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Jobs</text>
+<text x="304" y="480" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">init, migrate, backup</text>
+<rect x="292" y="513" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M292,522 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="304" y="531" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Bastion</text>
+<text x="304" y="555" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">kubectl exec only</text>
+<rect x="700" y="196" width="220" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M700,205 a9,9 0 0 1 9,-9 h202 a9,9 0 0 1 9,9 v17 h-220 z" fill="#E7F6EC"/>
+<text x="712" y="214" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">MariaDB</text>
+<text x="712" y="238" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">:3306</text>
+<text x="712" y="256" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">accepts only the</text>
+<text x="712" y="273" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">application's pods</text>
+<rect x="700" y="330" width="220" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M700,339 a9,9 0 0 1 9,-9 h202 a9,9 0 0 1 9,9 v17 h-220 z" fill="#E7F6EC"/>
+<text x="712" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Redis</text>
+<text x="712" y="372" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">:6379</text>
+<text x="712" y="390" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">accepts only the</text>
+<text x="712" y="407" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">application's pods</text>
+<rect x="700" y="464" width="220" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M700,473 a9,9 0 0 1 9,-9 h202 a9,9 0 0 1 9,9 v17 h-220 z" fill="#E7F6EC"/>
+<text x="712" y="482" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Loki</text>
+<text x="712" y="506" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">:3100 · :9095</text>
+<text x="712" y="524" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the pods' logs</text>
+<rect x="980" y="196" width="242" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M980,205 a9,9 0 0 1 9,-9 h224 a9,9 0 0 1 9,9 v17 h-242 z" fill="#FFF1E5"/>
+<text x="992" y="214" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">DNS</text>
+<text x="992" y="238" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">namespace kube-system · :53</text>
+<text x="992" y="256" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">CoreDNS</text>
+<rect x="980" y="330" width="242" height="130" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M980,339 a9,9 0 0 1 9,-9 h224 a9,9 0 0 1 9,9 v17 h-242 z" fill="#FFF1E5"/>
+<text x="992" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">The internet</text>
+<text x="992" y="372" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">0.0.0.0/0</text>
+<text x="992" y="390" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">443 · LLM providers, APIs, AWS</text>
+<text x="992" y="407" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">80 · API plugins</text>
+<text x="992" y="424" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">465 · 587 · SMTP to SES</text>
+<text x="992" y="441" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">3306 · SQL plugins' databases</text>
+<path d="M218,227.0 L290,226.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M612,244.0 L698,244.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M612,378.0 L698,378.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M612,503.5 L698,503.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="618" y="236.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="start" font-style="italic">3306</text>
+<text x="618" y="370.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="start" font-style="italic">6379</text>
+<text x="618" y="495.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="start" font-style="italic">3100 · 9095</text>
+<path d="M612,568 L950,568 L950,235.5 L978,235.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M950,395.0 L978,395.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="618" y="560" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="start" font-style="italic">egress: DNS, and the internet on these ports only</text>
+<path d="M218,668.0 L442,668.0 L442,594" fill="none" stroke="#CF222E" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-red)"/>
+<path d="M323,661.0 L337,675.0 M323,675.0 L337,661.0" stroke="#CF222E" stroke-width="2.6" stroke-linecap="round"/>
+<text x="454" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#CF222E" text-anchor="start" font-style="italic">denied: the app's pods, MariaDB, Redis and Loki</text>
+<text x="272" y="744" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">The policies select pods by the labels that the Helm chart sets: app.kubernetes.io/application-group and app.kubernetes.io/name.</text>
+<text x="272" y="762" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">A pod that you add without them can reach nothing.</text>
+<rect x="28" y="782" width="1194" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,802 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="92" y="806" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">allowed, on the ports shown</text>
+<path d="M292.7,802 h34" stroke="#CF222E" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-red)"/>
+<text x="336.7" y="806" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">denied by default</text>
+<path d="M486.4,795 L500.4,809 M486.4,809 L500.4,795" stroke="#CF222E" stroke-width="2.6" stroke-linecap="round"/>
+<text x="520.4" y="806" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">no policy allows it</text>
+<rect x="672.3" y="794" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
+<text x="716.3" y="806" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a namespace, or a group of pods</text>
+</svg>

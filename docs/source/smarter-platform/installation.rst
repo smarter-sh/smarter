@@ -15,7 +15,7 @@ There are three ways to install Smarter. Choose the one that best suits your nee
    Build and run the application locally from source code, using Docker Compose.
    This method is ideal for developers who want to contribute to the project,
    or who want to customize the application for their own use. Follow the
-   :doc:`Developer Setup Guide <../smarter-framework/guides/developer-setup>`.
+   :doc:`Developer Installation Guide <installation/developer-installation>`.
 
 3. **Production: Kubernetes on AWS**
 

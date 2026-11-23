@@ -15,9 +15,9 @@ The package can be used two ways:
   as Vite, webpack, Rollup or Next.js. See `Installation`_.
 
 For several platforms, a plugin writes the embed script's tag for you, from a settings screen:
-:doc:`WordPress <../smarter-wordpress>`, :doc:`Drupal <../smarter-drupal>`,
-:doc:`Shopify <../smarter-shopify>`, :doc:`Google Tag Manager <../smarter-gtm>`, and
-:doc:`Docusaurus, MkDocs, Sphinx and VitePress <../smarter-docs-sites>`.
+:doc:`WordPress </smarter-framework/smarter-integrations/smarter-wordpress>`, :doc:`Drupal </smarter-framework/smarter-integrations/smarter-drupal>`,
+:doc:`Shopify </smarter-framework/smarter-integrations/smarter-shopify>`, :doc:`Google Tag Manager </smarter-framework/smarter-integrations/smarter-gtm>`, and
+:doc:`Docusaurus, MkDocs, Sphinx and VitePress </smarter-framework/smarter-integrations/smarter-docs-sites>`.
 
 
 Before You Start
@@ -55,7 +55,7 @@ the LLMClient's (see :doc:`The Chat API Contract <api-contract>`). A platform op
 allow an origin for every LLMClient, in ``CORS_ALLOWED_ORIGINS`` or ``CORS_ALLOWED_ORIGIN_REGEXES``.
 
 **3. The browser can authenticate, if the LLMClient requires it.** An LLMClient requires
-authentication when it has at least one active :doc:`api key <../../smarter-platform/api-keys>`
+authentication when it has at least one active :doc:`api key <../../smarter-platform/system-administration/accounts-and-access/api-keys>`
 attached. Then pass a Smarter api key to the component as ``apiKey``, which it sends as
 ``Authorization: Token <apiKey>``. A deployed LLMClient without api keys is public: anyone who can
 reach its host can chat with it, without an ``apiKey``, and every prompt is charged to the

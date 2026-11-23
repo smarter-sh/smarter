@@ -681,6 +681,7 @@ sphinx==9.2.0
     #   sphinx-copybutton
     #   sphinx-design
     #   sphinx-last-updated-by-git
+    #   sphinx-reredirects
     #   sphinx-rtd-theme
     #   sphinxcontrib-django
     #   sphinxcontrib-jquery
@@ -694,6 +695,8 @@ sphinx-design==0.7.0
     # via -r smarter/requirements/in/local.in
 sphinx-last-updated-by-git==0.3.8
     # via sphinx-sitemap
+sphinx-reredirects==1.1.0
+    # via -r smarter/requirements/in/local.in
 sphinx-rtd-theme==3.1.0
     # via -r smarter/requirements/in/local.in
 sphinx-sitemap==2.9.0

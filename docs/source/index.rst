@@ -246,7 +246,7 @@ makes the dangerous actions impossible:
   that would launch an MCP server as a local process. Remote MCP servers run on their own
   infrastructure, not on yours.
 - **Nowhere to escape to.** In production, Smarter runs on
-  :doc:`private VPC networks <smarter-platform/security>` wherever possible, and
+  :doc:`private VPC networks <smarter-platform/system-administration/security>` wherever possible, and
   `Calico <https://www.tigera.io/project-calico/>`_ network policies on Kubernetes control which
   ports and services each workload can reach. Containers run as a non-root user. A model cannot
   open a connection that the network will not carry, so breaking out is not a matter of clever
@@ -272,7 +272,7 @@ makes the dangerous actions impossible:
   would be charged to, and every prompt, tool call, and guardrail
   intervention is recorded in the :doc:`Smarter Journal <smarter-framework/developer-reference/smarter-journal>`.
 
-See :doc:`Security <smarter-platform/security>` for details.
+See :doc:`Security <smarter-platform/system-administration/security>` for details.
 
 Composed like an orchestra
 --------------------------
@@ -303,8 +303,8 @@ person who created it, and is shared automatically with everyone in the same
 MCP clients, and guardrails in their own manifests by name, without copying them, and credentials
 stay in :doc:`Secrets <smarter-resources/smarter-secret>` rather than in anyone's manifest. Resources that Smarter provides are shared with every account, so
 your team can start from a library of ready-made building blocks. Permissions are enforced by the
-platform itself, in every query, for the :doc:`web console <smarter-platform/smarter-web-console>`,
-the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`CLI <smarter-platform/cli>`
+platform itself, in every query, for the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`,
+the :doc:`REST API <smarter-framework/smarter-api>`, and the :doc:`CLI <smarter-platform/system-administration/tools/cli>`
 alike. Every token is charged to the person, the application, and the account that used it, and
 :doc:`Budgets <smarter-resources/smarter-budget>` set spending limits, in dollars or in tokens, per
 hour, day, week or month, and in total, on anything that spends: a user, a whole account, an
@@ -335,7 +335,7 @@ your network.
 Open to your own software
 -------------------------
 
-Everything that you can do in the :doc:`web console <smarter-platform/smarter-web-console>`, your
+Everything that you can do in the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`, your
 own software can do too. The :doc:`Smarter API <smarter-framework/smarter-api>` applies manifests,
 reads every resource, chats with your LLMClients, and streams their progress, and the official
 clients have no access to the platform that your code doesn't have.
@@ -354,9 +354,9 @@ clients have no access to the platform that your code doesn't have.
   :doc:`OpenAPI 3.1 document <smarter-framework/smarter-openapi>`, with a JSON Schema for every
   manifest kind, all generated from the same Pydantic models that the platform itself runs on, and
   tested against its real responses. Generate a client in any language from it.
-- **Official SDKs and tools.** The :doc:`Python SDK <smarter-framework/smarter-python>`
-  (``pip install smarter-api``), the :doc:`Node.js SDK <smarter-framework/smarter-nodejs>`
-  (``npm install @smarter.sh/api``), the :doc:`Go SDK <smarter-framework/smarter-golang>`, the
+- **Official SDKs and tools.** The :doc:`Python SDK </smarter-framework/smarter-sdks/smarter-python>`
+  (``pip install smarter-api``), the :doc:`Node.js SDK </smarter-framework/smarter-sdks/smarter-nodejs>`
+  (``npm install @smarter.sh/api``), the :doc:`Go SDK </smarter-framework/smarter-sdks/smarter-golang>`, the
   :doc:`CLI <smarter-framework/smarter-cli>`, a
   `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_,
   and a :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat
@@ -378,11 +378,11 @@ At a glance
 
   - A :doc:`proxy server <smarter-resources/smarter-proxy>` that gives secure, governed, auditable access to AI providers and resources, without exposing secrets or the underlying vendor accounts.
   - Build every :doc:`AI resource <smarter-resources>` with declarative :doc:`YAML manifests <smarter-framework/smarter-manifests>`, with no Python programming, much as you would with `Kubernetes <https://kubernetes.io/>`_.
-  - Manage resources with the :doc:`web console <smarter-platform/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, the :doc:`command-line interface <smarter-platform/cli>`, and the :doc:`Python <smarter-framework/smarter-python>`, :doc:`Node.js <smarter-framework/smarter-nodejs>` and :doc:`Go <smarter-framework/smarter-golang>` SDKs.
+  - Manage resources with the :doc:`web console <smarter-platform/system-administration/tools/smarter-web-console>`, the :doc:`REST API <smarter-framework/smarter-api>`, the :doc:`command-line interface <smarter-platform/system-administration/tools/cli>`, and the :doc:`Python </smarter-framework/smarter-sdks/smarter-python>`, :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>` SDKs.
   - An open, typed :doc:`OpenAPI 3.1 contract <smarter-framework/smarter-openapi>`, served by every platform, to generate clients in any language.
   - Built for teams: every resource has an owner, and is shared with everyone in the owner's :doc:`Account <smarter-resources/smarter-account>`.
   - Runs at scale on Kubernetes, with automatic horizontal scaling of application servers and background workers.
-  - Built-in :doc:`logging <smarter-framework/developer-reference/smarter-journal>`, :doc:`cost accounting <smarter-platform/cost-accounting>`, and :doc:`security <smarter-platform/security>`.
+  - Built-in :doc:`logging <smarter-framework/developer-reference/smarter-journal>`, :doc:`cost accounting <smarter-platform/system-administration/costs-and-auditing/cost-accounting>`, and :doc:`security <smarter-platform/system-administration/security>`.
 
 - **Knowledge and tools**
 
@@ -407,7 +407,7 @@ At a glance
   - For when you do want to write code: built on :doc:`Django <smarter-framework/developer-reference/lib/django>`, :doc:`Django REST Framework <smarter-framework/developer-reference/lib/drf>`, and :doc:`Pydantic <smarter-framework/technologies/pydantic>`, and the same framework that Smarter itself is built on.
   - Automated :doc:`AWS cloud infrastructure <smarter-framework/technologies/aws>` and :doc:`Kubernetes <smarter-framework/technologies/kubernetes>` management.
   - A :doc:`React component <smarter-framework/smarter-chat/embedding>` that adds a Smarter chat to any web page.
-  - :doc:`APIs, SDKs and integrations <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python <smarter-framework/smarter-python>` (``pip install smarter-api``), :doc:`Node.js <smarter-framework/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go <smarter-framework/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and chat integrations for WordPress, Drupal, Shopify, Google Tag Manager and documentation sites.
+  - :doc:`APIs, SDKs and integrations <smarter-framework/apis-and-sdks>`: SDKs for :doc:`Python </smarter-framework/smarter-sdks/smarter-python>` (``pip install smarter-api``), :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` (``npm install @smarter.sh/api``) and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>`, `NPM packages <https://www.npmjs.com/package/@smarter.sh/ui-chat>`_, a `VS Code extension <https://marketplace.visualstudio.com/items?itemName=querium.smarter-manifest>`_, and :doc:`chat integrations </smarter-framework/smarter-integrations>` for WordPress, Drupal, Shopify, Google Tag Manager and documentation sites.
 
 
 Usage
