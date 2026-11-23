@@ -118,18 +118,19 @@ All four places, or the course is orphaned or the counts lie:
   toctree entry, both in a sensible position by subject.
 - `example-courses/index.rst`: the counts ("19 complete course designs",
   "18 short courses").
-- `docs/source/index.rst`: the count of micro courses and the subject table
-  that lists every course.
+- `docs/source/smarter-overview.rst` ("Why Smarter"): the count of micro
+  courses and the subject table that lists every course. The landing page,
+  `docs/source/index.rst`, repeats only the total ("23 ready-to-teach courses").
 - `micro-courses/course-formats.rst` only if a cross-reference is useful.
 
-`grep -rn "18 \|19 \|eighteen\|nineteen" docs/source/index.rst docs/source/smarter-instructor*.rst docs/source/smarter-instructors/example-courses/*.rst`
+`grep -rn "18 \|19 \|eighteen\|nineteen" docs/source/index.rst docs/source/smarter-overview.rst docs/source/smarter-instructor*.rst docs/source/smarter-instructors/example-courses/*.rst`
 finds the counts.
 
 ### 4. Verify
 
 ```console
 python3 skills/smarter-course-design/scripts/check-course.py <slug>
-skills/smarter-sphinx-docs/scripts/check-docs.sh docs/source/smarter-instructors/example-courses/micro-courses/<slug>.rst docs/source/smarter-instructors/example-courses/micro-courses/<slug>/*.rst docs/source/smarter-instructors/example-courses/*.rst docs/source/index.rst
+skills/smarter-sphinx-docs/scripts/check-docs.sh docs/source/smarter-instructors/example-courses/micro-courses/<slug>.rst docs/source/smarter-instructors/example-courses/micro-courses/<slug>/*.rst docs/source/smarter-instructors/example-courses/*.rst docs/source/index.rst docs/source/smarter-overview.rst
 source venv/bin/activate && git ls-files -mo --exclude-standard docs/ | xargs pre-commit run --files
 ```
 

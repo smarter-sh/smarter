@@ -50,6 +50,29 @@ class TestLLMClientBrokerExtensions(ExtensionTestMixin):
         self.assertEqual(response.status_code, 200, response.content[:300])
         self.assertEqual(LLMClientExtensions.extensions_for(llmclient), [])
 
+    def test_apply_moves_updated_at_when_only_what_it_uses_changes(self):
+        """
+        Attaching or detaching a resource moves the LLMClient's updated_at, even when nothing else changed.
+
+        The cached answers to an LLMClient's first messages are keyed by its updated_at, so an
+        LLMClient whose updated_at didn't move would answer as it did before the change.
+        """
+        self.install_echo()
+        self.apply([])
+        before_attach = LLMClient.objects.get(name=NAME).updated_at
+
+        self.apply(["echo"])
+        after_attach = LLMClient.objects.get(name=NAME).updated_at
+        self.assertGreater(after_attach, before_attach)
+
+        self.apply(["echo"])
+        unchanged = LLMClient.objects.get(name=NAME).updated_at
+        self.assertEqual(unchanged, after_attach)
+
+        self.apply([])
+        after_detach = LLMClient.objects.get(name=NAME).updated_at
+        self.assertGreater(after_detach, after_attach)
+
     def test_apply_unknown_extension(self):
         """An extension that is not installed, or not available to the account, is not found."""
         with self.assertRaisesRegex(SAMBrokerErrorNotFound, "not installed, or not available"):

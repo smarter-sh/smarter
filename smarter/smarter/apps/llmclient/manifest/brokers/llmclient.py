@@ -1039,6 +1039,10 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     f"Failed to apply {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
                 ) from e
 
+            # whether apply attached or detached any of the resources that the llmclient uses. Its own
+            # row may be unchanged then, but what it does is not: see the end of this block.
+            relations_changed = False
+
             # LLMClientAPIKey: create or update the API Key
             # -------------
             if self.manifest.spec.apiKey:
@@ -1062,9 +1066,11 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 for key in LLMClientAPIKey.objects.filter(llmclient=self.llmclient):
                     if key.api_key != api_key:
                         key.delete()
+                        relations_changed = True
                         logger.debug("Detached SmarterAuthToken %s from LLMClient %s", key.api_key.name, self.llmclient.name)  # type: ignore[union-attr]
                 _, created = LLMClientAPIKey.objects.get_or_create(llmclient=self.llmclient, api_key=api_key)
                 if created:
+                    relations_changed = True
                     logger.debug(
                         "SmarterAuthToken %s attached to LLMClient %s",
                         self.manifest.spec.apiKey,
@@ -1078,6 +1084,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     self.manifest.spec.plugins and plugin.plugin_meta.name not in self.manifest.spec.plugins
                 ):
                     plugin.delete()
+                    relations_changed = True
                     logger.debug(
                         "Detached Plugin %s from LLMClient %s",
                         plugin.plugin_meta.name,
@@ -1103,6 +1110,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         llmclient=self.llmclient, plugin_meta=plugin_meta
                     )
                     if created:
+                        relations_changed = True
                         logger.debug(
                             "attached Plugin %s to LLMClient %s",
                             plugin_meta.name,
@@ -1117,6 +1125,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             ):
                 if extension_link.extension.slug not in extension_slugs:
                     extension_link.delete()
+                    relations_changed = True
                     logger.debug(
                         "detached Extension %s from LLMClient %s",
                         extension_link.extension.slug,
@@ -1132,6 +1141,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     )
                 _, created = LLMClientExtensions.objects.get_or_create(llmclient=self.llmclient, extension=extension)
                 if created:
+                    relations_changed = True
                     logger.debug(
                         "attached Extension %s to LLMClient %s",
                         extension.slug,
@@ -1146,6 +1156,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             ):
                 if guardrail_link.guardrail.name not in guardrail_names:
                     guardrail_link.delete()
+                    relations_changed = True
                     logger.debug(
                         "detached Guardrail %s from LLMClient %s",
                         guardrail_link.guardrail.name,
@@ -1161,6 +1172,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     )
                 _, created = LLMClientGuardrails.objects.get_or_create(llmclient=self.llmclient, guardrail=guardrail)
                 if created:
+                    relations_changed = True
                     logger.debug(
                         "attached Guardrail %s to LLMClient %s",
                         guardrail.name,
@@ -1175,6 +1187,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             ):
                 if mcpclient_link.mcpclient.name not in mcpclient_names:
                     mcpclient_link.delete()
+                    relations_changed = True
                     logger.debug(
                         "detached MCPClient %s from LLMClient %s",
                         mcpclient_link.mcpclient.name,
@@ -1190,15 +1203,39 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     )
                 _, created = LLMClientMCPClients.objects.get_or_create(llmclient=self.llmclient, mcpclient=mcpclient)
                 if created:
+                    relations_changed = True
                     logger.debug(
                         "attached MCPClient %s to LLMClient %s",
                         mcpclient.name,
                         self.llmclient.name,
                     )
 
+            self.touch_when_relations_changed(relations_changed=relations_changed, llmclient_saved=changed)
+
             # done! return the response. Django will take care of committing the transaction
             self.cache_invalidations()
             return self.json_response_ok(command=command, data=self.command_result())
+
+    def touch_when_relations_changed(self, relations_changed: bool, llmclient_saved: bool) -> None:
+        """
+        Move the llmclient's ``updated_at`` when apply changed what it uses, but not the llmclient itself.
+
+        An llmclient's cached answers to first messages are keyed by its ``updated_at`` (see
+        :mod:`smarter.apps.provider.services.text_completion.lib.prompt_cache`), so attaching or
+        detaching a plugin, guardrail, extension, MCP client or api key must move it too. Otherwise the
+        llmclient answers as it did before, until the cached answers expire.
+
+        :param relations_changed: Whether apply attached or detached any resource that the llmclient uses.
+        :param llmclient_saved: Whether apply saved the llmclient's own row, which moved ``updated_at`` already.
+        """
+        if not relations_changed:
+            return
+        if llmclient_saved:
+            return
+        llmclient = self.llmclient
+        if not isinstance(llmclient, LLMClient):
+            return
+        llmclient.save(update_fields=["updated_at"])
 
     def resolve_extension(self, slug: str) -> Optional[Extension]:
         """

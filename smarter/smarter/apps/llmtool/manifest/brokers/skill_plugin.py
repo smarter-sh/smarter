@@ -876,8 +876,6 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
 
         :raises SAMPluginBrokerError:
             If the plugin or plugin metadata is not initialized.
-        :raises SAMBrokerErrorNotReady:
-            If the plugin is not ready to be deleted.
 
         .. seealso::
 
@@ -914,20 +912,7 @@ class SAMSkillPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=command,
             )
-        self.verify_no_dependencies(command)
-        if self.plugin.ready:
-            try:
-                self.plugin.delete()
-                return self.json_response_ok(command=command, data={})
-            except Exception as e:
-                raise SAMBrokerError(
-                    f"{self.formatted_class_name} {self.plugin_meta.name} delete failed",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
-        )
+        return self.delete_plugin(command)
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

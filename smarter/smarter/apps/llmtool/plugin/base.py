@@ -6,8 +6,9 @@ import copy
 import datetime
 import re
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from functools import cached_property
-from typing import Any, Optional, Type, Union
+from typing import Any, Iterator, Optional, Type, TypeVar, Union
 
 # 3rd party stuff
 import yaml
@@ -73,6 +74,9 @@ def should_log(level):
 
 
 logger = logging.getSmarterLogger(__name__, condition_func=should_log)
+
+# a plugin row that is read from the database by its PluginMeta, see PluginBase.stored_or_new_row().
+PluginRowType = TypeVar("PluginRowType", PluginSelector, PluginPrompt)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
@@ -377,6 +381,64 @@ class PluginBase(ABC, AccountMixin):
         if self.plugin_data:
             PluginDataClass = self.plugin_data_class
             PluginDataClass.get_cached_object(invalidate=True, pk=self.plugin_data.id)  # type: ignore
+
+    def stored_or_new_row(self, model_class: Type[PluginRowType]) -> PluginRowType:
+        """
+        Return this plugin's row of ``model_class``, read from the database, or a new, unsaved one.
+
+        The row is read from the database rather than the cache, because a cached row can be one
+        that a failed apply wrote and then rolled back. A plugin that has no row of its own, e.g. one
+        that such an apply left behind, gets a new one, which applying its manifest saves.
+
+        :param model_class: ``PluginSelector`` or ``PluginPrompt``.
+        :returns: The stored row, or a new one for this plugin's ``PluginMeta``.
+        """
+        row = model_class.objects.filter(plugin=self.plugin_meta).first()
+        if row is not None:
+            return row
+        logger.warning(
+            "plugin %s has no %s. Applying its manifest creates one.",
+            self.name,
+            model_class.__name__,
+        )
+        new_row = model_class(plugin=self.plugin_meta)
+        return new_row
+
+    def refresh_cached_rows(self) -> None:
+        """
+        Replace the cached selector and prompt of this plugin with what the database holds.
+
+        ``PluginSelector.save()`` and ``PluginPrompt.save()`` cache the row that they save. When the
+        transaction that saved it rolls back, the cache would otherwise keep a row that the database
+        doesn't have, and the plugin would read it back as its own.
+        """
+        plugin_meta = self._plugin_meta
+        if not isinstance(plugin_meta, PluginMeta):
+            return
+        try:
+            PluginSelector.get_cached_selector_by_plugin(plugin_meta, invalidate=True)
+        except PluginSelector.DoesNotExist:
+            logger.debug("plugin %s has no stored PluginSelector to cache.", self.name)
+        try:
+            PluginPrompt.get_cached_prompt_by_plugin(plugin_meta, invalidate=True)
+        except PluginPrompt.DoesNotExist:
+            logger.debug("plugin %s has no stored PluginPrompt to cache.", self.name)
+        self._plugin_selector = None
+        self._plugin_prompt = None
+
+    @contextmanager
+    def cached_rows_refreshed_on_failure(self) -> Iterator[None]:
+        """
+        Refresh this plugin's cached rows if the block raises, then raise again.
+
+        Put it outside the block's ``transaction.atomic()``, so that it runs after the rollback, and
+        caches what the database holds afterwards. See :meth:`refresh_cached_rows`.
+        """
+        try:
+            yield
+        except Exception:
+            self.refresh_cached_rows()
+            raise
 
     def reinitialize_plugin(self):
         """
@@ -1340,7 +1402,7 @@ class PluginBase(ABC, AccountMixin):
             # plugin_meta_django_model is empty only without a user profile: the plugin would have no owner.
             raise SmarterPluginError(f"Plugin {self._manifest.metadata.name} has no user profile to own it.")
 
-        with transaction.atomic():
+        with self.cached_rows_refreshed_on_failure(), transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
             tags = set(self._manifest.metadata.tags) if self._manifest.metadata.tags else set()
             plugin_meta.tags.set(tags)
@@ -1405,11 +1467,13 @@ class PluginBase(ABC, AccountMixin):
 
         def apply_fields(instance: models.Model, fields: dict) -> None:
             nonlocal changed
-            if assign_changed_fields(instance, fields):
+            is_new = instance.pk is None
+            fields_changed = assign_changed_fields(instance, fields)
+            if fields_changed or is_new:
                 instance.save()
                 changed = True
 
-        with transaction.atomic():
+        with self.cached_rows_refreshed_on_failure(), transaction.atomic():
             if isinstance(self.plugin_meta, PluginMeta):
                 read_only_attrs = ["id", "user_profile", "name", "created_at", "updated_at"]
                 apply_fields(
@@ -1425,15 +1489,19 @@ class PluginBase(ABC, AccountMixin):
             else:
                 raise SmarterPluginError("PluginMeta is not set or is not a PluginMeta instance.")
 
-            if isinstance(plugin_selector_django_model, dict) and isinstance(self.plugin_selector, PluginSelector):
-                apply_fields(self.plugin_selector, plugin_selector_django_model)
-            else:
-                raise SmarterPluginError("PluginSelector is not set or is not a PluginSelector instance.")
+            # the selector and prompt are read from the database, not the cache, and created if the
+            # plugin has none: a cached row can be one that a failed apply wrote and rolled back.
+            if not isinstance(plugin_selector_django_model, dict):
+                raise SmarterPluginError(f"Plugin {self.manifest.metadata.name} manifest has no selector.")
+            plugin_selector = self.stored_or_new_row(PluginSelector)
+            apply_fields(plugin_selector, plugin_selector_django_model)
+            self._plugin_selector = plugin_selector
 
-            if isinstance(plugin_prompt_django_model, dict) and isinstance(self.plugin_prompt, PluginPrompt):
-                apply_fields(self.plugin_prompt, plugin_prompt_django_model)
-            else:
-                raise SmarterPluginError("PluginPrompt is not set or is not a PluginPrompt instance.")
+            if not isinstance(plugin_prompt_django_model, dict):
+                raise SmarterPluginError(f"Plugin {self.manifest.metadata.name} manifest has no prompt.")
+            plugin_prompt = self.stored_or_new_row(PluginPrompt)
+            apply_fields(plugin_prompt, plugin_prompt_django_model)
+            self._plugin_prompt = plugin_prompt
 
             if isinstance(plugin_data_django_model, dict) and isinstance(self.plugin_data, self.plugin_data_class):
                 apply_fields(self.plugin_data, plugin_data_django_model)
@@ -1493,11 +1561,12 @@ class PluginBase(ABC, AccountMixin):
 
     def delete(self):
         """
-        Delete a plugin.
+        Delete a plugin, with its selector, prompt and data.
 
-        :return: True if the plugin was deleted successfully, False otherwise.
+        A plugin that isn't ready is deleted too, e.g. one that is missing its selector or prompt.
+
+        :return: True if the plugin was deleted, False if it has no PluginMeta to delete.
         :rtype: bool
-        :raises SmarterPluginError: If the plugin is not ready.
         """
 
         def committed():
@@ -1505,26 +1574,17 @@ class PluginBase(ABC, AccountMixin):
                 sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta, plugin_name=plugin_name
             )
 
-        if not self.ready:
+        plugin_meta = self.plugin_meta
+        if not isinstance(plugin_meta, PluginMeta):
             return False
 
         plugin_name = self.name
         with transaction.atomic():
-            plugin_deleting.send(sender=self.__class__, plugin=self, plugin_meta=self.plugin_meta)
-            if isinstance(self.plugin_selector_history, QuerySet):
-                self.plugin_selector_history.delete()
-
-            if isinstance(self.plugin_data, self.plugin_data_class):
-                self.plugin_data.delete()
-
-            if isinstance(self.plugin_prompt, PluginPrompt):
-                self.plugin_prompt.delete()
-
-            if isinstance(self.plugin_selector, PluginSelector):
-                self.plugin_selector.delete()
-
-            if isinstance(self.plugin_meta, PluginMeta):
-                self.plugin_meta.delete()
+            plugin_deleting.send(sender=self.__class__, plugin=self, plugin_meta=plugin_meta)
+            # the selector (with its history), the prompt and the data cascade from the PluginMeta.
+            # Deleting through it, rather than through each of them, also deletes a plugin that isn't
+            # ready because one of them is missing.
+            plugin_meta.delete()
 
             self._plugin_data = None
             self._plugin_prompt = None
