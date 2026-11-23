@@ -9,6 +9,7 @@ from smarter.apps.secret import urls as secret_urls
 from smarter.apps.secret.const import namespace as secret_namespace
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.settings import Settings
+from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib.manifest.sam_apps import (
     CORE_KINDS,
     SAM_APPS,
@@ -121,7 +122,9 @@ class TestSamAppUrlpatterns(SmarterTestBase):
         """Test that each READY line names the module that mounts the urls, not this helper."""
         with self.assertLogs("smarter.lib.manifest.sam_apps", level="DEBUG") as logs:
             sam_app_urlpatterns(smarter_settings, APPS_URLS, "test urls")
-        ready = [record.getMessage() for record in logs.records if "is READY" in record.getMessage()]
+        ready = [
+            record.getMessage() for record in logs.records if f"is {SmarterReadyState.READY}" in record.getMessage()
+        ]
         self.assertEqual(len(ready), 2)
         for message in ready:
             self.assertIn(__name__, message)
