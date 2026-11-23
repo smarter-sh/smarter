@@ -154,6 +154,35 @@ class TestBudgetPromptIntegration(TestAccountMixin):
         create.assert_not_called()
         self.assertIn("This assistant has used its budget for the month.", str(response))
 
+    def test_exceeded_budget_of_the_prompting_user_is_answered_in_the_chat(self):
+        """Test that in the workbench, the budget of the person who is prompting stops the prompt."""
+        self.exceed(self.non_admin_user_profile)
+        provider = self.provider()
+        with mock.patch(CREATE_PATCH) as create, mock.patch(CHARGE_PATCH):
+            response = provider.handler(
+                self.user_profile, self.prompt, self.data(), prompting_user_profile=self.non_admin_user_profile
+            )
+        create.assert_not_called()
+        self.assertIn("This assistant has used its budget for the month.", str(response))
+
+    def test_the_prompting_user_is_charged_not_the_owner(self):
+        """Test that in the workbench, the owner's budget doesn't stop the prompt, and the person prompting pays."""
+        self.exceed(self.user_profile)
+        provider = self.provider()
+        with (
+            mock.patch(CREATE_PATCH, return_value=completion("Hi there.")) as create,
+            mock.patch(CHARGE_PATCH) as create_charge,
+        ):
+            response = provider.handler(
+                self.user_profile, self.prompt, self.data(), prompting_user_profile=self.non_admin_user_profile
+            )
+        create.assert_called_once()
+        self.assertIn("Hi there.", str(response))
+        charged = [call.kwargs["resource_locator"] for call in create_charge.delay.call_args_list]
+        self.assertIn(self.non_admin_user_profile.record_locator, charged)
+        self.assertIn(self.llmclient.record_locator, charged)
+        self.assertNotIn(self.user_profile.record_locator, charged)
+
     def test_within_budget_calls_the_llm(self):
         """Test that a budget that is not exceeded does not stop the prompt."""
         self.budget.attach(self.llmclient)
