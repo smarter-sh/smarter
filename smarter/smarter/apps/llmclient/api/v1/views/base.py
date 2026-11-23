@@ -7,6 +7,7 @@ from http import HTTPStatus
 from typing import List, Optional
 from urllib.parse import urlparse
 
+from django.contrib.auth import SESSION_KEY
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 
@@ -284,6 +285,63 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         if host in smarter_settings.environment_platform_domain:
             return True
         return False
+
+    def is_workbench_request(self, request: HttpRequest, prompting_user) -> bool:
+        """
+        Whether the prompt comes from the web console's workbench.
+
+        The workbench prompts on the platform's own host, as the user who is logged in to the web
+        console: its session's user is the request's user. A deployed LLMClient is prompted on its
+        own host or custom domain, and the cli and the SDKs authenticate with an api key, which
+        never logs a user in to a session.
+
+        :param request: The prompt's request.
+        :param prompting_user: The request's user, resolved by ``get_resolved_user()``.
+        :returns: True for a prompt from the workbench.
+        :rtype: bool
+        """
+        if not self.is_web_platform:
+            return False
+        if not isinstance(prompting_user, User):
+            return False
+        if not prompting_user.is_authenticated:
+            return False
+        session = getattr(request, "session", None)
+        if session is None:
+            return False
+        session_user_id = session.get(SESSION_KEY)
+        if session_user_id is None:
+            return False
+        return str(session_user_id) == str(prompting_user.pk)
+
+    def get_workbench_user_profile(self, request: HttpRequest, prompting_user) -> Optional[UserProfile]:
+        """
+        Return the profile of the person who prompts from the workbench, who is charged for it.
+
+        A prompt is charged to the LLMClient's owner, once it is deployed, except in the web
+        console's workbench, where the person who is developing or trying the LLMClient pays for
+        their own prompts. Either way, the prompt runs with the owner's provider, plugins and
+        secrets. The profile is the one that the person chose in the web console's user menu, else
+        their newest.
+
+        :param request: The prompt's request.
+        :param prompting_user: The request's user, resolved by ``get_resolved_user()``.
+        :returns: The workbench user's profile, or None for any other prompt, or a user without a
+            profile. The prompt is then charged to the LLMClient's owner.
+        :rtype: Optional[UserProfile]
+        """
+        if not self.is_workbench_request(request, prompting_user):
+            return None
+        try:
+            user_profile = UserProfile.get_cached_object(user=prompting_user)
+        except UserProfile.DoesNotExist:
+            logger.warning(
+                "user %s has no profile, so the prompt is charged to the LLMClient's owner. llmclient_id=%s",
+                prompting_user.pk,
+                self.llmclient_id,
+            )
+            return None
+        return user_profile
 
     def helper_logger(self, message: str):
         """
@@ -593,10 +651,18 @@ class LLMClientApiBaseViewSet(SmarterOptionallyAuthenticatedApiView):
         # sent it: the staff-only endpoint of this platform's MCPServer serves only its staff, and records
         # each call under the person who made it. See smarter.apps.mcpserver.services.acting_user.
         prompting_user = get_resolved_user(request.user)
+        # and the owner pays for it, except in the workbench, where whoever is prompting pays.
+        prompting_user_profile = self.get_workbench_user_profile(request, prompting_user)
 
         def complete() -> HttpResponse:
             with acting_user(prompting_user):
-                response = handler(user_profile, prompt, prompt_data, plugins=self.plugins)
+                response = handler(
+                    user_profile,
+                    prompt,
+                    prompt_data,
+                    plugins=self.plugins,
+                    prompting_user_profile=prompting_user_profile,
+                )
             if not self.include_diagnostics:
                 response = without_diagnostics(response)
             if contract == CHAT_CONTRACT_V2:

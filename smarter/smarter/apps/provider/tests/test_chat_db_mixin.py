@@ -150,9 +150,45 @@ class TestChatDbMixin(TestAccountMixin):
             total_tokens=3,
         )
         self.assertEqual(self.tasks["create_charge"].delay.call_count, 3)
+        charged = [call.kwargs["resource_locator"] for call in self.tasks["create_charge"].delay.call_args_list]
+        # it isn't a workbench prompt, so the LLMClient's owner is charged.
+        self.assertEqual(charged, ["llmclient:test", self.user_profile.record_locator, self.account.record_locator])
+
+    def test_insert_charge_to_the_prompting_user(self):
+        """In the workbench, the person who is prompting is charged, not the LLMClient's owner."""
+        mixin = self.mixin(prompt=self.prompt, prompting_user_profile=self.non_admin_user_profile)
+        self.assertEqual(mixin.prompting_user_profile, self.non_admin_user_profile)
+        self.assertEqual(mixin.billed_user_profile, self.non_admin_user_profile)
+        mixin.db_insert_charge(
+            resource_locators=["llmclient:test"],
+            charge_type="completion",
+            completion_tokens=1,
+            prompt_tokens=2,
+            total_tokens=3,
+        )
+        charged = [call.kwargs["resource_locator"] for call in self.tasks["create_charge"].delay.call_args_list]
+        expected = [
+            "llmclient:test",
+            self.non_admin_user_profile.record_locator,
+            self.non_admin_user_profile.account.record_locator,
+        ]
+        self.assertEqual(charged, expected)
+        self.assertNotIn(self.user_profile.record_locator, charged)
+
+    def test_prompting_user_profile_setter(self):
+        """The workbench user is a UserProfile, or None for any other prompt, which the owner pays for."""
+        mixin = self.mixin(prompt=self.prompt)
+        self.assertIsNone(mixin.prompting_user_profile)
+        self.assertEqual(mixin.billed_user_profile, self.user_profile)
+        mixin.prompting_user_profile = self.non_admin_user_profile
+        self.assertEqual(mixin.billed_user_profile, self.non_admin_user_profile)
+        mixin.prompting_user_profile = None
+        self.assertEqual(mixin.billed_user_profile, self.user_profile)
+        with self.assertRaises(SmarterValueError):
+            mixin.prompting_user_profile = "not a profile"  # type: ignore[assignment]
 
     def test_insert_charge_without_the_owner(self):
-        """A plugin's or a tool's charge, charge_owner=False, is queued for its own resources only."""
+        """A plugin's or a tool's charge, charge_user=False, is queued for its own resources only."""
         mixin = self.mixin(prompt=self.prompt)
         mixin.db_insert_charge(
             resource_locators=["pluginmeta:test", "apiconnection:test"],
@@ -160,7 +196,7 @@ class TestChatDbMixin(TestAccountMixin):
             completion_tokens=1,
             prompt_tokens=2,
             total_tokens=3,
-            charge_owner=False,
+            charge_user=False,
         )
         charged = [call.kwargs["resource_locator"] for call in self.tasks["create_charge"].delay.call_args_list]
         self.assertEqual(charged, ["pluginmeta:test", "apiconnection:test"])
