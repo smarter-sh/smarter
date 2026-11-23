@@ -11,10 +11,12 @@ from contextlib import ExitStack
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from django.contrib.auth import SESSION_KEY
 from django.contrib.auth.models import AnonymousUser
 from django.http import StreamingHttpResponse
 from django.test import RequestFactory, override_settings
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import platform_staff_profile_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmclient.api.v1.views.base import LLMClientApiBaseViewSet
@@ -305,8 +307,8 @@ class TestLLMClientApiForDeployedHosts(TestAccountMixin):
             f"{smarter_settings.environment_api_domain}"
         )
 
-    def post(self, user=None):
-        """POST a prompt to the LLMClient's host, anonymously by default."""
+    def post(self, user=None, session=None):
+        """POST a prompt to the LLMClient's host, anonymously by default, with a session if given."""
         request = RequestFactory().post(
             "/prompt/",
             data=json.dumps({"messages": [{"role": "user", "content": "hello"}]}),
@@ -314,6 +316,8 @@ class TestLLMClientApiForDeployedHosts(TestAccountMixin):
             HTTP_HOST=self.host,
         )
         request.user = user or AnonymousUser()
+        if session is not None:
+            request.session = session  # type: ignore[assignment]
         handler = MagicMock(
             return_value=TestLLMClientApiBaseViewSet.lambda_response(TestLLMClientApiBaseViewSet.COMPLETION)
         )
@@ -336,11 +340,71 @@ class TestLLMClientApiForDeployedHosts(TestAccountMixin):
         self.assertEqual(payload.data.messages[0].content, "hi")
         handler.assert_called_once()
         self.assertEqual(handler.call_args.args[0], self.user_profile)
+        # nobody is signed in, so the LLMClient's owner is charged for it.
+        self.assertIsNone(handler.call_args.kwargs["prompting_user_profile"])
 
     def test_authenticated_prompt(self):
         response, handler = self.post(user=self.admin_user)
         self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:500])
         handler.assert_called_once()
+
+    def test_a_deployed_llmclient_is_charged_to_its_owner(self):
+        """A prompt to a deployed LLMClient's own host is charged to its owner, even from a signed-in user."""
+        response, handler = self.post(user=self.non_admin_user, session={SESSION_KEY: str(self.non_admin_user.pk)})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        handler.assert_called_once()
+        self.assertEqual(handler.call_args.args[0], self.user_profile)
+        self.assertIsNone(handler.call_args.kwargs["prompting_user_profile"])
+
+    def workbench_view(self, is_web_platform: bool = True) -> DefaultLLMClientApiView:
+        """A view of the prompt api, on the platform's own host or not."""
+        patcher = patch.object(
+            LLMClientApiBaseViewSet, "is_web_platform", new_callable=PropertyMock, return_value=is_web_platform
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return DefaultLLMClientApiView()
+
+    def workbench_request(self, session_user_id=None):
+        """A prompt's request, whose session's logged-in user is session_user_id."""
+        request = RequestFactory().post("/api/v1/llm-clients/1/prompt/")
+        request.user = self.non_admin_user
+        request.session = {}  # type: ignore[assignment]
+        if session_user_id is not None:
+            request.session[SESSION_KEY] = session_user_id
+        return request
+
+    def test_the_workbench_is_charged_to_whoever_is_prompting(self):
+        """In the workbench, the person who is prompting pays, not the LLMClient's owner."""
+        view = self.workbench_view()
+        request = self.workbench_request(str(self.non_admin_user.pk))
+        self.assertTrue(view.is_workbench_request(request, self.non_admin_user))
+        self.assertEqual(view.get_workbench_user_profile(request, self.non_admin_user), self.non_admin_user_profile)
+        with patch(f"{MODULE}.UserProfile.get_cached_object", side_effect=UserProfile.DoesNotExist):
+            self.assertIsNone(view.get_workbench_user_profile(request, self.non_admin_user))
+
+    def test_only_the_workbench_is_charged_to_whoever_is_prompting(self):
+        """Every other prompt is charged to the LLMClient's owner."""
+        session_user_id = str(self.non_admin_user.pk)
+        request = self.workbench_request(session_user_id)
+        deployed_host_view = self.workbench_view(is_web_platform=False)
+        self.assertFalse(deployed_host_view.is_workbench_request(request, self.non_admin_user))
+        self.assertIsNone(deployed_host_view.get_workbench_user_profile(request, self.non_admin_user))
+        view = self.workbench_view()
+        cases = {
+            "an anonymous user": (session_user_id, AnonymousUser()),
+            "no user": (session_user_id, None),
+            "an api key, which logs nobody in": (None, self.non_admin_user),
+            "another user's session": (str(self.admin_user.pk), self.non_admin_user),
+        }
+        for name, (user_id, user) in cases.items():
+            with self.subTest(name):
+                request = self.workbench_request(user_id)
+                self.assertFalse(view.is_workbench_request(request, user))
+                self.assertIsNone(view.get_workbench_user_profile(request, user))
+        request = self.workbench_request(session_user_id)
+        del request.session
+        self.assertFalse(view.is_workbench_request(request, self.non_admin_user))
 
     def test_staff_only_llmclient(self):
         """Only the platform's staff may prompt a staff-only LLMClient: anyone else is told it doesn't exist."""

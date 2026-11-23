@@ -78,6 +78,7 @@ class ChatDbMixin(AccountMixin):
         "_message_history",
         "_provider_name",
         "_provider",
+        "_prompting_user_profile",
         "_ready",
     )
 
@@ -99,6 +100,8 @@ class ChatDbMixin(AccountMixin):
             Keyword arguments passed to the superclass constructor. Recognized keys:
                 - SMARTER_CHAT_SESSION_KEY_NAME (str): Default is 'session_key'. Session key for the prompt session.
                 - prompt (Prompt): Prompt instance to use if session key is not provided.
+                - prompting_user_profile (UserProfile): The profile of the person who prompts from the
+                  web console's workbench, who is charged for it. See :attr:`billed_user_profile`.
 
         Example
         -------
@@ -116,6 +119,7 @@ class ChatDbMixin(AccountMixin):
         self._message_history: Optional[list[SmarterDictType]] = None
         self._provider_name: Optional[str] = kwargs.get("provider_name", None)
         self._provider: Optional[Provider] = kwargs.get("provider", None)
+        self._prompting_user_profile: Optional[UserProfile] = kwargs.get("prompting_user_profile", None)
         self._ready: bool = False
         super().__init__(*args, **kwargs)
         session_key = kwargs.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
@@ -221,6 +225,49 @@ class ChatDbMixin(AccountMixin):
         self._chat_plugin_usage = None  # type: ignore
         self._chat_history = None
         self._message_history = None
+
+    @property
+    def prompting_user_profile(self) -> Optional[UserProfile]:
+        """
+        The profile of the person who prompts from the web console's workbench.
+
+        It is not :attr:`user_profile`, the LLMClient's owner, whose provider, plugins and secrets
+        the prompt runs with. It is None for every other prompt, e.g. to a deployed LLMClient,
+        from the cli or an SDK, or from an Orchestrator's run.
+
+        :returns: The workbench user's profile, or None.
+        :rtype: Optional[UserProfile]
+        """
+        return self._prompting_user_profile
+
+    @prompting_user_profile.setter
+    def prompting_user_profile(self, value: Optional[UserProfile]) -> None:
+        """
+        Set the profile of the person who sent the prompt.
+
+        :param value: The workbench user's profile, or None for any other prompt.
+        :type value: Optional[UserProfile]
+        :raises SmarterValueError: If the value is neither a UserProfile nor None.
+        """
+        if value is not None and not isinstance(value, UserProfile):
+            raise SmarterValueError(f"prompting_user_profile must be a UserProfile or None, got {type(value)}")
+        self._prompting_user_profile = value
+
+    @property
+    def billed_user_profile(self) -> Optional[UserProfile]:
+        """
+        The profile that a prompt's completion is charged to, and whose budgets it must respect.
+
+        The LLMClient's owner, :attr:`user_profile`, pays for its prompts once it is deployed,
+        except in the web console's workbench, where the person who is prompting pays:
+        :attr:`prompting_user_profile`.
+
+        :returns: The profile to charge.
+        :rtype: Optional[UserProfile]
+        """
+        if self._prompting_user_profile is not None:
+            return self._prompting_user_profile
+        return self.user_profile
 
     @property
     def prompt_history(self) -> Optional[QuerySet[PromptHistory]]:
@@ -508,7 +555,7 @@ class ChatDbMixin(AccountMixin):
         completion_tokens: int,
         prompt_tokens: int,
         total_tokens: int,
-        charge_owner: bool = True,
+        charge_user: bool = True,
     ):
         """
         Insert a new charge record for the current account and prompt session.
@@ -527,11 +574,12 @@ class ChatDbMixin(AccountMixin):
             The number of prompt tokens used.
         total_tokens : int
             The total number of tokens used.
-        charge_owner : bool
-            Whether to charge the user and the account too, which every model call's completion charge
-            does. A plugin's or a tool's charge, whose tokens are the completion's, is charged to the
-            tool's own resources only, so that a model call's tokens are counted once for the user and
-            the account.
+        charge_user : bool
+            Whether to charge the user and their account too, which every model call's completion charge
+            does. The user is :attr:`billed_user_profile`: the LLMClient's owner, or in the web
+            console's workbench, the person who is prompting. A plugin's or a tool's charge, whose tokens are the completion's, is
+            charged to the tool's own resources only, so that a model call's tokens are counted once for
+            the user and the account.
 
         Raises
         ------
@@ -550,16 +598,17 @@ class ChatDbMixin(AccountMixin):
                 total_tokens=100,
             )
         """
-        if not isinstance(self.user_profile, UserProfile):
+        billed_user_profile = self.billed_user_profile
+        if not isinstance(billed_user_profile, UserProfile):
             raise SmarterValueError("Account is required to create a charge record.")
         if not resource_locators:
             raise SmarterValueError("Resource locators are required to create a charge record.")
         if not self.prompt:
             raise SmarterValueError("Prompt is required to create a charge record.")
 
-        if charge_owner:
-            resource_locators.append(self.user_profile.record_locator)
-            resource_locators.append(self.user_profile.account.record_locator)
+        if charge_user:
+            resource_locators.append(billed_user_profile.record_locator)
+            resource_locators.append(billed_user_profile.account.record_locator)
 
         # the same for every charge, so read once rather than per resource locator.
         provider_name = getattr(self, "provider_name", None)
