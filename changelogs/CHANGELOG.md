@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.4...v0.47.5-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **journal:** keep the Smarter Journal on by default ([f5ca995](https://github.com/smarter-sh/smarter/commit/f5ca9950b7b2a08f23a547f844d24e4fc93eaeaa))
+
 ## [0.47.4](https://github.com/smarter-sh/smarter/compare/v0.47.3...v0.47.4) (2026-11-23)
 
 ### Bug Fixes
