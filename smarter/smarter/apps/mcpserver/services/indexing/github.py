@@ -717,12 +717,17 @@ def store_files(index: RepositoryIndex, commit_sha: str, files: list[ArchiveFile
     """
     Replace a repository's indexed files, in one transaction.
 
+    The index's row is locked first, so that two runs that index the same repository at once, e.g.
+    Beat's hourly run and the one that a deploy queues, replace its files one after the other. The
+    second run waits for the first to commit, and its delete then removes the first run's files.
+    Without the lock, its insert could fail on the unique ``(index, path)`` constraint.
+
     The old files are deleted and the new ones inserted, in batches of :data:`BATCH_SIZE`, and the
     index is marked ready, at the commit, with its counts, and with no error. Since it is one
     transaction, a search sees either the old files or the new ones, never a mix.
 
-    Side effects: database writes: deletes and inserts of
-    :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows, and an update of the index.
+    Side effects: database writes: a lock on the index's row until the transaction ends, deletes and
+    inserts of :class:`~smarter.apps.mcpserver.models.RepositoryFile` rows, and an update of the index.
 
     :param index: The repository's index.
     :param commit_sha: The commit that the files are of. The blog's indexer passes a fingerprint
@@ -746,6 +751,8 @@ def store_files(index: RepositoryIndex, commit_sha: str, files: list[ArchiveFile
         total_bytes += file.size
 
     with transaction.atomic():
+        # Wait for any other run that is replacing this index's files, and keep them out until this one commits.
+        RepositoryIndex.objects.select_for_update().get(pk=index.pk)
         RepositoryFile.objects.filter(index=index).delete()
         RepositoryFile.objects.bulk_create(rows, batch_size=BATCH_SIZE)
         index.commit_sha = commit_sha

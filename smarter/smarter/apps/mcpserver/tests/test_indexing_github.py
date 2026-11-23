@@ -10,6 +10,8 @@ import tarfile
 from unittest import mock
 
 import requests
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerIndexError
 from smarter.apps.mcpserver.models import (
@@ -374,6 +376,30 @@ class TestIndexRepository(MCPServerTestBase):
         index = self.index(commit_sha=COMMIT_SHA)
         self.assertEqual(index.commit_sha, COMMIT_SHA)
         self.assertEqual(list(RepositoryFile.objects.filter(index=index).values_list("path", flat=True)), ["only.md"])
+
+    def test_replacing_the_files_locks_the_index_first(self):
+        """The index's row is locked before its files are deleted.
+
+        Two runs that index the same repository at once, e.g. Beat's hourly run and the one that a
+        deploy queues, then replace its files one after the other, instead of inserting the same
+        paths at the same time and failing on the unique (index, path) constraint.
+        """
+        self.index()
+        with CaptureQueriesContext(connection) as context:
+            self.index(force=True)
+        index_table = RepositoryIndex._meta.db_table
+        file_table = RepositoryFile._meta.db_table
+        lock_position = None
+        delete_position = None
+        for position, query in enumerate(context.captured_queries):
+            sql = query["sql"]
+            is_lock = "FOR UPDATE" in sql and index_table in sql
+            if is_lock and lock_position is None:
+                lock_position = position
+            is_delete = sql.startswith("DELETE") and file_table in sql
+            if is_delete and delete_position is None:
+                delete_position = position
+        self.assertLess(required(lock_position, "lock_position"), required(delete_position, "delete_position"))
 
     def test_failure_of_a_new_repository(self):
         """A repository that cannot be indexed, and has no index, fails, and the signal is sent."""
