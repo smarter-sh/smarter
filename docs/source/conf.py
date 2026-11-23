@@ -54,6 +54,11 @@ logging.getLogger().setLevel(logging.WARNING)
 for _noisy_logger in ("urllib3", "requests_cache", "github"):
     logging.getLogger(_noisy_logger).setLevel(logging.WARNING)
 
+# Import every host's urlconf now, in the main process. sphinx-build -j forks its workers
+# (sphinx.util.parallel), and each worker that imported the urlconfs itself would log their
+# "<app> API is READY" lines again, once per worker. Forked workers inherit them loaded.
+importlib.import_module(django.conf.settings.ROOT_HOSTCONF)
+
 ###############################################################################
 # Patch the get_field_type function in sphinxcontrib_django to be more robust
 # and return "Unknown" instead of raising an exception when it encounters
@@ -250,7 +255,71 @@ extensions = [
     "sphinxcontrib.autodoc_pydantic",
     "sphinx_rtd_theme",
     "sphinx_sitemap",
+    "sphinx_reredirects",
 ]
+
+###############################################################################
+# Redirects from pages that moved
+#
+# sphinx_reredirects writes a small HTML page at each old URL that redirects to
+# the new one, so that links from the web console, smarter.sh, the SDKs' docs and
+# search engines keep working. Each entry is an old docname and its new docname;
+# a folder's entry covers every page under it.
+###############################################################################
+SYSTEM_ADMINISTRATION = "smarter-platform/system-administration"
+MOVED_PAGES = {
+    "smarter-platform/smarter-web-console": SYSTEM_ADMINISTRATION + "/tools/smarter-web-console",
+    "smarter-platform/django-admin": SYSTEM_ADMINISTRATION + "/tools/django-admin",
+    "smarter-platform/cli": SYSTEM_ADMINISTRATION + "/tools/cli",
+    "smarter-platform/mcpserver": SYSTEM_ADMINISTRATION + "/tools/mcpserver",
+    "smarter-platform/account-management": SYSTEM_ADMINISTRATION + "/accounts-and-access/account-management",
+    "smarter-platform/user-management": SYSTEM_ADMINISTRATION + "/accounts-and-access/user-management",
+    "smarter-platform/api-keys": SYSTEM_ADMINISTRATION + "/accounts-and-access/api-keys",
+    "smarter-platform/adding-an-llm-provider": SYSTEM_ADMINISTRATION
+    + "/llm-providers-and-extensions/adding-an-llm-provider",
+    "smarter-platform/extensions": SYSTEM_ADMINISTRATION + "/llm-providers-and-extensions/extensions",
+    "smarter-platform/cost-accounting": SYSTEM_ADMINISTRATION + "/costs-and-auditing/cost-accounting",
+    "smarter-platform/smarter-journal": SYSTEM_ADMINISTRATION + "/costs-and-auditing/smarter-journal",
+    "smarter-platform/security": SYSTEM_ADMINISTRATION + "/security",
+    "smarter-platform/security-faq": SYSTEM_ADMINISTRATION + "/security/security-faq",
+    "smarter-platform/updates": SYSTEM_ADMINISTRATION + "/operations/updates",
+    "smarter-platform/backup-and-restore": SYSTEM_ADMINISTRATION + "/operations/backup-and-restore",
+    "smarter-platform/troubleshooting": "smarter-platform/trouble-shooting",
+}
+
+
+def moved_page_redirects(moved_pages: dict[str, str]) -> dict[str, str]:
+    """
+    Return sphinx_reredirects' ``redirects``: each old docname, and the URL of its new page.
+
+    A moved page's folder of the same name moved with it, so each page in the new folder also gets
+    a redirect from its old docname. Each URL is relative to the old page's own URL.
+
+    :param moved_pages: Each old docname and its new docname.
+    :returns: Each old docname and its relative URL.
+    """
+    pairs = []
+    for old_docname, new_docname in moved_pages.items():
+        pairs.append((old_docname, new_docname))
+        new_folder = os.path.join(HERE, new_docname)
+        if not os.path.isdir(new_folder):
+            continue
+        for folder, _subfolders, filenames in os.walk(new_folder):
+            for filename in filenames:
+                if not filename.endswith(".rst"):
+                    continue
+                path = os.path.join(folder, filename)
+                relative = os.path.relpath(path, new_folder)[: -len(".rst")]
+                pairs.append((old_docname + "/" + relative, new_docname + "/" + relative))
+    result = {}
+    for old_docname, new_docname in pairs:
+        old_folder = os.path.dirname(old_docname)
+        url = os.path.relpath(new_docname, old_folder) + ".html"
+        result[old_docname] = url
+    return result
+
+
+redirects = moved_page_redirects(MOVED_PAGES)
 
 templates_path = ["_templates"]
 # sphinx_autodoc_typehints cannot resolve some type hints that third party packages, e.g.
