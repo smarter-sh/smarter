@@ -10,7 +10,7 @@ resource kind and command involved, and the HTTP status code.
 This page describes the journal from the API's point of view: what it records,
 what it adds to responses, how to turn it on, and how to plan for its storage.
 For the platform administrator's view, see
-:doc:`../../smarter-platform/smarter-journal`. For the Python classes, see
+:doc:`../../smarter-platform/system-administration/costs-and-auditing/smarter-journal`. For the Python classes, see
 :doc:`../developer-reference/smarter-journal`.
 
 Why a Journal
@@ -309,7 +309,7 @@ Technical Reference
 
 - :doc:`../developer-reference/smarter-journal`: the journal's enumerations,
   model, response classes, API contract, serializers, API views and signals.
-- :doc:`../../smarter-platform/smarter-journal`: enabling the journal, and how
+- :doc:`../../smarter-platform/system-administration/costs-and-auditing/smarter-journal`: enabling the journal, and how
   it differs from Django and application logs.
 - :doc:`error-handling`: how CLI views turn exceptions into journaled error
   responses.

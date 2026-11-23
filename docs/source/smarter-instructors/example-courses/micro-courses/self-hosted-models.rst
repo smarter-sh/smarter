@@ -31,7 +31,7 @@ that they need, and puts them in the same applications as commercial ones:
 - **A fair comparison.** A self-hosted endpoint is registered as a
   :doc:`Provider </smarter-resources/smarter-provider>`, so an LLMClient uses it in exactly the
   same way as a commercial model, and its GPU hours are
-  :doc:`charged </smarter-platform/cost-accounting>` at the compute profile's price, so quality,
+  :doc:`charged </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` at the compute profile's price, so quality,
   latency and cost per thousand requests are measured on the same records.
 
 This suits an MLOps or machine learning systems course, and any course that has to decide when an
@@ -60,7 +60,7 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 
 **Read.** :doc:`/smarter-resources/smarter-llmhost`,
 :doc:`/smarter-framework/smarter-on-kubernetes`, :doc:`/smarter-resources/smarter-provider`,
-:doc:`/smarter-platform/cost-accounting`, `Django and httpx: An LLM Proxy That Keeps Provider API
+:doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`, `Django and httpx: An LLM Proxy That Keeps Provider API
 Keys Away From Callers <https://blog.smarter.sh/2026/03/07/smarter-llm-proxy-api-keys/>`__.
 
 **Exercises.**

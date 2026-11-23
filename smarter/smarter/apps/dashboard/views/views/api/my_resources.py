@@ -105,7 +105,9 @@ from smarter.lib.manifest.sam_apps import reverse_if_enabled
 
 logger = logging.getSmarterLogger(__name__)
 
-EXTENSIONS_DOCS_URL = "https://docs.smarter.sh/smarter-platform/extensions.html"
+EXTENSIONS_DOCS_URL = (
+    "https://docs.smarter.sh/smarter-platform/system-administration/llm-providers-and-extensions/extensions.html"
+)
 
 
 def get_pending_deployments(invalidate: bool = False, user_profile: Optional[UserProfile] = None) -> int:

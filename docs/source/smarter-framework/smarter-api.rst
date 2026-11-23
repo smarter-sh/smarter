@@ -2,13 +2,13 @@ Smarter API
 ================================
 
 The Smarter API provides support for :doc:`AI text prompts <../smarter-resources/smarter-prompt>`,
-the :doc:`command-line interface (CLI) <../smarter-platform/cli>`, as well as
+the :doc:`command-line interface (CLI) <../smarter-platform/system-administration/tools/cli>`, as well as
 limited support for anciallary UI features. The API is built on :doc:`Django REST Framework <developer-reference/lib/drf>` and
 includes a rich set of enterprise features for enhanced security, audit capability,
 and performance optimization.
 
 Its official clients are the :doc:`Smarter CLI <smarter-cli>`, for people at a terminal, and the
-:doc:`Python <smarter-python>`, :doc:`Node.js <smarter-nodejs>` and :doc:`Go <smarter-golang>`
+:doc:`Python </smarter-framework/smarter-sdks/smarter-python>`, :doc:`Node.js </smarter-framework/smarter-sdks/smarter-nodejs>` and :doc:`Go </smarter-framework/smarter-sdks/smarter-golang>`
 SDKs, for software that integrates with your platform.
 
 The whole API is described by a typed OpenAPI 3.1 document, the

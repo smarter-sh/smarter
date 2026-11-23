@@ -40,4 +40,4 @@ diagnostics insights into application behavior, and are not intended to be a sou
         style="width: 100%; height: auto; display: block; margin: 0 0 1.5em 0; border-radius: 0;"
         alt="Django Admin - Waffle Switches"/>
 
-See `Smarter Logging Configuration <configuration.html>`_ for details on configuring application logging.
+See `Smarter Logging Configuration <../../configuration.html>`_ for details on configuring application logging.

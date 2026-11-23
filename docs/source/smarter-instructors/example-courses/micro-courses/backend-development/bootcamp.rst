@@ -60,7 +60,7 @@ Technical Prerequisites
   and ``docker exec``.
 - **Required:** HTTP and JSON: methods, status codes, headers, request and response bodies.
 - **Required:** Smarter installed from source and running, following the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`. Allow an hour, and
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`. Allow an hour, and
   ask students to send a screenshot of ``docker ps`` beforehand.
 - **Helpful:** SQL and relational databases, YAML, and an editor such as Visual Studio Code with
   the Python extension.

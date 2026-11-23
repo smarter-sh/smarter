@@ -26,7 +26,7 @@ migration logs each merge. To see beforehand what it will merge, run
 ``python manage.py merge_duplicate_users --dry-run --verbose`` from the new version, against the
 database that it will upgrade: it changes nothing.
 
-If you have enabled `SMTP Email Services <smtp-email.html>`_, a `welcome email <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/account/email/welcome.html>`_
+If you have enabled :doc:`SMTP email <../../../smarter-framework/technologies/smtp>`, a `welcome email <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/templates/account/email/welcome.html>`_
 will be sent to the new user with further instructions. Add ``--language`` with another language
 of the web console, ``es`` (Spanish), ``fr`` (French) or ``pt-br`` (Brazilian Portuguese), to set the
 user's preferred language, which is English by default. The welcome email, and the password email

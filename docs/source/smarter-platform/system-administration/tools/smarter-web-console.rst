@@ -7,8 +7,8 @@ All users also gain role-based access to the `Django Admin Console <https://docs
 AI Resource Authors
 --------------------
 
-Authors can prototype, test, and manage AI resources such as :doc:`prompts <../smarter-resources/smarter-prompt>`,
-:doc:`llmclients <../smarter-resources/smarter-llmclient>`, and :doc:`plugins <../smarter-resources/smarter-llmtool>`
+Authors can prototype, test, and manage AI resources such as :doc:`prompts <../../../smarter-resources/smarter-prompt>`,
+:doc:`llmclients <../../../smarter-resources/smarter-llmclient>`, and :doc:`plugins <../../../smarter-resources/smarter-llmtool>`
 through the console's intuitive interface. The dashboard provides a comprehensive view of all AI resources,
 including their relationships, dependencies and real-time state, enabling authors to efficiently
 create and manage any Smarter AI resource from React-based UI pages.
@@ -27,7 +27,7 @@ their browser's time zone. The decorations are chosen, and some are drawn, by tw
 applications, LLMClients that the platform prompts itself, and the panel says so on those days. A
 platform administrator approves what they draw, and can choose another decoration for a day, in the
 Django admin, and turn the feature off with the ``enable_doodle`` waffle switch. See
-:doc:`@smarter/doodle <../smarter-framework/developer-reference/react-integration/doodle>`.
+:doc:`@smarter/doodle <../../../smarter-framework/developer-reference/react-integration/doodle>`.
 
 Console Dashboard
 ~~~~~~~~~~~~~~~~~
@@ -52,7 +52,7 @@ locator, so a detail can be bookmarked or shared too.
 Below the console's title, on every page, a **Did you know?** note shows a fact of the day about The
 Smarter Project, with a link to learn more. Everyone sees the same fact from midnight to midnight UTC.
 A platform administrator can turn it off with the ``enable_web_console_did_you_know`` waffle switch.
-See :doc:`@smarter/didyouknow <../smarter-framework/developer-reference/react-integration/didyouknow>`.
+See :doc:`@smarter/didyouknow <../../../smarter-framework/developer-reference/react-integration/didyouknow>`.
 
 .. raw:: html
 
@@ -70,7 +70,7 @@ who is enrolled in two courses at once, the menu also shows the account that the
 as, and a **Change Profile** item. It lists your profiles, with each one's account number, account
 name and the date that it was created, and **Switch** makes the console act as another one for the
 rest of your session. Until you choose, the console acts as your newest profile.
-See :doc:`@smarter/dashboard-user-menu <../smarter-framework/developer-reference/react-integration/dashboard-user-menu>`.
+See :doc:`@smarter/dashboard-user-menu <../../../smarter-framework/developer-reference/react-integration/dashboard-user-menu>`.
 
 Languages
 ~~~~~~~~~
@@ -82,7 +82,7 @@ and Brazilian Portuguese. A browser that prefers any variant of Spanish, such as
 ``es-AR``, gets Spanish, and one that prefers any variant of Portuguese gets Brazilian Portuguese.
 The languages that a platform offers are those of its ``LANGUAGES`` setting, and the menu is shown
 when there is more than one. Your resources, and their manifests, aren't translated.
-See :doc:`../smarter-framework/developer-reference/translations` for how the console is translated,
+See :doc:`../../../smarter-framework/developer-reference/translations` for how the console is translated,
 and how to add a language.
 
 AI Resource Lists
@@ -136,7 +136,7 @@ workbench itself opens with a guided tour of its chat and its Console, written f
 programmed. Each hint shows until the user has acted on it once, on any device, and the workbench's
 **Help** menu takes the tour again at any time. A platform administrator can turn the hints off with the
 ``enable_web_console_onboarding_hints`` waffle switch. See
-:doc:`@smarter/onboarding <../smarter-framework/developer-reference/react-integration/onboarding>`.
+:doc:`@smarter/onboarding <../../../smarter-framework/developer-reference/react-integration/onboarding>`.
 
 
 .. raw:: html
@@ -302,5 +302,5 @@ for a single use ticket, which is valid for a minute, and opens its WebSocket, `
 with it, so that another site's page cannot open a terminal with a superuser's session cookie.
 Each session's start and end are logged, with its user, pod and shell, but what is typed is not,
 since it can include passwords. See
-:doc:`../smarter-framework/developer-reference/react-integration/terminal-application` for how it
+:doc:`../../../smarter-framework/developer-reference/react-integration/terminal-application` for how it
 is built.

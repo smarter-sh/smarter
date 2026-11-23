@@ -52,7 +52,7 @@ Technical Prerequisites
 - **Required:** HTTP, JSON and YAML.
 - **Required:** the command line, ``curl``, Git and a GitHub account.
 - **Required by week 3:** basic Python, Docker basics, and Smarter installed from source (see the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`).
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`).
 - **Helpful:** Postman, and basic Django.
 
 Schedule

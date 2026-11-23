@@ -14,7 +14,7 @@ Protocol <https://modelcontextprotocol.io>`__ client, over Streamable HTTP, and 
 
 The MCPServer is an internal platform service, not a resource: there is no manifest to apply, and
 nothing to configure. Its main clients are the platform's own built-in :doc:`MCPClients
-<../smarter-resources/smarter-mcpclient>`, ``smarter_project``, ``smarter_project_github*`` and
+<../../../smarter-resources/smarter-mcpclient>`, ``smarter_project``, ``smarter_project_github*`` and
 ``smarter_operations``, which give LLMClients such as ``smarter``, ``smarter_developer``,
 ``smarter_sdk_guide`` and ``smarter_sysadmin`` their tools. See `The Built-in MCPClients`_.
 
@@ -285,7 +285,7 @@ With Claude Code:
       --header "Authorization: Bearer ghp_..."
 
 With an MCPClient, set ``authType: bearer_token``, and put the token in a :doc:`Secret
-<../smarter-resources/smarter-secret>` that ``credentials`` names. The built-in MCPClients send no
+<../../../smarter-resources/smarter-secret>` that ``credentials`` names. The built-in MCPClients send no
 token, so the LLMClients that use them cannot write issues. An MCPClient that is shared writes every
 issue and comment under the account of its Secret's token.
 
@@ -293,7 +293,7 @@ The MCPServer sends the token only to ``api.github.com``, and never logs, caches
 passes it to the LLM. ``search_issues`` and ``read_issue`` send only a classic token, so that a
 secret that is not GitHub's never reaches GitHub. Everything that the tools write is public, so they
 refuse a title, body, comment or file that holds the user's own token, or any credential that the
-:doc:`Guardrail's <../smarter-resources/smarter-guardrail>` secret detectors recognize: api keys, AWS
+:doc:`Guardrail's <../../../smarter-resources/smarter-guardrail>` secret detectors recognize: api keys, AWS
 access keys, JWTs and private keys. See
 :func:`smarter.apps.mcpserver.services.github.client.refuse_secrets`. The tools that write are
 annotated as such, so MCP clients may ask the user before they call them, and their results are
@@ -419,7 +419,7 @@ the call, which is recorded in the audit trail. Every one only reads, except ``c
    * - ``check_reply``
      - Checks a draft reply before the staff member sends it: other people's email addresses, IP
        addresses, phone and card numbers and secrets, with the same detectors as
-       :doc:`Guardrails <../smarter-resources/smarter-guardrail>`, and the platform's internals (pod,
+       :doc:`Guardrails <../../../smarter-resources/smarter-guardrail>`, and the platform's internals (pod,
        node and host names, internal urls, log lines, stack traces, exception names, versions), and
        wording that tells whether an address has an account.
    * - ``create_bug_report``
@@ -452,7 +452,7 @@ The components are ``smarter`` (the web app and api), ``smarter-worker`` and
 ``smarter-worker-infrastructure`` (the Celery workers), ``smarter-beat`` (the scheduler) and
 ``mariadb``. The logs come from Loki, which the Helm chart runs in the platform's namespace, and
 Grafana Alloy redacts email addresses, IP addresses, tokens, api keys and passwords before a line is
-stored. See :doc:`../smarter-framework/smarter-on-kubernetes/operations`. A failed sign-in is logged
+stored. See :doc:`../../../smarter-framework/smarter-on-kubernetes/operations`. A failed sign-in is logged
 with a keyed hash of the email address, not the address: see
 :py:mod:`smarter.apps.account.login_audit`.
 
@@ -465,7 +465,7 @@ Authentication
 Every request to the staff-only endpoint must come from one of the platform's staff, in one of two
 ways:
 
-- the :doc:`api key <api-keys>` of a staff user, in an ``Authorization: Token <key>`` header, e.g.
+- the :doc:`api key <../accounts-and-access/api-keys>` of a staff user, in an ``Authorization: Token <key>`` header, e.g.
   from Claude Code, or
 - an ``X-Smarter-Acting-User`` header that the platform signed itself, for the staff user who is
   chatting with an LLMClient whose MCPClient connects to this endpoint, such as Smarter Sysadmin. See
@@ -518,7 +518,7 @@ everyone who chats, so the platform says who is chatting itself.
 - The results are never cached, so that every call is answered, and recorded, for the person who
   made it.
 
-``smarter_sysadmin`` is also a :doc:`staff-only LLMClient <../smarter-resources/smarter-llmclient>`:
+``smarter_sysadmin`` is also a :doc:`staff-only LLMClient <../../../smarter-resources/smarter-llmclient>`:
 nobody else can see it. It is applied to the Smarter account only, and never deployed. Use it in the
 workbench.
 

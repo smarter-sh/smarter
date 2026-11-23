@@ -515,17 +515,5 @@ are often initialized from values in ``smarter_settings``.
    :hidden:
    :maxdepth: 1
 
-   smarter-web-console
-   django-admin
-   cli
-   extensions
    url-patterns
-   account-management
-   user-management
-   api-keys
-   adding-an-llm-provider
-   cost-accounting
-   smarter-journal
-   mcpserver
    overrides
-   security

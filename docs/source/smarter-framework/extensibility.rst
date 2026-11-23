@@ -138,7 +138,7 @@ Where to Go Next
    :gutter: 2
 
    .. grid-item-card:: Administrators
-      :link: ../smarter-platform/extensions
+      :link: ../smarter-platform/system-administration/llm-providers-and-extensions/extensions
       :link-type: doc
 
       Install, configure, enable, update, roll back and uninstall Extensions, from the web

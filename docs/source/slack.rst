@@ -171,7 +171,7 @@ The bot is for quick, factual questions about how Smarter works. For everything 
   in the `GitHub Discussions <https://github.com/smarter-sh/smarter/discussions/>`__ forum.
 - **Bugs**: open a `GitHub issue <https://github.com/smarter-sh/smarter/issues/>`__, with what you
   did, what you expected and what happened. The bot can help you find the relevant code first.
-- **Security problems**: don't post them in Slack. See :doc:`smarter-platform/security`.
+- **Security problems**: don't post them in Slack. See :doc:`smarter-platform/system-administration/security`.
 
 If the bot gives a wrong or misleading answer, tell the people in the workspace. That helps improve
 both the bot and the documentation.

@@ -353,8 +353,8 @@ Recommended Texts
 - **Reference:** Steve Wilson, *The Developer's Playbook for Large Language Model Security*
   (O'Reilly, 2024).
 - **Reference:** Tanya Janca, *Alice and Bob Learn Application Security* (Wiley, 2020).
-- **Smarter documentation:** :doc:`/smarter-platform/security`,
-  :doc:`/smarter-platform/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/security`,
+  :doc:`/smarter-platform/system-administration/security/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-secret` and :doc:`/adr/016-security`.
 
 Further Study

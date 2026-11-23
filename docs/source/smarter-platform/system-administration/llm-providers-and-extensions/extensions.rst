@@ -4,8 +4,8 @@ Managing Extensions
 Extensions are Python packages that add tools to the LLMs of a Smarter platform. Platform
 superusers install them at run time, from the web console's **Extensions** page, without a
 redeploy, and every account's LLMClients can then list them in their manifests'
-``spec.extensions``. See :doc:`../smarter-framework/extensibility` for how Extensions differ from
-Plugins, and :doc:`../smarter-framework/smarter-extensions` for how to build one.
+``spec.extensions``. See :doc:`../../../smarter-framework/extensibility` for how Extensions differ from
+Plugins, and :doc:`../../../smarter-framework/smarter-extensions` for how to build one.
 
 .. warning::
 
@@ -23,7 +23,7 @@ REST api's ``/api/v1/extensions/`` routes, which the Smarter SDKs call: list the
 and the registry, install from the registry or upload an archive, and enable, disable, configure,
 update, roll back, change the availability of, or uninstall an Extension. As on the page, any user
 may read the Extensions that their account may use, and only superusers may act on them. See
-:doc:`../smarter-framework/smarter-api/api-contract`.
+:doc:`../../../smarter-framework/smarter-api/api-contract`.
 
 The Extensions Page
 -------------------
@@ -134,7 +134,7 @@ The **Settings** form is generated from the settings that the Extension declares
 have a default, which an empty field restores, and a required setting must have a value before
 the Extension can be enabled. The page lists the required settings that are missing.
 
-A secret setting, such as an API key, is stored in a :doc:`Secret <../smarter-resources/smarter-secret>`.
+A secret setting, such as an API key, is stored in a :doc:`Secret <../../../smarter-resources/smarter-secret>`.
 The form shows whether it is set, and the name of its Secret, never its value. Keep it, type a new
 value, which Smarter saves in a Secret named ``extension_<slug>_<setting>``, choose one of the
 platform administrator's Secrets, or clear it. Secret values are encrypted at rest, and are never

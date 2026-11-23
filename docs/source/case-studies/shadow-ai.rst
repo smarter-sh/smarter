@@ -598,8 +598,8 @@ Sources
   ``departments/accounting/plugins/``, ``departments/hr/plugins/`` and ``departments/admissions/plugins/``,
   ``plugins/api/stackademy-api.yaml`` and ``departments/it/guardrails/stackademy-pii-redaction.yaml``
 - :doc:`/smarter-resources/smarter-proxy`, :doc:`/smarter-resources/smarter-secret` and
-  :doc:`/smarter-platform/api-keys`
-- :doc:`/smarter-resources/smarter-budget` and :doc:`/smarter-platform/cost-accounting`
+  :doc:`/smarter-platform/system-administration/accounts-and-access/api-keys`
+- :doc:`/smarter-resources/smarter-budget` and :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`
 - :doc:`/smarter-resources/smarter-llmclient`, :doc:`/smarter-resources/smarter-llmtool`,
   :doc:`/smarter-resources/smarter-mcpclient` and :doc:`/smarter-resources/smarter-guardrail`
 - :doc:`ask-stanley`, for the rebuild of the website's course chatbot, and :doc:`confidential-by-construction`, for

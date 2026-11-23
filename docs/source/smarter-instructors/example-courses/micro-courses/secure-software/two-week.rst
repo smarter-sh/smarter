@@ -329,8 +329,8 @@ Recommended Texts
   in week 2.
 - **Reference:** Tanya Janca, *Alice and Bob Learn Application Security* (Wiley, 2020), and Adam
   Shostack, *Threat Modeling: Designing for Security* (Wiley, 2014), for the capstone.
-- **Smarter documentation:** :doc:`/smarter-platform/security`,
-  :doc:`/smarter-platform/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
+- **Smarter documentation:** :doc:`/smarter-platform/system-administration/security`,
+  :doc:`/smarter-platform/system-administration/security/security-faq`, :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-secret` and :doc:`/adr/016-security`.
 
 Further Study

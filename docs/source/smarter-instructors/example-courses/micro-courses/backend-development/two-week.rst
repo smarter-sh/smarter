@@ -59,7 +59,7 @@ Technical Prerequisites
   ``docker exec`` and ``docker logs``).
 - **Required:** HTTP and JSON.
 - **Required:** Smarter installed from source, following the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`, before Live session 1.
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`, before Live session 1.
 - **Helpful:** SQL, YAML, and Visual Studio Code with the Python extension.
 
 Schedule

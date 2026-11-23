@@ -137,10 +137,10 @@ Production
        `guardrail/services/pipeline.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/guardrail/services/pipeline.py>`__
    * - Cost and budgets
      - Every request is charged, with its tokens, to the user, the application and the account,
-       and Budgets cap the spending. :doc:`/smarter-platform/cost-accounting`.
+       and Budgets cap the spending. :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
      - `account/models/charge.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/account/models/charge.py>`__,
        `budgets/ <https://github.com/smarter-sh/example-manifests/tree/main/smarter/budgets>`__
    * - The record of every conversation
      - Each prompt, answer, tool call and plugin selection is stored, and shown in the
-       workbench's Console. :doc:`/smarter-platform/smarter-journal`.
+       workbench's Console. :doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal`.
      - `prompt/models/ <https://github.com/smarter-sh/smarter/tree/main/smarter/smarter/apps/prompt/models>`__

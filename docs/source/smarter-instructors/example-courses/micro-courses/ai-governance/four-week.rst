@@ -112,7 +112,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
    * - 3
      - Lecture 7
      - **Money.** :doc:`Budgets </smarter-resources/smarter-budget>` and
-       :doc:`cost accounting </smarter-platform/cost-accounting>` as controls. Pre-reading:
+       :doc:`cost accounting </smarter-platform/system-administration/costs-and-auditing/cost-accounting>` as controls. Pre-reading:
        "Governing it with git" in the case study `Stackademy Online Coding Academy
        <https://smarter.sh/case-studies/stackademy>`__, on history, review and undo for an
        assistant's manifests, and on why only a platform administrator may apply a Budget.
@@ -123,7 +123,7 @@ The files that the lectures refer to are listed in full under `Smarter in the So
        models through :doc:`LLMHost </smarter-resources/smarter-llmhost>`.
    * - 3
      - Lecture 9
-     - **Audit.** The :doc:`journal </smarter-platform/smarter-journal>` and
+     - **Audit.** The :doc:`journal </smarter-platform/system-administration/costs-and-auditing/smarter-journal>` and
        :doc:`Prompt </smarter-resources/smarter-prompt>` records, retention, and the privacy of the
        audit trail.
    * - 3
@@ -411,7 +411,7 @@ Recommended Texts
 - **Optional:** Brian Christian, *The Alignment Problem* (W. W. Norton, 2020).
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-prompt`,
-  :doc:`/smarter-platform/smarter-journal`, :doc:`/smarter-platform/security` and
+  :doc:`/smarter-platform/system-administration/costs-and-auditing/smarter-journal`, :doc:`/smarter-platform/system-administration/security` and
   :doc:`/smarter-resources/smarter-llmhost`.
 
 Further Study

@@ -132,7 +132,7 @@ Budgets are managed by superusers, with a Budget manifest. ``spec.resources`` li
 the budget is enforced on, by kind and name, or by record locator. It is declarative: applying the
 manifest again detaches the budget from the resources that are no longer listed.
 
-.. literalinclude:: ../example-manifests/budget.yaml
+.. literalinclude:: ../../../example-manifests/budget.yaml
    :language: yaml
 
 .. code-block:: console

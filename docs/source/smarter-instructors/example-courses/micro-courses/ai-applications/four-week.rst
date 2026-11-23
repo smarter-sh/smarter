@@ -436,7 +436,7 @@ Recommended Texts
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-vectorstore`,
   :doc:`/smarter-resources/smarter-mcpclient`, :doc:`/smarter-resources/smarter-connection`,
   :doc:`/smarter-resources/llmtool/plugin/sql`, :doc:`/smarter-resources/smarter-orchestrator`,
-  :doc:`/smarter-resources/smarter-guardrail` and :doc:`/smarter-platform/cost-accounting`.
+  :doc:`/smarter-resources/smarter-guardrail` and :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`.
 
 Further Study
 -------------

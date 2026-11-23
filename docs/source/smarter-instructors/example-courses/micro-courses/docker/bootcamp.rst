@@ -52,7 +52,7 @@ Technical Prerequisites
 - **Required:** Git: clone and pull.
 - **Required:** Docker Desktop installed, with at least 8 GB of memory allotted to it, and
   ``make init`` and ``make run`` completed from the repository before the bootcamp (see
-  :doc:`/smarter-framework/guides/developer-setup`).
+  :doc:`/smarter-platform/installation/developer-installation`).
 - **Required:** reading YAML.
 - **Helpful:** reading Python or another scripting language, and basic networking (ports, DNS,
   localhost).

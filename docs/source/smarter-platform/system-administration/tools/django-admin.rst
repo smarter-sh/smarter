@@ -6,7 +6,7 @@ Smarter's Django admin console, at ``/admin/`` on your Smarter instance (e.g.,
 and for each account's administrators. Everyone else manages their resources in
 the :doc:`web console <smarter-web-console>`, or with manifests. The admin
 console is customized: see
-:doc:`smarter.apps.dashboard.admin <../smarter-framework/developer-reference/smarter-dashboard/admin>`
+:doc:`smarter.apps.dashboard.admin <../../../smarter-framework/developer-reference/smarter-dashboard/admin>`
 for its permission classes.
 
 You'll need an admin user account to log into the Django admin interface. If you don't have one yet, you can create one by running the following command
@@ -52,7 +52,7 @@ depend on it, e.g. an LLMClient that uses a Guardrail, the delete page lists the
 as protected objects, and refuses the delete. Delete them, or remove their
 references to it, first. A delete that the page allows is done by the broker,
 which invalidates the resource's caches and journals the delete in the
-:doc:`Smarter Journal <smarter-journal>`. If the broker refuses, the admin shows
+:doc:`Smarter Journal <../costs-and-auditing/smarter-journal>`. If the broker refuses, the admin shows
 the list again with the reason.
 
 Some tables record something outside the database, and are read-only, because a
@@ -61,7 +61,7 @@ change to a row would not change what it records:
 - **LLMClient Custom Domain DNS** rows record the DNS records of a Custom
   Domain's hosted zone, which the platform writes when it registers the domain.
 - **Infrastructure resources** are the ledger of the platform's cloud resources
-  (see :doc:`../smarter-framework/smarter-on-kubernetes/operations`).
+  (see :doc:`../../../smarter-framework/smarter-on-kubernetes/operations`).
 
 Exporting manifests
 -------------------
@@ -82,7 +82,7 @@ The admin console keeps two logs:
 - **Log entries**, Django's own log of the changes made in the admin: who added,
   changed or deleted which row, when, and what changed. It is read-only, for
   superusers.
-- The :doc:`Smarter Journal <smarter-journal>`, of every request to Smarter's
+- The :doc:`Smarter Journal <../costs-and-auditing/smarter-journal>`, of every request to Smarter's
   api, including the deletes that the admin makes with a broker. Staff see the
   entries of their own accounts' users.
 

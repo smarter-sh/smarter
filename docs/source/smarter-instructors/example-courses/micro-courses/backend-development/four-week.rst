@@ -61,7 +61,7 @@ Technical Prerequisites
 - **Required:** the Linux or macOS command line, and Docker basics.
 - **Required:** HTTP and JSON.
 - **Required by the end of week 1:** Smarter installed from source, following the
-  :doc:`Developer Setup Guide </smarter-framework/guides/developer-setup>`.
+  :doc:`Developer Installation Guide </smarter-platform/installation/developer-installation>`.
 - **Helpful:** SQL and relational databases, YAML, and Visual Studio Code with the Python
   extension.
 

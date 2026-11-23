@@ -205,8 +205,8 @@ Troubleshooting
 .. seealso::
 
    - :doc:`/smarter-framework/smarter-cli`
-   - :doc:`/smarter-platform/api-keys`
+   - :doc:`/smarter-platform/system-administration/accounts-and-access/api-keys`
    - :doc:`/smarter-resources/smarter-provider`
-   - :doc:`/smarter-platform/adding-an-llm-provider`
+   - :doc:`/smarter-platform/system-administration/llm-providers-and-extensions/adding-an-llm-provider`
    - :doc:`/external-links/openapi`
    - `Anthropic Claude Documentation <https://docs.anthropic.com/>`_
