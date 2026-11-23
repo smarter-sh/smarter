@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 
 from smarter.apps.account.models.budget import SmarterBudgetExceeded
 from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
+from smarter.apps.vectorsearch import run
 from smarter.apps.vectorsearch.api.v1.views import default
 from smarter.apps.vectorsearch.models import Vectorsearch
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
@@ -81,7 +82,8 @@ class TestVectorsearchRun(OpenApiResponseMixin, VectorstoreTestBase):
         """An invalid request, a disabled Vectorsearch, a failed search and a budget are refused."""
         self.assertIn("not valid", self.run_search({}, HTTPStatus.BAD_REQUEST)["detail"])
         self.assertIn("query", self.run_search({"query": " "}, HTTPStatus.BAD_REQUEST)["detail"])
-        with patch.object(default, "charge_authorization", side_effect=SmarterBudgetExceeded("over budget")):
+        # the view runs the Vectorsearch with run_vectorsearch(), which checks the budgets.
+        with patch.object(run, "charge_authorization", side_effect=SmarterBudgetExceeded("over budget")):
             self.assertEqual(self.run_search({"query": "x"}, HTTPStatus.PAYMENT_REQUIRED)["detail"], "over budget")
         self.vectorsearch.is_enabled = False
         self.vectorsearch.save()

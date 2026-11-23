@@ -259,6 +259,15 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         None,
         description=f"{class_identifier}.mcpClients[list]. Optional. The names of the MCPClients whose MCP servers' tools the {MANIFEST_KIND} offers the LLM. Example: ['deepwiki']. Each must be an MCPClient that you own, or that is shared with you. Experimental.",
     )
+    vectorsearches: Optional[List[str]] = Field(
+        None,
+        description=(
+            f"{class_identifier}.vectorsearches[list]. Optional. The names of the Vectorsearches that the "
+            f"{MANIFEST_KIND} offers the LLM, each as a tool that searches the documents of its Vectorstore. "
+            "Example: ['stackademy_handbook']. Each must be a Vectorsearch that you own, or that is shared with you. "
+            "The LLM calls one with a search query of its own, and answers from the passages that it returns."
+        ),
+    )
     apiKey: Optional[str] = Field(
         None,
         description=f"{class_identifier}.apiKey[str]. Optional. The name of the API key that this llmclient uses for authentication. Example: 'my_api_key'. API keys are only necessary for llmclients that are not public facing. This is the name of the API key that is used to authenticate the llmclient with the Smarter API. API keys are issued by an administrator of the Smarter installation and are used to authenticate the llmclient with the Smarter API.",
@@ -270,7 +279,7 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         Reject settings that the llmclient's OpenAI model can never honor, with the settings to use instead.
 
         For example: a defaultReasoningEffort that the model doesn't support, tools (plugins,
-        mcpClients or extensions) on a model that can't use them, or a defaultTemperature that the
+        mcpClients, extensions or vectorsearches) on a model that can't use them, or a defaultTemperature that the
         model always ignores. The models' rules are those of
         :data:`~smarter.lib.openai.model_capabilities.OPENAI_MODEL_CAPABILITIES`: other providers'
         models, and models that are not there, are not checked. Settings that only some requests
@@ -289,7 +298,7 @@ class SAMLLMClientSpec(AbstractSAMSpecBase):
         provider = prompt.provider or OPENAI_PROVIDER
         if provider != OPENAI_PROVIDER:
             return self
-        has_tools = bool(self.plugins) or bool(self.mcpClients) or bool(self.extensions)
+        has_tools = bool(self.plugins) or bool(self.mcpClients) or bool(self.extensions) or bool(self.vectorsearches)
         errors = llmclient_settings_errors(
             model=prompt.defaultModel,
             temperature=prompt.defaultTemperature,

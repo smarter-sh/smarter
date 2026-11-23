@@ -41,10 +41,12 @@ LLMCLIENT_LISTVIEW_CACHE_MODELS = (
     "llmclient.LLMClientGuardrails",
     "llmclient.LLMClientMCPClients",
     "llmclient.LLMClientPlugin",
+    "llmclient.LLMClientVectorsearches",
     "guardrail.Guardrail",
     "llmtool.PluginMeta",
     "mcpclient.MCPClient",
     "orchestrator.OrchestratorHarness",
+    "vectorsearch.Vectorsearch",
 )
 """The models whose changes alter what the LLMClient list shows: the LLMClient, the rows that it.
 
