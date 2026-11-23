@@ -8,6 +8,8 @@ Official website: https://smarter.sh/
 
 - https://docs.smarter.sh/
 
+- https://docs.smarter.sh/smarter-overview.html
+
 - https://docs.smarter.sh/smarter-platform/installation.html
 
 - https://docs.smarter.sh/smarter-framework.html

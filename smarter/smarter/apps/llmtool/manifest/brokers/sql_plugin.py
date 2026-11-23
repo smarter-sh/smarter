@@ -736,7 +736,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
         JSON response indicating success; otherwise, it raises appropriate errors.
 
         :raises: SAMPluginBrokerError: If the plugin or plugin metadata is not properly initialized.
-        :raises: SAMBrokerErrorNotReady: If the plugin is not ready for deletion.
 
         :param request: The HTTP request object.
         :type request: "HttpRequest"
@@ -750,7 +749,6 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
             :class:`SqlPlugin`
             :class:`SmarterJournaledJsonResponse`
             :class:`SAMPluginBrokerError`
-            :class:`SAMBrokerErrorNotReady`
             :class:`SmarterJournalCliCommands`
         """
         logger.debug(
@@ -787,20 +785,7 @@ class SAMSqlPluginBroker(SAMPluginBaseBroker):
                 thing=self.kind,
                 command=command,
             )
-        if not self.plugin.ready:
-            raise SAMBrokerErrorNotReady(
-                f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
-            )
-        self.verify_no_dependencies(command)
-        try:
-            self.plugin.delete()
-            return self.json_response_ok(command=command, data={})
-        except Exception as e:
-            raise SAMBrokerError(
-                f"{self.formatted_class_name} {self.plugin_meta.name} delete failed {e}",
-                thing=self.kind,
-                command=command,
-            ) from e
+        return self.delete_plugin(command)
 
     def deploy(self, request: "HttpRequest", *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

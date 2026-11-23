@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from smarter.apps.llmtool.manifest.brokers import SAMPluginBrokerError
 from smarter.apps.llmtool.manifest.brokers.plugin_base import SAMPluginBaseBroker
 from smarter.apps.llmtool.models import PluginMeta
-from smarter.lib.manifest.broker import SAMBrokerError, SAMBrokerErrorNotReady
+from smarter.lib.manifest.broker import SAMBrokerError
 
 
 def fake_plugin_class(
@@ -210,11 +210,13 @@ class PluginBrokerEdgeCasesMixin:
         with self.assertRaises(SAMPluginBrokerError):  # type: ignore[attr-defined]
             broker.delete(self.request, **self.kwargs)  # type: ignore[attr-defined]
 
-    def test_delete_requires_a_ready_plugin(self):
-        """Delete() raises when the plugin isn't ready."""
-        broker = self._ready_broker(plugin=self._fake_plugin(ready=False), plugin_meta=self._plugin_meta())
-        with self.assertRaises(SAMBrokerErrorNotReady):  # type: ignore[attr-defined]
-            broker.delete(self.request, **self.kwargs)  # type: ignore[attr-defined]
+    def test_delete_deletes_a_plugin_that_isnt_ready(self):
+        """Delete() deletes a plugin that isn't ready, e.g. one that is missing its selector or prompt."""
+        plugin = self._fake_plugin(ready=False)
+        broker = self._ready_broker(plugin=plugin, plugin_meta=self._plugin_meta())
+        response = broker.delete(self.request, **self.kwargs)  # type: ignore[attr-defined]
+        self.assertEqual(response.status_code, HTTPStatus.OK)  # type: ignore[attr-defined]
+        type(plugin).delete.assert_called_once()
 
     def test_delete_wraps_a_delete_failure(self):
         """Delete() raises SAMBrokerError when the plugin's delete() raises."""

@@ -191,7 +191,7 @@ the conversation and update the post once they approve.
 
 An article's title is its H1 too. Use the en dash (–) in a version range.
 
-Other articles use category 6 (Artificial Intelligence), 5 (How To) or 9
+Other articles use category 6 (Artificial Intelligence), 5 (Tutorials, which docs.smarter.sh links to as its tutorials) or 9
 (System Management). Run `categories` for the current list. The home page
 leaves out category 4 (a Code Snippets snippet, "Home page: hide
 Announcements", in wp-admin > Snippets). Announcements are listed in the Main
