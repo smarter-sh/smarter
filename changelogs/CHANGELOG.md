@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.5](https://github.com/smarter-sh/smarter/compare/v0.47.4...v0.47.5) (2026-11-23)
+
+### Bug Fixes
+
+* **journal:** keep the Smarter Journal on by default ([f5ca995](https://github.com/smarter-sh/smarter/commit/f5ca9950b7b2a08f23a547f844d24e4fc93eaeaa))
+* **mcpserver:** lock the index's row before store_files() replaces its files ([125578f](https://github.com/smarter-sh/smarter/commit/125578f1655d3e14763cbbc1376f798dc6c336f2)), closes [#1046](https://github.com/smarter-sh/smarter/issues/1046)
+
+## [0.47.5-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.47.5-alpha.1...v0.47.5-alpha.2) (2026-11-23)
+
+### Bug Fixes
+
+* **mcpserver:** lock the index's row before store_files() replaces its files ([125578f](https://github.com/smarter-sh/smarter/commit/125578f1655d3e14763cbbc1376f798dc6c336f2)), closes [#1046](https://github.com/smarter-sh/smarter/issues/1046)
+
+## [0.47.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.4...v0.47.5-alpha.1) (2026-11-23)
+
+### Bug Fixes
+
+* **journal:** keep the Smarter Journal on by default ([f5ca995](https://github.com/smarter-sh/smarter/commit/f5ca9950b7b2a08f23a547f844d24e4fc93eaeaa))
+
 ## [0.47.4](https://github.com/smarter-sh/smarter/compare/v0.47.3...v0.47.4) (2026-11-23)
 
 ### Bug Fixes
