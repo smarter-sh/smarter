@@ -182,6 +182,8 @@ class TestSmarterStaticPluginBroker(PluginBrokerEdgeCasesMixin, TestSAMBrokerBas
 
     def test_django_orm_to_manifest_dict(self):
         """Test that we can convert the Django plugin spec ORM to a Pydantic manifest spec."""
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         manifest_dict = self.broker.plugin_static_spec_orm2pydantic()
         self.assertIsInstance(manifest_dict, SAMPluginStaticSpec)
 

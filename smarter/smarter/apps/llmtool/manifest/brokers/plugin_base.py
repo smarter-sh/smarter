@@ -330,7 +330,13 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         if not retval:
             logger.debug("AbstractBroker is not ready for %s", self.kind)
             return False
-        retval = bool(self.manifest) or bool(self.plugin) or bool(self.orm_meta_instance)
+        try:
+            has_manifest = bool(self.manifest)
+        except SAMPluginBrokerError:
+            # a plugin whose rows are incomplete has no manifest to describe, but its broker can
+            # still delete it, or apply a manifest that completes it.
+            has_manifest = False
+        retval = has_manifest or bool(self.plugin) or bool(self.orm_meta_instance)
         logger.debug(
             "manifest or orm presence indicates ready=%s for %s",
             retval,
@@ -339,6 +345,32 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
         if retval:
             self.send_broker_ready(broker_ready)
         return retval
+
+    def delete_plugin(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
+        """
+        Delete this broker's plugin, ready or not, once nothing depends on it.
+
+        A plugin that isn't ready, e.g. one that is missing its selector or prompt, is deleted too:
+        otherwise it could never be deleted, nor applied again under its name. See
+        :meth:`smarter.apps.llmtool.plugin.base.PluginBase.delete`.
+
+        :param command: The journal command, ``delete``.
+        :returns: An ok response.
+        :raises SAMBrokerError: If the plugin has dependencies, or its deletion fails.
+        """
+        self.verify_no_dependencies(command)
+        plugin = self.plugin
+        plugin_name = self.plugin_meta.name if self.plugin_meta else self.name
+        try:
+            if plugin is not None:
+                plugin.delete()
+        except Exception as e:
+            raise SAMBrokerError(
+                f"{self.formatted_class_name} {plugin_name} delete failed",
+                thing=self.kind,
+                command=command,
+            ) from e
+        return self.json_response_ok(command=command, data={})
 
     @property
     def plugin(self) -> Optional[PluginBase]:
@@ -556,14 +588,9 @@ class SAMPluginBaseBroker(AbstractBroker[PluginDataBase, PluginMeta]):
             )
             return self._plugin_meta
 
-        if self._manifest:
-            logger.warning(
-                "created ORM instance from manifest for name=%s, user_profile=%s. This should be done elsewhere.",
-                self.name,
-                self.user_profile,
-            )
-            self._plugin_meta = PluginMeta(**self.manifest_to_django_orm())
-            self._plugin_meta.save()
+        # a plugin that doesn't exist yet is created by apply(), with its selector, prompt and data,
+        # in one transaction. A getter that saved a PluginMeta here, e.g. while the broker logs its
+        # state, left one behind without the others whenever apply() then failed.
         return self._plugin_meta
 
     @plugin_meta.setter

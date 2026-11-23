@@ -1,6 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test SAMApiPluginBroker."""
 
+import copy
 import os
 
 import yaml
@@ -11,7 +12,12 @@ from smarter.apps.connection.models import ApiConnection
 from smarter.apps.llmtool.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.llmtool.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.llmtool.manifest.models.api_plugin.spec import SAMApiPluginSpec
-from smarter.apps.llmtool.models import PluginDataApi, PluginMeta
+from smarter.apps.llmtool.models import (
+    PluginDataApi,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 from smarter.apps.llmtool.plugin.api import ApiPlugin
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -165,6 +171,81 @@ class TestSmarterApiPluginBroker(PluginBrokerEdgeCasesMixin, TestSmarterConnecti
         response = broker.delete(self.request, **self.kwargs)
         self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
         self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name="api_test").exists())
+
+    def renamed_manifest(self, name: str, drop_test_value: str = "") -> dict:
+        """
+        Return this test's manifest with another name, and optionally without one of its test values.
+
+        A plugin whose parameter has no test value fails to apply: its data doesn't validate.
+
+        :param name: The plugin's name.
+        :param drop_test_value: The name of a parameter whose test value to leave out.
+        :returns: The manifest, as a dict.
+        """
+        manifest_data = copy.deepcopy(self.manifest_data)
+        manifest_data["metadata"]["name"] = name
+        api_data = manifest_data["spec"]["apiData"]
+        kept = []
+        for test_value in api_data["testValues"]:
+            if test_value["name"] != drop_test_value:
+                kept.append(test_value)
+        api_data["testValues"] = kept
+        self.addCleanup(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).delete)
+        return manifest_data
+
+    def assert_plugin_is_complete(self, name: str) -> None:
+        """Assert that the plugin named ``name`` has its selector, prompt and data, and is ready."""
+        plugin_meta = PluginMeta.objects.get(user_profile=self.user_profile, name=name)
+        self.assertTrue(PluginSelector.objects.filter(plugin=plugin_meta).exists())
+        self.assertTrue(PluginPrompt.objects.filter(plugin=plugin_meta).exists())
+        self.assertTrue(PluginDataApi.objects.filter(plugin=plugin_meta).exists())
+        plugin = ApiPlugin(plugin_meta=plugin_meta, user_profile=self.user_profile)
+        self.assertTrue(plugin.ready)
+
+    def test_failed_apply_leaves_nothing_behind(self):
+        """A manifest that fails to apply leaves no PluginMeta, so applying it again, fixed, makes a whole plugin."""
+        name = f"api_test_failed_apply_{self.hash_suffix}"
+        broken = self.renamed_manifest(name, drop_test_value="limit")
+        response = self.SAMBrokerClass(self.request, manifest=broken).apply(self.request)
+        self.assertNotEqual(response.status_code, 200)
+        self.assertFalse(PluginMeta.objects.filter(user_profile=self.user_profile, name=name).exists())
+
+        fixed = self.renamed_manifest(name)
+        response = self.SAMBrokerClass(self.request, manifest=fixed).apply(self.request)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assert_plugin_is_complete(name)
+
+    def test_apply_repairs_a_plugin_without_its_selector_and_prompt(self):
+        """Applying a manifest restores a selector and prompt that the database lost, even if the cache still has them."""
+        name = f"api_test_repair_{self.hash_suffix}"
+        manifest_data = self.renamed_manifest(name)
+        self.SAMBrokerClass(self.request, manifest=manifest_data).apply(self.request)
+        plugin_meta = PluginMeta.objects.get(user_profile=self.user_profile, name=name)
+        # cache both rows, then delete them without going through save() or delete(), so that the
+        # cache keeps rows that the database no longer has, as a rolled-back apply used to leave it.
+        PluginSelector.get_cached_selector_by_plugin(plugin_meta)
+        PluginPrompt.get_cached_prompt_by_plugin(plugin_meta)
+        PluginSelector.objects.filter(plugin=plugin_meta)._raw_delete(PluginSelector.objects.db)
+        PluginPrompt.objects.filter(plugin=plugin_meta)._raw_delete(PluginPrompt.objects.db)
+
+        response = self.SAMBrokerClass(self.request, manifest=manifest_data).apply(self.request)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assert_plugin_is_complete(name)
+
+    def test_delete_a_plugin_without_its_selector_and_prompt(self):
+        """A plugin that isn't ready, because its selector and prompt are missing, can still be deleted."""
+        name = f"api_test_delete_incomplete_{self.hash_suffix}"
+        manifest_data = self.renamed_manifest(name)
+        self.SAMBrokerClass(self.request, manifest=manifest_data).apply(self.request)
+        plugin_meta = PluginMeta.objects.get(user_profile=self.user_profile, name=name)
+        PluginSelector.objects.filter(plugin=plugin_meta).delete()
+        PluginPrompt.objects.filter(plugin=plugin_meta).delete()
+
+        broker = self.SAMBrokerClass(self.request, manifest=manifest_data)
+        response = broker.delete(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        self.assertFalse(PluginMeta.objects.filter(pk=plugin_meta.pk).exists())
+        self.assertFalse(PluginDataApi.objects.filter(plugin_id=plugin_meta.pk).exists())
 
     def test_not_implemented(self):
         """Test that deploy(), undeploy(), prompt() and logs() are not implemented."""
