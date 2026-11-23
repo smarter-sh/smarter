@@ -202,6 +202,22 @@
           "default": null,
           "description": "LLMClient.spec.searchTerms[list]. Optional. The Plugins to add to the LLMClient. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/smarter-resources/smarter-llmtool.html for more information.",
           "title": "Plugins"
+        },
+        "vectorsearches": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "LLMClient.spec.vectorsearches[list]. Optional. The names of the Vectorsearches that the LLMClient offers the LLM, each as a tool that searches the documents of its Vectorstore. Example: ['stackademy_handbook']. Each must be a Vectorsearch that you own, or that is shared with you. The LLM calls one with a search query of its own, and answers from the passages that it returns.",
+          "title": "Vectorsearches"
         }
       },
       "required": [

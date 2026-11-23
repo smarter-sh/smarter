@@ -17,6 +17,7 @@ from .models import (
     LLMClientMCPClients,
     LLMClientPlugin,
     LLMClientRequests,
+    LLMClientVectorsearches,
 )
 
 logger = logging.getSmarterLogger(__name__)
@@ -313,6 +314,36 @@ class LLMClientMCPClientsAdmin(SmarterCustomerModelAdmin):
         return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
 
 
+class LLMClientVectorsearchesAdmin(SmarterCustomerModelAdmin):
+    """
+    LLMClientVectorsearches model admin.
+
+    Visibility is determined by ownership of the parent LLMClient, and role.
+    """
+
+    model = LLMClientVectorsearches
+    search_fields = ("llmclient__name", "vectorsearch__name")
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = ["llmclient", "vectorsearch", "created_at", "updated_at"]
+
+    def get_queryset(self, request):
+        """
+        Return the LLMClient Vectorsearches whose LLMClient the requesting user has ownership permission for.
+
+        :param request: The admin request.
+        :returns: The permitted rows, or an empty queryset if the user does not resolve to a ``User``.
+        """
+        user = get_resolved_user(request.user)  # type: ignore
+        qs = super().get_queryset(request)
+        if not isinstance(user, User):
+            return qs.none()
+        return qs.filter(llmclient__in=LLMClient.objects.with_ownership_permission_for(user=user))
+
+
 smarter_restricted_admin_site.register(LLMClient, LLMClientAdmin)
 smarter_restricted_admin_site.register(LLMClientCustomDomain, LLMClientCustomDomainAdmin)
 smarter_restricted_admin_site.register(LLMClientCustomDomainDNS, LLMClientCustomDomainDNSAdmin)
@@ -321,3 +352,4 @@ smarter_restricted_admin_site.register(LLMClientPlugin, LLMClientPluginAdmin)
 smarter_restricted_admin_site.register(LLMClientExtensions, LLMClientExtensionsAdmin)
 smarter_restricted_admin_site.register(LLMClientMCPClients, LLMClientMCPClientsAdmin)
 smarter_restricted_admin_site.register(LLMClientRequests, LLMClientRequestsAdmin)
+smarter_restricted_admin_site.register(LLMClientVectorsearches, LLMClientVectorsearchesAdmin)

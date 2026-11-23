@@ -792,16 +792,21 @@ class SAMVectorsearchBroker(AbstractBroker[Vectorsearch, Vectorsearch]):
 
     @classmethod
     def dependents(cls, instance: Vectorsearch) -> SAMDependents:
-        """Return the resources that depend on a Vectorsearch.
-
-        No other resource refers to a Vectorsearch.
+        """Return the LLMClients that use a Vectorsearch.
 
         :param instance: The Vectorsearch.
         :type instance: Vectorsearch
-        :return: An empty list.
+        :return: The LLMClients that list the Vectorsearch in their ``spec.vectorsearches``.
         :rtype: SAMDependents
         """
-        return []
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.api.v1.manifests.enum import SAMKinds
+        from smarter.apps.llmclient.models import LLMClient, LLMClientVectorsearches
+
+        llmclients = LLMClient.objects.filter(
+            id__in=LLMClientVectorsearches.objects.filter(vectorsearch=instance).values("llmclient_id")
+        )
+        return [(SAMKinds.LLM_CLIENT.value, llmclients)]
 
     @classmethod
     def references(cls, instance: Vectorsearch) -> SAMDependents:

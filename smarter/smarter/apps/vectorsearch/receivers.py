@@ -57,4 +57,4 @@ def vectorsearch_deleted(sender, instance: Vectorsearch, **kwargs):
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.
-connect_listview_cache("Vectorsearch", "vectorsearch.Vectorsearch")
+connect_listview_cache("Vectorsearch", "vectorsearch.Vectorsearch", "llmclient.LLMClientVectorsearches")

@@ -62,6 +62,7 @@ from smarter.apps.provider.services.text_completion.utils import (
     http_response_factory,
     pair_tool_messages,
 )
+from smarter.apps.vectorsearch.toolkit import VectorsearchToolkit
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -286,6 +287,12 @@ class OpenAISmarterClient(SmarterChatProviderBase):
     """The extension tools of the current prompt.
 
     See :meth:`handle_extensions`.
+    """
+
+    vectorsearch_toolkit: Optional[VectorsearchToolkit] = None
+    """The Vectorsearch tools of the current prompt.
+
+    See :meth:`handle_vectorsearches`.
     """
 
     guardrail_pipeline: Optional[GuardrailPipeline] = None
@@ -842,6 +849,13 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 }
                 extra_resource_locators.append(mcpclient.record_locator)
 
+        elif self.vectorsearch_toolkit is not None and self.vectorsearch_toolkit.is_vectorsearch_function(
+            function_name
+        ):
+            function_response = self.call_vectorsearch_tool(
+                function_name, function_args, serialized_tool_call, extra_resource_locators
+            )
+
         elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             plugin_id = int(function_name.rsplit("_", 1)[-1])
             try:
@@ -854,10 +868,6 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             if not self.account:
                 raise SmarterConfigurationError(
                     f"{self.formatted_class_name}: account is required to handle plugin calls."
-                )
-            if not self.user_profile:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
                 )
             if not self.user_profile:
                 raise SmarterConfigurationError(
@@ -915,6 +925,36 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             tool_name=tool_name,
         )
 
+    def call_vectorsearch_tool(
+        self,
+        function_name: str,
+        function_args: SmarterDictType,
+        serialized_tool_call: SmarterDictType,
+        extra_resource_locators: list[str],
+    ) -> JsonValue:
+        """
+        Run a Vectorsearch tool call, and record which Vectorsearch answered it.
+
+        :param function_name: The function name that the LLM called, a Vectorsearch tool's.
+        :param function_args: The function's arguments, with the LLM's ``query``.
+        :param serialized_tool_call: The tool call's record, to which the Vectorsearch is added.
+        :param extra_resource_locators: The resources that the tool call used, to which the
+            Vectorsearch's record locator is added.
+        :returns: The search's results, or an error, for the LLM.
+        """
+        if self.vectorsearch_toolkit is None:
+            return None
+        function_response = self.vectorsearch_toolkit.call(function_name, function_args)
+        vectorsearch = self.vectorsearch_toolkit.vectorsearch_for(function_name)
+        if vectorsearch is not None:
+            serialized_tool_call[_InternalKeys.SMARTER_VECTORSEARCH_KEY] = {
+                "id": vectorsearch.pk,
+                "name": vectorsearch.name,
+                "vectorstore": vectorsearch.vectorstore.name,
+            }
+            extra_resource_locators.append(vectorsearch.record_locator)
+        return function_response
+
     def tool_display_name(self, function_name: str) -> str:
         """
         Return the human-readable name of a tool call's function, for progress messages.
@@ -922,7 +962,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         A plugin's function name is symbolic, e.g. ``smarter_plugin_0000000016``, so its
         PluginMeta's name is returned instead. An MCP function's name is prefixed with its
         server's number, so the MCP tool's own name is returned instead, and likewise an
-        extension tool's name is returned without its ``ext_<slug>_`` prefix. Anything else,
+        extension tool's name is returned without its ``ext_<slug>_`` prefix, and a Vectorsearch tool's
+        Vectorsearch's name instead of ``smarter_vectorsearch_<id>``. Anything else,
         e.g. a plugin that can't be found, is returned as is.
 
         :param function_name: The function name that the LLM called.
@@ -935,6 +976,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             return getattr(function, "tool_name", None) or function_name
         if self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
             return self.extension_toolkit.tool_name_for(function_name) or function_name
+        if self.vectorsearch_toolkit is not None and self.vectorsearch_toolkit.is_vectorsearch_function(function_name):
+            vectorsearch = self.vectorsearch_toolkit.vectorsearch_for(function_name)
+            return vectorsearch.name if vectorsearch is not None else function_name
         if function_name.startswith(smarter_settings.function_calling_identifier_prefix):
             try:
                 plugin_meta = PluginMeta.get_cached_object(pk=int(function_name.rsplit("_", 1)[-1]))
@@ -1327,6 +1371,47 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 role=OpenAIMessageKeys.SMARTER_ERROR_KEY,
                 content=f"Smarter could not use the {slug} extension: {error}",
             )
+
+    def handle_vectorsearches(self) -> None:
+        """
+        Offer the LLM a search tool for each of the LLMClient's Vectorsearches.
+
+        The LLMClient's enabled Vectorsearches, listed in its manifest's ``spec.vectorsearches``, are
+        loaded into a :class:`~smarter.apps.vectorsearch.toolkit.VectorsearchToolkit`, whose tools,
+        one per Vectorsearch, are added to the request. The LLM calls one with a search query, and
+        answers from the passages that the search returns.
+
+        :returns: None
+        :rtype: None
+        """
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmclient.models import LLMClientVectorsearches
+
+        self.vectorsearch_toolkit = None
+        llmclient = self.prompt.llmclient if isinstance(self.prompt, Prompt) else None
+        if llmclient is None:
+            return
+        vectorsearches = LLMClientVectorsearches.vectorsearches_for(llmclient)
+        if not vectorsearches:
+            return
+        logger.debug(
+            "loading vectorsearches: %s",
+            [vectorsearch.name for vectorsearch in vectorsearches],
+        )
+        self.vectorsearch_toolkit = VectorsearchToolkit(vectorsearches)
+        if self.tools is None:
+            self.tools = []
+        if self.available_functions is None:
+            self.available_functions = {}
+        for tool in self.vectorsearch_toolkit.tools:
+            self.tools.append(tool)
+            self.available_functions[tool["function"]["name"]] = self.vectorsearch_toolkit.call
+            llm_tool_presented.send(sender=self.handle_vectorsearches, tool=tool, plugin=None)
+        names = ", ".join(vectorsearch.name for vectorsearch in vectorsearches)
+        self.append_message(
+            role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+            content=f"Smarter added a search tool for these vectorsearches: {names}",
+        )
 
     def handle_completion(self) -> SmarterDictType:
         """
@@ -1960,6 +2045,9 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
             # add the tools of the llmclient's extensions
             self.handle_extensions()
+
+            # add a search tool for each of the llmclient's vectorsearches
+            self.handle_vectorsearches()
 
             self.prep_first_request()
             completions_kwargs = {

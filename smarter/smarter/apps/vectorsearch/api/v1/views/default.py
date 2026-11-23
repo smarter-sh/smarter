@@ -18,17 +18,10 @@ from pydantic import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from smarter.apps.account.models.budget import (
-    SmarterBudgetExceeded,
-    charge_authorization,
-)
-from smarter.apps.vectorsearch.contract.models import (
-    VectorsearchApiResults,
-    VectorsearchApiRun,
-)
+from smarter.apps.account.models.budget import SmarterBudgetExceeded
+from smarter.apps.vectorsearch.contract.models import VectorsearchApiRun
 from smarter.apps.vectorsearch.models import Vectorsearch
-from smarter.apps.vectorsearch.signals import vectorsearch_called
-from smarter.apps.vectorstore.contract.models import VectorstoreApiSearchResult
+from smarter.apps.vectorsearch.run import combined_metadata_filter, run_vectorsearch
 from smarter.apps.vectorstore.models import VectorstoreMeta
 from smarter.apps.vectorstore.service import VectorstoreService
 from smarter.common.exceptions import SmarterException
@@ -95,23 +88,20 @@ class DefaultVectorsearchApiView(SmarterAuthenticatedAPIView):
         """
         Return the metadata that every result must match: the request's, then the Vectorsearch's own.
 
-        The Vectorsearch's filter wins where both name the same key, so that a caller can narrow a
-        Vectorsearch, but never widen it.
+        See :func:`~smarter.apps.vectorsearch.run.combined_metadata_filter`.
 
         :param vectorsearch: The Vectorsearch.
         :param run: The request.
         :returns: The combined filter, which may be empty.
         """
-        combined: SmarterDictType = {}
-        if run.filter:
-            combined.update(run.filter)
-        if isinstance(vectorsearch.metadata_filter, dict):
-            combined.update(vectorsearch.metadata_filter)
-        return combined
+        return combined_metadata_filter(vectorsearch, run.filter)
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         """
         Run the Vectorsearch with the JSON body's ``query``, and optional ``filter``.
+
+        The run itself is :func:`~smarter.apps.vectorsearch.run.run_vectorsearch`, which an LLMClient's
+        Vectorsearch tools call too.
 
         :param request: The request.
         :param kwargs: The url's arguments: ``hashed_id`` or ``vectorsearch_id``.
@@ -127,39 +117,24 @@ class DefaultVectorsearchApiView(SmarterAuthenticatedAPIView):
             run = VectorsearchApiRun.model_validate(data)
         except ValidationError as e:
             return error(f"The request is not valid: {e.errors(include_url=False)}")
-        if not vectorsearch.is_enabled:
-            return error(f"Vectorsearch {vectorsearch.name} is disabled.")
-        locators = [vectorsearch.record_locator]
+        budget_locators = []
         if self.user_profile is not None:
-            locators.append(self.user_profile.record_locator)
+            budget_locators.append(self.user_profile.record_locator)
         if self.account is not None:
-            locators.append(self.account.record_locator)
+            budget_locators.append(self.account.record_locator)
         try:
-            charge_authorization(locators, self.__class__.__name__)
+            response = run_vectorsearch(
+                vectorsearch,
+                run.query,
+                service=self.get_service(vectorsearch.vectorstore),
+                run_filter=run.filter,
+                budget_locators=budget_locators,
+                sender=self.__class__,
+            )
         except SmarterBudgetExceeded as e:
             return error(e.message, HTTPStatus.PAYMENT_REQUIRED)
-        vectorsearch_called.send(
-            sender=self.__class__, vectorsearch=vectorsearch, request=request, args=args, kwargs=kwargs
-        )
-        metadata_filter = self.metadata_filter(vectorsearch, run)
-        vectorstore = vectorsearch.vectorstore
-        try:
-            results = self.get_service(vectorstore).search(
-                query=run.query,
-                k=vectorsearch.k,
-                search_type=vectorsearch.search_type,
-                score_threshold=vectorsearch.score_threshold,
-                fetch_k=vectorsearch.fetch_k,
-                lambda_mult=vectorsearch.lambda_mult,
-                metadata_filter=metadata_filter or None,
-            )
         except (SmarterException, ValueError, TypeError) as e:
             return error(str(e))
-        response = VectorsearchApiResults(
-            vectorsearch=vectorsearch.name,
-            vectorstore=vectorstore.name,
-            results=[VectorstoreApiSearchResult.from_result(result) for result in results],
-        )
         return Response(response.model_dump(mode="json"))
 
 

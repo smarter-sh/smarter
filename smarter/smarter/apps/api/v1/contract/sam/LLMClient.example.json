@@ -96,6 +96,9 @@
       "research_assistant",
       "code_review",
       "image_search"
+    ],
+    "vectorsearches": [
+      "example_vectorsearch"
     ]
   }
 }

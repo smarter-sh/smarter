@@ -5132,7 +5132,7 @@
             "title": "Tlscertificateissuancestatus"
           },
           "tools": {
-            "description": "Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients and guardrails, in that order.",
+            "description": "Everything that the LLMClient adds to a prompt: its extensions, plugins, MCPClients, Vectorsearches and guardrails, in that order.",
             "items": {
               "$ref": "#/components/schemas/LLMClientApiTool"
             },
@@ -5209,6 +5209,14 @@
             "$ref": "#/components/schemas/AccountApiUserProfile",
             "description": "The LLMClient's owner."
           },
+          "vectorsearches": {
+            "description": "The LLMClient's Vectorsearches.",
+            "items": {
+              "$ref": "#/components/schemas/LLMClientApiVectorsearchRef"
+            },
+            "title": "Vectorsearches",
+            "type": "array"
+          },
           "version": {
             "anyOf": [
               {
@@ -5232,6 +5240,7 @@
           "extensions",
           "plugins",
           "mcpclients",
+          "vectorsearches",
           "guardrails",
           "tools",
           "customDomains",
@@ -5345,7 +5354,7 @@
       },
       "LLMClientApiTool": {
         "additionalProperties": false,
-        "description": "Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient or guardrail.",
+        "description": "Something that an LLMClient adds to a prompt: an extension, plugin, MCPClient, Vectorsearch or guardrail.",
         "properties": {
           "id": {
             "description": "The link row's id: LLMClientExtensions, LLMClientPlugin, ... .id.",
@@ -5358,6 +5367,7 @@
               "Extension",
               "Plugin",
               "MCPClient",
+              "Vectorsearch",
               "Guardrail"
             ],
             "title": "Kind",
@@ -5375,6 +5385,28 @@
           "kind"
         ],
         "title": "LLMClientApiTool",
+        "type": "object"
+      },
+      "LLMClientApiVectorsearchRef": {
+        "additionalProperties": false,
+        "description": "A Vectorsearch of an LLMClient, in the LLMClient's own response: the LLMClientVectorsearches' id, and the Vectorsearch's name.",
+        "properties": {
+          "id": {
+            "description": "LLMClientVectorsearches.id.",
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "description": "The Vectorsearch's name, Vectorsearch.name.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LLMClientApiVectorsearchRef",
         "type": "object"
       },
       "LLMClientPromptErrorResponse": {
@@ -14635,6 +14667,22 @@
             "default": null,
             "description": "LLMClient.spec.searchTerms[list]. Optional. The Plugins to add to the LLMClient. Plugins are a proprietary extensibility model for tool calling and are not the same as OpenAI plugins. See https://docs.smarter.sh/smarter-resources/smarter-llmtool.html for more information.",
             "title": "Plugins"
+          },
+          "vectorsearches": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.spec.vectorsearches[list]. Optional. The names of the Vectorsearches that the LLMClient offers the LLM, each as a tool that searches the documents of its Vectorstore. Example: ['stackademy_handbook']. Each must be a Vectorsearch that you own, or that is shared with you. The LLM calls one with a search query of its own, and answers from the passages that it returns.",
+            "title": "Vectorsearches"
           }
         },
         "required": [

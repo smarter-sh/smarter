@@ -127,6 +127,21 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
         self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
 
+    def test_a_failed_deploy_is_an_error(self):
+        """A database that can't be reached or created fails the deploy, with the reason, e.g. a refused api key."""
+        self.apply()
+        refusal = (
+            "Vector Store Backend Connection Error: Pinecone is unreachable: [401 UNAUTHENTICATED] Invalid API key"
+        )
+        with patch(
+            "smarter.apps.vectorstore.manifest.brokers.vectorstore.VectorstoreService.reconcile",
+            autospec=True,
+            side_effect=lambda service: service.set_status(VectorstoreStatus.FAILED, refusal),
+        ):
+            with self.assertRaisesRegex(SAMVectorstoreBrokerError, "401 UNAUTHENTICATED"):
+                self.broker_for(self.manifest_text()).deploy(self.request, **self.kwargs)
+        self.assertEqual(VectorstoreMeta.objects.get(name=self.vs_name).status, VectorstoreStatus.FAILED)
+
     def test_immutable_while_deployed(self):
         """Test that a deployed Vectorstore's storage cannot change, and its embeddings model may, reloading its documents."""
         vectorstore = self.apply()
