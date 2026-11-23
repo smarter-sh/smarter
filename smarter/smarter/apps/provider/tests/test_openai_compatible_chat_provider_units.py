@@ -1,5 +1,6 @@
 """Unit tests of OpenAISmarterClient's error formatting, budget refusals, MCP tools and guard clauses, on a client without its handler state."""
 
+from collections import defaultdict
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from openai.types.chat import ChatCompletion
@@ -8,6 +9,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
     Function,
 )
 
+from smarter.apps.account.models import ChargeTypes
 from smarter.apps.account.models.budget import SmarterBudgetExceeded
 from smarter.apps.prompt.models import Prompt
 from smarter.apps.provider.services.text_completion.lib import (
@@ -152,6 +154,47 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         with patch.object(module.PluginMeta, "get_cached_object", return_value=plugin_meta) as get:
             self.assertEqual(self.client.tool_display_name(f"{PLUGIN_PREFIX}_0000000016"), "stackademy_sql")
         get.assert_called_once_with(pk=16)
+
+    # -------------------------------------------------------------------------
+    # charges of plugin and tool calls
+    # -------------------------------------------------------------------------
+    def test_a_plugin_call_is_charged_to_the_plugin_and_its_connection_only(self):
+        """
+        A plugin call is charged to the plugin and its connection, not to the owner again.
+
+        The model call's tokens were already charged to the provider, the llmclient, the user and the
+        account, as its completion, so charging them again would count those tokens twice.
+        """
+        plugin = MagicMock()
+        plugin.plugin_meta.record_locator = "pluginmeta-test"
+        plugin.plugin_data.connection.record_locator = "apiconnection-test"
+        self.client.input_text = "Do you offer any courses on AI?"
+        with (
+            patch.object(module, "chat_plugin_called"),
+            patch.object(OpenAISmarterClient, "prompt", new_callable=PropertyMock, return_value=MagicMock()),
+            patch.object(OpenAISmarterClient, "db_insert_chat_plugin_usage"),
+            patch.object(OpenAISmarterClient, "_insert_charge_by_type") as insert_charge,
+        ):
+            self.client.handle_plugin_called(plugin)
+        insert_charge.assert_called_once_with(
+            ["pluginmeta-test", "apiconnection-test"], ChargeTypes.PLUGIN.value, charge_owner=False
+        )
+
+    def test_a_tool_call_is_charged_to_the_tools_own_resources_only(self):
+        """A tool call is charged to its own resources, e.g. an MCPClient, and not at all when it has none."""
+        self.client.first_iteration = defaultdict(lambda: None)
+        with (
+            patch.object(module, "chat_tool_called"),
+            patch.object(OpenAISmarterClient, "prompt", new_callable=PropertyMock, return_value=MagicMock()),
+            patch.object(OpenAISmarterClient, "db_insert_chat_tool_call") as insert_tool_call,
+            patch.object(OpenAISmarterClient, "_insert_charge_by_type") as insert_charge,
+        ):
+            self.client.handle_tool_called("mcp_tool", "{}", extra_resource_locators=["mcpclient-test"])
+            insert_charge.assert_called_once_with(["mcpclient-test"], ChargeTypes.TOOL.value, charge_owner=False)
+            insert_charge.reset_mock()
+            self.client.handle_tool_called("plugin_tool", "{}")
+            insert_charge.assert_not_called()
+        self.assertEqual(insert_tool_call.call_count, 2)
 
     def test_tool_display_name_of_unknown_tools(self):
         """Unknown functions, and plugins that can't be found, keep their function names."""
