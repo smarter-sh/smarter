@@ -40,10 +40,13 @@ class TestEnvironmentSettings(SmarterTestBase):
         self.assertEqual(get_environment_settings(smarter_settings, "NO_SUCH_GROUP"), {})
 
     def test_values_never_show_a_secret(self):
-        """A SecretStr is only set or not set; an email address and the primary contact are masked."""
+        """A SecretStr shows only its last four characters, or not set; an email address and the primary contact are masked."""
         secret = f"unit-test-secret-{self.hash_suffix}"
         value = environment_setting_log_value
-        self.assertEqual(value("platform_fernet_encryption_key", SecretStr(secret)), "set")
+        self.assertEqual(value("platform_fernet_encryption_key", SecretStr(secret)), "****" + secret[-4:])
+        self.assertNotIn(secret, value("platform_fernet_encryption_key", SecretStr(secret)))
+        # a secret of four characters or fewer would be shown whole, so it is masked entirely.
+        self.assertEqual(value("platform_admin_password", SecretStr("abcd")), "****")
         self.assertEqual(value("platform_admin_password", SecretStr(DEFAULT_MISSING_VALUE)), "not set")
         self.assertNotIn("person", value("platform_email_admin", "person@example.com"))
         self.assertNotIn("Ada Lovelace", value("platform_branding_primary_contact", "Ada Lovelace"))
@@ -84,7 +87,8 @@ class TestEnvironmentVariables(SmarterTestBase):
             "OPENAI_API_KEY": secret,
         }
         variables = get_environment_variables(smarter_settings, "app_provider", environ)
-        self.assertIn(variables["SMARTER_APP_PROVIDER_OPENAI_API_KEY"], ("set", "not set"))
+        openai_api_key = variables["SMARTER_APP_PROVIDER_OPENAI_API_KEY"]
+        self.assertTrue(openai_api_key == "not set" or openai_api_key.startswith("****"), openai_api_key)
         self.assertEqual(variables["APP_PROVIDER_EXAMPLE_REGION"], "us-east-1")
         self.assertNotIn("SMARTER_APP_PROXY_ENABLE", variables)
         self.assertNotIn("OPENAI_API_KEY", variables)
