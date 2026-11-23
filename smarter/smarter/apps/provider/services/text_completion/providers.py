@@ -282,6 +282,7 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             prompt: Prompt,
             data: Union[SmarterDictType, list],
             plugins: Optional[List[PluginBase]] = None,
+            prompting_user_profile: Optional[UserProfile] = None,
         ) -> SmarterChatCompletionResponseType:
             """
             Expose the handler method of the default provider.
@@ -289,6 +290,9 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
             The provider is the one that the prompt's user may read: ``user_profile.user``, which is
             the LLMClient's owner, not ``request.user``, which is anonymous on a deployed LLMClient's
             own host. Not the Smarter admin either, who may read every account's providers.
+
+            The prompt is charged to the owner, except for a prompt from the web console's
+            workbench, which is charged to ``prompting_user_profile``, the person who is prompting.
             """
             client_orm = self.get_client_orm_by_provider_name_and_user(
                 provider_name=provider_name or self.default_handler_name, user=user_profile.user
@@ -302,7 +306,13 @@ class OpenAICompatibleClientFactory(SmarterHelperMixin):
                 api_key=api_key,
                 default_model=client_orm.default_model,
             )
-            handler = smarter_openai_compatible_provider.handler(user_profile, prompt, data, plugins=plugins)
+            handler = smarter_openai_compatible_provider.handler(
+                user_profile,
+                prompt,
+                data,
+                plugins=plugins,
+                prompting_user_profile=prompting_user_profile,
+            )
             return handler
 
         return get_handler

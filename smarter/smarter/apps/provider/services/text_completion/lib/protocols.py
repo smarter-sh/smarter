@@ -128,6 +128,10 @@ class SmarterChatHarnessProtocol(Protocol):
     :type data: Union[SmarterDictType, list]
     :param plugins: Optional list of plugins to use.
     :type plugins: Optional[List[PluginBase]]
+    :param prompting_user_profile: The profile of the person who prompts from the web console's
+        workbench, who is charged for it. None for any other prompt, which is charged to the
+        LLMClient's owner.
+    :type prompting_user_profile: Optional[UserProfile]
 
     :returns: The response data.
     :rtype: Union[SmarterDictType, list]
@@ -139,6 +143,7 @@ class SmarterChatHarnessProtocol(Protocol):
         prompt: Prompt,
         data: Union[SmarterDictType, list],
         plugins: Optional[List[PluginBase]] = None,
+        prompting_user_profile: Optional[UserProfile] = None,
     ) -> SmarterChatCompletionResponseType: ...
 
 

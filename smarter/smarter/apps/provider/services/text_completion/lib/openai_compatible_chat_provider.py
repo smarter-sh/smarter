@@ -755,7 +755,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         # so that those tokens are counted once for each resource.
         resource_locators = list(extra_resource_locators or [])
         if resource_locators:
-            self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value, charge_owner=False)
+            self._insert_charge_by_type(resource_locators, ChargeTypes.TOOL.value, charge_user=False)
         self.db_insert_chat_tool_call(
             function_name=function_name, function_args=function_args, request=request, response=response
         )
@@ -785,7 +785,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         if plugin.plugin_data and hasattr(plugin.plugin_data, "connection"):
             resource_locators.append(plugin.plugin_data.connection.record_locator)  # type: ignore[union-attr]
 
-        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value, charge_owner=False)
+        self._insert_charge_by_type(resource_locators, ChargeTypes.PLUGIN.value, charge_user=False)
         self.db_insert_chat_plugin_usage(prompt=self.prompt, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCallUnion):
@@ -993,14 +993,18 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         """
         Check the budgets of everything that a prompt completion is charged to, before calling the LLM.
 
+        The user is :attr:`billed_user_profile`: the LLMClient's owner, or in the web console's
+        workbench, the person who is prompting.
+
         :raises SmarterBudgetExceeded: if a budget's resource lock forbids charges to the provider,
             the llmclient, the user, or their account.
         """
+        billed_user_profile = self.billed_user_profile
         resources = [
             getattr(self, "provider", None),
             getattr(self.prompt, "llmclient", None),
-            self.user_profile,
-            getattr(self.user_profile, "account", None),
+            billed_user_profile,
+            getattr(billed_user_profile, "account", None),
         ]
         charge_authorization(
             [resource.record_locator for resource in resources if resource is not None], self.__class__.__name__
@@ -1889,6 +1893,7 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         prompt: Prompt,
         data: Union[SmarterDictType, list],
         plugins: Optional[list[PluginBase]] = None,
+        prompting_user_profile: Optional[UserProfile] = None,
     ) -> SmarterChatCompletionResponseType:
         """
         Process a prompt prompt request and invoke the appropriate OpenAI-compatible API endpoint.
@@ -1906,7 +1911,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         - Managing billing, logging, and signal dispatch.
         - Returning a formatted HTTP response with the LLM's output and relevant metadata.
 
-        :param user_profile: The user_profile instance making the request.
+        :param user_profile: The LLMClient owner's profile, whose provider, plugins and secrets the
+            prompt runs with. The session's own profile, ``prompt.user_profile``, replaces it.
         :type user_profile: UserProfile
         :param prompt: The prompt session instance associated with this request.
         :type prompt: Prompt
@@ -1930,6 +1936,10 @@ class OpenAISmarterClient(SmarterChatProviderBase):
 
         :param plugins: A list of plugin instances to be considered for selection and presentation to the LLM.
         :type plugins: Optional[list[PluginBase]]
+        :param prompting_user_profile: The profile of the person who prompts from the web console's
+            workbench, who is charged for it and whose budgets it must respect. None for any other
+            prompt, which is charged to the LLMClient's owner. See :attr:`billed_user_profile`.
+        :type prompting_user_profile: Optional[UserProfile]
 
         :returns: An HTTP response dictionary (or list) containing the LLM's output, tool call results, and metadata.
         :rtype: SmarterChatCompletionResponseType
@@ -1978,6 +1988,8 @@ class OpenAISmarterClient(SmarterChatProviderBase):
                 prompt,
                 self._user_profile,
             )
+        # the owner pays, except for a prompt from the workbench, whose user pays.
+        self.prompting_user_profile = prompting_user_profile
         self.data = data  # type: ignore[assignment]
         self.plugins = plugins
         self.prompt_cache_key = None

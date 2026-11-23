@@ -451,7 +451,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         retval = bool(self.prompt) and bool(self.data) and bool(self.account)
         if retval:
-            charge_authorization(self.user_profile.record_locator, self.__class__.__name__)  # type: ignore
+            charge_authorization(self.billed_user_profile.record_locator, self.__class__.__name__)  # type: ignore
         return retval
 
     @property
@@ -870,7 +870,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         content = f"LLM responded with the following error: {error_message}"
         self.append_message(role=OpenAIMessageKeys.SMARTER_ERROR_KEY, content=content)
 
-    def _insert_charge_by_type(self, resource_locators: list[str], charge_type: str, charge_owner: bool = True) -> None:
+    def _insert_charge_by_type(self, resource_locators: list[str], charge_type: str, charge_user: bool = True) -> None:
         """
         Insert a charge record based on the charge type.
 
@@ -882,8 +882,8 @@ class SmarterChatProviderBase(ChatDbMixin):
         :type resource_locators: list[str]
         :param charge_type: The type of charge (e.g., prompt completion, tool, plugin).
         :type charge_type: str
-        :param charge_owner: Whether to charge the user and the account too. See ``db_insert_charge``.
-        :type charge_owner: bool
+        :param charge_user: Whether to charge the user and the account too. See ``db_insert_charge``.
+        :type charge_user: bool
 
         :returns: None
         :rtype: None
@@ -900,7 +900,7 @@ class SmarterChatProviderBase(ChatDbMixin):
             completion_tokens=self.completion_tokens,
             prompt_tokens=self.prompt_tokens,
             total_tokens=self.total_tokens,
-            charge_owner=charge_owner,
+            charge_user=charge_user,
         )
 
 

@@ -114,7 +114,9 @@ to. A budget can be attached to anything that has a record locator, for example 
 an LLMClient, a Provider, a Proxy, an LLMHostCompute, a plugin, a connection or an MCPClient. A charge
 is created for each resource that took part in a request, so a budget sees its resource's share of
 the spending. Each model call is charged once, as a completion, to its provider, its LLMClient, its
-user and their account. When the model calls a plugin or an MCP server's tool, that call's tokens are
+user and their account. The user is the LLMClient's owner, whoever chats with it once it is deployed,
+except in the web console's workbench, where the person who is prompting is the user, and their own
+budgets apply. When the model calls a plugin or an MCP server's tool, that call's tokens are
 also charged, as a plugin or tool charge, to the plugin and its connection, or to the MCPClient, and
 to nothing else, so that no resource counts the same tokens twice.
 

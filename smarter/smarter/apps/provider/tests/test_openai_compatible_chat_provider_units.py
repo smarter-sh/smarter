@@ -177,7 +177,7 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         ):
             self.client.handle_plugin_called(plugin)
         insert_charge.assert_called_once_with(
-            ["pluginmeta-test", "apiconnection-test"], ChargeTypes.PLUGIN.value, charge_owner=False
+            ["pluginmeta-test", "apiconnection-test"], ChargeTypes.PLUGIN.value, charge_user=False
         )
 
     def test_a_tool_call_is_charged_to_the_tools_own_resources_only(self):
@@ -190,7 +190,7 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
             patch.object(OpenAISmarterClient, "_insert_charge_by_type") as insert_charge,
         ):
             self.client.handle_tool_called("mcp_tool", "{}", extra_resource_locators=["mcpclient-test"])
-            insert_charge.assert_called_once_with(["mcpclient-test"], ChargeTypes.TOOL.value, charge_owner=False)
+            insert_charge.assert_called_once_with(["mcpclient-test"], ChargeTypes.TOOL.value, charge_user=False)
             insert_charge.reset_mock()
             self.client.handle_tool_called("plugin_tool", "{}")
             insert_charge.assert_not_called()
