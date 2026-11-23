@@ -406,6 +406,12 @@ Recommended Texts
 - **Required:** Qinghua Lu, Liming Zhu, Jon Whittle and Xiwei Xu, *Responsible AI: Best Practices
   for Creating Trustworthy AI Systems* (Addison-Wesley, 2023), selected chapters on governance
   patterns in weeks 2 and 3.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__: `Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__, on guardrails,
+  before Lecture 4, and `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, on budgets and the
+  journal, before Lecture 7. Students read them, or follow them on the shared instance.
 - **Week 4:** Cathy O'Neil, *Weapons of Math Destruction* (Crown, 2016), and Joy Buolamwini,
   *Unmasking AI* (Random House, 2023), one chosen by each student, for the fairness discussion.
 - **Optional:** Brian Christian, *The Alignment Problem* (W. W. Norton, 2020).

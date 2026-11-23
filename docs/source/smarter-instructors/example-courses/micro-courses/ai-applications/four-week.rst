@@ -429,6 +429,21 @@ Recommended Texts
   (agents). Week 4: chapters 3, 4 and 10.
 - **Required:** Anthropic, `Building effective agents
   <https://www.anthropic.com/engineering/building-effective-agents>`__ (2024), before Lecture 10.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, which builds
+  Stackademy's course advisor, Stanley, one resource at a time. `Part 1
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__ before Lecture 1,
+  `Part 2 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-2-yaml-manifest/>`__ before
+  Lecture 3, `Part 6
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-6-vectorstore/>`__ before Lecture 4,
+  `Part 4 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-4-sql-database/>`__ before
+  Lecture 6, `Part 3 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-3-rest-api/>`__
+  before Lecture 7, `Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__ before Lecture 9,
+  and `Part 7 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-7-deploy-embed/>`__ and
+  `Part 8 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__ before
+  Lecture 12. The series runs on the reader's own Smarter, installed with the Quick Start; on the
+  class's shared instance, students skip its setup steps.
 - **Optional:** Jay Alammar and Maarten Grootendorst, *Hands-On Large Language Models* (O'Reilly,
   2024), chapters 2 and 8, for the mechanics of embeddings and retrieval.
 - **Optional:** Paul Iusztin and Maxime Labonne, *LLM Engineer's Handbook* (Packt, 2024), for

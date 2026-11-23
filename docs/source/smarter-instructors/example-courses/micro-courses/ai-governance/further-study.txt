@@ -31,8 +31,16 @@
   on why LLMs do better at code than at other work; `How Smarter's Kubernetes-Style Annotations
   Trace Every Resource to Its GitHub Commit
   <https://blog.smarter.sh/2026/10/31/sam-annotations-github-provenance/>`__, on annotations,
-  selectors and change handlers as a way to connect resources to other systems. The case studies
-  `Guardrails: Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__, on
+  selectors and change handlers as a way to connect resources to other systems; `Your First AI
+  Application With Smarter, Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__, on putting four
+  guardrails in front of a public chatbot; `Your First AI Application With Smarter, Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, on what one answer
+  costs, a Budget that refuses prompts once its allowance is spent, and auditing with the journal;
+  `Download Your AI Resources From Smarter
+  <https://blog.smarter.sh/2026/11/10/download-my-data-yaml-manifests/>`__, on giving users every
+  manifest they own, with each Secret's value redacted and a download link that expires. The case
+  studies `Guardrails: Can You Trust the Model? <https://smarter.sh/case-studies/guardrails>`__, on
   guardrails as controls, shadow mode and false positives, and `Stackademy Online Coding Academy
   <https://smarter.sh/case-studies/stackademy>`__, on budgets and governing an assistant's manifests
   with git, turn these ideas into lessons with labs and discussion questions.

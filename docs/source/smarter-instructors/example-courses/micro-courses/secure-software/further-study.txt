@@ -40,9 +40,11 @@
   service layer and guard that keep AWS and Kubernetes out of the tests; `Calico Network Policies:
   Pod Labels as Smarter's Network Boundary
   <https://blog.smarter.sh/2026/10/25/calico-network-policy-labels/>`__, on a deny-all namespace
-  that admits traffic by pod label, defined in Terraform. The case studies `Guardrails: Can You
-  Trust the Model? <https://smarter.sh/case-studies/guardrails>`__, on prompt injection, untrusted
-  HTML and SSRF, `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, on
-  tenant isolation, CORS, sessions and API keys, and `What Happens When You Click Deploy
+  that admits traffic by pod label, defined in Terraform; `Your First AI Application With Smarter,
+  Part 5 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__, on putting
+  four guardrails in front of a public chatbot. The case studies `Guardrails: Can You Trust the
+  Model? <https://smarter.sh/case-studies/guardrails>`__, on prompt injection, untrusted HTML and
+  SSRF, `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, on tenant
+  isolation, CORS, sessions and API keys, and `What Happens When You Click Deploy
   <https://smarter.sh/case-studies/deploy>`__, on DNS, certificates, custom domains and subdomain
   takeover, turn these posts into lessons with labs and discussion questions.

@@ -359,6 +359,12 @@ Recommended Texts
 
 - **Pre-reading:** Ethan Mollick, *Co-Intelligence: Living and Working with AI* (Portfolio, 2024),
   chapters 1 to 3. A short, non-technical introduction to working with language models.
+- **Pre-reading:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, `Part 1
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, which builds
+  Stackademy's course advisor, Stanley, in the workbench. The series runs on the reader's own
+  Smarter, installed with the Quick Start; on the class's shared instance, students skip its setup
+  steps. Parts 2 to 8 make a good follow-up after the bootcamp.
 - **Reference:** John Berryman and Albert Ziegler, *Prompt Engineering for LLMs* (O'Reilly, 2024).
   Chapters 1 to 4 explain how a model sees a prompt, and are worth reading after the bootcamp.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
