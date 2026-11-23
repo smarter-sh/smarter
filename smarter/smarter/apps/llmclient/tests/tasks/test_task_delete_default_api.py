@@ -6,10 +6,13 @@ DNS and Kubernetes are never called: destroy_domain_A_record() and the infrastru
 
 import importlib
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 from smarter.apps.account.models import Account
 from smarter.apps.llmclient import receivers
 from smarter.apps.llmclient.tasks.delete_default_api import delete_default_api
+from smarter.common.conf import smarter_settings
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 MODULE = "smarter.apps.llmclient.tasks.delete_default_api"
@@ -95,7 +98,10 @@ class TestLLMClientDeletedReceiver(SmarterTestBase):
     def test_queues_with_account_number(self):
         llmclient = MagicMock()
         llmclient.name = "example"
-        llmclient.default_url = API_URL
+        # the task is given the default host's url, whose A record it destroys, not the default url,
+        # whose host differs in local Docker.
+        llmclient.default_host = urlparse(API_URL).netloc
+        llmclient.default_url = "http://example.3141-5926-5359.api.localhost:9357/"
         llmclient.user_profile.account.account_number = ACCOUNT_NUMBER
         with (
             patch.object(receivers, "delete_default_api") as task,
@@ -103,4 +109,5 @@ class TestLLMClientDeletedReceiver(SmarterTestBase):
         ):
             receivers.llmclient_deleted(sender=None, instance=llmclient)
         on_commit.assert_called_once()
-        task.delay.assert_called_once_with(name="example", account_number=ACCOUNT_NUMBER, api_url=API_URL)
+        api_url = SmarterValidator.urlify(llmclient.default_host, environment=smarter_settings.environment)
+        task.delay.assert_called_once_with(name="example", account_number=ACCOUNT_NUMBER, api_url=api_url)

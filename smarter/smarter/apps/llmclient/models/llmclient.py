@@ -489,16 +489,43 @@ class LLMClient(MetaDataWithOwnershipModel):
         return domain
 
     @property
+    def default_url_host(self) -> str:
+        """
+        The host at which the platform serves the deployed LLMClient, the host of :attr:`default_url`.
+
+        In an AWS environment, it is :attr:`default_host`. In local Docker, :attr:`default_host` is in
+        the developers' shared DNS zone, e.g. ``api.local.example.com``, which doesn't resolve to the
+        computer that runs the platform, while the platform's own api domain is a localhost domain,
+        which every browser resolves to that computer, and which the platform answers.
+
+        Examples:
+
+        - an AWS environment: 'example.1234-5678-9012.alpha.api.example.com'
+        - local Docker: 'example.1234-5678-9012.api.localhost:9357'
+
+        :returns: The host of the LLMClient's default url.
+        :rtype: str
+        """
+        user_profile: UserProfile = self.user_profile
+        account_number = user_profile.account.account_number
+        host = f"{self.rfc1034_compliant_name}.{account_number}.{smarter_settings.environment_api_domain}"
+        return host
+
+    @property
     def default_url(self) -> str:
         """
-        The default URL for the LLMClient.
+        The default URL for the LLMClient: the url at which it answers once it is deployed.
+
+        Its host is :attr:`default_url_host`, which is :attr:`default_host` except in local Docker.
+        DNS records, ingresses and certificates use :attr:`default_host`, never this url.
 
         example 'https://example.1234-5678-9012.alpha.api.example.com'
 
         :returns: default URL
         :rtype: str
         """
-        return SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
+        url = SmarterValidator.urlify(self.default_url_host, environment=smarter_settings.environment)
+        return url  # type: ignore[return-value]
 
     @property
     def custom_host(self) -> Optional[str]:
@@ -770,6 +797,26 @@ class LLMClient(MetaDataWithOwnershipModel):
             return True
         return False
 
+    def _hostname_of(self, attribute: str) -> Optional[str]:
+        """
+        Return one of the LLMClient's hosts as the hostname of its url in this environment, with its port, or None.
+
+        :param attribute: The name of the host's property, e.g. ``default_host``.
+        :returns: The hostname, or None if the LLMClient has no such host, or it isn't valid.
+        :rtype: Optional[str]
+        """
+        try:
+            host = getattr(self, attribute)
+            if not host:
+                return None
+            url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
+        except SmarterValueError:
+            return None
+        if not url:
+            return None
+        hostname = urlparse(url).netloc
+        return hostname
+
     def mode(self, url: str) -> str:
         """
         Determine the mode of the LLMClient based on the provided URL.
@@ -786,36 +833,19 @@ class LLMClient(MetaDataWithOwnershipModel):
         parsed_url = urlparse(url)
         input_hostname = parsed_url.netloc
 
-        # most likely case first when running in production, at scale.
-        try:
-            default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if default_url:
-                default_hostname = urlparse(default_url).netloc
-                if default_hostname and input_hostname == default_hostname:
-                    return self.Modes.DEFAULT
-        except SmarterValueError:
-            pass
-
-        # workbench sandbox mode
-        try:
-            sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)  # type: ignore[return-value]
-            if sandbox_url:
-                sandbox_hostname = urlparse(sandbox_url).netloc
-                if sandbox_hostname and input_hostname == sandbox_hostname:
-                    return self.Modes.SANDBOX
-        except SmarterValueError:
-            pass
-
-        # custom domain mode. Least likely case.
-        custom_host = self.custom_host
-        if custom_host:
-            try:
-                custom_url = SmarterValidator.urlify(custom_host, environment=smarter_settings.environment)
-                custom_hostname = urlparse(custom_url).netloc
-                if custom_hostname and input_hostname == custom_hostname:
-                    return self.Modes.CUSTOM
-            except SmarterValueError:
-                pass
+        # most likely case first when running in production, at scale. In local Docker, the
+        # llmclient answers at its default url's host, which differs from its default host.
+        # The custom domain is the least likely case.
+        hosts_by_mode = (
+            ("default_host", self.Modes.DEFAULT),
+            ("default_url_host", self.Modes.DEFAULT),
+            ("sandbox_host", self.Modes.SANDBOX),
+            ("custom_host", self.Modes.CUSTOM),
+        )
+        for attribute, mode in hosts_by_mode:
+            hostname = self._hostname_of(attribute)
+            if hostname and input_hostname == hostname:
+                return mode
 
         logger.error(
             "Invalid LLMClient url %s received for default_url: %s, sandbox_url: %s, custom_url: %a",

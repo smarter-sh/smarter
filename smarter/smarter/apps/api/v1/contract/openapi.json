@@ -15010,10 +15010,17 @@
             "title": "Defaulttemperature"
           },
           "deployed": {
-            "default": false,
-            "description": "LLMClient.spec.configuration.prompt.deployed[bool]. Required. Whether the llmclient is deployed. Deployed means that the llmclient is available for use outside the Smarter Prompt Engineer Workbench. Published llmclients have their own subdomain, Kubernetes ingress, and TLS/SSL certificate.",
-            "title": "Deployed",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "LLMClient.spec.configuration.prompt.deployed[bool]. Optional. Whether the llmclient is deployed. Deployed means that the llmclient is available for use outside the Smarter Prompt Engineer Workbench, at its own url. true deploys it and false undeploys it, as smarter deploy and smarter undeploy do. Leave it out to keep the llmclient's deployed state as it is, e.g. when a deployed llmclient's manifest is applied again.",
+            "title": "Deployed"
           },
           "provider": {
             "anyOf": [
