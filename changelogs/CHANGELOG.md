@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.47.2-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.47.2-alpha.1...v0.47.2-alpha.2) (2026-11-23)
+
+### Bug Fixes
+
+* **account:** skip the files that a repository's .smarterignore lists ([82f4973](https://github.com/smarter-sh/smarter/commit/82f4973a199861be163eed36e3894fe2970a7ae5))
+* **vectorstore:** add the cli api's documents command ([de9f828](https://github.com/smarter-sh/smarter/commit/de9f8287a7db9db8ed6e408ccf51a56c7c631f83))
+
 ## [0.47.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.1...v0.47.2-alpha.1) (2026-11-23)
 
 ### Bug Fixes
