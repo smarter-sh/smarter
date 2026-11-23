@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.47.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.21-alpha.1...v0.47.0-alpha.1) (2026-11-23)
+
+### Features
+
+* **vectorsearch:** let an LLMClient search its documents as a tool ([9718adf](https://github.com/smarter-sh/smarter/commit/9718adfdd74807e8efbfecf68af94b974b8f3b75))
+
+### Bug Fixes
+
+* **vectorstore:** fail a deploy whose database can't be reached ([3e0a416](https://github.com/smarter-sh/smarter/commit/3e0a4160f85daffcf762290d3b7704a765c293f2))
+
 ## [0.46.21-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.46.20...v0.46.21-alpha.1) (2026-11-23)
 
 ### Bug Fixes
