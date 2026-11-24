@@ -1,7 +1,8 @@
 """
 The response of the doodle of the day, ``GET /api/v1/doodles/today/``.
 
-The sign-in page's React app, ``@smarter/doodle``, reads it. Its fields are camelCase.
+The sign-in page's React app, ``@smarter/doodle``, reads it. Its fields are camelCase. The
+dashboard's Newest Doodles widget reads :class:`DrawnDoodlesResponse`, of the same doodles.
 """
 
 from typing import Optional
@@ -48,6 +49,18 @@ class DoodleOfTheDay(DoodleApiModel):
             "Smarter Doodle Artist drew it too. Empty when a person or the calendar chose it."
         ),
     )
+
+
+class DrawnDoodle(DoodleOfTheDay):
+    """A doodle that the Smarter Doodle Artist drew, for the dashboard's Newest Doodles widget."""
+
+    region_name: str = Field(description="The doodle's region, as people read it, e.g. Mexico.")
+
+
+class DrawnDoodlesResponse(DoodleApiModel):
+    """The response of ``POST /api/web/dashboard/doodles/``: the newest doodles that the artist drew."""
+
+    doodles: list[DrawnDoodle] = Field(description="The newest first. Only approved doodles, up to today.")
 
 
 class DoodleApiResponse(DoodleOfTheDay):
@@ -105,4 +118,4 @@ def with_query(url: str, query: Optional[str]) -> str:
     return f"{url}{separator}{query}"
 
 
-__all__ = ["DoodleApiResponse", "DoodleOfTheDay"]
+__all__ = ["DoodleApiResponse", "DoodleOfTheDay", "DrawnDoodle", "DrawnDoodlesResponse"]

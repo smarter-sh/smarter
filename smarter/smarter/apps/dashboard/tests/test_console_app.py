@@ -73,13 +73,20 @@ class TestConsoleApp(SmarterTestBase):
             reverse(ConsoleReverseNames.register_view),
             reverse(AccountReverseNames.ACCOUNT_PASSWORD_RESET_REQUEST),
             reset_link,
+            reverse(ConsoleReverseNames.doodle_view, kwargs={"day": "2026-11-03", "region": "latam"}),
         ]
 
     def test_paths_keep_their_urls(self):
         """The moved pages keep the paths that emails, settings and templates use."""
         self.assertEqual(
             self.console_paths(),
-            ["/login/", "/register/", "/password-reset-request/", "/password-reset-link/MTk1NA/abc-123/"],
+            [
+                "/login/",
+                "/register/",
+                "/password-reset-request/",
+                "/password-reset-link/MTk1NA/abc-123/",
+                "/doodles/2026-11-03/latam/",
+            ],
         )
         self.assertEqual(settings.LOGIN_URL, "/login/")
 

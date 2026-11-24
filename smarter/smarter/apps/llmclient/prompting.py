@@ -34,6 +34,7 @@ from pydantic import ValidationError
 from rest_framework.test import APIClient
 
 from smarter.apps.account.models import User, UserProfile
+from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.llmclient.exceptions import SmarterLLMClientException
 from smarter.apps.llmclient.models import LLMClient, LLMClientPlugin
 from smarter.apps.mcpserver.services.acting_user import acting_user
@@ -255,6 +256,23 @@ def extract_json_object(text: Optional[str]) -> Optional[SmarterDictType]:
     return value
 
 
+def smarter_llmclient(name: str) -> Optional[LLMClient]:
+    """
+    Return an LLMClient of the Smarter account, by name, e.g. a staff-only one that the platform prompts.
+
+    :param name: e.g. :data:`~smarter.apps.doodle.const.EDITOR_LLMCLIENT`.
+    :returns: The LLMClient, or ``None`` if the example manifests that declare it aren't loaded.
+        A missing LLMClient isn't cached, so it is found as soon as they are.
+    :rtype: Optional[LLMClient]
+    """
+    account = smarter_cached_objects.smarter_account
+    try:
+        llmclient = LLMClient.get_cached_object(name=name, account=account)
+    except LLMClient.DoesNotExist:
+        return None
+    return llmclient
+
+
 __all__ = [
     "PLATFORM_IP_ADDRESS",
     "SmarterLLMClientPromptError",
@@ -265,4 +283,5 @@ __all__ = [
     "prompt_llmclient",
     "send_message",
     "single_use_api_key",
+    "smarter_llmclient",
 ]
