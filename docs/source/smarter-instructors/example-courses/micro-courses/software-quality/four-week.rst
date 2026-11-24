@@ -388,6 +388,9 @@ Recommended Texts
   in weeks 3 and 4.
 - **Required:** Nicole Forsgren, Jez Humble and Gene Kim, *Accelerate* (IT Revolution, 2018), part
   1, in week 4.
+- **Required:** `Maintaining Code Quality On A Large Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__
+  (blog.smarter.sh, 2026), on what each of Smarter's pre-commit hooks catches, before Lecture 7.
 - **Reference:** Brian Okken, *Python Testing with pytest* (2nd edition, Pragmatic Bookshelf,
   2022).
 - **Smarter documentation:** :doc:`/smarter-framework/developer-reference/devops/test`,

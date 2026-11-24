@@ -334,6 +334,12 @@ Recommended Texts
   week 1.
 - **Required:** Arvind Narayanan and Sayash Kapoor, *AI Snake Oil* (Princeton University Press,
   2024). Week 1: chapters 1 to 4. Week 2: chapters 5 to 8.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__: `Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__, on guardrails,
+  before Lecture 2, and `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, on budgets and the
+  journal, before Lecture 4. Students read them, or follow them on the shared instance.
 - **Optional:** Brian Christian, *The Alignment Problem* (W. W. Norton, 2020), for the history of
   fairness and safety research.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-guardrail`,

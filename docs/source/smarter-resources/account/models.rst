@@ -8,6 +8,7 @@ Account Django ORM
    models/charge
    models/llm_prices
    models/metadata_with_ownership
+   models/repository_apply
    models/user_profile
 
 See also :doc:`models/budget`.

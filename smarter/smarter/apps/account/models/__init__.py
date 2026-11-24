@@ -41,11 +41,17 @@ from .data_export import (
     DataExportStatus,
     DataExportStep,
 )
-from .llm_prices import LLMPrices
+from .llm_prices import LLMPrices, LLMPriceSource
 from .metadata_with_ownership import (
     MetaDataWithOwnershipModel,
     MetaDataWithOwnershipModelManager,
     SmarterQuerySetWithPermissions,
+)
+from .repository_apply import (
+    RepositoryApply,
+    RepositoryApplyManifest,
+    RepositoryApplyManifestStatus,
+    RepositoryApplyStatus,
 )
 from .user_profile import UserProfile, active_language, user_administers_account
 
@@ -78,6 +84,11 @@ __all__ = [
     "user_administers_account",
     "ResolvedUserType",
     "LLMPrices",
+    "LLMPriceSource",
+    "RepositoryApply",
+    "RepositoryApplyManifest",
+    "RepositoryApplyManifestStatus",
+    "RepositoryApplyStatus",
     "MetaDataWithOwnershipModel",
     "MetaDataWithOwnershipModelManager",
     "SmarterQuerySetWithPermissions",

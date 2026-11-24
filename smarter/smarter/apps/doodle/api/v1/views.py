@@ -2,20 +2,26 @@
 """
 The views of the doodle api, ``/api/v1/doodles/``.
 
-Both are public, because the sign-in page shows the doodle before anyone signs in. Neither reads
+They are all public, because the sign-in page shows the doodle before anyone signs in. None reads
 or writes anything of the visitor's: the time zone that the browser sends picks the region and the
 local date, and is not stored. Their reads are cached in :mod:`smarter.apps.doodle.caching`.
 
 - ``today/?tz=<IANA time zone>``: :class:`DoodleTodayView`, the doodle of the day, as JSON.
+- ``<date>/<region>/``: :class:`DoodleOfDayView`, the approved doodle of one day in one region, as
+  JSON, for the web console's page of one doodle, which the dashboard's Newest Doodles widget links to.
 - ``artwork/<sha256>.svg``: :class:`DoodleArtworkView`, an artwork, cached forever by browsers.
 """
 
+import datetime
+
 from django.http import HttpResponse
+from django.utils import timezone
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from smarter.apps.doodle.artwork import still_svg
-from smarter.apps.doodle.caching import artwork_svg, doodle_of_the_day
+from smarter.apps.doodle.caching import approved_doodle, artwork_svg, doodle_of_the_day
 from smarter.apps.doodle.const import ARTWORK_CACHE_MAX_AGE, TODAY_CACHE_MAX_AGE
 from smarter.apps.doodle.contract.models import DoodleApiResponse
 from smarter.apps.doodle.regions import DoodleRegion, local_date, region_for_timezone
@@ -66,6 +72,50 @@ class DoodleTodayView(SmarterUnauthenticatedAPIView):
         return response
 
 
+class DoodleOfDayView(SmarterUnauthenticatedAPIView):
+    """
+    The approved doodle of one day in one region, e.g. ``2026-11-03/latam/``, as the sign-in page showed it.
+
+    ``GET`` returns the same response as :class:`DoodleTodayView`, for the web console's page of one
+    doodle. Only a day up to tomorrow, in UTC, which is already today east of UTC, so that a planned
+    doodle isn't shown before its day. Its query string, e.g. the ``tz`` that ``@smarter/doodle`` sends,
+    is ignored.
+    """
+
+    def get(self, request: Request, *args, day: str = "", region: str = "", **kwargs) -> Response:
+        """
+        Return the doodle.
+
+        :param request: The request.
+        :param day: The local date, e.g. ``2026-11-03``.
+        :param region: The region, e.g. ``latam``.
+        :returns: A :class:`~smarter.apps.doodle.contract.models.DoodleApiResponse`.
+        :rtype: Response
+        :raises NotFound: If the day or region isn't valid, the day is after tomorrow, or no doodle was approved.
+        """
+        try:
+            date = datetime.date.fromisoformat(day)
+        except ValueError as e:
+            raise NotFound("No such day.") from e
+        if region not in DoodleRegion.values:
+            raise NotFound("No such region.")
+        tomorrow = timezone.now().date() + datetime.timedelta(days=1)
+        if date > tomorrow:
+            raise NotFound("No doodle yet.")
+        doodle = approved_doodle(date.isoformat(), region)
+        if doodle is None:
+            raise NotFound("No approved doodle.")
+        animated = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_ANIMATION)
+        show_caption = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_CAPTION)
+        show_ai_credit = switch_is_active(SmarterWaffleSwitches.ENABLE_DOODLE_AI_CREDIT)
+        body = DoodleApiResponse.from_doodle(
+            doodle, animated=animated, show_caption=show_caption, show_ai_credit=show_ai_credit
+        )
+        response = Response(body.to_json())
+        response["Cache-Control"] = f"public, max-age={TODAY_CACHE_MAX_AGE}"
+        return response
+
+
 class DoodleArtworkView(SmarterUnauthenticatedAPIView):
     """
     An artwork of a doodle, ``image/svg+xml``.
@@ -95,4 +145,4 @@ class DoodleArtworkView(SmarterUnauthenticatedAPIView):
         return response
 
 
-__all__ = ["DoodleArtworkView", "DoodleTodayView"]
+__all__ = ["DoodleArtworkView", "DoodleOfDayView", "DoodleTodayView"]

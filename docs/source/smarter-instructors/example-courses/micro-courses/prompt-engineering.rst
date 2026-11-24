@@ -65,7 +65,8 @@ Each course plan lists every manifest and file that it uses under *Smarter in th
 :doc:`/smarter-resources/smarter-guardrail`, :doc:`/smarter-framework/smarter-manifests`, `Getting
 Started with Smarter's CLI <https://blog.smarter.sh/2026/02/07/getting-started-smarter-cli/>`__,
 `How to Embed a Smarter Chatbot in an HTML Web Page
-<https://blog.smarter.sh/2026/07/11/smarter-chat-html/>`__.
+<https://blog.smarter.sh/2026/07/11/smarter-chat-html/>`__, `Your First AI Application With Smarter
+<https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__.
 
 **Exercises.**
 

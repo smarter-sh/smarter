@@ -354,6 +354,13 @@ Recommended Texts
 
 - **Pre-reading:** Anthropic, `Building effective agents
   <https://www.anthropic.com/engineering/building-effective-agents>`__ (2024). A 20-minute read.
+- **Pre-reading:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, `Part 1
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, which also checks
+  that a student's setup works. The series runs on the reader's own Smarter, installed with the
+  Quick Start; on the class's shared instance, students skip its setup steps. Parts 2 to 8 build the
+  same Stackademy application that the bootcamp uses, one resource at a time, and make a good
+  follow-up.
 - **Reference:** Chip Huyen, *AI Engineering: Building Applications with Foundation Models*
   (O'Reilly, 2025). Chapter 6, on retrieval and agents, is the best follow-up to the bootcamp.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-vectorstore`,

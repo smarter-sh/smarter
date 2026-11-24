@@ -223,3 +223,49 @@ def delete_expired_data_exports() -> int:
     deleted = delete_expired()
     logger.info("deleted %s expired data exports.", deleted)
     return deleted
+
+
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
+def check_llm_prices() -> int:
+    """
+    Top-level Celery task for keeping the LLM prices up to date, from the providers' pricing pages.
+
+    Calls :func:`smarter.apps.account.llm_price_checker.check_llm_prices`, which the Smarter LLM Price
+    Checker, an LLMClient, does. Scheduled every week via Celery Beat. It isn't retried: a page or a
+    price that fails is kept as it was, and checked again the next week.
+
+    :returns: How many models' prices changed.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .llm_price_checker import check_llm_prices as check_prices
+
+    results = check_prices()
+    changed = 0
+    for result in results:
+        changed += result.changed
+    logger.info("checked the LLM prices of %s pricing pages, and %s changed.", len(results), changed)
+    return changed
+
+
+@app.task(queue=smarter_settings.app_llmclient_tasks_celery_task_queue)
+def apply_repository(run_id: int) -> str:
+    """
+    Top-level Celery task for the Apply page's batch apply of a GitHub repository.
+
+    Runs :func:`smarter.apps.account.repository_apply.run_repository_apply`, which clones the repository and
+    applies each of its manifests as the user who started it, recording each one's result in the run's rows for
+    the web console. It is not retried: a failure is recorded in the run, and the user can start another.
+
+    :param run_id: The id of the :class:`~smarter.apps.account.models.RepositoryApply`.
+    :returns: The run's status, e.g. ``finished``.
+
+    **Example usage**::
+
+        apply_repository.delay(run.pk)
+    """
+    # pylint: disable=import-outside-toplevel
+    from .repository_apply import run_repository_apply
+
+    logger.info("batch apply %s", run_id)
+    run = run_repository_apply(run_id)
+    return str(run.status)

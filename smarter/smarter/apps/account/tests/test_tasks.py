@@ -8,9 +8,11 @@ them synchronously, in this process.
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+from smarter.apps.account.llm_price_checker import LLMPriceCheckerResult
 from smarter.apps.account.models import Charge, ChargeTypes
 from smarter.apps.account.tasks import (
     aggregate_records,
+    check_llm_prices,
     create_charge,
     evaluate_budget_constraints,
     send_slack_invitation_emails,
@@ -104,3 +106,21 @@ class TestSendSlackInvitationEmailsTask(SmarterTestBase):
         self.infrastructure.email.ready = False
         self.assertEqual(send_slack_invitation_emails(), 0)
         self.AccountContact.send_slack_invitation_emails.assert_not_called()
+
+
+class TestCheckLLMPricesTask(SmarterTestBase):
+    """Test that check_llm_prices returns how many models' prices the Smarter LLM Price Checker changed."""
+
+    def test_counts_the_changed_prices(self):
+        results = [
+            LLMPriceCheckerResult(url="https://example.com/a", checked=2, changed=1),
+            LLMPriceCheckerResult(url="https://example.com/b", checked=1, changed=1, refused=["x: y"]),
+            LLMPriceCheckerResult(url="https://example.com/c", error="HTTP 503"),
+        ]
+        with patch("smarter.apps.account.llm_price_checker.check_llm_prices", return_value=results) as check:
+            self.assertEqual(check_llm_prices(), 2)
+        check.assert_called_once_with()
+
+    def test_nothing_to_check(self):
+        with patch("smarter.apps.account.llm_price_checker.check_llm_prices", return_value=[]):
+            self.assertEqual(check_llm_prices(), 0)
