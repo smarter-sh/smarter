@@ -3,12 +3,17 @@ Cached reads of the doodle app's rows.
 
 - :func:`doodle_of_the_day`: the doodle of a day in a region, for ``GET /api/v1/doodles/today/``.
 - :func:`artwork_svg`: an artwork's SVG, for ``GET /api/v1/doodles/artwork/<sha256>.svg``.
+- :func:`approved_doodle`: the approved doodle of a day in a region, for
+  ``GET /api/v1/doodles/<date>/<region>/``.
+- :func:`newest_drawn_doodles`: the newest doodles that the Smarter Doodle Artist drew, for the
+  dashboard's Newest Doodles widget.
 
 A doodle is cached for :data:`~smarter.apps.doodle.const.DOODLE_CACHE_TIMEOUT` seconds, so a
 change in the admin, e.g. an approval, shows within ten minutes. An artwork never changes: its name is its hash.
 """
 
 import datetime
+from typing import Optional
 
 from cache_results import cache_results
 from django.templatetags.static import static
@@ -24,9 +29,10 @@ from .const import (
     DEFAULT_THEME_SLUG,
     DOODLE_CACHE_TIMEOUT,
 )
-from .contract.models import DoodleOfTheDay
-from .models import Doodle, DoodleArtwork, DoodleTheme
+from .contract.models import DoodleOfTheDay, DrawnDoodle, with_query
+from .models import Doodle, DoodleArtwork, DoodleStatus, DoodleTheme
 from .planner import candidates, default_theme
+from .regions import DoodleRegion
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.DOODLE_LOGGING, SmarterWaffleSwitches.CACHE_LOGGING]
@@ -153,6 +159,58 @@ def doodle_of_the_day(day: str, region: str) -> DoodleOfTheDay:
     )
 
 
+@cache_results(timeout=DOODLE_CACHE_TIMEOUT)
+def approved_doodle(day: str, region: str) -> Optional[DoodleOfTheDay]:
+    """
+    Return the approved doodle of a day in a region, as the sign-in page showed it, or None.
+
+    Unlike :func:`doodle_of_the_day`, nothing takes its place when there is none: it is for a page that
+    shows one doodle, e.g. from the dashboard's Newest Doodles widget.
+
+    :param day: The local date, as an ISO string.
+    :param region: The region.
+    :returns: The doodle, or None if none was approved.
+    :rtype: Optional[DoodleOfTheDay]
+    """
+    date = datetime.date.fromisoformat(day)
+    doodle = Doodle.shown(date, region)
+    if doodle is None:
+        return None
+    retval = doodle_from_row(doodle, region)
+    return retval
+
+
+@cache_results(timeout=DOODLE_CACHE_TIMEOUT)
+def newest_drawn_doodles(today: str, limit: int) -> list[DrawnDoodle]:
+    """
+    Return the newest approved doodles that the Smarter Doodle Artist drew, up to a day.
+
+    A doodle of a later day isn't shown before its day. Each artwork is still, without animations.
+
+    :param today: The last day, as an ISO string, e.g. today's date in UTC. It is part of the
+        cache's key, so the list moves on every day.
+    :param limit: How many doodles, at most.
+    :returns: The doodles, the newest first, then by region.
+    :rtype: list[DrawnDoodle]
+    """
+    last_day = datetime.date.fromisoformat(today)
+    rows = (
+        Doodle.objects.select_related("theme", "artwork")
+        .defer("theme__props_svg", "artwork__svg")
+        .filter(status=DoodleStatus.APPROVED, theme__is_generated=True, date__lte=last_day)
+        .order_by("-date", "region")[:limit]
+    )
+    doodles = []
+    for row in rows:
+        doodle = doodle_from_row(row, row.region)
+        fields = doodle.model_dump(by_alias=False)
+        fields["image_url"] = with_query(doodle.image_url, "still=1")
+        region_name = str(DoodleRegion(row.region).label)
+        drawn = DrawnDoodle(**fields, region_name=region_name)
+        doodles.append(drawn)
+    return doodles
+
+
 @cache_results(timeout=ARTWORK_CACHE_MAX_AGE)
 def artwork_svg(sha256: str) -> str:
     """
@@ -169,4 +227,4 @@ def artwork_svg(sha256: str) -> str:
     return str(artwork.svg)
 
 
-__all__ = ["artwork_svg", "artwork_url", "doodle_of_the_day"]
+__all__ = ["approved_doodle", "artwork_svg", "artwork_url", "doodle_of_the_day", "newest_drawn_doodles"]

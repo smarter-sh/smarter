@@ -36,8 +36,10 @@ Technical Reference
    account/const
    account/hierarchy
    account/llm_price_catalog
+   account/llm_price_checker
    account/models
    account/receivers
+   account/repository_apply
    account/repository_owners
    account/repository_scripts
    account/resources

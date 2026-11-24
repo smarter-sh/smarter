@@ -20,7 +20,7 @@ from pydantic import BaseModel, SecretStr
 
 from .utils import ENVIRONMENT_VARIABLE_PREFIX, mask_email, mask_identifier
 
-ENVIRONMENT_VARIABLE_LOG_INDENT = " " * 4
+ENVIRONMENT_VARIABLE_LOG_INDENT = " " * 2
 """What :func:`log_environment_variables` puts in front of each variable, after the logger's prefix."""
 
 SECRET_VISIBLE_CHARACTERS = 4

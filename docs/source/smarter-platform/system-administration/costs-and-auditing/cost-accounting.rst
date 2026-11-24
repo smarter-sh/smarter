@@ -99,9 +99,25 @@ Each charge has a ``total_cost``, in USD, that budgets which measure cost compar
   and ``initialize_platform`` runs. The catalog records each model's input and output price, as its
   provider publishes it, with the page that published it, and stores one blended price, of three
   input tokens to one output token: ``(3 × input + output) / 4``. Each model is priced for
-  completion, plugin and tool charges alike. A price that exists is never changed, so set your own
-  prices, and those of other models, in the Django admin's LLM prices, without markup or with
-  yours.
+  completion, plugin and tool charges alike. The catalog only starts a platform's prices, and
+  never changes one that exists: the prices live in the database.
+
+  Every week, the **Smarter LLM Price Checker** keeps them up to date. It is a staff-only LLMClient
+  of the Smarter account, ``smarter_llm_price_checker``, from the example manifests, which Celery
+  Beat prompts through :doc:`llm_price_checker </smarter-resources/account/llm_price_checker>`.
+  The platform fetches each price's ``source_url``, the provider's pricing page, and gives the
+  page to the LLMClient, which answers with each model's standard input and output price. The
+  platform checks each answer again before it applies it. Both prices must be dollar amounts that
+  are written on the page, and the new blended price may differ from the current one by at most a
+  factor of three. A price that fails a check is logged and kept, and checked again the next week.
+  Each price records who set it (``source``: the catalog, the checker, or a person), its input and
+  output prices, and when it was last checked. The waffle switch ``enable_llm_price_checker``
+  turns the checker off.
+
+  Set your own prices, and those of other models, in the Django admin's LLM prices, without
+  markup or with yours. A price that you change there becomes yours, and the checker never
+  changes it. To hand a price back to the checker, choose its source, *Smarter LLM Price Checker*,
+  and give it the provider's pricing page.
 
 - **LLMHost compute** is charged hourly, by Celery Beat, at the compute's ``price_per_hour`` for
   each of its ready nodes. A compute without a price is not charged.

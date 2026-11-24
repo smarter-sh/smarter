@@ -26,8 +26,11 @@
   <https://blog.smarter.sh/2026/11/02/smarter-sh-automation/>`__, on scheduled workflows that test,
   audit and tidy every repository of the project; `Leveraging Automations to Keep Smarter Healthy
   <https://blog.smarter.sh/2026/11/02/leveraging-automations-keep-smarter-healthy/>`__, on how
-  pre-commit hooks, coverage thresholds, Dependabot and scheduled workflows each guard reliability.
-  The case studies `Converge or Diverge: AI Coding Agents
+  pre-commit hooks, coverage thresholds, Dependabot and scheduled workflows each guard reliability;
+  `Maintaining Code Quality On A Large Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__, on
+  what each pre-commit hook catches, making the tools agree, and the ratchet for a backlog of
+  findings. The case studies `Converge or Diverge: AI Coding Agents
   <https://smarter.sh/case-studies/ai-coding-agents>`__, on the series that Part 1 begins, and `One
   Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, on how the CLI, SDKs and
   VS Code extension depend on the platform, turn these posts into lessons with labs and discussion

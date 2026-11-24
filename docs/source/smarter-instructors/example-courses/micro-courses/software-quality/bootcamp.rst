@@ -336,6 +336,10 @@ Recommended Texts
 
 - **Pre-reading:** Ham Vocke, `The Practical Test Pyramid
   <https://martinfowler.com/articles/practical-test-pyramid.html>`__ (martinfowler.com, 2018).
+- **Pre-reading:** `Maintaining Code Quality On A Large Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__
+  (blog.smarter.sh, 2026), on what each of Smarter's pre-commit hooks catches, and the ratchet for a
+  backlog of findings.
 - **Reference:** Vladimir Khorikov, *Unit Testing: Principles, Practices, and Patterns* (Manning,
   2020).
 - **Smarter documentation:** :doc:`/smarter-framework/developer-reference/devops/test`,

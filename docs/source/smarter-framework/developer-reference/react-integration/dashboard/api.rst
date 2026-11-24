@@ -13,3 +13,10 @@ API
    :undoc-members:
    :show-inheritance:
    :no-index:
+
+
+.. automodule:: smarter.apps.dashboard.views.views.api.doodles
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :no-index:

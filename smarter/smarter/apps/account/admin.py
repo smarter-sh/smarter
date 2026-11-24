@@ -27,6 +27,10 @@ from .models import (
     Budget,
     Charge,
     DataExport,
+    LLMPrices,
+    LLMPriceSource,
+    RepositoryApply,
+    RepositoryApplyManifest,
     ResourceConstraint,
     ResourceLock,
     UserProfile,
@@ -416,6 +420,108 @@ class ChargeAdmin(SmarterSuperUserOnlyModelAdmin):
     search_fields = ("resource_locator",)
 
 
+class LLMPricesAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    LLMPrices model admin, for superusers: the platform's prices are the same for every account.
+
+    A price that a person changes here becomes theirs (:attr:`LLMPriceSource.HUMAN`), and the Smarter
+    LLM Price Checker never changes it again. To hand a price back to the checker, choose its source
+    and give it the provider's pricing page.
+    """
+
+    model = LLMPrices
+    list_display = (
+        "provider",
+        "model",
+        "charge_type",
+        "price",
+        "input_price",
+        "output_price",
+        "source",
+        "checked_at",
+        "updated_at",
+    )
+    list_filter = ("source", "provider", "charge_type")
+    search_fields = ("provider", "model")
+    readonly_fields = (
+        "checked_at",
+        "created_at",
+        "updated_at",
+    )
+
+    def save_model(self, request, obj, form, change):
+        """
+        Save a price, as a person's when its price changed, unless the person also chose its source.
+
+        :param request: The admin request.
+        :param obj: The price.
+        :param form: The admin form.
+        :param change: True when the price already existed.
+        """
+        price_fields = {"price", "input_price", "output_price"}
+        changed_fields = set(form.changed_data)
+        price_changed = bool(price_fields & changed_fields)
+        if price_changed and "source" not in changed_fields:
+            obj.source = LLMPriceSource.HUMAN
+        super().save_model(request, obj, form, change)
+
+
+class RepositoryApplyManifestInline(admin.TabularInline):
+    """The manifests of a batch apply, read-only, in the order in which they were applied."""
+
+    model = RepositoryApplyManifest
+    extra = 0
+    can_delete = False
+    fields = ("position", "path", "kind", "name", "status", "message")
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        """
+        Refuse to add rows in the admin.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
+        return False
+
+
+class RepositoryApplyAdmin(SmarterSuperUserOnlyModelAdmin):
+    """
+    The batch applies that users started from the Apply page, read-only, for superusers who investigate one.
+
+    See :mod:`smarter.apps.account.repository_apply`.
+    """
+
+    model = RepositoryApply
+    inlines = [RepositoryApplyManifestInline]
+    list_display = ("created_at", "url", "user_profile", "status", "completed_at")
+    list_filter = ("status",)
+    search_fields = ("url",)
+    date_hierarchy = "created_at"
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Make every field read-only: rows are written by the platform, never in the admin.
+
+        :param request: The admin request.
+        :param obj: The row being viewed, or None.
+        :returns: The names of all of the model's fields.
+        """
+        # pylint: disable=protected-access
+        return [field.name for field in self.model._meta.fields]
+
+    def has_add_permission(self, request, obj=None):
+        """
+        Refuse to add rows in the admin.
+
+        :param request: The admin request.
+        :param obj: Unused.
+        :returns: False.
+        """
+        return False
+
+
 class AggregatedChargesAdmin(SmarterSuperUserOnlyModelAdmin):
     """AggregatedCharges model admin, read-only, for superusers, as :class:`ChargeAdmin` is."""
 
@@ -655,5 +761,7 @@ smarter_restricted_admin_site.register(ResourceLock, ResourceLockAdmin)
 smarter_restricted_admin_site.register(Charge, ChargeAdmin)
 smarter_restricted_admin_site.register(DataExport, DataExportAdmin)
 smarter_restricted_admin_site.register(AggregatedCharges, AggregatedChargesAdmin)
+smarter_restricted_admin_site.register(LLMPrices, LLMPricesAdmin)
+smarter_restricted_admin_site.register(RepositoryApply, RepositoryApplyAdmin)
 smarter_restricted_admin_site.register(UserProfile, RestrictedUserProfileAdmin)
 smarter_restricted_admin_site.register(User, RestrictedUserAdmin)

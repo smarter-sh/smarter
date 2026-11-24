@@ -38,9 +38,12 @@
   that test, audit and tidy every repository of the project; `Claude Code Reviews Smarter's
   Kubernetes Pod Logs Every Day, and Proposes the Fixes
   <https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, on an unattended
-  agent that turns production logs into issues and pull requests. The case studies `Converge or
-  Diverge: AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__, on tests and
-  guards as an agent's feedback, `One Contract, Five Clients
-  <https://smarter.sh/case-studies/api-contract>`__, on contract tests, and `What Happens When You
-  Click Deploy <https://smarter.sh/case-studies/deploy>`__, on keeping the cloud out of tests, turn
-  these posts into lessons with labs and discussion questions.
+  agent that turns production logs into issues and pull requests; `Maintaining Code Quality On A
+  Large Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__, on
+  what each pre-commit hook catches, making the tools agree, and the ratchet for a backlog of
+  findings. The case studies `Converge or Diverge: AI Coding Agents
+  <https://smarter.sh/case-studies/ai-coding-agents>`__, on tests and guards as an agent's feedback,
+  `One Contract, Five Clients <https://smarter.sh/case-studies/api-contract>`__, on contract tests,
+  and `What Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__, on keeping
+  the cloud out of tests, turn these posts into lessons with labs and discussion questions.

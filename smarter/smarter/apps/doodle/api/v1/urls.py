@@ -9,7 +9,7 @@ from django.urls import path
 from smarter.common.utils import to_snake_case
 
 from .const import namespace
-from .views import DoodleArtworkView, DoodleTodayView
+from .views import DoodleArtworkView, DoodleOfDayView, DoodleTodayView
 
 app_name = namespace
 
@@ -30,9 +30,11 @@ class DoodleApiV1ReverseViews:
 
     today = to_snake_case(DoodleTodayView.__name__)
     artwork = to_snake_case(DoodleArtworkView.__name__)
+    doodle_of_day = to_snake_case(DoodleOfDayView.__name__)
 
 
 urlpatterns = [
     path("today/", DoodleTodayView.as_view(), name=DoodleApiV1ReverseViews.today),
     path("artwork/<str:sha256>.svg", DoodleArtworkView.as_view(), name=DoodleApiV1ReverseViews.artwork),
+    path("<str:day>/<str:region>/", DoodleOfDayView.as_view(), name=DoodleApiV1ReverseViews.doodle_of_day),
 ]

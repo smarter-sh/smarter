@@ -44,6 +44,9 @@ ARTWORK_CACHE_MAX_AGE = 60 * 60 * 24 * 365
 Its url is its content's hash, so it never changes.
 """
 
+NEWEST_DRAWN_DOODLES = 6
+"""How many doodles that the Smarter Doodle Artist drew the dashboard's Newest Doodles widget shows."""
+
 TODAY_CACHE_MAX_AGE = 300
 """Seconds that a browser may cache the response of the doodle of the day."""
 

@@ -336,6 +336,17 @@ Recommended Texts
 
 - **Required:** John Berryman and Albert Ziegler, *Prompt Engineering for LLMs* (O'Reilly, 2024).
   Week 1: chapters 1 to 4. Week 2: chapters 5 to 8.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, which builds
+  Stackademy's course advisor, Stanley, one resource at a time. `Part 1
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__ before Lecture 1,
+  `Part 2 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-2-yaml-manifest/>`__ before
+  Lecture 2, `Part 3 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-3-rest-api/>`__
+  and `Part 6 <https://blog.smarter.sh/2026/11/23/first-ai-application-part-6-vectorstore/>`__
+  before Lecture 5, and `Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__ before Lecture 6.
+  The series runs on the reader's own Smarter, installed with the Quick Start; on the class's shared
+  instance, students skip its setup steps.
 - **Background:** Ethan Mollick, *Co-Intelligence: Living and Working with AI* (Portfolio, 2024).
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-llmclient`,
   :doc:`/smarter-resources/smarter-llmtool`, :doc:`/smarter-resources/smarter-guardrail`,

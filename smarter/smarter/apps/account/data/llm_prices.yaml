@@ -3,8 +3,10 @@
 #
 # manage.py initialize_llm_prices, which initialize_platform runs, creates an LLMPrices row of each
 # charge type (completion, plugin, tool) for each model below, at its blended price: three input
-# tokens to one output token, (3 * input + output) / 4. It never changes a price that already
-# exists, so an operator's prices, entered in the Django admin, are kept.
+# tokens to one output token, (3 * input + output) / 4, with its source page. It never changes a
+# price that already exists: from then on, the prices live in the database, where the Smarter LLM
+# Price Checker (smarter.apps.account.llm_price_checker) keeps them up to date every week, from
+# each one's source page, and an operator's prices, entered in the Django admin, are kept.
 #
 # Only the built-in providers' default models are listed, each with the page that published its
 # price and the day it was checked. A model that isn't listed costs nothing until an operator adds
@@ -16,7 +18,7 @@ prices:
     model: gpt-6-luna
     input: 0.10
     output: 0.50
-    source: https://developers.openai.com/api/docs/pricing
+    source: https://developers.openai.com/api/docs/models/gpt-6-luna
     checked: 2026-11-23
 
   - provider: anthropic
