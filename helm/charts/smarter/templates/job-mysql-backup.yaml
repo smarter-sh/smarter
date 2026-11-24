@@ -227,7 +227,7 @@ spec:
                 - secretRef:
                     name: "{{ .Values.global.appName }}-env"
               env:
-                {{- range $env := .Values.app.env }}
+                {{- range $env := .Values.api.env }}
                 - name: {{ $env.name }}
                   value: {{ $env.value | quote }}
                 {{- end }}
