@@ -107,4 +107,5 @@ class TestEnvironmentVariables(SmarterTestBase):
         self.assertIn("SMARTER_APP_LLMCLIENT_ENABLE", variables)
         # indented, and set off with a dash, as children of the line that the caller logs before them.
         self.assertTrue(all(line[:2] == ("%s - %s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT) for line in lines))
-        self.assertTrue((lines[0][0] % lines[0][1:]).startswith("     - SMARTER_APP_LLMCLIENT_"))
+        first_line = lines[0][0] % lines[0][1:]
+        self.assertTrue(first_line.startswith(f"{ENVIRONMENT_VARIABLE_LOG_INDENT} - SMARTER_APP_LLMCLIENT_"))
