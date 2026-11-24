@@ -12,7 +12,7 @@ from smarter.apps.account.llm_price_catalog import (
     blended_price,
     load_llm_price_catalog,
 )
-from smarter.apps.account.models import ChargeTypes, LLMPrices
+from smarter.apps.account.models import ChargeTypes, LLMPrices, LLMPriceSource
 
 from .base import CommandTestBase
 
@@ -73,6 +73,48 @@ class TestInitializeLLMPrices(CommandTestBase):
         self.assertIn("Created 0 LLM prices, and kept 3", output)
         completion = LLMPrices.objects.get(provider=self.provider, charge_type=ChargeTypes.PROMPT_COMPLETION.value)
         self.assertEqual(completion.price, Decimal("9.99"))
+
+    def test_records_the_source(self):
+        """A created price is the catalog's, with its page and its input and output prices."""
+        self.run_command("initialize_llm_prices", file=self.catalog_file([self.entry()]))
+        for price in LLMPrices.objects.filter(provider=self.provider):
+            self.assertEqual(price.source, LLMPriceSource.CATALOG)
+            self.assertEqual(price.source_url, "https://example.com/pricing")
+            self.assertEqual(price.input_price, Decimal("0.10"))
+            self.assertEqual(price.output_price, Decimal("0.50"))
+            checked_at = price.checked_at
+            assert checked_at is not None
+            self.assertEqual(checked_at.date().isoformat(), "2026-11-23")
+
+    def test_adopts_an_unchanged_price(self):
+        """A price from before prices had a source is the catalog's again, when it is still the catalog's price."""
+        path = self.catalog_file([self.entry()])
+        self.run_command("initialize_llm_prices", file=path)
+        prices = LLMPrices.objects.filter(provider=self.provider)
+        prices.update(source=LLMPriceSource.HUMAN, source_url="", input_price=None, output_price=None, checked_at=None)
+        changed = prices.filter(charge_type=ChargeTypes.PROMPT_COMPLETION.value)
+        changed.update(price=Decimal("9.99"))
+        self.run_command("initialize_llm_prices", file=path)
+        for price in LLMPrices.objects.filter(provider=self.provider):
+            with self.subTest(charge_type=price.charge_type):
+                if price.charge_type == ChargeTypes.PROMPT_COMPLETION.value:
+                    self.assertEqual(price.source, LLMPriceSource.HUMAN)
+                    self.assertEqual(price.source_url, "")
+                    self.assertEqual(price.price, Decimal("9.99"))
+                else:
+                    self.assertEqual(price.source, LLMPriceSource.CATALOG)
+                    self.assertEqual(price.source_url, "https://example.com/pricing")
+                    self.assertEqual(price.input_price, Decimal("0.10"))
+
+    def test_never_adopts_a_persons_price_with_a_page(self):
+        """A person's price that has a page of its own stays the person's, even at the catalog's price."""
+        path = self.catalog_file([self.entry()])
+        self.run_command("initialize_llm_prices", file=path)
+        prices = LLMPrices.objects.filter(provider=self.provider)
+        prices.update(source=LLMPriceSource.HUMAN, source_url="https://example.com/my-prices")
+        self.run_command("initialize_llm_prices", file=path)
+        sources = set(prices.values_list("source", flat=True))
+        self.assertEqual(sources, {LLMPriceSource.HUMAN})
 
     def test_an_invalid_catalog_fails(self):
         """A catalog with a negative price, or an unknown field, fails, and creates nothing."""

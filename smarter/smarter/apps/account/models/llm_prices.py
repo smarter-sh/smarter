@@ -69,6 +69,27 @@ def get_cached_price(charge_type: str, provider: str, model: str) -> Optional[De
     )
 
 
+class LLMPriceSource(models.TextChoices):
+    """
+    Who set an :class:`LLMPrices` row's price.
+
+    The Smarter LLM Price Checker, :mod:`smarter.apps.account.llm_price_checker`, keeps the prices
+    of the catalog and its own up to date, and never changes a person's.
+    """
+
+    CATALOG = "catalog", "Price catalog"
+    """``manage.py initialize_llm_prices`` created it, from the price catalog ``data/llm_prices.yaml``."""
+
+    LLM = "llm", "Smarter LLM Price Checker"
+    """The Smarter LLM Price Checker read it on its source's page."""
+
+    HUMAN = "human", "A person"
+    """A person set it, e.g. in the Django admin.
+
+    It is never changed automatically.
+    """
+
+
 class LLMPrices(TimestampedModel):
     """
     LLMPrices model for managing markup factors in account billing.
@@ -79,6 +100,11 @@ class LLMPrices(TimestampedModel):
     :param provider: String. The LLM provider (e.g., OpenAI, Meta AI).
     :param model: String. The model name.
     :param price: Decimal. The price in USD per million tokens, markup included. :meth:`cost_of` uses it to price charges, which budgets that measure cost compare to their limits.
+    :param source: String. Who set the price, an :class:`LLMPriceSource`. A row created any other way than by the catalog or the Smarter LLM Price Checker is a person's.
+    :param source_url: String. The provider's page that publishes the model's price, which the Smarter LLM Price Checker reads every week.
+    :param input_price: Decimal, optional. The provider's price per million input tokens.
+    :param output_price: Decimal, optional. The provider's price per million output tokens.
+    :param checked_at: Datetime, optional. When the price was last checked against its source.
 
     .. note::
 
@@ -103,6 +129,37 @@ class LLMPrices(TimestampedModel):
     provider = models.CharField(max_length=255)
     model = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=6)
+    source = models.CharField(
+        max_length=20,
+        choices=LLMPriceSource.choices,
+        default=LLMPriceSource.HUMAN,
+        help_text="Who set the price. The Smarter LLM Price Checker never changes a price that a person set.",
+    )
+    source_url = models.URLField(
+        max_length=2048,
+        blank=True,
+        default="",
+        help_text="The provider's page that publishes the model's price. The Smarter LLM Price Checker reads it.",
+    )
+    input_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text="The provider's price, in USD per million input tokens, that the price was blended from.",
+    )
+    output_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        help_text="The provider's price, in USD per million output tokens, that the price was blended from.",
+    )
+    checked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the price was last checked against its source.",
+    )
 
     # pylint: disable=C0115
     class Meta:
@@ -142,4 +199,4 @@ class LLMPrices(TimestampedModel):
         return (Decimal(total_tokens) * price / Decimal(1000000)).quantize(Decimal("0.00000001"))
 
 
-__all__ = ["LLMPrices"]
+__all__ = ["LLMPriceSource", "LLMPrices"]
