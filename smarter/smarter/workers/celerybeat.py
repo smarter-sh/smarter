@@ -31,6 +31,11 @@ app.conf.beat_schedule = {
         "schedule": timedelta(hours=1),
         "options": OPERATIONAL,
     },
+    "check-llm-prices": {
+        "task": "smarter.apps.account.tasks.check_llm_prices",
+        "schedule": timedelta(days=7),
+        "options": OPERATIONAL,
+    },
     "send-slack-invitation-emails": {
         "task": "smarter.apps.account.tasks.send_slack_invitation_emails",
         "schedule": timedelta(hours=1),

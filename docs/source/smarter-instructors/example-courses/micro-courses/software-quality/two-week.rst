@@ -310,6 +310,9 @@ Recommended Texts
   2020). Week 1: parts 1 and 2. Week 2: part 4 (anti-patterns).
 - **Required:** the `Conventional Commits <https://www.conventionalcommits.org/>`__ and
   `Semantic Versioning <https://semver.org/>`__ specifications, in week 2.
+- **Required:** `Maintaining Code Quality On A Large Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__
+  (blog.smarter.sh, 2026), on what each of Smarter's pre-commit hooks catches, before Lecture 4.
 - **Reference:** Harry Percival, *Test-Driven Development with Python* (O'Reilly; free online at
   `obeythetestinggoat.com <https://www.obeythetestinggoat.com/>`__).
 - **Smarter documentation:** :doc:`/smarter-framework/developer-reference/devops/test`,

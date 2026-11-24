@@ -175,6 +175,7 @@ class ConsoleReverseNames:
     """
 
     login_view = "login_view"
+    doodle_view = "doodle_view"
     register_view = "account_register_view"
     robots_txt = to_snake_case(RobotsTxtView.__name__)
     sitemap_xml = to_snake_case(SitemapXmlView.__name__)
@@ -198,6 +199,8 @@ urlpatterns = [
     path("docs/", include(docs_urls, namespace=docs_namespace)),
     # the pages of the single-page console. See smarter.apps.dashboard.views.console_app.
     path("login/", ConsoleAppView.as_view(), name=ConsoleReverseNames.login_view),
+    # one doodle, e.g. 2026-11-03/latam/, as the sign-in page showed it: the dashboard's Newest Doodles link to it.
+    path("doodles/<str:day>/<str:region>/", ConsoleAppView.as_view(), name=ConsoleReverseNames.doodle_view),
     # the SAM resource apps' pages are mounted below, by sam_app_urlpatterns().
     # the LLMTools pages were served under /plugin/. Bookmarks and published links still work.
     re_path(

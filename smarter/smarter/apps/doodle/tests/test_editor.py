@@ -117,6 +117,7 @@ class TestDoodleEditor(DoodleTestMixin):
     def setUp(self):
         super().setUp()
         self.tone = None
+        self.email = MagicMock(return_value=True)
         for day in (DIWALI, QUIET_DAY, REVOLUTION_DAY, TRENDING_DAY):
             self.addCleanup(self.delete_doodles, day)
             self.addCleanup(DoodleEditorRun.objects.filter(date=day).delete)
@@ -130,6 +131,7 @@ class TestDoodleEditor(DoodleTestMixin):
             patch.object(editor, "smarter_llmclient", return_value=llmclient),
             patch.object(editor, "prompt_in_process", side_effect=list(results)) as prompt,
             patch.object(editor, "tone_check", return_value=self.tone),
+            patch.object(editor, "email_drawn_doodle", self.email),
         ):
             yield prompt
 
@@ -264,6 +266,7 @@ class TestDoodleEditor(DoodleTestMixin):
         self.assertFalse(theme.is_active)
         self.assertIn("ai-sway", theme.artwork.svg)
         self.assertIn('id="doodle-base"', theme.artwork.svg)
+        self.email.assert_called_once_with(doodle)
 
     def test_a_drawn_observance_is_shown_at_once_with_auto_approve(self):
         with override_switch(ARTWORK, active=True), override_switch(AUTO_APPROVE, active=True):
@@ -276,6 +279,8 @@ class TestDoodleEditor(DoodleTestMixin):
         self.assertEqual(prompt.call_count, 1)
         doodle = Doodle.objects.get(date=REVOLUTION_DAY, region="mx")
         self.assertEqual(doodle.status, DoodleStatus.APPROVED)
+        # the admin is emailed about the drawing once, not about the run that reused it
+        self.email.assert_called_once()
 
     def test_the_calendar_stays_when_the_artist_fails(self):
         plan_doodle(REVOLUTION_DAY, "mx")
@@ -290,6 +295,11 @@ class TestDoodleEditor(DoodleTestMixin):
                 self.assertEqual(run.status, DoodleEditorRunStatus.SUCCEEDED)
                 doodle = Doodle.objects.get(date=REVOLUTION_DAY, region="mx")
                 self.assertEqual(doodle.source, DoodleSource.DEFAULT)
+
+    def test_the_admin_is_not_emailed_about_catalog_themes(self):
+        with self.llm(decisions({"region": "mx", "choice": "default", "reason": "Nothing to celebrate."})):
+            edit_day(REVOLUTION_DAY)
+        self.email.assert_not_called()
 
     def test_the_artist_must_exist(self):
         decision = DoodleEditorDecision(**REVOLUTION_DAY_DECISION)

@@ -347,6 +347,10 @@ Recommended Texts
   chapters 1 to 3.
 - **Reference:** J.R. Storment and Mike Fuller, *Cloud FinOps* (2nd edition, O'Reilly, 2023), on
   managing variable cloud costs, which applies directly to model charges.
+- **Reference:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, which prices one
+  answer, gives a chatbot a budget and watches it spend it.
 - **Smarter documentation:** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
   :doc:`/smarter-resources/smarter-budget` and :doc:`/smarter-resources/smarter-provider`.
 

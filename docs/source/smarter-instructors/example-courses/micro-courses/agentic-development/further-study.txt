@@ -39,6 +39,10 @@
   into every platform, what its tools do and how to connect to it; `How Smarter's MCP Server
   Searches Its Own Code, Documentation and Blog
   <https://blog.smarter.sh/2026/11/01/smarter-project-mcp-server-design/>`__, on indexing whole
-  repositories and ranking search results without embeddings. The case study `Converge or Diverge:
-  AI Coding Agents <https://smarter.sh/case-studies/ai-coding-agents>`__ turns the three-part series
-  into a lesson with labs and discussion questions.
+  repositories and ranking search results without embeddings; `Maintaining Code Quality On A Large
+  Codebase
+  <https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__, on
+  what each pre-commit hook catches, making the tools agree, and the ratchet for a backlog of
+  findings. The case study `Converge or Diverge: AI Coding Agents
+  <https://smarter.sh/case-studies/ai-coding-agents>`__ turns the three-part series into a lesson
+  with labs and discussion questions.

@@ -37,10 +37,12 @@
   OpenAPI document that every client depends on; `How Smarter's Kubernetes-Style Annotations Trace
   Every Resource to Its GitHub Commit
   <https://blog.smarter.sh/2026/10/31/sam-annotations-github-provenance/>`__, on annotations,
-  selectors and change handlers as a way to connect resources to other systems. The case studies
-  `One Platform, Many Tenants <https://smarter.sh/case-studies/multi-tenancy>`__, on tenant
-  isolation as queryset rules, `What Happens When You Click Deploy
-  <https://smarter.sh/case-studies/deploy>`__, on Celery tasks that wait on DNS and certificates and
-  on tests that never reach the cloud, and `One Contract, Five Clients
-  <https://smarter.sh/case-studies/api-contract>`__, on the generated OpenAPI contract, turn these
-  posts into lessons with labs and discussion questions.
+  selectors and change handlers as a way to connect resources to other systems; `Download Your AI
+  Resources From Smarter <https://blog.smarter.sh/2026/11/10/download-my-data-yaml-manifests/>`__,
+  on an export that zips a user's manifests into private storage behind the infrastructure layer,
+  and emails a link that expires. The case studies `One Platform, Many Tenants
+  <https://smarter.sh/case-studies/multi-tenancy>`__, on tenant isolation as queryset rules, `What
+  Happens When You Click Deploy <https://smarter.sh/case-studies/deploy>`__, on Celery tasks that
+  wait on DNS and certificates and on tests that never reach the cloud, and `One Contract, Five
+  Clients <https://smarter.sh/case-studies/api-contract>`__, on the generated OpenAPI contract, turn
+  these posts into lessons with labs and discussion questions.

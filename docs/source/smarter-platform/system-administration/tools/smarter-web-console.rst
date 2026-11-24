@@ -154,6 +154,18 @@ a file, drag one onto the page, or start from a kind's example. The editor check
 each problem with a detailed error message, and shows what each field is as you hover over it or move the cursor
 to it, so that you can iterate quickly. Apply creates the manifest's resource, or updates it if it exists.
 
+The page also applies a whole repository of manifests. Give it the url of a public GitHub repository, e.g.
+``https://github.com/smarter-sh/example-manifests``, and it clones the repository and applies every manifest in
+it, as you, in your account, in the order of their dependencies: a Connection before the plugin that uses it, a
+plugin before the LLMClient that lists it. It is the same code as ``manage.py load_from_github``, with which each
+platform loads its example manifests, so each resource is annotated with the repository, file and commit that it
+came from. The page lists each manifest that it found, and shows each one's state as it goes: pending, applied,
+skipped or failed. For a manifest that failed or was skipped, it shows why, what applying it printed, and a link to
+the file on GitHub, at the commit that was applied, so that you can fix it and apply the repository again: applying
+is idempotent, and updates what exists. The repository's ``scripts/`` never run from the console, the folders that
+its ``owners.yaml`` gives to other users are skipped, and no LLMClient is deployed. You can apply 20 repositories a
+day, one at a time. See :mod:`smarter.apps.account.repository_apply`.
+
 .. raw:: html
 
    <img src="https://cdn.smarter.sh/docs/smarter-framework/smarter-web-dashboard/console-drop-zone.png"

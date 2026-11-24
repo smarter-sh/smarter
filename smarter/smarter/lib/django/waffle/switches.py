@@ -174,6 +174,9 @@ class SmarterWaffleSwitches:
     ENABLE_DOODLE_TRENDS = "enable_doodle_trends"
     """Tells the Smarter Doodle Editor what each region is reading about on Wikipedia, for today and tomorrow."""
 
+    ENABLE_LLM_PRICE_CHECKER = "enable_llm_price_checker"
+    """Lets the Smarter LLM Price Checker, an LLMClient, update the LLM prices every week from the providers' pricing pages."""
+
     ENABLE_DOODLE_LLM_EDITOR = "enable_doodle_llm_editor"
     """Lets the Smarter Doodle Editor, an LLMClient, choose each region's doodle of each new day."""
 
@@ -481,6 +484,14 @@ class SmarterWaffleSwitches:
             comment=(
                 "Tells the Smarter Doodle Editor what each region is reading about on Wikipedia, "
                 "for today and tomorrow."
+            ),
+            default=True,
+        ),
+        ENABLE_LLM_PRICE_CHECKER: SmarterWaffleSwitch(
+            name=ENABLE_LLM_PRICE_CHECKER,
+            comment=(
+                "Lets the Smarter LLM Price Checker, an LLMClient, update the LLM prices every week "
+                "from the providers' pricing pages. A price that a person set is never changed."
             ),
             default=True,
         ),

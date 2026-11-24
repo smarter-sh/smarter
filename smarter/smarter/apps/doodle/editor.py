@@ -40,12 +40,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.guardrail.api.v1.views.views import evaluate as evaluate_guardrail
 from smarter.apps.guardrail.models import Guardrail, GuardrailStage
-from smarter.apps.llmclient.models import LLMClient
 from smarter.apps.llmclient.prompting import (
     SmarterLLMClientPromptError,
     assistant_text,
     extract_json_object,
     prompt_in_process,
+    smarter_llmclient,
 )
 from smarter.apps.llmtool.nlp import (
     simple_search,
@@ -77,6 +77,7 @@ from .models import (
     DoodleStatus,
     DoodleTheme,
 )
+from .notifications import email_drawn_doodle
 from .planner import candidates, due_on, themes_without_svg
 from .regions import DoodleRegion, region_countries
 from .sanitize import extract_svg, sanitize_svg
@@ -481,23 +482,6 @@ def tone_check(decision: DoodleEditorDecision, subject: DoodleEditorSubject) -> 
     return None
 
 
-def smarter_llmclient(name: str) -> Optional[LLMClient]:
-    """
-    Return an LLMClient of the Smarter account, by name.
-
-    :param name: e.g. :data:`~smarter.apps.doodle.const.EDITOR_LLMCLIENT`.
-    :returns: The LLMClient, or ``None`` if the example manifests that declare it aren't loaded.
-        A missing LLMClient isn't cached, so it is found as soon as they are.
-    :rtype: Optional[LLMClient]
-    """
-    account = smarter_cached_objects.smarter_account
-    try:
-        llmclient = LLMClient.get_cached_object(name=name, account=account)
-    except LLMClient.DoesNotExist:
-        return None
-    return llmclient
-
-
 def session_url() -> str:
     """
     Return the url that the editor's and the artist's ``Prompt`` sessions come from: the doodle's api.
@@ -507,6 +491,25 @@ def session_url() -> str:
     """
     url = f"{smarter_settings.environment_url}/api/v1/doodles/"
     return url
+
+
+def drawn_theme_slug(subject: DoodleEditorSubject, day: datetime.date) -> str:
+    """
+    Return the slug of the theme that the artist draws for an observance or a trend on a day.
+
+    There is one theme per country's holiday, or edition's article: those of the same name have
+    their own link. The hash keeps apart the ids that slugify empties, e.g. the Hindi or Japanese
+    titles of trends.
+
+    :param subject: The observance or trend.
+    :param day: The day.
+    :returns: e.g. ``ai-2035-11-19-mx-revolution-day-1a2b3c4d``.
+    :rtype: str
+    """
+    readable = slugify(f"ai-{day.isoformat()}-{subject.id.replace(':', '-')}")[:54].rstrip("-")
+    digest = hashlib.sha1(subject.id.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
+    slug = f"{readable}-{digest}"
+    return slug
 
 
 def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: datetime.date) -> DoodleTheme:
@@ -521,11 +524,7 @@ def draw(decision: DoodleEditorDecision, subject: DoodleEditorSubject, day: date
     :raises SmarterLLMClientPromptError: If the artist doesn't exist, or the prompt fails.
     :raises SmarterValueError: If its answer isn't a safe SVG of the base scene's viewBox.
     """
-    # one theme per country's holiday, or edition's article: those of the same name have their own link.
-    # The hash keeps apart the ids that slugify empties, e.g. the Hindi or Japanese titles of trends.
-    readable = slugify(f"ai-{day.isoformat()}-{subject.id.replace(':', '-')}")[:54].rstrip("-")
-    digest = hashlib.sha1(subject.id.encode("utf-8"), usedforsecurity=False).hexdigest()[:8]
-    slug = f"{readable}-{digest}"
+    slug = drawn_theme_slug(subject, day)
     existing = themes_without_svg().filter(slug=slug).first()
     if existing is not None:
         return existing
@@ -572,11 +571,17 @@ def apply_decision(
     :param day: The day.
     :returns: The doodle, or ``None`` if the artist failed and the calendar's doodle stays.
     :rtype: Optional[Doodle]
+
+    When the artist draws new artwork, the platform's admin is emailed about it
+    (:func:`~smarter.apps.doodle.notifications.email_drawn_doodle`), e.g. to approve it.
     """
     status = DoodleStatus.APPROVED
     reason = f"Chosen by the Smarter Doodle Editor: {decision.reason}"
+    newly_drawn = False
     if decision.choice in ("observance", "trend"):
         subject = drawable_subject(decision, request)
+        slug = drawn_theme_slug(subject, day)  # type: ignore[arg-type]
+        newly_drawn = not themes_without_svg().filter(slug=slug).exists()
         try:
             theme = draw(decision, subject, day)  # type: ignore[arg-type]
         except (SmarterLLMClientPromptError, SmarterValueError) as e:
@@ -608,6 +613,8 @@ def apply_decision(
             "reason": reason[:2000],
         },
     )
+    if newly_drawn:
+        email_drawn_doodle(doodle)
     return doodle
 
 

@@ -22,14 +22,17 @@
   `Practical AI <https://practicalai.fm/>`__, on putting AI into products.
 - **Smarter:** articles on `blog.smarter.sh <https://blog.smarter.sh/>`__ related to this course:
   `How Two Smarter LLMClients Create the Sign-in Page's Daily Doodle
-  <https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__, the course's case;
-  `LLM Guardrails in YAML: How Smarter Declares, Orders and Audits Them
-  <https://blog.smarter.sh/2026/06/11/smarter-llm-guardrails-yaml/>`__, on the Guardrails around
-  the editor and its judge; `DOMPurify and Markdown: Rendering LLM Output as Untrusted HTML in an
+  <https://blog.smarter.sh/2026/11/04/smarter-doodle-llm-editor-artist/>`__, the course's case; `LLM
+  Guardrails in YAML: How Smarter Declares, Orders and Audits Them
+  <https://blog.smarter.sh/2026/06/11/smarter-llm-guardrails-yaml/>`__, on the Guardrails around the
+  editor and its judge; `DOMPurify and Markdown: Rendering LLM Output as Untrusted HTML in an
   Embeddable Chat Widget <https://blog.smarter.sh/2026/08/03/smarter-chat-untrusted-html/>`__, on
   the same problem as the artist's SVG, in the chat; `Build a Slack Bot With a Smarter LLMClient
   <https://blog.smarter.sh/2026/10/31/slack-bot-llmclient-kubernetes/>`__, on another piece of
-  software that leaves the AI parts on the platform; and `Django-React Integration
-  <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how the console hosts the
-  Doodle's React app. The case study `Guardrails <https://smarter.sh/case-studies/guardrails>`__ is a lesson
-  with labs and discussion questions.
+  software that leaves the AI parts on the platform; `Django-React Integration
+  <https://blog.smarter.sh/2026/05/29/react-integration/>`__, on how the console hosts the Doodle's
+  React app; `Getting Started With The SmarterChat React Component
+  <https://blog.smarter.sh/2026/11/08/smarter-chat-prompt-engineering-workbench/>`__, on following a
+  prompt through the workbench step by step, and on finding out why an answer is empty. The case
+  study `Guardrails <https://smarter.sh/case-studies/guardrails>`__ is a lesson with labs and
+  discussion questions.
