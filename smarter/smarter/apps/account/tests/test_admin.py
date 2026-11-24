@@ -5,11 +5,21 @@ Each admin that the restricted admin site registers for the account app is asked
 its queryset and permissions, as a superuser, a staff user and a customer.
 """
 
+from decimal import Decimal
+from unittest.mock import MagicMock
+
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import RequestFactory
 
 from smarter.apps.account import admin as account_admin
-from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    AccountContact,
+    ChargeTypes,
+    LLMPrices,
+    LLMPriceSource,
+    UserProfile,
+)
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.models import Secret
@@ -130,3 +140,31 @@ class TestAccountAdmin(TestAccountMixin):
         ]  # pylint: disable=protected-access
         self.assertEqual(user_profile_admin.get_queryset(request).count(), 0)
         self.assertEqual(user_profile_admin.get_queryset(self.request(self.staff_user)).count(), 0)
+
+    def test_llm_prices_admin(self):
+        """A price that a person changes becomes theirs, unless they also chose its source."""
+        prices_admin = account_admin.smarter_restricted_admin_site._registry[
+            LLMPrices
+        ]  # pylint: disable=protected-access
+        assert isinstance(prices_admin, account_admin.LLMPricesAdmin)
+        provider = f"test_provider_{self.hash_suffix}"
+        self.addCleanup(LLMPrices.objects.filter(provider=provider).delete)
+        price = LLMPrices.objects.create(
+            charge_type=ChargeTypes.PROMPT_COMPLETION.value,
+            provider=provider,
+            model="test-model",
+            price=Decimal("1"),
+            source=LLMPriceSource.CATALOG,
+        )
+        request = self.request(self.admin_user)
+        cases = (
+            (["price"], LLMPriceSource.CATALOG, LLMPriceSource.HUMAN),
+            (["input_price", "source"], LLMPriceSource.LLM, LLMPriceSource.LLM),
+            (["source_url"], LLMPriceSource.CATALOG, LLMPriceSource.CATALOG),
+        )
+        for changed_data, source, expected in cases:
+            with self.subTest(changed_data=changed_data):
+                price.source = source
+                prices_admin.save_model(request, price, MagicMock(changed_data=changed_data), True)
+                price.refresh_from_db()
+                self.assertEqual(price.source, expected)

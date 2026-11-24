@@ -326,6 +326,10 @@ Recommended Texts
   Week 1: parts 1 and 2. Week 2: parts 3 to 5.
 - **Required:** J.R. Storment and Mike Fuller, *Cloud FinOps* (2nd edition, O'Reilly, 2023),
   chapters on the FinOps lifecycle and unit economics, in week 2.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, on what one answer
+  costs and on budgets, before Lecture 5. Students read it, or follow it on the shared instance.
 - **Optional:** Ethan Mollick, *Co-Intelligence* (Portfolio, 2024), on AI and work.
 - **Smarter documentation:** :doc:`/smarter-platform/system-administration/costs-and-auditing/cost-accounting`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-provider` and

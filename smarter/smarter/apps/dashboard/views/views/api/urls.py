@@ -21,6 +21,7 @@ from smarter.apps.dashboard.views.views.api.budgets import (
     BudgetsView,
 )
 from smarter.apps.dashboard.views.views.api.charges import ChargesView
+from smarter.apps.dashboard.views.views.api.doodles import NewestDoodlesView
 from smarter.apps.dashboard.views.views.api.getting_started import GettingStartedView
 from smarter.apps.dashboard.views.views.api.my_resources import MyResourcesView
 from smarter.apps.dashboard.views.views.api.onboarding import OnboardingSeenView
@@ -59,6 +60,7 @@ class DashboardApiReverseNames:
     budgets = to_snake_case(BudgetsView.__name__)
     budget_series = to_snake_case(BudgetSeriesView.__name__)
     activity = to_snake_case(ActivityView.__name__)
+    newest_doodles = to_snake_case(NewestDoodlesView.__name__)
     getting_started = to_snake_case(GettingStartedView.__name__)
     quick_actions = to_snake_case(QuickActionsView.__name__)
     global_search = to_snake_case(GlobalSearchView.__name__)
@@ -80,6 +82,7 @@ urlpatterns = [
         name=DashboardApiReverseNames.budget_series,
     ),
     path("activity/", ActivityView.as_view(), name=DashboardApiReverseNames.activity),
+    path("doodles/", NewestDoodlesView.as_view(), name=DashboardApiReverseNames.newest_doodles),
     path("getting-started/", GettingStartedView.as_view(), name=DashboardApiReverseNames.getting_started),
     path("quick-actions/", QuickActionsView.as_view(), name=DashboardApiReverseNames.quick_actions),
     path("search/", GlobalSearchView.as_view(), name=DashboardApiReverseNames.global_search),

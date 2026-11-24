@@ -399,6 +399,10 @@ Recommended Texts
   weeks 2 and 4.
 - **Required:** Daron Acemoglu and Simon Johnson, *Power and Progress: Our Thousand-Year Struggle
   Over Technology and Prosperity* (PublicAffairs, 2023), selected chapters, in week 4.
+- **Required:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__, `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__, on what one answer
+  costs and on budgets, before Lecture 10. Students read it, or follow it on the shared instance.
 - **Optional:** Ajay Agrawal, Joshua Gans and Avi Goldfarb, *Power and Prediction: The Disruptive
   Economics of Artificial Intelligence* (Harvard Business Review Press, 2022), on system-level
   change.

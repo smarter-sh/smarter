@@ -355,6 +355,12 @@ Recommended Texts
   and 2. Free.
 - **Reference:** Arvind Narayanan and Sayash Kapoor, *AI Snake Oil* (Princeton University Press,
   2024). A clear-eyed account of what AI can and cannot do.
+- **Reference:** the blog series `Your First AI Application With Smarter
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/>`__: `Part 5
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-5-guardrails/>`__ puts four
+  guardrails in front of a chatbot, and `Part 8
+  <https://blog.smarter.sh/2026/11/23/first-ai-application-part-8-budgets/>`__ gives it a budget and
+  reads its journal.
 - **Smarter documentation:** :doc:`/smarter-resources/smarter-guardrail`,
   :doc:`/smarter-resources/smarter-budget`, :doc:`/smarter-resources/smarter-prompt` and
   :doc:`/smarter-platform/system-administration/security`.

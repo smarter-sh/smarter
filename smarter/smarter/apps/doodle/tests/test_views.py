@@ -2,14 +2,15 @@
 
 import datetime
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.test import Client
+from django.urls import reverse as django_reverse
 from waffle.testutils import override_switch
 
 from smarter.apps.doodle.api.v1 import views
 from smarter.apps.doodle.api.v1.urls import DoodleApiV1ReverseViews
-from smarter.apps.doodle.caching import artwork_url, doodle_of_the_day
+from smarter.apps.doodle.caching import approved_doodle, artwork_url, doodle_of_the_day
 from smarter.apps.doodle.const import DEFAULT_THEME_SLUG, LEARN_HOW_URL
 from smarter.apps.doodle.contract.models import DoodleApiResponse
 from smarter.apps.doodle.models import Doodle, DoodleSource
@@ -136,3 +137,61 @@ class TestDoodleViews(DoodleTestMixin):
         with patch("smarter.apps.doodle.regions.timezone.now", return_value=now):
             response = self.client.get(self.today_url, {"tz": KOLKATA})
         self.assertEqual(response.json()["date"], DIWALI.isoformat())
+
+
+class TestDoodleOfDayView(DoodleTestMixin):
+    """One approved doodle, by day and region, for the web console's page of one doodle."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        plan_doodle(DIWALI, DoodleRegion.SOUTH_ASIA)
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client()
+        approved_doodle.invalidate(DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA)
+
+    def url(self, day: str, region: str) -> str:
+        return django_reverse(
+            f"{DoodleApiV1ReverseViews.namespace}:{DoodleApiV1ReverseViews.doodle_of_day}",
+            kwargs={"day": day, "region": region},
+        )
+
+    def get(self, day: str, region: str, today: datetime.date = DIWALI):
+        """GET a doodle, on a day that is ``today``."""
+        clock = MagicMock()
+        clock.now.return_value = datetime.datetime.combine(today, datetime.time(12, 0))
+        with patch.object(views, "timezone", clock), override_switch(CAPTION, active=True):
+            response = self.client.get(self.url(day, region), {"tz": "Asia/Kolkata"})
+        return response
+
+    def test_the_url(self):
+        self.assertEqual(self.url("2035-10-30", "mx"), "/api/v1/doodles/2035-10-30/mx/")
+
+    def test_an_approved_doodle(self):
+        response = self.get(DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA)
+        self.assertEqual(response.status_code, HTTPStatus.OK, response.content[:300])
+        body = DoodleApiResponse.model_validate(response.json())
+        self.assertEqual(body.theme, "diwali")
+        self.assertEqual(body.date, DIWALI.isoformat())
+        self.assertEqual(body.region, DoodleRegion.SOUTH_ASIA)
+        self.assertTrue(body.show_caption)
+        self.assertEqual(response["Cache-Control"], "public, max-age=300")
+
+    def test_not_found(self):
+        cases = {
+            "a bad day": ("2035-13-45", DoodleRegion.SOUTH_ASIA, DIWALI),
+            "a bad region": (DIWALI.isoformat(), "atlantis", DIWALI),
+            "before its day": (DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA, DIWALI - datetime.timedelta(days=2)),
+            "never planned": ("2035-10-29", DoodleRegion.SOUTH_ASIA, DIWALI),
+        }
+        for reason, (day, region, today) in cases.items():
+            with self.subTest(reason=reason):
+                response = self.get(day, region, today)
+                self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_tomorrow_is_shown(self):
+        """Tomorrow in UTC is already today east of UTC."""
+        response = self.get(DIWALI.isoformat(), DoodleRegion.SOUTH_ASIA, DIWALI - datetime.timedelta(days=1))
+        self.assertEqual(response.status_code, HTTPStatus.OK)

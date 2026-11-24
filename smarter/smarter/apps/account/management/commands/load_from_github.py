@@ -12,6 +12,9 @@ this command:
 
 A repository may also hold scripts, in its ``scripts/`` folder, which run before or after its
 manifests are applied: see :mod:`smarter.apps.account.repository_scripts`.
+
+The web console's Apply page runs this command's code too, as a user may: see
+:mod:`smarter.apps.account.repository_apply`, whose loader is a subclass of :class:`Command`.
 """
 
 import copy

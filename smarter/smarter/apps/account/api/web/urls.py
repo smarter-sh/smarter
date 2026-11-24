@@ -2,7 +2,8 @@
 URL configuration for the Account app's endpoints in the web console's api.
 
 These are mounted at ``/api/web/account/``. The Budget list page's React app calls the ones under
-``/api/web/account/budget/``, and the single-page console calls the others, which sign in and out, sign
+``/api/web/account/budget/``, the Apply page the ones under ``/api/web/account/repository-apply/``, and the
+single-page console calls the others, which sign in and out, sign
 up, activate an account and reset a password. See :mod:`smarter.apps.api.web`, :mod:`smarter.apps.account.views.budget.listview`
 and :mod:`smarter.apps.account.api.web.views`.
 
@@ -19,6 +20,10 @@ from smarter.apps.account.api.web.data_export import (
     DataExportView,
 )
 from smarter.apps.account.api.web.profile_image import ProfileImageView
+from smarter.apps.account.api.web.repository_apply import (
+    RepositoryApplyDetailView,
+    RepositoryApplyView,
+)
 from smarter.apps.account.api.web.user_profiles import (
     UserProfileSelectView,
     UserProfilesView,
@@ -72,6 +77,8 @@ class AccountApiWebReverseNames:
     profile_image = to_snake_case(ProfileImageView.__name__)
     data_export = to_snake_case(DataExportView.__name__)
     data_export_detail = to_snake_case(DataExportDetailView.__name__)
+    repository_apply = to_snake_case(RepositoryApplyView.__name__)
+    repository_apply_detail = to_snake_case(RepositoryApplyDetailView.__name__)
     user_profiles = to_snake_case(UserProfilesView.__name__)
     user_profile_select = to_snake_case(UserProfileSelectView.__name__)
 
@@ -103,6 +110,13 @@ urlpatterns = [
         "data-export/<int:export_id>/",
         DataExportDetailView.as_view(),
         name=AccountApiWebReverseNames.data_export_detail,
+    ),
+    # the Apply page's batch apply of a GitHub repository: see smarter.apps.account.api.web.repository_apply.
+    path("repository-apply/", RepositoryApplyView.as_view(), name=AccountApiWebReverseNames.repository_apply),
+    path(
+        "repository-apply/<int:run_id>/",
+        RepositoryApplyDetailView.as_view(),
+        name=AccountApiWebReverseNames.repository_apply_detail,
     ),
     path("user-profiles/", UserProfilesView.as_view(), name=AccountApiWebReverseNames.user_profiles),
     path(

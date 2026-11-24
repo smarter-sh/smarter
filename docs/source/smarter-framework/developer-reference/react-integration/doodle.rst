@@ -99,6 +99,12 @@ the shapes of a flat drawing, no text, images, links, scripts, ids or ``url()``,
 animates its own classes. A drawn doodle is *proposed*: visitors see the calendar's choice until a
 superuser approves it, unless ``enable_doodle_auto_approve`` is on.
 
+Each time the artist draws new artwork, the platform's admin (``platform_email_admin``) is emailed
+the drawing, its region, day, caption and status, with a link to the doodle in the admin, where a
+proposed doodle is approved (:mod:`smarter.apps.doodle.notifications`). The dashboard's Newest
+Doodles widget shows every user the newest approved doodles that the artist drew, up to today,
+each with its artwork and the article that its caption links to.
+
 Each prompt of the editor is recorded, under Doodle Editor Runs in the admin: what it was asked,
 what it answered, and which of its choices were refused. A day is asked once, or until it has
 failed three times, after which the calendar's choice stays. On a platform without the
@@ -201,6 +207,10 @@ Technical Reference
    :no-index:
 
 .. automodule:: smarter.apps.doodle.caching
+   :members:
+   :no-index:
+
+.. automodule:: smarter.apps.doodle.notifications
    :members:
    :no-index:
 

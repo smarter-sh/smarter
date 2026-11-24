@@ -69,7 +69,9 @@ to Keep Smarter Healthy
 smarter-sh/automation, the GitHub Actions Cron Jobs That Look After Every Smarter Repository
 <https://blog.smarter.sh/2026/11/02/smarter-sh-automation/>`__, `Claude Code Reviews Smarter's
 Kubernetes Pod Logs Every Day, and Proposes the Fixes
-<https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__.
+<https://blog.smarter.sh/2026/10/31/claude-code-pod-log-review-self-healing/>`__, `Maintaining Code
+Quality On A Large Codebase
+<https://blog.smarter.sh/2026/11/13/maintaining-code-quality-large-python-django-project/>`__.
 
 **Exercises.**
 
