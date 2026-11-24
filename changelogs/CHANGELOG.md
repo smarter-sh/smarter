@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.7-alpha.1...v0.48.0-alpha.1) (2026-11-24)
+
+### Features
+
+* **account:** batch apply GitHub repositories, and check LLM prices ([f6fa0bf](https://github.com/smarter-sh/smarter/commit/f6fa0bf3aeb6bd94374246d48a01364b0aab5b0a))
+* **doodle:** email new drawings; serve the newest, and any one doodle ([38d9b31](https://github.com/smarter-sh/smarter/commit/38d9b3105eb90002445c17662b4c514bdad9cbff))
+
 ## [0.47.7-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.47.6...v0.47.7-alpha.1) (2026-11-23)
 
 ### Bug Fixes
