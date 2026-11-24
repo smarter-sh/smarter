@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.1-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.48.1-alpha.2...v0.48.1-alpha.3) (2026-11-24)
+
+### Bug Fixes
+
+* **cache:** bump cache-results to 0.2.2 to survive redis outages ([dde5f84](https://github.com/smarter-sh/smarter/commit/dde5f84abc95aadbd7b911c9be9841ba4c9293c6)), closes [smarter-sh/cache-results#11](https://github.com/smarter-sh/cache-results/issues/11) [#941](https://github.com/smarter-sh/smarter/issues/941)
+
+### Refactoring
+
+* **helm:** rename the api's values key from app to api ([0ccf00b](https://github.com/smarter-sh/smarter/commit/0ccf00bff881e64cfc0eb2b59f4d97b3e0ee771a))
+
 ## [0.48.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.1-alpha.1...v0.48.1-alpha.2) (2026-11-24)
 
 ### Bug Fixes
