@@ -7,7 +7,7 @@ container's needs therefore grow with its worker count, and the recommendations 
 are computed from it rather than fixed.
 
 The figures come from measurement: one uvicorn worker uses about 420 MB at rest (see
-``app.workers`` in ``helm/charts/smarter/values.yaml``), and runs Python on at most one
+``api.workers`` in ``helm/charts/smarter/values.yaml``), and runs Python on at most one
 core at a time. Celery's prefork pool forks its children from a process that has
 already loaded Django, so they share most of that memory, and a Celery container counts
 as a single process here.

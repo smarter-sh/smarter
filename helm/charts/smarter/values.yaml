@@ -338,9 +338,9 @@ global:
 
 
 # -----------------------------------------------------------------------------
-# Smarter Application Configuration
+# Smarter api (uvicorn web server) Configuration
 # -----------------------------------------------------------------------------
-app:
+api:
   replicaCount: 2
   # The number of uvicorn worker processes in each app pod (uvicorn --workers). Each worker
   # is a separate Python process that loads all of Django, about 420 MB at rest, and runs
@@ -362,7 +362,7 @@ app:
   # a write (env SMARTER_DATABASE_READ_TIMEOUT, PyMySQL's read_timeout and
   # write_timeout). A query that the database never answers would otherwise hold
   # the request's thread forever. Rendered only into the app Deployment, never
-  # into app.env or the global env map: app.env also reaches the init job and the
+  # into api.env or the global env map: api.env also reaches the init job and the
   # backup job's email container, and the workers, beat and the init job run
   # migrations, management commands and tasks that can legitimately take longer
   # than a web request. Leave it empty for no timeout.
@@ -377,9 +377,9 @@ app:
   promptThreads: 32
   resources:
     requests:
-      # One core per uvicorn worker (app.workers).
+      # One core per uvicorn worker (api.workers).
       cpu: "1"
-      # About 420 MB for each of the 2 uvicorn workers (app.workers), plus headroom for
+      # About 420 MB for each of the 2 uvicorn workers (api.workers), plus headroom for
       # the threads and buffers of requests in flight. The scheduler only places a pod
       # on a node with this much memory free, and the HorizontalPodAutoscaler measures
       # memory utilization against it.
@@ -394,7 +394,7 @@ app:
   # node (spot capacity, a node group at its max size), the new pod stays Pending and the
   # deploy never finishes. maxUnavailable: 1 lets it stop one old pod to make room, so the
   # deploy always completes, with one pod fewer than replicas for a minute or so at worst.
-  # Keep it at or below app.podDisruptionBudget.maxUnavailable, and hpa.minReplicas above it.
+  # Keep it at or below api.podDisruptionBudget.maxUnavailable, and hpa.minReplicas above it.
   rollingUpdate:
     maxSurge: 1
     maxUnavailable: 1
@@ -482,7 +482,7 @@ hpa:
   minReplicas: 3
   maxReplicas: 25
   targetCPUUtilizationPercentage: 75
-  # Measured against app.resources.requests.memory. The 2 uvicorn workers of an idle
+  # Measured against api.resources.requests.memory. The 2 uvicorn workers of an idle
   # pod already use about 66% of their 1280Mi request, and Python rarely returns memory
   # to the operating system, so a lower target would keep the app scaled out after
   # the load is gone. Leave it empty to scale on CPU only.

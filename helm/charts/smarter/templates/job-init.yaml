@@ -128,7 +128,7 @@ spec:
             # would otherwise come out after all of their logging, which goes to unbuffered stderr.
             - name: PYTHONUNBUFFERED
               value: "1"
-            {{- range $env := .Values.app.env }}
+            {{- range $env := .Values.api.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}

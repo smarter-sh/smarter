@@ -180,10 +180,14 @@
           <!-- video -->
           <tr>
             <td align="center" style="padding:16px 50px 8px 50px">
-              <a href="{{ branding.smarter_project_cdn_url }}/videos/about.mp4" rel="noopener" target="_blank">
-                <img alt="" width="500" src="{{ branding.smarter_project_cdn_url }}/videos/about-poster.png"
+              <a href="https://youtu.be/u82i4m7a6VQ" rel="noopener" target="_blank">
+                <img alt="{% blocktranslate with product_name=branding.smarter_product_name trimmed %}{{ product_name }} Explained, in 5 Minutes{% endblocktranslate %}"
+                  width="500" src="{% absolute_static 'assets/media/email/smarter-explained-video.jpg' %}"
                   style="width:100%; max-width:500px; height:auto; border:0; border-radius:8px" />
               </a>
+              <p style="margin:10px 0 0 0; font-size:14px; line-height:1.5">
+                <a href="https://youtu.be/u82i4m7a6VQ" rel="noopener" target="_blank"
+                  style="color:#181C32; font-weight:600">&#9654;&nbsp;{% blocktranslate with product_name=branding.smarter_product_name trimmed %}Watch on YouTube: {{ product_name }} Explained, in 5 Minutes{% endblocktranslate %}</a></p>
             </td>
           </tr>
 
@@ -199,12 +203,16 @@
                 style="border-collapse:separate; background-color:#F5F8FA; border-radius:16px">
                 <tr>
                   <td style="padding:18px 24px 14px 24px; border-bottom:1px dashed #E4E6EF; font-size:13px; line-height:1.5; color:#5E6278">
-                    <a href="{{ branding.learn_url }}" target="_blank" rel="noopener"
-                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Quick Start Tutorial" %}</a>
+                    <a href="https://blog.smarter.sh/category/tutorials/" target="_blank" rel="noopener"
+                      style="color:#181C32; font-size:14px; font-weight:600">{% translate "Tutorials" %}</a>
                     <p style="margin:3px 0 0 0">
-                      {% blocktranslate with product_name=branding.smarter_product_name percent="80%" trimmed %}
-                        This page will give you an introduction to the {{ percent }} of {{ product_name }} concepts that you will use
-                        on a daily basis.
+                      {% blocktranslate trimmed %}
+                        Start with the tutorial
+                        <a href="https://blog.smarter.sh/2026/11/23/first-ai-application-part-1-workbench/" rel="noopener" target="_blank">Your First AI Application</a>,
+                        which builds one application, a course advisor, in eight parts. Then try the advanced tutorial
+                        <a href="https://blog.smarter.sh/2026/11/01/smarter-extension-cookiecutter-how-to/" rel="noopener" target="_blank">Build a Smarter Extension in Python</a>,
+                        the other <a href="https://blog.smarter.sh/category/tutorials/" rel="noopener" target="_blank">tutorials on the Smarter blog</a>,
+                        and the <a href="https://docs.smarter.sh/external-links/youtube.html" rel="noopener" target="_blank">video tutorials</a>.
                       {% endblocktranslate %}</p>
                   </td>
                 </tr>

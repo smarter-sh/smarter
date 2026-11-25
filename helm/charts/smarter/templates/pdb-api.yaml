@@ -7,7 +7,7 @@
 # - Purpose: Limits how many app pods voluntary disruptions (node drains, cluster
 #   upgrades, node consolidation) may evict at the same time, so that the app keeps
 #   serving requests while nodes are replaced.
-# - Usage: Managed via Helm; values are set in values.yaml (app.podDisruptionBudget).
+# - Usage: Managed via Helm; values are set in values.yaml (api.podDisruptionBudget).
 # - Notes: The selector must match the pod labels of deployment-api.yaml. It does not
 #   protect against involuntary disruptions such as an OOM kill or a node failure.
 #
@@ -21,7 +21,7 @@
 # between backing services. If the label is missing then the network policies are
 # assured to PREVENT communication.
 # -----------------------------------------------------------------------------------
-{{- if .Values.app.podDisruptionBudget.enabled }}
+{{- if .Values.api.podDisruptionBudget.enabled }}
 {{- range $index, $name := splitList "," (include "smarter.apiNames" .) }}
 {{- if $index }}
 ---
@@ -40,7 +40,7 @@ metadata:
     app.kubernetes.io/name: "{{ $name }}"
     app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 spec:
-  maxUnavailable: {{ $.Values.app.podDisruptionBudget.maxUnavailable | default 1 }}
+  maxUnavailable: {{ $.Values.api.podDisruptionBudget.maxUnavailable | default 1 }}
   selector:
     matchLabels:
       app.kubernetes.io/name: "{{ $name }}"
