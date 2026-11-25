@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.1](https://github.com/smarter-sh/smarter/compare/v0.48.0...v0.48.1) (2026-11-25)
+
+### Bug Fixes
+
+* **account:** add a Tutorials row to the welcome email ([414fb59](https://github.com/smarter-sh/smarter/commit/414fb59182ae2b188f1c34f5c00457e143c8f66e))
+* **account:** link the welcome email's video to YouTube ([b7b594c](https://github.com/smarter-sh/smarter/commit/b7b594cb15ae52973fc3f701bf723c71b917012c))
+* **cache:** bump cache-results to 0.2.2 to survive redis outages ([dde5f84](https://github.com/smarter-sh/smarter/commit/dde5f84abc95aadbd7b911c9be9841ba4c9293c6)), closes [smarter-sh/cache-results#11](https://github.com/smarter-sh/cache-results/issues/11) [#941](https://github.com/smarter-sh/smarter/issues/941)
+
+### Refactoring
+
+* **helm:** rename the api's values key from app to api ([0ccf00b](https://github.com/smarter-sh/smarter/commit/0ccf00bff881e64cfc0eb2b59f4d97b3e0ee771a))
+
+## [0.48.1-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.48.1-alpha.2...v0.48.1-alpha.3) (2026-11-24)
+
+### Bug Fixes
+
+* **cache:** bump cache-results to 0.2.2 to survive redis outages ([dde5f84](https://github.com/smarter-sh/smarter/commit/dde5f84abc95aadbd7b911c9be9841ba4c9293c6)), closes [smarter-sh/cache-results#11](https://github.com/smarter-sh/cache-results/issues/11) [#941](https://github.com/smarter-sh/smarter/issues/941)
+
+### Refactoring
+
+* **helm:** rename the api's values key from app to api ([0ccf00b](https://github.com/smarter-sh/smarter/commit/0ccf00bff881e64cfc0eb2b59f4d97b3e0ee771a))
+
+## [0.48.1-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.1-alpha.1...v0.48.1-alpha.2) (2026-11-24)
+
+### Bug Fixes
+
+* **account:** add a Tutorials row to the welcome email ([414fb59](https://github.com/smarter-sh/smarter/commit/414fb59182ae2b188f1c34f5c00457e143c8f66e))
+
+## [0.48.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.0...v0.48.1-alpha.1) (2026-11-24)
+
+### Bug Fixes
+
+* **account:** link the welcome email's video to YouTube ([b7b594c](https://github.com/smarter-sh/smarter/commit/b7b594cb15ae52973fc3f701bf723c71b917012c))
+
 ## [0.48.0](https://github.com/smarter-sh/smarter/compare/v0.47.6...v0.48.0) (2026-11-24)
 
 ### Features

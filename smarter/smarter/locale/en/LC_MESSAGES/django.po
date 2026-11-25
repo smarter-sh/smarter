@@ -764,14 +764,13 @@ msgid "Getting Started"
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html
-msgid "Quick Start Tutorial"
+#, python-format
+msgid "%(product_name)s Explained, in 5 Minutes"
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html
 #, python-format
-msgid ""
-"This page will give you an introduction to the %(percent)s of "
-"%(product_name)s concepts that you will use on a daily basis."
+msgid "Watch on YouTube: %(product_name)s Explained, in 5 Minutes"
 msgstr ""
 
 #: smarter/templates/account/email/welcome.html

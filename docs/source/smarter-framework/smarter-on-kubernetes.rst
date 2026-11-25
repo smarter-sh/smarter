@@ -43,20 +43,20 @@ differs.
      - Kubernetes (Helm chart)
    * - Web application and REST API
      - ``smarter-api``: one container, uvicorn with auto-reload, on port 9357.
-     - Deployment ``smarter-api``: uvicorn with 2 workers per pod (``app.workers``), on port 8000,
+     - Deployment ``smarter-api``: uvicorn with 2 workers per pod (``api.workers``), on port 8000,
        behind the ClusterIP Service ``smarter-api``. Before v0.43.0 both were named ``smarter``. An
-       install that upgrades from an older release sets ``app.legacyName.enabled`` for one upgrade,
+       install that upgrades from an older release sets ``api.legacyName.enabled`` for one upgrade,
        which also runs a Deployment and a Service under the old name, both Services reaching both
        Deployments' pods, so that the rename drops no request while its Ingresses still name
        ``smarter``; once they name ``smarter-api``, it upgrades again without it. Each worker accepts at most 100 concurrent
-       requests (``app.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
+       requests (``api.limitConcurrency``) and answers 503 above that, so an overloaded pod sheds
        load instead of running out of memory. Each worker runs at most 32 streamed chat prompts
-       at once, in a thread pool of their own (``app.promptThreads``,
+       at once, in a thread pool of their own (``api.promptThreads``,
        ``SMARTER_PROMPT_THREADS``), and queues the next ones. A HorizontalPodAutoscaler scales
        it on CPU and memory (3 to 25 pods by default, ``hpa.*``), and a PodDisruptionBudget lets
-       node drains evict only one app pod at a time (``app.podDisruptionBudget``). A deploy
+       node drains evict only one app pod at a time (``api.podDisruptionBudget``). A deploy
        replaces one app pod at a time, and may stop an old pod before its replacement is ready
-       (``app.rollingUpdate``), so that it finishes even when no node has room for an extra
+       (``api.rollingUpdate``), so that it finishes even when no node has room for an extra
        pod and the cluster can't add one.
    * - Operational Celery worker
      - ``smarter-worker``, queue ``default_celery_task_queue``.
@@ -169,7 +169,7 @@ Docker and Kubernetes Compared
    * - Scaling
      - One container per service.
      - HorizontalPodAutoscalers for the app and the operational worker; the app's also scales
-       on memory, measured against ``app.resources.requests.memory``, and follows
+       on memory, measured against ``api.resources.requests.memory``, and follows
        ``hpa.behavior``. Pods are stateless; all state is in the database, Redis, and the cloud.
    * - Health checks
      - None.
@@ -185,7 +185,7 @@ Docker and Kubernetes Compared
      - The same, except the database's.
      - Connecting to the database times out after 5 seconds, and to Redis after 2. A Redis
        command times out after 5 seconds. The web server's database queries time out after
-       ``app.databaseReadTimeout`` seconds (``SMARTER_DATABASE_READ_TIMEOUT``, 60 by default),
+       ``api.databaseReadTimeout`` seconds (``SMARTER_DATABASE_READ_TIMEOUT``, 60 by default),
        and the workers', the scheduler's and the init Job's never do, since migrations can run
        long. A SqlConnection's ``timeout`` is its driver's connect and query timeout.
    * - Upgrades

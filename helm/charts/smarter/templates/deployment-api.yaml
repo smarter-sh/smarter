@@ -2,7 +2,7 @@
 # Deployment Manifest for Smarter Application
 #
 # This file defines the main Deployment resource for the Smarter app, the api, named
-# <appName>-api. With app.legacyName.enabled, an aid for upgrading from a release before
+# <appName>-api. With api.legacyName.enabled, an aid for upgrading from a release before
 # the rename, it also renders a twin under the api's old name, <appName>: see
 # smarter.apiNames in _helpers.tpl. Their pods share the label
 # app.kubernetes.io/component: api, which the Services select.
@@ -11,8 +11,8 @@
 # - Purpose: Deploys the main application container with Helm templating.
 # - Usage: Managed via Helm; values are set in values.yaml.
 # - Notes: Update resource requests/limits and environment variables as needed.
-#   The uvicorn worker count and concurrency limit come from app.workers and
-#   app.limitConcurrency in values.yaml.
+#   The uvicorn worker count and concurrency limit come from api.workers and
+#   api.limitConcurrency in values.yaml.
 #
 # Important: labels are referenced by other resources, in this repo as well as
 # external repos including https://github.com/smarter-sh/smarter-infrastructure.
@@ -44,15 +44,15 @@ metadata:
   namespace: "{{ $.Values.namespace }}"
 spec:
   progressDeadlineSeconds: 600
-  replicas: {{ $.Values.app.replicaCount }}
+  replicas: {{ $.Values.api.replicaCount }}
   revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: "{{ $name }}"
-  # app.rollingUpdate in values.yaml. Its maxUnavailable must stay above 0: see the comment there.
+  # api.rollingUpdate in values.yaml. Its maxUnavailable must stay above 0: see the comment there.
   strategy:
     rollingUpdate:
-      {{- toYaml $.Values.app.rollingUpdate | nindent 6 }}
+      {{- toYaml $.Values.api.rollingUpdate | nindent 6 }}
     type: RollingUpdate
   template:
     metadata:
@@ -81,9 +81,9 @@ spec:
             - "0.0.0.0"
             - "--port"
             - "{{ $.Values.deployment.containerPort }}"
-            - "--workers={{ $.Values.app.workers | default 2 }}"
-            {{- if $.Values.app.limitConcurrency }}
-            - "--limit-concurrency={{ $.Values.app.limitConcurrency }}"
+            - "--workers={{ $.Values.api.workers | default 2 }}"
+            {{- if $.Values.api.limitConcurrency }}
+            - "--limit-concurrency={{ $.Values.api.limitConcurrency }}"
             {{- end }}
             - "--timeout-keep-alive=15"
             - "--timeout-graceful-shutdown=30"
@@ -92,31 +92,31 @@ spec:
             - "--lifespan=off"
           imagePullPolicy: '{{ $.Values.global.image.pullPolicy | default "Always" }}'
           resources:
-            {{- toYaml $.Values.app.resources | nindent 12 }}
+            {{- toYaml $.Values.api.resources | nindent 12 }}
           # the platform's environment, from the Secret in secret-env.yaml
           envFrom:
             - secretRef:
                 name: "{{ $.Values.global.appName }}-env"
           env:
-            {{- range $env := $.Values.app.env }}
+            {{- range $env := $.Values.api.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}
             {{- end }}
-            {{- /* Web server only: see app.databaseReadTimeout in values.yaml. */}}
-            {{- if $.Values.app.databaseReadTimeout }}
+            {{- /* Web server only: see api.databaseReadTimeout in values.yaml. */}}
+            {{- if $.Values.api.databaseReadTimeout }}
             - name: SMARTER_DATABASE_READ_TIMEOUT
-              value: {{ $.Values.app.databaseReadTimeout | quote }}
+              value: {{ $.Values.api.databaseReadTimeout | quote }}
             {{- end }}
-            {{- /* Web server only: see app.promptThreads in values.yaml. */}}
-            {{- if $.Values.app.promptThreads }}
+            {{- /* Web server only: see api.promptThreads in values.yaml. */}}
+            {{- if $.Values.api.promptThreads }}
             - name: SMARTER_PROMPT_THREADS
-              value: {{ $.Values.app.promptThreads | quote }}
+              value: {{ $.Values.api.promptThreads | quote }}
             {{- end }}
           securityContext:
             {{- toYaml $.Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" $ | nindent 12 }}
-            {{- with $.Values.app.extraVolumeMounts }}
+            {{- with $.Values.api.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           # The probes, tuned for a server that loads in about 10 seconds:
@@ -180,7 +180,7 @@ spec:
           terminationMessagePolicy: File
       volumes:
         {{- include "smarter.writableVolumes" $ | nindent 8 }}
-        {{- with $.Values.app.extraVolumes }}
+        {{- with $.Values.api.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       terminationGracePeriodSeconds: 45

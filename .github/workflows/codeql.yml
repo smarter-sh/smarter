@@ -33,6 +33,12 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    # The python analysis, the slowest, takes about 3 minutes.
+    timeout-minutes: 20
+    # security-events: write lets codeql-action/analyze upload its SARIF
+    # results to the repository's code scanning alerts; without it the
+    # upload fails. actions: read lets CodeQL read this workflow run's
+    # details, which the upload needs in a private repository.
     permissions:
       actions: read
       contents: read

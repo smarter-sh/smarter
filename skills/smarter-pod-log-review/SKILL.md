@@ -11,8 +11,8 @@ A deployed Smarter namespace runs four long-lived deployments from the Helm char
 
 | Deployment                      | Process                                                                                                                      | Replicas                         |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| `smarter-api`                   | `uvicorn smarter.asgi:application` (the api server)                                                                          | `app.replicaCount`, plus the HPA |
-| `smarter`                       | the api server under its name before v0.43.0, only when `app.legacyName.enabled` is set for an upgrade from an older release | the same                         |
+| `smarter-api`                   | `uvicorn smarter.asgi:application` (the api server)                                                                          | `api.replicaCount`, plus the HPA |
+| `smarter`                       | the api server under its name before v0.43.0, only when `api.legacyName.enabled` is set for an upgrade from an older release | the same                         |
 | `smarter-worker`                | `celery ... worker -Q default_celery_task_queue`                                                                             | `worker` values, plus the HPA    |
 | `smarter-worker-infrastructure` | Celery worker for DNS, certificate and Kubernetes work                                                                       | usually 1                        |
 | `smarter-beat`                  | `celery ... beat`, the scheduler                                                                                             | 1                                |

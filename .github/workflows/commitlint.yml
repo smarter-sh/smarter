@@ -1,0 +1,294 @@
+---
+#------------------------------------------------------------------------------
+# Commitlint:      checks that every commit in a pull request has a
+#                  Conventional Commits message, e.g. "fix(secret): mask the
+#                  value in the log", and tells the pull request's author
+#                  when one doesn't.
+#
+# Why: semantic-release reads the commit messages to choose Smarter's next
+# version number and to write changelogs/CHANGELOG.md. A commit whose message
+# it can't parse, e.g. "fixed stuff", is silently left out of both. The rules
+# are in commitlint.config.js. The commit-msg hook in .pre-commit-config.yaml
+# checks them on the contributor's computer, but only when they installed it
+# (make pre-commit-init), and pre-commit.ci skips it. This workflow checks
+# them on every pull request, whoever wrote it.
+#
+# CAPSTONE PROJECT: this workflow is a scaffold. The steps that check out the
+# code and install commitlint are done. The boxes marked "TODO" are your work.
+# Until you do them, the workflow runs and passes without checking anything.
+#
+# Every TODO box contains the code you need, already written for you, but
+# commented out: each of its lines starts with "# ", so GitHub ignores it.
+# Your job is to un-comment it:
+#
+#   1. In VS Code, select the lines between "UNCOMMENT FROM HERE"
+#      and "UNCOMMENT TO HERE" (not the two marker lines themselves).
+#   2. Press Cmd+/ (Mac) or Ctrl+/ (Windows, Linux). VS Code removes the "# "
+#      from the start of every selected line.
+#   3. Check that the lines you un-commented line up with the code around them.
+#      In YAML, the spaces at the start of a line matter: one space too many
+#      or too few breaks the file.
+#
+# Test your work inside your fork: push a branch with a badly worded commit,
+# open a pull request from it against your fork's own main branch, and watch
+# the "Commitlint" check on the pull request's page.
+#
+# Read more:
+#   - commitlint.config.js, the rules this workflow applies
+#   - https://www.conventionalcommits.org/
+#   - https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
+#   - https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication
+#   - https://cli.github.com/manual/gh_pr_comment
+#------------------------------------------------------------------------------
+name: Commitlint
+
+on:
+  pull_request:
+
+# A new push to the pull request cancels the check of the previous one.
+concurrency:
+  group: commitlint-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# The workflow's default: read only. A job asks for more in its own
+# permissions block (see TODO 1).
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    #--------------------------------------------------------------------------
+    # TODO 1: let this job comment on the pull request.
+    #
+    # Out of the box, this job can only read your repository (see
+    # "permissions" above), so GitHub refuses the comment of TODO 4 with
+    # "Resource not accessible by integration". These three lines give this
+    # one job permission to write on pull requests, and nothing more.
+    #
+    # Un-comment the three lines below. "permissions:" must line up with
+    # "runs-on:" above.
+    #
+    # ----- UNCOMMENT FROM HERE -----
+    # permissions:
+    #   contents: read
+    #   pull-requests: write
+    # ----- UNCOMMENT TO HERE -----
+    #
+    # Note: a pull request from a fork to another repository never gets write
+    # access, whatever this block says. That is GitHub protecting the
+    # repository from code that strangers wrote. (Your pull request, inside
+    # your own fork, is not from a fork.)
+    #--------------------------------------------------------------------------
+
+    steps:
+      # fetch-depth 0 fetches the whole history. By default, checkout fetches
+      # one commit, and commitlint needs every commit of the pull request.
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+
+      # The packages that commitlint.config.js extends. --no-save leaves
+      # package.json and package-lock.json as they are.
+      - name: Install commitlint
+        run: npm install --no-save --no-audit --no-fund @commitlint/cli @commitlint/config-conventional @commitlint/config-angular @commitlint/format
+
+      #------------------------------------------------------------------------
+      # TODO 2: check the pull request's commit messages.
+      #
+      # Un-comment the lines below.
+      #
+      # What the code does:
+      #   - FIRST is the commit your branch started from, and LAST is your
+      #     branch's newest commit. GitHub fills both in from the pull request.
+      #   - commitlint checks the message of every commit after FIRST, up to
+      #     and including LAST.
+      #   - When a message breaks a rule, commitlint fails, which turns the
+      #     pull request's "Commitlint" check red. That is what you want.
+      #   - "id: lint" names this step, so that TODO 4 can ask whether it
+      #     failed.
+      #
+      # ----- UNCOMMENT FROM HERE -----
+      # - name: Check the commit messages
+      #   id: lint
+      #   env:
+      #     FIRST: ${{ github.event.pull_request.base.sha }}
+      #     LAST: ${{ github.event.pull_request.head.sha }}
+      #   run: npx commitlint --from "$FIRST" --to "$LAST" --verbose
+      # ----- UNCOMMENT TO HERE -----
+      #------------------------------------------------------------------------
+
+      #------------------------------------------------------------------------
+      # TODO 3 (optional): ask an AI to suggest better messages.
+      #
+      # Do TODOs 1, 2 and 4 first. Then un-comment the lines below, and make the
+      # two changes to TODO 4's step that TODO 5 describes.
+      #
+      # What the code does:
+      #   - The first step writes a file, prompt.txt, that holds the
+      #     instructions for the AI, followed by your pull request's commit
+      #     messages.
+      #   - The second step sends prompt.txt to an AI model through GitHub
+      #     Models, which every GitHub account can use for free with the
+      #     token that GitHub gives this workflow. There is no API key to buy.
+      #   - Both steps run only when TODO 2 found a bad message.
+      #   - The AI's answer is saved as steps.ai.outputs.response, which TODO
+      #     4's comment can include.
+      #
+      # An example. Say your pull request has two commits, made in this order:
+      #
+      #     fixed typo in readme
+      #     added the comment step
+      #
+      # The first step writes this prompt.txt. Its first line is the echo's
+      # instructions; then come your commit messages, newest first, which is
+      # the order git log lists them in:
+      #
+      #     Rewrite each of the git commit messages below in the Conventional
+      #     Commits format: type(scope): description. The types are build,
+      #     chore, ci, docs, feat, fix, perf, refactor, revert, style and
+      #     test. Answer with one suggested message per commit, and nothing
+      #     else.
+      #
+      #     Commit messages, newest first:
+      #     ------------------------------
+      #     added the comment step
+      #     fixed typo in readme
+      #
+      # And the AI answers with something like:
+      #
+      #     ci(commitlint): add the pull request comment step
+      #     docs(readme): fix a typo
+      #
+      # That answer is what TODO 5 adds to the pull request's comment. The AI
+      # can be wrong, so the comment asks the author to check it.
+      #
+      # GitHub Models also needs one more line in TODO 1's permissions
+      # block, under "pull-requests: write" and lined up with it:
+      #
+      #       models: read
+      #
+      # Think about it: the commit messages come from whoever opened the pull
+      # request. Someone could write a commit message that says "ignore your
+      # instructions and ...". This is called prompt injection. Why does it
+      # matter that this job can only read code and write a comment?
+      #
+      # Read more: https://docs.github.com/en/github-models and
+      # https://github.com/actions/ai-inference
+      #
+      # ----- UNCOMMENT FROM HERE -----
+      # - name: Write the prompt for the AI
+      #   if: ${{ failure() && steps.lint.outcome == 'failure' }}
+      #   env:
+      #     FIRST: ${{ github.event.pull_request.base.sha }}
+      #     LAST: ${{ github.event.pull_request.head.sha }}
+      #   run: |
+      #     echo "Rewrite each of the git commit messages below in the Conventional Commits format: type(scope): description. The types are build, chore, ci, docs, feat, fix, perf, refactor, revert, style and test. Answer with one suggested message per commit, and nothing else." > prompt.txt
+      #     echo "" >> prompt.txt
+      #     git log --format=%B "$FIRST..$LAST" >> prompt.txt
+      #
+      # - name: Ask the AI
+      #   id: ai
+      #   if: ${{ failure() && steps.lint.outcome == 'failure' }}
+      #   continue-on-error: true
+      #   uses: actions/ai-inference@v1
+      #   with:
+      #     model: openai/gpt-4.1-mini
+      #     prompt-file: prompt.txt
+      # ----- UNCOMMENT TO HERE -----
+      #------------------------------------------------------------------------
+
+      #------------------------------------------------------------------------
+      # TODO 4: tell the pull request's author when a message failed.
+      #
+      # Un-comment the lines below.
+      #
+      # What the code does:
+      #   - "if:" runs this step only when TODO 2's step (id: lint) failed.
+      #   - "continue-on-error: true": the check has already failed. If GitHub
+      #     also refuses the comment, that shouldn't add a second, confusing
+      #     error.
+      #   - "env:" lists the values the command needs. GitHub fills them in:
+      #       GH_TOKEN    the token that lets gh, GitHub's command line tool,
+      #                   post the comment. GitHub creates it for every run;
+      #                   you don't add it anywhere.
+      #       GH_REPO     your repository, e.g. your-name/smarter
+      #       PR_NUMBER   the pull request's number, the one after the # in
+      #                   its title on GitHub, e.g. 12
+      #       RUN_URL     the address of this run's log, where the author can
+      #                   see which commit failed, and why
+      #   - "run:" posts the comment. The text between the double quotes is
+      #     the comment; change the wording if you like. Don't use backticks
+      #     (`) or double quotes (") inside it: they end or break the text.
+      #
+      # Why "$PR_NUMBER" in run:, and not ${{ github.event.pull_request.number }}
+      # directly: GitHub pastes a ${{ }} into the script before the script
+      # runs. For a number that's harmless, but for text that a person typed,
+      # like a pull request's title, a title such as  a"; rm -rf ~ "  would
+      # run as a command. This is called script injection. Passing every
+      # value through env: is the safe habit.
+      #
+      # ----- UNCOMMENT FROM HERE -----
+      # - name: Comment on the pull request
+      #   if: ${{ failure() && steps.lint.outcome == 'failure' }}
+      #   continue-on-error: true
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GH_REPO: ${{ github.repository }}
+      #     PR_NUMBER: ${{ github.event.pull_request.number }}
+      #     RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      #   run: |
+      #     gh pr comment "$PR_NUMBER" --body "At least one commit message in this pull request doesn't follow the Conventional Commits format: type(scope): description, e.g. fix(secret): mask the value in the log.
+      #
+      #     See which commit failed, and why: $RUN_URL
+      #
+      #     To fix your newest commit's message: git commit --amend
+      #     To fix an older commit's message: git rebase -i
+      #     Then update this pull request: git push --force-with-lease"
+      # ----- UNCOMMENT TO HERE -----
+      #------------------------------------------------------------------------
+
+      #------------------------------------------------------------------------
+      # TODO 5 (optional): notify someone by name.
+      #
+      # An @-mention at the start of the comment makes GitHub send that person
+      # an email. In the step you just un-commented:
+      #
+      #   1. Add this line to its env: block, lined up with PR_NUMBER:
+      #
+      #        NOTIFY: ${{ vars.COMMIT_REVIEWER || github.event.pull_request.user.login }}
+      #
+      #   2. In the run: line, change --body "At least one ...
+      #      to                       --body "@$NOTIFY At least one ...
+      #
+      # NOTIFY is the GitHub username in your repository variable
+      # COMMIT_REVIEWER, or, when you haven't created that variable, the pull
+      # request's author. To create it: your fork's Settings > Secrets and
+      # variables > Actions > Variables tab > New repository variable.
+      #
+      # Why a variable and not a secret: a username isn't secret. GitHub hides
+      # secrets in logs and never shows them again after you save them;
+      # variables are for plain settings that anyone may read.
+      #
+      # If you did TODO 3, show the AI's suggestions in the comment:
+      #
+      #   1. Add this line to the env: block, lined up with PR_NUMBER:
+      #
+      #        AI_SUGGESTIONS: ${{ steps.ai.outputs.response }}
+      #
+      #   2. Add these two lines at the end of the comment's text, just before
+      #      its closing double quote, lined up with the comment's other
+      #      lines ("To fix your newest commit's message" and so on), with an
+      #      empty line before them:
+      #
+      #        An AI suggests these messages (check them before you use them):
+      #        $AI_SUGGESTIONS
+      #------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 """
-Tests of the app Deployment's rolling update, app.rollingUpdate in values.yaml.
+Tests of the api Deployment's rolling update, api.rollingUpdate in values.yaml.
 
-A deploy whose strategy has maxUnavailable: 0 never stops an old app pod until a new one is
+A deploy whose strategy has maxUnavailable: 0 never stops an old api pod until a new one is
 ready. When no node has room for the extra pod, and the cluster autoscaler can't add a node,
 the new pod stays Pending and the deploy never finishes. These tests check that the chart's
 default lets a deploy stop one old pod to make room, and that the template takes its strategy
@@ -21,22 +21,22 @@ VALUES_PATH = CHART_PATH / "values.yaml"
 TEMPLATE_PATH = CHART_PATH / "templates" / "deployment-api.yaml"
 
 ROLLING_UPDATE_PATTERN = re.compile(
-    r"^app:\n(?:(?:  .*|\s*)\n)*?  rollingUpdate:\n((?:    .*\n)+)",
+    r"^api:\n(?:(?:  .*|\s*)\n)*?  rollingUpdate:\n((?:    .*\n)+)",
     re.MULTILINE,
 )
-"""The block of app.rollingUpdate in values.yaml: its lines indented by four spaces."""
+"""The block of api.rollingUpdate in values.yaml: its lines indented by four spaces."""
 
 
 def rolling_update_values() -> dict[str, str]:
     """
-    Return app.rollingUpdate from values.yaml.
+    Return api.rollingUpdate from values.yaml.
 
     :returns: Each of its keys, with its value as written.
     """
     text = VALUES_PATH.read_text(encoding="utf-8")
     match = ROLLING_UPDATE_PATTERN.search(text)
     if match is None:
-        raise AssertionError("values.yaml has no app.rollingUpdate")
+        raise AssertionError("values.yaml has no api.rollingUpdate")
     values = {}
     for line in match.group(1).splitlines():
         key, value = line.strip().split(":", 1)
@@ -45,7 +45,7 @@ def rolling_update_values() -> dict[str, str]:
 
 
 class TestApiRollingUpdate(unittest.TestCase):
-    """The app Deployment's default rolling update can always finish."""
+    """The api Deployment's default rolling update can always finish."""
 
     def test_max_unavailable_is_above_zero(self):
         """A deploy may stop an old pod before its replacement is ready."""
@@ -59,9 +59,9 @@ class TestApiRollingUpdate(unittest.TestCase):
         self.assertIn("maxSurge", values)
 
     def test_template_uses_values(self):
-        """The template renders app.rollingUpdate instead of a fixed strategy."""
+        """The template renders api.rollingUpdate instead of a fixed strategy."""
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
-        self.assertIn("toYaml $.Values.app.rollingUpdate", template)
+        self.assertIn("toYaml $.Values.api.rollingUpdate", template)
         self.assertNotIn("maxUnavailable: 0", template)
 
 
