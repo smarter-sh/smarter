@@ -138,7 +138,8 @@ def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     Returns True if the subscription is active, False otherwise. Superusers, and every user
     while multitenant authentication is off, pass without a call. When the status can't be
     checked, it fails open and returns True, to avoid blocking access due to transient issues.
-    Only the endpoint's answer is cached, by :func:`subscription_status_code`.
+    Only the endpoint's answer is cached, by :func:`subscription_status_code`. The two early
+    returns don't name the user in the log: a username is often a person's name.
 
     :param username: The user's username.
     :param email: The user's email address, or None. The Account Manager requires it from a platform
@@ -148,8 +149,7 @@ def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     # check to see if multitenant authentication is enabled
     if not switch_is_active(SmarterWaffleSwitches.ENABLE_MULTITENANT_AUTHENTICATION):
         logger.info(
-            "Multitenant authentication is disabled; skipping payment status check for user %s. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
-            username,
+            "Multitenant authentication is disabled; skipping the payment status check. You can enable multitenant authentication by activating the corresponding waffle switch in the Django admin console.",
         )
         return True
 
@@ -157,8 +157,7 @@ def verify_payment_status(username: str, email: Optional[str] = None) -> bool:
     is_superuser = User.objects.filter(username=username, is_superuser=True, is_active=True).exists()
     if is_superuser:
         logger.info(
-            "User %s is a superuser; skipping payment status check.",
-            username,
+            "the user is a superuser; skipping the payment status check.",
         )
         return True
 
