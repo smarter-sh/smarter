@@ -202,14 +202,20 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 # mcdaniel jan-2026: adding local requirements.txt back in because of the
 # https://github.com/smarter-sh/smarter-deploy repo that is used to deploy
 # smarter locally for non-developers.
+#
+# The lockfiles pin each package's version and the sha256 of each of its files
+# (make python-hashes). --require-hashes fails the build on a file
+# whose hash isn't in the lockfile, e.g. one replaced on PyPI or on the way
+# from it, and on a lockfile written without hashes. See
+# docs/source/smarter-platform/system-administration/security/supply-chain.rst.
 COPY ./smarter/requirements requirements
 RUN pip install --upgrade pip
 RUN pip install setuptools wheel pip-tools && \
-  pip install --no-cache-dir -r requirements/docker.txt
+  pip install --no-cache-dir --require-hashes -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
-RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
+RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install --require-hashes -r requirements/local.txt ; fi
 
 # The WordNet thesaurus, which smarter.apps.llmtool.nlp uses to match plugin selector
 # search terms by synonym. NLTK looks for it in ~/nltk_data, among other places.

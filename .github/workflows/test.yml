@@ -246,6 +246,28 @@ jobs:
         run: python -m unittest discover -v -s scripts/tests -t scripts
 
   #----------------------------------------------------------------------------
+  # The Python lockfiles against the published advisories (pip-audit), with
+  # make python-audit, which lists the advisories that don't reach Smarter.
+  # It runs on every pull request, even when the fingerprint skips the suite,
+  # because a new advisory can be published against a pin that hasn't
+  # changed. python-report fails when it does.
+  #----------------------------------------------------------------------------
+  python-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: make python-audit
+        run: make python-audit
+
+  #----------------------------------------------------------------------------
   # One shard of the Python suite. SHARDS must match the length of the shard
   # list. fail-fast is off, so that one failing shard doesn't cancel the
   # others: every failure is reported in one run.
@@ -780,9 +802,11 @@ jobs:
   # - When every shard passed, it saves the pass marker (see fingerprint).
   #   When the shards were skipped because these files passed before, it
   #   says so, and passes.
+  # - It fails when python-audit did, so that a lockfile with a known
+  #   vulnerability can't be merged either.
   #----------------------------------------------------------------------------
   python-report:
-    needs: [fingerprint, python]
+    needs: [fingerprint, python, python-audit]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -830,7 +854,7 @@ jobs:
         if: needs.python.result == 'success'
         shell: bash
         run: |
-          pip install "$(grep -E '^coverage==' smarter/requirements/local.txt)"
+          pip install "$(grep -oE '^coverage==[^ ]+' smarter/requirements/local.txt)"
           cat > "$RUNNER_TEMP/coveragerc" <<'EOF'
           [run]
           relative_files = True
@@ -897,6 +921,13 @@ jobs:
         shell: bash
         run: |
           echo "::error::A shard of the Python tests did not pass: ${{ needs.python.result }}."
+          exit 1
+
+      - name: Fail when the advisory check failed
+        if: needs.python-audit.result != 'success'
+        shell: bash
+        run: |
+          echo "::error::make python-audit did not pass: ${{ needs.python-audit.result }}. A Python lockfile pins a release with a known vulnerability. See the python-audit job."
           exit 1
 
   #----------------------------------------------------------------------------

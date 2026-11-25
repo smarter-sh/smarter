@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Draw the diagrams of docs/source/smarter-platform/system-administration/security.rst.
+Draw the diagrams of docs/source/smarter-platform/system-administration/security/infrastructure.rst.
 
 Usage: security-diagrams.py [output folder]   (default: docs/source/_static/security, from the repository root)
 

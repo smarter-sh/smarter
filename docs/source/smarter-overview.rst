@@ -222,7 +222,7 @@ makes the dangerous actions impossible:
   that would launch an MCP server as a local process. Remote MCP servers run on their own
   infrastructure, not on yours.
 - **Nowhere to escape to.** In production, Smarter runs on
-  :doc:`private VPC networks <smarter-platform/system-administration/security>` wherever possible, and
+  :doc:`private VPC networks <smarter-platform/system-administration/security/infrastructure>` wherever possible, and
   `Calico <https://www.tigera.io/project-calico/>`_ network policies on Kubernetes control which
   ports and services each workload can reach. Containers run as a non-root user. A model cannot
   open a connection that the network will not carry, so breaking out is not a matter of clever
