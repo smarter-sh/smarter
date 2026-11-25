@@ -117,8 +117,8 @@ serious. The others are cheaper, and the project expects to finish most of them 
 Outbound HTTPS is open to any address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The application's pods may connect to any address on the internet on ports 443, 80, 465, 587 and
-3306. Most malicious packages send what they steal with an ordinary HTTPS request, so the network
+The application's pods may connect to any address on the internet on ports 443, 80, 587 and 3306.
+Most malicious packages send what they steal with an ordinary HTTPS request, so the network
 policies don't stop it. DNS lookups, which the pods need, are a second, slower way out.
 
 The platform can't simply close port 443, because several features call hosts that a manifest
@@ -132,8 +132,9 @@ endpoints.
 - Limit the outbound traffic of every other pod to a list of known hosts (the LLM providers, AWS,
   SES), with an egress proxy or with DNS-aware network policies, which Calico's open-source edition
   doesn't support.
-- Close the ports that each workload doesn't use: SES needs only one of 465 and 587, and 80 and 3306
-  are needed only where plugins run.
+- Close 80 and 3306 for every pod but that worker: they are needed only where API plugins on plain
+  HTTP and SQL plugins run. The SMTP port that Smarter doesn't use, 465, is already closed: SES is
+  reached on 587 only.
 
 Every application pod holds every credential
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
