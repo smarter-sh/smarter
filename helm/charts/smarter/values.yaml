@@ -295,7 +295,7 @@ global:
   appName: smarter
   image:
     pullPolicy: Always
-    repository: lpm0073/smarter
+    repository: mcdaniel0073/smarter
     tag: v9999.9999.9999.dev9999
   affinity:
     nodeAffinity:

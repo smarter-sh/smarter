@@ -4,7 +4,7 @@
 #
 # usage:      The common platform requirements.
 #
-#             pip-compile --upgrade smarter/requirements/in/base.in -o smarter/requirements/base.txt
+#             make python-requirements   # pip-compile, then the hashes and the cooldown check
 # -----------------------------------------------------------------------------
 
 -r constraints.in
