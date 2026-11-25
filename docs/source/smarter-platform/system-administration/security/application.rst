@@ -175,9 +175,11 @@ Secure Development
 
 Every change to Smarter passes `bandit <https://bandit.readthedocs.io/>`__, mypy and the other
 pre-commit hooks, and GitHub's CodeQL analysis. Dependabot opens pull requests for the console's npm
-packages, the GitHub Actions and the Helm chart's dependencies. Every Python package is pinned to an
-exact version. Every Docker image is built with the operating system's latest security updates. The
-repository is public, so its code, infrastructure and these settings are open to review.
+packages, the GitHub Actions and the Helm chart's dependencies, once a release has been published for
+two weeks. Every Python package is pinned to an exact version, and updated by a maintainer, and every
+pull request fails when a pinned package has a published vulnerability (``pip-audit``). Every Docker
+image is built with the operating system's latest security updates. The repository is public, so its
+code, infrastructure and these settings are open to review.
 
 :doc:`supply-chain` describes the risk of a malicious dependency in detail: what a
 compromised package could reach, what protects against it, and the weaknesses that the project plans

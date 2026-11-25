@@ -62,8 +62,28 @@ What protects against it today
 - **Exact pins.** No dependency changes without a commit that changes the lockfile, which is public
   and reviewed. A malicious new release of a package isn't installed until the lockfile is updated to
   it.
-- **Pinned GitHub Actions,** by commit SHA, and Dependabot pull requests for the Actions, the
-  console's npm packages and the Helm chart's dependencies.
+- **Hashes.** The lockfile also has the sha256 of each of a release's files, its wheels and its
+  sdist, which ``make python-requirements`` reads from PyPI. The Docker build installs with
+  ``--require-hashes``, so a file that was replaced on PyPI, or on the way from it, fails the build,
+  and so does a lockfile written without hashes. ``pip`` and ``setuptools`` are pinned and hashed
+  too.
+- **Pinned GitHub Actions,** by commit SHA.
+- **Dependabot pull requests** for the GitHub Actions, the npm packages and the Helm chart's
+  dependencies, once a release has been published for two weeks. Most malicious releases are found and
+  removed from their registry within days. Security updates are proposed at once. The Python packages
+  are left out on purpose: Dependabot's changes to the ``pip-compile`` lockfiles left pip unable to
+  install them. A maintainer updates the Python lockfile with ``make python-requirements``, and the
+  change passes the tests like any other.
+- **Two weeks' wait for Python releases, too.** ``make python-requirements`` ends with
+  ``make python-cooldown``, which fails when the lockfile pins a release uploaded to PyPI in the last
+  14 days. The project's own packages, such as ``smarter-types``, are exempt, and a security fix that
+  can't wait is allowed by name (``PYTHON_COOLDOWN_ALLOW``). See ``scripts/python_lockfiles.py``.
+- **An advisory check on every pull request.** ``make python-audit`` checks the Python lockfiles
+  against PyPI's and OSV's published advisories with ``pip-audit``, and the test workflow fails when
+  one pins a release with a known vulnerability. It runs even when nothing in the lockfile changed,
+  because new advisories are published against old releases. An advisory that doesn't reach Smarter,
+  such as one in a part of a package that Smarter never imports, is ignored by its id in the
+  ``Makefile``, with the reason, until the package is upgraded past it.
 - **Image scanning.** Each environment's ECR repository scans every pushed image for known
   vulnerabilities.
 - **A signed Helm chart.** Each release's chart is signed with Cosign; Artifact Hub shows the
@@ -117,37 +137,6 @@ so a dependency that is compromised in any of them reaches all of the platform's
 
 **Plan:** split the credentials by workload, with a ServiceAccount, an IAM role and a Secret for each,
 so that each pod holds only what it uses. This goes together with the separate worker above.
-
-The Python pins don't have hashes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The lockfile pins each package's version, but not the hash of its file. If a package's file on PyPI,
-or on the way from PyPI, were replaced, the build would install it.
-
-**Plan:** generate the lockfile with ``pip-compile --generate-hashes``, and install with
-``--require-hashes``, so that the build fails on any file it hasn't seen before.
-
-Python dependencies aren't checked for advisories or updated automatically
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Dependabot covers the npm packages, the GitHub Actions and the Helm chart, but not the Python
-packages, and no check of the lockfile against published advisories runs in the pipeline. Image
-scanning in ECR finds some of them, after the image is built.
-
-**Plan:**
-
-- Add the Python packages to Dependabot.
-- Run ``pip-audit`` against the lockfile in the test workflow, so that a pull request that adds a
-  package with a known vulnerability fails.
-
-New releases are adopted as soon as they are published
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Most malicious releases are found and removed from PyPI within days. A lockfile update can pick one
-up in that window.
-
-**Plan:** wait a few days before adopting a new release, with Dependabot's cooldown setting, except
-for security fixes.
 
 There is no software bill of materials, and the image isn't signed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
