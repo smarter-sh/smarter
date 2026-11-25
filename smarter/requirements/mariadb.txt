@@ -4,7 +4,22 @@
 #
 #    pip-compile --no-index --output-file=smarter/requirements/mariadb.txt smarter/requirements/in/mariadb.in
 #
-mariadb==1.1.14
+mariadb==1.1.14 \
+    --hash=sha256:0f5fc74023f2e479be159542633f8b5865fee18a36e5a6d4e262387b39a692ee \
+    --hash=sha256:1a50b4612c0dd5b69690cebb34cef552a7f64dcadeb5aa91d70cd99bf01bc5b3 \
+    --hash=sha256:3d2c795cde606f4e12c0d73282b062433f414cae035675b0d81f2d65c9b79ac5 \
+    --hash=sha256:3f6fdc4ded5e0500a6a29bf0c8bf1be94189dcef5a8d5e0e154a4b3456f86bcc \
+    --hash=sha256:4c7f33578da163a1b79929aae241f5f981d7b9d5a94d89e589aad7ec58e313ea \
+    --hash=sha256:55ddbe5272c292cbcb2968d87681b5d2b327e65646a015e324b8eeb804d14531 \
+    --hash=sha256:5b514362ba3ad3ef7ada91bc8a8b3b4c0e5144efce96b5bffa3dbc46b8af7d7a \
+    --hash=sha256:6659725837e48fa6af05e20128fb525029f706f1921d5dbf639a25b2f80b9f93 \
+    --hash=sha256:685a1ad2a24fd0aae1c4416fe0ac794adc84ab9209c8d0c57078f770d39731db \
+    --hash=sha256:7fd603c5cf23c47ef0d28fdc2b4b79919ee7f75d00ed070d3cd1054dcf816aeb \
+    --hash=sha256:932a95016b7e9b8d78893aa5ee608e74199e3c6dd607dbe5e4da2010a4f67b88 \
+    --hash=sha256:98d552a8bb599eceaa88f65002ad00bd88aeed160592c273a7e5c1d79ab733dd \
+    --hash=sha256:e6d702a53eccf20922e47f2f45cfb5c7a0c2c6c0a46e4ee2d8a80d0ff4a52f34
     # via -r smarter/requirements/in/mariadb.in
-packaging==26.3
+packaging==26.3 \
+    --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
     # via mariadb

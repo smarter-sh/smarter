@@ -21,17 +21,32 @@ party software packages.
 
 **DO NOT EDIT THESE FILES.**
 
-Python requirements for this project are maintained automatically via GitHub's Dependabot service,
-combined with automated ci-cd procedures that occasionally re-generate these .txt files
-from the .in files located in the .in subfolder. Further instructions are included the header docs
-of each .in file.
+A maintainer updates them with `make python-requirements`, which runs pip-compile on each
+`.in` file in the `in/` subfolder, then `make python-hashes` and `make python-cooldown`. Dependabot doesn't manage them:
+its changes to these lockfiles left pip unable to install them. Further instructions are included
+in the header docs of each `.in` file.
 
-## Manually updating requirements files
+Each lockfile pins every package, direct and transitive, to an exact version, with the sha256 of
+each of its files (`make python-hashes`). The Docker build installs them with `--require-hashes`, so
+it fails on a file it hasn't seen before. A lockfile written without hashes fails the build too:
+always regenerate them with `make python-requirements`.
 
-You can manually run pip-compile from the root of this project, as follows:
+- `make python-cooldown` fails when a lockfile pins a release uploaded to PyPI in the last 14 days.
+- `make python-audit` fails when one pins a release with a published vulnerability. The Tests
+  workflow runs it on every pull request to main.
+
+See [Supply-Chain Security](https://docs.smarter.sh/smarter-platform/system-administration/security/supply-chain.html).
+
+## Updating the requirements files
+
+From the root of this project:
 
 ```console
-pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
-pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
-pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
+make python-requirements                                   # keep the pins, e.g. after editing an .in file
+make python-requirements PYTHON_COOLDOWN_ALLOW="package"   # a security fix newer than 14 days
 ```
+
+It runs pip-compile with `--allow-unsafe` (pip and setuptools are pinned too, because
+`--require-hashes` refuses a dependency without a hash), then `make python-hashes` and
+`make python-cooldown` (`scripts/python_lockfiles.py`). Don't run pip-compile by itself: it writes
+the lockfile without hashes, and the Docker build then fails.
