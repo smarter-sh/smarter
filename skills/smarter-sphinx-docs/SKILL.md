@@ -164,8 +164,8 @@ skills/smarter-sphinx-docs/scripts/settings-diagram.py
 rsvg-convert -w 1875 docs/source/_static/settings-data-flow.svg -o <scratchpad>/settings.png
 ```
 
-The three diagrams of the security page,
-`docs/source/smarter-platform/system-administration/security.rst`, are in
+The three diagrams of the infrastructure security page,
+`docs/source/smarter-platform/system-administration/security/infrastructure.rst`, are in
 `docs/source/_static/security/`: the network traffic, the pod network policies
 (Calico) and the AWS identities (IRSA and the remaining IAM users).
 [scripts/security-diagrams.py](scripts/security-diagrams.py) draws them, one

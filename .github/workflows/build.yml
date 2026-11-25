@@ -374,6 +374,13 @@ jobs:
       # - 2026-05-28T18-39-51.alpha
       # - v0.14.0-alpha.27.alpha
       #
+      # sbom and provenance: BuildKit scans each platform's image with Syft
+      # and attaches its software bill of materials (SPDX) and its SLSA
+      # provenance (mode=max: the build's sources, arguments and steps) to the
+      # image index, as attestations. They travel with the image: the copy to
+      # Docker Hub below keeps them, and the signature below covers them,
+      # because the index lists them by digest. Read one with:
+      #   docker buildx imagetools inspect <image> --format '{{ json .SBOM }}'
       # -----------------------------------------------------------------------
       - name: Build and push to AWS ECR
         id: build-and-push-to-ecr
@@ -392,6 +399,8 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
           build-args: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
+          sbom: true
+          provenance: mode=max
           cache-from: type=gha
           cache-to: type=gha,mode=max
         env:
@@ -420,6 +429,72 @@ jobs:
             --tag "$TARGET:${{ github.run_id }}" \
             --tag "$TARGET:${{ env.DATESTAMP }}" \
             "$SOURCE"
+
+      # -----------------------------------------------------------------------
+      # Sign the image with Cosign, with the key that signs the Helm chart
+      # (COSIGN_KEY; its public half is sigstore/artifacthub-cosign.pub), and
+      # verify the signatures. What is signed is the image index's digest, in
+      # ECR and on Docker Hub, so every tag of this build carries the
+      # signature, and so do its SBOM and provenance attestations, which the
+      # index lists by digest. Cosign pushes each signature to the image's own
+      # repository, as the tag sha256-<digest>.sig, and records it in
+      # Sigstore's public transparency log, Rekor, as the chart's is. The key
+      # is read from the environment, never written to a file.
+      # -----------------------------------------------------------------------
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@e1523de7571e31dbe865fd2e80c5c7c23ae71eb4 # v3.4.0
+
+      - name: Sign the image with Cosign
+        shell: bash
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          ECR_IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}
+          DOCKERHUB_IMAGE: ${{ secrets.DOCKERHUB_ACCOUNT }}/${{ secrets.DOCKERHUB_REPO }}
+          DIGEST: ${{ steps.build-and-push-to-ecr.outputs.digest }}
+        run: |
+          # The copy to Docker Hub keeps the index unchanged, so its digest is the same, but read it rather than assume it.
+          HUB_DIGEST=$(docker buildx imagetools inspect "$DOCKERHUB_IMAGE:${GITHUB_RUN_ID}" --format '{{ json .Manifest }}' | jq -r .digest)
+          cosign sign --yes --key env://COSIGN_KEY "$ECR_IMAGE@$DIGEST"
+          cosign sign --yes --key env://COSIGN_KEY "$DOCKERHUB_IMAGE@$HUB_DIGEST"
+          cosign verify --key sigstore/artifacthub-cosign.pub "$ECR_IMAGE@$DIGEST" > /dev/null
+          cosign verify --key sigstore/artifacthub-cosign.pub "$DOCKERHUB_IMAGE@$HUB_DIGEST" > /dev/null
+          echo "Signed and verified $DIGEST in ECR and $HUB_DIGEST on Docker Hub."
+
+      # -----------------------------------------------------------------------
+      # A release's SBOMs, one per platform, as SPDX JSON files attached to its
+      # GitHub release, for operators who check the image's contents with
+      # their own tools without pulling it. From the image's own attestations,
+      # so they describe exactly the image that was pushed and signed.
+      # -----------------------------------------------------------------------
+      - name: Extract the SBOMs
+        if: github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true'
+        shell: bash
+        env:
+          ECR_IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}
+          DIGEST: ${{ steps.build-and-push-to-ecr.outputs.digest }}
+        run: |
+          mkdir -p sbom
+          for platform in linux/amd64 linux/arm64; do
+            arch="${platform#linux/}"
+            file="sbom/smarter-${LATEST_RELEASE}-${arch}.spdx.json"
+            docker buildx imagetools inspect "$ECR_IMAGE@$DIGEST" \
+              --format "{{ json (index .SBOM \"$platform\").SPDX }}" > "$file"
+            packages=$(jq '.packages | length' "$file")
+            if [ "$packages" -eq 0 ]; then
+              echo "::error::The $platform SBOM lists no packages."
+              exit 1
+            fi
+            echo "$file: $packages packages"
+          done
+
+      - name: Attach the SBOMs to the GitHub release
+        if: github.ref == 'refs/heads/main' && needs.release.outputs.published == 'true'
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          token: ${{ secrets.PAT }}
+          tag_name: ${{ needs.release.outputs.tag }}
+          files: sbom/*.spdx.json
 
       # -----------------------------------------------------------------------
       # The image's lines of the notify job's Slack message, and of this job's

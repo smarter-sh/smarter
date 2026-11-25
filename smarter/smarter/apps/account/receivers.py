@@ -123,20 +123,22 @@ def user_logged_in_receiver(sender, request, user: User, **kwargs):
       if not, create one with the default account, and the request's language, which the
       web console chose from the language cookie or the browser's Accept-Language header.
       This is how a console sign-up gets its UserProfile.
+
+    The user is logged by id, never by username, which is often a person's name.
     """
     # SmarterTokenAuthenticationMiddleware logs the user in on every api request that carries a token,
     # so those logins are logged at DEBUG. A sign-in to the web console is logged at INFO.
     log = logger.debug if request is not None and request.META.get("HTTP_AUTHORIZATION") else logger.info
-    log("User logged in: %s", user)
+    log("User logged in: user_id=%s", user.pk)
     try:
         UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:
         account = get_cached_default_account()
         UserProfile.objects.create(name=user.username, user=user, account=account, language=active_language())
         logger.info(
-            "created a UserProfile for user %s with the default account %s",
-            user,
-            account,
+            "created a UserProfile for user_id=%s with the default account %s",
+            user.pk,
+            account.account_number,
         )
     except UserProfile.MultipleObjectsReturned:
         # this is fine. the same user can have multiple UserProfiles if they belong to multiple accounts
@@ -152,6 +154,7 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     ``last_login``. Django saves ``last_login`` on each login, and
     SmarterTokenAuthenticationMiddleware logs the user in on every api request,
     so invalidating then would empty the user's caches on every request.
+    The user is logged by id, never by username.
     """
     # pylint: disable=C0415
     from smarter.apps.dashboard.context_processors import cache_invalidations
@@ -161,8 +164,8 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
     # a save of last_login alone happens on every login, including every api request with a token.
     log = logger.debug if last_login_only else logger.info
     log(
-        "User post_save: %s, created: %s",
-        instance,
+        "User post_save: user_id=%s, created: %s",
+        instance.pk,
         created,
     )
     if last_login_only:
@@ -185,15 +188,14 @@ def user_post_save(sender: User, instance: User, created, **kwargs):
 @receiver(post_delete, sender=User)
 def user_post_delete(sender: User, instance: User, **kwargs):
     """
-    Log the deletion of a User.
+    Log the deletion of a User, by id, never by username.
 
     :param sender: The User model.
     :param instance: The deleted User.
     """
     logger.info(
-        "User post_delete: %s, id: %s",
-        instance,
-        instance.id,  # type: ignore
+        "User post_delete: user_id=%s",
+        instance.pk,
     )
 
 

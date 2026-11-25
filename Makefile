@@ -27,7 +27,7 @@ include .env
 	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
-	python-init python-lint python-clean python-requirements check-python \
+	python-init python-lint python-clean python-requirements python-hashes python-cooldown python-audit check-python \
 	keen-init keen-build keen-server \
 	console console-local \
 	helm-update \
@@ -340,15 +340,67 @@ python-clean: ## Destroy the Python virtual environment and remove __pycache__ d
 
 # FIX NOTE: mcdaniel. the pip version pin temporarily resolves a pip-compile issue.
 #           AttributeError: 'PackageFinder' object has no attribute 'allow_all_prereleases'
+#
+# --allow-unsafe pins pip and setuptools too: the Docker build installs the
+# lockfiles with --require-hashes, which refuses any dependency without a hash.
+# The hashes are added by python-hashes, not by pip-compile --generate-hashes,
+# which took over ten minutes a lockfile (scripts/python_lockfiles.py says why).
 python-requirements: ## Compile and update Python dependency files
 	@echo "==============================================================================="
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
 	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
-	pip-compile smarter/requirements/in/base.in -o smarter/requirements/base.txt
-	pip-compile smarter/requirements/in/local.in -o smarter/requirements/local.txt
-	pip-compile smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
-	pip-compile smarter/requirements/in/docs.in -o smarter/requirements/docs.txt --no-strip-extras
+	pip-compile --allow-unsafe smarter/requirements/in/base.in -o smarter/requirements/base.txt
+	pip-compile --allow-unsafe smarter/requirements/in/local.in -o smarter/requirements/local.txt
+	pip-compile --allow-unsafe smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+	pip-compile --allow-unsafe smarter/requirements/in/docs.in -o smarter/requirements/docs.txt --no-strip-extras
+	$(MAKE) python-hashes
+	$(MAKE) python-cooldown
+
+# The hashes: the sha256 of each pin's wheels and sdist, from PyPI's JSON API, in
+# pip-compile's format. The Docker build installs with --require-hashes.
+python-hashes: ## Add each pin's hashes to the Python lockfiles
+	python3 -I scripts/python_lockfiles.py hash
+
+# The cooldown: fail when a lockfile pins a release uploaded to PyPI in the last
+# PYTHON_COOLDOWN_DAYS days, the wait of .github/dependabot.yml. Most malicious
+# releases are found and removed within days. The project's own packages are
+# exempt (scripts/python_lockfiles.py). A security fix that can't wait:
+#   make python-requirements PYTHON_COOLDOWN_ALLOW="package other-package"
+# See docs/source/smarter-platform/system-administration/security/supply-chain.rst.
+PYTHON_COOLDOWN_DAYS ?= 14
+PYTHON_COOLDOWN_ALLOW ?=
+python-cooldown: ## Fail when a Python lockfile pins a release uploaded in the last 14 days
+	python3 -I scripts/python_lockfiles.py cooldown --days $(PYTHON_COOLDOWN_DAYS) $(foreach package,$(PYTHON_COOLDOWN_ALLOW),--allow $(package))
+
+# The advisory check: fail when a Python lockfile pins a release with a published
+# vulnerability (PyPI's and OSV's advisories). The Tests workflow runs it on every
+# pull request to main. An advisory that doesn't reach Smarter is ignored below,
+# by its id, with the reason; remove the line once the package is upgraded past it.
+# See docs/source/smarter-platform/system-administration/security/supply-chain.rst.
+PIP_AUDIT_VERSION := 2.10.1
+PIP_AUDIT_LOCKFILES := docker local docs
+#   langchain: path traversal in the filesystem prompt and chain loaders and the file-search
+#   middleware, which Smarter never imports. Held at 1.2.x by in/constraints.in.
+PIP_AUDIT_IGNORE += PYSEC-2026-2192
+#   langgraph-sdk: the actions= argument of the @auth.on.* decorators of a LangGraph server,
+#   which Smarter doesn't run. A dependency of langchain.
+PIP_AUDIT_IGNORE += PYSEC-2026-4240
+#   mariadb: SQL injection in MariaDB Connector/C through mysql_real_escape_string() with the
+#   big5 character set. Smarter's connections are utf8mb4 (settings DATABASES), and use the ORM.
+PIP_AUDIT_IGNORE += PYSEC-2026-217
+#   social-auth-core: the OpenID Connect nonce isn't bound to the browser's session. Smarter's
+#   only OIDC backend, LinkedinOpenIdConnect, is off by default, and replaces the base class's
+#   validate_claims(), nonce check included. Held below 6 by in/constraints.in.
+PIP_AUDIT_IGNORE += CVE-2026-115910
+python-audit: ## Fail when a Python lockfile pins a release with a known vulnerability
+	pip install --quiet "pip-audit==$(PIP_AUDIT_VERSION)"
+	set -e; for lockfile in $(PIP_AUDIT_LOCKFILES); do \
+		echo "pip-audit smarter/requirements/$$lockfile.txt"; \
+		pip-audit --no-deps --disable-pip --progress-spinner off \
+			$(foreach id,$(PIP_AUDIT_IGNORE),--ignore-vuln $(id)) \
+			-r smarter/requirements/$$lockfile.txt; \
+	done
 
 
 # ---------------------------------------------------------

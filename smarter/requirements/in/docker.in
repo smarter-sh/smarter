@@ -7,7 +7,7 @@
 #             handshakes with the cloud proxy server Nginx to manage
 #             http requests and responses.
 #
-#             pip-compile --upgrade smarter/requirements/in/docker.in -o smarter/requirements/docker.txt
+#             make python-requirements   # pip-compile, then the hashes and the cooldown check
 # -----------------------------------------------------------------------------
 
 -r constraints.in
