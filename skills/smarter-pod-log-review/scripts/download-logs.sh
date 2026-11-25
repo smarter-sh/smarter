@@ -34,7 +34,7 @@ SINCE="${4:-}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 KUBECTL="$HERE/../../smarter-kubectl/scripts/kubectl.sh"
 # smarter-api is the api server since v0.43.0. smarter is its name before, which an environment
-# still runs only with app.legacyName.enabled.
+# still runs only with api.legacyName.enabled.
 DEPLOYMENTS=(smarter-api smarter smarter-worker smarter-worker-infrastructure smarter-beat)
 
 k() { "$KUBECTL" "$CTX" "$NS" "$@"; }

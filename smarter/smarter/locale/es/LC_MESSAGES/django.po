@@ -929,17 +929,14 @@ msgid "Getting Started"
 msgstr "Primeros pasos"
 
 #: smarter/templates/account/email/welcome.html
-msgid "Quick Start Tutorial"
-msgstr "Tutorial de Quick Start"
+#, python-format
+msgid "%(product_name)s Explained, in 5 Minutes"
+msgstr "%(product_name)s explicado en 5 minutos"
 
 #: smarter/templates/account/email/welcome.html
 #, python-format
-msgid ""
-"This page will give you an introduction to the %(percent)s of "
-"%(product_name)s concepts that you will use on a daily basis."
-msgstr ""
-"Esta página te presenta el %(percent)s de los conceptos de %(product_name)s "
-"que usarás a diario."
+msgid "Watch on YouTube: %(product_name)s Explained, in 5 Minutes"
+msgstr "Ver en YouTube: %(product_name)s explicado en 5 minutos"
 
 #: smarter/templates/account/email/welcome.html
 msgid "Example LLMClients"
