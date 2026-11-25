@@ -1,11 +1,14 @@
 """Test the account app's signal receivers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.utils import timezone
 
 from smarter.apps.account.models import Account, User, UserProfile
-from smarter.apps.account.receivers import account_post_delete
+from smarter.apps.account.receivers import (
+    account_post_delete,
+    user_logged_in_receiver,
+)
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
@@ -13,6 +16,21 @@ from smarter.apps.account.utils import (
 )
 
 CACHE_INVALIDATIONS = "smarter.apps.dashboard.context_processors.cache_invalidations"
+RECEIVERS_LOGGER = "smarter.apps.account.receivers.logger"
+
+
+def logged_text(logger: MagicMock) -> str:
+    """
+    Return the arguments of every call to a patched logger, as one string.
+
+    :param logger: The patched logger.
+    :returns: The arguments, each as a string, joined with spaces.
+    """
+    arguments = []
+    for logger_call in logger.mock_calls:
+        for argument in logger_call.args:
+            arguments.append(str(argument))
+    return " ".join(arguments)
 
 
 class TestUserPostSave(TestAccountMixin):
@@ -60,6 +78,54 @@ class TestUserPostSave(TestAccountMixin):
         self.assertTrue(UserProfile.get_cached_object(user=self.user).user.is_staff)
         self.assertTrue(UserProfile.get_cached_object(user=self.user, account=self.account).user.is_staff)
         self.assertTrue(UserProfile.get_cached_objects(user=self.user)[0].user.is_staff)
+
+
+class TestUserReceiversLogging(TestAccountMixin):
+    """Test that the User receivers log a user by id, never by username, which is often a person's name."""
+
+    def setUp(self):
+        super().setUp()
+        self.username = f"test_receivers_logging_{self.hash_suffix}"
+        self.user = User.objects.create_user(
+            username=self.username,
+            email=f"{self.username}@example.com",
+            password="12345",
+        )
+        self.addCleanup(User.objects.filter(pk=self.user.pk).delete)
+
+    def test_logged_in(self):
+        """A sign-in is logged with the user's id."""
+        user_profile = UserProfile.objects.create(name="test", user=self.user, account=self.account)
+        self.addCleanup(user_profile.delete)
+        with patch(RECEIVERS_LOGGER) as logger:
+            user_logged_in_receiver(sender=User, request=None, user=self.user)
+        logged = logged_text(logger)
+        self.assertIn(str(self.user.pk), logged)
+        self.assertNotIn(self.username, logged)
+
+    def test_logged_in_creates_a_profile(self):
+        """A sign-up's new UserProfile is logged with the user's id and the account's number."""
+        with (
+            patch(RECEIVERS_LOGGER) as logger,
+            patch("smarter.apps.account.receivers.get_cached_default_account", return_value=self.account),
+        ):
+            user_logged_in_receiver(sender=User, request=None, user=self.user)
+        self.assertTrue(UserProfile.objects.filter(user=self.user, account=self.account).exists())
+        logged = logged_text(logger)
+        self.assertIn(str(self.user.pk), logged)
+        self.assertIn(str(self.account.account_number), logged)
+        self.assertNotIn(self.username, logged)
+
+    def test_save_and_delete(self):
+        """A User's save and deletion are logged with its id."""
+        user_id = self.user.pk
+        with patch(RECEIVERS_LOGGER) as logger:
+            self.user.first_name = "Changed"
+            self.user.save()
+            self.user.delete()
+        logged = logged_text(logger)
+        self.assertIn(str(user_id), logged)
+        self.assertNotIn(self.username, logged)
 
 
 class TestUserProfileReceivers(TestAccountMixin):
@@ -128,16 +194,16 @@ class TestAccountPostSave(TestAccountMixin):
         self.addCleanup(Account.objects.filter(pk=self.account.pk).update, company_name=company_name)
         self.addCleanup(setattr, self.account, "company_name", company_name)
         self.account.company_name = "Ada Q. Lovelace"
-        with patch("smarter.apps.account.receivers.logger") as logger:
+        with patch(RECEIVERS_LOGGER) as logger:
             self.account.save()
-        logged = " ".join(str(arg) for call in logger.mock_calls for arg in call.args)
+        logged = logged_text(logger)
         self.assertIn(self.account.account_number, logged)
         for value in (self.account.phone_number, self.account.address1, self.account.postal_code, "Lovelace"):
             self.assertNotIn(value, logged)
 
     def test_delete_does_not_log_the_company_name(self):
-        with patch("smarter.apps.account.receivers.logger") as logger:
+        with patch(RECEIVERS_LOGGER) as logger:
             account_post_delete(sender=Account, instance=self.account)
-        logged = " ".join(str(arg) for call in logger.mock_calls for arg in call.args)
+        logged = logged_text(logger)
         self.assertIn(self.account.account_number, logged)
         self.assertNotIn(self.account.company_name, logged)

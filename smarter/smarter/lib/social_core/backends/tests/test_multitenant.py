@@ -38,6 +38,20 @@ def verify(username: str, email=None) -> bool:
     return verify_payment_status(username, email)
 
 
+def logged_text(logger: MagicMock) -> str:
+    """
+    Return the arguments of every call to a patched logger, as one string.
+
+    :param logger: The patched logger.
+    :returns: The arguments, each as a string, joined with spaces.
+    """
+    arguments = []
+    for logger_call in logger.mock_calls:
+        for argument in logger_call.args:
+            arguments.append(str(argument))
+    return " ".join(arguments)
+
+
 class TestVerifyPaymentStatus(TestAccountMixin):
     """Test verify_payment_status(): superusers pass, and errors of the status api fail open."""
 
@@ -48,14 +62,24 @@ class TestVerifyPaymentStatus(TestAccountMixin):
         self.addCleanup(patcher.stop)
 
     def test_superuser(self):
-        with patch(f"{MODULE}.requests.get") as get:
+        """A superuser passes without a call, and the log doesn't name them."""
+        with patch(f"{MODULE}.requests.get") as get, patch(f"{MODULE}.logger") as logger:
             self.assertTrue(verify(self.admin_user.username))
         get.assert_not_called()
+        logger.info.assert_called_once()
+        self.assertNotIn(self.admin_user.username, logged_text(logger))
 
     def test_switch_off(self):
-        with patch(f"{MODULE}.switch_is_active", return_value=False), patch(f"{MODULE}.requests.get") as get:
+        """With multitenant authentication off, everyone passes without a call, and the log doesn't name them."""
+        with (
+            patch(f"{MODULE}.switch_is_active", return_value=False),
+            patch(f"{MODULE}.requests.get") as get,
+            patch(f"{MODULE}.logger") as logger,
+        ):
             self.assertTrue(verify(self.non_admin_user.username))
         get.assert_not_called()
+        logger.info.assert_called_once()
+        self.assertNotIn(self.non_admin_user.username, logged_text(logger))
 
     def test_status(self):
         for status, expected in ((HTTPStatus.OK, True), (HTTPStatus.PAYMENT_REQUIRED, False)):
