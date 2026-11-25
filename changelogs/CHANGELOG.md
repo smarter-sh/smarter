@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.1...v0.48.2-alpha.1) (2026-11-25)
+
+### Bug Fixes
+
+* **helm:** run mariadb, redis and loki on the stateful node pool ([19cc09c](https://github.com/smarter-sh/smarter/commit/19cc09c7cbdf214721052ffb6a11f95ba36cd9b0)), closes [#942](https://github.com/smarter-sh/smarter/issues/942) [#1052](https://github.com/smarter-sh/smarter/issues/1052) [#929](https://github.com/smarter-sh/smarter/issues/929) [#931](https://github.com/smarter-sh/smarter/issues/931)
+
 ## [0.48.1](https://github.com/smarter-sh/smarter/compare/v0.48.0...v0.48.1) (2026-11-25)
 
 ### Bug Fixes

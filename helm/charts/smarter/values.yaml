@@ -647,13 +647,16 @@ mariadb:
     # scaling down MariaDB's node.
     podAnnotations:
       cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-    # The chart's default PodDisruptionBudget is maxUnavailable: 1, which allows evicting the
-    # only pod. minAvailable: 1 blocks every voluntary eviction. A node drain, or a managed node
-    # group upgrade, then waits for an operator to delete the pod by hand, at a time they choose.
+    # maxUnavailable: 1 lets a node drain evict the only pod, so that an upgrade of the stateful
+    # node group (a new AMI or Kubernetes version) proceeds on its own: EKS starts the new node,
+    # drains the old one, and MariaDB moves over with an outage of a minute or two. A
+    # minAvailable: 1 would block every drain, and EKS fails the upgrade after 15 minutes. The
+    # other evictors stay away: the annotation above stops the cluster autoscaler, and the
+    # descheduler's policy (smarter-infrastructure) protects every pod with a PVC.
     pdb:
       create: true
-      minAvailable: 1
-      maxUnavailable: ""
+      minAvailable: ""
+      maxUnavailable: 1
     # Smarter stores emoji and other 4-byte characters (prompts, manifests,
     # chat history), which need utf8mb4. The Bitnami chart's default my.cnf sets
     # character-set-server=UTF8, which is the 3-byte utf8mb3. Command-line flags
@@ -662,13 +665,16 @@ mariadb:
     extraFlags: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    # Sized to fit the stateful node (a t3.medium, about 3.4 GiB allocatable) together with
+    # Redis and Loki. MariaDB uses about 300Mi and a few tens of millicores in prod. The scheduler
+    # places pods by their requests, so a request far above use keeps them off the node.
     resources:
       requests:
-        cpu: 500m
-        memory: 2Gi
+        cpu: 250m
+        memory: 1Gi
       limits:
         cpu: 2
-        memory: 4Gi
+        memory: 2Gi
     livenessProbe:
       enabled: true
       initialDelaySeconds: 30
@@ -676,13 +682,33 @@ mariadb:
       timeoutSeconds: 5
       failureThreshold: 6
       successThreshold: 1
-    # The annotation and the PodDisruptionBudget above stop only voluntary evictions. A spot node
-    # that AWS reclaims takes MariaDB with it, whatever they say (issue #942: every node was spot,
-    # and MariaDB went down when its node was replaced). On a cluster with an on-demand node group,
-    # pin MariaDB to it, e.g. on EKS:
-    #   nodeSelector:
-    #     eks.amazonaws.com/capacityType: ON_DEMAND
-    # Leave it empty while every node is spot, or the pod can't be scheduled.
+    # A spot node that AWS reclaims takes MariaDB with it, whatever the annotation above says
+    # (issue #942). So MariaDB prefers the stateful node pool: on-demand nodes, labeled and
+    # tainted smarter.sh/node-pool=stateful, that only pods with this toleration may use.
+    # smarter-infrastructure creates the pool (aws/terraform/smarter/node-group-stateful.tf), in
+    # the zone of MariaDB's volume.
+    #
+    # The toleration and affinity are defined once, here, as YAML anchors. Every service that
+    # belongs on the pool references them (redis.master and loki.singleBinary below), so the
+    # pool's key and value live in one place. The affinity is preferred, not required: when the
+    # pool has no node (a cluster without one, or while its node is replaced), the pod runs on
+    # any node that can attach its volume, rather than staying Pending. It doesn't move back by
+    # itself; delete the pod at a quiet time to return it to the pool.
+    tolerations: &statefulNodePoolTolerations
+      - key: smarter.sh/node-pool
+        operator: Equal
+        value: stateful
+        effect: NoSchedule
+    affinity: &statefulNodePoolAffinity
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: smarter.sh/node-pool
+                  operator: In
+                  values:
+                    - stateful
     nodeSelector: {}
     readinessProbe:
       enabled: true
@@ -729,18 +755,17 @@ redis:
     # This annotation stops the cluster autoscaler from scaling down Redis's node.
     podAnnotations:
       cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-    # The chart's default PodDisruptionBudget is maxUnavailable: 1, which allows evicting the
-    # only pod. minAvailable: 1 blocks every voluntary eviction. A node drain, or a managed node
-    # group upgrade, then waits for an operator to delete the pod by hand, at a time they choose.
+    # As for MariaDB: a node drain may evict Redis, so that an upgrade of the stateful node group
+    # proceeds on its own.
     pdb:
       create: true
-      minAvailable: 1
-      maxUnavailable: ""
-    # As for MariaDB: a reclaimed spot node takes Redis with it (issue #942). On a cluster with an
-    # on-demand node group, pin Redis to it, e.g. on EKS:
-    #   nodeSelector:
-    #     eks.amazonaws.com/capacityType: ON_DEMAND
-    # Leave it empty while every node is spot, or the pod can't be scheduled.
+      minAvailable: ""
+      maxUnavailable: 1
+    # As for MariaDB: a reclaimed spot node takes Redis with it (issue #942), so Redis prefers the
+    # stateful node pool, with the anchors that mariadb.primary defines. Its volume must be in
+    # the pool's zone, or it can't run there.
+    tolerations: *statefulNodePoolTolerations
+    affinity: *statefulNodePoolAffinity
     nodeSelector: {}
     containerSecurityContext:
       enabled: true
@@ -750,13 +775,16 @@ redis:
       storageClass: gp3
     podSecurityContext:
       enabled: true
+    # Sized to fit the stateful node together with MariaDB and Loki (see
+    # mariadb.primary.resources).
+    # Redis uses about 10Mi in prod: it holds the cache, Celery's queues and sessions.
     resources:
       requests:
-        cpu: "250m"
-        memory: "2Gi"
+        cpu: "100m"
+        memory: "256Mi"
       limits:
         cpu: "1"
-        memory: "4Gi"
+        memory: "1Gi"
     service:
       headless:
         sessionAffinity: None
@@ -863,6 +891,11 @@ loki:
     replicas: 1
     podLabels:
       app.kubernetes.io/application-group: "smarter"
+    # Loki is one pod on a ReadWriteOnce volume, like MariaDB and Redis, so it prefers the
+    # stateful node pool too, with the anchors that mariadb.primary defines. These replace the
+    # Loki chart's default affinity, a pod anti-affinity that means nothing with one replica.
+    tolerations: *statefulNodePoolTolerations
+    affinity: *statefulNodePoolAffinity
     persistence:
       enabled: true
       size: 10Gi
