@@ -173,8 +173,9 @@ Pods and Containers
   specs. The database, administrator and Django credentials come from Secrets that
   smarter-infrastructure generates in the namespace.
 - **Images.** Each environment's ECR repository scans every pushed image for vulnerabilities. The
-  cluster pulls third-party images through an ECR pull-through cache. Each release's Helm chart is
-  signed with Cosign; Artifact Hub shows the signature and the public key.
+  cluster pulls third-party images through an ECR pull-through cache. Each release's Smarter image
+  and Helm chart are signed with Cosign, and the image carries a software bill of materials. See
+  "Verifying a release" in :doc:`supply-chain`.
 - **The bastion pod** is the one place for a shell with the platform's environment, reached with
   ``kubectl exec``, which needs the cluster's IAM credentials.
 - **The web console's Terminal**, a shell inside the app's container for superusers, is off by

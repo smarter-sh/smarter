@@ -86,8 +86,14 @@ What protects against it today
   ``Makefile``, with the reason, until the package is upgraded past it.
 - **Image scanning.** Each environment's ECR repository scans every pushed image for known
   vulnerabilities.
-- **A signed Helm chart.** Each release's chart is signed with Cosign; Artifact Hub shows the
-  signature and the public key.
+- **A signed Helm chart and a signed image.** Each release's chart and Docker image are signed with
+  Cosign, with the same key, and each signature is recorded in Sigstore's public transparency log.
+  Artifact Hub shows the chart's signature and the public key. See `Verifying a release`_.
+- **A software bill of materials.** Each image carries an SBOM (SPDX) and a SLSA build provenance for
+  each platform, attached by BuildKit at build time and covered by the image's signature. Each
+  release on GitHub also has the SBOMs as files, ``smarter-<version>-amd64.spdx.json`` and
+  ``smarter-<version>-arm64.spdx.json``, so that the image's contents can be checked without pulling
+  it.
 - **A signed extension registry.** The index of LLM tool extensions is signed, and Smarter checks the
   signature on every read. See :doc:`../llm-providers-and-extensions/extensions`.
 - **Hardened containers.** The pods run as a non-root user, on a read-only root filesystem, with
@@ -138,22 +144,12 @@ so a dependency that is compromised in any of them reaches all of the platform's
 **Plan:** split the credentials by workload, with a ServiceAccount, an IAM role and a Secret for each,
 so that each pod holds only what it uses. This goes together with the separate worker above.
 
-There is no software bill of materials, and the image isn't signed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Helm chart is signed, but the Docker image is not, and releases don't publish a software bill of
-materials (SBOM). An operator can't verify that the image they run is the one the pipeline built, or
-check its contents with their own tools without pulling it.
-
-**Plan:**
-
-- Generate an SBOM of each release's image and publish it with the release.
-- Sign the image with Cosign, as the chart is, and document how to verify it.
-
 What operators can do now
 -------------------------
 
-- **Review the lockfile** of the release you deploy, and scan its image with your own tools.
+- **Verify the release you deploy,** as below, and deploy the image by its digest, not by a tag.
+- **Review the lockfile** of the release you deploy, and scan its image, or its SBOM, with your own
+  tools.
 - **Close the ports you don't use.** If your platform doesn't use SQL plugins, or API plugins on plain
   HTTP, remove the 3306 and 80 rules from the application's egress policy.
 - **Turn on threat detection.** Amazon GuardDuty notices unusual API calls made with the pods'
@@ -164,5 +160,32 @@ What operators can do now
   stored can't be read.
 - **Update regularly,** as :doc:`../operations/updates` describes, so that fixed dependencies reach
   your platform.
+
+Verifying a release
+-------------------
+
+The project's public key is
+`sigstore/artifacthub-cosign.pub <https://github.com/smarter-sh/smarter/blob/main/sigstore/artifacthub-cosign.pub>`__.
+With `Cosign <https://docs.sigstore.dev/cosign/system_config/installation/>`__ installed, verify the
+image you run, by its digest, and the chart:
+
+.. code-block:: console
+
+   curl -LO https://github.com/smarter-sh/smarter/raw/main/sigstore/artifacthub-cosign.pub
+   cosign verify --key artifacthub-cosign.pub mcdaniel0073/smarter@sha256:<digest>
+   cosign verify --key artifacthub-cosign.pub ghcr.io/smarter-sh/charts/smarter:<chart version>
+
+The image's tags (``v0.49.0``, ``v0.49``, ``latest``, ...) all point to one signed digest, which
+``docker buildx imagetools inspect mcdaniel0073/smarter:<version>`` prints. To read the SBOM or the
+provenance from the image itself:
+
+.. code-block:: console
+
+   docker buildx imagetools inspect mcdaniel0073/smarter:<version> \
+     --format '{{ json (index .SBOM "linux/amd64").SPDX }}'
+   docker buildx imagetools inspect mcdaniel0073/smarter:<version> \
+     --format '{{ json (index .Provenance "linux/amd64").SLSA }}'
+
+Images built before signing was added have no signature or SBOM.
 
 See also the :doc:`security-faq`.
