@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.48.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.2...v0.48.3-alpha.1) (2026-11-25)
+
+### Bug Fixes
+
+* **account:** log users by id, not username, on sign-in and User saves ([2154890](https://github.com/smarter-sh/smarter/commit/2154890d6125da358f51575f4c0b9cd4f64068fa)), closes [#1001](https://github.com/smarter-sh/smarter/issues/1001) [#1055](https://github.com/smarter-sh/smarter/issues/1055) [#1055](https://github.com/smarter-sh/smarter/issues/1055)
+* **helm:** default the image to mcdaniel0073/smarter on docker hub ([3b1d771](https://github.com/smarter-sh/smarter/commit/3b1d7711526999b5e76cc78dcff0a4cc7c8cce80))
+
 ## [0.48.2](https://github.com/smarter-sh/smarter/compare/v0.48.1...v0.48.2) (2026-11-25)
 
 ### Bug Fixes
