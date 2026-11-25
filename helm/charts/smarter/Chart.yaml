@@ -41,7 +41,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 28.1.5
+    version: 28.1.6
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
