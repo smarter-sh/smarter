@@ -1,5 +1,21 @@
+---
+#------------------------------------------------------------------------------
+# Dependabot version updates, as pull requests to alpha.
+#
+# cooldown: a new release isn't proposed until it has been published for two
+# weeks. Most malicious releases are found and removed from their registry
+# within days, so the wait keeps them out of the lockfiles. It applies to
+# version updates only: Dependabot's security updates, for a release that
+# fixes a published advisory, are proposed at once.
+# See docs/source/smarter-platform/system-administration/security/supply-chain.rst.
+#------------------------------------------------------------------------------
 version: 2
 updates:
+  # Python ("pip") is left out on purpose. Dependabot's changes to the
+  # pip-compile lockfiles routinely broke the platform: it moved pins in ways
+  # that left pip unable to install the lockfile. A maintainer updates the
+  # Python lockfiles with make python-requirements and runs the tests. The
+  # same two weeks' wait is checked there, by make python-cooldown.
   - package-ecosystem: "npm"
     directory: "/"
     ignore:
@@ -14,6 +30,8 @@ updates:
     schedule:
       interval: "monthly"
     target-branch: "alpha"
+    cooldown:
+      default-days: 14
   - package-ecosystem: "github-actions"
     directory: "/.github"
     labels:
@@ -22,6 +40,8 @@ updates:
     schedule:
       interval: "monthly"
     target-branch: "alpha"
+    cooldown:
+      default-days: 14
   - package-ecosystem: "helm"
     directory: "/helm/charts/smarter"
     labels:
@@ -30,3 +50,5 @@ updates:
     target-branch: "alpha"
     schedule:
       interval: "quarterly"
+    cooldown:
+      default-days: 14
