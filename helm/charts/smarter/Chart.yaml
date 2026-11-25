@@ -49,7 +49,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 28.3.10
+    version: 28.3.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
   - name: slack-bot
