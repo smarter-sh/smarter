@@ -25,7 +25,7 @@ maintainers:
     url: https://lawrencemcdaniel.com
 dependencies:
   - name: alloy
-    version: 1.15.0
+    version: 1.16.0
     repository: https://grafana.github.io/helm-charts
     condition: alloy.enabled
   - name: grafana
