@@ -272,14 +272,16 @@ class SAMApiConnectionBroker(SAMConnectionBaseBroker[ApiConnection]):
                 )
             connection = PydanticApiConnection(
                 baseUrl=self.connection.base_url,
-                apiKey=self.connection.api_key.get_secret() if self.connection.api_key else None,
+                # the Secrets' names, as a manifest gives them, never their values: this manifest is
+                # what describe returns, and what apply reads back.
+                apiKey=self.connection.api_key.name if self.connection.api_key else None,
                 authMethod=self.connection.auth_method,
                 timeout=self.connection.timeout,
                 proxyProtocol=self.connection.proxy_protocol,
                 proxyHost=self.connection.proxy_host,
                 proxyPort=self.connection.proxy_port,
                 proxyUsername=self.connection.proxy_username,
-                proxyPassword=self.connection.proxy_password.get_secret() if self.connection.proxy_password else None,
+                proxyPassword=self.connection.proxy_password.name if self.connection.proxy_password else None,
             )
             spec = SAMApiConnectionSpec(
                 connection=connection,

@@ -199,3 +199,52 @@ def check_extension_updates() -> list[str]:
     except SmarterExtensionRegistryError as e:
         logger.warning("could not check for updates: %s", e)
         return []
+
+
+@app.task(
+    queue=smarter_settings.app_tools_tasks_celery_task_queue,
+    ignore_result=False,
+    acks_late=False,
+)
+def run_tool_call(kind: str, call_json: str) -> str:
+    """
+    Run one resolved LLM tool call, in the tool worker, ``smarter-worker-tools``, and return its result.
+
+    :class:`~smarter.apps.llmtool.runner.runner.RemoteToolRunner` sends it, and waits for its result
+    (ADR-038). The call is rebuilt from its JSON with its kind's model, run in this process by its kind's
+    executor, and its :class:`~smarter.apps.llmtool.runner.models.ToolCallResult` returned as JSON.
+
+    It never retries: a tool call can change something, and must not run twice. It never raises, and logs
+    neither the call, which holds credentials, nor its result; nor does Celery, in the tool worker
+    (:func:`smarter.lib.celery_conf.hide_tool_calls_from_logs`).
+
+    :param kind: The call's ``kind``, e.g. ``mcp``.
+    :param call_json: The resolved call, as JSON.
+    :returns: The result, as JSON.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .runner import (
+        InProcessToolRunner,
+        ToolCallResult,
+        call_model_for,
+        running_in_tool_worker,
+    )
+
+    try:
+        model = call_model_for(kind)
+        call = model.model_validate_json(call_json)
+    # a call that can't be rebuilt is reported to the LLM, rather than raised to Celery.
+    # pylint: disable=broad-exception-caught
+    except Exception as e:
+        result = ToolCallResult(failure=f"the tool worker could not read the {kind} call: {type(e).__name__}")
+        return result.model_dump_json()
+    try:
+        with running_in_tool_worker():
+            result = InProcessToolRunner().run(call)
+    # an executor reports its failures in its result; one that raises is reported the same way, by its
+    # type only: Celery would log the exception with the task's arguments, and its message can hold a
+    # url with a credential.
+    # pylint: disable=broad-exception-caught
+    except Exception as e:
+        result = ToolCallResult(failure=f"the tool worker could not run the {kind} call: {type(e).__name__}")
+    return result.model_dump_json()

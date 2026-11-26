@@ -139,6 +139,10 @@ class TestSettingsValidators(SmarterTestBase):
             make_settings(
                 environment=environment, django_secret_key="a-configured-secret-key"
             ).require_django_secret_key()
+            # the tool worker, which has no database, is never given the key.
+            make_settings(
+                environment=environment, django_secret_key=placeholder, database_unavailable=True
+            ).require_django_secret_key()
         with self.assertLogs("smarter.common.conf.settings", level="WARNING"):
             make_settings(
                 environment=SmarterEnvironments.LOCAL, django_secret_key=placeholder

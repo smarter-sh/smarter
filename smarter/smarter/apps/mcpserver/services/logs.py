@@ -3,7 +3,8 @@ The platform's pod logs: reading them, formatting their lines for an LLM, and gr
 
 The logs come from :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``: the last
 72 hours of the app (``smarter``), the Celery workers (``smarter-worker``,
-``smarter-worker-infrastructure``), beat (``smarter-beat``) and MariaDB (``mariadb``), kept in Loki.
+``smarter-worker-infrastructure`` and, where it is enabled, the tool worker ``smarter-worker-tools``),
+beat (``smarter-beat``) and MariaDB (``mariadb``), kept in Loki.
 Every query is built from structured filters (:func:`log_query`), never from LogQL that a caller
 wrote, so an LLM cannot inject a query of its own.
 
@@ -48,8 +49,18 @@ from smarter.apps.infrastructure.services.logs import (
 )
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerServiceError
 
-COMPONENTS = ("smarter", "smarter-worker", "smarter-worker-infrastructure", "smarter-beat", "mariadb")
+COMPONENTS = (
+    "smarter",
+    "smarter-worker",
+    "smarter-worker-infrastructure",
+    "smarter-worker-tools",
+    "smarter-beat",
+    "mariadb",
+)
 """The components whose logs are kept: the ``app.kubernetes.io/name`` of their pods."""
+
+OPTIONAL_COMPONENTS = ("smarter-worker-tools",)
+"""The components that a platform may not run, e.g. the tool worker, off by default: not missing when they write nothing."""
 
 MAX_MINUTES = int(LOG_RETENTION.total_seconds() // 60)
 """The longest period that can be read: the log store's retention."""
@@ -257,7 +268,7 @@ class LogSources:
     """The components that wrote to the logs."""
 
     missing: list[str]
-    """The components of :data:`COMPONENTS` that wrote nothing, e.g. because they are down."""
+    """The components of :data:`COMPONENTS` that wrote nothing, e.g. because they are down, except :data:`OPTIONAL_COMPONENTS`."""
 
     pods: list[str]
     """The pods that wrote to the logs."""
@@ -280,7 +291,7 @@ def log_sources(minutes: int) -> LogSources:
     pods = infrastructure.logs.label_values("pod", start, end)
     missing = []
     for component in COMPONENTS:
-        if component not in components:
+        if component not in components and component not in OPTIONAL_COMPONENTS:
             missing.append(component)
     sources = LogSources(components=list(components), missing=missing, pods=list(pods))
     return sources
@@ -382,6 +393,7 @@ def log_errors(minutes: int, min_level: LogLevel, components: tuple[str, ...] = 
 
 __all__ = [
     "COMPONENTS",
+    "OPTIONAL_COMPONENTS",
     "MAX_LINE_CHARACTERS",
     "MAX_MINUTES",
     "SUMMARY_LINES",

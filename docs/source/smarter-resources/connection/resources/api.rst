@@ -37,6 +37,22 @@ It encapsulates the necessary configuration and credentials (``Smarter Secret``)
 
 From `connections/api/stackademy-catalog-api.yaml.tpl <https://github.com/smarter-sh/stackademy/blob/main/connections/api/stackademy-catalog-api.yaml.tpl>`__ in the :doc:`Stackademy example project </smarter-framework/smarter-manifests/stackademy>`.
 
+Where ``baseUrl`` may point
+---------------------------
+
+``baseUrl`` may use https or plain http, on any port, but its host must resolve to public addresses
+only, and so must the host of every redirect. A ``baseUrl`` on a private network, such as
+``http://10.0.0.5/``, ``http://localhost:8000/`` or the cloud's instance metadata at
+``169.254.169.254``, is refused before any request is sent, and the plugin's tool call fails. This
+keeps a manifest from making the platform call its own network. An api on a private network must be
+published at a public address, behind its own authentication.
+
+In the local environment, ``localhost`` and other loopback hosts are permitted as well, so that a
+developer's connection can reach the platform's own api, e.g. ``http://localhost:9357``, as
+Stackademy's tutorials do.
+
+A redirect to another host doesn't carry the connection's ``Authorization`` header.
+
 Technical References
 --------------------
 

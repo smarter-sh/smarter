@@ -122,10 +122,13 @@ AI-specific protections
   prompt injection, jailbreaks and off-topic requests, before a message reaches the LLM or its tools,
   and before a reply reaches the user. See :doc:`../../../smarter-resources/smarter-guardrail`.
 - **Server-side request forgery.** Tools that fetch URLs chosen by a manifest author or by the LLM
-  (web search, skills, image search, MCP clients, the extension registry, ...) go through one hardened
-  client, ``safe_http``: HTTPS on port 443 only, only to public addresses, with every redirect
-  validated, no credentials in URLs, bounded response sizes and timeouts. This keeps them away from
-  the cluster's own network and the cloud's instance metadata. See
+  (web search, skills, image search, MCP clients, API plugins, the extension registry, ...) go through
+  one hardened client, ``safe_http``: HTTPS on port 443 only, only to public addresses, with every
+  redirect validated, no credentials in URLs, credential headers dropped on a redirect to another
+  host, bounded response sizes and timeouts. This keeps them away from the cluster's own network and
+  the cloud's instance metadata. An ApiConnection's api may also use plain HTTP and its own port, but
+  only at a public address. In the local environment, a developer's MCP clients and API connections
+  may also reach ``localhost``. See
   `safe_http.py <https://github.com/smarter-sh/smarter/blob/main/smarter/smarter/apps/llmtool/plugin/safe_http.py>`__.
 - **Signed extensions.** The extension registry's index is signed, and Smarter verifies its signature
   with ``SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY`` on every read. See :doc:`../llm-providers-and-extensions/extensions`.

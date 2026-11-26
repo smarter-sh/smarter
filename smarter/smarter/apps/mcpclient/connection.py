@@ -32,8 +32,7 @@ import asyncio
 import fnmatch
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
-from typing import Awaitable, Callable, Optional, TypeVar
-from urllib.parse import urlparse
+from typing import Awaitable, Callable, Optional, TypeVar, Union
 
 import anyio
 import anyio.to_thread
@@ -43,15 +42,15 @@ from mcp import Client
 from mcp.client import Transport
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
+from pydantic import BaseModel, ConfigDict, Field
 
-from smarter.apps.llmtool.plugin.safe_http import is_loopback_host, validate_public_url
+from smarter.apps.llmtool.plugin.safe_http import validate_destination_url
 from smarter.apps.mcpserver.services import (
     ACTING_USER_HEADER,
     acting_user_headers,
     current_acting_user,
 )
-from smarter.common.conf import smarter_settings
-from smarter.common.const import VERSION, SmarterEnvironments
+from smarter.common.const import VERSION
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -107,22 +106,61 @@ def matches_any(value: str, patterns: Optional[list[str]]) -> bool:
     return any(fnmatch.fnmatchcase(value, pattern) for pattern in patterns or [])
 
 
-def is_tool_allowed(mcpclient: MCPClient, tool_name: str) -> bool:
+class MCPEndpoint(BaseModel):
+    """
+    What it takes to connect to an MCPClient's MCP server, resolved from the MCPClient.
+
+    Plain values, with no database access: the credential is already decrypted, into ``headers``,
+    and the acting user, if any, already signed. :meth:`MCPServerConnection.endpoint` resolves it
+    in the app, and an :class:`MCPServerConnection` built from it connects without the MCPClient,
+    as a worker without database access must (ADR-038).
+
+    .. warning::
+
+        ``headers`` holds the credential. It is excluded from ``repr()``. Never log the model's
+        ``model_dump()``.
+
+    :ivar name: The MCPClient's name, for messages.
+    :ivar endpoint_url: The MCP server's URL. It is checked again before each request.
+    :ivar transport: ``http`` (Streamable HTTP) or ``sse``.
+    :ivar timeout: Seconds to wait for the server to connect and respond.
+    :ivar headers: The request headers: the MCPClient's custom headers, its credential, and the
+        signed acting user for this platform's staff-only MCP server.
+    :ivar allowed_tools: The MCPClient's ``allowed_tools`` patterns, checked again before a call.
+    :ivar allowed_resources: The MCPClient's ``allowed_resources`` patterns.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    name: str
+    endpoint_url: str
+    transport: str = str(MCPTransport.HTTP)
+    timeout: float = 30.0
+    headers: dict[str, str] = Field(default_factory=dict, repr=False)
+    allowed_tools: list[str] = Field(default_factory=list)
+    allowed_resources: list[str] = Field(default_factory=list)
+
+
+MCPPermissions = Union[MCPClient, MCPEndpoint]
+"""Whatever carries ``allowed_tools`` and ``allowed_resources``: an MCPClient, or its resolved endpoint."""
+
+
+def is_tool_allowed(mcpclient: MCPPermissions, tool_name: str) -> bool:
     """
     Return whether an MCPClient offers one of its server's tools to the LLM.
 
-    :param mcpclient: The MCPClient.
+    :param mcpclient: The MCPClient, or its resolved endpoint.
     :param tool_name: The name of the tool, as the server reports it.
     :returns: True if ``allowed_tools`` is empty, or the name matches one of its patterns.
     """
     return not mcpclient.allowed_tools or matches_any(tool_name, mcpclient.allowed_tools)
 
 
-def is_resource_allowed(mcpclient: MCPClient, uri: str) -> bool:
+def is_resource_allowed(mcpclient: MCPPermissions, uri: str) -> bool:
     """
     Return whether the LLM may read one of an MCPClient's server's resources.
 
-    :param mcpclient: The MCPClient.
+    :param mcpclient: The MCPClient, or its resolved endpoint.
     :param uri: The URI of the resource.
     :returns: True if the URI matches one of the ``allowed_resources`` patterns. If there
         are none, no resource may be read.
@@ -162,23 +200,14 @@ def validate_endpoint_url(url: str) -> None:
     In the local environment, a loopback host, e.g. ``http://localhost:9357/`` or
     ``https://127.0.0.1/``, is permitted, on any port, so that a developer's MCPClients can
     reach MCP servers that run on their machine, such as the platform's own. Every other
-    URL, and every URL in every other environment, must pass
-    :func:`~smarter.apps.llmtool.plugin.safe_http.validate_public_url`. Loopback hosts are
-    never permitted in a deployed environment, where they would let an MCPClient reach the
-    services of the Smarter server itself.
+    URL, and every URL in every other environment, must be https on the standard port, to a
+    host with public addresses only. See
+    :func:`~smarter.apps.llmtool.plugin.safe_http.validate_destination_url`, which this calls.
 
     :param url: The URL.
     :raises SafeHttpError: If the URL is not permitted.
     """
-    if smarter_settings.environment == SmarterEnvironments.LOCAL:
-        try:
-            parsed = urlparse(url)
-            hostname = parsed.hostname
-        except ValueError:
-            hostname = None
-        if hostname and parsed.scheme in ("http", "https") and is_loopback_host(hostname):
-            return
-    validate_public_url(url)
+    validate_destination_url(url)
 
 
 async def guard_request(request: httpx2.Request) -> None:
@@ -284,22 +313,88 @@ class MCPServerConnection:
     """
     A connection to an MCPClient's MCP server.
 
+    It is built from the MCPClient, in the app, or from its resolved :class:`MCPEndpoint`, where
+    there is no database (ADR-038). :meth:`endpoint` resolves the one from the other.
+
     :param mcpclient: The MCPClient.
+    :param endpoint: Its resolved endpoint, instead of the MCPClient.
+    :raises SmarterMCPClientConfigurationError: If neither is given.
     """
 
-    def __init__(self, mcpclient: MCPClient):
+    def __init__(self, mcpclient: Optional[MCPClient] = None, *, endpoint: Optional[MCPEndpoint] = None):
+        if mcpclient is None and endpoint is None:
+            raise SmarterMCPClientConfigurationError("An MCPServerConnection needs an MCPClient or an MCPEndpoint.")
         self.mcpclient = mcpclient
+        self.resolved_endpoint = endpoint
         # kept now, in the caller's thread: the async calls may run in a thread of their own, which
         # a context variable doesn't follow.
         self.acting_user = current_acting_user()
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} mcpclient={self.mcpclient.name}>"
+        return f"<{self.__class__.__name__} mcpclient={self.name}>"
+
+    @property
+    def name(self) -> str:
+        """The MCPClient's name, for messages."""
+        if self.resolved_endpoint is not None:
+            return self.resolved_endpoint.name
+        return self.require_mcpclient().name
+
+    @property
+    def permissions(self) -> MCPPermissions:
+        """The MCPClient, or, without it, the resolved endpoint: whatever carries ``allowed_tools`` and ``allowed_resources``."""
+        if self.mcpclient is not None:
+            return self.mcpclient
+        return self.endpoint()
+
+    def require_mcpclient(self) -> MCPClient:
+        """
+        Return the MCPClient.
+
+        :raises SmarterMCPClientConfigurationError: If this connection was built from an endpoint only.
+        """
+        if self.mcpclient is None:
+            raise SmarterMCPClientConfigurationError(
+                f"{self.name}: this connection was built from a resolved endpoint, without its MCPClient."
+            )
+        return self.mcpclient
 
     @property
     def timeout(self) -> float:
         """Seconds to wait for the MCP server to connect and respond."""
-        return float(self.mcpclient.timeout or 30)
+        if self.resolved_endpoint is not None:
+            return self.resolved_endpoint.timeout
+        return float(self.require_mcpclient().timeout or 30)
+
+    def endpoint(self) -> MCPEndpoint:
+        """
+        Return the resolved endpoint: everything needed to connect, without the database.
+
+        Resolving it reads the credential from the MCPClient's Smarter Secret, and signs the acting
+        user, so it is resolved once, when it is first needed, and only in the app. The URL isn't
+        checked here: :meth:`run` checks it before every connection.
+
+        :returns: The endpoint.
+        :raises SmarterMCPClientConfigurationError: If the MCPClient has no endpoint URL, or its
+            credential is missing.
+        """
+        if self.resolved_endpoint is not None:
+            return self.resolved_endpoint
+        mcpclient = self.require_mcpclient()
+        if not mcpclient.endpoint_url:
+            raise SmarterMCPClientConfigurationError(f"MCPClient {mcpclient.name} has no endpointUrl.")
+        headers = self.request_headers()
+        transport = mcpclient.transport or MCPTransport.HTTP
+        self.resolved_endpoint = MCPEndpoint(
+            name=mcpclient.name,
+            endpoint_url=mcpclient.endpoint_url,
+            transport=str(transport),
+            timeout=self.timeout,
+            headers=headers,
+            allowed_tools=list(mcpclient.allowed_tools or []),
+            allowed_resources=list(mcpclient.allowed_resources or []),
+        )
+        return self.resolved_endpoint
 
     def credential(self) -> str:
         """
@@ -307,11 +402,12 @@ class MCPServerConnection:
 
         :raises SmarterMCPClientConfigurationError: If the Secret is missing or empty.
         """
-        secret = self.mcpclient.credentials
+        mcpclient = self.require_mcpclient()
+        secret = mcpclient.credentials
         value = secret.get_secret() if secret else None
         if not value:
             raise SmarterMCPClientConfigurationError(
-                f"MCPClient {self.mcpclient.name} requires a credentials Secret for authType {self.mcpclient.auth_type}."
+                f"MCPClient {mcpclient.name} requires a credentials Secret for authType {mcpclient.auth_type}."
             )
         return value
 
@@ -325,19 +421,20 @@ class MCPServerConnection:
 
         :raises SmarterMCPClientConfigurationError: If the credential is missing.
         """
+        mcpclient = self.require_mcpclient()
         headers: dict[str, str] = {}
-        for name, value in (self.mcpclient.headers or {}).items():
+        for name, value in (mcpclient.headers or {}).items():
             # only the platform sets the acting user, whatever the case of a stored header's name.
             if str(name).lower() == ACTING_USER_HEADER.lower():
                 continue
             headers[str(name)] = str(value)
         headers["User-Agent"] = USER_AGENT
-        auth_type = self.mcpclient.auth_type or MCPAuthType.NONE
+        auth_type = mcpclient.auth_type or MCPAuthType.NONE
         if auth_type == MCPAuthType.API_KEY:
-            headers[self.mcpclient.api_key_header or "X-API-Key"] = self.credential()
+            headers[mcpclient.api_key_header or "X-API-Key"] = self.credential()
         elif auth_type in (MCPAuthType.BEARER_TOKEN, MCPAuthType.OAUTH2):
             headers["Authorization"] = f"Bearer {self.credential()}"
-        signed = acting_user_headers(self.mcpclient.endpoint_url, self.acting_user)
+        signed = acting_user_headers(mcpclient.endpoint_url, self.acting_user)
         headers.update(signed)
         return headers
 
@@ -355,8 +452,9 @@ class MCPServerConnection:
         :rtype: mcp.client.Transport
         :raises SmarterMCPClientConfigurationError: If the transport is not supported.
         """
-        url = self.mcpclient.endpoint_url or ""
-        transport = self.mcpclient.transport or MCPTransport.HTTP
+        endpoint = self.endpoint()
+        url = endpoint.endpoint_url
+        transport = endpoint.transport
         if transport == MCPTransport.HTTP:
             return streamable_http_client(url, http_client=http_client)
         if transport == MCPTransport.SSE:
@@ -367,9 +465,7 @@ class MCPServerConnection:
                 sse_read_timeout=self.timeout,
                 httpx_client_factory=guarded_http_client,
             )
-        raise SmarterMCPClientConfigurationError(
-            f"MCPClient {self.mcpclient.name}: transport {transport} is not supported."
-        )
+        raise SmarterMCPClientConfigurationError(f"MCPClient {endpoint.name}: transport {transport} is not supported.")
 
     def run(self, operation: Callable[[Client], Awaitable[T]], description: str) -> T:
         """
@@ -382,14 +478,12 @@ class MCPServerConnection:
             handshake, returns an error, or does not respond within the timeout.
         :raises SmarterMCPClientConfigurationError: If the MCPClient is misconfigured.
         """
-        url = self.mcpclient.endpoint_url
-        if not url:
-            raise SmarterMCPClientConfigurationError(f"MCPClient {self.mcpclient.name} has no endpointUrl.")
+        endpoint = self.endpoint()
         try:
-            validate_endpoint_url(url)
+            validate_endpoint_url(endpoint.endpoint_url)
         except SmarterValueError as e:
-            raise SmarterMCPClientConnectionError(f"MCPClient {self.mcpclient.name}: {e.message}") from e
-        headers = self.request_headers()
+            raise SmarterMCPClientConnectionError(f"MCPClient {endpoint.name}: {e.message}") from e
+        headers = endpoint.headers
 
         async def connect_and_run() -> T:
             timeout = httpx2.Timeout(self.timeout, read=self.timeout)
@@ -422,8 +516,28 @@ class MCPServerConnection:
                 message = str(cause) or type(cause).__name__
             logger.warning("%s failed: %s", description, message)
             raise SmarterMCPClientConnectionError(
-                f"MCPClient {self.mcpclient.name} could not {description}: {message}"
+                f"MCPClient {endpoint.name} could not {description}: {message}"
             ) from cause
+
+    def require_allowed_tool(self, tool_name: str) -> None:
+        """
+        Refuse a tool that ``allowed_tools`` doesn't allow.
+
+        :param tool_name: The name of the tool, as the server reports it.
+        :raises SmarterMCPClientPermissionError: If the tool isn't allowed.
+        """
+        if not is_tool_allowed(self.permissions, tool_name):
+            raise SmarterMCPClientPermissionError(f"MCPClient {self.name} does not allow the tool {tool_name}.")
+
+    def require_allowed_resource(self, uri: str) -> None:
+        """
+        Refuse a resource that ``allowed_resources`` doesn't allow.
+
+        :param uri: The URI of the resource.
+        :raises SmarterMCPClientPermissionError: If the resource isn't allowed.
+        """
+        if not is_resource_allowed(self.permissions, uri):
+            raise SmarterMCPClientPermissionError(f"MCPClient {self.name} does not allow reading the resource {uri}.")
 
     # -------------------------------------------------------------------------
     # operations
@@ -480,10 +594,7 @@ class MCPServerConnection:
             ``is_error`` is True, and its text describes the error.
         :raises SmarterMCPClientPermissionError: If ``allowed_tools`` does not allow the tool.
         """
-        if not is_tool_allowed(self.mcpclient, tool_name):
-            raise SmarterMCPClientPermissionError(
-                f"MCPClient {self.mcpclient.name} does not allow the tool {tool_name}."
-            )
+        self.require_allowed_tool(tool_name)
 
         async def operation(client: Client) -> MCPToolResult:
             result = await client.call_tool(tool_name, arguments or {})
@@ -505,10 +616,7 @@ class MCPServerConnection:
         :returns: The resource's text content, for the LLM.
         :raises SmarterMCPClientPermissionError: If ``allowed_resources`` does not allow the URI.
         """
-        if not is_resource_allowed(self.mcpclient, uri):
-            raise SmarterMCPClientPermissionError(
-                f"MCPClient {self.mcpclient.name} does not allow reading the resource {uri}."
-            )
+        self.require_allowed_resource(uri)
 
         async def operation(client: Client) -> str:
             result = await client.read_resource(uri)
@@ -524,6 +632,8 @@ class MCPServerConnection:
 
 
 __all__ = [
+    "MCPEndpoint",
+    "MCPPermissions",
     "MCPServerCatalog",
     "MCPServerConnection",
     "MCPToolInfo",

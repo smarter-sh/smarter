@@ -387,7 +387,7 @@ def pod_network_policies():
         "In the platform's namespace, a default-deny policy blocks all ingress and egress. Traefik, in its own "
         "namespace, may reach the application's pods on port 8000 only. The application's pods (smarter-api, the "
         "Celery workers, beat, the init Job and the bastion) may reach each other, MariaDB on 3306, Redis on 6379, "
-        "Loki on 3100 and 9095, DNS in kube-system on 53, and the internet on 443, 80, 465, 587 and 3306. MariaDB and "
+        "Loki on 3100 and 9095, DNS in kube-system on 53, and the internet on 443, 80, 587 and 3306. MariaDB and "
         "Redis accept connections only from the application's pods. A pod in another namespace, or one without the "
         "chart's labels, can reach nothing.",
     )
@@ -449,7 +449,7 @@ def pod_network_policies():
         [
             "443 · LLM providers, APIs, AWS",
             "80 · API plugins",
-            "465 · 587 · SMTP to SES",
+            "587 · SMTP to SES",
             "3306 · SQL plugins' databases",
         ],
         "outside",

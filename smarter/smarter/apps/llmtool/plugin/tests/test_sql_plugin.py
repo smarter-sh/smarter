@@ -25,6 +25,7 @@ from smarter.apps.llmtool.plugin.sql import (
     SmarterSqlPluginError,
     SqlPlugin,
 )
+from smarter.apps.llmtool.runner import ToolCallResult
 from smarter.apps.llmtool.serializers import PluginSqlSerializer
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
@@ -646,6 +647,8 @@ class TestSqlPlugin(PluginTestBase):
         self.assertIsNone(connection.connected)
         self.assertTrue(connection.execute_query("SELECT 1 AS one;"))
         self.assertTrue(connection.connected)
-        with mock.patch.object(SqlConnection, "get_connection", return_value=None):
+        runner = mock.MagicMock()
+        runner.run.return_value = ToolCallResult(failure="could not connect to the database")
+        with mock.patch("smarter.apps.connection.models.sql_connection.get_tool_runner", return_value=runner):
             self.assertFalse(connection.execute_query("SELECT 1 AS one;"))
         self.assertFalse(connection.connected)

@@ -160,6 +160,41 @@ def create_missing_switch(switch_name: str) -> "AbstractBaseSwitch":
     return switch
 
 
+def switches_can_be_read(switch_name: str) -> bool:
+    """
+    Return whether this process can read a switch from the database now.
+
+    It can't in the tool worker, which has no database (``smarter_settings.database_unavailable``): a
+    query there would only wait for the connection to time out. Nor before the app registry is ready,
+    or while the database isn't.
+
+    :param switch_name: The switch, for the log.
+    :returns: True if the switch can be read.
+    """
+    # imported here: smarter.common.conf imports the logger, which imports this module.
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.conf import smarter_settings
+
+    # the tool worker has no database: each switch is off, without a query.
+    if smarter_settings.database_unavailable:
+        return False
+
+    # Prevent model access before Django app registry is ready
+    if not apps.ready:
+        logger.warning("App registry not ready, assuming switch %s is inactive.", switch_name)
+        return False
+
+    try:
+        if not is_database_ready():
+            logger.debug("Database not ready, assuming switch %s is inactive.", switch_name)
+            return False
+    # pylint: disable=broad-except
+    except Exception as e:
+        logger.warning("Error checking database readiness: %s", e, exc_info=True)
+        return False
+    return True
+
+
 def switch_is_active(switch_name: str) -> bool:
     """
     Check if a Waffle switch is active, with caching and database readiness checks.
@@ -190,18 +225,7 @@ def switch_is_active(switch_name: str) -> bool:
     if cached is not None:
         return cached
 
-    # Prevent model access before Django app registry is ready
-    if not apps.ready:
-        logger.warning("App registry not ready, assuming switch %s is inactive.", switch_name)
-        return False
-
-    try:
-        if not is_database_ready():
-            logger.debug("Database not ready, assuming switch %s is inactive.", switch_name)
-            return False
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.warning("Error checking database readiness: %s", e, exc_info=True)
+    if not switches_can_be_read(switch_name):
         return False
     if not isinstance(switch_name, str):
         logger.error("switch_name must be a string, got %s", type(switch_name).__name__)

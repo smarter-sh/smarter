@@ -184,5 +184,6 @@ Technical Reference
    llmtool/nlp
    llmtool/signals
    llmtool/receivers
+   llmtool/runner
    llmtool/tasks
    llmtool/views

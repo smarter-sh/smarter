@@ -819,6 +819,23 @@ times when deploying LLMClients/Agents.
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
 """
 
+CELERY_TASK_IGNORE_RESULT = True
+"""
+Store no task's result, unless the task asks to.
+
+Only the tool runner's task, ``run_tool_call``, returns a result that its caller waits for (ADR-038),
+and it sets ``ignore_result=False``. Every other task is fire and forget, and storing its result would
+only fill Redis.
+"""
+
+CELERY_RESULT_EXPIRES = 300
+"""
+Seconds to keep a task's result in the result backend.
+
+The tool runner waits for its result for the tool call's timeout, at most a few minutes, so five
+minutes is enough. The result backend is the broker's Redis: see :mod:`smarter.lib.celery_conf`.
+"""
+
 CELERY_WORKER_CANCEL_LONG_RUNNING_TASKS_ON_CONNECTION_LOSS = True
 """
 Cancel running tasks with late acknowledgement when a worker loses its broker connection.

@@ -162,6 +162,37 @@ services:
       timeout: 30s
       retries: 3
 
+  # the tool worker (ADR-038): it executes tool calls that the app has resolved, when
+  # SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote, and the tests' round trips through Celery. It never reads
+  # the database: each call brings what it needs. Here it shares .env with the other services, for
+  # convenience; a deployment gives it only the broker's url (see the Helm chart's workerTools).
+  # It runs the image that the other services build, and has no build of its own, so that
+  # make docker-build exports no fifth copy, and CI's cache override needs no entry for it.
+  smarter-worker-tools:
+    container_name: smarter-worker-tools
+    mem_limit: 2g
+    cpus: 0.5
+    user: smarter_user
+    image: smarter
+    pull_policy: never
+    # no -E: task events would copy each call's arguments, which hold its credentials.
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q tools_celery_task_queue -n tools@%h
+    depends_on:
+      - smarter-redis
+    env_file:
+      - ./.env
+    volumes:
+      - ./overrides:/home/smarter_user/overrides:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
+      - SMARTER_DATABASE_UNAVAILABLE=true
+    healthcheck:
+      test: ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
   smarter-beat:
     container_name: smarter-beat
     mem_limit: 1g

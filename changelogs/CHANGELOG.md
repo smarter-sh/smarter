@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.3...v0.48.4-alpha.4) (2026-11-26)
+
+### Bug Fixes
+
+* **helm:** deploy the tool worker, off by default ([48a485c](https://github.com/smarter-sh/smarter/commit/48a485c7c81eafead26b5885d6e65dbbad3a8b50))
+* **llmtool:** run tool calls in a worker without credentials ([8f7285c](https://github.com/smarter-sh/smarter/commit/8f7285c386492c8da8122a4e20620e17e2b4e05a))
+
+## [0.48.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.2...v0.48.4-alpha.3) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** describe shows Secrets' names, never their values ([28767e9](https://github.com/smarter-sh/smarter/commit/28767e9771d44818fa800ca4fd0599ba7fe74efb))
+
+### Refactoring
+
+* **llmtool:** run Extension tool calls through the tool runner ([fa04d8f](https://github.com/smarter-sh/smarter/commit/fa04d8f1fbaa622cca3d11ea27083d749094bb96))
+
+## [0.48.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.1...v0.48.4-alpha.2) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** make the SqlConnection SSH tunnel work, via the runner ([d320401](https://github.com/smarter-sh/smarter/commit/d32040170b3cb547c6e0bf2ec763fcebc52f69c8))
+
+### Refactoring
+
+* **connection:** run ApiPlugin requests through the tool runner ([f5842ab](https://github.com/smarter-sh/smarter/commit/f5842ab4cd233f410a4d1c602b0c0c5f121f45c3))
+* **llmtool:** run web and image search requests through the runner ([d53ebcd](https://github.com/smarter-sh/smarter/commit/d53ebcde3037858fefea1220e440ccb235de8ecc))
+* **llmtool:** run web search page fetches through the tool runner ([a88d0f2](https://github.com/smarter-sh/smarter/commit/a88d0f28176c849c780d013655ce47875b1d961e))
+* **mcpclient:** run MCP tool calls through the new tool runner ([3114186](https://github.com/smarter-sh/smarter/commit/31141865e03a21678e2217213511e78df11293b6))
+
+## [0.48.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.3...v0.48.4-alpha.1) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** refuse api connection urls that aren't public (SSRF) ([4ce9e59](https://github.com/smarter-sh/smarter/commit/4ce9e597026a61e41aee04773de88a7c0dc63d16))
+
 ## [0.48.3](https://github.com/smarter-sh/smarter/compare/v0.48.2...v0.48.3) (2026-11-25)
 
 ### Bug Fixes
