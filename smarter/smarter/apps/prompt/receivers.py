@@ -53,8 +53,23 @@ prefix = __name__
 def get_sender_name(sender: Any) -> str:
     """Get a readable name for the sender of a signal, handling both class and instance methods."""
     if isinstance(sender, type):
-        return f"{sender.__name__}({id(sender)})"
-    return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
+        return sender.__name__
+    return f"{sender.__self__.__class__.__name__}.{sender.__name__}"
+
+
+def prompt_id(prompt: Optional[Prompt]) -> Optional[int]:
+    """
+    Return the id that a log shows for a prompt.
+
+    A Prompt's string form includes the client's ip address and the request's url, so logs name a
+    prompt by its id alone.
+
+    :param prompt: The prompt, or None.
+    :returns: The prompt's id, or None if there is no prompt.
+    """
+    if prompt is None:
+        return None
+    return prompt.id  # type: ignore[attr-defined]
 
 
 def iteration_summary(iteration_data: Optional[SmarterDictType]) -> Optional[SmarterDictType]:
@@ -145,7 +160,7 @@ def handle_chat_config_invoked(
     url: Optional[str] = instance.url
     masked_url = mask_url_query(url)
 
-    logger.info("by %s url=%s", get_sender_name(sender), masked_url)
+    logger.info("%s", masked_url)
     # SmarterFormattedText.json() of the whole configuration is costly, and it is evaluated before the call, so only
     # when it will be logged.
     if logger.isEnabledFor(logging.DEBUG):
@@ -164,11 +179,7 @@ def handle_chat_started(sender, prompt: Optional[Prompt] = None, data: Optional[
     """
 
     sender_name = get_sender_name(sender)
-    logger.info(
-        "by %s for prompt %s",
-        sender_name,
-        prompt,
-    )
+    logger.info("prompt %s by %s", prompt_id(prompt), sender_name)
 
 
 @receiver(chat_request, dispatch_uid="chat_request")
@@ -187,18 +198,12 @@ def handle_chat_completion_request_sent(
 
     sender_name = get_sender_name(sender)
 
-    logger.info(
-        "iteration %s by %s for prompt %s",
-        iteration,
-        sender_name,
-        prompt,
-    )
+    logger.info("prompt %s iteration %s by %s", prompt_id(prompt), iteration, sender_name)
     if logger_level == logging.DEBUG:
         logger.debug(
-            "iteration %s by %s for prompt %s, \nrequest: %s",
+            "prompt %s iteration %s request: %s",
+            prompt_id(prompt),
             iteration,
-            sender_name,
-            prompt,
             SmarterFormattedText.json(data) if data else None,
         )
 
@@ -221,12 +226,7 @@ def handle_chat_completion_response_received(
     """
     sender_name = get_sender_name(sender)
 
-    logger.info(
-        "iteration %s from %s for prompt %s",
-        iteration,
-        sender_name,
-        prompt,
-    )
+    logger.info("prompt %s iteration %s from %s", prompt_id(prompt), iteration, sender_name)
     if smarter_settings.app_dashboard_server_logs_enable or (logger_level == logging.DEBUG):
         request_data = request_to_json(request) if request else None
         if isinstance(request_data, (dict, list)):
@@ -244,10 +244,9 @@ def handle_chat_completion_response_received(
         # DEBUG: the request and response hold the system prompt and the user's conversation. The
         # dashboard's server logs stream DEBUG records, e.g. in Smarter Chat's Sandbox mode.
         logger.debug(
-            "iteration %s from %s for prompt %s, \nrequest: %s, \nresponse: %s",
+            "prompt %s iteration %s \nrequest: %s, \nresponse: %s",
+            prompt_id(prompt),
             iteration,
-            sender_name,
-            prompt,
             formatted_request_data,
             SmarterFormattedText.json(response_data) if response_data else None,
         )
@@ -271,12 +270,8 @@ def handle_chat_completion_plugin_called(
     :param kwargs: Other signal arguments, unused.
     """
 
-    logger.info(
-        "by %s for prompt %s, plugin: %s",
-        get_sender_name(sender),
-        prompt,
-        plugin,
-    )
+    plugin_name = plugin.name if plugin else None
+    logger.info("prompt %s called plugin %s", prompt_id(prompt), plugin_name)
     # DEBUG: the input text is the user's prompt.
     logger.debug("input_text: %s", input_text)
 
@@ -305,15 +300,7 @@ def handle_chat_completion_tool_called(
     :param kwargs: Other signal arguments, unused.
     """
 
-    chat_id = prompt.id if prompt else None  # type: ignore
-
-    logger.info(
-        "by %s %s %s for prompt: %s",
-        get_sender_name(sender),
-        function_name,
-        function_args,
-        chat_id,
-    )
+    logger.info("prompt %s called %s %s", prompt_id(prompt), function_name, function_args)
 
 
 def save_prompt_history(
@@ -377,11 +364,7 @@ def handle_chat_response_success(
     else:
         response_data = response
 
-    logger.info(
-        "for prompt %s, sent by %s",
-        prompt,
-        get_sender_name(sender),
-    )
+    logger.info("prompt %s finished", prompt_id(prompt))
     if prompt:
         save_prompt_history(prompt.id, request_data, response_data, messages)
     else:
@@ -400,9 +383,8 @@ def handle_chat_response_success(
             formatted_request_data = str(request_data)
 
         logger.debug(
-            "for prompt %s, sent by %s \nrequest: %s, \nresponse: %s",
-            prompt,
-            get_sender_name(sender),
+            "prompt %s \nrequest: %s, \nresponse: %s",
+            prompt_id(prompt),
             formatted_request_data,
             SmarterFormattedText.json(response_data) if response_data else None,
         )
@@ -460,24 +442,24 @@ def handle_chat_response_failure(
         return
 
     logger.error(
-        "from %s during iteration %s for prompt: %s, request_meta_data: %s, exception: %s %s",
-        sender_name,
+        "prompt %s iteration %s failed in %s, request_meta_data: %s, exception: %s %s",
+        prompt_id(prompt),
         iteration,
-        prompt if prompt else None,
+        sender_name,
         SmarterFormattedText.json(request_meta_data) if request_meta_data else None,
         exception,
         stack_trace if stack_trace else "",
     )
     if iteration == 1 and first_iteration:
         logger.error(
-            "for prompt: %s, first_iteration: %s",
-            prompt if prompt else None,
+            "prompt %s first_iteration: %s",
+            prompt_id(prompt),
             iteration_summary(first_iteration),
         )
     if isinstance(iteration, int) and iteration >= 2 and second_iteration:
         logger.error(
-            "for prompt: %s, second_iteration: %s",
-            prompt if prompt else None,
+            "prompt %s second_iteration: %s",
+            prompt_id(prompt),
             iteration_summary(second_iteration),
         )
 
@@ -511,13 +493,12 @@ def handle_llm_tool_presented(sender, tool: SmarterDictType, **kwargs):
     :param kwargs: Other signal arguments, unused.
     """
 
-    sender_name = sender.__name__
-
-    logger.info(
-        "from %s: %s",
-        sender_name,
-        SmarterFormattedText.json(tool),
-    )
+    function = tool.get("function") or {}
+    tool_name = function.get("name")
+    logger.info("%s", tool_name)
+    # the whole definition is long, and costly to format: only when DEBUG is logged.
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("%s: %s", tool_name, SmarterFormattedText.json(tool))
 
 
 @receiver(llm_tool_requested, dispatch_uid="llm_tool_requested")

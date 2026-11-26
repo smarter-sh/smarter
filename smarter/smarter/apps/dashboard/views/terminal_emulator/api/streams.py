@@ -454,13 +454,6 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     request_id = _request_id(request)
     session_key = _session_key(request)
     masked_session_key = mask_identifier(session_key)
-    logger.info(
-        "called for user_id=%s min_level=%s request_id=%s session_key=%s",
-        user_id,
-        logging.getLevelName(min_level),
-        request_id,
-        masked_session_key,
-    )
 
     if not smarter_settings.app_dashboard_server_logs_enable:
         return HttpResponse(
@@ -475,7 +468,11 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         channel = build_channel(user_context)
         pubsub.subscribe(channel)
         logger.info(
-            "Subscribed to the user's Redis channel for log streaming.",
+            "streaming to user_id=%s min_level=%s request_id=%s session_key=%s",
+            user_id,
+            logging.getLevelName(min_level),
+            request_id,
+            masked_session_key,
         )
     except RedisError:
         logger.exception(
@@ -507,7 +504,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         :rtype: AsyncIterator[str]
         """
         try:
-            logger.info("Starting log stream event generator.")
+            logger.debug("started.")
             # Ask the browser to retry quickly if disconnected.
             yield "retry: 3000\n\n"
 
@@ -535,7 +532,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                     # Keep idle connections alive through proxies.
                     yield ": keepalive\n\n"
         finally:
-            logger.info("Closing Redis pubsub connection for log streaming.")
+            logger.info("closed.")
             try:
                 await asyncio.to_thread(pubsub.close)
             except RedisError:

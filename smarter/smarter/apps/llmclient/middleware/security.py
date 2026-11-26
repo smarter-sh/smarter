@@ -223,7 +223,7 @@ class SmarterSecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         )
         llmclient: Optional[LLMClient] = get_cached_llmclient_by_request(request=request)
         if llmclient is not None:
-            logger.info("verified that %s is an llmclient.", masked_url)
+            logger.info("verified")
             return None
 
         # ---------------------------------------------------------------------
