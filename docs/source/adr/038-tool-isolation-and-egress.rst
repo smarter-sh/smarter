@@ -3,7 +3,8 @@ ADR-038: Tool Isolation and Egress Control
 
 Status
 ------
-Proposed
+Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phases 0, 3 and 4
+are not started.
 
 Context
 -------
@@ -41,7 +42,7 @@ queue, in ``smarter-worker-infrastructure`` (:doc:`ADR-030 <030-task-queues>`), 
 
 Decision
 --------
-Proposed, in three parts, each useful by itself.
+Three parts, each useful by itself.
 
 1. **A tool worker with no credentials.** Tool calls that reach hosts chosen by a manifest author or the
    LLM (API, SQL, web search and image search plugins, MCP clients, and extensions) run in a new
@@ -181,7 +182,8 @@ Phase 2, the tool worker (smarter, Helm chart)
    Secret and no token, and its network policy (smarter-infrastructure). Behind a setting, off by
    default, and turned on in prod once the suite passes with the remote runner.
 
-   Built, off by default. ``RemoteToolRunner`` sends each call, as JSON, in the Celery task
+   Built, and off by default in the chart. smarter-sh's deploy action, ``.github/actions/deploy``, turns
+   it on with its input ``tool-worker-enabled``, ``true`` by default. ``RemoteToolRunner`` sends each call, as JSON, in the Celery task
    ``run_tool_call`` on the queue ``tools_celery_task_queue``, and waits for its result in the result
    backend, the broker's Redis. ``CELERY_TASK_IGNORE_RESULT`` keeps every other task's result out of it,
    and a result is forgotten once read. ``TOOL_CALL_MODELS`` maps each kind to its call's model, which
@@ -192,7 +194,10 @@ Phase 2, the tool worker (smarter, Helm chart)
 
    The worker, ``smarter-worker-tools``, sets ``SMARTER_DATABASE_UNAVAILABLE``: it opens no database
    connection, reads every waffle switch as off (Extensions get theirs in the call), and runs without
-   the Django secret key, which would let code there forge the platform's sessions. An Extension's
+   the Django secret key, which would let code there forge the platform's sessions. Its Celery app
+   registers ``run_tool_call`` and Celery's own tasks only, so a message for any other task that lands
+   on its queue is rejected, not run. Each call it runs is logged on one line, labeled with the tool,
+   the LLMClient, the chat session (masked) and the request, never its arguments or result. An Extension's
    archive reaches it through the cache: the app publishes the archive, keyed by its sha256, when it
    resolves a call for the remote runner, and renews it on each call; the worker checks the sha256
    before it loads the code. The chart's ``workerTools`` deploys it with a Secret of its own, holding
@@ -206,7 +211,10 @@ Phase 2, the tool worker (smarter, Helm chart)
    task, as they did in the app's memory. Redis is reachable only from the namespace's pods. Encrypting
    the arguments to a key that only the tool worker holds would close that, at the cost of a key to
    manage. MariaDB's port stays open to the worker for SQL plugins whose connection is the platform's
-   own MariaDB, such as Stackademy's; the worker has no credential for it but the call's.
+   own MariaDB, such as Stackademy's; the worker has no credential for it but the call's. Code running
+   in the tool worker, an Extension's included, holds the broker's and the cache's Redis url, so it can
+   still reach the cache, the sessions and the other workers' queues. A Redis ACL user for the tool
+   worker would close that.
 
 Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    A ServiceAccount, IAM role and Secret per workload, from the phase 0 table. The Kubernetes Role
@@ -221,5 +229,5 @@ Decisions for the maintainers
 -----------------------------
 1. Custom LLM endpoints: through the tool worker, or added to the allowlist when a manifest is applied.
 2. Email: SES's HTTPS api, closing 587, or 587 to SES only.
-3. Whether phase 2 ships before phase 3 (recommended: the tool worker contains extensions, the larger
-   risk, and doesn't depend on the credential split).
+3. Whether phase 2 ships before phase 3. Decided: it did, because the tool worker contains extensions,
+   the larger risk, and doesn't depend on the credential split.
