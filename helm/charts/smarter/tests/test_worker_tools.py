@@ -24,6 +24,7 @@ HELPERS_PATH = CHART_PATH / "templates" / "_helpers.tpl"
 DEPLOYMENT_PATH = CHART_PATH / "templates" / "deployment-worker-tools.yaml"
 SECRET_PATH = CHART_PATH / "templates" / "secret-env-tools.yaml"
 SERVICE_ACCOUNT_PATH = CHART_PATH / "templates" / "serviceaccount.yaml"
+ACTION_PATH = CHART_PATH.parent.parent.parent / ".github" / "actions" / "deploy" / "action.yml"
 
 SECRET_WORDS = ("PASSWORD", "SECRET", "TOKEN", "API_KEY", "FERNET", "AWS_ACCESS", "SQL", "PAT", "SMTP", "ADMIN")
 """Words in the names of the settings that hold credentials, none of which the tool worker may have."""
@@ -107,6 +108,12 @@ class TestToolWorker(unittest.TestCase):
         for path in (DEPLOYMENT_PATH, SECRET_PATH):
             self.assertIn(".enabled }}", path.read_text(encoding="utf-8"))
         self.assertIn('"SMARTER_APP_LLMTOOL_TOOL_RUNNER" | default "remote"', template("smarter.env"))
+
+    def test_deploy_action_enables_it(self):
+        """Smarter-sh's own deploy turns the tool worker on, from an input that defaults to true and can turn it off."""
+        action = ACTION_PATH.read_text(encoding="utf-8")
+        self.assertRegex(action, r"  tool-worker-enabled:\n(?:    .*\n)*?    default: \"true\"\n")
+        self.assertIn("--set workerTools.enabled=${{ inputs.tool-worker-enabled == 'true' }}", action)
 
     def test_alloy_collects_its_logs(self):
         """Alloy's discovery selects the tool worker's pods, whose application-group is not the platform's."""

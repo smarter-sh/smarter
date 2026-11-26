@@ -45,7 +45,8 @@ Turning It On
 1. Apply smarter-infrastructure's network policies for ``smarter-tools`` in the environment. Without
    them, the namespace's default-deny policy keeps the tool worker from reaching Redis: it starts, but
    takes no task, and every tool call fails after its timeout.
-2. Set ``workerTools.enabled: true`` in the environment's values, and deploy.
+2. Set ``workerTools.enabled: true`` in the environment's values, and deploy. smarter-sh's own deploy
+   action, ``.github/actions/deploy``, sets it from its input ``tool-worker-enabled``, ``true`` by default.
 3. Watch a tool call: its ``run_tool_call`` task appears in ``smarter-worker-tools``' log, and the
    tool's answer in the chat. ``smarter-worker-tools`` is a component of the MCPServer's log tools.
 
