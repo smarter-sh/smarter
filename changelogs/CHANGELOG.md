@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.1...v0.48.4-alpha.2) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** make the SqlConnection SSH tunnel work, via the runner ([d320401](https://github.com/smarter-sh/smarter/commit/d32040170b3cb547c6e0bf2ec763fcebc52f69c8))
+
+### Refactoring
+
+* **connection:** run ApiPlugin requests through the tool runner ([f5842ab](https://github.com/smarter-sh/smarter/commit/f5842ab4cd233f410a4d1c602b0c0c5f121f45c3))
+* **llmtool:** run web and image search requests through the runner ([d53ebcd](https://github.com/smarter-sh/smarter/commit/d53ebcde3037858fefea1220e440ccb235de8ecc))
+* **llmtool:** run web search page fetches through the tool runner ([a88d0f2](https://github.com/smarter-sh/smarter/commit/a88d0f28176c849c780d013655ce47875b1d961e))
+* **mcpclient:** run MCP tool calls through the new tool runner ([3114186](https://github.com/smarter-sh/smarter/commit/31141865e03a21678e2217213511e78df11293b6))
+
 ## [0.48.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.3...v0.48.4-alpha.1) (2026-11-26)
 
 ### Bug Fixes
