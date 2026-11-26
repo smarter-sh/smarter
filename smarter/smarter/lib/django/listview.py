@@ -35,7 +35,6 @@ delete, however many users and pages it has.
 """
 
 import functools
-import json
 import time
 from http import HTTPStatus
 from typing import (
@@ -68,7 +67,7 @@ from rest_framework import serializers
 
 from smarter.common.conf import smarter_settings
 from smarter.common.enum import SmarterResourceOwnershipFilterEnum
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.django.pagination import (
     DEFAULT_SEARCH_FIELDS,
     DEFAULT_SORT_FIELDS,

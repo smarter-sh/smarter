@@ -4,7 +4,6 @@ Test :mod:`smarter.apps.orchestrator.runtime`: starting a run, and executing its
 The provider's handler is replaced with a fake that answers each step, so no LLM is called.
 """
 
-import json
 from http import HTTPStatus
 from typing import Optional
 from unittest.mock import patch
@@ -33,6 +32,7 @@ from smarter.apps.orchestrator.signals import (
 from smarter.apps.provider.services.text_completion.providers import (
     smarter_compatible_client,
 )
+from smarter.lib import json
 
 ROLE = OrchestratorHarness.Role
 

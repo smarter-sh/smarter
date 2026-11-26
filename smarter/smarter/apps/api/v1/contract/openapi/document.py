@@ -4,8 +4,6 @@ The Smarter api's OpenAPI document: its metadata, its tags, and every family's p
 ``manage.py export_api_contract`` writes it to ``openapi.json``, with :func:`write_openapi`.
 """
 
-import json
-
 from smarter.apps.api.v1.contract.const import (
     API_VERSION,
     DEFAULT_PLATFORM_URL,
@@ -25,6 +23,7 @@ from smarter.apps.api.v1.contract.models import (
     OpenApiServer,
     OpenApiServerVariable,
 )
+from smarter.lib import json
 
 from .builders import API_KEY_AUTH, merge_paths
 from .chat import CHAT_TAG, chat_paths

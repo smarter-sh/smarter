@@ -1,6 +1,5 @@
 """Tests for smarter.apps.mcpserver.protocol.ratelimit, and the rate limit of the MCP server's view."""
 
-import json
 from unittest import mock
 
 from cache_results import lazy_cache
@@ -17,6 +16,7 @@ from smarter.apps.mcpserver.protocol.ratelimit import (
     retry_after,
 )
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
+from smarter.lib import json
 
 from .base_classes import MCPServerTestBase
 

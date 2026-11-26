@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.prompt.contract.history`, and the prompt history's real responses against the OpenAPI document."""
 
-import json
 import secrets
 from http import HTTPStatus
 from unittest.mock import patch
@@ -24,6 +23,7 @@ from smarter.apps.prompt.contract.history import (
     PromptHistoryApiToolCall,
 )
 from smarter.apps.prompt.models import Prompt, PromptPluginUsage, PromptToolCall
+from smarter.lib import json
 
 
 class TestPromptHistoryContract(OpenApiResponseMixin, TestAccountMixin):

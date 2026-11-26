@@ -27,7 +27,6 @@ responds.
 """
 
 import glob
-import json
 import os
 import re
 from typing import Optional
@@ -43,6 +42,7 @@ from smarter.apps.api.v1.contract.const import (
 )
 from smarter.apps.api.v1.contract.models import CliApiValidation
 from smarter.apps.mcpserver.exceptions import SmarterMCPServerServiceError
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
 SAM_SCHEMA_REPOSITORY_PATH = "smarter/smarter/apps/api/v1/contract/sam"

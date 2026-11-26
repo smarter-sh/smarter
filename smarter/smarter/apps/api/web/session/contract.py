@@ -16,7 +16,6 @@ any user.
 TypeScript types (``make console-session-contract``). A test fails if the committed schema is out of date.
 """
 
-import json
 from pathlib import Path
 from typing import Optional
 
@@ -24,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType
 

@@ -35,6 +35,7 @@ from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
 from smarter.apps.llmtool.manifest.controller import PluginController
 from smarter.apps.llmtool.models import PluginMeta, PluginPrompt
 from smarter.apps.llmtool.plugin.base import PluginBase
+from smarter.apps.llmtool.runner import ToolCallLabel, labeled_tool_calls
 from smarter.apps.llmtool.serializers import PluginMetaSerializer
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.toolkit import MCP_INSTRUCTIONS_PREFIX, MCPToolkit
@@ -69,11 +70,13 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
+from smarter.common.utils import mask_identifier
 from smarter.lib import json, logging
 from smarter.lib.cache.tool_results import is_error_result
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.logging import WaffleSwitchedLoggerWrapper
+from smarter.lib.logging.redis_log_handler import request_id_context
 from smarter.lib.openai.model_capabilities import closest_reasoning_effort
 from smarter.lib.openai.model_quirks import (
     DEFAULT_TEMPERATURE_ONLY_MODELS,
@@ -826,76 +829,78 @@ class OpenAISmarterClient(SmarterChatProviderBase):
         function_response: JsonValue = None
         extra_resource_locators: list[str] = []
         budget_refusal = self.tool_budget_refusal(function_name)
-        if budget_refusal is not None:
-            # a budget forbids charges to the plugin or MCP server, so the LLM is told why instead.
-            function_response = budget_refusal
-        elif self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
-            extension = self.extension_toolkit.extension_for(function_name)
-            function_response = self.extension_toolkit.call(function_name, function_args)
-            if extension is not None:
-                serialized_tool_call[_InternalKeys.SMARTER_EXTENSION_KEY] = {
-                    "id": extension.pk,
-                    "slug": extension.slug,
-                    "version": extension.installed_version.version if extension.installed_version else None,
-                    "tool": self.extension_toolkit.tool_name_for(function_name),
-                }
+        # the tool worker's log says which tool, LLMClient and session each call was for.
+        with labeled_tool_calls(self.tool_call_label(tool_name)):
+            if budget_refusal is not None:
+                # a budget forbids charges to the plugin or MCP server, so the LLM is told why instead.
+                function_response = budget_refusal
+            elif self.extension_toolkit is not None and self.extension_toolkit.is_extension_function(function_name):
+                extension = self.extension_toolkit.extension_for(function_name)
+                function_response = self.extension_toolkit.call(function_name, function_args)
+                if extension is not None:
+                    serialized_tool_call[_InternalKeys.SMARTER_EXTENSION_KEY] = {
+                        "id": extension.pk,
+                        "slug": extension.slug,
+                        "version": extension.installed_version.version if extension.installed_version else None,
+                        "tool": self.extension_toolkit.tool_name_for(function_name),
+                    }
 
-        elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
-            mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
-            function_response = self.mcp_toolkit.call(function_name, function_args)
-            if mcpclient is not None:
-                serialized_tool_call[_InternalKeys.SMARTER_MCPCLIENT_KEY] = {
-                    "id": mcpclient.id,  # type: ignore[attr-defined]
-                    "name": mcpclient.name,
-                    "tool": self.mcp_toolkit.functions[function_name].tool_name,
-                }
-                extra_resource_locators.append(mcpclient.record_locator)
+            elif self.mcp_toolkit is not None and self.mcp_toolkit.is_mcp_function(function_name):
+                mcpclient = self.mcp_toolkit.mcpclient_for(function_name)
+                function_response = self.mcp_toolkit.call(function_name, function_args)
+                if mcpclient is not None:
+                    serialized_tool_call[_InternalKeys.SMARTER_MCPCLIENT_KEY] = {
+                        "id": mcpclient.id,  # type: ignore[attr-defined]
+                        "name": mcpclient.name,
+                        "tool": self.mcp_toolkit.functions[function_name].tool_name,
+                    }
+                    extra_resource_locators.append(mcpclient.record_locator)
 
-        elif self.vectorsearch_toolkit is not None and self.vectorsearch_toolkit.is_vectorsearch_function(
-            function_name
-        ):
-            function_response = self.call_vectorsearch_tool(
-                function_name, function_args, serialized_tool_call, extra_resource_locators
-            )
+            elif self.vectorsearch_toolkit is not None and self.vectorsearch_toolkit.is_vectorsearch_function(
+                function_name
+            ):
+                function_response = self.call_vectorsearch_tool(
+                    function_name, function_args, serialized_tool_call, extra_resource_locators
+                )
 
-        elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
-            plugin_id = int(function_name.rsplit("_", 1)[-1])
-            try:
-                plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)
-            except PluginMeta.DoesNotExist as e:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."
-                ) from e
+            elif function_name.startswith(smarter_settings.function_calling_identifier_prefix):
+                plugin_id = int(function_name.rsplit("_", 1)[-1])
+                try:
+                    plugin_meta = PluginMeta.get_cached_object(pk=plugin_id)
+                except PluginMeta.DoesNotExist as e:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: plugin with id {plugin_id} not found. This is a bug."
+                    ) from e
 
-            if not self.account:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: account is required to handle plugin calls."
+                if not self.account:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: account is required to handle plugin calls."
+                    )
+                if not self.user_profile:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
+                    )
+                if not isinstance(self.user_profile, UserProfile):
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: user_profile must be an instance of UserProfile, got {type(self.user_profile)}. This is a bug."
+                    )
+                plugin_controller = PluginController(
+                    user_profile=self.user_profile,
+                    plugin_meta=plugin_meta,
                 )
-            if not self.user_profile:
+                if not plugin_controller or not plugin_controller.plugin:
+                    raise SmarterConfigurationError(
+                        f"{self.formatted_class_name}: plugin with id {plugin_id} not found or not initialized."
+                    )
+                plugin = plugin_controller.plugin
+                plugin.params = function_args
+                function_response = plugin.tool_call_fetch_plugin_response(function_args)
+                serialized_tool_call[_InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
+                self.handle_plugin_called(plugin=plugin)
+            else:
                 raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: user_profile is required to handle plugin calls."
+                    f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
                 )
-            if not isinstance(self.user_profile, UserProfile):
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: user_profile must be an instance of UserProfile, got {type(self.user_profile)}. This is a bug."
-                )
-            plugin_controller = PluginController(
-                user_profile=self.user_profile,
-                plugin_meta=plugin_meta,
-            )
-            if not plugin_controller or not plugin_controller.plugin:
-                raise SmarterConfigurationError(
-                    f"{self.formatted_class_name}: plugin with id {plugin_id} not found or not initialized."
-                )
-            plugin = plugin_controller.plugin
-            plugin.params = function_args
-            function_response = plugin.tool_call_fetch_plugin_response(function_args)
-            serialized_tool_call[_InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
-            self.handle_plugin_called(plugin=plugin)
-        else:
-            raise SmarterConfigurationError(
-                f"{self.formatted_class_name}: function '{function_name}' not recognized. Available functions: {self.available_functions}"
-            )
         if budget_refusal is not None or not self.tool_call_is_cacheable(function_name, function_response, plugin):
             # the prompt used something that may change, so its answer is not cached.
             self.prompt_cacheable = False
@@ -956,6 +961,36 @@ class OpenAISmarterClient(SmarterChatProviderBase):
             }
             extra_resource_locators.append(vectorsearch.record_locator)
         return function_response
+
+    def tool_call_label(self, tool_name: str) -> ToolCallLabel:
+        """
+        Return the label of the tool calls that one of the LLM's tool calls makes, for the tool worker's log.
+
+        Names and ids only: the chat session's key is masked, since anyone who holds it can continue the
+        conversation.
+
+        :param tool_name: The tool's name, as users know it (:meth:`tool_display_name`).
+        :returns: The label.
+        """
+        llmclient_description = None
+        session = None
+        prompt = self.prompt if isinstance(self.prompt, Prompt) else None
+        if prompt is not None:
+            llmclient = prompt.llmclient
+            if llmclient is not None:
+                llmclient_description = f"{llmclient.name} ({llmclient.pk})"
+            if prompt.session_key:
+                session = mask_identifier(prompt.session_key)
+        request_id = request_id_context.get()
+        # a label is for the log only, so it never stops a tool call: the name is taken as text.
+        tool = str(tool_name)
+        label = ToolCallLabel(
+            tool=tool,
+            llmclient=llmclient_description,
+            session=session,
+            request_id=request_id,
+        )
+        return label
 
     def tool_display_name(self, function_name: str) -> str:
         """

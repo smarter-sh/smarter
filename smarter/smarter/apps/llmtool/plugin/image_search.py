@@ -97,6 +97,7 @@ from smarter.apps.llmtool.manifest.models.image_search_plugin.spec import (
 )
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.llmtool.models import PluginDataImageSearch
+from smarter.apps.llmtool.runner import carry_tool_call_label
 from smarter.apps.llmtool.runner.http import fetch_with_runner
 from smarter.apps.llmtool.serializers import PluginImageSearchSerializer
 from smarter.apps.llmtool.signals import plugin_called, plugin_responded
@@ -828,8 +829,10 @@ class ImageSearchPlugin(PluginBase):
         for start in range(0, len(images), MAX_VALIDATION_WORKERS):
             batch = images[start : start + MAX_VALIDATION_WORKERS]
             with ThreadPoolExecutor(max_workers=len(batch)) as executor:
+                # each request is labeled like the tool call that it is part of, in the tool worker's log.
+                labeled_content_type = carry_tool_call_label(image_content_type)
                 content_types = list(
-                    executor.map(lambda image: image_content_type(image.url, plugin_data.timeout), batch)
+                    executor.map(lambda image: labeled_content_type(image.url, plugin_data.timeout), batch)
                 )
             for image, content_type in zip(batch, content_types):
                 if content_type is None:

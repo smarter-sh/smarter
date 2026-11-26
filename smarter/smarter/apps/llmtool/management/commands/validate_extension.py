@@ -1,11 +1,11 @@
 """Validate a Smarter Extension's source directory or archive, as the registry and the installer will."""
 
-import json
 from pathlib import Path
 
 from smarter.apps.llmtool.extension.archive import ExtensionArchive, build_archive
 from smarter.apps.llmtool.extension.exceptions import SmarterExtensionException
 from smarter.apps.llmtool.extension.loader import load_archive, unload
+from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 
 

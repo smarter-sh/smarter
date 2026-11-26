@@ -8,8 +8,7 @@ model's complete shape. Its values are placeholders: a string is its field's nam
 a choice is the first one.
 """
 
-import json
-
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
 from .const import EXAMPLE_PATH

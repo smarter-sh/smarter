@@ -1,6 +1,5 @@
 """Test the prompt app's journal sources: :mod:`smarter.apps.prompt.journal`."""
 
-import json
 import secrets
 from http import HTTPStatus
 from unittest.mock import patch
@@ -19,6 +18,7 @@ from smarter.apps.prompt.journal import (
     resolve_chat_history,
 )
 from smarter.apps.prompt.models import Prompt, PromptHistory
+from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.models import SAMJournal
 from smarter.lib.journal.sources import (

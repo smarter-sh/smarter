@@ -23,7 +23,6 @@ schema is out of date.
 The public page names no owner and has no api keys: :meth:`LLMClientDeploymentPage.public` leaves them out.
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
@@ -33,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType
 

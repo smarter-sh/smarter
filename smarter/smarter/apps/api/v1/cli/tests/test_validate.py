@@ -1,13 +1,13 @@
 """Test the cli 'validate' command, :class:`smarter.apps.api.v1.cli.views.validate.ApiV1CliValidateApiView`."""
 
 import copy
-import json
 import os
 from http import HTTPStatus
 
 import yaml
 
 from smarter.apps.guardrail.models import Guardrail
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.typing import SmarterDictType
 

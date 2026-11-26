@@ -14,7 +14,7 @@ models, the ``MetaDataModel.annotations`` setter, and the data migrations all ca
 
 import datetime
 import decimal
-import json
+import json as std_json  # one-line JSON: smarter.lib.json.dumps always indents
 import re
 import uuid
 from typing import Optional, Union
@@ -142,7 +142,7 @@ def coerce_annotation_value(key: str, value: object, lenient: bool = False) -> s
         except UnicodeDecodeError as e:
             raise SmarterAnnotationError(f"Annotation {key!r} has a bytes value that is not UTF-8.") from e
     if isinstance(value, (list, dict)) and lenient:
-        return json.dumps(value, default=str)
+        return std_json.dumps(value, default=str)
     raise SmarterAnnotationError(
         f"Annotation {key!r} has a {type(value).__name__} value. Annotation values are strings: "
         "to store structured data, quote it as a JSON string."
@@ -183,8 +183,8 @@ def normalize_annotations(value: AnnotationsInput, lenient: bool = False) -> Ann
         return {}
     if isinstance(value, str):
         try:
-            value = json.loads(value)
-        except json.JSONDecodeError as e:
+            value = std_json.loads(value)
+        except std_json.JSONDecodeError as e:
             raise SmarterAnnotationError(f"Annotations could not be parsed as JSON: {e}") from e
     if isinstance(value, dict):
         pairs = list(value.items())

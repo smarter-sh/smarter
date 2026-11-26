@@ -3,7 +3,6 @@
 import asyncio
 import copy
 import importlib
-import json
 import os
 import re
 import tempfile
@@ -61,6 +60,7 @@ from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.tests.base_classes import mock_mcp_server
 from smarter.apps.secret.tests.factories import secret_factory
 from smarter.common.const import PROJECT_ROOT
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.narrowing import json_list, json_object

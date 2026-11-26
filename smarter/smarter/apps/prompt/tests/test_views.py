@@ -4,7 +4,6 @@ Test the Prompt dashboard views: the React list of LLMClients, its list, clone, 
 See :class:`smarter.lib.unittest.resource_views.ResourceViewsTestMixin`.
 """
 
-import json
 import secrets
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, call, patch
@@ -63,6 +62,7 @@ from smarter.apps.prompt.views.detailviews.prompt_workbench_view import (
     SmarterPromptSession,
 )
 from smarter.common.conf import smarter_settings
+from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.urls import AuthTokenReverseNames

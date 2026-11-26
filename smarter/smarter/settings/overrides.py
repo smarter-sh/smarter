@@ -50,7 +50,6 @@ be a password.
 """
 
 import ast
-import json
 import os
 import re
 from collections.abc import Mapping, MutableMapping
@@ -60,7 +59,7 @@ from typing import Optional
 import yaml
 from django.conf import global_settings
 
-from smarter.lib import logging
+from smarter.lib import json, logging
 
 logger = logging.getSmarterLogger(__name__)
 
