@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.6-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.5...v0.48.6-alpha.1) (2026-11-26)
+
+### Bug Fixes
+
+* **celery:** register only run_tool_call in the tool worker ([6c146c0](https://github.com/smarter-sh/smarter/commit/6c146c070008c652416c2d3606f09efc4cf098a3))
+* **llmclient:** log the url and LLMClient that the middleware verified ([3c51d0d](https://github.com/smarter-sh/smarter/commit/3c51d0d3bb83be21f89f933e02cbf28a1c993305))
+
 ## [0.48.5](https://github.com/smarter-sh/smarter/compare/v0.48.4...v0.48.5) (2026-11-26)
 
 ### Bug Fixes
