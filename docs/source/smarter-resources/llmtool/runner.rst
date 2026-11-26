@@ -6,7 +6,8 @@ Tool Runner
          miss it resolves the call, decrypting the credential from its Smarter Secret, into a ToolCall of plain values.
          The tool runner, from get_tool_runner(), finds the executor of the call's kind in TOOL_EXECUTORS:
          execute_mcp_call for MCP clients, execute_api_call for API plugins, execute_sql_call for SQL plugins,
-         through an SSH tunnel when the connection uses one, execute_http_call for the web search
+         through an SSH tunnel when the connection uses one, execute_extension_call for Extensions, whose code gets
+         its settings, switches and caller as plain values, execute_http_call for the web search
          apis, the Brave image search, the checks of each image's url and websites' robots.txt, and
          execute_webfetch_call for the pages that the web search plugin reads, with its domain policy and robots.txt
          checked again on each redirect. The executor reads neither the app's database nor a Secret, and calls the MCP
@@ -30,6 +31,10 @@ Smarter Secret. Today these go through it:
 - API plugins, with :mod:`smarter.apps.connection.execution`;
 - SQL plugins, with :mod:`smarter.apps.connection.execution`, through an SSH tunnel
   (:mod:`smarter.apps.connection.ssh`) for a connection that uses one;
+- Extensions, with :mod:`smarter.apps.llmtool.extension.execution`. Their code is a third party's, so
+  its context holds plain values decided before the call: its settings, its switches, and who called
+  it, as an ``ExtensionCaller``. The one thing the executor still reads from the database is an
+  Extension's code, its archive, the first time a process runs a version;
 - the WebsearchPlugin's search apis (Brave, Tavily), the ImageSearchPlugin's Brave image search and
   its checks of each image's url, and every website's robots.txt, with
   :mod:`smarter.apps.llmtool.runner.http`. Its ``fetch_with_runner()`` takes the place of

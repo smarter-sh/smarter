@@ -164,7 +164,18 @@ Phase 1, the boundary (smarter)
    failure to connect is a ``failure``, and a query the database rejects is ``is_error``, so the app can
    still tell them apart. The SSH tunnel, which was broken, now works, and pins the SSH server's host key
    to ``sshKnownHosts`` instead of writing an unknown key to the database mid-connection, which a worker
-   couldn't do. Next: Extensions.
+   couldn't do. Extensions are the ``extension`` kind: ``ExtensionToolCall`` carries the validated
+   arguments, the settings with their secrets decrypted, the Extension's switches, read from waffle in
+   the app, and who called, as plain identifiers (``ExtensionCaller``: account number, user id,
+   LLMClient name), which replace the ``account``, ``user_profile`` and ``llmclient`` database objects
+   that an Extension's context used to hold. ``execute_extension_call()`` runs the tool in its thread,
+   with its timeout.
+
+   Done: every tool call that reaches a host chosen by a manifest author or the LLM goes through the
+   runner. Vector search, static and skill plugins stay in the app: they reach no such host. One
+   dependency on the database remains for phase 2: an Extension's code, its archive, is read from the
+   database the first time a process runs a version (``load_by_key()``), so a worker needs it from
+   elsewhere, e.g. an object store keyed by its sha256.
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no

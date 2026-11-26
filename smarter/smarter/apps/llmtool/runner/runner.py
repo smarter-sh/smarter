@@ -26,6 +26,7 @@ ToolExecutor = Callable[[ToolCall], ToolCallResult]
 
 TOOL_EXECUTORS: dict[str, str] = {
     "api": "smarter.apps.connection.execution.execute_api_call",
+    "extension": "smarter.apps.llmtool.extension.execution.execute_extension_call",
     "http": "smarter.apps.llmtool.runner.http.execute_http_call",
     "webfetch": "smarter.apps.llmtool.plugin.websearch_fetch.execute_webfetch_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",

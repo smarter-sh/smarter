@@ -294,6 +294,34 @@ def load_version(version: "ExtensionVersion") -> LoadedExtension:
         return load_archive(ExtensionArchive(archive_bytes))
 
 
+def load_by_key(slug: str, sha256: str) -> LoadedExtension:
+    """
+    Return an extension version's code, by its slug and its archive's sha256, as a tool call names it.
+
+    A version already loaded into this process is returned as it is. Otherwise its archive is read from
+    the database, once per process, and loaded. That read is the one thing an extension's tool call
+    still needs the database for: a worker without one must get the archive another way (ADR-038,
+    phase 2), e.g. from an object store keyed by its sha256.
+
+    :param slug: The extension's slug.
+    :param sha256: The sha256 of the version's archive.
+    :returns: The loaded extension.
+    :raises SmarterExtensionLoadError: If no installed version has that archive, or its code can't be loaded.
+    """
+    key = (slug, sha256)
+    with _lock:
+        if key in _loaded:
+            return _loaded[key]
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.llmtool.models import ExtensionVersion
+
+    version = ExtensionVersion.objects.filter(extension__slug=slug, sha256=sha256).select_related("extension").first()
+    if version is None:
+        raise SmarterExtensionLoadError(f"no installed version of {slug} has the archive {sha256[:12]}.")
+    loaded = load_version(version)
+    return loaded
+
+
 def unload(slug: str) -> None:
     """
     Forget every loaded version of an extension, e.g. after it is uninstalled.
@@ -308,6 +336,7 @@ def unload(slug: str) -> None:
 
 
 __all__ = [
+    "load_by_key",
     "LoadedExtension",
     "extensions_root",
     "load_archive",
