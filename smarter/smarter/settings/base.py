@@ -2225,10 +2225,8 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
         )
     else:
         logger.warning("SMTP server not configured", stacklevel=2)
-    if smarter_settings.aws_is_configured:
-        logger.debug("AWS credentials detected", stacklevel=2)
-    else:
-        logger.warning("AWS credentials not found.", stacklevel=2)
+    # the settings have already warned, once, if AWS is not configured.
+    logger.debug("AWS is configured: %s", smarter_settings.aws_is_configured, stacklevel=2)
     logger.debug("=" * 80, stacklevel=2)
 
 
