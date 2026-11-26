@@ -1,12 +1,12 @@
 """Test the api's OpenAPI document view: :mod:`smarter.apps.api.v1.contract.views`."""
 
-import json
 from http import HTTPStatus
 
 from django.test import Client
 
 from smarter.apps.api.v1.contract.const import OPENAPI_PATH
 from smarter.apps.api.v1.urls import ApiV1ReverseNames
+from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

@@ -1,10 +1,10 @@
 """Test :mod:`smarter.apps.provider.services.text_completion.utils`."""
 
-import json
 from unittest import TestCase
 
 from smarter.apps.provider.services.text_completion import utils
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.narrowing import json_object
 

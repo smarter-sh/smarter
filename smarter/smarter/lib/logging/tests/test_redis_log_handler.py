@@ -5,7 +5,6 @@ Redis is faked, and the module's log_queue is replaced with a new queue in each
 test, so that the running worker thread and the real Redis are never touched.
 """
 
-import json
 import logging
 import queue
 from typing import Optional
@@ -13,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from django.core.exceptions import ImproperlyConfigured
 
+from smarter.lib import json
 from smarter.lib.logging import redis_log_handler as handler
 from smarter.lib.unittest.base_classes import SmarterTestBase
 

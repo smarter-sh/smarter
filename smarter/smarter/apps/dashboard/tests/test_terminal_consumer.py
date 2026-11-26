@@ -8,7 +8,6 @@ each test ends. Nothing reaches the network or any infrastructure.
 """
 
 import asyncio
-import json
 from typing import Optional
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +27,7 @@ from smarter.apps.dashboard.views.terminal_emulator.api.shell import (
     TerminalShell,
 )
 from smarter.apps.dashboard.views.terminal_emulator.api.tickets import issue_ticket
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 TIMEOUT = 10

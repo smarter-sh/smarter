@@ -1,7 +1,5 @@
 """Test the Infrastructure Resource web console: the list view, and its API."""
 
-import json
-
 from django.test import Client
 from django.urls import reverse
 
@@ -10,6 +8,7 @@ from smarter.apps.infrastructure.api.web.urls import InfrastructureApiWebReverse
 from smarter.apps.infrastructure.models import InfrastructureResource
 from smarter.apps.infrastructure.urls import InfrastructureReverseNames
 from smarter.apps.infrastructure.views.listview import DEFAULT_PAGE_SIZE, summary
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.resource_views import assert_console_page
 

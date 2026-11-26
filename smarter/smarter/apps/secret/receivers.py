@@ -171,11 +171,10 @@ def secret_accessed_receiver(sender, secret: Secret, user_profile: UserProfile, 
     :param user_profile: The user profile that read it.
     """
     logger.info(
-        "from %s, Secret %s, id: %s, user_profile: %s",
-        sender_name(sender),
-        str(secret),
+        "Secret %s (id %s) read by user profile %s",
+        secret.name,
         secret.id,  # type: ignore
-        user_profile,
+        user_profile.pk,
     )
 
 

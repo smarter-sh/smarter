@@ -6,14 +6,13 @@ The dashboard's search box posts its query here, and shows the resources of ever
 it and that the user may read, grouped by list. See :mod:`smarter.apps.dashboard.search`.
 """
 
-import json
 from http import HTTPStatus
 
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.models import get_resolved_user
 from smarter.apps.dashboard.search import GlobalSearchResponse, global_search
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.django.views import SmarterAuthenticatedWebView
 
 logger = logging.getSmarterLogger(__name__)

@@ -156,6 +156,34 @@ class TestOpenAISmarterClientUnits(SmarterTestBase):
         get.assert_called_once_with(pk=16)
 
     # -------------------------------------------------------------------------
+    # tool_call_label
+    # -------------------------------------------------------------------------
+    def test_tool_call_label_names_the_llmclient_and_masks_the_session(self):
+        """The tool worker's label names the tool and the LLMClient, and masks the chat session's key."""
+        session_key = "6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b"
+        prompt = MagicMock(spec=Prompt)
+        prompt.session_key = session_key
+        prompt.llmclient.name = "stackademy"
+        prompt.llmclient.pk = 12
+        token = module.request_id_context.set("r-123")
+        self.addCleanup(module.request_id_context.reset, token)
+        with patch.object(OpenAISmarterClient, "prompt", new_callable=PropertyMock, return_value=prompt):
+            label = self.client.tool_call_label("stackademy_sql")
+        self.assertEqual(label.tool, "stackademy_sql")
+        self.assertEqual(label.llmclient, "stackademy (12)")
+        self.assertEqual(label.request_id, "r-123")
+        self.assertNotIn(session_key, label.describe())
+        self.assertTrue(session_key.endswith((label.session or "*").lstrip("*")))
+
+    def test_tool_call_label_without_a_prompt(self):
+        """Without a Prompt, the label names the tool only."""
+        with patch.object(OpenAISmarterClient, "prompt", new_callable=PropertyMock, return_value=None):
+            label = self.client.tool_call_label("calculator")
+        self.assertEqual(label.tool, "calculator")
+        self.assertIsNone(label.llmclient)
+        self.assertIsNone(label.session)
+
+    # -------------------------------------------------------------------------
     # charges of plugin and tool calls
     # -------------------------------------------------------------------------
     def test_a_plugin_call_is_charged_to_the_plugin_and_its_connection_only(self):

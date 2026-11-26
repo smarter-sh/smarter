@@ -6,7 +6,6 @@ contract tests of an app whose fixtures live with the app, e.g. the vectorstores
 """
 
 import functools
-import json
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
@@ -14,6 +13,7 @@ from referencing.jsonschema import DRAFT202012
 
 from smarter.apps.api.v1.contract.const import OPENAPI_PATH
 from smarter.apps.api.v1.contract.openapi import openapi_document
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
 DOCUMENT_URI = "urn:smarter:openapi"

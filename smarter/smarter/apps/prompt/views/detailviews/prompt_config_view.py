@@ -773,13 +773,11 @@ class PromptConfigView(SmarterOptionallyAuthenticatedApiView):
         self, request: HttpRequest, *args, **kwargs
     ) -> Union[SmarterJournaledJsonResponse, SmarterJournaledJsonErrorResponse, HttpResponseNotAllowed]:
         """Get the llmclient configuration."""
-        logger.warning("%s should be invoked via POST instead of GET.", request.path)
         if not waffle.switch_is_active(SmarterWaffleSwitches.ALLOW_API_GET):
             # the client's error, not the platform's.
             logger.warning(
-                "%s is not allowed because %s switch is inactive.",
-                request.path,
-                SmarterWaffleSwitches.ALLOW_API_GET,
+                "GET %s refused: use POST, or turn on the %s switch.", request.path, SmarterWaffleSwitches.ALLOW_API_GET
             )
             return HttpResponseNotAllowed(permitted_methods=[SmarterHttpMethods.POST])
+        logger.warning("GET %s allowed by the %s switch: use POST.", request.path, SmarterWaffleSwitches.ALLOW_API_GET)
         return self.config_response(request)

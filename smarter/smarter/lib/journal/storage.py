@@ -36,7 +36,7 @@ This module is pure: it neither reads nor writes the database. See
 """
 
 import hashlib
-import json
+import json as std_json  # one-line JSON: smarter.lib.json.dumps always indents
 import zlib
 from collections.abc import Callable
 from typing import Optional, Union
@@ -101,7 +101,7 @@ def to_json_bytes(value: JsonValue) -> bytes:
     :param value: The value.
     :returns: Its JSON.
     """
-    text = json.dumps(value, separators=(",", ":"), ensure_ascii=False, default=str)
+    text = std_json.dumps(value, separators=(",", ":"), ensure_ascii=False, default=str)
     return text.encode("utf-8")
 
 
@@ -125,7 +125,7 @@ def unpack(data: Union[bytes, bytearray, memoryview]) -> JsonValue:
     """
     compressed = bytes(data)
     text = zlib.decompress(compressed)
-    value = json.loads(text)
+    value = std_json.loads(text)
     return value
 
 

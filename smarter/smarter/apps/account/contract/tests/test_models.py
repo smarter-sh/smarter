@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.account.contract.models`, and the accounts' real responses against the OpenAPI document."""
 
-import json
 from datetime import datetime
 from http import HTTPStatus
 
@@ -23,6 +22,7 @@ from smarter.apps.account.serializers import (
 )
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
+from smarter.lib import json
 
 
 class TestAccountContractModels(TestAccountMixin):

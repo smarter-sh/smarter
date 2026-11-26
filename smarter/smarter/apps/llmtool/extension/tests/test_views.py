@@ -1,6 +1,5 @@
 """Tests of smarter.apps.llmtool.extension.views: the web console's Extensions pages and their api."""
 
-import json
 from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -13,6 +12,7 @@ from smarter.apps.llmtool.extension.api.web.urls import (
 )
 from smarter.apps.llmtool.models import Extension, ExtensionSetting
 from smarter.apps.secret.models import Secret
+from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.resource_views import assert_console_page
 

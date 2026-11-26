@@ -9,11 +9,10 @@ its earlier address, redirects here.
 It is public: the document describes the api, and holds no data.
 """
 
-import json
-
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.api.v1.contract.const import OPENAPI_PATH
+from smarter.lib import json
 from smarter.lib.django.views import SmarterView
 from smarter.lib.typing import SmarterDictType
 
