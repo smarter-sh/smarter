@@ -2,7 +2,8 @@
 The Smarter platform's Celery app.
 
 It is configured from the Django settings whose names start with ``CELERY_``, and finds the
-``tasks`` modules of every installed Django app.
+``tasks`` modules of every installed Django app. In the tool worker, ``smarter-worker-tools``, it
+registers only the tool worker's own task (:data:`TOOL_WORKER_TASKS`).
 """
 
 import logging
@@ -122,7 +123,94 @@ def hide_tool_calls_from_logs(**kwargs) -> None:
 worker_init.connect(hide_tool_calls_from_logs, weak=False)
 worker_process_init.connect(hide_tool_calls_from_logs, weak=False)
 
-# Load task modules from all registered Django APP configs.
-APP.autodiscover_tasks()
+
+TOOL_WORKER_TASKS = ("smarter.apps.llmtool.tasks.run_tool_call",)
+"""The names of the only tasks that the tool worker, ``smarter-worker-tools``, runs (ADR-038)."""
+
+TOOL_WORKER_TASK_PACKAGES = ("smarter.apps.llmtool",)
+"""The packages whose ``tasks`` modules the tool worker imports: those of :data:`TOOL_WORKER_TASKS`."""
+
+CELERY_BUILTIN_TASK_PREFIX = "celery."
+"""The prefix of Celery's own tasks, e.g. ``celery.chord_unlock``, which every worker keeps."""
+
+
+def task_packages() -> list[str]:
+    """
+    Name the packages whose ``tasks`` modules the Celery app imports.
+
+    Every installed Django app's, except in the tool worker (``smarter_settings.database_unavailable``),
+    which imports only :data:`TOOL_WORKER_TASK_PACKAGES`. The tool worker runs third parties' code,
+    so it imports no more of the platform than it needs. It is called lazily, when the app is
+    finalized, after Django is set up.
+
+    :returns: The packages' dotted names.
+    """
+    # pylint: disable=import-outside-toplevel
+    from django.apps import apps
+
+    from smarter.common.conf import smarter_settings
+
+    if smarter_settings.database_unavailable:
+        return list(TOOL_WORKER_TASK_PACKAGES)
+    packages = [config.name for config in apps.get_app_configs()]
+    return packages
+
+
+def keep_only_tool_worker_tasks(app: Celery) -> list[str]:
+    """
+    Remove every task from the app's registry except :data:`TOOL_WORKER_TASKS` and Celery's own.
+
+    Django's app loading imports many apps' ``tasks`` modules, through their receivers, whatever
+    :func:`task_packages` says, and so registers tasks that deploy LLMClients, write DNS records or
+    charge accounts. The tool worker must never run them. A worker rejects a message for a task that
+    isn't in its registry ("Received unregistered task"), so after this it runs nothing but tool calls,
+    whatever lands on its queue.
+
+    :param app: The Celery app.
+    :returns: The names of the tasks removed, sorted.
+    :raises SmarterConfigurationError: If a task of :data:`TOOL_WORKER_TASKS` isn't registered: the
+        worker would run nothing.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.exceptions import SmarterConfigurationError
+
+    registry = app.tasks
+    for name in TOOL_WORKER_TASKS:
+        if name not in registry:
+            raise SmarterConfigurationError(f"The tool worker's task {name} is not registered.")
+    removed = []
+    for name in sorted(registry.keys()):
+        if name in TOOL_WORKER_TASKS:
+            continue
+        if name.startswith(CELERY_BUILTIN_TASK_PREFIX):
+            continue
+        registry.unregister(name)
+        removed.append(name)
+    return removed
+
+
+def restrict_tool_worker_tasks(**kwargs) -> None:
+    """
+    In the tool worker, keep only its own tasks in the registry (:func:`keep_only_tool_worker_tasks`).
+
+    Connected to ``worker_init``, which the worker sends before it prints its banner and before its
+    pool's processes fork, so that they inherit the restricted registry. Only the tool worker
+    (``smarter_settings.database_unavailable``): the other workers keep every task.
+
+    :param kwargs: The signal's arguments, unused.
+    :returns: None
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.conf import smarter_settings
+
+    if not smarter_settings.database_unavailable:
+        return
+    keep_only_tool_worker_tasks(APP)
+
+
+worker_init.connect(restrict_tool_worker_tasks, weak=False)
+
+# Load the task modules of the packages that task_packages() names, when the app is finalized.
+APP.autodiscover_tasks(task_packages)
 
 APP.conf.broker_connection_retry_on_startup = True
