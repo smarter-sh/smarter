@@ -1,11 +1,8 @@
 """SqlConnection model."""
 
-import tempfile
 from http import HTTPStatus
-from socket import socket
 from typing import Optional, Union
 
-import paramiko
 import requests
 from django.core.exceptions import ImproperlyConfigured
 from django.core.validators import MinValueValidator
@@ -13,6 +10,7 @@ from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
 
+from smarter.apps.connection.execution import SqlToolCall, SshTunnelSettings
 from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
@@ -26,10 +24,17 @@ from smarter.apps.connection.signals import (
     sql_connection_success,
     sql_connection_validated,
 )
+from smarter.apps.connection.ssh import (
+    DEFAULT_SSH_PORT,
+    LOOPBACK,
+    SshTunnel,
+    SshTunnelError,
+)
+from smarter.apps.llmtool.runner import get_tool_runner
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import to_snake_case
-from smarter.lib import json, logging
+from smarter.lib import logging
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -77,6 +82,7 @@ class SqlConnection(ConnectionBase):
         verbose_name_plural = "SQL Connections"
 
     _connection: Optional[BaseDatabaseWrapper] = None
+    _tunnel: Optional[SshTunnel] = None
 
     connected: Optional[bool] = None
     """
@@ -113,42 +119,6 @@ class SqlConnection(ConnectionBase):
         :return: None
         """
         self.close()
-
-    class ParamikoUpdateKnownHostsPolicy(paramiko.MissingHostKeyPolicy):
-        """
-        Custom Paramiko policy to automatically add missing SSH host keys to the known_hosts field.
-
-        This policy extends Paramiko's MissingHostKeyPolicy to handle unknown host keys by appending
-        them to the ``ssh_known_hosts`` field of the associated :class:`SqlConnection`
-        model instance. When an unknown host key is encountered during an SSH connection attempt,
-        this policy captures the key and updates the database record accordingly.
-        """
-
-        def __init__(self, sql_connection: "SqlConnection"):
-            self.sql_connection = sql_connection
-
-        # pylint: disable=W0613
-        def missing_host_key(self, client, hostname, key):
-            """
-            Append an unknown host key to the connection's ``ssh_known_hosts`` and save the connection.
-
-            Called by paramiko when the SSH server's host key is not known. Logs a warning.
-
-            :param client: The paramiko SSH client (unused).
-            :param hostname: The host whose key is unknown.
-            :param key: The host's public key.
-            """
-            # Add the new host key to the known_hosts field
-            new_entry = f"{hostname} {key.get_name()} {key.get_base64()}\n"
-            if self.sql_connection.ssh_known_hosts:
-                self.sql_connection.ssh_known_hosts += new_entry
-            else:
-                self.sql_connection.ssh_known_hosts = new_entry
-            self.sql_connection.save()
-            logger.warning(
-                "Unknown host key for %s. Key added to known_hosts.",
-                hostname,
-            )
 
     DBMS_DEFAULT_TIMEOUT = 30
     """
@@ -507,79 +477,80 @@ class SqlConnection(ConnectionBase):
             sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
             return None
 
-    def transport_handler(self, channel, src_addr, dest_addr):
+    def ssh_tunnel_settings(self) -> Optional[SshTunnelSettings]:
         """
-        (NOT IMPLEMENTED) Handler for Paramiko SSH transport channels.
+        Return the SSH tunnel's settings, with its password decrypted, or None if the connection doesn't use one.
 
-        .. warning::
-            This method is a placeholder and does not implement actual port forwarding logic.
+        For ``tcpip_ssh``, ``proxy_host`` and ``proxy_port`` (22 when unset) are the SSH server,
+        ``proxy_username`` and ``proxy_password`` its login, and ``ssh_known_hosts`` its host keys.
+        ``hostname`` and ``port`` are the database, as the SSH server reaches it. See
+        :mod:`smarter.apps.connection.ssh`.
+
+        :returns: The settings, or None.
+        :raises SmarterValueError: If the connection uses SSH, but has no ``proxy_host``.
         """
-        logger.info(
-            "Transport handler called with channel: %s, src_addr: %s, dest_addr: %s",
-            channel,
-            src_addr,
-            dest_addr,
+        if self.authentication_method != DBMSAuthenticationMethods.TCPIP_SSH.value:
+            return None
+        if not self.proxy_host:
+            raise SmarterValueError(f"SqlConnection {self.name} uses tcpip_ssh, but has no proxyHost, its SSH server.")
+        password = None
+        if self.proxy_password:
+            password = self.proxy_password.get_secret(update_last_accessed=False)
+        settings = SshTunnelSettings(
+            host=self.proxy_host,
+            port=self.proxy_port or DEFAULT_SSH_PORT,
+            username=self.proxy_username,
+            password=password,
+            known_hosts=self.ssh_known_hosts,
         )
+        return settings
 
     def connect_tcpip_ssh(self) -> Optional[BaseDatabaseWrapper]:
         """
-        Establish a database connection using Standard TCP/IP over SSH with Paramiko.
+        Establish a database connection through an SSH tunnel.
 
-        This method attempts to create and validate a database connection using the standard TCP/IP authentication method
-        over an SSH tunnel, based on the current SQL connection instance's configuration. It emits signals for connection
-        attempts, successes, and failures for observability.
+        It opens an :class:`~smarter.apps.connection.ssh.SshTunnel` to the SSH server, which forwards a
+        loopback port to the database, and connects the database driver to that port. The tunnel stays
+        open while the connection is used, and :meth:`close` closes both. The SSH server's host key must
+        be in ``ssh_known_hosts``: an unknown one is refused, never learned. It emits signals for
+        connection attempts, successes, and failures for observability.
 
         :return: The database connection object if successful, otherwise None.
         :rtype: Optional[BaseDatabaseWrapper]
         """
-
+        sql_connection_attempted.send(sender=self.__class__, connection=self)
         try:
-            sql_connection_attempted.send(sender=self.__class__, connection=self)
-            ssh_client = paramiko.SSHClient()
-            if self.ssh_known_hosts:
-                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                    temp_file.write(self.ssh_known_hosts.encode())
-                    known_hosts_file = temp_file.name
-                ssh_client.load_host_keys(known_hosts_file)
-            else:
-                ssh_client.load_system_host_keys()
-
-            ssh_client.load_system_host_keys()
-            ssh_client.set_missing_host_key_policy(SqlConnection.ParamikoUpdateKnownHostsPolicy(self))
-
-            ssh_client.connect(
-                hostname=self.hostname,
-                port=self.port if self.port else 22,  # Default SSH port is 22
-                username=self.proxy_username,
-                password=self.proxy_password.get_secret(update_last_accessed=False) if self.proxy_password else None,
-                timeout=self.timeout,
+            ssh = self.ssh_tunnel_settings()
+            if ssh is None:
+                return None
+            tunnel = SshTunnel(
+                ssh_host=ssh.host,
+                ssh_port=ssh.port,
+                username=ssh.username,
+                password=ssh.password,
+                known_hosts=ssh.known_hosts,
+                remote_host=self.hostname,
+                remote_port=self.port or 3306,
+                timeout=self.timeout or self.DBMS_DEFAULT_TIMEOUT,
             )
-
-            # Open a local port forwarding channel
-            transport = ssh_client.get_transport()
-            local_socket = socket()
-            local_socket.bind(("127.0.0.1", 0))  # Bind to an available local port
-            local_socket.listen(1)
-            local_port = local_socket.getsockname()[1]
-
-            # Forward the remote database port to the local port
-            if isinstance(transport, paramiko.Transport):
-                transport.request_port_forward(address="127.0.0.1", port=local_port, handler=self.transport_handler)
-
-            connection_handler = ConnectionHandler({"default": self.django_db_connection})
+            tunnel.open()
+        except (SshTunnelError, SmarterValueError) as e:
+            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
+            return None
+        settings = self.django_db_connection
+        settings["HOST"] = LOOPBACK
+        settings["PORT"] = str(tunnel.local_port)
+        try:
+            connection_handler = ConnectionHandler({"default": settings})
             tcpip_ssh_connection: BaseDatabaseWrapper = connection_handler["default"]
             tcpip_ssh_connection.ensure_connection()
-
-            sql_connection_success.send(sender=self.__class__, connection=self)
-            return tcpip_ssh_connection
-
-        except (paramiko.SSHException, DatabaseError, ImproperlyConfigured) as e:
+        except (DatabaseError, ImproperlyConfigured) as e:
+            tunnel.close()
             sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
             return None
-        # pylint: disable=W0718
-        except Exception as e:
-            sql_connection_failed.send(sender=self.__class__, connection=self, stage="SSH connection", error=str(e))
-            return None
+        self._tunnel = tunnel
+        sql_connection_success.send(sender=self.__class__, connection=self)
+        return tcpip_ssh_connection
 
     def connect_ldap_user_pwd(self) -> Optional[BaseDatabaseWrapper]:
         """
@@ -628,15 +599,10 @@ class SqlConnection(ConnectionBase):
 
         - :meth:`get_connection`
         """
-        connection = self.get_connection()
-        if connection is None:
-            return False
-        try:
-            connection.close()
-        # pylint: disable=W0718
-        except Exception as e:
-            logger.error("Failed to close the test connection: %s", e)
-        return True
+        self._connection = self.get_connection()
+        connected = self._connection is not None
+        self.close()
+        return connected
 
     def get_connection(self) -> Optional[BaseDatabaseWrapper]:
         """
@@ -687,10 +653,44 @@ class SqlConnection(ConnectionBase):
             except Exception as e:
                 logger.error("Failed to close the database connection: %s", e)
             self._connection = None
+        if self._tunnel is not None:
+            self._tunnel.close()
+            self._tunnel = None
+
+    def tool_call(self, sql: str) -> SqlToolCall:
+        """
+        Resolve a query into a :class:`~smarter.apps.connection.execution.SqlToolCall`, for the tool runner.
+
+        :param sql: The final SQL.
+        :returns: The call, with the database's password, and the SSH tunnel's, decrypted.
+        :raises SmarterValueError: If the connection uses SSH, but has no SSH server.
+        """
+        password = None
+        if self.password:
+            password = self.password.get_secret()
+        call = SqlToolCall(
+            engine=self.db_engine or "",
+            database=self.database,
+            username=self.username,
+            password=password,
+            host=self.hostname,
+            port=self.port or 3306,
+            options=self.db_options,
+            ssh=self.ssh_tunnel_settings(),
+            sql=sql,
+            timeout=self.timeout or self.DBMS_DEFAULT_TIMEOUT,
+        )
+        return call
 
     def execute_query(self, sql: str, limit: Optional[int] = None) -> Union[str, bool]:
         """
         Execute a SQL query and return the results as a JSON string.
+
+        The query is resolved here, in the app, into a
+        :class:`~smarter.apps.connection.execution.SqlToolCall`, with the passwords read from their
+        Smarter Secrets, and executed by the tool runner (:mod:`smarter.apps.llmtool.runner`), with
+        :func:`~smarter.apps.connection.execution.execute_sql_call`, through the SSH tunnel if the
+        connection uses one. The signals are sent here, from its result.
 
         Sets :attr:`connected`, so that a caller can tell a failed connection, such as rejected
         credentials, from a failed query.
@@ -706,40 +706,37 @@ class SqlConnection(ConnectionBase):
 
         .. warning::
 
-            This method does not limit the execution time nor the number of rows returned by the query,
-            unless the ``limit`` parameter is provided. It is the caller's responsibility to ensure that
-            the query is efficient and does not return excessive data.
+            This method does not limit the number of rows returned by the query, unless the ``limit``
+            parameter is provided. The connection's ``timeout`` limits how long the query runs, on
+            MySQL and PostgreSQL. It is the caller's responsibility to ensure that the query is
+            efficient and does not return excessive data.
         """
-
-        def query_result_to_json(cursor) -> str:
-            # Get column names from cursor description
-            columns = [col[0] for col in cursor.description]
-            # Fetch all rows
-            rows = cursor.fetchall()
-            # Convert each row to a dict
-            result = [dict(zip(columns, row)) for row in rows]
-            # Convert to JSON string (optional)
-            return json.dumps(result)
-
-        query_connection = self.connection
-        self.connected = isinstance(query_connection, BaseDatabaseWrapper)
-        if not isinstance(query_connection, BaseDatabaseWrapper):
-            return False
-        sql_connection_query_attempted.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
+        if limit is not None:
+            sql = sql.rstrip(";")  # Remove any trailing semicolon
+            sql += f" LIMIT {limit};"
+        self.connected = None
+        sql_connection_attempted.send(sender=self.__class__, connection=self)
         try:
-            if limit is not None:
-                sql = sql.rstrip(";")  # Remove any trailing semicolon
-                sql += f" LIMIT {limit};"
-            with query_connection.cursor() as cursor:
-                cursor.execute(sql)
-                json_str = query_result_to_json(cursor)
-                sql_connection_query_success.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
-                return json_str
-        except (DatabaseError, ImproperlyConfigured) as e:
-            sql_connection_query_failed.send(sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(e))
+            call = self.tool_call(sql)
+        except SmarterValueError as e:
+            self.connected = False
+            sql_connection_failed.send(sender=self.__class__, connection=self, error=str(e))
             return False
-        finally:
-            self.close()
+        result = get_tool_runner().run(call)
+        if result.failure is not None:
+            self.connected = False
+            sql_connection_failed.send(sender=self.__class__, connection=self, error=result.failure)
+            return False
+        self.connected = True
+        sql_connection_success.send(sender=self.__class__, connection=self)
+        sql_connection_query_attempted.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
+        if result.is_error:
+            sql_connection_query_failed.send(
+                sender=self.__class__, connection=self, sql=sql, limit=limit, error=str(result.value)
+            )
+            return False
+        sql_connection_query_success.send(sender=self.__class__, connection=self, sql=sql, limit=limit)
+        return str(result.value)
 
     def test_proxy(self) -> bool:
         """

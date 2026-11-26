@@ -1,6 +1,6 @@
 ---
 name: smarter-docker-environment
-description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-beat), for migrations, manage.py commands or the dev server (tests run with make docker-test; see smarter-python-testing). Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
+description: Use whenever Smarter code must run in its Docker containers (smarter-api, smarter-worker, smarter-worker-infrastructure, smarter-worker-tools, smarter-beat), for migrations, manage.py commands or the dev server (tests run with make docker-test; see smarter-python-testing). Explains how to sync host edits into containers that have no bind mount, the docker cp traps, restarts, and the safety rules for the live credentials inside.
 ---
 
 # Smarter Docker Environment
@@ -32,6 +32,7 @@ description: Use whenever Smarter code must run in its Docker containers (smarte
 | `smarter-api`                      | Django dev server on http://localhost:9357, and where `manage.py` commands run |
 | `smarter-worker`                   | Celery worker for operational tasks                                            |
 | `smarter-worker-infrastructure`    | Celery worker for infrastructure tasks (deploys, DNS, certificates)            |
+| `smarter-worker-tools`             | Celery tool worker (ADR-038), no database; used when the runner is `remote`    |
 | `smarter-beat`                     | Celery beat scheduler                                                          |
 | `smarter-mariadb`, `smarter-redis` | Database and cache/broker                                                      |
 

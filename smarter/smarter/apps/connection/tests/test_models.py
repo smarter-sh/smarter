@@ -1,7 +1,5 @@
 """Test :mod:`smarter.apps.connection.models.connection_base`, :mod:`smarter.apps.connection.models.utils`, and the parts of :mod:`smarter.apps.connection.models.sql_connection` that need no database server."""
 
-from unittest.mock import MagicMock
-
 from django.urls import reverse
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -81,21 +79,3 @@ class TestSqlConnectionModels(SqlConnectionTestMixin):
         connection = get_cached_connection_detail_view_and_kind(self.admin_user, SAMKinds.SQL_CONNECTION, name)
         self.assertIsInstance(connection, SqlConnection)
         self.assertEqual(connection.pk, self.connection_django_model.pk)  # type: ignore[union-attr]
-
-    def test_paramiko_update_known_hosts_policy(self):
-        """Test that an unknown ssh host key is appended to the connection's known hosts."""
-        connection = SqlConnection.objects.get(pk=self.connection_django_model.pk)  # type: ignore[union-attr]
-        original = connection.ssh_known_hosts
-        self.addCleanup(SqlConnection.objects.filter(pk=connection.pk).update, ssh_known_hosts=original)
-        key = MagicMock()
-        key.get_name.return_value = "ssh-ed25519"
-        key.get_base64.return_value = "AAAA"
-        policy = SqlConnection.ParamikoUpdateKnownHostsPolicy(connection)
-
-        connection.ssh_known_hosts = None
-        policy.missing_host_key(client=None, hostname="db1.example.com", key=key)
-        policy.missing_host_key(client=None, hostname="db2.example.com", key=key)
-        self.assertEqual(
-            SqlConnection.objects.get(pk=connection.pk).ssh_known_hosts,
-            "db1.example.com ssh-ed25519 AAAA\ndb2.example.com ssh-ed25519 AAAA\n",
-        )

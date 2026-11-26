@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 HOST_ROOT="smarter/smarter"
 CONTAINER_ROOT="/home/smarter_user/smarter/smarter"
-CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-beat)
+CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-worker-tools smarter-beat)
 
 LIST="$(mktemp)"
 trap 'rm -f "$LIST"' EXIT

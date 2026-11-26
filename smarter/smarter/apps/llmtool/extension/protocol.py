@@ -41,17 +41,13 @@ import inspect
 import logging as python_logging
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, ClassVar, Optional, Union
+from typing import ClassVar, Optional, Union
 
 from pydantic import BaseModel, JsonValue
-from waffle import get_waffle_switch_model
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
-
-if TYPE_CHECKING:
-    from smarter.apps.account.models import Account, UserProfile
 
 TOOL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,47}$")
 """A tool's name: letters, digits and underscores, starting with a letter, at most 48 characters."""
@@ -93,25 +89,44 @@ def extension_logger(slug: str) -> ExtensionLogger:
 
 
 @dataclass(frozen=True)
+class ExtensionCaller:
+    """
+    Who called a tool: plain identifiers, not the platform's database objects.
+
+    An extension's code is a third party's. It gets what identifies the caller, and nothing that would
+    let it read or change the platform's data, or reach a user's personal details.
+
+    :param account_number: The account of the LLMClient that called the tool, e.g. ``1234-5678-9012``.
+    :param user_id: The id of the user whose prompt called the tool.
+    :param llmclient_name: The name of the LLMClient that called the tool.
+    """
+
+    account_number: Optional[str] = None
+    user_id: Optional[int] = None
+    llmclient_name: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class ExtensionContext:
     """
     What a tool call knows about where it runs.
+
+    Everything here is a plain value, decided before the call: it reads no database, so that the
+    tool can run in a worker without one (ADR-038).
 
     :param slug: The extension's slug.
     :param version: The extension's installed version.
     :param settings: The extension's settings, one attribute per setting in its manifest.
         A ``secret`` setting is a :class:`pydantic.SecretStr`; an unset setting is None.
-    :param account: The account of the LLMClient that called the tool, if any.
-    :param user_profile: The user whose prompt called the tool, if any.
-    :param llmclient: The LLMClient that called the tool, if any.
+    :param caller: Who called the tool: the account number, the user's id and the LLMClient's name.
+    :param switches: The extension's own waffle switches, by their names in the manifest, and whether each is on.
     """
 
     slug: str
     version: str
     settings: BaseModel
-    account: Optional["Account"] = None
-    user_profile: Optional["UserProfile"] = None
-    llmclient: Optional[object] = None
+    caller: ExtensionCaller = field(default_factory=ExtensionCaller)
+    switches: dict[str, bool] = field(default_factory=dict)
     logger: ExtensionLogger = field(default=None, compare=False)  # type: ignore[assignment]
 
     def __post_init__(self):
@@ -123,10 +138,9 @@ class ExtensionContext:
         Return whether one of the extension's waffle switches is on.
 
         :param name: The switch's name in the manifest's ``[[tool.smarter.switches]]``, without the ``ext_<slug>_`` prefix.
-        :returns: True if the switch exists and is on.
+        :returns: True if the switch exists and is on, as it was when the tool was called.
         """
-        switch = get_waffle_switch_model().get(switch_name(self.slug, name))
-        return bool(switch.pk) and switch.is_active()
+        return self.switches.get(name, False)
 
 
 class SmarterExtensionTool:
@@ -159,8 +173,8 @@ class SmarterExtensionTool:
     0, the default, caches nothing.
 
     Set it only for a tool that changes nothing, and whose result depends only on its arguments
-    and settings, not on who calls it (``context.account``, ``context.user_profile`` and
-    ``context.llmclient``): a cached result is returned to every LLMClient and user. For example,
+    and settings, not on who calls it (``context.caller``): a cached result is returned to every
+    LLMClient and user. For example,
     a weather forecast, ``cache_ttl = 3600``. An error is never cached.
     """
 
@@ -223,6 +237,7 @@ class SmarterExtensionTool:
 
 
 __all__ = [
+    "ExtensionCaller",
     "ExtensionContext",
     "ExtensionLogger",
     "ExtensionToolError",

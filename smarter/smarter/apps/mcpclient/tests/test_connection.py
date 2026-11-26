@@ -96,7 +96,7 @@ class TestMCPServerConnection(MCPClientTestBase):
         echo = next(tool for tool in catalog.tools if tool.name == "echo")
         self.assertEqual(echo.description, "Repeat the text.")
         self.assertEqual(echo.input_schema["properties"]["text"]["type"], "string")
-        guard.assert_called_once_with(self.mcpclient.endpoint_url)
+        guard.assert_called_once_with(self.mcpclient.endpoint_url, require_https=True)
 
     def test_catalog_round_trip(self):
         """Test that a catalog survives to_dict() and from_dict(), as it does in the cache."""
@@ -192,7 +192,7 @@ class TestMCPServerConnection(MCPClientTestBase):
         """
         loopback_urls = ("http://localhost:9357/api/v1/mcp/", "https://127.0.0.1/mcp", "http://api.localhost:9357/mcp")
         with (
-            mock.patch("smarter.apps.mcpclient.connection.smarter_settings") as settings,
+            mock.patch("smarter.apps.llmtool.plugin.safe_http.smarter_settings") as settings,
             mock.patch(GUARD_PATCH) as guard,
         ):
             settings.environment = SmarterEnvironments.LOCAL
@@ -212,7 +212,7 @@ class TestMCPServerConnection(MCPClientTestBase):
 
     def test_loopback_host_is_refused_outside_the_local_environment(self):
         """The real guard refuses localhost in a deployed environment."""
-        with mock.patch("smarter.apps.mcpclient.connection.smarter_settings") as settings:
+        with mock.patch("smarter.apps.llmtool.plugin.safe_http.smarter_settings") as settings:
             settings.environment = SmarterEnvironments.PROD
             with self.assertRaises(SafeHttpError):
                 validate_endpoint_url("http://localhost:9357/api/v1/mcp/")
@@ -311,7 +311,7 @@ class TestMCPServerConnection(MCPClientTestBase):
         with mock.patch(GUARD_PATCH, side_effect=SafeHttpError("blocked")) as guard:
             with self.assertRaises(SafeHttpError):
                 run_sync(lambda: guard_request(httpx2.Request("GET", "https://169.254.169.254/latest/")))
-        guard.assert_called_once_with("https://169.254.169.254/latest/")
+        guard.assert_called_once_with("https://169.254.169.254/latest/", require_https=True)
         run_sync(client.aclose)
 
     def test_run_sync_in_event_loop(self):

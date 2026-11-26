@@ -33,9 +33,15 @@ An extension's code imports what it needs from this package:
 """
 
 from .lifecycle import LifecycleContext, SmarterExtensionLifecycle
-from .protocol import ExtensionContext, ExtensionToolError, SmarterExtensionTool
+from .protocol import (
+    ExtensionCaller,
+    ExtensionContext,
+    ExtensionToolError,
+    SmarterExtensionTool,
+)
 
 __all__ = [
+    "ExtensionCaller",
     "ExtensionContext",
     "ExtensionToolError",
     "LifecycleContext",

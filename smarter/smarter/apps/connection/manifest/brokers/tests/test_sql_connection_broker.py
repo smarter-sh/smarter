@@ -328,6 +328,37 @@ class TestSmarterSqlConnectionBroker(TestSmarterConnectionBrokerBase):
         self.assertEqual(manifest.spec.connection.poolSize, connection.pool_size)
         self.assertEqual(manifest.spec.connection.maxOverflow, connection.max_overflow)
 
+    def test_describe_never_shows_a_secrets_value(self):
+        """
+        Test that a manifest built from the database names the connection's Secrets, and describe() shows no value.
+
+        It once carried the database password and the SSH password, decrypted: describe() showed them to anyone
+        who could describe the connection, and apply() read them back as the names of Secrets.
+        """
+        response = self.broker.apply(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        connection = required(self.broker.connection, "broker.connection")
+        broker = self.SAMBrokerClass(self.request, name=connection.name, kind=self.broker.kind)
+        manifest = required(broker.manifest, "broker.manifest")
+        self.assertEqual(manifest.spec.connection.password, connection.password.name if connection.password else None)
+        self.assertEqual(
+            manifest.spec.connection.proxyPassword,
+            connection.proxy_password.name if connection.proxy_password else None,
+        )
+        response = broker.describe(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        described = json.loads(response.content.decode())["data"]["spec"]["connection"]
+        self.assertIsNotNone(connection.password)
+        # the fixture has no proxy password: the ApiConnection broker's test covers proxyPassword.
+        for field, secret in (("password", connection.password), ("proxyPassword", connection.proxy_password)):
+            if secret is None:
+                self.assertIsNone(described[field], field)
+                continue
+            value = secret.get_secret()
+            self.assertNotEqual(secret.name, value, f"the test Secret's value must differ from its name: {field}")
+            self.assertEqual(described[field], secret.name, field)
+            self.assertNotEqual(described[field], value, field)
+
     def test_describe(self):
         """Test the describe() method returns a valid manifest response."""
         response = self.broker.describe(self.request, **self.kwargs)

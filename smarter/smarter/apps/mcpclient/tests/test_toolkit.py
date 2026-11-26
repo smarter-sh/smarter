@@ -11,12 +11,14 @@ Test :mod:`smarter.apps.mcpclient.toolkit`.
 from unittest import mock
 
 from smarter.apps.llmtool.plugin.tests.base_classes import capture_signal
+from smarter.apps.llmtool.runner import ToolCallResult
 from smarter.apps.mcpclient.connection import (
     MCPServerConnection,
     MCPToolInfo,
     MCPToolResult,
 )
 from smarter.apps.mcpclient.exceptions import SmarterMCPClientConnectionError
+from smarter.apps.mcpclient.execution import TOOL, MCPToolCall
 from smarter.apps.mcpclient.signals import (
     mcpclient_resource_read,
     mcpclient_tool_called,
@@ -38,6 +40,8 @@ from .base_classes import (
     MCPClientTestBase,
     mock_mcp_server,
 )
+
+RUNNER_PATCH = "smarter.apps.mcpclient.toolkit.get_tool_runner"
 
 
 class TestMCPToolkit(MCPClientTestBase):
@@ -142,6 +146,61 @@ class TestMCPToolkit(MCPClientTestBase):
             result = toolkit.call(self.function_name(toolkit, "echo"), {"text": "hi"})
         self.assertIn("server is down", result)
         self.assertEqual(failed[0]["tool_name"], "echo")
+
+    # =========================================================================
+    # the tool runner
+    # =========================================================================
+    def fake_runner(self, result: ToolCallResult) -> mock.MagicMock:
+        """Return a stand-in for the tool runner, which answers every call with a result."""
+        runner = mock.MagicMock()
+        runner.run.return_value = result
+        return runner
+
+    def test_call_goes_through_the_tool_runner(self):
+        """Test that a tool call is resolved in the app, into an MCPToolCall, and run by the tool runner."""
+        toolkit = self.load()
+        runner = self.fake_runner(ToolCallResult(value="42"))
+        with mock.patch(RUNNER_PATCH, return_value=runner):
+            result = toolkit.call(self.function_name(toolkit, "add_numbers"), {"a": 40, "b": 2})
+        self.assertEqual(result, "42")
+        call = runner.run.call_args.args[0]
+        self.assertIsInstance(call, MCPToolCall)
+        self.assertEqual(call.operation, TOOL)
+        self.assertEqual(call.tool_name, "add_numbers")
+        self.assertEqual(call.arguments, {"a": 40, "b": 2})
+        self.assertEqual(call.endpoint.endpoint_url, self.mcpclient.endpoint_url)
+        self.assertEqual(call.endpoint.headers["X-Client-Id"], "smarter-tests")
+
+    def test_runner_failure_and_tool_error(self):
+        """Test that a runner's failure and a tool's error both reach the LLM as text, and neither is cached."""
+        toolkit = self.load()
+        name = self.function_name(toolkit, "echo")
+        failure = self.fake_runner(ToolCallResult(failure="server is down"))
+        with mock.patch(RUNNER_PATCH, return_value=failure), capture_signal(mcpclient_tool_failed) as failed:
+            self.assertEqual(toolkit.call(name, {"text": "x"}), "Error: server is down")
+        self.assertEqual(failed[0]["tool_name"], "echo")
+        tool_error = self.fake_runner(ToolCallResult(value="bad text", is_error=True))
+        with mock.patch(RUNNER_PATCH, return_value=tool_error):
+            self.assertEqual(toolkit.call(name, {"text": "x"}), "Error: bad text")
+        # neither was cached: the next call runs again.
+        succeeded = self.fake_runner(ToolCallResult(value="x"))
+        with mock.patch(RUNNER_PATCH, return_value=succeeded):
+            self.assertEqual(toolkit.call(name, {"text": "x"}), "x")
+        succeeded.run.assert_called_once()
+
+    def test_refused_resource_is_never_resolved(self):
+        """Test that a resource URI that the MCPClient doesn't allow is refused before its credential is read."""
+        toolkit = self.load()
+        name = f"mcp{self.mcpclient.id}_read_resource"
+        runner = self.fake_runner(ToolCallResult(value="secret"))
+        with (
+            mock.patch(RUNNER_PATCH, return_value=runner),
+            mock.patch.object(MCPServerConnection, "endpoint") as endpoint,
+        ):
+            refused = toolkit.call(name, {"uri": "file:///etc/passwd"})
+        self.assertIn("does not allow", refused)
+        endpoint.assert_not_called()
+        runner.run.assert_not_called()
 
     def test_read_only(self):
         """Test that a tool is read-only when the server marks it readOnlyHint, and the read_resource tool always is."""

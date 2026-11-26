@@ -96,7 +96,7 @@ class TestLogReading(OperationsTestBase):
         """The components and pods that wrote, and the components that wrote nothing."""
         sources = log_sources(60)
         self.assertIn("smarter", sources.components)
-        self.assertEqual(sources.missing, ["smarter-worker-infrastructure"])
+        self.assertEqual(sources.missing, ["smarter-worker-infrastructure"], "the tool worker is optional")
         self.assertIn("smarter-mariadb-0", sources.pods)
 
     def test_search_logs(self):

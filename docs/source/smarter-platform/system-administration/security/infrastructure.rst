@@ -88,15 +88,15 @@ the platform's namespace:
   bastion) from pods in the same namespace, and from the Traefik namespace on the app's port only.
 - **MariaDB** accepts connections on 3306, and **Redis** on 6379, only from the application's pods.
 - **Egress from the application's pods** only to MariaDB, Redis and Loki in the namespace, DNS in
-  ``kube-system``, and to the internet on HTTPS (443), HTTP (80, for API plugins), SMTP (465, 587)
-  and MySQL (3306, for SQL plugins' remote databases).
+  ``kube-system``, and to the internet on HTTPS (443), HTTP (80, for API plugins), SMTP (587, to
+  SES) and MySQL (3306, for SQL plugins' remote databases).
 - **The bastion pod** may also reach the internet on 80 and 443, for package updates.
 
 .. image:: ../../../_static/security/pod-network-policies.svg
    :alt: In the platform's namespace, default-deny-all blocks all traffic. Traefik may reach the application's pods
          on port 8000 only. The application's pods (smarter-api, the Celery workers, beat, the Jobs and the bastion)
          may reach each other, MariaDB on 3306, Redis on 6379, Loki on 3100 and 9095, DNS in kube-system, and the
-         internet on 443, 80, 465, 587 and 3306. A pod in another namespace, or without the chart's labels, can
+         internet on 443, 80, 587 and 3306. A pod in another namespace, or without the chart's labels, can
          reach nothing.
    :width: 100%
 

@@ -14,16 +14,22 @@ from unittest import mock
 from cache_results import lazy_cache
 
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import DomainPolicy
+from smarter.apps.llmtool.plugin import safe_http
 from smarter.apps.llmtool.plugin.websearch_fetch import (
     TRUNCATION_MARKER,
     USER_AGENT_TOKEN,
+    WEBFETCH_TOOL_CALL_KIND,
     WebFetchError,
+    WebFetchToolCall,
+    execute_webfetch_call,
     fetch_page,
     html_to_markdown,
     normalize_url,
     robots_permit,
     truncate,
 )
+from smarter.apps.llmtool.runner import ToolCall, ToolCallResult, executor_for
+from smarter.apps.llmtool.runner.http import HttpToolCall, response_to_value
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import SAFE_HTTP_DNS_PATCH, FakeWebHost, mock_web_host
@@ -393,3 +399,69 @@ class TestWebsearchFetch(SmarterTestBase):
             with self.assertRaises(WebFetchError):
                 fetch_page("https://example.com/post", respect_robots_txt=False)
         self.assertEqual(host.requested, [])
+
+    # =========================================================================
+    # the tool runner: the webfetch kind, and robots.txt as an http call
+    # =========================================================================
+    def test_webfetch_call_travels_as_json(self):
+        """Test that a page fetch round-trips through JSON, with its redirect policy as data, and its kind is registered."""
+        call = WebFetchToolCall(
+            url="https://example.com/post",
+            allowed=("example.com",),
+            blocked=("bad.example",),
+            respect_robots_txt=False,
+            timeout=7,
+        )
+        self.assertEqual(call.kind, WEBFETCH_TOOL_CALL_KIND)
+        self.assertEqual(WebFetchToolCall.model_validate_json(call.model_dump_json()), call)
+        self.assertIs(executor_for(WEBFETCH_TOOL_CALL_KIND), execute_webfetch_call)
+
+    def test_fetch_page_goes_through_the_tool_runner(self):
+        """Test that fetch_page() hands the runner a WebFetchToolCall with the url and the policy, as data."""
+        value = response_to_value(
+            safe_http.SafeResponse(
+                url="https://example.com/post",
+                status_code=200,
+                headers={"content-type": "text/html; charset=utf-8"},
+                content=ARTICLE.encode("utf-8"),
+            )
+        )
+        runner = mock.MagicMock()
+        runner.run.return_value = ToolCallResult(value=value, status_code=200)
+        policy = DomainPolicy(allowed=("example.com",), blocked=("bad.example",))
+        with mock.patch("smarter.apps.llmtool.plugin.websearch_fetch.get_tool_runner", return_value=runner):
+            page = fetch_page("https://example.com/post", policy=policy, respect_robots_txt=False, timeout=7)
+        self.assertEqual(page.title, "The Title")
+        call = runner.run.call_args.args[0]
+        self.assertIsInstance(call, WebFetchToolCall)
+        self.assertEqual(call.url, "https://example.com/post")
+        self.assertEqual(call.allowed, ("example.com",))
+        self.assertEqual(call.blocked, ("bad.example",))
+        self.assertFalse(call.respect_robots_txt)
+        self.assertEqual(call.timeout, 7)
+
+    def test_execute_webfetch_call_enforces_the_policy_on_redirects(self):
+        """Test that the executor rebuilds the redirect policy from the call's data, and refuses a blocked redirect."""
+        host = self.host()
+        host.add("https://example.com/go", status_code=302, headers={"Location": "https://bad.example/page"})
+        host.add_html("https://bad.example/page", "<p>Bad</p>")
+        call = WebFetchToolCall(url="https://example.com/go", blocked=("bad.example",), respect_robots_txt=False)
+        with mock_web_host(host):
+            result = execute_webfetch_call(call)
+        self.assertIn("not permitted", result.failure or "")
+        self.assertNotIn("https://bad.example/page", host.requested)
+
+    def test_execute_webfetch_call_needs_a_webfetch_call(self):
+        """Test that the executor refuses another kind of call."""
+        with self.assertRaises(TypeError):
+            execute_webfetch_call(ToolCall(kind="other"))
+
+    def test_robots_txt_goes_through_the_tool_runner(self):
+        """Test that robots.txt is fetched through the tool runner, as an http call to the website's robots.txt."""
+        runner = mock.MagicMock()
+        runner.run.return_value = ToolCallResult(failure="not found", status_code=404)
+        with mock.patch("smarter.apps.llmtool.runner.http.get_tool_runner", return_value=runner):
+            self.assertTrue(robots_permit("https://example.com/page", 5))
+        call = runner.run.call_args.args[0]
+        self.assertIsInstance(call, HttpToolCall)
+        self.assertEqual(call.url, "https://example.com/robots.txt")

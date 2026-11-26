@@ -26,12 +26,13 @@ chose Docker and Kubernetes (AWS EKS) in the first place.
    smarter-on-kubernetes/llmclient-deploy
    smarter-on-kubernetes/operations
    smarter-on-kubernetes/slack-bot
+   smarter-on-kubernetes/tool-worker
 
 
 The Services
 ------------
 
-Both environments run the same five processes. Only how they are started, scaled and connected
+Both environments run the same processes. Only how they are started, scaled and connected
 differs.
 
 .. list-table::
@@ -65,6 +66,12 @@ differs.
      - ``smarter-worker-infrastructure``, queue ``infrastructure_celery_task_queue``.
      - Deployment ``smarter-worker-infrastructure``, same queue, a fixed number of replicas
        (``workerInfrastructure.replicaCount``, 1 by default).
+   * - Tool Celery worker
+     - ``smarter-worker-tools``, queue ``tools_celery_task_queue``, without a database. It takes
+       calls when the app's ``SMARTER_APP_LLMTOOL_TOOL_RUNNER`` is ``remote``.
+     - Deployment ``smarter-worker-tools``, same queue, off by default (``workerTools.enabled``),
+       without a database, a Secret of the platform's, a token or an IAM role. See
+       :doc:`smarter-on-kubernetes/tool-worker`.
    * - Celery Beat
      - ``smarter-beat``.
      - Deployment ``smarter-beat``. Run exactly one replica, or scheduled tasks run more than once.
