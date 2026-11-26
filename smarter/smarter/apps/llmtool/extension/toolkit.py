@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from pydantic import JsonValue, ValidationError
 
 from smarter.apps.llmtool.runner import get_tool_runner
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -38,7 +39,7 @@ from ..signals import (
 )
 from .exceptions import SmarterExtensionLoadError
 from .execution import ExtensionToolCall
-from .loader import LoadedExtension, load_version
+from .loader import LoadedExtension, load_version, publish_archive
 from .manifest import describe_validation_errors
 from .protocol import SmarterExtensionTool
 from .settings import resolve_settings, resolve_switches, settings_values
@@ -239,6 +240,9 @@ class ExtensionToolkit:
             problems = describe_validation_errors(e, whole_location="arguments")
             raise ExtensionToolCallError(f"Invalid arguments: {problems}") from e
         settings = resolve_settings(function.extension, function.loaded.manifest)
+        if smarter_settings.app_llmtool_tool_runner == "remote" and function.extension.installed_version:
+            # the tool worker has no database: it loads the extension's code from the cache.
+            publish_archive(function.extension.installed_version)
         call = ExtensionToolCall(
             slug=slug,
             version=version,

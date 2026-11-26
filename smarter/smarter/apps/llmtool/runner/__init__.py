@@ -7,21 +7,29 @@ See :mod:`smarter.apps.llmtool.runner.models` and :mod:`smarter.apps.llmtool.run
 
 from .models import ToolCall, ToolCallResult
 from .runner import (
+    TOOL_CALL_MODELS,
     TOOL_EXECUTORS,
     InProcessToolRunner,
+    RemoteToolRunner,
     ToolExecutor,
     ToolRunner,
+    call_model_for,
     executor_for,
     get_tool_runner,
+    running_in_tool_worker,
 )
 
 __all__ = [
+    "TOOL_CALL_MODELS",
     "TOOL_EXECUTORS",
     "InProcessToolRunner",
+    "RemoteToolRunner",
     "ToolCall",
     "ToolCallResult",
     "ToolExecutor",
     "ToolRunner",
+    "call_model_for",
     "executor_for",
     "get_tool_runner",
+    "running_in_tool_worker",
 ]
