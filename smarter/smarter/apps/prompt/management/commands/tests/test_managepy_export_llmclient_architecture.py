@@ -1,6 +1,5 @@
 """Test the export_llmclient_architecture management command."""
 
-import json
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -11,6 +10,7 @@ from django.core.management.base import CommandError
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.guardrail.models import Guardrail
 from smarter.apps.llmclient.models import LLMClient, LLMClientGuardrails
+from smarter.lib import json
 from smarter.lib.manifest.models import SAMDependencyTreeNode
 
 

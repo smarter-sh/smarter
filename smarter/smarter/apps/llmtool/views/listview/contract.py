@@ -17,7 +17,6 @@ So these models have nothing that only an administrator needs: no settings, erro
 updates or links to the console.
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -31,6 +30,7 @@ from smarter.apps.llmtool.extension.contract import (
     Source,
     TrustBadge,
 )
+from smarter.lib import json
 from smarter.lib.django.pagination import ListViewPagination
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType, required

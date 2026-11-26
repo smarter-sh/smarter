@@ -1,12 +1,12 @@
 """Test the Content Security Policy report endpoint: :mod:`smarter.lib.django.csp`."""
 
-import json
 from http import HTTPStatus
 from unittest.mock import patch
 
 from django.conf import settings
 from django.test import Client
 
+from smarter.lib import json
 from smarter.lib.django.csp import (
     CSP_REPORT_PATH,
     MAX_REPORT_BYTES,

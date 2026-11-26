@@ -1,7 +1,6 @@
 """Test :mod:`smarter.apps.guardrail.contract.models`."""
 
 import copy
-import json
 from typing import get_args
 
 from django.db.models import Field
@@ -27,6 +26,7 @@ from smarter.apps.guardrail.serializers import (
     GuardrailSerializer,
 )
 from smarter.apps.guardrail.tests.base_classes import GUARDRAIL_DEFAULTS
+from smarter.lib import json
 
 NAME = "test_guardrail_contract_models"
 

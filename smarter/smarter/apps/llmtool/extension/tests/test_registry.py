@@ -2,7 +2,6 @@
 
 import base64
 import hashlib
-import json
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -14,6 +13,7 @@ from smarter.apps.llmtool.extension.registry import RegistryIndex, RegistryVersi
 from smarter.apps.llmtool.models import Extension, ExtensionSource, ExtensionTrustBadge
 from smarter.apps.llmtool.plugin.safe_http import SafeHttpError, SafeResponse
 from smarter.apps.llmtool.tasks import check_extension_updates
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .mixins import ExtensionTestMixin, fixture_archive

@@ -1,7 +1,6 @@
 """Tests for smarter.apps.prompt.progress: a prompt's progress, as Server-Sent Events."""
 
 import asyncio
-import json
 import threading
 import time
 from collections.abc import AsyncGenerator
@@ -34,6 +33,7 @@ from smarter.apps.prompt.signals import (
     llm_tool_requested,
     llm_tool_responded,
 )
+from smarter.lib import json
 from smarter.lib.logging.redis_log_handler import request_id_context, user_id_context
 from smarter.lib.typing import SmarterDictType
 

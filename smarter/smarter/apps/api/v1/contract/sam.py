@@ -14,12 +14,12 @@ date.
 """
 
 import glob
-import json
 import os
 
 from django.test import RequestFactory
 from pydantic import BaseModel
 
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
 from .const import (

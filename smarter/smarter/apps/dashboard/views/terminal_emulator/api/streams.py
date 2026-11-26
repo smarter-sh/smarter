@@ -46,7 +46,7 @@ See Also
 """
 
 import asyncio
-import json
+import json as std_json  # one-line JSON: smarter.lib.json.dumps always indents
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Optional, Union
 
@@ -142,7 +142,7 @@ def _should_skip_stream_internal_log(payload_text: str) -> bool:
         return True
 
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return False
 
@@ -192,7 +192,7 @@ def _is_below_level(payload_text: str, min_level: int) -> bool:
     :rtype: bool
     """
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return False
     if not isinstance(payload_json, dict):
@@ -230,7 +230,7 @@ def _is_other_request(payload_text: str, request_id: Optional[str]) -> bool:
     if not request_id:
         return False
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return True
     return not isinstance(payload_json, dict) or payload_json.get("request_id") != request_id
@@ -264,7 +264,7 @@ def _is_other_session(payload_text: str, session_key: Optional[str]) -> bool:
     if not session_key:
         return False
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return True
     return not isinstance(payload_json, dict) or payload_json.get("session_key") != session_key
@@ -384,7 +384,7 @@ async def _replay_stream_history(
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
                 continue
             try:
-                all_entries.append(json.loads(decoded))
+                all_entries.append(std_json.loads(decoded))
             except (ValueError, TypeError):
                 # Not valid JSON — wrap it in a plain message envelope so the client
                 # always receives a consistent object shape.
@@ -395,7 +395,7 @@ async def _replay_stream_history(
 
     all_entries.reverse()
 
-    yield f"event: bulk\ndata: {json.dumps(all_entries)}\n\n"
+    yield f"event: bulk\ndata: {std_json.dumps(all_entries)}\n\n"
 
 
 @login_required

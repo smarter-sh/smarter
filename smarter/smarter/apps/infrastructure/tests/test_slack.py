@@ -5,7 +5,6 @@ Nothing is posted to Slack: the Web API service's ``requests.post`` is a fake, a
 use the in-memory Slack service.
 """
 
-import json
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -21,6 +20,7 @@ from smarter.apps.infrastructure.services import (
     infrastructure,
 )
 from smarter.apps.infrastructure.services.slack import SlackApiResponse, escape
+from smarter.lib import json
 
 from .base import InfrastructureTestBase
 

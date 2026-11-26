@@ -1,7 +1,6 @@
 """Test :mod:`smarter.apps.api.v1.contract.sam`, the SAM JSON Schemas."""
 
 import glob
-import json
 import os
 import tempfile
 from http import HTTPStatus
@@ -28,6 +27,7 @@ from smarter.apps.api.v1.contract.sam import (
 )
 from smarter.apps.api.v1.contract.tests.mixins import REGENERATE, SKILL
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 FIX_EXAMPLE = (

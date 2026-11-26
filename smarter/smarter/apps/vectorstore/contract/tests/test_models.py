@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.vectorstore.contract.models`."""
 
-import json
 from typing import get_args
 
 from django.db import models
@@ -33,6 +32,7 @@ from smarter.apps.vectorstore.serializers import (
     VectorstoreSnapshotSerializer,
 )
 from smarter.apps.vectorstore.tests.base_classes import VectorstoreTestBase
+from smarter.lib import json
 from smarter.lib.typing import required
 
 DEPLOYMENT_KEYS = ("conditions", "attempt", "maxAttempts", "nextRetryAt", "lastError")
