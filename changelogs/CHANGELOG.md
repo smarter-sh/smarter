@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.2...v0.48.4-alpha.3) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** describe shows Secrets' names, never their values ([28767e9](https://github.com/smarter-sh/smarter/commit/28767e9771d44818fa800ca4fd0599ba7fe74efb))
+
+### Refactoring
+
+* **llmtool:** run Extension tool calls through the tool runner ([fa04d8f](https://github.com/smarter-sh/smarter/commit/fa04d8f1fbaa622cca3d11ea27083d749094bb96))
+
 ## [0.48.4-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.1...v0.48.4-alpha.2) (2026-11-26)
 
 ### Bug Fixes
