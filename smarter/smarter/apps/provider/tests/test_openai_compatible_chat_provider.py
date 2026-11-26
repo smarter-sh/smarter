@@ -11,7 +11,6 @@ Test :class:`OpenAISmarterClient`.
 The openai client is mocked, so no request leaves the test.
 """
 
-import json
 import secrets
 from http import HTTPStatus
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -32,6 +31,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
     REASONING_EFFORT_NONE,
     OpenAISmarterClient,
 )
+from smarter.lib import json
 from smarter.lib.openai import model_quirks
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase

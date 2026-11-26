@@ -6,10 +6,9 @@ module, and a test fails if the committed file is out of date. Smarter Chat keep
 which it generates its TypeScript types, and against which it validates its test fixtures.
 """
 
-import json
-
 from pydantic.json_schema import models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType
 

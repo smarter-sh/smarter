@@ -46,7 +46,7 @@ See Also
 """
 
 import asyncio
-import json
+import json as std_json  # one-line JSON: smarter.lib.json.dumps always indents
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Optional, Union
 
@@ -142,7 +142,7 @@ def _should_skip_stream_internal_log(payload_text: str) -> bool:
         return True
 
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return False
 
@@ -192,7 +192,7 @@ def _is_below_level(payload_text: str, min_level: int) -> bool:
     :rtype: bool
     """
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return False
     if not isinstance(payload_json, dict):
@@ -230,7 +230,7 @@ def _is_other_request(payload_text: str, request_id: Optional[str]) -> bool:
     if not request_id:
         return False
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return True
     return not isinstance(payload_json, dict) or payload_json.get("request_id") != request_id
@@ -264,7 +264,7 @@ def _is_other_session(payload_text: str, session_key: Optional[str]) -> bool:
     if not session_key:
         return False
     try:
-        payload_json = json.loads(payload_text)
+        payload_json = std_json.loads(payload_text)
     except (ValueError, TypeError):
         return True
     return not isinstance(payload_json, dict) or payload_json.get("session_key") != session_key
@@ -384,7 +384,7 @@ async def _replay_stream_history(
                 upper_bound = f"({_decode_redis_payload(entry_id)}"
                 continue
             try:
-                all_entries.append(json.loads(decoded))
+                all_entries.append(std_json.loads(decoded))
             except (ValueError, TypeError):
                 # Not valid JSON — wrap it in a plain message envelope so the client
                 # always receives a consistent object shape.
@@ -395,7 +395,7 @@ async def _replay_stream_history(
 
     all_entries.reverse()
 
-    yield f"event: bulk\ndata: {json.dumps(all_entries)}\n\n"
+    yield f"event: bulk\ndata: {std_json.dumps(all_entries)}\n\n"
 
 
 @login_required
@@ -454,13 +454,6 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
     request_id = _request_id(request)
     session_key = _session_key(request)
     masked_session_key = mask_identifier(session_key)
-    logger.info(
-        "called for user_id=%s min_level=%s request_id=%s session_key=%s",
-        user_id,
-        logging.getLevelName(min_level),
-        request_id,
-        masked_session_key,
-    )
 
     if not smarter_settings.app_dashboard_server_logs_enable:
         return HttpResponse(
@@ -475,7 +468,11 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         channel = build_channel(user_context)
         pubsub.subscribe(channel)
         logger.info(
-            "Subscribed to the user's Redis channel for log streaming.",
+            "streaming to user_id=%s min_level=%s request_id=%s session_key=%s",
+            user_id,
+            logging.getLevelName(min_level),
+            request_id,
+            masked_session_key,
         )
     except RedisError:
         logger.exception(
@@ -507,7 +504,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
         :rtype: AsyncIterator[str]
         """
         try:
-            logger.info("Starting log stream event generator.")
+            logger.debug("started.")
             # Ask the browser to retry quickly if disconnected.
             yield "retry: 3000\n\n"
 
@@ -535,7 +532,7 @@ def stream_user_logs(request: HttpRequest) -> Union[StreamingHttpResponse, HttpR
                     # Keep idle connections alive through proxies.
                     yield ": keepalive\n\n"
         finally:
-            logger.info("Closing Redis pubsub connection for log streaming.")
+            logger.info("closed.")
             try:
                 await asyncio.to_thread(pubsub.close)
             except RedisError:

@@ -127,6 +127,33 @@ class TestPromptReceivers(ReceiversTestMixin, SmarterTestBase):
         self.assertNotIn("marker-stack-trace", logged)
         self.assertNotIn(CHAT_CONTENT_MARKER, logged)
 
+    def test_prompt_is_logged_by_its_id(self):
+        """A Prompt's string form holds the client's ip address and url, so logs show only its id."""
+        prompt = MagicMock(id=7005)
+        prompt.configure_mock(**{"__str__.return_value": "7005 - 203.0.113.9 - https://example.com/config/"})
+        with patch.object(receivers, "logger") as mock_logger:
+            receivers.handle_chat_started(sender=SmarterTestBase, prompt=prompt)
+        logged = str(mock_logger.info.call_args)
+        self.assertIn("7005", logged)
+        self.assertNotIn("203.0.113.9", logged)
+        self.assertIsNone(receivers.prompt_id(None))
+
+    def test_sender_name_has_no_object_id(self):
+        """A sender is named by its class, without the id() of the object."""
+        self.assertEqual(receivers.get_sender_name(SmarterTestBase), "SmarterTestBase")
+
+    def test_llm_tool_presented_logs_the_definition_only_at_debug(self):
+        """INFO names the tool; its whole definition is logged at DEBUG."""
+        tool = {
+            "type": "function",
+            "function": {"name": "smarter_plugin_0000000011", "description": "marker-description"},
+        }
+        with patch.object(receivers, "logger") as mock_logger:
+            mock_logger.isEnabledFor.return_value = False
+            receivers.handle_llm_tool_presented(sender=SmarterTestBase, tool=tool)
+        mock_logger.info.assert_called_once_with("%s", "smarter_plugin_0000000011")
+        mock_logger.debug.assert_not_called()
+
     def test_iteration_summary(self):
         """The summary of either shape of an iteration's data is its model and number of messages."""
         expected = {"model": "gpt-test-model", "messages": 2}

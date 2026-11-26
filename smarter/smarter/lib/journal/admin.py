@@ -31,7 +31,6 @@ Both are empty for any other entry, and for the entries that were journaled befo
 body was.
 """
 
-import json
 from collections.abc import Iterable
 from typing import Union
 
@@ -50,6 +49,7 @@ from smarter.apps.dashboard.admin import (
     smarter_admin_user,
     smarter_restricted_admin_site,
 )
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal
 

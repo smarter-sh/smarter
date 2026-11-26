@@ -2,11 +2,13 @@
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from unittest import mock
 
 from cache_results import lazy_cache
 from celery.exceptions import TimeoutError as CeleryTimeoutError
 
+from smarter.apps.llmtool import tasks
 from smarter.apps.llmtool.extension.loader import archive_cache_key
 from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
 from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
@@ -17,9 +19,13 @@ from smarter.apps.llmtool.runner import (
     InProcessToolRunner,
     RemoteToolRunner,
     ToolCall,
+    ToolCallLabel,
     ToolCallResult,
     call_model_for,
+    carry_tool_call_label,
+    current_tool_call_label,
     get_tool_runner,
+    labeled_tool_calls,
     running_in_tool_worker,
 )
 from smarter.apps.llmtool.runner.http import HttpToolCall, fetch_with_runner
@@ -28,7 +34,11 @@ from smarter.apps.llmtool.runner.runner import (
     call_timeout,
     remote_timeout,
 )
-from smarter.apps.llmtool.tasks import run_tool_call
+from smarter.apps.llmtool.tasks import (
+    describe_tool_call_label,
+    describe_tool_call_outcome,
+    run_tool_call,
+)
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.settings import Settings
 from smarter.common.exceptions import SmarterConfigurationError
@@ -45,6 +55,7 @@ from smarter.lib.unittest.narrowing import json_object
 
 SETTINGS_PATCH = "smarter.apps.llmtool.runner.runner.smarter_settings"
 URL = "https://api.example.com/search"
+LABEL = ToolCallLabel(tool="stackademy_sql", llmclient="stackademy (12)", session="****a1b2c3", request_id="r-1")
 
 
 def eager_apply_async(args, **kwargs):
@@ -97,11 +108,66 @@ class TestRemoteToolRunner(SmarterTestBase):
             result = RemoteToolRunner().run(call)
         self.assertIsNone(result.failure, result.failure)
         self.assertEqual(result.status_code, 200)
-        kind, call_json = apply_async.call_args.kwargs["args"]
+        kind, call_json, label_json = apply_async.call_args.kwargs["args"]
         self.assertEqual(kind, "http")
+        self.assertIsNone(label_json)
         self.assertEqual(HttpToolCall.model_validate_json(call_json), call)
         self.assertEqual(apply_async.call_args.kwargs["queue"], smarter_settings.app_tools_tasks_celery_task_queue)
         self.assertEqual(host.calls[0]["headers"]["X-Subscription-Token"], "k")
+
+    def test_label_travels_with_the_call_and_is_logged(self):
+        """A labeled call's label reaches the task, which logs it with the call's outcome, but not its credential."""
+        host = FakeWebHost()
+        host.add(URL, b'{"ok": true}', headers={"Content-Type": "application/json"})
+        call = HttpToolCall(url=URL, headers={"X-Subscription-Token": "the-credential"})
+        with (
+            mock.patch.object(run_tool_call, "apply_async", side_effect=eager_apply_async) as apply_async,
+            mock.patch.object(tasks, "tool_worker_logger") as tool_worker_logger,
+            mock_web_host(host),
+            labeled_tool_calls(LABEL),
+        ):
+            RemoteToolRunner().run(call)
+        label_json = apply_async.call_args.kwargs["args"][2]
+        self.assertEqual(ToolCallLabel.model_validate_json(label_json), LABEL)
+        level, template, *args = tool_worker_logger.log.call_args.args
+        line = template % tuple(args)
+        self.assertEqual(level, logging.INFO)
+        self.assertIn("http call", line)
+        self.assertIn("succeeded (HTTP 200)", line)
+        self.assertIn("tool=stackademy_sql llmclient=stackademy (12) session=****a1b2c3 request=r-1", line)
+        self.assertNotIn("the-credential", line)
+        self.assertNotIn(URL, line)
+
+    def test_failed_call_is_a_warning_without_its_failure_text(self):
+        """A call that couldn't be made is logged as a warning, by its outcome only, and unlabeled calls say so."""
+        with mock.patch.object(tasks, "tool_worker_logger") as tool_worker_logger:
+            run_tool_call("http", HttpToolCall(url="https://10.0.0.1/?key=k", timeout=1).model_dump_json())
+        level, template, *args = tool_worker_logger.log.call_args.args
+        line = template % tuple(args)
+        self.assertEqual(level, logging.WARNING)
+        self.assertIn("failed", line)
+        self.assertIn("unlabeled", line)
+        self.assertNotIn("key=k", line)
+
+    def test_outcome_and_label_descriptions(self):
+        """Each outcome is described by its kind and status, and a label that can't be read never stops a call."""
+        self.assertEqual(describe_tool_call_outcome(ToolCallResult(value=1)), "succeeded")
+        self.assertEqual(describe_tool_call_outcome(ToolCallResult(value="no", is_error=True)), "tool error")
+        failed = ToolCallResult(failure="denied: pw=x", status_code=401)
+        self.assertEqual(describe_tool_call_outcome(failed), "failed (HTTP 401)")
+        self.assertEqual(describe_tool_call_label(None), "unlabeled")
+        self.assertEqual(describe_tool_call_label("{not json"), "unreadable label")
+        self.assertEqual(ToolCallLabel().describe(), "tool=- llmclient=- session=- request=-")
+
+    def test_label_is_carried_into_threads(self):
+        """A thread doesn't inherit the label, unless its function is wrapped by carry_tool_call_label()."""
+        with labeled_tool_calls(LABEL), ThreadPoolExecutor(max_workers=1) as executor:
+            bare = executor.submit(current_tool_call_label).result()
+            carried = executor.submit(carry_tool_call_label(current_tool_call_label)).result()
+        self.assertIsNone(bare)
+        self.assertEqual(carried, LABEL)
+        self.assertIsNone(current_tool_call_label())
+        self.assertIsNone(carry_tool_call_label(current_tool_call_label)())
 
     def test_fetch_with_runner_through_the_remote_runner(self):
         """A caller of fetch_with_runner() gets the same response when the runner is remote."""
@@ -130,9 +196,18 @@ class TestRemoteToolRunner(SmarterTestBase):
         """A task that fails, or a queue that can't be reached, is a failure for the LLM."""
         async_result = mock.MagicMock()
         async_result.get.side_effect = RuntimeError("worker lost")
-        with mock.patch.object(run_tool_call, "apply_async", return_value=async_result):
+        with (
+            mock.patch.object(run_tool_call, "apply_async", return_value=async_result),
+            mock.patch("smarter.apps.llmtool.runner.runner.logger") as runner_logger,
+            labeled_tool_calls(LABEL),
+        ):
             result = RemoteToolRunner().run(HttpToolCall(url=URL))
         self.assertIn("RuntimeError: worker lost", result.failure or "")
+        template, *args = runner_logger.warning.call_args.args
+        line = template % tuple(args)
+        self.assertIn("RuntimeError", line)
+        self.assertIn("tool=stackademy_sql", line)
+        self.assertNotIn("worker lost", line)
 
     def test_task_with_an_unreadable_call(self):
         """The task reports a call that it can't rebuild, without its content, rather than raising."""

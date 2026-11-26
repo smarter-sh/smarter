@@ -1,7 +1,6 @@
 """Tests of smarter.apps.llmclient.views.deployment_contract: the LLMClient deployment page's models and schema."""
 
 import io
-import json
 
 from django.core.management import call_command
 
@@ -13,6 +12,7 @@ from smarter.apps.llmclient.views.deployment_contract import (
     contract_schema,
     contract_schema_json,
 )
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

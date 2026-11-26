@@ -5,7 +5,7 @@ See :mod:`smarter.apps.llmtool.runner.models` and :mod:`smarter.apps.llmtool.run
 :doc:`ADR-038 </adr/038-tool-isolation-and-egress>`.
 """
 
-from .models import ToolCall, ToolCallResult
+from .models import ToolCall, ToolCallLabel, ToolCallResult
 from .runner import (
     TOOL_CALL_MODELS,
     TOOL_EXECUTORS,
@@ -14,8 +14,11 @@ from .runner import (
     ToolExecutor,
     ToolRunner,
     call_model_for,
+    carry_tool_call_label,
+    current_tool_call_label,
     executor_for,
     get_tool_runner,
+    labeled_tool_calls,
     running_in_tool_worker,
 )
 
@@ -25,11 +28,15 @@ __all__ = [
     "InProcessToolRunner",
     "RemoteToolRunner",
     "ToolCall",
+    "ToolCallLabel",
     "ToolCallResult",
     "ToolExecutor",
     "ToolRunner",
     "call_model_for",
+    "carry_tool_call_label",
+    "current_tool_call_label",
     "executor_for",
     "get_tool_runner",
+    "labeled_tool_calls",
     "running_in_tool_worker",
 ]

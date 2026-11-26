@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.orchestrator.contract.models`, and the Orchestrators' real responses against the OpenAPI document."""
 
-import json
 from http import HTTPStatus
 from typing import get_args
 from unittest.mock import patch
@@ -28,6 +27,7 @@ from smarter.apps.orchestrator.models import (
 )
 from smarter.apps.orchestrator.models.orchestration_run import OrchestrationRunStatus
 from smarter.apps.orchestrator.serializers import OrchestratorSerializer
+from smarter.lib import json
 from smarter.lib.typing import required
 
 

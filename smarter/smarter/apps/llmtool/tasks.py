@@ -1,7 +1,8 @@
 # pylint: disable=unused-argument,too-many-locals
 """Celery tasks for the plugin app."""
 
-from typing import Optional
+import time
+from typing import TYPE_CHECKING, Optional
 
 from cache_results import cache_results
 
@@ -21,9 +22,14 @@ from smarter.workers.celery import app
 
 from .models import PluginSelectorHistory
 
+if TYPE_CHECKING:
+    from .runner import ToolCallResult
+
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.PLUGIN_LOGGING]
 )
+tool_worker_logger = logging.getSmarterLogger(__name__)
+"""The tool worker's logger, which no switch silences: the tool worker has no database to read one from."""
 
 
 @app.task(
@@ -201,12 +207,56 @@ def check_extension_updates() -> list[str]:
         return []
 
 
+def describe_tool_call_outcome(result: "ToolCallResult") -> str:
+    """
+    Describe a tool call's outcome for the tool worker's log, without its value or its failure's text.
+
+    A failure's text can hold what the tool or its server answered, e.g. a database driver's message
+    with a user name, so only the kind of outcome and the HTTP status are logged.
+
+    :param result: The call's result.
+    :returns: ``succeeded``, ``tool error`` or ``failed``, with `` (HTTP <status>)`` when there was a
+        response.
+    """
+    if result.failure is not None:
+        outcome = "failed"
+    elif result.is_error:
+        outcome = "tool error"
+    else:
+        outcome = "succeeded"
+    if result.status_code is not None:
+        outcome = f"{outcome} (HTTP {result.status_code})"
+    return outcome
+
+
+def describe_tool_call_label(label_json: Optional[str]) -> str:
+    """
+    Describe the label that the app sent with a tool call, for the tool worker's log.
+
+    :param label_json: The :class:`~smarter.apps.llmtool.runner.models.ToolCallLabel`, as JSON, or None.
+    :returns: The label's description, or ``unlabeled``.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .runner import ToolCallLabel
+
+    if not label_json:
+        return "unlabeled"
+    try:
+        label = ToolCallLabel.model_validate_json(label_json)
+    # a label that can't be read never stops the call.
+    # pylint: disable=broad-exception-caught
+    except Exception:
+        return "unreadable label"
+    description = label.describe()
+    return description
+
+
 @app.task(
     queue=smarter_settings.app_tools_tasks_celery_task_queue,
     ignore_result=False,
     acks_late=False,
 )
-def run_tool_call(kind: str, call_json: str) -> str:
+def run_tool_call(kind: str, call_json: str, label_json: Optional[str] = None) -> str:
     """
     Run one resolved LLM tool call, in the tool worker, ``smarter-worker-tools``, and return its result.
 
@@ -216,10 +266,14 @@ def run_tool_call(kind: str, call_json: str) -> str:
 
     It never retries: a tool call can change something, and must not run twice. It never raises, and logs
     neither the call, which holds credentials, nor its result; nor does Celery, in the tool worker
-    (:func:`smarter.lib.celery_conf.hide_tool_calls_from_logs`).
+    (:func:`smarter.lib.celery_conf.hide_tool_calls_from_logs`). It logs one line per call: its kind, its
+    label (the tool, the LLMClient, the masked chat session and the request), its outcome and how long it
+    took.
 
     :param kind: The call's ``kind``, e.g. ``mcp``.
     :param call_json: The resolved call, as JSON.
+    :param label_json: The call's :class:`~smarter.apps.llmtool.runner.models.ToolCallLabel`, as JSON, or
+        None for a call that the app didn't label.
     :returns: The result, as JSON.
     """
     # pylint: disable=import-outside-toplevel
@@ -230,6 +284,7 @@ def run_tool_call(kind: str, call_json: str) -> str:
         running_in_tool_worker,
     )
 
+    started = time.monotonic()
     try:
         model = call_model_for(kind)
         call = model.model_validate_json(call_json)
@@ -237,6 +292,7 @@ def run_tool_call(kind: str, call_json: str) -> str:
     # pylint: disable=broad-exception-caught
     except Exception as e:
         result = ToolCallResult(failure=f"the tool worker could not read the {kind} call: {type(e).__name__}")
+        log_tool_call(kind, label_json, result, started)
         return result.model_dump_json()
     try:
         with running_in_tool_worker():
@@ -247,4 +303,36 @@ def run_tool_call(kind: str, call_json: str) -> str:
     # pylint: disable=broad-exception-caught
     except Exception as e:
         result = ToolCallResult(failure=f"the tool worker could not run the {kind} call: {type(e).__name__}")
+    log_tool_call(kind, label_json, result, started)
     return result.model_dump_json()
+
+
+def log_tool_call(kind: str, label_json: Optional[str], result: "ToolCallResult", started: float) -> None:
+    """
+    Log one line for a tool call that the tool worker ran: what it was for, and how it ended.
+
+    It logs at INFO, through :data:`tool_worker_logger`, which no waffle switch silences: the tool worker
+    has no database to read a switch from. A call that couldn't be made, or that the tool answered with an
+    error, is a WARNING.
+
+    :param kind: The call's ``kind``.
+    :param label_json: The call's label, as JSON, or None.
+    :param result: The call's result.
+    :param started: When the task started, from :func:`time.monotonic`.
+    """
+    elapsed = time.monotonic() - started
+    task_id = run_tool_call.request.id or "-"
+    description = describe_tool_call_label(label_json)
+    outcome = describe_tool_call_outcome(result)
+    level = logging.INFO
+    if result.failure is not None or result.is_error:
+        level = logging.WARNING
+    tool_worker_logger.log(
+        level,
+        "%s call %s %s in %.3fs: %s",
+        kind,
+        task_id,
+        outcome,
+        elapsed,
+        description,
+    )

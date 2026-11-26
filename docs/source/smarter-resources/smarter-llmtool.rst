@@ -8,9 +8,18 @@ LLMTool Plugins ("plugins") provide a `declarative <https://en.wikipedia.org/wik
 `yaml <https://en.wikipedia.org/wiki/YAML>`__
 `manifest <https://kubernetes.io/docs/concepts/overview/working-with-objects/>`__
 alternative to programming in Python in order to
-extend :doc:`LLM tool functionality <llmtool/how-tools-work>`. Every kind of plugin extends the LLM
-tool specification, so in these docs "plugin" always means an LLMTool Plugin. Plugins are
+extend :doc:`LLM tool functionality <llmtool/how-tools-work>`. Every kind of Smarter plugin extends the LLM
+tool specification, so in these docs "plugin" always means a Smarter LLMTool Plugin. Plugins are
 implemented in the ``smarter.apps.llmtool`` Django app.
+
+.. important::
+
+   Smarter's plugins protect your AI application from bad actors in several ways: they run their calls
+   in a special, isolated sandbox that can't reach Smarter's internal resources on its private network;
+   they receive only the credentials that each
+   call needs for its own information retrieval; and they run only verified code, from the platform's
+   own dependencies to every extension (see **Plugin Execution Sandbox**, below).
+
 :doc:`Smarter Application Manifests (SAM) <../smarter-framework/developer-reference/lib/drf/manifest>`
 are used to :doc:`define LLMTool Plugins <llmtool/how-it-works>`, which can be used to provide several powerful kinds of
 enterprise data integrations, two of which require a ``Connection`` resource as well as a ``Secret``
@@ -29,6 +38,58 @@ resource to store authentication credentials:
 
  - :doc:`connection/resources/api`: Connect to REST APIs.
  - :doc:`connection/resources/sql`: Connect to SQL databases.
+
+**Plugin Execution Sandbox**
+
+As with WordPress, plugins increase an AI application's attack surface. In Smarter, a plugin designed to
+access an external resource like a database, an API or to search the web runs its calls inside a
+special sandboxed environment: Smarter's
+:doc:`tool worker <../smarter-framework/smarter-on-kubernetes/tool-worker>`, a standalone Kubernetes
+pod whose capabilities are restricted in several ways.
+
+ - **Credentials.** The sandbox lacks access to sensitive environment data that normal pods have.
+   By contrast, it receives exactly one credential at a time: the credential for the external resource that the plugin
+   is trying to reach, and only for the duration
+   of the call that it is running. Meanwhile, it does **not** have access to Smarter's database password,
+   nor its Secrets, its
+   encryption key, its LLM provider keys, nor any kind of cloud role nor a Kubernetes token. It is
+   effectively unable to interact with the Django framework in any way.
+ - **Infrastructure.** The sandbox's root filesystem is completely read-only and it runs as a non-root
+   user: it can write only to temporary
+   scratch volumes, which are erased with the pod. So malicious code can't modify Smarter's own code
+   nor its third-party PyPi Python packages, it can't download nor plant a backdoor that would survive a restart,
+   and it can't install tools
+   nor gain root access to break out of the container. Anything it does write disappears with the pod.
+ - **Network.** The sandbox's pods run in an application group of their own, ``smarter-tools``.
+   Other kinds of Smarter pods can communicate with each other. But not these, these are isolated.
+   They are also subject to stricter network policies:
+
+   - **Outbound to the internet:** they can reach public addresses, on ports 443, 80 and 3306,
+     but not private ones. *(Keep in mind that reaching APIs,
+     databases and web sites that a manifest author or the LLM chooses is the sandbox's sole job.)*
+   - **Outbound from inside the platform:** these pods can communicate with only three services:
+
+     - Redis, which acts as a broker by delivering tool calls to the sandbox and carrying their results back to the platform.
+     - DNS, to look up host names.
+     - Smarter's own MariaDB server, though only in isolated cases for Smarter's example plugins for its tutorials. [#mariadb]_
+
+   - **No private addresses:** the sandbox can't reach any private nor link-local address: not
+     the app's pods, nor the other pod workers, the cluster's nodes, the Kubernetes API nor the cloud's
+     instance metadata service. Likewise, its HTTP client refuses private addresses too, on every request and
+     every redirect, so a url that resolves to one fails before the network policy is even needed.
+   - **Inbound:** nothing. No pod, inside or outside the cluster, can open a connection to the
+     sandbox.
+ - **Code execution.** The sandbox runs as a non-root user, with every Linux capability stripped
+   away. No file system privilege escalation is possible. A seccomp filter also blocks the dangerous calls
+   that a program can make to the Linux kernel, such as loading kernel modules or rebooting the
+   machine, which are the usual ways out of a container. It runs only the
+   platform's own code, and extensions from the signed extension registry, whose code it checks
+   against its sha256 before loading it. Lastly, every call is subject to a short timeout.
+
+See :doc:`../smarter-platform/system-administration/security/application`.
+
+.. [#mariadb] For SQL plugins whose database is hosted on the same server as Smarter's, such as
+   Stackademy's. However, the sandbox is strictly **unable** to access Smarter's own application database.
 
 Plugins are fundamentally more feature rich than traditional :doc:`LLM function tools <llmtool/how-tools-work>`. An LLMTool Plugin manifest
 defines not only what proprietary data is being made available to the LLM, but also the LLM prompt specification itself

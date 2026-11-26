@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.provider.contract.models`, and the Providers' real responses against the OpenAPI document."""
 
-import json
 from http import HTTPStatus
 from typing import get_args
 
@@ -19,6 +18,7 @@ from smarter.apps.provider.serializers import (
     ProviderModelSerializer,
     ProviderSerializer,
 )
+from smarter.lib import json
 from smarter.lib.typing import required
 
 

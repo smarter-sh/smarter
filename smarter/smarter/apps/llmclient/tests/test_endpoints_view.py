@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.llmclient.views.endpoints`, the page that a browser sees at a deployed LLMClient's endpoints."""
 
-import json
 import re
 import shlex
 from http import HTTPStatus
@@ -44,6 +43,7 @@ from smarter.apps.prompt.contract.models import (
     PromptChatApiPromptRequest,
     PromptChatApiPromptResponse,
 )
+from smarter.lib import json
 from smarter.lib.django.templatetags.smarter_react_contract import ReactAppAssets
 from smarter.lib.unittest.narrowing import http_response
 

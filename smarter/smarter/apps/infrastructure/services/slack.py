@@ -26,7 +26,6 @@ thread, needs. Like email, Slack never breaks the work that posts to it: failure
 returned as None or False, never raised.
 """
 
-import json
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
@@ -39,7 +38,7 @@ from smarter.apps.infrastructure.const import InfrastructureServiceNames
 from smarter.apps.infrastructure.exceptions import SlackServiceError
 from smarter.apps.infrastructure.services.base import InfrastructureService
 from smarter.common.conf import smarter_settings
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.unittest import running_unit_tests
 

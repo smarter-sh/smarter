@@ -16,13 +16,13 @@ generates its TypeScript types (``make llmclient-architecture-contract``). A tes
 schema is out of date.
 """
 
-import json
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.typing import SmarterDictType

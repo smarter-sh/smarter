@@ -1,6 +1,5 @@
 """Test :mod:`smarter.lib.journal.contract.models`."""
 
-import json
 from http import HTTPStatus
 from typing import get_args
 
@@ -10,6 +9,7 @@ from rest_framework.test import APIClient
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.contract.tests.mixins import OpenApiResponseMixin
 from smarter.common.api import SmarterApiVersions
+from smarter.lib import json
 from smarter.lib.journal.contract.models import (
     SAMJournalApiCommand,
     SAMJournalApiEntry,
