@@ -113,10 +113,12 @@ Signal sent when an API connection is successful.
 
 Arguments:
     connection: The API connection instance that was successful.
+    status_code: The response's HTTP status.
+    error: Why the query failed, when the connection worked but the query didn't.
 
 Example::
 
-    api_connection_success.send(sender=self.__class__, connection=self)
+    api_connection_success.send(sender=self.__class__, connection=self, status_code=200)
 """
 
 api_connection_failed = Signal()
@@ -125,10 +127,12 @@ Signal sent when an API connection fails.
 
 Arguments:
     connection: The API connection instance that failed.
+    status_code: The response's HTTP status, or None when there was no response.
+    error: Why it failed.
 
 Example::
 
-    api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
+    api_connection_failed.send(sender=self.__class__, connection=self, status_code=None, error=error)
 """
 
 api_connection_query_attempted = Signal()
@@ -149,11 +153,12 @@ Signal sent when an API connection query is successful.
 
 Arguments:
     connection: The API connection instance that was queried.
-    response: The response returned from the API query.
+    status_code: The response's HTTP status. The response itself isn't sent: it stays where the
+        call ran, which may be a worker (ADR-038), and it can hold personal data.
 
 Example::
 
-    api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
+    api_connection_query_success.send(sender=self.__class__, connection=self, status_code=200)
 """
 
 api_connection_query_failed = Signal()
@@ -162,10 +167,10 @@ Signal sent when an API connection query fails.
 
 Arguments:
     connection: The API connection instance that was queried.
-    response: The response returned from the API query.
-    error: The error message associated with the failure.
+    status_code: The response's HTTP status, or None when there was no response.
+    error: Why the query failed.
 
 Example::
 
-    api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+    api_connection_query_failed.send(sender=self.__class__, connection=self, status_code=404, error=error)
 """

@@ -208,8 +208,8 @@ deploy script.**
 
 ### The local environment is live
 
-The `smarter-api`, `smarter-worker`, `smarter-worker-infrastructure` and
-`smarter-beat` containers hold a kubeconfig for the **real EKS cluster**, and
+The `smarter-api`, `smarter-worker`, `smarter-worker-infrastructure`,
+`smarter-worker-tools` and `smarter-beat` containers hold a kubeconfig for the **real EKS cluster**, and
 working AWS and Route53 credentials. Any code an agent runs there can create
 real, billable resources or change production DNS. Several skills tell the agent
 to run tests and `manage.py` commands there, on its own.

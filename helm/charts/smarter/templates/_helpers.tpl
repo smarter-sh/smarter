@@ -59,6 +59,8 @@ It starts from .Values.env, then:
   and the release's namespace, SMARTER_SUBSYSTEM_K8S_NAMESPACE (the release's namespace), and
   SMARTER_PLATFORM_S3_BUCKET, which smarter-infrastructure names after the environment's platform
   domain: <subdomain>.<root domain> in prod, <environment>.<subdomain>.<root domain> elsewhere;
+  and, with workerTools.enabled, SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote, which sends the app's tool
+  calls to the tool worker;
 - reads the Kubernetes Secrets that smarter-infrastructure creates in the release's namespace
   (infrastructureSecrets in values.yaml): the database, administrator, email and Django
   credentials. A value read from one of them supersedes .Values.env, because the infrastructure
@@ -83,6 +85,9 @@ It starts from .Values.env, then:
 {{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (get $env "DJANGO_CELERY_BROKER_URL" | default (printf "redis://:%s@%s/0" .Values.redis.auth.password $redis)) -}}
 {{- $_ := set $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" (get $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" | default .Release.Namespace) -}}
 {{- $_ := set $env "SMARTER_PLATFORM_S3_BUCKET" (get $env "SMARTER_PLATFORM_S3_BUCKET" | default (printf "%s%s.%s" $prefix $subdomain $rootDomain)) -}}
+{{- if (.Values.workerTools | default dict).enabled -}}
+{{- $_ := set $env "SMARTER_APP_LLMTOOL_TOOL_RUNNER" (get $env "SMARTER_APP_LLMTOOL_TOOL_RUNNER" | default "remote") -}}
+{{- end -}}
 {{- if .Values.infrastructureSecrets.enabled -}}
 {{- range $secretName, $keys := .Values.infrastructureSecrets.secrets -}}
 {{- $secret := lookup "v1" "Secret" $.Release.Namespace $secretName -}}
@@ -94,6 +99,52 @@ It starts from .Values.env, then:
 {{- end -}}
 {{- end -}}
 {{- end -}}
+{{- toYaml $env -}}
+{{- end }}
+
+{{/*
+The tool worker's environment, from its own Secret in secret-env-tools.yaml (ADR-038).
+
+  {{- $env := include "smarter.toolsEnv" . | fromYaml }}
+
+Only what it needs to start, take its tasks from the broker and read extension archives from the
+cache, from smarter.env: the broker's url, the cache's (DJANGO_CACHES, or the settings that it is
+derived from), and settings that aren't secret. Never the database's, the Django secret key, the
+Fernet key, the LLM providers' keys or the AWS keys: each tool call brings the credentials that it
+needs. Then:
+
+- SMARTER_DATABASE_UNAVAILABLE=true: the worker never opens a database connection, and reads every
+  waffle switch as off;
+- AWS_EC2_METADATA_DISABLED=true: boto3, which settings start, doesn't ask the node's instance
+  metadata for its IAM role. The network policy blocks it too.
+*/}}
+{{- define "smarter.toolsEnv" -}}
+{{- $all := include "smarter.env" . | fromYaml -}}
+{{- $env := dict -}}
+{{- $keys := list
+  "AWS_REGION"
+  "DJANGO_CACHES"
+  "DJANGO_CELERY_BROKER_URL"
+  "DJANGO_SETTINGS_MODULE"
+  "SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS"
+  "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE"
+  "SMARTER_DEBUG_MODE"
+  "SMARTER_ENVIRONMENT"
+  "SMARTER_LOG_LEVEL"
+  "SMARTER_PLATFORM_CLOUD_PROVIDER"
+  "SMARTER_PLATFORM_INTERNAL_IP_PREFIXES"
+  "SMARTER_PLATFORM_ROOT_DOMAIN"
+  "SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER"
+  "SMARTER_PLATFORM_SUBDOMAIN"
+  "SMARTER_SUBSYSTEM_K8S_NAMESPACE"
+-}}
+{{- range $key := $keys -}}
+{{- if hasKey $all $key -}}
+{{- $_ := set $env $key (get $all $key) -}}
+{{- end -}}
+{{- end -}}
+{{- $_ := set $env "SMARTER_DATABASE_UNAVAILABLE" "true" -}}
+{{- $_ := set $env "AWS_EC2_METADATA_DISABLED" "true" -}}
 {{- toYaml $env -}}
 {{- end }}
 

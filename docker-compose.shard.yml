@@ -66,6 +66,25 @@ services:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
 
+  # the tool worker (ADR-038), without a database, for the tests that send a tool call through
+  # Celery to it (smarter.apps.llmtool.runner.tests.test_remote). One process: a shard's tests send
+  # their calls one at a time, and each prefork process costs about 0.4 GiB (with 4, it used 1.04 GiB,
+  # and 11 shards ran Docker's VM out of memory).
+  smarter-worker-tools:
+    mem_limit: 1g
+    cpus: 0.5
+    user: smarter_user
+    image: smarter
+    command: celery -A smarter.workers.celery.app worker --concurrency=1 --loglevel=info -Q tools_celery_task_queue -n tools@%h
+    depends_on:
+      - smarter-redis
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
+      - SMARTER_DATABASE_UNAVAILABLE=true
+
   smarter-worker-infrastructure:
     mem_limit: 2g
     cpus: 0.5

@@ -8,6 +8,7 @@ import requests
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from smarter.apps.connection.execution import ApiToolCall
 from smarter.apps.connection.signals import (
     api_connection_attempted,
     api_connection_failed,
@@ -16,6 +17,8 @@ from smarter.apps.connection.signals import (
     api_connection_query_success,
     api_connection_success,
 )
+from smarter.apps.llmtool.plugin.safe_http import DEFAULT_TIMEOUT
+from smarter.apps.llmtool.runner import ToolCallResult, get_tool_runner
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import to_snake_case
@@ -217,6 +220,19 @@ class ApiConnection(ConnectionBase):
         Sets :attr:`last_status_code`, so that a caller can tell a rejected credential
         (HTTP 401 or 403) from any other failure.
 
+        The request is resolved here, in the app, into an
+        :class:`~smarter.apps.connection.execution.ApiToolCall`, with the ``Authorization`` header
+        read from the connection's Smarter Secret, and executed by the tool runner
+        (:mod:`smarter.apps.llmtool.runner`), with
+        :func:`~smarter.apps.connection.execution.execute_api_call`. The signals are sent here, from
+        its result. Because ``base_url`` comes from a manifest, the request is made with
+        :func:`smarter.apps.llmtool.plugin.safe_http.fetch`: plain http and any port are permitted,
+        as an api may need them, but the host, and the host of every redirect, must resolve to public
+        addresses only, so that a manifest can't make the platform call its own network: the
+        cluster's services, the Kubernetes api or the cloud's instance metadata. Loopback hosts are
+        permitted in the local environment only. A redirect to another origin doesn't carry the
+        ``Authorization`` header.
+
         :param endpoint: The API endpoint to query.
         :param params: A dictionary of URL query string parameters to include in the API request.
         :param limit: The maximum number of rows to return from the API response.
@@ -225,54 +241,84 @@ class ApiConnection(ConnectionBase):
         :param body: Optional JSON request body. Only sent for ``POST``, ``PUT`` and ``PATCH`` requests.
         :return: The API response as a JSON object or False if the request fails.
         """
-        params = params or {}
         method = (method or SmarterHttpMethods.GET).upper()
-        url = urljoin(self.base_url, endpoint)
-        headers = dict(headers or {})
-        api_key = self.api_key.get_secret() if self.api_key else None
-        if self.auth_method == "basic" and api_key:
-            headers["Authorization"] = f"Basic {api_key}"
-        elif self.auth_method == "token" and api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        request_kwargs: SmarterDictType = {"headers": headers, "params": params, "timeout": self.timeout}
+        json_body: Optional[Union[SmarterDictType, list[Any]]] = None
         if body and method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH):
-            request_kwargs["json"] = body
+            json_body = body
+        call = ApiToolCall(
+            url=urljoin(self.base_url, endpoint),
+            method=method,
+            headers=self.request_headers(headers),
+            params=params or {},
+            json_body=json_body,
+            timeout=self.timeout or DEFAULT_TIMEOUT,
+            limit=limit,
+        )
 
-        response = None
         self.last_status_code = None
-        try:
-            api_connection_attempted.send(sender=self.__class__, connection=self)
-            api_connection_query_attempted.send(sender=self.__class__, connection=self)
-            response = requests.request(method, url, **request_kwargs)
-            self.last_status_code = response.status_code
-            response.raise_for_status()
-            if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
-                api_connection_success.send(sender=self.__class__, connection=self)
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                if limit:
-                    response_data = response.json()
-                    if isinstance(response_data, list):
-                        response_data = response_data[:limit]
-                    elif isinstance(response_data, dict):
-                        response_data = {k: v[:limit] if isinstance(v, list) else v for k, v in response_data.items()}
-                    return response_data
-                return response.json()
-            else:
-                # we connected, but the query failed.
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
-                return False
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            # connection failed, and so by extension, so did the query
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+        api_connection_attempted.send(sender=self.__class__, connection=self)
+        api_connection_query_attempted.send(sender=self.__class__, connection=self)
+        result = get_tool_runner().run(call)
+        self.last_status_code = result.status_code
+        self.record_result(result)
+        if result.failure is not None:
             return False
-        except (requests.exceptions.HTTPError, requests.exceptions.RequestException) as e:
-            # query failed, but connection was successful
-            api_connection_success.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            return False
+        return result.value  # type: ignore[return-value]
+
+    def request_headers(self, headers: Optional[dict[str, str]]) -> dict[str, str]:
+        """
+        Return a copy of a request's headers, with this connection's ``Authorization`` header.
+
+        :param headers: The caller's headers, which are not changed.
+        :returns: The headers to send. ``basic`` and ``token`` auth replace any caller-supplied
+            ``Authorization`` header with the connection's api key.
+        """
+        request_headers = dict(headers or {})
+        api_key = None
+        if self.api_key:
+            api_key = self.api_key.get_secret()
+        if not api_key:
+            return request_headers
+        if self.auth_method == "basic":
+            request_headers["Authorization"] = f"Basic {api_key}"
+        elif self.auth_method == "token":
+            request_headers["Authorization"] = f"Bearer {api_key}"
+        return request_headers
+
+    def record_result(self, result: ToolCallResult) -> None:
+        """
+        Send the signals that report a query's result.
+
+        - Without a status code, the url was refused, or the api couldn't be reached: the
+          connection failed, and so, by extension, did the query.
+        - With status 200 and a failure, the api answered, but not with JSON: the connection
+          worked, and the query failed.
+        - With another 2xx status, the api answered the query, but not with its data: the query
+          succeeded, and the connection is reported as failed.
+        - With an error status, the connection worked, and the query failed.
+        - Otherwise both succeeded.
+
+        The signals carry the response's ``status_code``, and, for a failure, its description as
+        ``error``. They don't carry the response, which stays where the call ran.
+
+        :param result: The tool runner's result.
+        """
+        status_code = result.status_code
+        error = result.failure
+        if error is None:
+            api_connection_success.send(sender=self.__class__, connection=self, status_code=status_code)
+            api_connection_query_success.send(sender=self.__class__, connection=self, status_code=status_code)
+            return
+        if status_code is None:
+            api_connection_query_failed.send(sender=self.__class__, connection=self, status_code=None, error=error)
+            api_connection_failed.send(sender=self.__class__, connection=self, status_code=None, error=error)
+            return
+        if HTTPStatus.OK < status_code < HTTPStatus.MULTIPLE_CHOICES:
+            api_connection_query_success.send(sender=self.__class__, connection=self, status_code=status_code)
+            api_connection_failed.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
+            return
+        api_connection_success.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
+        api_connection_query_failed.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"

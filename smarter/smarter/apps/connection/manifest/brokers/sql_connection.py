@@ -337,7 +337,9 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                     port=self.connection.port,
                     database=self.connection.database,
                     username=self.connection.username,
-                    password=self.connection.password.get_secret() if self.connection.password else None,
+                    # the Secrets' names, as a manifest gives them, never their values: this manifest is
+                    # what describe returns, and what apply reads back.
+                    password=self.connection.password.name if self.connection.password else None,
                     timeout=self.connection.timeout,
                     useSsl=self.connection.use_ssl,
                     sslCert=self.connection.ssl_cert,
@@ -346,9 +348,7 @@ class SAMSqlConnectionBroker(SAMConnectionBaseBroker[SqlConnection]):
                     proxyHost=self.connection.proxy_host,
                     proxyPort=self.connection.proxy_port,
                     proxyUsername=self.connection.proxy_username,
-                    proxyPassword=(
-                        self.connection.proxy_password.get_secret() if self.connection.proxy_password else None
-                    ),
+                    proxyPassword=self.connection.proxy_password.name if self.connection.proxy_password else None,
                     sshKnownHosts=self.connection.ssh_known_hosts,
                     poolSize=self.connection.pool_size,
                     maxOverflow=self.connection.max_overflow,

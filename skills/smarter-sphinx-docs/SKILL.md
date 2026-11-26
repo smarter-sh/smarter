@@ -178,6 +178,19 @@ skills/smarter-sphinx-docs/scripts/security-diagrams.py
 rsvg-convert -w 1875 docs/source/_static/security/network-traffic.svg -o <scratchpad>/network-traffic.png
 ```
 
+The tool runner's diagram, `docs/source/_static/tool-runner.svg`, at the top of
+`docs/source/smarter-resources/llmtool/runner.rst`, shows how an LLM tool call is
+resolved in the app, run by the tool runner (`smarter.apps.llmtool.runner`) and
+returned. [scripts/tool-runner-diagram.py](scripts/tool-runner-diagram.py) draws
+it, with the `Diagram` class of `security-diagrams.py`, which it loads from
+beside it rather than copying. Update it when a kind of tool moves behind the
+runner (`TOOL_EXECUTORS`), or the runner moves into a worker (ADR-038):
+
+```console
+skills/smarter-sphinx-docs/scripts/tool-runner-diagram.py
+rsvg-convert -w 1875 docs/source/_static/tool-runner.svg -o <scratchpad>/tool-runner.png
+```
+
 - **List only what's published.** Check each package on its registry before you
   list it there (`registry.npmjs.org/<name>`, `pypi.org/pypi/<name>/json`,
   `proxy.golang.org/<module>/@latest`, Docker Hub's and Artifact Hub's APIs).

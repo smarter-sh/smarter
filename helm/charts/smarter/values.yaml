@@ -193,6 +193,10 @@ env:
   # tasks use too.
   SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE: "infrastructure_celery_task_queue"
 
+  # the tool worker's queue (workerTools). SMARTER_APP_LLMTOOL_TOOL_RUNNER, which sends the app's tool
+  # calls there, is derived from workerTools.enabled (smarter.env in templates/_helpers.tpl).
+  SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE: "tools_celery_task_queue"
+
   # llmclient: deploying LLMClients: its Celery tasks' DNS records, ingresses, retries and queue.
   SMARTER_APP_LLMCLIENT_ENABLE: true
   SMARTER_APP_LLMCLIENT_TASKS_CELERY_MAX_RETRIES: "3"
@@ -450,6 +454,29 @@ workerInfrastructure:
       # 2, the minimum that Django settings recommend. Each of its 4 concurrent tasks runs kubectl and
       # the aws cli, which are CPU bound while they start, and slowed one another down on 1.
       cpu: "2"
+      memory: "2Gi"
+
+# The tool worker (ADR-038), which executes the tool calls that the app resolves: API, SQL and MCP
+# calls, extension tools, web search page fetches. It has no database, no Smarter Secret, no IAM role
+# and no Kubernetes token: its environment is a Secret of its own, with the broker's and the cache's
+# url and a few settings that aren't secret (templates/secret-env-tools.yaml). With enabled, the
+# app's pods send every tool call to it (SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote); without, they run
+# each call themselves. Enable it after smarter-infrastructure's network policies for its pods
+# (application-group <appName>-tools), which let it reach Redis. See
+# templates/deployment-worker-tools.yaml.
+workerTools:
+  enabled: false
+  replicaCount: 2
+  # concurrent tool calls per pod, each a prefork process of about 0.2 to 0.4 GiB: 4 used 1.04 GiB in
+  # all. Tool calls wait on the network, rarely on the cpu, so scale with replicaCount rather than past
+  # what resources.limits.memory holds.
+  concurrency: 4
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
       memory: "2Gi"
 
 beat:
@@ -960,6 +987,7 @@ alloy:
       # expressions work, and Alloy's own braces need no escaping.
       content: |
         // The pods of the app, the Celery workers, beat and MariaDB, in this namespace only.
+        // The tool worker's pods are in another application-group, but the same namespace.
         discovery.kubernetes "pods" {
           role = "pod"
           namespaces {
@@ -967,7 +995,7 @@ alloy:
           }
           selectors {
             role  = "pod"
-            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-beat,mariadb)"
+            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-worker-tools,{{ .Values.global.appName }}-beat,mariadb)"
           }
         }
 

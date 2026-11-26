@@ -28,7 +28,12 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError, create_model
 
-from .protocol import ExtensionContext, ExtensionToolError, SmarterExtensionTool
+from .protocol import (
+    ExtensionCaller,
+    ExtensionContext,
+    ExtensionToolError,
+    SmarterExtensionTool,
+)
 from .settings import ResolvedSettingValue
 
 
@@ -38,21 +43,39 @@ class TestSettings(BaseModel):
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
 
-def tool_context(slug: str = "test", version: str = "0.0.0", **settings: ResolvedSettingValue) -> ExtensionContext:
+def tool_context(
+    slug: str = "test",
+    version: str = "0.0.0",
+    *,
+    caller: Optional[ExtensionCaller] = None,
+    switches: Optional[dict[str, bool]] = None,
+    **settings: ResolvedSettingValue,
+) -> ExtensionContext:
     """
     Return the context of a tool call, with the given settings.
 
-    :param slug: The extension's slug, which names its logger and switches.
+    :param slug: The extension's slug, which names its logger.
     :param version: The extension's version.
+    :param caller: Who called the tool, e.g. ``ExtensionCaller(account_number="1234-5678-9012")``.
+        Defaults to no one.
+    :param switches: The extension's switches, by name, and whether each is on, e.g. ``{"verbose": True}``.
+        Defaults to all off.
     :param settings: The settings, by name, as the tool reads them, e.g. ``api_key=SecretStr("x")``.
-    :returns: A context without an account, user or LLMClient.
+    :returns: The context.
     """
     fields: dict[str, tuple[type, ResolvedSettingValue]] = {
         name: (type(value) if value is not None else Optional[str], value)  # type: ignore[misc]
         for name, value in settings.items()
     }
     model = create_model("Settings", __base__=TestSettings, **fields)  # type: ignore[call-overload]
-    return ExtensionContext(slug=slug, version=version, settings=model())
+    context = ExtensionContext(
+        slug=slug,
+        version=version,
+        settings=model(),
+        caller=caller or ExtensionCaller(),
+        switches=dict(switches or {}),
+    )
+    return context
 
 
 def call_tool(

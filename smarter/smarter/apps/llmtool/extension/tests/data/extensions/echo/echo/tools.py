@@ -30,7 +30,7 @@ class Echo(SmarterExtensionTool):
         result = {
             "echo": " ".join([f"{greeting} {arguments.text}"] * repeat),
             "has_api_key": api_key is not None,
-            "account": context.account.account_number if context.account else None,
+            "account": context.caller.account_number,
         }
         if context.switch_is_active("verbose"):
             result["version"] = context.version

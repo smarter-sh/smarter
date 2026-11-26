@@ -196,6 +196,10 @@ inputs:
   togetherai-api-key:
     description: "The TogetherAI API key"
     required: false
+  tool-worker-enabled:
+    description: "Deploy the tool worker, smarter-worker-tools (the chart's workerTools.enabled, ADR-038), and send every LLM tool call to it, rather than run tool calls in the app's pods, where the platform's credentials are. It needs smarter-infrastructure's network policies for the application-group smarter-tools, or it can't reach Redis. false: the app runs tool calls itself"
+    required: false
+    default: "true"
 
 runs:
   using:
@@ -573,6 +577,7 @@ runs:
           --set serviceAccount.awsRoleArn="${{ inputs.aws-iam-role-arn }}" \
           --set databaseScheduledBackup.awsRoleArn="${{ inputs.aws-backup-iam-role-arn }}" \
           --set serviceAccount.createClusterRole=false \
+          --set workerTools.enabled=${{ inputs.tool-worker-enabled == 'true' }} \
           --set slackBot.enabled=${{ inputs.slack-bot-token != '' && inputs.slack-app-token != '' && inputs.slack-bot-agent-url != '' }} \
           --set slackBot.agentUrl="${{ inputs.slack-bot-agent-url }}" \
           --set databaseInit.notifySlackChannel="${{ inputs.slack-notify-channel }}" \

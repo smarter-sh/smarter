@@ -47,7 +47,7 @@ TEST_SERVER_INSTRUCTIONS = "Use echo to repeat text, and add_numbers to add numb
 README_URI = "docs://test/readme"
 README_TEXT = "Hello from the test readme."
 
-GUARD_PATCH = "smarter.apps.mcpclient.connection.validate_public_url"
+GUARD_PATCH = "smarter.apps.llmtool.plugin.safe_http.validate_public_url"
 
 
 def get_data_path(filename: str) -> str:

@@ -48,3 +48,4 @@ See: `Michael Nygard’s ADRs <https://cognitect.com/blog/2011/11/15/documenting
    adr/035-single-page-app
    adr/036-account-hierarchy
    adr/037-orchestration-runtime
+   adr/038-tool-isolation-and-egress

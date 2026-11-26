@@ -79,7 +79,7 @@ def forward_to_django(test) -> None:
         return httpx2.AsyncClient(transport=httpx2.MockTransport(handler), headers=headers, timeout=timeout, auth=auth)
 
     for patcher in (
-        mock.patch(f"{CONNECTION}.validate_public_url"),
+        mock.patch(f"{CONNECTION}.validate_destination_url"),
         mock.patch(f"{CONNECTION}.guarded_http_client", http_client),
     ):
         patcher.start()

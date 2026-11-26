@@ -19,16 +19,15 @@ extension does not fail the prompt.
 import hashlib
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Union
 
-from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
+from pydantic import JsonValue, ValidationError
 
+from smarter.apps.llmtool.runner import get_tool_runner
+from smarter.common.conf import smarter_settings
 from smarter.lib import json, logging
 from smarter.lib.cache.tool_results import cached_tool_call
-from smarter.lib.django.connections import close_thread_connections
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
 
@@ -39,10 +38,11 @@ from ..signals import (
     extension_tool_responded,
 )
 from .exceptions import SmarterExtensionLoadError
-from .loader import LoadedExtension, load_version
+from .execution import ExtensionToolCall
+from .loader import LoadedExtension, load_version, publish_archive
 from .manifest import describe_validation_errors
-from .protocol import ExtensionContext, ExtensionToolError, SmarterExtensionTool
-from .settings import resolve_settings
+from .protocol import SmarterExtensionTool
+from .settings import resolve_settings, resolve_switches, settings_values
 
 if TYPE_CHECKING:
     from smarter.apps.account.models import Account, UserProfile
@@ -54,7 +54,6 @@ FUNCTION_NAME_PATTERN = re.compile(r"[^A-Za-z0-9_-]")
 MAX_FUNCTION_NAME_LENGTH = 64
 """The maximum length of an OpenAI function name."""
 FUNCTION_NAME_PREFIX = "ext_"
-JSON_VALUE: TypeAdapter[JsonValue] = TypeAdapter(JsonValue)
 TOOL_CACHE_NAMESPACE = "extension"
 """The namespace of extension tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
 
@@ -240,23 +239,32 @@ class ExtensionToolkit:
         except ValidationError as e:
             problems = describe_validation_errors(e, whole_location="arguments")
             raise ExtensionToolCallError(f"Invalid arguments: {problems}") from e
-        context = ExtensionContext(
+        settings = resolve_settings(function.extension, function.loaded.manifest)
+        if smarter_settings.app_llmtool_tool_runner == "remote" and function.extension.installed_version:
+            # the tool worker has no database: it loads the extension's code from the cache.
+            publish_archive(function.extension.installed_version)
+        call = ExtensionToolCall(
             slug=slug,
             version=version,
-            settings=resolve_settings(function.extension, function.loaded.manifest),
-            account=self.account,
-            user_profile=self.user_profile,
-            llmclient=self.llmclient,
+            sha256=function.loaded.sha256,
+            tool_name=tool_name,
+            arguments=validated.model_dump(mode="json"),
+            settings=settings_values(settings),
+            switches=resolve_switches(slug, function.loaded.manifest),
+            account_number=self.account.account_number if self.account else None,
+            user_id=self.user_profile.user_id if self.user_profile else None,  # type: ignore[attr-defined]
+            llmclient_name=getattr(self.llmclient, "name", None),
+            timeout=function.loaded.manifest.smarter.timeout,
         )
         # a hash of the settings, so that changing one invalidates the tool's cached results. A
         # secret setting is hashed as SecretStr dumps it, masked, so no secret is part of the key.
-        settings = hashlib.sha256(context.settings.model_dump_json().encode()).hexdigest()[:16]
+        settings_hash = hashlib.sha256(settings.model_dump_json().encode()).hexdigest()[:16]
         result = cached_tool_call(
             TOOL_CACHE_NAMESPACE,
-            (function.extension.pk, version, tool_name, settings),
+            (function.extension.pk, version, tool_name, settings_hash),
             validated,
             function.tool.cache_ttl,
-            lambda: self.execute(function, validated, context),
+            lambda: self.execute(call),
         )
         extension_tool_responded.send(
             sender=self.__class__,
@@ -268,45 +276,19 @@ class ExtensionToolkit:
         )
         return result.value
 
-    def execute(self, function: ExtensionFunction, validated: BaseModel, context: ExtensionContext) -> JsonValue:
+    def execute(self, call: ExtensionToolCall) -> JsonValue:
         """
-        Run a tool with its validated arguments, in a thread, with the manifest's timeout.
+        Run a resolved tool call with the tool runner (:mod:`smarter.apps.llmtool.runner`).
 
-        :param function: The function that the LLM called.
-        :param validated: The tool's validated arguments.
-        :param context: The tool's context.
+        :param call: The call, with its validated arguments, settings, switches and caller.
         :returns: The tool's result.
-        :raises ExtensionToolCallError: If the tool fails, times out, or returns a result that is not JSON.
+        :raises ExtensionToolCallError: If the tool fails, times out, or returns a result that is not
+            JSON. Raised, rather than returned, so that an error is never cached.
         """
-        slug, version, tool_name = function.extension.slug, function.loaded.version, function.tool.name
-        timeout = function.loaded.manifest.smarter.timeout
-
-        def run_tool() -> JsonValue:
-            try:
-                return function.tool().call(validated, context)
-            finally:
-                # the tool runs in its own thread, which has its own database connection.
-                close_thread_connections()
-
-        executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"extension-{slug}")
-        future = executor.submit(run_tool)
-        try:
-            result = future.result(timeout=timeout)
-        except FutureTimeoutError:
-            raise ExtensionToolCallError(f"The tool did not finish within {timeout} seconds.") from None
-        except ExtensionToolError as e:
-            raise ExtensionToolCallError(str(e)) from e
-        # a tool is the extension's code, which can fail in any way at all.
-        # pylint: disable=broad-exception-caught
-        except Exception as e:
-            logger.exception("%s %s %s raised: %s", slug, version, tool_name, e)
-            raise ExtensionToolCallError(f"The tool failed: {type(e).__name__}: {e}") from e
-        finally:
-            executor.shutdown(wait=False)
-        try:
-            return JSON_VALUE.validate_python(result)
-        except ValidationError as e:
-            raise ExtensionToolCallError(f"The tool returned a result that is not JSON: {e.errors()[0]['msg']}") from e
+        result = get_tool_runner().run(call)
+        if result.failure is not None:
+            raise ExtensionToolCallError(result.failure)
+        return result.value
 
     def failed(self, function: ExtensionFunction, error: str) -> SmarterDictType:
         """

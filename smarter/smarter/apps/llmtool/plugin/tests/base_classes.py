@@ -125,6 +125,8 @@ SKILL_REMOTE_RAW_URL = f"https://raw.githubusercontent.com/{SKILL_REMOTE_OWNER}/
 # SkillPlugin and the WebsearchPlugin.
 SAFE_HTTP_REQUESTS_PATCH = "smarter.apps.llmtool.plugin.safe_http.requests.request"
 SAFE_HTTP_DNS_PATCH = "smarter.apps.llmtool.plugin.safe_http.socket.getaddrinfo"
+SAFE_HTTP_SETTINGS_PATCH = "smarter.apps.llmtool.plugin.safe_http.smarter_settings"
+"""Patch it to set the environment, which decides whether loopback hosts are permitted."""
 SKILL_SOURCES_REQUESTS_PATCH = SAFE_HTTP_REQUESTS_PATCH
 SKILL_SOURCES_DNS_PATCH = SAFE_HTTP_DNS_PATCH
 PUBLIC_ADDRESS = "140.82.112.3"
@@ -133,7 +135,8 @@ PUBLIC_ADDRESS = "140.82.112.3"
 SQL_QUERY = "SELECT {username} AS username, {unit} AS unit;"
 API_ENDPOINT = "/api/v1/tests/unauthenticated/{kind}/"
 
-API_REQUEST_PATCH = "smarter.apps.connection.models.api_connection.requests.request"
+API_REQUEST_PATCH = "smarter.apps.llmtool.plugin.safe_http.requests.request"
+"""ApiConnection.execute_query() sends its request with safe_http.fetch(), which calls this."""
 LIVE_API_PROBE_URL = "http://localhost:9357/api/v1/tests/unauthenticated/list/"
 
 
@@ -192,10 +195,18 @@ def roles(received: list[tuple[str, SmarterDictType]]) -> list[str]:
 
 
 def mock_response(json_data: Any = None, status_code: int = 200) -> mock.MagicMock:
-    """Return a mock of a requests.Response."""
+    """
+    Return a mock of a requests.Response whose body is json_data, as JSON.
+
+    It serves the body as safe_http.fetch() reads it, streamed with iter_content(), and also from
+    json(), for callers of requests.request itself.
+    """
     response = mock.MagicMock(spec=requests.Response)
     response.status_code = status_code
+    response.headers = {"Content-Type": "application/json"}
     response.json.return_value = json_data
+    body = json.dumps(json_data).encode("utf-8")
+    response.iter_content.return_value = [body]
     if status_code >= 400:
         response.raise_for_status.side_effect = requests.exceptions.HTTPError(f"{status_code} error")
     else:
@@ -228,6 +239,16 @@ def fake_http_response(
 
 
 # pylint: disable=unused-argument
+def resolves_to(address: str):
+    """Return a stand-in for socket.getaddrinfo that resolves every host to an address."""
+
+    def getaddrinfo(host, port, *args, **kwargs):
+        family = socket.AF_INET6 if ":" in address else socket.AF_INET
+        return [(family, socket.SOCK_STREAM, 6, "", (address, port))]
+
+    return getaddrinfo
+
+
 def public_getaddrinfo(host, port, *args, **kwargs):
     """A stand-in for socket.getaddrinfo that resolves every host to a public address."""
     return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (PUBLIC_ADDRESS, port))]

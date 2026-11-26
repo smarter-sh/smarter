@@ -3,23 +3,43 @@
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 from unittest.mock import patch
+
+from cache_results import lazy_cache
 
 from smarter.apps.llmtool.extension import loader
 from smarter.apps.llmtool.extension.archive import ExtensionArchive
 from smarter.apps.llmtool.extension.exceptions import SmarterExtensionLoadError
 from smarter.apps.llmtool.extension.loader import (
     MARKER,
+    archive_cache_key,
+    cached_archive,
     identifier,
     load_archive,
+    load_by_key,
     load_version,
     materialize,
     module_name_for,
+    publish_archive,
     unload,
 )
+from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
+from smarter.apps.llmtool.runner import ToolCallResult
+from smarter.common.conf.settings import Settings
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .mixins import ExtensionTestMixin, fixture_archive
+
+
+def without_the_database():
+    """Patch the settings as the tool worker's are: it has no database.
+
+    The settings are frozen, so their class is patched.
+    """
+    return mock.patch.object(
+        Settings, "database_unavailable", new_callable=mock.PropertyMock, return_value=True, create=True
+    )
 
 
 class TestLoader(SmarterTestBase):
@@ -134,3 +154,75 @@ class TestLoadVersion(ExtensionTestMixin):
         loaded = load_version(version)
         self.assertEqual(loaded.version, "1.0.0")
         self.assertIs(load_version(version), loaded)
+
+
+class TestArchiveForTheToolWorker(ExtensionTestMixin):
+    """Test that the tool worker, which has no database, loads an extension's code from the cache."""
+
+    def setUp(self):
+        super().setUp()
+        self.extension = self.enable_echo()
+        self.version = self.extension.installed_version
+        lazy_cache.delete(archive_cache_key(self.version.sha256))  # type: ignore[union-attr]
+        self.addCleanup(lazy_cache.delete, archive_cache_key(self.version.sha256))  # type: ignore[union-attr]
+
+    def test_publish_and_load_without_the_database(self):
+        """A published archive is loaded by its sha256 from the cache, in a process that has no database."""
+        version = self.version
+        assert version is not None
+        self.assertIsNone(cached_archive(version.sha256))
+        publish_archive(version)
+        archive = cached_archive(version.sha256)
+        assert archive is not None
+        self.assertEqual(archive.sha256, version.sha256)
+        unload("echo")
+        with (
+            without_the_database(),
+            mock.patch("smarter.apps.llmtool.models.ExtensionVersion.objects") as versions,
+        ):
+            loaded = load_by_key("echo", version.sha256)
+        versions.filter.assert_not_called()
+        self.assertEqual(loaded.sha256, version.sha256)
+        self.assertIn("echo", loaded.tools)
+
+    def test_publish_touches_rather_than_copies(self):
+        """An archive already in the cache is only renewed, not read from the database again."""
+        version = self.version
+        assert version is not None
+        publish_archive(version)
+        with mock.patch.object(type(version).objects, "values_list") as values_list:
+            publish_archive(version)
+        values_list.assert_not_called()
+
+    def test_without_the_database_or_the_cache(self):
+        """A process without a database fails a call whose archive isn't in the cache, saying so."""
+        unload("echo")
+        with without_the_database():
+            with self.assertRaises(SmarterExtensionLoadError) as context:
+                load_by_key("echo", self.version.sha256)  # type: ignore[union-attr]
+        self.assertIn("isn't in the cache", str(context.exception))
+
+    def test_cached_bytes_must_match_the_sha256(self):
+        """Bytes in the cache that aren't the archive with that sha256 are refused."""
+        version = self.version
+        assert version is not None
+        lazy_cache.set(archive_cache_key(version.sha256), b"not the archive", timeout=60)
+        with self.assertRaises(SmarterExtensionLoadError):
+            cached_archive(version.sha256)
+
+    def test_toolkit_publishes_only_for_the_remote_runner(self):
+        """Resolving a call publishes the archive when the runner is remote, and not otherwise."""
+        toolkit = ExtensionToolkit([self.extension], account=self.account, user_profile=self.user_profile).load()
+        with mock.patch("smarter.apps.llmtool.extension.toolkit.publish_archive") as publish:
+            toolkit.call("ext_echo_echo", {"text": "in process"})
+            publish.assert_not_called()
+            with (
+                mock.patch("smarter.apps.llmtool.extension.toolkit.smarter_settings") as settings,
+                mock.patch("smarter.apps.llmtool.runner.runner.smarter_settings") as runner_settings,
+                mock.patch("smarter.apps.llmtool.extension.toolkit.get_tool_runner") as get_runner,
+            ):
+                settings.app_llmtool_tool_runner = "remote"
+                runner_settings.app_llmtool_tool_runner = "in_process"
+                get_runner.return_value.run.return_value = ToolCallResult(value={"echo": "x"})
+                toolkit.call("ext_echo_echo", {"text": "remote"})
+            publish.assert_called_once()

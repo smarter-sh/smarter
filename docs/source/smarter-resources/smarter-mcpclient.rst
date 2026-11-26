@@ -278,6 +278,7 @@ Technical Reference
    mcpclient/connection
    mcpclient/const
    mcpclient/exceptions
+   mcpclient/execution
    mcpclient/manifest
    mcpclient/models
    mcpclient/receivers

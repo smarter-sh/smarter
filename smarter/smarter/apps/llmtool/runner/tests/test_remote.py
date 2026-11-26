@@ -1,0 +1,307 @@
+"""Test the remote tool runner, the tool worker's task, and what keeps the tool worker without a database."""
+
+import logging
+import time
+from unittest import mock
+
+from cache_results import lazy_cache
+from celery.exceptions import TimeoutError as CeleryTimeoutError
+
+from smarter.apps.llmtool.extension.loader import archive_cache_key
+from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
+from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
+from smarter.apps.llmtool.plugin.tests.base_classes import FakeWebHost, mock_web_host
+from smarter.apps.llmtool.runner import (
+    TOOL_CALL_MODELS,
+    TOOL_EXECUTORS,
+    InProcessToolRunner,
+    RemoteToolRunner,
+    ToolCall,
+    ToolCallResult,
+    call_model_for,
+    get_tool_runner,
+    running_in_tool_worker,
+)
+from smarter.apps.llmtool.runner.http import HttpToolCall, fetch_with_runner
+from smarter.apps.llmtool.runner.runner import (
+    MAX_REMOTE_TIMEOUT_SECONDS,
+    call_timeout,
+    remote_timeout,
+)
+from smarter.apps.llmtool.tasks import run_tool_call
+from smarter.common.conf import smarter_settings
+from smarter.common.conf.settings import Settings
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib import json
+from smarter.lib.celery_conf import (
+    APP,
+    HideTaskDataFilter,
+    hide_tool_calls_from_logs,
+    set_result_backend,
+)
+from smarter.lib.django.waffle.is_active import switches_can_be_read
+from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.narrowing import json_object
+
+SETTINGS_PATCH = "smarter.apps.llmtool.runner.runner.smarter_settings"
+URL = "https://api.example.com/search"
+
+
+def eager_apply_async(args, **kwargs):
+    """Run the tool worker's task here, as Celery would there, and return its EagerResult."""
+    return run_tool_call.apply(args=args)
+
+
+class TestRemoteToolRunner(SmarterTestBase):
+    """Test the remote runner, and the tool worker's task."""
+
+    def test_registries_name_the_same_kinds(self):
+        """Every kind has both an executor and a model, and each model's kind is its key."""
+        self.assertEqual(set(TOOL_CALL_MODELS), set(TOOL_EXECUTORS))
+        for kind in TOOL_CALL_MODELS:
+            model = call_model_for(kind)
+            self.assertTrue(issubclass(model, ToolCall), kind)
+            self.assertEqual(model.model_fields["kind"].default, kind)
+        with self.assertRaises(SmarterConfigurationError):
+            call_model_for("no-such-kind")
+
+    def test_get_tool_runner_follows_the_setting(self):
+        """The setting chooses the runner, and inside the tool worker every call runs in process."""
+        with mock.patch(SETTINGS_PATCH) as settings:
+            settings.app_llmtool_tool_runner = "in_process"
+            self.assertIsInstance(get_tool_runner(), InProcessToolRunner)
+            settings.app_llmtool_tool_runner = "remote"
+            self.assertIsInstance(get_tool_runner(), RemoteToolRunner)
+            with running_in_tool_worker():
+                self.assertIsInstance(get_tool_runner(), InProcessToolRunner)
+            self.assertIsInstance(get_tool_runner(), RemoteToolRunner)
+
+    def test_timeouts(self):
+        """A call's own timeout, or its endpoint's, is multiplied for the remote wait, with a margin and a cap."""
+        self.assertEqual(call_timeout(HttpToolCall(url=URL, timeout=7)), 7)
+        self.assertEqual(call_timeout(ToolCall(kind="other")), 30)
+        endpoint = mock.Mock(timeout=12)
+        self.assertEqual(call_timeout(mock.Mock(spec=["endpoint"], endpoint=endpoint)), 12)
+        self.assertEqual(remote_timeout(HttpToolCall(url=URL, timeout=10)), 55)
+        self.assertEqual(remote_timeout(HttpToolCall(url=URL, timeout=1000)), MAX_REMOTE_TIMEOUT_SECONDS)
+
+    def test_remote_round_trip(self):
+        """A call reaches the task as JSON, on the tools queue, and its result comes back the same, through Celery."""
+        host = FakeWebHost()
+        host.add(URL, b'{"ok": true}', headers={"Content-Type": "application/json"})
+        call = HttpToolCall(url=URL, headers={"X-Subscription-Token": "k"})
+        with (
+            mock.patch.object(run_tool_call, "apply_async", side_effect=eager_apply_async) as apply_async,
+            mock_web_host(host),
+        ):
+            result = RemoteToolRunner().run(call)
+        self.assertIsNone(result.failure, result.failure)
+        self.assertEqual(result.status_code, 200)
+        kind, call_json = apply_async.call_args.kwargs["args"]
+        self.assertEqual(kind, "http")
+        self.assertEqual(HttpToolCall.model_validate_json(call_json), call)
+        self.assertEqual(apply_async.call_args.kwargs["queue"], smarter_settings.app_tools_tasks_celery_task_queue)
+        self.assertEqual(host.calls[0]["headers"]["X-Subscription-Token"], "k")
+
+    def test_fetch_with_runner_through_the_remote_runner(self):
+        """A caller of fetch_with_runner() gets the same response when the runner is remote."""
+        host = FakeWebHost()
+        host.add(URL, b"\x00binary\xff")
+        with (
+            mock.patch(SETTINGS_PATCH) as settings,
+            mock.patch.object(run_tool_call, "apply_async", side_effect=eager_apply_async),
+            mock_web_host(host),
+        ):
+            settings.app_llmtool_tool_runner = "remote"
+            settings.app_tools_tasks_celery_task_queue = "tools_celery_task_queue"
+            response = fetch_with_runner(URL)
+        self.assertEqual(response.content, b"\x00binary\xff")
+
+    def test_worker_that_does_not_answer(self):
+        """A worker that doesn't answer in time is a failure for the LLM, and the result is forgotten."""
+        async_result = mock.MagicMock()
+        async_result.get.side_effect = CeleryTimeoutError("timed out")
+        with mock.patch.object(run_tool_call, "apply_async", return_value=async_result):
+            result = RemoteToolRunner().run(HttpToolCall(url=URL, timeout=1))
+        self.assertIn("did not answer within 19 seconds", result.failure or "")
+        async_result.forget.assert_called_once()
+
+    def test_task_that_fails(self):
+        """A task that fails, or a queue that can't be reached, is a failure for the LLM."""
+        async_result = mock.MagicMock()
+        async_result.get.side_effect = RuntimeError("worker lost")
+        with mock.patch.object(run_tool_call, "apply_async", return_value=async_result):
+            result = RemoteToolRunner().run(HttpToolCall(url=URL))
+        self.assertIn("RuntimeError: worker lost", result.failure or "")
+
+    def test_task_with_an_unreadable_call(self):
+        """The task reports a call that it can't rebuild, without its content, rather than raising."""
+        result = ToolCallResult.model_validate_json(run_tool_call("http", '{"kind": "http", "secret": "x"}'))
+        self.assertIn("could not read the http call", result.failure or "")
+        self.assertNotIn("secret", result.failure or "")
+        result = ToolCallResult.model_validate_json(run_tool_call("no-such-kind", "{}"))
+        self.assertIsNotNone(result.failure)
+
+    def test_task_runs_nested_calls_in_process(self):
+        """Inside the task, a call that an executor makes itself runs in process, even when the setting says remote."""
+        host = FakeWebHost()
+        host.add(URL, b"ok")
+        call = HttpToolCall(url=URL)
+        with (
+            mock.patch(SETTINGS_PATCH) as settings,
+            mock.patch.object(run_tool_call, "apply_async") as apply_async,
+            mock_web_host(host),
+        ):
+            settings.app_llmtool_tool_runner = "remote"
+            result = ToolCallResult.model_validate_json(run_tool_call("http", call.model_dump_json()))
+        self.assertIsNone(result.failure)
+        apply_async.assert_not_called()
+
+    def test_result_backend_is_the_broker(self):
+        """Task results go to the broker's Redis, unless a result backend is configured, and are ignored by default."""
+        conf = mock.MagicMock()
+        conf.result_backend = None
+        conf.broker_url = "redis://broker:6379/0"
+        set_result_backend(mock.MagicMock(conf=conf))
+        conf.update.assert_called_once_with(result_backend="redis://broker:6379/0")
+        conf.result_backend = "redis://elsewhere:6379/3"
+        conf.update.reset_mock()
+        set_result_backend(mock.MagicMock(conf=conf))
+        conf.update.assert_not_called()
+        self.assertTrue(APP.conf.task_ignore_result)
+        self.assertFalse(run_tool_call.ignore_result)
+        self.assertEqual(json.loads(ToolCallResult(value=1).model_dump_json())["value"], 1)
+
+    def test_switches_without_the_database(self):
+        """In the tool worker, which has no database, every waffle switch reads as off, without a query."""
+        self.assertTrue(switches_can_be_read("any_switch"))
+        with (
+            mock.patch.object(
+                Settings, "database_unavailable", new_callable=mock.PropertyMock, return_value=True, create=True
+            ),
+            mock.patch("smarter.lib.django.waffle.is_active.is_database_ready") as is_database_ready,
+        ):
+            self.assertFalse(switches_can_be_read("any_switch"))
+        is_database_ready.assert_not_called()
+
+    def test_task_whose_executor_raises(self):
+        """An executor that raises is a failure for the LLM, by the exception's type only, which may name a credential."""
+        with mock.patch(
+            "smarter.apps.llmtool.runner.runner.InProcessToolRunner.run", side_effect=ValueError("https://x/?key=k")
+        ):
+            result = ToolCallResult.model_validate_json(run_tool_call("http", HttpToolCall(url=URL).model_dump_json()))
+        self.assertEqual(result.failure, "the tool worker could not run the http call: ValueError")
+
+    def test_log_filter_hides_task_data(self):
+        """Celery's records of a task's success keep its name, without its result or arguments; its pool's are dropped."""
+        context = {"id": "1", "name": "run_tool_call", "return_value": "rows", "args": "('sql', 'pw')", "runtime": 1}
+        record = logging.LogRecord(
+            "celery.app.trace", logging.INFO, "", 0, "Task %(name)s: %(return_value)s", None, None
+        )
+        record.args = context
+        record.data = dict(context)
+        self.assertTrue(HideTaskDataFilter().filter(record))
+        self.assertEqual(record.getMessage(), "Task run_tool_call: (hidden)")
+        self.assertEqual(record.data["args"], "(hidden)")  # type: ignore[attr-defined]
+        pool = logging.LogRecord("celery.pool", logging.DEBUG, "", 0, "TaskPool: Apply %s", ("x",), None)
+        self.assertFalse(HideTaskDataFilter().filter(pool))
+        other = logging.LogRecord("celery.pool", logging.DEBUG, "", 0, "started", None, None)
+        self.assertTrue(HideTaskDataFilter().filter(other))
+
+    def test_log_filter_only_in_the_tool_worker(self):
+        """The filter is installed, once, only in a worker without a database."""
+        trace_logger = logging.getLogger("celery.app.trace")
+        hide_tool_calls_from_logs()
+        self.assertFalse(any(isinstance(f, HideTaskDataFilter) for f in trace_logger.filters))
+        with mock.patch.object(
+            Settings, "database_unavailable", new_callable=mock.PropertyMock, return_value=True, create=True
+        ):
+            hide_tool_calls_from_logs()
+            hide_tool_calls_from_logs()
+        filters = [f for f in trace_logger.filters if isinstance(f, HideTaskDataFilter)]
+        for f in filters:
+            trace_logger.removeFilter(f)
+            logging.getLogger("celery.pool").removeFilter(f)
+        for f in [f for f in logging.getLogger("celery.pool").filters if isinstance(f, HideTaskDataFilter)]:
+            logging.getLogger("celery.pool").removeFilter(f)
+        self.assertEqual(len(filters), 1)
+
+
+TOOL_WORKER_WAIT_SECONDS = 120
+"""How long the round trips wait for a tool worker to start."""
+
+
+def tool_workers() -> list[str]:
+    """
+    Return the Celery workers that consume the tools queue, by asking every worker through the broker.
+
+    :returns: Their names, e.g. ``tools@<host>``.
+    """
+    queues = APP.control.inspect(timeout=5).active_queues() or {}
+    queue = smarter_settings.app_tools_tasks_celery_task_queue
+    return [name for name, consumed in queues.items() if any(q.get("name") == queue for q in consumed)]
+
+
+def remote_runner():
+    """Patch the setting that chooses the runner to ``remote``.
+
+    The settings are frozen, so their class is patched.
+    """
+    return mock.patch.object(
+        Settings, "app_llmtool_tool_runner", new_callable=mock.PropertyMock, return_value="remote", create=True
+    )
+
+
+class TestThroughTheToolWorker(ExtensionTestMixin):
+    """
+    Send tool calls through the broker to the tool worker, ``smarter-worker-tools``, and back.
+
+    Unlike :class:`TestRemoteToolRunner`, nothing here is eager or patched between the app and the worker:
+    each call is a task in Redis, which a worker without a database (``SMARTER_DATABASE_UNAVAILABLE``)
+    takes, runs and answers through the result backend. Each test stack runs one (docker-compose.shard.yml,
+    and docker-compose.yml in CI).
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # the test stack waits for its api, not for its workers, which start Django in about 30 seconds.
+        deadline = time.monotonic() + TOOL_WORKER_WAIT_SECONDS
+        while not tool_workers() and time.monotonic() < deadline:
+            time.sleep(5)
+        if not tool_workers():
+            raise AssertionError(
+                "no worker consumes the tools queue: these tests need smarter-worker-tools running "
+                "(docker-compose.yml, docker-compose.shard.yml)."
+            )
+
+    def test_call_refused_in_the_worker(self):
+        """A call that safe_http refuses comes back with the worker's failure, through Redis."""
+        result = RemoteToolRunner().run(HttpToolCall(url="https://10.0.0.1/", timeout=5))
+        self.assertIn("public address", result.failure or "")
+        self.assertIsNone(result.status_code)
+
+    def test_page_fetched_by_the_worker(self):
+        """A page that the worker fetches comes back with its status and body, through Redis."""
+        with remote_runner():
+            response = fetch_with_runner("https://example.com/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Example Domain", response.content)
+
+    def test_extension_tool_run_by_the_worker(self):
+        """
+        An Extension's tool runs in the worker, which loads its code from the cache, where the app published it.
+
+        The archive is removed from the cache first, so that the call publishes it, and the worker, which
+        has no database, can only find it there.
+        """
+        extension = self.enable_echo()
+        version = extension.installed_version
+        assert version is not None
+        lazy_cache.delete(archive_cache_key(version.sha256))
+        self.addCleanup(lazy_cache.delete, archive_cache_key(version.sha256))
+        toolkit = ExtensionToolkit([extension], account=self.account, user_profile=self.user_profile).load()
+        with remote_runner():
+            result = json_object(toolkit.call("ext_echo_echo", {"text": "from the tool worker"}))
+        self.assertEqual(result.get("echo"), "hello from the tool worker", result)
+        self.assertIsNotNone(lazy_cache.get(archive_cache_key(version.sha256)))

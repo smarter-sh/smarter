@@ -12,7 +12,8 @@ Usage::
 (``SMARTER_TEST_SHARD``, ``smarter.lib.unittest.runner``). Locally the shards can't share one stack: the tests
 write real rows without rollback, sweep every test account in teardown, clear the shared Redis cache, and send
 requests and Celery tasks to the one dev server and its workers. So each shard gets its own Compose project,
-``smarter-shard-<n>``, from ``docker-compose.shard.yml``: MariaDB, Redis, the api and the two workers, with no
+``smarter-shard-<n>``, from ``docker-compose.shard.yml``: MariaDB, Redis, the api and the three workers (the tool
+worker, without a database, among them), with no
 Celery Beat, whose scheduled tasks would change the rows of running tests.
 
 Steps:
@@ -54,7 +55,7 @@ ROOT_PASSWORD = "smarter"
 DATABASES = ["smarter", "stackademy"]
 PROJECT_PREFIX = "smarter-shard-"
 STORES = ["smarter-mariadb", "smarter-redis"]
-APPLICATIONS = ["smarter-api", "smarter-worker", "smarter-worker-infrastructure"]
+APPLICATIONS = ["smarter-api", "smarter-worker", "smarter-worker-infrastructure", "smarter-worker-tools"]
 WORKDIR = "/home/smarter_user/smarter"
 READY_TIMEOUT_SECONDS = 300
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
@@ -65,7 +66,8 @@ DEFAULT_LABELS = ["smarter"]
 # (7,939 tests, 5.6 minutes) on Docker Desktop with 16 CPUs and 47.2 GiB. A shard's five containers peaked at
 # 3.73 GiB together, and averaged at most 0.86 CPU: the api's test process is capped at one CPU by
 # docker-compose.shard.yml, and spends part of its time waiting on MariaDB and Redis.
-MEMORY_PER_SHARD_BYTES = int(3.75 * GIB)
+# The tool worker, added since, with one process: 0.42 GiB after its tests' calls.
+MEMORY_PER_SHARD_BYTES = int(4.25 * GIB)
 CPUS_PER_SHARD = 1.0
 # Left for the dev stack (its api, two workers, Beat, MariaDB and Redis used 3.04 GiB in the same run).
 DEV_STACK_MEMORY_BYTES = 3 * GIB
