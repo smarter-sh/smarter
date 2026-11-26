@@ -173,14 +173,40 @@ Phase 1, the boundary (smarter)
 
    Done: every tool call that reaches a host chosen by a manifest author or the LLM goes through the
    runner. Vector search, static and skill plugins stay in the app: they reach no such host. One
-   dependency on the database remains for phase 2: an Extension's code, its archive, is read from the
-   database the first time a process runs a version (``load_by_key()``), so a worker needs it from
-   elsewhere, e.g. an object store keyed by its sha256.
+   dependency on the database remained for phase 2: an Extension's code, its archive, which a process
+   read from the database the first time it ran a version (``load_by_key()``).
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no
    Secret and no token, and its network policy (smarter-infrastructure). Behind a setting, off by
    default, and turned on in prod once the suite passes with the remote runner.
+
+   Built, off by default. ``RemoteToolRunner`` sends each call, as JSON, in the Celery task
+   ``run_tool_call`` on the queue ``tools_celery_task_queue``, and waits for its result in the result
+   backend, the broker's Redis. ``CELERY_TASK_IGNORE_RESULT`` keeps every other task's result out of it,
+   and a result is forgotten once read. ``TOOL_CALL_MODELS`` maps each kind to its call's model, which
+   rebuilds the call in the worker. ``SMARTER_APP_LLMTOOL_TOOL_RUNNER`` (``in_process`` or ``remote``)
+   chooses the runner. Inside the worker, every call runs in process, so that an executor's own calls,
+   such as a page fetch's robots.txt, don't go back to the queue. A worker that doesn't answer within
+   four times the call's timeout, plus 15 seconds, is a ``failure`` for the LLM, as is a task that fails.
+
+   The worker, ``smarter-worker-tools``, sets ``SMARTER_DATABASE_UNAVAILABLE``: it opens no database
+   connection, reads every waffle switch as off (Extensions get theirs in the call), and runs without
+   the Django secret key, which would let code there forge the platform's sessions. An Extension's
+   archive reaches it through the cache: the app publishes the archive, keyed by its sha256, when it
+   resolves a call for the remote runner, and renews it on each call; the worker checks the sha256
+   before it loads the code. The chart's ``workerTools`` deploys it with a Secret of its own, holding
+   the broker's and the cache's url and settings that aren't secret, a ServiceAccount without a token or
+   an IAM role, ``AWS_EC2_METADATA_DISABLED``, and pods in the application-group ``smarter-tools``, to
+   which none of the platform's network policies apply. Its own policy lets it reach Redis, MariaDB's
+   port, DNS, and the internet on 443, 80 and 3306, but no private or link-local address: not the app,
+   the other pods, the EKS api or the instance metadata service.
+
+   What remains: the call's arguments, with its credentials, sit in Redis until the worker takes the
+   task, as they did in the app's memory. Redis is reachable only from the namespace's pods. Encrypting
+   the arguments to a key that only the tool worker holds would close that, at the cost of a key to
+   manage. MariaDB's port stays open to the worker for SQL plugins whose connection is the platform's
+   own MariaDB, such as Stackademy's; the worker has no credential for it but the call's.
 
 Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    A ServiceAccount, IAM role and Secret per workload, from the phase 0 table. The Kubernetes Role

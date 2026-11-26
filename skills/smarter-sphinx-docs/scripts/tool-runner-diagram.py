@@ -5,11 +5,11 @@ Draw the diagram of docs/source/smarter-resources/llmtool/runner.rst: how an LLM
 Usage: tool-runner-diagram.py [output folder]   (default: docs/source/_static, from the repository root)
 
 - tool-runner.svg: a tool call resolved in the app (permissions, cache, the decrypted credential), handed to
-  the tool runner as a serializable ToolCall, executed by its kind's executor without the database, and
-  returned as a ToolCallResult.
+  the tool runner as a serializable ToolCall, executed by its kind's executor without the database, in the app
+  or, through Redis, in the tool worker, and returned as a ToolCallResult.
 
 It describes smarter.apps.llmtool.runner, and the tools that go through it (TOOL_EXECUTORS): keep it true when
-a kind of tool moves behind the runner, or the runner moves into a worker (ADR-038). Edit the function, run the
+a kind of tool moves behind the runner, or the runners change (ADR-038). Edit the function, run the
 script, and render the result to check it: rsvg-convert -w 1875 <svg> -o <scratchpad>/tool-runner.png.
 
 It draws with the Diagram class of security-diagrams.py, loaded from beside this file, so that the diagrams
@@ -69,9 +69,10 @@ def tool_runner():
         "it calls the MCP server, the api, the search api or the website, through safe_http, to public addresses "
         "only. It "
         "returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app "
-        "sends the signals, stores the result in the cache, and gives it to the LLM. Today the runner executes the "
-        "call in the app's process; in phase 2 of ADR-038 a remote runner sends the same call to a worker that holds "
-        "no credentials.",
+        "sends the signals, stores the result in the cache, and gives it to the LLM. The in-process runner executes "
+        "the call in the app's process. The remote runner sends it, as JSON, in a Celery task through Redis to the "
+        "tool worker, smarter-worker-tools, which has no database, no Secret and no cloud credential: it runs the "
+        "same executor, and returns the result through Redis.",
     )
 
     # 1. in the app
@@ -123,14 +124,24 @@ def tool_runner():
         300,
         250,
         "The tool runner",
-        ["InProcessToolRunner today", "a remote runner in phase 2"],
+        ["InProcessToolRunner: in the app", "RemoteToolRunner: the tool worker"],
         "core",
         code="get_tool_runner()",
     )
     d.box(
+        "redis",
+        430,
+        430,
+        200,
+        "Redis",
+        ["the task, then its result"],
+        "data",
+        code="tools_celery_task_queue",
+    )
+    d.box(
         "registry",
         380,
-        440,
+        580,
         250,
         "Executors, by kind",
         [
@@ -149,13 +160,15 @@ def tool_runner():
         900,
         250,
         "ToolCallResult",
-        ["value · is_error", "failure · status_code"],
+        ["value · is_error", "failure · status_code", "remote: back through Redis"],
         code="JSON",
     )
 
     # 3. execution, without the database
     d.heading(690, 100, 300, "3 · Execution")
-    d.region(676, 150, 328, 716, "no database · no Secrets", note="in the app today; in a worker, phase 2")
+    d.region(
+        676, 150, 328, 716, "no database · no Secrets", note="smarter-worker-tools (remote), or the app (in_process)"
+    )
     d.box(
         "exec_mcp",
         690,
@@ -283,7 +296,29 @@ def tool_runner():
         label_at=(392, 292),
         label_anchor="start",
     )
-    d.arrow([d.bottom("runner"), d.top("registry")], label="by its kind", label_at=(515, 424), label_anchor="start")
+    runner_bottom = d.bottom("runner", dx=25)
+    d.arrow(
+        [runner_bottom, (runner_bottom[0], d.top("redis")[1])],
+        "blue",
+        label="remote: a task",
+        label_at=(540, 419),
+        label_anchor="start",
+    )
+    redis_bottom = d.bottom("redis")
+    d.arrow(
+        [redis_bottom, (redis_bottom[0], d.top("registry")[1])],
+        "blue",
+        label="the worker takes it",
+        label_at=(540, 556),
+        label_anchor="start",
+    )
+    in_process_x = 400
+    d.arrow(
+        [(in_process_x, d.bottom("runner")[1]), (in_process_x, d.top("registry")[1])],
+        label="in_process",
+        label_at=(412, 568),
+        label_anchor="start",
+    )
     registry_x, registry_y = d.right("registry")
     for key in ("exec_mcp", "exec_api", "exec_sql", "exec_extension", "exec_http", "exec_webfetch"):
         exec_x, exec_y = d.left(key)
@@ -321,7 +356,7 @@ def tool_runner():
             ("blue", True, "its result"),
             ("green", False, "a credential, or a request that leaves the cluster"),
             ("grey", False, "in the same process"),
-            (None, False, "where the runner will draw the line"),
+            (None, False, "where the runner draws the line"),
         ],
     )
     d.save()

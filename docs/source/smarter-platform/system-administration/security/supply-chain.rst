@@ -135,7 +135,9 @@ endpoints.
 
 - Move the features that call arbitrary hosts (API, SQL and web search plugins, MCP clients and
   Extensions) into a worker of their own, which holds no secrets other than the ones each call needs,
-  no database access and no AWS role.
+  no database access and no AWS role. Available, off by default: the tool worker,
+  :doc:`/smarter-framework/smarter-on-kubernetes/tool-worker`, whose network policy also keeps it
+  away from every private address, the instance metadata service included.
 - Limit the outbound traffic of every other pod to a list of known hosts (the LLM providers, AWS,
   GitHub), through an egress proxy in the cluster. DNS-aware network policies would do the same in the
   network, but Calico's open-source edition doesn't support them.
@@ -155,6 +157,7 @@ signature says who published an Extension, not what its code does. Install only 
 you have read.
 
 **Plan:** run tool calls, Extensions included, in the worker above, which holds no credentials, and
+which an operator can enable now (``workerTools.enabled``), then
 split the remaining credentials by workload, with a ServiceAccount, an IAM role and a Secret for each,
 so that each pod holds only what it uses. See :doc:`ADR-038 </adr/038-tool-isolation-and-egress>`.
 
@@ -166,6 +169,9 @@ What operators can do now
   tools.
 - **Close the ports you don't use.** If your platform doesn't use SQL plugins, or API plugins on plain
   HTTP, remove the 3306 and 80 rules from the application's egress policy.
+- **Run tool calls in the tool worker.** Apply smarter-infrastructure's network policies for it, then
+  set ``workerTools.enabled``: API, SQL and MCP calls, web search and Extensions then run in a pod
+  without the platform's credentials. See :doc:`/smarter-framework/smarter-on-kubernetes/tool-worker`.
 - **Turn on threat detection.** Amazon GuardDuty notices unusual API calls made with the pods'
   credentials, and unusual DNS and network traffic. See "What Smarter Doesn't Provide" in
   :doc:`infrastructure`.
