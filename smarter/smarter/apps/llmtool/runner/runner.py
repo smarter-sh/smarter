@@ -29,6 +29,7 @@ TOOL_EXECUTORS: dict[str, str] = {
     "http": "smarter.apps.llmtool.runner.http.execute_http_call",
     "webfetch": "smarter.apps.llmtool.plugin.websearch_fetch.execute_webfetch_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",
+    "sql": "smarter.apps.connection.execution.execute_sql_call",
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""
 

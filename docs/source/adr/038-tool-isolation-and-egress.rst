@@ -158,7 +158,13 @@ Phase 1, the boundary (smarter)
    ``http`` call too. The web search plugin's fetch of a page is the ``webfetch`` kind: its
    ``redirect_policy``, a function, travels as data (the domain policy's allowed and blocked domains,
    and whether to obey robots.txt), and ``execute_webfetch_call()`` builds the function where the call
-   runs. Next: SQL plugins, then Extensions.
+   runs. SQL plugins are the ``sql`` kind: ``SqlConnection.execute_query()`` resolves a ``SqlToolCall``
+   (the database's settings with its password, the final SQL, and the SSH tunnel's settings for
+   ``tcpip_ssh``), and ``execute_sql_call()`` opens the tunnel, connects, queries and closes both. A
+   failure to connect is a ``failure``, and a query the database rejects is ``is_error``, so the app can
+   still tell them apart. The SSH tunnel, which was broken, now works, and pins the SSH server's host key
+   to ``sshKnownHosts`` instead of writing an unknown key to the database mid-connection, which a worker
+   couldn't do. Next: Extensions.
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no

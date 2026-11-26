@@ -5,11 +5,12 @@ Tool Runner
    :alt: When the LLM asks for a tool, the tool's code in the app checks the permissions and the cache. On a cache
          miss it resolves the call, decrypting the credential from its Smarter Secret, into a ToolCall of plain values.
          The tool runner, from get_tool_runner(), finds the executor of the call's kind in TOOL_EXECUTORS:
-         execute_mcp_call for MCP clients, execute_api_call for API plugins, execute_http_call for the web search
+         execute_mcp_call for MCP clients, execute_api_call for API plugins, execute_sql_call for SQL plugins,
+         through an SSH tunnel when the connection uses one, execute_http_call for the web search
          apis, the Brave image search, the checks of each image's url and websites' robots.txt, and
          execute_webfetch_call for the pages that the web search plugin reads, with its domain policy and robots.txt
-         checked again on each redirect. The executor reads no database and no Secret, and calls the MCP server, the
-         api, the search api or the website. Its ToolCallResult returns to the tool's code in the app, which
+         checked again on each redirect. The executor reads neither the app's database nor a Secret, and calls the MCP
+         server, the api, the SqlConnection's database, the search api or the website. Its ToolCallResult returns to the tool's code in the app, which
          sends the signals, caches the result and gives it to the LLM. Today execution runs in the app's process; in
          phase 2 of ADR-038 it moves to a worker without credentials.
    :width: 100%
@@ -27,6 +28,8 @@ Smarter Secret. Today these go through it:
 
 - MCP clients, with :mod:`smarter.apps.mcpclient.execution`;
 - API plugins, with :mod:`smarter.apps.connection.execution`;
+- SQL plugins, with :mod:`smarter.apps.connection.execution`, through an SSH tunnel
+  (:mod:`smarter.apps.connection.ssh`) for a connection that uses one;
 - the WebsearchPlugin's search apis (Brave, Tavily), the ImageSearchPlugin's Brave image search and
   its checks of each image's url, and every website's robots.txt, with
   :mod:`smarter.apps.llmtool.runner.http`. Its ``fetch_with_runner()`` takes the place of

@@ -3,7 +3,6 @@
 from typing import cast
 from unittest.mock import MagicMock, patch
 
-import paramiko
 import requests
 
 from smarter.apps.connection.manifest.models.sql_connection.enum import (
@@ -11,6 +10,7 @@ from smarter.apps.connection.manifest.models.sql_connection.enum import (
     DBMSAuthenticationMethods,
 )
 from smarter.apps.connection.models import ConnectionBase, SqlConnection
+from smarter.apps.connection.ssh import SshTunnelError
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
@@ -107,13 +107,12 @@ class TestSqlConnectionModel(SmarterTestBase):
         self.assertIn("******", logged)
         self.assertNotIn("s3cret", logged)
 
-    def assert_default_database(self, authentication_method: str):
+    def assert_default_database(self, authentication_method: str, **fields):
         """Assert that the connection's Django settings are given to ConnectionHandler as its default database."""
-        connection = sqlite_connection(authentication_method=authentication_method)
+        connection = sqlite_connection(authentication_method=authentication_method, **fields)
         with (
             patch("smarter.apps.connection.models.sql_connection.ConnectionHandler") as handler,
-            patch("smarter.apps.connection.models.sql_connection.paramiko.SSHClient"),
-            patch("smarter.apps.connection.models.sql_connection.socket"),
+            patch("smarter.apps.connection.models.sql_connection.SshTunnel"),
         ):
             try:
                 connection.get_connection()
@@ -130,7 +129,7 @@ class TestSqlConnectionModel(SmarterTestBase):
         self.assert_default_database(DBMSAuthenticationMethods.LDAP_USER_PWD.value)
 
     def test_tcpip_ssh_default_database(self):
-        self.assert_default_database(DBMSAuthenticationMethods.TCPIP_SSH.value)
+        self.assert_default_database(DBMSAuthenticationMethods.TCPIP_SSH.value, proxy_host="bastion.example.com")
 
     def test_ldap_options(self):
         connection = sqlite_connection(authentication_method=DBMSAuthenticationMethods.LDAP_USER_PWD.value)
@@ -215,18 +214,40 @@ class TestSqlConnectionModelFailures(SmarterTestBase):
             self.assertIsNone(sqlite_connection().connect_tcpip())
 
     def test_tcpip_ssh(self):
-        """An SSH tunnelled connection loads the connection's known hosts, and reports SSH and other failures."""
-        connection = sqlite_connection(ssh_known_hosts="example.com ssh-ed25519 AAAA", proxy_username="tunnel")
-        with patch(f"{MODULE}.paramiko.SSHClient") as ssh_client, patch(f"{MODULE}.ConnectionHandler") as handler:
+        """
+        An SSH tunnelled connection opens a tunnel from the proxy fields, and connects the driver to its local port.
+
+        The tunnel closes with the connection. A tunnel that can't be opened, or a connection without an SSH
+        server, is None.
+        """
+        connection = sqlite_connection(
+            authentication_method=DBMSAuthenticationMethods.TCPIP_SSH.value,
+            ssh_known_hosts="bastion.example.com ssh-ed25519 AAAA",
+            proxy_host="bastion.example.com",
+            proxy_port=2222,
+            proxy_username="tunnel",
+        )
+        with patch(f"{MODULE}.SshTunnel") as tunnel_class, patch(f"{MODULE}.ConnectionHandler") as handler:
+            tunnel = tunnel_class.return_value
+            tunnel.local_port = 40123
             db_wrapper = handler.return_value.__getitem__.return_value
             self.assertIs(connection.connect_tcpip_ssh(), db_wrapper)
-            ssh_client.return_value.load_host_keys.assert_called_once()
-            self.assertEqual(ssh_client.return_value.connect.call_args.kwargs["username"], "tunnel")
+            kwargs = tunnel_class.call_args.kwargs
+            self.assertEqual(kwargs["ssh_host"], "bastion.example.com")
+            self.assertEqual(kwargs["ssh_port"], 2222)
+            self.assertEqual(kwargs["username"], "tunnel")
+            self.assertEqual(kwargs["known_hosts"], "bastion.example.com ssh-ed25519 AAAA")
+            settings = handler.call_args.args[0]["default"]
+            self.assertEqual((settings["HOST"], settings["PORT"]), ("127.0.0.1", "40123"))
+            connection._connection = db_wrapper  # pylint: disable=protected-access
+            connection.close()
+            tunnel.close.assert_called_once()
 
-            for error in (paramiko.SSHException("refused"), RuntimeError("broken")):
-                with self.subTest(error=error):
-                    ssh_client.return_value.connect.side_effect = error
-                    self.assertIsNone(connection.connect_tcpip_ssh())
+            tunnel.open.side_effect = SshTunnelError("refused")
+            self.assertIsNone(connection.connect_tcpip_ssh())
+
+        connection.proxy_host = None
+        self.assertIsNone(connection.connect_tcpip_ssh())
 
     def test_ldap_failure(self):
         with patch(f"{MODULE}.ConnectionHandler", side_effect=RuntimeError("no ldap")):

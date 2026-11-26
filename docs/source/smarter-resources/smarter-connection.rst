@@ -91,6 +91,7 @@ Technical Reference
    connection/resources
    connection/serializers
    connection/signals
+   connection/ssh
    connection/tasks
    connection/urls
    connection/views
