@@ -5,6 +5,7 @@ error branches.
 """
 
 import os
+import warnings
 from unittest.mock import patch
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -129,6 +130,28 @@ class TestSettingsValidators(SmarterTestBase):
                 generated = security.generated_fernet_encryption_key()
             self.assertIs(security.generated_fernet_encryption_key(), generated)
             self.assertEqual(len(generated.get_secret_value()), 44)
+
+    def test_the_tool_worker_generates_its_keys_quietly(self):
+        """The tool worker is never given the keys (ADR-038), so it generates both without a warning."""
+        with (
+            patch.dict(os.environ, {security.DATABASE_UNAVAILABLE_VARIABLE: "true"}),
+            patch.object(security, "_generated_django_secret_key", None),
+            patch.object(security, "_generated_fernet_encryption_key", None),
+            warnings.catch_warnings(record=True) as caught,
+        ):
+            warnings.simplefilter("always")
+            secret_key = security.generated_django_secret_key()
+            fernet_key = security.generated_fernet_encryption_key()
+        self.assertTrue(secret_key.get_secret_value())
+        self.assertEqual(len(fernet_key.get_secret_value()), 44)
+        self.assertEqual(caught, [])
+
+    def test_is_tool_worker(self):
+        """The tool worker is recognized by SMARTER_DATABASE_UNAVAILABLE, which the Helm chart sets for it only."""
+        with patch.dict(os.environ, {security.DATABASE_UNAVAILABLE_VARIABLE: "true"}):
+            self.assertTrue(security.is_tool_worker())
+        with patch.dict(os.environ, {security.DATABASE_UNAVAILABLE_VARIABLE: "false"}):
+            self.assertFalse(security.is_tool_worker())
 
     def test_require_secret_key(self):
         """Outside of the local environment, a missing secret key is fatal; locally, it is a warning."""

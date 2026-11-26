@@ -154,6 +154,22 @@ The workflows that build and deploy an environment use a third identity: a deplo
 environment, whose key is in the GitHub environment's secrets. It can push the environment's
 image, and is an administrator of the environment's namespace only. The platform never uses it.
 
+Each server checks what it depends on when it starts, so that a pod whose credentials or
+connections don't work says so in its first log lines, not at the first request or deploy. The
+settings ask AWS STS whether boto3's credentials work as they load, in every process but the tool
+worker, and warn if they don't (``smarter_settings.aws_is_configured``). Then
+:mod:`smarter.apps.infrastructure.startup` runs once per server, and logs one line per check:
+
+- the web server checks the database, the Redis cache, the Celery broker, and that kubectl
+  reaches the cluster and the environment's namespace exists;
+- each Celery worker checks the same, except the broker, which Celery itself connects to;
+- the tool worker confirms, one capability at a time, that what ADR-038 removes is absent: no
+  credentials in its environment, no ServiceAccount token, and no route to the instance
+  metadata service or the Kubernetes api. Each is an INFO line that confirms it, or an ERROR
+  that reports a breach. It also confirms that it reaches the internet, which tool calls need.
+  These run only in a pod: in docker-compose, the tool worker shares ``.env`` with the other
+  services, and no network policy applies.
+
 Signals
 -------
 
@@ -285,6 +301,7 @@ Technical Reference
    infrastructure/logs
    infrastructure/cluster-health
    infrastructure/inventory
+   infrastructure/startup
    infrastructure/providers
    infrastructure/aws
    infrastructure/memory

@@ -30,6 +30,10 @@ django_asgi_app = get_asgi_application()
 static_asgi_app = ASGIStaticFilesHandler(django_asgi_app)
 
 from smarter import consumers  # noqa: E402  pylint: disable=wrong-import-position
+from smarter.apps.infrastructure.startup import (  # noqa: E402  pylint: disable=wrong-import-position
+    WEB_SERVER_CHECKS,
+    run_startup_checks,
+)
 
 websocket_application = AllowedHostsOriginValidator(AuthMiddlewareStack(URLRouter(consumers.urlpatterns)))
 
@@ -52,5 +56,8 @@ logger.debug("static_root: %s", settings.STATIC_ROOT)
 logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
 
 print_startup_banner()
+
+# the settings checked AWS as they loaded. The rest is checked here, once Django is set up.
+run_startup_checks(WEB_SERVER_CHECKS)
 
 __all__ = ["application"]
