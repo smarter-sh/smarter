@@ -140,6 +140,16 @@ Phase 1, the boundary (smarter)
    ``process_tool_call()`` going through it. No change in behavior. Tests: each kind of tool, through
    the runner.
 
+   In progress. The runner is :mod:`smarter.apps.llmtool.runner`: ``ToolCall`` and
+   ``ToolCallResult``, the ``InProcessToolRunner``, and ``TOOL_EXECUTORS``, which maps each
+   kind of call to its executor by dotted path, so that ``llmtool`` imports none of the apps it runs
+   tools for. Caching stays in the app, around the runner: a call is resolved, and its credentials
+   read, only when the cache misses. MCP clients go through it: the toolkit resolves an
+   ``MCPToolCall``, which carries the MCPClient's ``MCPEndpoint`` (its url, transport, timeout,
+   headers with the credential, and its permissions), and ``execute_mcp_call()`` connects from the
+   endpoint alone, checking the permissions again. Next: the API, web search and image search
+   plugins, then SQL plugins and Extensions.
+
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no
    Secret and no token, and its network policy (smarter-infrastructure). Behind a setting, off by
