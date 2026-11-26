@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.3...v0.48.4-alpha.1) (2026-11-26)
+
+### Bug Fixes
+
+* **connection:** refuse api connection urls that aren't public (SSRF) ([4ce9e59](https://github.com/smarter-sh/smarter/commit/4ce9e597026a61e41aee04773de88a7c0dc63d16))
+
 ## [0.48.3](https://github.com/smarter-sh/smarter/compare/v0.48.2...v0.48.3) (2026-11-25)
 
 ### Bug Fixes
