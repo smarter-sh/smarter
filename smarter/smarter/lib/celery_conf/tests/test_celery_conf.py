@@ -5,6 +5,7 @@ from unittest import mock
 from celery import Celery
 from django.apps import apps
 
+from smarter.apps.infrastructure.startup import TOOL_WORKER_CHECKS, WORKER_CHECKS
 from smarter.apps.llmtool.tasks import run_tool_call
 from smarter.common.conf.settings import Settings
 from smarter.common.exceptions import SmarterConfigurationError
@@ -14,6 +15,7 @@ from smarter.lib.celery_conf import (
     TOOL_WORKER_TASKS,
     keep_only_tool_worker_tasks,
     restrict_tool_worker_tasks,
+    run_worker_startup_checks,
     task_packages,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -92,6 +94,16 @@ class TestToolWorkerTasks(SmarterTestBase):
             with in_the_tool_worker():
                 restrict_tool_worker_tasks()
             keep_only.assert_called_once_with(APP)
+
+    def test_startup_checks(self):
+        """A worker runs the workers' startup checks; the tool worker only its isolation check."""
+        with mock.patch("smarter.apps.infrastructure.startup.run_startup_checks") as run:
+            run_worker_startup_checks()
+            run.assert_called_once_with(WORKER_CHECKS)
+            run.reset_mock()
+            with in_the_tool_worker():
+                run_worker_startup_checks()
+            run.assert_called_once_with(TOOL_WORKER_CHECKS)
 
     def test_task_packages(self):
         """The tool worker discovers only llmtool's tasks; the other workers every installed app's."""

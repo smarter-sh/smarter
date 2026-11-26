@@ -6,6 +6,17 @@ platform itself: a malicious release of a Python package, a typosquatted name, a
 stolen account, a compromised base image or GitHub Action. The attacker's code then runs inside the
 platform, with the platform's own permissions.
 
+.. image:: ../../../_static/security/supply-chain-attacks.svg
+   :alt: Eight common supply-chain attacks, each numbered where it enters the pipeline, from upstream
+         maintainers through the registries, the build and the release to the running platform, with the
+         control that stops it in Smarter. Typosquatting: names enter through a reviewed lockfile, reduced.
+         Dependency confusion: one public index, exact versions and hashes, blocked. A maintainer's account
+         taken over: exact pins, a 14-day cooldown and pip-audit, reduced. A tampered artifact:
+         require-hashes, blocked. A hijacked CI action: actions pinned by commit SHA, blocked. A poisoned
+         base image: the official image, OS updates and ECR scanning, reduced. A swapped release: Cosign
+         signatures, an SBOM and provenance, blocked. A malicious plugin or extension: the signed
+         registry names the publisher, and the tool worker runs its code with no credentials, reduced.
+
 This is an assessment of Smarter's supply-chain risk, including its known weaknesses and the plan
 to fix each one.
 
@@ -42,6 +53,15 @@ What Smarter depends on
 
 Where a malicious dependency would run
 --------------------------------------
+
+.. image:: ../../../_static/security/supply-chain-blast-radius.svg
+   :alt: A malicious dependency's install code runs inside docker build, without the workflow's AWS
+         credentials, and is baked into the image. At run time it is part of the Django and Celery processes
+         in every application pod, where it reaches the Kubernetes Secret's credentials, the IAM role's AWS
+         permissions, the ServiceAccount's Role and MariaDB and Redis. Hardened containers make it hard to
+         persist, and Calico blocks other namespaces and unused ports, but outbound HTTPS to any address is
+         open, and DNS is a slower second way out. The plan: the tool worker, an egress proxy, and
+         credentials split by workload.
 
 **At build time.** A Python package can run code when it is installed. The image's ``pip install``
 runs inside Docker's build, on GitHub's runners. That build doesn't receive the workflow's AWS

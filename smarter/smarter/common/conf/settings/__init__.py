@@ -196,6 +196,10 @@ class Settings(
         # look like an error. READY is logged by one uvicorn worker per server, and
         # NOT_READY by every process.
         prefix_format = SmarterFormattedText.LIGHT_GRAY
+        if self.database_unavailable:
+            # the tool worker has no AWS credentials, by design (ADR-038): its ServiceAccount has no
+            # IAM role. STS isn't asked, and nothing warns that they are missing.
+            self._aws_is_configured = False
         if not self.ready():
             logger.warning(
                 "Pydantic version: %s smarter_settings are %s.",
@@ -228,7 +232,8 @@ class Settings(
         - is the root domain set? Only checked outside of the local environment, which serves
           the platform from localhost.
         - is AWS configured? Needed for DNS, TLS certificates, and deploying LLMClients to
-          Kubernetes when ``cloud_provider`` is ``aws``.
+          Kubernetes when ``cloud_provider`` is ``aws``. Not checked in the tool worker
+          (``database_unavailable``), which has no AWS credentials, by design (ADR-038).
 
         SMTP is not checked: without it, email is not sent, and each email that is not sent is
         logged with instructions. See :attr:`smtp_is_configured`.
@@ -254,19 +259,22 @@ class Settings(
             )
             retval = False
 
-        if not self.aws_is_configured:
+        if not self.aws_is_configured and not self.database_unavailable:
             print(
                 SmarterFormattedText.text(
                     "\n"
                     + "=" * 80
                     + "\n[WARNING] AWS is not configured properly. Some features may not work as expected.\n"
-                    + "Ensure that AWS credentials are set in environment variables, .env file, or AWS config files.\n"
+                    + "Smarter uses boto3's default credentials. On Kubernetes, that is the IAM role of the pod's\n"
+                    + "ServiceAccount (IRSA: serviceAccount.awsRoleArn in the Helm chart). Locally, it is an AWS\n"
+                    + "profile (AWS_PROFILE). A static key pair (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY) also\n"
+                    + "works, but is not recommended.\n"
                     + "=" * 80
                     + "\n",
                     SmarterFormattedText.DARK_RED,
                 )
             )
-            logger.warning("AWS is not configured properly. Some features may not work as expected.")
+            # aws_credentials_work() has already logged why.
             retval = False
 
         self._ready = retval

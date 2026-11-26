@@ -210,6 +210,35 @@ def restrict_tool_worker_tasks(**kwargs) -> None:
 
 worker_init.connect(restrict_tool_worker_tasks, weak=False)
 
+
+def run_worker_startup_checks(**kwargs) -> None:
+    """
+    Check, when a worker starts, what it depends on, the way the settings check AWS.
+
+    Connected to ``worker_init``, so that the checks run once, in the worker's main process, before its
+    pool's processes fork. The tool worker (``smarter_settings.database_unavailable``) checks its isolation
+    (ADR-038); every other worker its database, cache and Kubernetes cluster. See
+    :mod:`smarter.apps.infrastructure.startup`.
+
+    :param kwargs: The signal's arguments, unused.
+    :returns: None
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.apps.infrastructure.startup import (
+        TOOL_WORKER_CHECKS,
+        WORKER_CHECKS,
+        run_startup_checks,
+    )
+    from smarter.common.conf import smarter_settings
+
+    checks = WORKER_CHECKS
+    if smarter_settings.database_unavailable:
+        checks = TOOL_WORKER_CHECKS
+    run_startup_checks(checks)
+
+
+worker_init.connect(run_worker_startup_checks, weak=False)
+
 # Load the task modules of the packages that task_packages() names, when the app is finalized.
 APP.autodiscover_tasks(task_packages)
 

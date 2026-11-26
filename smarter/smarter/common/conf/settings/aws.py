@@ -10,7 +10,7 @@ from botocore.exceptions import (
     NoCredentialsError,
     ProfileNotFound,
 )
-from pydantic import BaseModel, Field, SecretStr, ValidationInfo
+from pydantic import BaseModel, Field, PrivateAttr, SecretStr, ValidationInfo
 
 from smarter.common.conf.const import DEFAULT_MISSING_VALUE, THE_EMPTY_SET
 from smarter.common.conf.env import is_missing_value
@@ -131,6 +131,9 @@ def aws_credentials_work() -> bool:
 
 class AwsSettings(BaseModel):
     """The cloud provider: AWS credentials, region, and the EKS cluster."""
+
+    _aws_is_configured: Optional[bool] = PrivateAttr(default=None)
+    """The answer of :attr:`aws_is_configured`, once it has asked STS, or None before."""
 
     aws_profile: Optional[str] = Field(
         None,
@@ -357,17 +360,23 @@ class AwsSettings(BaseModel):
     @property
     def aws_is_configured(self) -> bool:
         """
-        True if AWS is configured.
+        True if AWS is configured: boto3 finds credentials, and STS accepts them.
 
-        This is determined by the presence of either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
-        This setting indicates whether the platform has sufficient AWS credentials
-        configured to connect to AWS services. If AWS is not configured, attempts
-        to use AWS services will fail.
+        boto3's default credential chain finds them: on Kubernetes, the IAM role of the pod's
+        ServiceAccount (IRSA); locally, an AWS profile (``AWS_PROFILE``); or a static key pair
+        (``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``), which is not recommended. If AWS is
+        not configured, attempts to use AWS services will fail.
+
+        STS is asked once, by :meth:`ready` when the settings are created, and the answer is kept:
+        the Django settings read it several times as they load, e.g. to choose the storage backend,
+        and each read would otherwise be a call to STS, and a warning when it fails.
 
         :type: bool
         """
-        logger.debug("Checking if AWS is configured with aws_profile, or aws_access_key_id and aws_secret_access_key.")
-        return aws_credentials_work()
+        if self._aws_is_configured is None:
+            logger.debug("Checking whether boto3 finds AWS credentials, and STS accepts them.")
+            self._aws_is_configured = aws_credentials_work()
+        return self._aws_is_configured
 
     platform_cloud_provider: str = Field(
         "aws",
