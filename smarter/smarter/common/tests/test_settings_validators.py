@@ -500,12 +500,34 @@ class TestAwsCredentialsWork(SmarterTestBase):
         self.assertNotIn("arn:aws", message)
 
     def test_aws_is_configured_uses_it(self):
-        """Settings() asks once itself, in ready(); the property asks again."""
+        """Settings() asks STS once, in ready(), and the property keeps its answer."""
         with patch(f"{self.MODULE}.aws_credentials_work", return_value=False) as works:
             settings = Settings()
-            calls_by_init = works.call_count
+            self.assertEqual(works.call_count, 1)
             self.assertFalse(settings.aws_is_configured)
-        self.assertEqual(works.call_count, calls_by_init + 1)
+            self.assertFalse(settings.aws_is_configured)
+        self.assertEqual(works.call_count, 1)
+
+    def test_the_tool_worker_never_asks(self):
+        """The tool worker has no AWS credentials, by design (ADR-038): STS isn't asked, and nothing warns."""
+        with (
+            patch(f"{self.MODULE}.aws_credentials_work") as works,
+            patch("builtins.print") as mock_print,
+        ):
+            settings = Settings(database_unavailable=True)
+            self.assertFalse(settings.aws_is_configured)
+        works.assert_not_called()
+        for call in mock_print.call_args_list:
+            self.assertNotIn("AWS is not configured", str(call))
+
+    def test_aws_is_configured_asks_each_settings_once(self):
+        """Each Settings instance asks for itself, so that a new one sees credentials that have changed."""
+        with patch(f"{self.MODULE}.aws_credentials_work", side_effect=[False, True]) as works:
+            first = Settings()
+            second = Settings()
+        self.assertFalse(first.aws_is_configured)
+        self.assertTrue(second.aws_is_configured)
+        self.assertEqual(works.call_count, 2)
 
     def test_aws_regions_default(self):
         """The default lists every commercial region, opt-in ones included, and validates aws_region against them."""

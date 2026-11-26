@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 932" width="1250" height="932" role="img" aria-labelledby="t d">
+<title id="t">Common supply-chain attacks, and where Smarter stops them</title>
+<desc id="d">Eight common supply-chain attacks, numbered where each enters Smarter&#x27;s pipeline, from upstream maintainers, through the registries, the build and the release, to the running platform, with the control that stops or reduces each one. 1, typosquatting, a look-alike package name: every name enters through a reviewed lockfile change; reduced. 2, dependency confusion: one public index, exact versions and hashes; blocked. 3, a maintainer&#x27;s account taken over to publish a malicious release: exact pins, a 14-day cooldown on new releases and pip-audit; reduced. 4, a tampered artifact, replaced on the registry or in transit: pip installs with require-hashes; blocked. 5, a hijacked CI action, a tag moved to a malicious commit: actions are pinned to commit SHAs; blocked. 6, a poisoned base image: the official Python image with OS updates at each build, and ECR scanning; reduced. 7, a swapped release: Cosign signatures, an SBOM and SLSA provenance, deployed by verified digest; blocked. 8, a malicious plugin or extension, third-party code that answers tool calls: the signed registry names the publisher, and the tool worker runs its code with no credentials, no database and no private addresses; reduced.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1250" height="932" rx="14" fill="#F6F8FA"/>
+<text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Common supply-chain attacks, and where Smarter stops them</text>
+<text x="625.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">each numbered attack enters at one stage of the pipeline; the card below it names Smarter&#x27;s control</text>
+<text x="28" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">The pipeline an attack must travel</text>
+<rect x="28" y="98" width="1194" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28.0" y="118" width="210" height="76" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,127 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="40.0" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Upstream</text>
+<text x="40.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">maintainers&#x27; accounts</text>
+<text x="40.0" y="177" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">and source code</text>
+<path d="M242.0,164 L270.0,164" fill="none" stroke="#2980B9" stroke-width="1.6" marker-end="url(#head-blue)"/>
+<rect x="274.0" y="118" width="210" height="76" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M274.0,127 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="286.0" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Registries</text>
+<text x="286.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">PyPI, npm, ECR Public,</text>
+<text x="286.0" y="177" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">GitHub Actions, Helm repos</text>
+<path d="M488.0,164 L516.0,164" fill="none" stroke="#2980B9" stroke-width="1.6" marker-end="url(#head-blue)"/>
+<rect x="520.0" y="118" width="210" height="76" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M520.0,127 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="532.0" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Build</text>
+<text x="532.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">GitHub Actions runner,</text>
+<text x="532.0" y="177" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">docker build, pip install</text>
+<path d="M734.0,164 L762.0,164" fill="none" stroke="#2980B9" stroke-width="1.6" marker-end="url(#head-blue)"/>
+<rect x="766.0" y="118" width="210" height="76" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M766.0,127 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
+<text x="778.0" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Release</text>
+<text x="778.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Docker image and Helm</text>
+<text x="778.0" y="177" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">chart, in public registries</text>
+<path d="M980.0,164 L1008.0,164" fill="none" stroke="#2980B9" stroke-width="1.6" marker-end="url(#head-blue)"/>
+<rect x="1012.0" y="118" width="210" height="76" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M1012.0,127 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#2980B9"/>
+<text x="1024.0" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">Run</text>
+<text x="1024.0" y="160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the platform&#x27;s pods,</text>
+<text x="1024.0" y="177" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">extensions, plugins</text>
+<circle cx="418.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="418.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+<circle cx="444.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="444.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+<circle cx="470.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="470.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+<circle cx="224.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="224.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+<circle cx="690.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="690.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+<circle cx="716.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="716.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">6</text>
+<circle cx="962.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="962.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">7</text>
+<circle cx="1208.0" cy="118" r="11" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="1208.0" y="122" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">8</text>
+<text x="28" y="235" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#57606A" text-anchor="start">Smarter today:</text>
+<rect x="128" y="222" width="65" height="18" rx="9" fill="#1A7F37"/>
+<text x="160.5" y="235" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">blocked</text>
+<text x="201" y="235" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">blocked by a control</text>
+<rect x="369" y="222" width="65" height="18" rx="9" fill="#BF8700"/>
+<text x="401.5" y="235" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">reduced</text>
+<text x="442" y="235" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">made harder or slower</text>
+<text x="28" y="278" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">The attacks</text>
+<rect x="28" y="284" width="1194" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28.0" y="304" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,313 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="46.0" cy="317" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="46.0" y="321" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="64.0" y="322" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Typosquatting</text>
+<text x="597.0" y="322" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: registries</text>
+<text x="40.0" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="40.0" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A look-alike name (reqeusts, python-dateutils)</text>
+<text x="40.0" y="385" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">is uploaded, waiting for someone&#x27;s typo.</text>
+<rect x="322.5" y="336" width="278.5" height="92" rx="7" fill="#FFF8C5"/>
+<text x="332.5" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#7D4E00" text-anchor="start">What stops it in Smarter</text>
+<text x="332.5" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Every package name enters through a lockfile</text>
+<text x="332.5" y="385" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">change in a public, reviewed pull request.</text>
+<rect x="332.5" y="406" width="65" height="18" rx="9" fill="#BF8700"/>
+<text x="365.0" y="419" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">reduced</text>
+<path d="M300.5,376 L318.5,376" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="641.0" y="304" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M641.0,313 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="659.0" cy="317" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="659.0" y="321" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+<text x="677.0" y="322" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Dependency confusion</text>
+<text x="1210.0" y="322" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: registries</text>
+<text x="653.0" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="653.0" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A public package takes the name of a private</text>
+<text x="653.0" y="385" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">one, with a higher version, and wins the install.</text>
+<rect x="935.5" y="336" width="278.5" height="92" rx="7" fill="#E7F6EC"/>
+<text x="945.5" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#116329" text-anchor="start">What stops it in Smarter</text>
+<text x="945.5" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">One public index and no private names; exact</text>
+<text x="945.5" y="385" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">versions and file hashes, so no index can swap one.</text>
+<rect x="945.5" y="406" width="65" height="18" rx="9" fill="#1A7F37"/>
+<text x="978.0" y="419" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">blocked</text>
+<path d="M913.5,376 L931.5,376" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="28.0" y="454" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,463 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="46.0" cy="467" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="46.0" y="471" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="64.0" y="472" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Maintainer account takeover</text>
+<text x="597.0" y="472" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: upstream</text>
+<text x="40.0" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="40.0" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A stolen login or token publishes a malicious</text>
+<text x="40.0" y="535" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">release of a real, trusted package.</text>
+<rect x="322.5" y="486" width="278.5" height="92" rx="7" fill="#FFF8C5"/>
+<text x="332.5" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#7D4E00" text-anchor="start">What stops it in Smarter</text>
+<text x="332.5" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Exact pins; a 14-day cooldown on new releases</text>
+<text x="332.5" y="535" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">(make python-cooldown, Dependabot); pip-audit.</text>
+<rect x="332.5" y="556" width="65" height="18" rx="9" fill="#BF8700"/>
+<text x="365.0" y="569" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">reduced</text>
+<path d="M300.5,526 L318.5,526" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="641.0" y="454" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M641.0,463 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="659.0" cy="467" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="659.0" y="471" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4</text>
+<text x="677.0" y="472" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Tampered artifact</text>
+<text x="1210.0" y="472" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: registries</text>
+<text x="653.0" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="653.0" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A release&#x27;s file is replaced on the registry,</text>
+<text x="653.0" y="535" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">or altered on its way to the build.</text>
+<rect x="935.5" y="486" width="278.5" height="92" rx="7" fill="#E7F6EC"/>
+<text x="945.5" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#116329" text-anchor="start">What stops it in Smarter</text>
+<text x="945.5" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">pip install --require-hashes: a file whose sha256</text>
+<text x="945.5" y="535" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">isn&#x27;t the lockfile&#x27;s fails the build.</text>
+<rect x="945.5" y="556" width="65" height="18" rx="9" fill="#1A7F37"/>
+<text x="978.0" y="569" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">blocked</text>
+<path d="M913.5,526 L931.5,526" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="28.0" y="604" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,613 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="46.0" cy="617" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="46.0" y="621" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5</text>
+<text x="64.0" y="622" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Hijacked CI action</text>
+<text x="597.0" y="622" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: build</text>
+<text x="40.0" y="650" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="40.0" y="668" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">An action&#x27;s tag (v4) is moved to a malicious</text>
+<text x="40.0" y="685" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">commit that runs in the release pipeline.</text>
+<rect x="322.5" y="636" width="278.5" height="92" rx="7" fill="#E7F6EC"/>
+<text x="332.5" y="650" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#116329" text-anchor="start">What stops it in Smarter</text>
+<text x="332.5" y="668" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Every GitHub Action is pinned to a commit SHA,</text>
+<text x="332.5" y="685" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">and updated by Dependabot after two weeks.</text>
+<rect x="332.5" y="706" width="65" height="18" rx="9" fill="#1A7F37"/>
+<text x="365.0" y="719" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">blocked</text>
+<path d="M300.5,676 L318.5,676" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="641.0" y="604" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M641.0,613 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="659.0" cy="617" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="659.0" y="621" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">6</text>
+<text x="677.0" y="622" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Poisoned base image</text>
+<text x="1210.0" y="622" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: build</text>
+<text x="653.0" y="650" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="653.0" y="668" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">The OS image the build starts from carries</text>
+<text x="653.0" y="685" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">a backdoor or a vulnerable package.</text>
+<rect x="935.5" y="636" width="278.5" height="92" rx="7" fill="#FFF8C5"/>
+<text x="945.5" y="650" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#7D4E00" text-anchor="start">What stops it in Smarter</text>
+<text x="945.5" y="668" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Official Python image, from ECR Public; OS updates</text>
+<text x="945.5" y="685" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">at each build; ECR scans every pushed image.</text>
+<rect x="945.5" y="706" width="65" height="18" rx="9" fill="#BF8700"/>
+<text x="978.0" y="719" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">reduced</text>
+<path d="M913.5,676 L931.5,676" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="28.0" y="754" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,763 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="46.0" cy="767" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="46.0" y="771" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">7</text>
+<text x="64.0" y="772" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Swapped release</text>
+<text x="597.0" y="772" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: release</text>
+<text x="40.0" y="800" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="40.0" y="818" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A different image or chart is pushed under</text>
+<text x="40.0" y="835" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">the release&#x27;s tag, to registries or mirrors.</text>
+<rect x="322.5" y="786" width="278.5" height="92" rx="7" fill="#E7F6EC"/>
+<text x="332.5" y="800" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#116329" text-anchor="start">What stops it in Smarter</text>
+<text x="332.5" y="818" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Cosign signatures in Sigstore&#x27;s public log, an SBOM</text>
+<text x="332.5" y="835" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">and SLSA provenance; deploy by verified digest.</text>
+<rect x="332.5" y="856" width="65" height="18" rx="9" fill="#1A7F37"/>
+<text x="365.0" y="869" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">blocked</text>
+<path d="M300.5,826 L318.5,826" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<rect x="641.0" y="754" width="581.0" height="132" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M641.0,763 a9,9 0 0 1 9,-9 h563.0 a9,9 0 0 1 9,9 v17 h-581.0 z" fill="#EAEEF2"/>
+<circle cx="659.0" cy="767" r="10" fill="#CF222E" stroke="#FFFFFF" stroke-width="2"/>
+<text x="659.0" y="771" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">8</text>
+<text x="677.0" y="772" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Malicious plugin or extension</text>
+<text x="1210.0" y="772" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end">enters at: run</text>
+<text x="653.0" y="800" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#A40E26" text-anchor="start">How it works</text>
+<text x="653.0" y="818" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">Third-party code is installed at run time and</text>
+<text x="653.0" y="835" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">runs to answer the LLM&#x27;s tool calls.</text>
+<rect x="935.5" y="786" width="278.5" height="92" rx="7" fill="#FFF8C5"/>
+<text x="945.5" y="800" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#7D4E00" text-anchor="start">What stops it in Smarter</text>
+<text x="945.5" y="818" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">A signed registry names the publisher; the tool</text>
+<text x="945.5" y="835" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#24292F" text-anchor="start">worker runs its code with no credentials or database.</text>
+<rect x="945.5" y="856" width="65" height="18" rx="9" fill="#BF8700"/>
+<text x="978.0" y="869" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">reduced</text>
+<path d="M913.5,826 L931.5,826" fill="none" stroke="#8C959F" stroke-width="1.6" marker-end="url(#head)"/>
+<text x="28" y="910" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">An attack that gets through runs inside the application, with the platform&#x27;s own permissions.</text>
+</svg>
