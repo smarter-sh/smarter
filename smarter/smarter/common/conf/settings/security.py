@@ -10,7 +10,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, SecretStr, ValidationError
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.env import is_missing_value
+from smarter.common.conf.env import get_env, is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
     comma_separated,
@@ -26,6 +26,22 @@ _generated_django_secret_key: Optional[SecretStr] = None
 _generated_fernet_encryption_key: Optional[SecretStr] = None
 """The Fernet encryption key that this process generated, because none was configured, or None."""
 
+DATABASE_UNAVAILABLE_VARIABLE = "SMARTER_DATABASE_UNAVAILABLE"
+"""The environment variable of ``database_unavailable``, which the Helm chart sets for the tool worker only."""
+
+
+def is_tool_worker() -> bool:
+    """
+    Whether this process is the tool worker, which is given no Django secret key and no Fernet key, by design (ADR-038).
+
+    The keys' defaults are made while the settings are validated, before ``database_unavailable`` has a
+    value, so its environment variable is read directly.
+
+    :returns: True if ``SMARTER_DATABASE_UNAVAILABLE`` is true.
+    """
+    tool_worker = get_env(DATABASE_UNAVAILABLE_VARIABLE, False)
+    return tool_worker
+
 
 def generated_django_secret_key() -> SecretStr:
     """
@@ -33,18 +49,20 @@ def generated_django_secret_key() -> SecretStr:
 
     It is generated, with a warning, the first time a ``django_secret_key`` isn't configured. Outside of the
     local environment, Smarter refuses to start with it: see :meth:`SecuritySettings.django_secret_key_is_set`.
+    The tool worker (:func:`is_tool_worker`) is never given the key, so it generates one without a warning.
 
     :returns: The key.
     """
     global _generated_django_secret_key  # pylint: disable=global-statement
     if _generated_django_secret_key is None:
-        warnings.warn(
-            "DJANGO_SECRET_KEY is not set. A new secret key will be generated. "
-            "This may cause existing sessions and other cryptographic operations to become invalid. "
-            "You can safely disregard this warning if this is a new installation or test environment. "
-            "Outside of the local environment, Smarter refuses to start without a DJANGO_SECRET_KEY.",
-            UserWarning,
-        )
+        if not is_tool_worker():
+            warnings.warn(
+                "DJANGO_SECRET_KEY is not set. A new secret key will be generated. "
+                "This may cause existing sessions and other cryptographic operations to become invalid. "
+                "You can safely disregard this warning if this is a new installation or test environment. "
+                "Outside of the local environment, Smarter refuses to start without a DJANGO_SECRET_KEY.",
+                UserWarning,
+            )
         random_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
         _generated_django_secret_key = SecretStr(random_key)
     return _generated_django_secret_key
@@ -55,18 +73,20 @@ def generated_fernet_encryption_key() -> SecretStr:
     Return a new Fernet key, the same one for the life of the process: the default of ``platform_fernet_encryption_key``.
 
     It is generated, with a warning, the first time the key isn't configured. Secrets encrypted with
-    it can't be read by another process, or after a restart.
+    it can't be read by another process, or after a restart. The tool worker (:func:`is_tool_worker`) is
+    never given the key, and decrypts nothing, so it generates one without a warning.
 
     :returns: The key.
     """
     global _generated_fernet_encryption_key  # pylint: disable=global-statement
     if _generated_fernet_encryption_key is None:
-        warnings.warn(
-            "PLATFORM_FERNET_ENCRYPTION_KEY is not set. "
-            "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
-            "You can safely disregard this warning if this is a new installation, test environment or CI-CD process.",
-            UserWarning,
-        )
+        if not is_tool_worker():
+            warnings.warn(
+                "PLATFORM_FERNET_ENCRYPTION_KEY is not set. "
+                "A new encryption key will be generated. This may cause existing encrypted data to become inaccessible. "
+                "You can safely disregard this warning if this is a new installation, test environment or CI-CD process.",
+                UserWarning,
+            )
         new_key = generate_fernet_encryption_key()
         _generated_fernet_encryption_key = SecretStr(new_key)
     return _generated_fernet_encryption_key
@@ -363,4 +383,5 @@ __all__ = [
     "SecuritySettings",
     "generated_fernet_encryption_key",
     "generated_django_secret_key",
+    "is_tool_worker",
 ]
