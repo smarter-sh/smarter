@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 826" width="1250" height="826" role="img" aria-labelledby="t d">
+<title id="t">If a malicious dependency gets in</title>
+<desc id="d">What a malicious Python dependency can do once it is installed. At build time, its install script runs inside docker build on a GitHub runner, without the workflow&#x27;s AWS credentials, and whatever it writes goes into the image every environment runs. At run time it is part of the Django and Celery processes, in every application pod: the app, the workers, beat and the init Job. From there it reaches the pods&#x27; environment from the Kubernetes Secret (the database password, the Fernet key, the LLM providers&#x27; API keys and the SES SMTP password), the IAM role&#x27;s AWS permissions (Route53, ACM, S3, LLMHost node groups), the ServiceAccount&#x27;s Role, which includes Secrets, and MariaDB and Redis. Hardened containers, non-root with a read-only root filesystem and no capabilities, make it hard to persist. Calico&#x27;s network policies keep it away from other namespaces and close ports 465 and the rest, but outbound HTTPS to any address is open, with ports 80, 587 and 3306, and DNS lookups are a slower second way out. The plan, ADR-038: the tool worker runs tool calls and extensions with no credentials and no private addresses; an egress proxy limits every other pod to known hosts; and credentials are split by workload.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1250" height="826" rx="14" fill="#F6F8FA"/>
+<text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">If a malicious dependency gets in</text>
+<text x="625.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">it runs inside the application, with the application&#x27;s permissions; the way out is outbound HTTPS</text>
+<text x="28" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · where its code runs</text>
+<rect x="28" y="98" width="300" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="118" width="300" height="158" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,127 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">At build time</text>
+<text x="40" y="160" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">docker build</text>
+<text x="40" y="178" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">setup.py or a build hook runs during</text>
+<text x="40" y="195" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">pip install, inside docker build on</text>
+<text x="40" y="212" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a GitHub runner, without the workflow&#x27;s</text>
+<text x="40" y="229" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">AWS credentials. What it writes is</text>
+<text x="40" y="246" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">baked into the image every</text>
+<text x="40" y="263" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">environment runs.</text>
+<rect x="28" y="318" width="300" height="90" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M28,327 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#2980B9"/>
+<text x="40" y="336" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">At run time (the larger exposure)</text>
+<text x="40" y="360" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">in-process, no isolation</text>
+<text x="40" y="378" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">imported into the Django and Celery</text>
+<text x="40" y="395" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">processes, in every application pod:</text>
+<rect x="44" y="430" width="128" height="26" rx="6" fill="#FFFFFF" fill-opacity="0.95"/>
+<text x="108" y="447" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="middle">smarter-api</text>
+<rect x="182" y="430" width="128" height="26" rx="6" fill="#FFFFFF" fill-opacity="0.95"/>
+<text x="246" y="447" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="middle">smarter-worker(s)</text>
+<rect x="44" y="464" width="128" height="26" rx="6" fill="#FFFFFF" fill-opacity="0.95"/>
+<text x="108" y="481" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="middle">smarter-beat</text>
+<rect x="182" y="464" width="128" height="26" rx="6" fill="#FFFFFF" fill-opacity="0.95"/>
+<text x="246" y="481" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="middle">the init Job</text>
+<path d="M178,284 L178,314" fill="none" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#head)"/>
+<text x="188" y="302" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ships in the image</text>
+<rect x="28" y="524" width="300" height="110" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,533 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#E7F6EC"/>
+<text x="40" y="542" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Hardened containers</text>
+<text x="40" y="566" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">non-root, read-only root filesystem,</text>
+<text x="40" y="583" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">every Linux capability dropped: it</text>
+<text x="40" y="600" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">can&#x27;t rewrite the installed packages,</text>
+<text x="40" y="617" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">so it is hard to persist</text>
+<text x="370" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#A40E26" text-anchor="start">2 · what it can reach</text>
+<rect x="370" y="98" width="400" height="2" fill="#A40E26" fill-opacity="0.35"/>
+<rect x="370" y="118" width="400" height="124" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M370,127 a9,9 0 0 1 9,-9 h382 a9,9 0 0 1 9,9 v17 h-400 z" fill="#FFEBE9"/>
+<text x="382" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A40E26" text-anchor="start">The pods&#x27; environment</text>
+<text x="382" y="160" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">Kubernetes Secret</text>
+<text x="382" y="178" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">database password</text>
+<text x="382" y="195" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Fernet key that encrypts Smarter Secrets</text>
+<text x="382" y="212" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLM providers&#x27; API keys</text>
+<text x="382" y="229" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">SES SMTP password</text>
+<path d="M332,410 L366,148" fill="none" stroke="#CF222E" stroke-width="1.3" marker-end="url(#head-red)"/>
+<rect x="370" y="256" width="400" height="90" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M370,265 a9,9 0 0 1 9,-9 h382 a9,9 0 0 1 9,9 v17 h-400 z" fill="#FFEBE9"/>
+<text x="382" y="274" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A40E26" text-anchor="start">AWS, through the IAM role</text>
+<text x="382" y="298" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IRSA, short-lived, one environment</text>
+<text x="382" y="316" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Route53 records, ACM certificates</text>
+<text x="382" y="333" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the environment&#x27;s S3 buckets, LLMHost node groups</text>
+<path d="M332,410 L366,286" fill="none" stroke="#CF222E" stroke-width="1.3" marker-end="url(#head-red)"/>
+<rect x="370" y="360" width="400" height="73" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M370,369 a9,9 0 0 1 9,-9 h382 a9,9 0 0 1 9,9 v17 h-400 z" fill="#FFEBE9"/>
+<text x="382" y="378" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A40E26" text-anchor="start">Kubernetes, through the ServiceAccount</text>
+<text x="382" y="402" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">Role in the namespace</text>
+<text x="382" y="420" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">including the namespace&#x27;s Secrets</text>
+<path d="M332,410 L366,390" fill="none" stroke="#CF222E" stroke-width="1.3" marker-end="url(#head-red)"/>
+<rect x="370" y="447" width="400" height="73" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M370,456 a9,9 0 0 1 9,-9 h382 a9,9 0 0 1 9,9 v17 h-400 z" fill="#FFEBE9"/>
+<text x="382" y="465" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A40E26" text-anchor="start">Data stores</text>
+<text x="382" y="489" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">network policy allows the platform</text>
+<text x="382" y="507" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB and Redis</text>
+<path d="M332,410 L366,477" fill="none" stroke="#CF222E" stroke-width="1.3" marker-end="url(#head-red)"/>
+<text x="812" y="92" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · how it gets data out</text>
+<rect x="812" y="98" width="410" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="812" y="118" width="410" height="124" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M812,127 a9,9 0 0 1 9,-9 h392 a9,9 0 0 1 9,9 v17 h-410 z" fill="#FFEBE9"/>
+<text x="824" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A40E26" text-anchor="start">Outbound HTTPS to any address</text>
+<text x="824" y="160" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">the first known weakness</text>
+<text x="824" y="178" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">open: port 443, and 80, 587, 3306, so an ordinary</text>
+<text x="824" y="195" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">HTTPS request carries what it stole. Closing 443</text>
+<text x="824" y="212" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">would break API and MCP plugins, web search and</text>
+<text x="824" y="229" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLM providers at custom endpoints.</text>
+<rect x="937" y="272" width="160" height="40" rx="20" fill="#FFFFFF" stroke="#CF222E" stroke-dasharray="5 4"/>
+<text x="1017" y="297" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="bold" fill="#A40E26" text-anchor="middle">attacker&#x27;s server</text>
+<path d="M1017,244 L1017,268" fill="none" stroke="#CF222E" stroke-width="1.6" marker-end="url(#head-red)"/>
+<rect x="812" y="338" width="410" height="59" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M812,347 a9,9 0 0 1 9,-9 h392 a9,9 0 0 1 9,9 v17 h-410 z" fill="#FFF8C5"/>
+<text x="824" y="356" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7D4E00" text-anchor="start">DNS lookups</text>
+<text x="824" y="380" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">needed by every pod; a slower second way out</text>
+<path d="M1017,334 L1017,316" fill="none" stroke="#8C959F" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#head)"/>
+<rect x="812" y="430" width="410" height="93" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M812,439 a9,9 0 0 1 9,-9 h392 a9,9 0 0 1 9,9 v17 h-410 z" fill="#E7F6EC"/>
+<text x="824" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Blocked by Calico&#x27;s network policies</text>
+<text x="824" y="472" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">other namespaces, and every pod outside the</text>
+<text x="824" y="489" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">platform away from MariaDB and Redis</text>
+<text x="824" y="506" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ports the platform doesn&#x27;t use, 465 included</text>
+<path d="M774,160 L808,160" fill="none" stroke="#CF222E" stroke-width="1.6" marker-end="url(#head-red)"/>
+<text x="28" y="668" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#1A7F37" text-anchor="start">The plan (ADR-038)</text>
+<rect x="28" y="674" width="1194" height="2" fill="#1A7F37" fill-opacity="0.35"/>
+<rect x="28.0" y="694" width="382.0" height="107" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28.0,703 a9,9 0 0 1 9,-9 h364.0 a9,9 0 0 1 9,9 v17 h-382.0 z" fill="#E7F6EC"/>
+<text x="40.0" y="712" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Tool worker</text>
+<text x="40.0" y="736" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">in place</text>
+<text x="40.0" y="754" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">API, SQL and MCP calls, web search and</text>
+<text x="40.0" y="771" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Extensions run with no credentials, no</text>
+<text x="40.0" y="788" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">database and no private addresses</text>
+<rect x="434.0" y="694" width="382.0" height="90" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M434.0,703 a9,9 0 0 1 9,-9 h364.0 a9,9 0 0 1 9,9 v17 h-382.0 z" fill="#E7F6EC"/>
+<text x="446.0" y="712" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Egress proxy</text>
+<text x="446.0" y="736" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">planned</text>
+<text x="446.0" y="754" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">every other pod reaches only known hosts:</text>
+<text x="446.0" y="771" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the LLM providers, AWS, GitHub</text>
+<rect x="840.0" y="694" width="382.0" height="107" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M840.0,703 a9,9 0 0 1 9,-9 h364.0 a9,9 0 0 1 9,9 v17 h-382.0 z" fill="#E7F6EC"/>
+<text x="852.0" y="712" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Credentials split by workload</text>
+<text x="852.0" y="736" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">planned</text>
+<text x="852.0" y="754" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a ServiceAccount, IAM role and Secret per</text>
+<text x="852.0" y="771" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">workload, so each pod holds only</text>
+<text x="852.0" y="788" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">what it uses</text>
+</svg>
