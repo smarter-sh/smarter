@@ -63,4 +63,41 @@ class ToolCallResult(BaseModel):
     status_code: Optional[int] = None
 
 
-__all__ = ["ToolCall", "ToolCallResult"]
+class ToolCallLabel(BaseModel):
+    """
+    What a tool call is for, so that the tool worker's log can say so.
+
+    The app sets it around each tool call that the LLM makes
+    (:func:`~smarter.apps.llmtool.runner.runner.labeled_tool_calls`), and the remote runner sends it to
+    the tool worker beside the call. It holds names and ids only, never a credential, an argument or a
+    result: it is logged as is.
+
+    :ivar tool: The tool's name, as users know it, e.g. a plugin's or an MCP tool's name.
+    :ivar llmclient: The LLMClient that the call is made for, as ``<name> (<id>)``, or None.
+    :ivar session: The chat session's key, masked, or None.
+    :ivar request_id: The id of the request that made the call, or None.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tool: Optional[str] = None
+    llmclient: Optional[str] = None
+    session: Optional[str] = None
+    request_id: Optional[str] = None
+
+    def describe(self) -> str:
+        """
+        Describe the label for a log line.
+
+        :returns: e.g. ``tool=stackademy_sql llmclient=stackademy (12) session=****a1b2c3 request=r-123``,
+            with ``-`` for what isn't known.
+        """
+        tool = self.tool or "-"
+        llmclient = self.llmclient or "-"
+        session = self.session or "-"
+        request_id = self.request_id or "-"
+        description = f"tool={tool} llmclient={llmclient} session={session} request={request_id}"
+        return description
+
+
+__all__ = ["ToolCall", "ToolCallLabel", "ToolCallResult"]
