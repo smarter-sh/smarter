@@ -117,8 +117,8 @@ Known weaknesses, and the plan for each
 
 Two weaknesses remain, and the same change addresses both: the tool calls that reach hosts chosen by a
 manifest author or the LLM move to a worker with no credentials, and every other pod's internet traffic
-is limited to known hosts. :doc:`ADR-038 </adr/038-tool-isolation-and-egress>` proposes the design and
-the order of the work.
+is limited to known hosts. :doc:`ADR-038 </adr/038-tool-isolation-and-egress>` gives the design,
+the order of the work, and how far it has got.
 
 Outbound HTTPS is open to any address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,7 +135,8 @@ endpoints.
 
 - Move the features that call arbitrary hosts (API, SQL and web search plugins, MCP clients and
   Extensions) into a worker of their own, which holds no secrets other than the ones each call needs,
-  no database access and no AWS role. Available, off by default: the tool worker,
+  no database access and no AWS role. Available, off by default in the chart and on in smarter-sh's
+  own deploy: the tool worker,
   :doc:`/smarter-framework/smarter-on-kubernetes/tool-worker`, whose network policy also keeps it
   away from every private address, the instance metadata service included.
 - Limit the outbound traffic of every other pod to a list of known hosts (the LLM providers, AWS,
