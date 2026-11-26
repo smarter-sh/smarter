@@ -33,7 +33,6 @@ import fnmatch
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from typing import Awaitable, Callable, Optional, TypeVar
-from urllib.parse import urlparse
 
 import anyio
 import anyio.to_thread
@@ -44,14 +43,13 @@ from mcp.client import Transport
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 
-from smarter.apps.llmtool.plugin.safe_http import is_loopback_host, validate_public_url
+from smarter.apps.llmtool.plugin.safe_http import validate_destination_url
 from smarter.apps.mcpserver.services import (
     ACTING_USER_HEADER,
     acting_user_headers,
     current_acting_user,
 )
-from smarter.common.conf import smarter_settings
-from smarter.common.const import VERSION, SmarterEnvironments
+from smarter.common.const import VERSION
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -162,23 +160,14 @@ def validate_endpoint_url(url: str) -> None:
     In the local environment, a loopback host, e.g. ``http://localhost:9357/`` or
     ``https://127.0.0.1/``, is permitted, on any port, so that a developer's MCPClients can
     reach MCP servers that run on their machine, such as the platform's own. Every other
-    URL, and every URL in every other environment, must pass
-    :func:`~smarter.apps.llmtool.plugin.safe_http.validate_public_url`. Loopback hosts are
-    never permitted in a deployed environment, where they would let an MCPClient reach the
-    services of the Smarter server itself.
+    URL, and every URL in every other environment, must be https on the standard port, to a
+    host with public addresses only. See
+    :func:`~smarter.apps.llmtool.plugin.safe_http.validate_destination_url`, which this calls.
 
     :param url: The URL.
     :raises SafeHttpError: If the URL is not permitted.
     """
-    if smarter_settings.environment == SmarterEnvironments.LOCAL:
-        try:
-            parsed = urlparse(url)
-            hostname = parsed.hostname
-        except ValueError:
-            hostname = None
-        if hostname and parsed.scheme in ("http", "https") and is_loopback_host(hostname):
-            return
-    validate_public_url(url)
+    validate_destination_url(url)
 
 
 async def guard_request(request: httpx2.Request) -> None:

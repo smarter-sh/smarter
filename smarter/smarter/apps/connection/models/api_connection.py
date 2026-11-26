@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 import requests
 from django.core.validators import MinValueValidator
 from django.db import models
+from pydantic import JsonValue
 
 from smarter.apps.connection.signals import (
     api_connection_attempted,
@@ -15,6 +16,11 @@ from smarter.apps.connection.signals import (
     api_connection_query_failed,
     api_connection_query_success,
     api_connection_success,
+)
+from smarter.apps.llmtool.plugin.safe_http import (
+    DEFAULT_TIMEOUT,
+    SafeHttpError,
+    fetch,
 )
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
@@ -27,6 +33,42 @@ from smarter.lib.typing import SmarterDictType
 from .connection_base import ConnectionBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
+
+API_MAX_RESPONSE_BYTES = 10_000_000
+"""The largest api response that :meth:`ApiConnection.execute_query` reads, in bytes."""
+
+SUCCESS_STATUS_CODES = tuple(range(200, 300))
+"""
+The status codes that :func:`~smarter.apps.llmtool.plugin.safe_http.fetch` returns rather than raises.
+
+Only 200 is a successful query. The others are answered, but report the query as failed, as before.
+"""
+
+
+def limit_response(response_data: JsonValue, limit: Optional[int]) -> JsonValue:
+    """
+    Limit an api's JSON response to ``limit`` items.
+
+    A list keeps its first ``limit`` items. A dict keeps every key, and each of its values that is
+    a list keeps its first ``limit`` items. Anything else, or no limit, is returned as it is.
+
+    :param response_data: The parsed response.
+    :param limit: The number of items to keep, or None or 0 for all of them.
+    :returns: The limited response.
+    """
+    if not limit:
+        return response_data
+    if isinstance(response_data, list):
+        return response_data[:limit]
+    if not isinstance(response_data, dict):
+        return response_data
+    limited: dict[str, JsonValue] = {}
+    for key, value in response_data.items():
+        if isinstance(value, list):
+            limited[key] = value[:limit]
+        else:
+            limited[key] = value
+    return limited
 
 
 class ApiConnection(ConnectionBase):
@@ -217,6 +259,14 @@ class ApiConnection(ConnectionBase):
         Sets :attr:`last_status_code`, so that a caller can tell a rejected credential
         (HTTP 401 or 403) from any other failure.
 
+        The request is made with :func:`smarter.apps.llmtool.plugin.safe_http.fetch`, because
+        ``base_url`` comes from a manifest. Plain http and any port are permitted, as an api may
+        need them, but the host, and the host of every redirect, must resolve to public addresses
+        only, so that a manifest can't make the platform call its own network: the cluster's
+        services, the Kubernetes api or the cloud's instance metadata. Loopback hosts are
+        permitted in the local environment only. A redirect to another origin doesn't carry the
+        ``Authorization`` header.
+
         :param endpoint: The API endpoint to query.
         :param params: A dictionary of URL query string parameters to include in the API request.
         :param limit: The maximum number of rows to return from the API response.
@@ -228,51 +278,86 @@ class ApiConnection(ConnectionBase):
         params = params or {}
         method = (method or SmarterHttpMethods.GET).upper()
         url = urljoin(self.base_url, endpoint)
-        headers = dict(headers or {})
-        api_key = self.api_key.get_secret() if self.api_key else None
-        if self.auth_method == "basic" and api_key:
-            headers["Authorization"] = f"Basic {api_key}"
-        elif self.auth_method == "token" and api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        request_kwargs: SmarterDictType = {"headers": headers, "params": params, "timeout": self.timeout}
+        headers = self.request_headers(headers)
+        json_body: Optional[Union[SmarterDictType, list[Any]]] = None
         if body and method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH):
-            request_kwargs["json"] = body
+            json_body = body
 
-        response = None
         self.last_status_code = None
+        api_connection_attempted.send(sender=self.__class__, connection=self)
+        api_connection_query_attempted.send(sender=self.__class__, connection=self)
         try:
-            api_connection_attempted.send(sender=self.__class__, connection=self)
-            api_connection_query_attempted.send(sender=self.__class__, connection=self)
-            response = requests.request(method, url, **request_kwargs)
-            self.last_status_code = response.status_code
-            response.raise_for_status()
-            if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
-                api_connection_success.send(sender=self.__class__, connection=self)
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                if limit:
-                    response_data = response.json()
-                    if isinstance(response_data, list):
-                        response_data = response_data[:limit]
-                    elif isinstance(response_data, dict):
-                        response_data = {k: v[:limit] if isinstance(v, list) else v for k, v in response_data.items()}
-                    return response_data
-                return response.json()
-            else:
-                # we connected, but the query failed.
-                api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-                api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
-                return False
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            # connection failed, and so by extension, so did the query
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+            response = fetch(
+                url,
+                method=method,
+                headers=headers,
+                params=params,
+                json_body=json_body,
+                timeout=self.timeout or DEFAULT_TIMEOUT,
+                max_bytes=API_MAX_RESPONSE_BYTES,
+                accept_status=SUCCESS_STATUS_CODES,
+                require_https=False,
+                permit_local_loopback=True,
+            )
+        except SafeHttpError as e:
+            self.request_failed(e)
             return False
-        except (requests.exceptions.HTTPError, requests.exceptions.RequestException) as e:
-            # query failed, but connection was successful
+
+        self.last_status_code = response.status_code
+        if response.status_code != HTTPStatus.OK:
+            # we connected, but the query failed.
+            api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
+            api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
+            return False
+        try:
+            response_data = response.json()
+        except ValueError as e:
+            # the api answered, but not with JSON.
             api_connection_success.send(sender=self.__class__, connection=self, response=response, error=e)
             api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
             return False
+        api_connection_success.send(sender=self.__class__, connection=self)
+        api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
+        limited_data = limit_response(response_data, limit)
+        return limited_data  # type: ignore[return-value]
+
+    def request_headers(self, headers: Optional[dict[str, str]]) -> dict[str, str]:
+        """
+        Return a copy of a request's headers, with this connection's ``Authorization`` header.
+
+        :param headers: The caller's headers, which are not changed.
+        :returns: The headers to send. ``basic`` and ``token`` auth replace any caller-supplied
+            ``Authorization`` header with the connection's api key.
+        """
+        request_headers = dict(headers or {})
+        api_key = None
+        if self.api_key:
+            api_key = self.api_key.get_secret()
+        if not api_key:
+            return request_headers
+        if self.auth_method == "basic":
+            request_headers["Authorization"] = f"Basic {api_key}"
+        elif self.auth_method == "token":
+            request_headers["Authorization"] = f"Bearer {api_key}"
+        return request_headers
+
+    def request_failed(self, error: SafeHttpError) -> None:
+        """
+        Record a request that :func:`~smarter.apps.llmtool.plugin.safe_http.fetch` refused, or that failed.
+
+        An error with a status code is an api's answer: the connection worked, but the query
+        failed. One without is a url that was refused, or a connection that failed, and so, by
+        extension, a failed query.
+
+        :param error: The error that fetch raised.
+        """
+        self.last_status_code = error.status_code
+        if error.status_code is None:
+            api_connection_query_failed.send(sender=self.__class__, connection=self, response=None, error=error)
+            api_connection_failed.send(sender=self.__class__, connection=self, response=None, error=error)
+            return
+        api_connection_success.send(sender=self.__class__, connection=self, response=None, error=error)
+        api_connection_query_failed.send(sender=self.__class__, connection=self, response=None, error=error)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"

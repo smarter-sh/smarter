@@ -6,8 +6,8 @@ from typing import Optional
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
-from requests import Response
 
+from smarter.apps.llmtool.plugin.safe_http import SafeResponse
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
@@ -38,6 +38,19 @@ from .signals import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.CONNECTION_LOGGING]
 )
+
+
+def describe_response(response: Optional[SafeResponse]) -> Optional[str]:
+    """
+    Describe an api's response for the log, without its body.
+
+    :param response: The response, or None.
+    :returns: Its status code and size, e.g. ``HTTP 200, 512 bytes``, or None.
+    """
+    if response is None:
+        return None
+    description = f"HTTP {response.status_code}, {len(response.content)} bytes"
+    return description
 
 
 # ------------------------------------------------------------------------------
@@ -293,10 +306,13 @@ def handle_api_connection_query_attempted(sender, connection: ApiConnection, **k
 
 @receiver(api_connection_query_success, dispatch_uid="api_connection_query_success")
 def handle_api_connection_query_success(
-    sender, connection: ApiConnection, response: Optional[Response] = None, **kwargs
+    sender, connection: ApiConnection, response: Optional[SafeResponse] = None, **kwargs
 ):
     """
-    Log a successful API query, with its JSON response body.
+    Log a successful API query, with its response's status and size.
+
+    The body isn't logged: an api's response can hold personal data, and Smarter's log is shown
+    to users in DEBUG mode.
 
     :param sender: The class that sent the signal.
     :param connection: The ApiConnection.
@@ -307,16 +323,20 @@ def handle_api_connection_query_success(
     logger.info(
         "%s - response: %s",
         connection.get_connection_string(),
-        SmarterFormattedText.json(response.json()) if response else None,
+        describe_response(response),
     )
 
 
 @receiver(api_connection_query_failed, dispatch_uid="api_connection_query_failed")
 def handle_api_connection_query_failed(
-    sender, connection: ApiConnection, response: Optional[Response] = None, error: Optional[Exception] = None, **kwargs
+    sender,
+    connection: ApiConnection,
+    response: Optional[SafeResponse] = None,
+    error: Optional[Exception] = None,
+    **kwargs,
 ):
     """
-    Log, at INFO level, a failed API query, with its JSON response body and error.
+    Log, at INFO level, a failed API query, with its response's status and size, and the error.
 
     :param sender: The class that sent the signal.
     :param connection: The ApiConnection.
@@ -328,7 +348,7 @@ def handle_api_connection_query_failed(
     logger.info(
         "%s - response: %s - error: %s",
         connection.get_connection_string(),
-        SmarterFormattedText.json(response.json()) if response else None,
+        describe_response(response),
         error,
     )
 

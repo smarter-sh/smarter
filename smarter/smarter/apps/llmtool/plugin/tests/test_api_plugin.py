@@ -29,6 +29,7 @@ from smarter.apps.llmtool.plugin.api import (
 )
 from smarter.apps.llmtool.plugin.request import API_PLUGIN_REQUEST_SIGNALS
 from smarter.apps.llmtool.serializers import PluginApiSerializer
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json
 
@@ -38,10 +39,14 @@ from .base_classes import (
     API_ENDPOINT,
     API_REQUEST_PATCH,
     LIVE_API_PROBE_URL,
+    PUBLIC_ADDRESS,
+    SAFE_HTTP_DNS_PATCH,
+    SAFE_HTTP_SETTINGS_PATCH,
     PluginTestBase,
     capture_request_signals,
     live_api_is_available,
     mock_response,
+    resolves_to,
     roles,
 )
 
@@ -248,7 +253,7 @@ class TestApiPlugin(PluginTestBase):
         self.assertEqual(method, "GET")
         self.assertEqual(url, "http://localhost:9357/api/v1/tests/unauthenticated/list/")
         self.assertEqual(request.call_args.kwargs["params"], {"source": "smarter"})
-        self.assertNotIn("json", request.call_args.kwargs)
+        self.assertIsNone(request.call_args.kwargs["json"])
 
     def test_api_tool_call_json_string_args(self):
         """Test a tool call with a JSON string of arguments, as sent by OpenAI."""
@@ -388,14 +393,14 @@ class TestApiPlugin(PluginTestBase):
         _, request = self.api_call(plugin, {"kind": "list", "page": 2})
         self.assertEqual(request.call_args.args[0], "DELETE")
         self.assertEqual(request.call_args.kwargs["params"], {"source": "smarter", "page": 2})
-        self.assertNotIn("json", request.call_args.kwargs)
+        self.assertIsNone(request.call_args.kwargs["json"])
 
     def test_api_tool_call_get_with_static_body_sends_no_body(self):
         """Test that a GET request never sends a body."""
         plugin = self.load_api_plugin()
         plugin.plugin_data.body = {"static": 1}  # type: ignore[union-attr]
         _, request = self.api_call(plugin, {"kind": "list"})
-        self.assertNotIn("json", request.call_args.kwargs)
+        self.assertIsNone(request.call_args.kwargs["json"])
 
     # =========================================================================
     # ApiPlugin: tool calls, argument validation
@@ -635,9 +640,11 @@ class TestApiPlugin(PluginTestBase):
         connection.auth_method = "none"
         with mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request:
             connection.execute_query("/x/", headers={"Authorization": "Bearer caller", "Accept": "text/plain"})
-        self.assertEqual(
-            request.call_args.kwargs["headers"], {"Authorization": "Bearer caller", "Accept": "text/plain"}
-        )
+        sent_headers = request.call_args.kwargs["headers"]
+        self.assertEqual(sent_headers["Authorization"], "Bearer caller")
+        self.assertEqual(sent_headers["Accept"], "text/plain")
+        # safe_http.fetch() adds its own User-Agent, and nothing else.
+        self.assertEqual(set(sent_headers), {"Authorization", "Accept", "User-Agent"})
 
     def test_api_connection_execute_query_does_not_mutate_headers(self):
         """Test that the caller's headers dict is not modified."""
@@ -653,7 +660,11 @@ class TestApiPlugin(PluginTestBase):
             with mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request:
                 self.fresh_api_connection().execute_query("/x/", method=method, body={"a": 1})
             self.assertEqual(request.call_args.args[0], method)
-            self.assertEqual("json" in request.call_args.kwargs, sends_body, f"method={method}")
+            sent_body = request.call_args.kwargs["json"]
+            if sends_body:
+                self.assertEqual(sent_body, {"a": 1}, f"method={method}")
+            else:
+                self.assertIsNone(sent_body, f"method={method}")
 
     def test_api_connection_execute_query_lowercase_method(self):
         """Test that the method is normalized to uppercase."""
@@ -694,6 +705,81 @@ class TestApiPlugin(PluginTestBase):
         with mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request:
             self.fresh_api_connection().execute_query("api/v1/x/")
         self.assertEqual(request.call_args.args[1], "http://localhost:9357/api/v1/x/")
+
+    # =========================================================================
+    # ApiConnection.execute_query: server-side request forgery
+    # =========================================================================
+    def deployed_api_connection(self, base_url: str) -> ApiConnection:
+        """Return the shared ApiConnection, unsaved, with another base url."""
+        connection = self.fresh_api_connection()
+        connection.base_url = base_url
+        return connection
+
+    def test_api_connection_refuses_non_public_addresses_when_deployed(self):
+        """
+        Test that, in a deployed environment, a base url that isn't public is refused before any request is sent.
+
+        A manifest's base url must not reach the platform's own network: the cloud's instance
+        metadata, the cluster's services, or the Smarter server itself.
+        """
+        cases = (
+            ("http://169.254.169.254/latest/meta-data/", "169.254.169.254"),
+            ("http://internal.example:6379/", "10.0.0.5"),
+            ("https://internal.example/", "192.168.1.1"),
+            ("http://localhost:9357/", "127.0.0.1"),
+        )
+        for base_url, address in cases:
+            with (
+                mock.patch(SAFE_HTTP_SETTINGS_PATCH) as settings,
+                mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=resolves_to(address)),
+                mock.patch(API_REQUEST_PATCH, return_value=mock_response([1])) as request,
+            ):
+                settings.environment = SmarterEnvironments.PROD
+                connection = self.deployed_api_connection(base_url)
+                self.assertFalse(connection.execute_query("/x/"), base_url)
+            request.assert_not_called()
+            self.assertIsNone(connection.last_status_code, base_url)
+
+    def test_api_connection_permits_public_http_on_any_port_when_deployed(self):
+        """Test that, in a deployed environment, a public host is reached over plain http and on its own port."""
+        with (
+            mock.patch(SAFE_HTTP_SETTINGS_PATCH) as settings,
+            mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=resolves_to(PUBLIC_ADDRESS)),
+            mock.patch(API_REQUEST_PATCH, return_value=mock_response([1, 2])) as request,
+        ):
+            settings.environment = SmarterEnvironments.PROD
+            retval = self.deployed_api_connection("http://api.example.com:8080/").execute_query("/x/")
+        self.assertEqual(retval, [1, 2])
+        self.assertEqual(request.call_args.args[1], "http://api.example.com:8080/x/")
+
+    def test_api_connection_refuses_a_redirect_to_a_non_public_address(self):
+        """Test that a public api can't redirect the request, and its credential, to a non-public address."""
+        redirect = mock_response(None, 302)
+        redirect.headers = {"Location": "http://metadata.internal/latest/"}
+
+        def getaddrinfo(host, port, *args, **kwargs):
+            address = "169.254.169.254" if host == "metadata.internal" else PUBLIC_ADDRESS
+            return resolves_to(address)(host, port)
+
+        with (
+            mock.patch(SAFE_HTTP_SETTINGS_PATCH) as settings,
+            mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=getaddrinfo),
+            mock.patch(API_REQUEST_PATCH, return_value=redirect) as request,
+        ):
+            settings.environment = SmarterEnvironments.PROD
+            connection = self.deployed_api_connection("https://api.example.com/")
+            self.assertFalse(connection.execute_query("/x/"))
+        request.assert_called_once()
+        self.assertEqual(request.call_args.args[1], "https://api.example.com/x/")
+
+    def test_api_connection_non_json_response_is_a_failed_query(self):
+        """Test that a 200 response that isn't JSON fails the query, rather than raising."""
+        response = mock_response(None)
+        response.iter_content.return_value = [b"<html>not json</html>"]
+        with mock.patch(API_REQUEST_PATCH, return_value=response):
+            connection = self.fresh_api_connection()
+            self.assertFalse(connection.execute_query("/x/"))
+        self.assertEqual(connection.last_status_code, 200)
 
     # =========================================================================
     # ApiPlugin: request lifecycle signals
