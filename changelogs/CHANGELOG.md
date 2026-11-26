@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.4-alpha.4](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.3...v0.48.4-alpha.4) (2026-11-26)
+
+### Bug Fixes
+
+* **helm:** deploy the tool worker, off by default ([48a485c](https://github.com/smarter-sh/smarter/commit/48a485c7c81eafead26b5885d6e65dbbad3a8b50))
+* **llmtool:** run tool calls in a worker without credentials ([8f7285c](https://github.com/smarter-sh/smarter/commit/8f7285c386492c8da8122a4e20620e17e2b4e05a))
+
 ## [0.48.4-alpha.3](https://github.com/smarter-sh/smarter/compare/v0.48.4-alpha.2...v0.48.4-alpha.3) (2026-11-26)
 
 ### Bug Fixes
