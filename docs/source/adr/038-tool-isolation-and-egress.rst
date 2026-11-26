@@ -154,9 +154,11 @@ Phase 1, the boundary (smarter)
    credential from other failures. So do the web search apis (Brave, Tavily), the Brave image search
    and its checks of each image's url, as the generic ``http`` kind: ``fetch_with_runner()`` takes the
    place of ``safe_http.fetch()``, sends an ``HttpToolCall`` with ``fetch``'s arguments, and turns the
-   result back into a ``SafeResponse``, with the body in base64. Next: the web search plugin's fetch
-   of a page, whose ``redirect_policy`` (robots.txt and the domain policy on each hop) must become
-   data to travel with a call, then SQL plugins and Extensions.
+   result back into a ``SafeResponse``, with the body in base64. Every website's robots.txt is an
+   ``http`` call too. The web search plugin's fetch of a page is the ``webfetch`` kind: its
+   ``redirect_policy``, a function, travels as data (the domain policy's allowed and blocked domains,
+   and whether to obey robots.txt), and ``execute_webfetch_call()`` builds the function where the call
+   runs. Next: SQL plugins, then Extensions.
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no

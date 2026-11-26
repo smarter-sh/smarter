@@ -51,18 +51,20 @@ def tool_runner():
     d = Diagram(
         "tool-runner",
         1300,
-        890,
+        930,
         "How an LLM tool call runs",
         "resolved in the app, where the credentials are; executed by the tool runner, without them (ADR-038)",
         "When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or "
         "ApiConnection.execute_query(), checks the permissions and the cache. On a cache miss it resolves the call: "
         "it reads the credential from its Smarter Secret, decrypts it, signs the acting user, and builds a ToolCall, "
-        "such as an MCPToolCall, an ApiToolCall or an HttpToolCall, of plain values that travel as JSON. It hands the "
-        "call to the tool runner, from get_tool_runner(), which finds the executor of the call's kind in "
-        "TOOL_EXECUTORS: execute_mcp_call for MCP clients, execute_api_call for API plugins, and execute_http_call for "
-        "the web search apis (Brave, Tavily), the Brave image search, and the checks of each image's url. The "
-        "executor reads no database and no Secret: it calls the MCP server, the api, the search api or the image's "
-        "host, through safe_http, to public addresses only. It "
+        "such as an MCPToolCall, an ApiToolCall, an HttpToolCall or a WebFetchToolCall, of plain values that travel "
+        "as JSON. It hands the call to the tool runner, from get_tool_runner(), which finds the executor of the call's "
+        "kind in TOOL_EXECUTORS: execute_mcp_call for MCP clients, execute_api_call for API plugins, "
+        "execute_http_call for the web search apis (Brave, Tavily), the Brave image search, the checks of each image's "
+        "url and websites' robots.txt, and execute_webfetch_call for the pages the web search plugin reads, with its "
+        "domain policy and robots.txt checked again on each redirect. The executor reads no database and no Secret: "
+        "it calls the MCP server, the api, the search api or the website, through safe_http, to public addresses "
+        "only. It "
         "returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app "
         "sends the signals, stores the result in the cache, and gives it to the LLM. Today the runner executes the "
         "call in the app's process; in phase 2 of ADR-038 a remote runner sends the same call to a worker that holds "
@@ -97,7 +99,7 @@ def tool_runner():
         "Resolve the call",
         ["decrypts the credential", "signs the acting user", "plain values, no database objects"],
         "core",
-        code="MCPToolCall · ApiToolCall · HttpToolCall",
+        code="MCPToolCall · ApiToolCall · ...",
     )
     d.box(
         "secrets",
@@ -128,13 +130,18 @@ def tool_runner():
         440,
         250,
         "Executors, by kind",
-        ["mcp: execute_mcp_call", "api: execute_api_call", "http: execute_http_call"],
+        [
+            "mcp: execute_mcp_call",
+            "api: execute_api_call",
+            "http: execute_http_call",
+            "webfetch: execute_webfetch_call",
+        ],
         code="TOOL_EXECUTORS",
     )
     d.box(
         "result",
         380,
-        700,
+        740,
         250,
         "ToolCallResult",
         ["value · is_error", "failure · status_code"],
@@ -143,7 +150,7 @@ def tool_runner():
 
     # 3. execution, without the database
     d.heading(690, 100, 300, "3 · Execution")
-    d.region(676, 166, 328, 464, "no database · no Secrets", note="in the app today; in a worker, phase 2")
+    d.region(676, 166, 328, 524, "no database · no Secrets", note="in the app today; in a worker, phase 2")
     d.box(
         "exec_mcp",
         690,
@@ -156,33 +163,52 @@ def tool_runner():
     d.box(
         "exec_api",
         690,
-        340,
+        330,
         300,
         "execute_api_call()",
-        ["API plugins: the api's JSON, limited", "http or https, any port", "public addresses only"],
+        ["API plugins: the api's JSON, limited", "http or https, any port"],
         code="safe_http.fetch()",
     )
     d.box(
         "exec_http",
         690,
-        490,
+        450,
         300,
         "execute_http_call()",
-        ["web search: Brave, Tavily", "image search: Brave, and a", "check of each image's url"],
+        ["web search apis, image search,", "image checks, robots.txt"],
         code="safe_http.fetch()",
+    )
+    d.box(
+        "exec_webfetch",
+        690,
+        570,
+        300,
+        "execute_webfetch_call()",
+        ["a page that the LLM chose", "policy and robots.txt on each hop"],
+        code="safe_http.fetch(redirect_policy=)",
     )
 
     # 4. the internet
     d.heading(1046, 100, 226, "4 · The internet")
     d.box("mcpservers", 1046, 210, 226, "MCP servers", ["the MCPClient's endpoint"], "outside", code="https · 443")
-    d.box("apis", 1046, 340, 226, "APIs", ["the ApiConnection's base url"], "outside", code="http or https · any port")
+    d.box("apis", 1046, 330, 226, "APIs", ["the ApiConnection's base url"], "outside", code="http or https · any port")
     d.box(
         "searches",
         1046,
-        490,
+        450,
         226,
         "Search apis, image hosts",
         ["Brave, Tavily", "each image's own host"],
+        "outside",
+        code="https · 443",
+    )
+    d.box(
+        "pages",
+        1046,
+        570,
+        226,
+        "Web pages",
+        ["the pages the LLM reads", "and their robots.txt"],
         "outside",
         code="https · 443",
     )
@@ -216,7 +242,7 @@ def tool_runner():
     )
     d.arrow([d.bottom("runner"), d.top("registry")], label="by its kind", label_at=(515, 424), label_anchor="start")
     registry_x, registry_y = d.right("registry")
-    for key in ("exec_mcp", "exec_api", "exec_http"):
+    for key in ("exec_mcp", "exec_api", "exec_http", "exec_webfetch"):
         exec_x, exec_y = d.left(key)
         d.arrow([(registry_x, registry_y), (660, registry_y), (660, exec_y), (exec_x, exec_y)])
 
@@ -224,10 +250,11 @@ def tool_runner():
     d.arrow([d.right("exec_mcp"), d.left("mcpservers")], "green")
     d.arrow([d.right("exec_api"), d.left("apis")], "green")
     d.arrow([d.right("exec_http"), d.left("searches")], "green")
+    d.arrow([d.right("exec_webfetch"), d.left("pages")], "green")
 
     # the result, from either executor (the region's edge), back to the tool's code
     region_bottom_x = 676 + 328 / 2
-    region_bottom_y = 166 + 464
+    region_bottom_y = 166 + 524
     result_x, result_y = d.right("result")
     d.arrow(
         [(region_bottom_x, region_bottom_y), (region_bottom_x, result_y), (result_x, result_y)],
@@ -243,7 +270,7 @@ def tool_runner():
     )
 
     d.legend(
-        826,
+        866,
         [
             ("blue", False, "the call"),
             ("blue", True, "its result"),

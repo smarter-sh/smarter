@@ -27,6 +27,7 @@ ToolExecutor = Callable[[ToolCall], ToolCallResult]
 TOOL_EXECUTORS: dict[str, str] = {
     "api": "smarter.apps.connection.execution.execute_api_call",
     "http": "smarter.apps.llmtool.runner.http.execute_http_call",
+    "webfetch": "smarter.apps.llmtool.plugin.websearch_fetch.execute_webfetch_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""
