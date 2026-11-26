@@ -84,6 +84,7 @@ Technical Reference
 
    connection/api
    connection/const
+   connection/execution
    connection/manifest
    connection/models
    connection/receivers

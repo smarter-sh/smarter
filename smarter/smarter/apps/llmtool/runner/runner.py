@@ -29,6 +29,7 @@ ToolExecutor = Callable[[ToolCall], ToolCallResult]
 """A function that executes one kind of resolved tool call, and returns its result."""
 
 TOOL_EXECUTORS: dict[str, str] = {
+    "api": "smarter.apps.connection.execution.execute_api_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""

@@ -7,7 +7,6 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.apps.llmtool.plugin.safe_http import SafeResponse
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.mixins.helper_mixin import SmarterReadyState
 from smarter.lib import logging
@@ -38,19 +37,6 @@ from .signals import (
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING, SmarterWaffleSwitches.CONNECTION_LOGGING]
 )
-
-
-def describe_response(response: Optional[SafeResponse]) -> Optional[str]:
-    """
-    Describe an api's response for the log, without its body.
-
-    :param response: The response, or None.
-    :returns: Its status code and size, e.g. ``HTTP 200, 512 bytes``, or None.
-    """
-    if response is None:
-        return None
-    description = f"HTTP {response.status_code}, {len(response.content)} bytes"
-    return description
 
 
 # ------------------------------------------------------------------------------
@@ -271,13 +257,13 @@ def handle_api_connection_success(sender, connection: ApiConnection, **kwargs):
 
 
 @receiver(api_connection_failed, dispatch_uid="api_connection_failed")
-def handle_api_connection_failed(sender, connection: ApiConnection, error: Optional[Exception] = None, **kwargs):
+def handle_api_connection_failed(sender, connection: ApiConnection, error: Optional[str] = None, **kwargs):
     """
     Log, at INFO level, that an API connection failed and is not ready.
 
     :param sender: The class that sent the signal.
     :param connection: The ApiConnection.
-    :param error: The exception, if any. It is not logged.
+    :param error: Why it failed, if known. It is not logged.
     :param kwargs: Other keyword arguments sent with the signal.
     """
 
@@ -305,25 +291,23 @@ def handle_api_connection_query_attempted(sender, connection: ApiConnection, **k
 
 
 @receiver(api_connection_query_success, dispatch_uid="api_connection_query_success")
-def handle_api_connection_query_success(
-    sender, connection: ApiConnection, response: Optional[SafeResponse] = None, **kwargs
-):
+def handle_api_connection_query_success(sender, connection: ApiConnection, status_code: Optional[int] = None, **kwargs):
     """
-    Log a successful API query, with its response's status and size.
+    Log a successful API query, with its response's status.
 
-    The body isn't logged: an api's response can hold personal data, and Smarter's log is shown
-    to users in DEBUG mode.
+    The response isn't logged: an api's response can hold personal data, and Smarter's log is
+    shown to users in DEBUG mode.
 
     :param sender: The class that sent the signal.
     :param connection: The ApiConnection.
-    :param response: The HTTP response, or None.
+    :param status_code: The response's HTTP status.
     :param kwargs: Other keyword arguments sent with the signal.
     """
 
     logger.info(
-        "%s - response: %s",
+        "%s - response: HTTP %s",
         connection.get_connection_string(),
-        describe_response(response),
+        status_code,
     )
 
 
@@ -331,24 +315,24 @@ def handle_api_connection_query_success(
 def handle_api_connection_query_failed(
     sender,
     connection: ApiConnection,
-    response: Optional[SafeResponse] = None,
-    error: Optional[Exception] = None,
+    status_code: Optional[int] = None,
+    error: Optional[str] = None,
     **kwargs,
 ):
     """
-    Log, at INFO level, a failed API query, with its response's status and size, and the error.
+    Log, at INFO level, a failed API query, with its response's status, if any, and why it failed.
 
     :param sender: The class that sent the signal.
     :param connection: The ApiConnection.
-    :param response: The HTTP response, or None.
-    :param error: The exception, or None.
+    :param status_code: The response's HTTP status, or None when there was no response.
+    :param error: Why the query failed.
     :param kwargs: Other keyword arguments sent with the signal.
     """
 
     logger.info(
-        "%s - response: %s - error: %s",
+        "%s - response: HTTP %s - error: %s",
         connection.get_connection_string(),
-        describe_response(response),
+        status_code,
         error,
     )
 

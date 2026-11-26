@@ -147,8 +147,12 @@ Phase 1, the boundary (smarter)
    read, only when the cache misses. MCP clients go through it: the toolkit resolves an
    ``MCPToolCall``, which carries the MCPClient's ``MCPEndpoint`` (its url, transport, timeout,
    headers with the credential, and its permissions), and ``execute_mcp_call()`` connects from the
-   endpoint alone, checking the permissions again. Next: the API, web search and image search
-   plugins, then SQL plugins and Extensions.
+   endpoint alone, checking the permissions again. API plugins go through it too:
+   ``ApiConnection.execute_query()`` resolves an ``ApiToolCall`` (the full url, and the headers with
+   the connection's ``Authorization``), ``execute_api_call()`` sends it with ``safe_http``, and the
+   app sends the connection's signals from the result, whose ``status_code`` tells a rejected
+   credential from other failures. Next: the web search and image search plugins, then SQL plugins
+   and Extensions.
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no

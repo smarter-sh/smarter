@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 import requests
 from django.core.validators import MinValueValidator
 from django.db import models
-from pydantic import JsonValue
 
+from smarter.apps.connection.execution import ApiToolCall
 from smarter.apps.connection.signals import (
     api_connection_attempted,
     api_connection_failed,
@@ -17,11 +17,8 @@ from smarter.apps.connection.signals import (
     api_connection_query_success,
     api_connection_success,
 )
-from smarter.apps.llmtool.plugin.safe_http import (
-    DEFAULT_TIMEOUT,
-    SafeHttpError,
-    fetch,
-)
+from smarter.apps.llmtool.plugin.safe_http import DEFAULT_TIMEOUT
+from smarter.apps.llmtool.runner import ToolCallResult, get_tool_runner
 from smarter.apps.secret.models import Secret
 from smarter.common.const import SmarterHttpMethods
 from smarter.common.utils import to_snake_case
@@ -33,42 +30,6 @@ from smarter.lib.typing import SmarterDictType
 from .connection_base import ConnectionBase
 
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.CONNECTION_LOGGING])
-
-API_MAX_RESPONSE_BYTES = 10_000_000
-"""The largest api response that :meth:`ApiConnection.execute_query` reads, in bytes."""
-
-SUCCESS_STATUS_CODES = tuple(range(200, 300))
-"""
-The status codes that :func:`~smarter.apps.llmtool.plugin.safe_http.fetch` returns rather than raises.
-
-Only 200 is a successful query. The others are answered, but report the query as failed, as before.
-"""
-
-
-def limit_response(response_data: JsonValue, limit: Optional[int]) -> JsonValue:
-    """
-    Limit an api's JSON response to ``limit`` items.
-
-    A list keeps its first ``limit`` items. A dict keeps every key, and each of its values that is
-    a list keeps its first ``limit`` items. Anything else, or no limit, is returned as it is.
-
-    :param response_data: The parsed response.
-    :param limit: The number of items to keep, or None or 0 for all of them.
-    :returns: The limited response.
-    """
-    if not limit:
-        return response_data
-    if isinstance(response_data, list):
-        return response_data[:limit]
-    if not isinstance(response_data, dict):
-        return response_data
-    limited: dict[str, JsonValue] = {}
-    for key, value in response_data.items():
-        if isinstance(value, list):
-            limited[key] = value[:limit]
-        else:
-            limited[key] = value
-    return limited
 
 
 class ApiConnection(ConnectionBase):
@@ -259,11 +220,16 @@ class ApiConnection(ConnectionBase):
         Sets :attr:`last_status_code`, so that a caller can tell a rejected credential
         (HTTP 401 or 403) from any other failure.
 
-        The request is made with :func:`smarter.apps.llmtool.plugin.safe_http.fetch`, because
-        ``base_url`` comes from a manifest. Plain http and any port are permitted, as an api may
-        need them, but the host, and the host of every redirect, must resolve to public addresses
-        only, so that a manifest can't make the platform call its own network: the cluster's
-        services, the Kubernetes api or the cloud's instance metadata. Loopback hosts are
+        The request is resolved here, in the app, into an
+        :class:`~smarter.apps.connection.execution.ApiToolCall`, with the ``Authorization`` header
+        read from the connection's Smarter Secret, and executed by the tool runner
+        (:mod:`smarter.apps.llmtool.runner`), with
+        :func:`~smarter.apps.connection.execution.execute_api_call`. The signals are sent here, from
+        its result. Because ``base_url`` comes from a manifest, the request is made with
+        :func:`smarter.apps.llmtool.plugin.safe_http.fetch`: plain http and any port are permitted,
+        as an api may need them, but the host, and the host of every redirect, must resolve to public
+        addresses only, so that a manifest can't make the platform call its own network: the
+        cluster's services, the Kubernetes api or the cloud's instance metadata. Loopback hosts are
         permitted in the local environment only. A redirect to another origin doesn't carry the
         ``Authorization`` header.
 
@@ -275,51 +241,29 @@ class ApiConnection(ConnectionBase):
         :param body: Optional JSON request body. Only sent for ``POST``, ``PUT`` and ``PATCH`` requests.
         :return: The API response as a JSON object or False if the request fails.
         """
-        params = params or {}
         method = (method or SmarterHttpMethods.GET).upper()
-        url = urljoin(self.base_url, endpoint)
-        headers = self.request_headers(headers)
         json_body: Optional[Union[SmarterDictType, list[Any]]] = None
         if body and method in (SmarterHttpMethods.POST, SmarterHttpMethods.PUT, SmarterHttpMethods.PATCH):
             json_body = body
+        call = ApiToolCall(
+            url=urljoin(self.base_url, endpoint),
+            method=method,
+            headers=self.request_headers(headers),
+            params=params or {},
+            json_body=json_body,
+            timeout=self.timeout or DEFAULT_TIMEOUT,
+            limit=limit,
+        )
 
         self.last_status_code = None
         api_connection_attempted.send(sender=self.__class__, connection=self)
         api_connection_query_attempted.send(sender=self.__class__, connection=self)
-        try:
-            response = fetch(
-                url,
-                method=method,
-                headers=headers,
-                params=params,
-                json_body=json_body,
-                timeout=self.timeout or DEFAULT_TIMEOUT,
-                max_bytes=API_MAX_RESPONSE_BYTES,
-                accept_status=SUCCESS_STATUS_CODES,
-                require_https=False,
-                permit_local_loopback=True,
-            )
-        except SafeHttpError as e:
-            self.request_failed(e)
+        result = get_tool_runner().run(call)
+        self.last_status_code = result.status_code
+        self.record_result(result)
+        if result.failure is not None:
             return False
-
-        self.last_status_code = response.status_code
-        if response.status_code != HTTPStatus.OK:
-            # we connected, but the query failed.
-            api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-            api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
-            return False
-        try:
-            response_data = response.json()
-        except ValueError as e:
-            # the api answered, but not with JSON.
-            api_connection_success.send(sender=self.__class__, connection=self, response=response, error=e)
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
-            return False
-        api_connection_success.send(sender=self.__class__, connection=self)
-        api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
-        limited_data = limit_response(response_data, limit)
-        return limited_data  # type: ignore[return-value]
+        return result.value  # type: ignore[return-value]
 
     def request_headers(self, headers: Optional[dict[str, str]]) -> dict[str, str]:
         """
@@ -341,23 +285,40 @@ class ApiConnection(ConnectionBase):
             request_headers["Authorization"] = f"Bearer {api_key}"
         return request_headers
 
-    def request_failed(self, error: SafeHttpError) -> None:
+    def record_result(self, result: ToolCallResult) -> None:
         """
-        Record a request that :func:`~smarter.apps.llmtool.plugin.safe_http.fetch` refused, or that failed.
+        Send the signals that report a query's result.
 
-        An error with a status code is an api's answer: the connection worked, but the query
-        failed. One without is a url that was refused, or a connection that failed, and so, by
-        extension, a failed query.
+        - Without a status code, the url was refused, or the api couldn't be reached: the
+          connection failed, and so, by extension, did the query.
+        - With status 200 and a failure, the api answered, but not with JSON: the connection
+          worked, and the query failed.
+        - With another 2xx status, the api answered the query, but not with its data: the query
+          succeeded, and the connection is reported as failed.
+        - With an error status, the connection worked, and the query failed.
+        - Otherwise both succeeded.
 
-        :param error: The error that fetch raised.
+        The signals carry the response's ``status_code``, and, for a failure, its description as
+        ``error``. They don't carry the response, which stays where the call ran.
+
+        :param result: The tool runner's result.
         """
-        self.last_status_code = error.status_code
-        if error.status_code is None:
-            api_connection_query_failed.send(sender=self.__class__, connection=self, response=None, error=error)
-            api_connection_failed.send(sender=self.__class__, connection=self, response=None, error=error)
+        status_code = result.status_code
+        error = result.failure
+        if error is None:
+            api_connection_success.send(sender=self.__class__, connection=self, status_code=status_code)
+            api_connection_query_success.send(sender=self.__class__, connection=self, status_code=status_code)
             return
-        api_connection_success.send(sender=self.__class__, connection=self, response=None, error=error)
-        api_connection_query_failed.send(sender=self.__class__, connection=self, response=None, error=error)
+        if status_code is None:
+            api_connection_query_failed.send(sender=self.__class__, connection=self, status_code=None, error=error)
+            api_connection_failed.send(sender=self.__class__, connection=self, status_code=None, error=error)
+            return
+        if HTTPStatus.OK < status_code < HTTPStatus.MULTIPLE_CHOICES:
+            api_connection_query_success.send(sender=self.__class__, connection=self, status_code=status_code)
+            api_connection_failed.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
+            return
+        api_connection_success.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
+        api_connection_query_failed.send(sender=self.__class__, connection=self, status_code=status_code, error=error)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string() if isinstance(self.name, str) else "unassigned"

@@ -16,6 +16,7 @@ from unittest import mock, skipUnless
 import requests
 from django.core.cache import cache
 
+from smarter.apps.connection.execution import ApiToolCall
 from smarter.apps.connection.models import ApiConnection, SqlConnection
 from smarter.apps.llmtool.manifest.models.api_plugin.const import (
     MANIFEST_KIND as API_MANIFEST_KIND,
@@ -28,6 +29,7 @@ from smarter.apps.llmtool.plugin.api import (
     SmarterApiPluginError,
 )
 from smarter.apps.llmtool.plugin.request import API_PLUGIN_REQUEST_SIGNALS
+from smarter.apps.llmtool.runner import ToolCallResult
 from smarter.apps.llmtool.serializers import PluginApiSerializer
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
@@ -771,6 +773,33 @@ class TestApiPlugin(PluginTestBase):
             self.assertFalse(connection.execute_query("/x/"))
         request.assert_called_once()
         self.assertEqual(request.call_args.args[1], "https://api.example.com/x/")
+
+    def test_api_connection_execute_query_goes_through_the_tool_runner(self):
+        """Test that execute_query resolves an ApiToolCall in the app, with the credential, and the tool runner runs it."""
+        runner = mock.MagicMock()
+        runner.run.return_value = ToolCallResult(value=[1, 2], status_code=200)
+        with mock.patch("smarter.apps.connection.models.api_connection.get_tool_runner", return_value=runner):
+            connection = self.fresh_api_connection()
+            retval = connection.execute_query("/x/", {"a": 1}, 5, method="post", body={"b": 2})
+        self.assertEqual(retval, [1, 2])
+        self.assertEqual(connection.last_status_code, 200)
+        call = runner.run.call_args.args[0]
+        self.assertIsInstance(call, ApiToolCall)
+        self.assertEqual(call.url, "http://localhost:9357/x/")
+        self.assertEqual(call.method, "POST")
+        self.assertEqual(call.headers["Authorization"], f"Bearer {self.api_key}")
+        self.assertEqual(call.params, {"a": 1})
+        self.assertEqual(call.json_body, {"b": 2})
+        self.assertEqual(call.limit, 5)
+
+    def test_api_connection_records_a_rejected_credential(self):
+        """Test that a runner's failure with status 401 fails the query, and leaves the status for the plugin."""
+        runner = mock.MagicMock()
+        runner.run.return_value = ToolCallResult(failure="the api answered HTTP 401", status_code=401)
+        with mock.patch("smarter.apps.connection.models.api_connection.get_tool_runner", return_value=runner):
+            connection = self.fresh_api_connection()
+            self.assertFalse(connection.execute_query("/x/"))
+        self.assertEqual(connection.last_status_code, 401)
 
     def test_api_connection_non_json_response_is_a_failed_query(self):
         """Test that a 200 response that isn't JSON fails the query, rather than raising."""

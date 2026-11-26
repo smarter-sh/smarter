@@ -46,9 +46,13 @@ class ToolCallResult(BaseModel):
     - it couldn't be made: refused, unreachable, timed out or misconfigured. ``failure``
       describes why, and ``value`` is None.
 
+    An HTTP tool, e.g. an ApiPlugin's api, also reports the response's ``status_code``, so that the
+    app can tell a rejected credential (401, 403) from any other failure.
+
     :ivar value: The tool's result, as JSON.
     :ivar is_error: Whether the tool answered with an error of its own.
     :ivar failure: Why the call couldn't be made, or None.
+    :ivar status_code: The HTTP status of an HTTP tool's response, or None when there was none.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -56,6 +60,7 @@ class ToolCallResult(BaseModel):
     value: JsonValue = None
     is_error: bool = False
     failure: Optional[str] = None
+    status_code: Optional[int] = None
 
 
 __all__ = ["ToolCall", "ToolCallResult"]
