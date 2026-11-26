@@ -9,6 +9,11 @@ provider's key, no IAM role and no Kubernetes token. Each call brings the creden
 resolved by the app. :doc:`ADR-038 </adr/038-tool-isolation-and-egress>` is the design, and
 :doc:`/smarter-resources/llmtool/runner` describes the runner that sends calls to it.
 
+The tool worker also knows only its own task, ``run_tool_call``. It runs the platform's image and
+Celery app, which register every app's tasks, so at startup it removes all but that one and Celery's
+own from its registry (``TOOL_WORKER_TASKS`` in :mod:`smarter.lib.celery_conf`). Its banner lists
+that one task, and it rejects any other message on its queue as an unregistered task.
+
 Without the tool worker, which is the default, the app runs each tool call in its own process, where
 the platform's credentials are.
 
