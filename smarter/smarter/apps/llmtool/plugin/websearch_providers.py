@@ -37,6 +37,7 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import (
     DomainPolicy,
     url_host,
 )
+from smarter.apps.llmtool.runner.http import fetch_with_runner
 from smarter.apps.secret.models import Secret
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib import json, logging
@@ -301,7 +302,7 @@ class BraveSearchProvider(SearchProvider):
             params["search_lang"] = request.language
         if request.freshness:
             params["freshness"] = self.freshness[request.freshness]
-        return safe_http.fetch(
+        return fetch_with_runner(
             self.url,
             headers={"Accept": "application/json", "X-Subscription-Token": api_key},
             params=params,
@@ -381,7 +382,7 @@ class TavilySearchProvider(SearchProvider):
             body["time_range"] = request.freshness
         if request.language:
             body["language"] = request.language
-        return safe_http.fetch(
+        return fetch_with_runner(
             self.url,
             method="POST",
             headers={"Accept": "application/json", "Authorization": f"Bearer {api_key}"},

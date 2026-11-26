@@ -151,8 +151,12 @@ Phase 1, the boundary (smarter)
    ``ApiConnection.execute_query()`` resolves an ``ApiToolCall`` (the full url, and the headers with
    the connection's ``Authorization``), ``execute_api_call()`` sends it with ``safe_http``, and the
    app sends the connection's signals from the result, whose ``status_code`` tells a rejected
-   credential from other failures. Next: the web search and image search plugins, then SQL plugins
-   and Extensions.
+   credential from other failures. So do the web search apis (Brave, Tavily), the Brave image search
+   and its checks of each image's url, as the generic ``http`` kind: ``fetch_with_runner()`` takes the
+   place of ``safe_http.fetch()``, sends an ``HttpToolCall`` with ``fetch``'s arguments, and turns the
+   result back into a ``SafeResponse``, with the body in base64. Next: the web search plugin's fetch
+   of a page, whose ``redirect_policy`` (robots.txt and the domain policy on each hop) must become
+   data to travel with a call, then SQL plugins and Extensions.
 
 Phase 2, the tool worker (smarter, Helm chart)
    The remote runner, the ``tools`` queue, ``deployment-worker-tools.yaml`` with its own ServiceAccount, no

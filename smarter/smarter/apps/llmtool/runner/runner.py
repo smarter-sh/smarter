@@ -18,18 +18,15 @@ from typing import Callable
 from django.utils.module_loading import import_string
 
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib import logging
-from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .models import ToolCall, ToolCallResult
-
-logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.PLUGIN_LOGGING])
 
 ToolExecutor = Callable[[ToolCall], ToolCallResult]
 """A function that executes one kind of resolved tool call, and returns its result."""
 
 TOOL_EXECUTORS: dict[str, str] = {
     "api": "smarter.apps.connection.execution.execute_api_call",
+    "http": "smarter.apps.llmtool.runner.http.execute_http_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""
@@ -75,8 +72,9 @@ class InProcessToolRunner(ToolRunner):
         :returns: The executor's result.
         :raises SmarterConfigurationError: If no executor is registered for the call's kind.
         """
+        # no logging here: some calls run in worker threads, where the waffle switched logger
+        # would open a database connection per thread to read its switch.
         executor = executor_for(call.kind)
-        logger.debug("running a %s tool call in process", call.kind)
         result = executor(call)
         return result
 

@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 800" width="1300" height="800" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 890" width="1300" height="890" role="img" aria-labelledby="t d">
 <title id="t">How an LLM tool call runs</title>
-<desc id="d">When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or ApiConnection.execute_query(), checks the permissions and the cache. On a cache miss it resolves the call: it reads the credential from its Smarter Secret, decrypts it, signs the acting user, and builds a ToolCall, such as an MCPToolCall or an ApiToolCall, of plain values that travel as JSON. It hands the call to the tool runner, from get_tool_runner(), which finds the executor of the call's kind in TOOL_EXECUTORS: execute_mcp_call for mcp, execute_api_call for api. The executor reads no database and no Secret: it checks the permissions again and calls the MCP server or the api, through safe_http, to public addresses only. It returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app sends the signals, stores the result in the cache, and gives it to the LLM. Today the runner executes the call in the app's process; in phase 2 of ADR-038 a remote runner sends the same call to a worker that holds no credentials.</desc>
+<desc id="d">When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or ApiConnection.execute_query(), checks the permissions and the cache. On a cache miss it resolves the call: it reads the credential from its Smarter Secret, decrypts it, signs the acting user, and builds a ToolCall, such as an MCPToolCall, an ApiToolCall or an HttpToolCall, of plain values that travel as JSON. It hands the call to the tool runner, from get_tool_runner(), which finds the executor of the call's kind in TOOL_EXECUTORS: execute_mcp_call for MCP clients, execute_api_call for API plugins, and execute_http_call for the web search apis (Brave, Tavily), the Brave image search, and the checks of each image's url. The executor reads no database and no Secret: it calls the MCP server, the api, the search api or the image's host, through safe_http, to public addresses only. It returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app sends the signals, stores the result in the cache, and gives it to the LLM. Today the runner executes the call in the app's process; in phase 2 of ADR-038 a remote runner sends the same call to a worker that holds no credentials.</desc>
 <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
-<rect width="1300" height="800" rx="14" fill="#F6F8FA"/>
+<rect width="1300" height="890" rx="14" fill="#F6F8FA"/>
 <text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">How an LLM tool call runs</text>
 <text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">resolved in the app, where the credentials are; executed by the tool runner, without them (ADR-038)</text>
 <text x="28" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · In the app</text>
@@ -16,14 +16,14 @@
 <rect x="28" y="290" width="300" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M28,299 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
 <text x="40" y="308" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">The tool's code</text>
-<text x="40" y="332" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">MCPToolkit · ApiConnection</text>
+<text x="40" y="332" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">MCPToolkit · ApiConnection · plugins</text>
 <text x="40" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">checks the permissions</text>
 <text x="40" y="367" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">checks the cache: a hit stops here</text>
 <text x="40" y="384" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">sends the signals, caches, answers</text>
 <rect x="28" y="450" width="300" height="113" rx="9" fill="#2980B9" stroke="#2980B9"/>
 <path d="M28,459 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#2980B9"/>
 <text x="40" y="468" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">Resolve the call</text>
-<text x="40" y="492" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">MCPToolCall · ApiToolCall</text>
+<text x="40" y="492" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">MCPToolCall · ApiToolCall · HttpToolCall</text>
 <text x="40" y="510" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">decrypts the credential</text>
 <text x="40" y="527" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">signs the acting user</text>
 <text x="40" y="544" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">plain values, no database objects</text>
@@ -40,48 +40,62 @@
 <text x="392" y="342" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">get_tool_runner()</text>
 <text x="392" y="360" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">InProcessToolRunner today</text>
 <text x="392" y="377" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">a remote runner in phase 2</text>
-<rect x="380" y="440" width="250" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<rect x="380" y="440" width="250" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M380,449 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
 <text x="392" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Executors, by kind</text>
 <text x="392" y="482" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">TOOL_EXECUTORS</text>
 <text x="392" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">mcp: execute_mcp_call</text>
 <text x="392" y="517" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">api: execute_api_call</text>
-<rect x="380" y="590" width="250" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M380,599 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
-<text x="392" y="608" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">ToolCallResult</text>
-<text x="392" y="632" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">JSON</text>
-<text x="392" y="650" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">value · is_error</text>
-<text x="392" y="667" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">failure · status_code</text>
+<text x="392" y="534" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">http: execute_http_call</text>
+<rect x="380" y="700" width="250" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M380,709 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
+<text x="392" y="718" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">ToolCallResult</text>
+<text x="392" y="742" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">JSON</text>
+<text x="392" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">value · is_error</text>
+<text x="392" y="777" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">failure · status_code</text>
 <text x="690" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · Execution</text>
 <rect x="690" y="106" width="300" height="2" fill="#2980B9" fill-opacity="0.35"/>
-<rect x="676" y="166" width="328" height="360" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<rect x="676" y="166" width="328" height="464" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="688" y="185" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">no database · no Secrets</text>
 <text x="688" y="201" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">in the app today; in a worker, phase 2</text>
-<rect x="690" y="220" width="300" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M690,229 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
-<text x="702" y="238" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_mcp_call()</text>
-<text x="702" y="262" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">MCPServerConnection(endpoint=)</text>
-<text x="702" y="280" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">checks the permissions again</text>
-<text x="702" y="297" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">connects, calls, disconnects</text>
-<rect x="690" y="380" width="300" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M690,389 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
-<text x="702" y="398" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_api_call()</text>
-<text x="702" y="422" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">safe_http.fetch()</text>
-<text x="702" y="440" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">public addresses only</text>
-<text x="702" y="457" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no credentials on a redirect</text>
-<text x="702" y="474" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">to another host</text>
+<rect x="690" y="210" width="300" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M690,219 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="702" y="228" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_mcp_call()</text>
+<text x="702" y="252" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">MCPServerConnection(endpoint=)</text>
+<text x="702" y="270" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">checks the permissions again</text>
+<text x="702" y="287" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">connects, calls, disconnects</text>
+<rect x="690" y="340" width="300" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M690,349 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="702" y="358" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_api_call()</text>
+<text x="702" y="382" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">safe_http.fetch()</text>
+<text x="702" y="400" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">API plugins: the api's JSON, limited</text>
+<text x="702" y="417" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">http or https, any port</text>
+<text x="702" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">public addresses only</text>
+<rect x="690" y="490" width="300" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M690,499 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="702" y="508" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_http_call()</text>
+<text x="702" y="532" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">safe_http.fetch()</text>
+<text x="702" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">web search: Brave, Tavily</text>
+<text x="702" y="567" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">image search: Brave, and a</text>
+<text x="702" y="584" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">check of each image's url</text>
 <text x="1046" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">4 · The internet</text>
 <rect x="1046" y="106" width="226" height="2" fill="#2980B9" fill-opacity="0.35"/>
-<rect x="1046" y="220" width="226" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M1046,229 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
-<text x="1058" y="238" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">MCP servers</text>
-<text x="1058" y="262" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https · 443</text>
-<text x="1058" y="280" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the MCPClient's endpoint</text>
-<rect x="1046" y="380" width="226" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M1046,389 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
-<text x="1058" y="398" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">APIs</text>
-<text x="1058" y="422" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">http or https · any port</text>
-<text x="1058" y="440" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the ApiConnection's base url</text>
+<rect x="1046" y="210" width="226" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M1046,219 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
+<text x="1058" y="228" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">MCP servers</text>
+<text x="1058" y="252" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https · 443</text>
+<text x="1058" y="270" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the MCPClient's endpoint</text>
+<rect x="1046" y="340" width="226" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M1046,349 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
+<text x="1058" y="358" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">APIs</text>
+<text x="1058" y="382" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">http or https · any port</text>
+<text x="1058" y="400" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the ApiConnection's base url</text>
+<rect x="1046" y="490" width="226" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M1046,499 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
+<text x="1058" y="508" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Search apis, image hosts</text>
+<text x="1058" y="532" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https · 443</text>
+<text x="1058" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Brave, Tavily</text>
+<text x="1058" y="567" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each image's own host</text>
 <path d="M178.0,246 L178.0,288" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
 <path d="M178.0,403 L178.0,448" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
 <text x="190" y="432" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">on a cache miss</text>
@@ -91,21 +105,23 @@
 <text x="392" y="292" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">a ToolCall, as JSON</text>
 <path d="M505.0,396 L505.0,438" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
 <text x="515" y="424" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">by its kind</text>
-<path d="M630,488.0 L660,488.0 L660,268.0 L688,268.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,488.0 L660,488.0 L660,436.5 L688,436.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M990,268.0 L1044,259.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
-<path d="M990,436.5 L1044,419.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
-<path d="M840.0,526 L840.0,638.0 L630,638.0" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<path d="M378,638.0 L344,638.0 L344,346.5 L328,346.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<rect x="28" y="736" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M48,756 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
-<text x="92" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the call</text>
-<path d="M176.8,756 h34" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<text x="220.8" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">its result</text>
-<path d="M317.8,756 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
-<text x="361.8" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a credential, or a request that leaves the cluster</text>
-<path d="M702.8,756 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<text x="746.8" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">in the same process</text>
-<rect x="898.6999999999999" y="748" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
-<text x="942.6999999999999" y="760" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">where the runner will draw the line</text>
+<path d="M630,496.5 L660,496.5 L660,258.0 L688,258.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,496.5 L660,496.5 L660,396.5 L688,396.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,496.5 L660,496.5 L660,546.5 L688,546.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M990,258.0 L1044,249.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M990,396.5 L1044,379.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M990,546.5 L1044,538.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M840.0,630 L840.0,748.0 L630,748.0" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<path d="M378,748.0 L344,748.0 L344,346.5 L328,346.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<rect x="28" y="826" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,846 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="92" y="850" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the call</text>
+<path d="M176.8,846 h34" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<text x="220.8" y="850" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">its result</text>
+<path d="M317.8,846 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="361.8" y="850" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a credential, or a request that leaves the cluster</text>
+<path d="M702.8,846 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="746.8" y="850" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">in the same process</text>
+<rect x="898.6999999999999" y="838" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
+<text x="942.6999999999999" y="850" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">where the runner will draw the line</text>
 </svg>
