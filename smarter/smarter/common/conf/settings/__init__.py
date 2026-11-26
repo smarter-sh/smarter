@@ -281,13 +281,17 @@ class Settings(
         placeholder key is worse: it is published in this repository, so anyone could forge
         signed values with it. Locally, a generated key is fine, and only logs a warning.
 
-        :raises SmarterConfigurationError: If the secret key is not configured, and the
-            environment is not local.
+        The tool worker (``database_unavailable``) is never given the key: it signs nothing, and
+        with the key, code that a tool call runs there could forge the platform's sessions. It
+        uses its own random key.
+
+        :raises SmarterConfigurationError: If the secret key is not configured, the environment is
+            not local, and this process has a database.
 
         See Also:
             - smarter_settings.django_secret_key_is_set
         """
-        if self.django_secret_key_is_set:
+        if self.django_secret_key_is_set or self.database_unavailable:
             return
         if not self.environment_is_local:
             raise SmarterConfigurationError(

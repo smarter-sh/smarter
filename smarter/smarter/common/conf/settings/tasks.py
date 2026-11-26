@@ -1,7 +1,7 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """The settings of the Celery tasks that deploy LLMClients and manage infrastructure."""
 
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -236,6 +236,59 @@ class TaskSettings(BaseModel):
             )
 
         return v
+
+    app_tools_tasks_celery_task_queue: str = Field(
+        "tools_celery_task_queue",
+        description="The Celery task queue name for LLM tool calls, which the tool worker, smarter-worker-tools, runs.",
+        title="Tools Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for LLM tool calls, when ``app_llmtool_tool_runner`` is ``remote``.
+
+    The tool worker, ``smarter-worker-tools``, serves it: it runs each tool call without the database or
+    the platform's credentials (ADR-038). See :mod:`smarter.apps.llmtool.runner`.
+
+    :type: str
+    :default: ``"tools_celery_task_queue"``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("app_tools_tasks_celery_task_queue")
+    def validate_app_tools_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """
+        Validate ``app_tools_tasks_celery_task_queue``.
+
+        :param v: The queue's name, or empty for the default.
+        :returns: The queue's name.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return field_default(cls, "app_tools_tasks_celery_task_queue")
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"app_tools_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
+        return v
+
+    app_llmtool_tool_runner: Literal["in_process", "remote"] = Field(
+        "in_process",
+        description=(
+            "Where LLM tool calls run: in_process, in the app's own process, or remote, in the tool worker, "
+            "smarter-worker-tools, which holds no credentials."
+        ),
+        title="LLM Tool Runner",
+    )
+    """
+    Where LLM tool calls run.
+
+    - ``in_process``, the default: in the process that handles the chat, as they always have.
+    - ``remote``: in the tool worker, ``smarter-worker-tools``, through the Celery queue
+      ``app_tools_tasks_celery_task_queue``. The worker holds no database, no Smarter Secret and no cloud
+      credential: each call brings what it needs (ADR-038). The worker must be running.
+
+    Set it with ``SMARTER_APP_LLMTOOL_TOOL_RUNNER``. See :mod:`smarter.apps.llmtool.runner`.
+
+    :type: str
+    :default: ``"in_process"``
+    """
 
 
 __all__ = ["TaskSettings"]

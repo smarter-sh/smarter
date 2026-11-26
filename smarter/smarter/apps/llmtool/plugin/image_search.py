@@ -97,6 +97,7 @@ from smarter.apps.llmtool.manifest.models.image_search_plugin.spec import (
 )
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import DomainPolicy
 from smarter.apps.llmtool.models import PluginDataImageSearch
+from smarter.apps.llmtool.runner.http import fetch_with_runner
 from smarter.apps.llmtool.serializers import PluginImageSearchSerializer
 from smarter.apps.llmtool.signals import plugin_called, plugin_responded
 from smarter.apps.secret.models import Secret
@@ -112,7 +113,7 @@ from smarter.lib.typing import SmarterDictType
 
 from .base import PluginBase, SmarterPluginError
 from .request import IMAGE_SEARCH_PLUGIN_REQUEST_SIGNALS, PluginRequest
-from .safe_http import SafeHttpError, fetch
+from .safe_http import SafeHttpError
 from .websearch_providers import SearchProvider
 
 
@@ -314,7 +315,7 @@ def image_content_type(url: str, timeout: float) -> Optional[str]:
         request, or None if the url is not available.
     """
     try:
-        response = fetch(
+        response = fetch_with_runner(
             url,
             method="HEAD",
             headers=VALIDATION_HEADERS,
@@ -730,7 +731,7 @@ class ImageSearchPlugin(PluginBase):
                 "spellcheck": spellcheck,
             }
             try:
-                response = fetch(
+                response = fetch_with_runner(
                     BRAVE_IMAGE_SEARCH_URL,
                     headers={"Accept": "application/json", "X-Subscription-Token": api_key},
                     params={key: value for key, value in query_params.items() if value is not None},

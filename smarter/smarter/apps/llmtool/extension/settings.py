@@ -10,7 +10,8 @@ at call time and never cached.
 
 from typing import TYPE_CHECKING, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, SecretStr, create_model
+from pydantic import BaseModel, ConfigDict, JsonValue, SecretStr, create_model
+from waffle import get_waffle_switch_model
 
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -83,6 +84,48 @@ def setting_value(spec: ExtensionSettingSpec, row: Optional["ExtensionSetting"])
         except ValueError as e:
             logger.error("ignoring invalid value of %s: %s", row, e)
     return spec.default
+
+
+def settings_values(settings: BaseModel) -> dict[str, JsonValue]:
+    """
+    Return resolved settings as plain JSON values, with each secret decrypted, for a tool call to carry.
+
+    The executor rebuilds the settings model from them with :func:`settings_model`, which makes each secret
+    a :class:`pydantic.SecretStr` again.
+
+    :param settings: The settings, from :func:`resolve_settings`.
+    :returns: Each setting's value, by name.
+    """
+    values: dict[str, JsonValue] = {}
+    for name in type(settings).model_fields:
+        value = getattr(settings, name)
+        if isinstance(value, SecretStr):
+            values[name] = value.get_secret_value()
+        else:
+            values[name] = value
+    return values
+
+
+def resolve_switches(slug: str, manifest: ExtensionManifest) -> dict[str, bool]:
+    """
+    Return whether each of an extension's waffle switches is on, by its name in the manifest.
+
+    It reads the switches in the app, so that the extension's code reads them from its context, without
+    the database (ADR-038).
+
+    :param slug: The extension's slug.
+    :param manifest: The manifest of the version that runs.
+    :returns: e.g. ``{"logging": True}``. A switch that doesn't exist is off.
+    """
+    # pylint: disable=import-outside-toplevel
+    from .protocol import switch_name
+
+    switch_model = get_waffle_switch_model()
+    switches: dict[str, bool] = {}
+    for spec in manifest.smarter.switches:
+        switch = switch_model.get(switch_name(slug, spec.name))
+        switches[spec.name] = bool(switch.pk) and switch.is_active()
+    return switches
 
 
 def resolve_settings(extension: "Extension", manifest: ExtensionManifest) -> ExtensionSettingsBase:

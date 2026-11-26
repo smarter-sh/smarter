@@ -311,8 +311,18 @@ A tool subclasses :class:`~smarter.apps.llmtool.extension.protocol.SmarterExtens
   :class:`~smarter.apps.llmtool.extension.protocol.ExtensionContext`. It returns any JSON value.
 - ``context.settings`` has one attribute per setting in ``pyproject.toml``. A secret setting is a
   :class:`pydantic.SecretStr`: call ``get_secret_value()`` only where you use it, and never log it.
-- ``context.account``, ``context.user_profile`` and ``context.llmclient`` say who called the tool.
+- ``context.caller`` says who called the tool, as an
+  :class:`~smarter.apps.llmtool.extension.protocol.ExtensionCaller`: ``account_number``, ``user_id``
+  and ``llmclient_name``. They are plain identifiers, not the platform's database objects: an
+  Extension is a third party's code, and gets no access to the platform's data, or to a user's
+  personal details.
+- ``context.switch_is_active(name)`` says whether one of the Extension's own switches is on, as it was
+  when the tool was called.
 - ``context.logger`` logs as ``smarter_extensions.<slug>``.
+
+The context reads no database. Everything in it, the settings, switches and caller, is decided by the
+platform before the tool runs, so that a tool can run apart from the platform's credentials (see
+:doc:`ADR-038 </adr/038-tool-isolation-and-egress>`).
 
 Errors
 ~~~~~~

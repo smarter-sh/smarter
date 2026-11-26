@@ -25,8 +25,10 @@ What Smarter depends on
 -----------------------
 
 - **Python packages.** Every package in the Docker image, direct and transitive, is pinned to an
-  exact version by ``pip-compile``, in ``smarter/requirements/docker.txt``. This is the largest set
-  of dependencies, and the one that runs with the most privilege.
+  exact version and the hashes of its files, in ``smarter/requirements/docker.txt``. This is the
+  largest set of dependencies, and the one that runs with the most privilege.
+- **Extensions,** third-party Python code that the platform installs at run time from the signed
+  extension registry, and runs to answer tool calls (below).
 - **The web console's npm packages,** in the
   `smarter-console <https://github.com/smarter-sh/smarter-console>`__ repository. They run in users'
   browsers, not on the server. The platform installs the console's built release, pinned in
@@ -95,7 +97,9 @@ What protects against it today
   ``smarter-<version>-arm64.spdx.json``, so that the image's contents can be checked without pulling
   it.
 - **A signed extension registry.** The index of LLM tool extensions is signed, and Smarter checks the
-  signature on every read. See :doc:`../llm-providers-and-extensions/extensions`.
+  signature on every read, so an Extension comes from the publisher the index names. The signature
+  doesn't vouch for the Extension's code: see the second weakness below, and
+  :doc:`../llm-providers-and-extensions/extensions`.
 - **Hardened containers.** The pods run as a non-root user, on a read-only root filesystem, with
   every Linux capability dropped. Code can't modify the installed packages or the image at run time,
   which makes it harder for an attack to persist.
@@ -111,14 +115,16 @@ What protects against it today
 Known weaknesses, and the plan for each
 ---------------------------------------
 
-The items below are listed in the order the project plans to work on them. The first is the most
-serious. The others are cheaper, and the project expects to finish most of them first.
+Two weaknesses remain, and the same change addresses both: the tool calls that reach hosts chosen by a
+manifest author or the LLM move to a worker with no credentials, and every other pod's internet traffic
+is limited to known hosts. :doc:`ADR-038 </adr/038-tool-isolation-and-egress>` proposes the design and
+the order of the work.
 
 Outbound HTTPS is open to any address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The application's pods may connect to any address on the internet on ports 443, 80, 465, 587 and
-3306. Most malicious packages send what they steal with an ordinary HTTPS request, so the network
+The application's pods may connect to any address on the internet on ports 443, 80, 587 and 3306.
+Most malicious packages send what they steal with an ordinary HTTPS request, so the network
 policies don't stop it. DNS lookups, which the pods need, are a second, slower way out.
 
 The platform can't simply close port 443, because several features call hosts that a manifest
@@ -127,13 +133,17 @@ endpoints.
 
 **Plan:**
 
-- Move the features that call arbitrary hosts into a worker of their own, which holds no secrets
-  other than the ones each call needs, and no AWS role.
+- Move the features that call arbitrary hosts (API, SQL and web search plugins, MCP clients and
+  Extensions) into a worker of their own, which holds no secrets other than the ones each call needs,
+  no database access and no AWS role. Available, off by default: the tool worker,
+  :doc:`/smarter-framework/smarter-on-kubernetes/tool-worker`, whose network policy also keeps it
+  away from every private address, the instance metadata service included.
 - Limit the outbound traffic of every other pod to a list of known hosts (the LLM providers, AWS,
-  SES), with an egress proxy or with DNS-aware network policies, which Calico's open-source edition
-  doesn't support.
-- Close the ports that each workload doesn't use: SES needs only one of 465 and 587, and 80 and 3306
-  are needed only where plugins run.
+  GitHub), through an egress proxy in the cluster. DNS-aware network policies would do the same in the
+  network, but Calico's open-source edition doesn't support them.
+- Close 80 and 3306 for every pod but that worker: they are needed only where API plugins on plain
+  HTTP and SQL plugins run. The SMTP port that Smarter doesn't use, 465, is already closed: SES is
+  reached on 587 only.
 
 Every application pod holds every credential
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,8 +151,15 @@ Every application pod holds every credential
 The app, the workers, beat and the init Job read the same Secret and run as the same ServiceAccount,
 so a dependency that is compromised in any of them reaches all of the platform's credentials.
 
-**Plan:** split the credentials by workload, with a ServiceAccount, an IAM role and a Secret for each,
-so that each pod holds only what it uses. This goes together with the separate worker above.
+This includes Extensions. An Extension's code is third-party Python, which the app imports into its
+own process at run time to answer a tool call, where it can read every credential. The registry's
+signature says who published an Extension, not what its code does. Install only Extensions whose code
+you have read.
+
+**Plan:** run tool calls, Extensions included, in the worker above, which holds no credentials, and
+which an operator can enable now (``workerTools.enabled``), then
+split the remaining credentials by workload, with a ServiceAccount, an IAM role and a Secret for each,
+so that each pod holds only what it uses. See :doc:`ADR-038 </adr/038-tool-isolation-and-egress>`.
 
 What operators can do now
 -------------------------
@@ -152,6 +169,9 @@ What operators can do now
   tools.
 - **Close the ports you don't use.** If your platform doesn't use SQL plugins, or API plugins on plain
   HTTP, remove the 3306 and 80 rules from the application's egress policy.
+- **Run tool calls in the tool worker.** Apply smarter-infrastructure's network policies for it, then
+  set ``workerTools.enabled``: API, SQL and MCP calls, web search and Extensions then run in a pod
+  without the platform's credentials. See :doc:`/smarter-framework/smarter-on-kubernetes/tool-worker`.
 - **Turn on threat detection.** Amazon GuardDuty notices unusual API calls made with the pods'
   credentials, and unusual DNS and network traffic. See "What Smarter Doesn't Provide" in
   :doc:`infrastructure`.

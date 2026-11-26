@@ -297,6 +297,28 @@ class DatabaseSettings(BaseModel):
     :raises SmarterConfigurationError: If the value is not a non-negative integer.
     """
 
+    database_unavailable: bool = Field(
+        False,
+        description=(
+            "True in a process that has no platform database: the tool worker. Waffle switches are then off, "
+            "without a query."
+        ),
+        title="Database Unavailable",
+    )
+    """
+    True in a process that is not given the platform's database: the tool worker, ``smarter-worker-tools``.
+
+    The tool worker runs LLM tool calls without the database or the platform's credentials (ADR-038). Its
+    network policy doesn't let it reach the database, so a query would wait for the connection to time
+    out. With this setting, every waffle switch is off, and is never read from the database, so that a
+    switched logger, which checks its switch on each log call, costs nothing.
+
+    Set it with ``SMARTER_DATABASE_UNAVAILABLE``. The Helm chart sets it for the tool worker only.
+
+    :type: bool
+    :default: False
+    """
+
     @before_field_validator("database_read_timeout")
     def parse_database_read_timeout(cls, v: Optional[Union[int, str]]) -> int:
         """Validates the 'database_read_timeout' field.

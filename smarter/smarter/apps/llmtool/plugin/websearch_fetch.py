@@ -32,13 +32,14 @@ All requests are made with :py:mod:`smarter.apps.llmtool.plugin.safe_http`.
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Callable, Optional
+from typing import Callable, Final, Literal, Optional
 from urllib.parse import urljoin, urlparse, urlunparse
 from urllib.robotparser import RobotFileParser
 
 from bs4 import BeautifulSoup, Comment
 from bs4.element import NavigableString, Tag
 from cache_results import cache_results
+from pydantic import Field
 
 from smarter.apps.llmtool.const import PluginCacheTtl
 from smarter.apps.llmtool.manifest.models.websearch_plugin.const import (
@@ -47,6 +48,12 @@ from smarter.apps.llmtool.manifest.models.websearch_plugin.const import (
 from smarter.apps.llmtool.manifest.models.websearch_plugin.policy import (
     DomainPolicy,
     url_host,
+)
+from smarter.apps.llmtool.runner import ToolCall, ToolCallResult, get_tool_runner
+from smarter.apps.llmtool.runner.http import (
+    fetch_with_runner,
+    response_to_value,
+    value_to_response,
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
@@ -184,7 +191,8 @@ def robots_rules(url: str, timeout: float) -> Optional[RobotFileParser]:
     @cache_results(timeout=PluginCacheTtl.WEBSEARCH_ROBOTS_TXT)
     def get_cached_robots_txt(netloc: str) -> str:
         try:
-            response = safe_http.fetch(
+            # through the tool runner: the website is one that the LLM chose.
+            response = fetch_with_runner(
                 f"https://{netloc}/robots.txt",
                 headers={"User-Agent": USER_AGENT},
                 timeout=timeout,
@@ -384,6 +392,85 @@ def make_redirect_policy(policy: DomainPolicy, respect_robots_txt: bool, timeout
     return redirect_policy
 
 
+WEBFETCH_TOOL_CALL_KIND: Final = "webfetch"
+"""The ``kind`` of a page fetch, which selects :func:`execute_webfetch_call`."""
+
+
+class WebFetchToolCall(ToolCall):
+    """
+    The WebsearchPlugin's fetch of a page, resolved for execution.
+
+    ``safe_http.fetch``'s ``redirect_policy`` is a function, which can't travel with a call, so the
+    call carries what it decides on instead, and :func:`execute_webfetch_call` builds the function
+    where the call runs, with :func:`make_redirect_policy`.
+
+    :ivar url: The page's url, normalized.
+    :ivar allowed: The domain policy's allowed domains, which each redirect must satisfy.
+    :ivar blocked: The domain policy's blocked domains.
+    :ivar respect_robots_txt: Whether each redirect must also be permitted by its website's robots.txt.
+    :ivar timeout: Seconds to wait for each request.
+    """
+
+    kind: Literal["webfetch"] = WEBFETCH_TOOL_CALL_KIND
+    url: str
+    allowed: tuple[str, ...] = Field(default_factory=tuple)
+    blocked: tuple[str, ...] = Field(default_factory=tuple)
+    respect_robots_txt: bool = True
+    timeout: float = safe_http.DEFAULT_TIMEOUT
+
+
+def execute_webfetch_call(call: ToolCall) -> ToolCallResult:
+    """
+    Execute a resolved page fetch, enforcing the domain policy and robots.txt on each redirect.
+
+    :param call: The call, a :class:`WebFetchToolCall`.
+    :returns: The response, as :func:`~smarter.apps.llmtool.runner.http.response_to_value` returns
+        it, with its status code; or a result with a ``failure``, with the status code if the
+        server answered.
+    :raises TypeError: If the call isn't a :class:`WebFetchToolCall`.
+    """
+    if not isinstance(call, WebFetchToolCall):
+        raise TypeError(f"execute_webfetch_call() needs a WebFetchToolCall, not a {type(call).__name__}.")
+    policy = DomainPolicy(allowed=call.allowed, blocked=call.blocked)
+    redirect_policy = make_redirect_policy(policy, call.respect_robots_txt, call.timeout)
+    try:
+        response = safe_http.fetch(
+            call.url,
+            headers={"User-Agent": USER_AGENT, "Accept": ACCEPT},
+            timeout=call.timeout,
+            max_bytes=MAX_PAGE_BYTES,
+            max_redirects=MAX_REDIRECTS,
+            redirect_policy=redirect_policy,
+        )
+    except safe_http.SafeHttpError as e:
+        return ToolCallResult(failure=str(e), status_code=e.status_code)
+    result = ToolCallResult(value=response_to_value(response), status_code=response.status_code)
+    return result
+
+
+def fetch_page_response(
+    url: str, allowed: tuple[str, ...], blocked: tuple[str, ...], respect_robots_txt: bool, timeout: float
+) -> safe_http.SafeResponse:
+    """
+    Fetch a page through the tool runner, as a :class:`WebFetchToolCall`.
+
+    :returns: The response.
+    :raises SafeHttpError: If the page, or a redirect, is refused or can't be read.
+    """
+    call = WebFetchToolCall(
+        url=url,
+        allowed=allowed,
+        blocked=blocked,
+        respect_robots_txt=respect_robots_txt,
+        timeout=timeout,
+    )
+    result = get_tool_runner().run(call)
+    if result.failure is not None:
+        raise safe_http.SafeHttpError(result.failure, status_code=result.status_code)
+    response = value_to_response(result.value, result.status_code or 0)
+    return response
+
+
 # pylint: disable=too-many-arguments
 def fetch_page(
     url: str,
@@ -432,17 +519,9 @@ def fetch_page(
     ) -> tuple[safe_http.SafeResponse, datetime]:
         nonlocal cached
         cached = False
-        # failures raise SafeHttpError, so that they are never cached.
-        response = safe_http.fetch(
-            url,
-            headers={"User-Agent": USER_AGENT, "Accept": ACCEPT},
-            timeout=timeout,
-            max_bytes=MAX_PAGE_BYTES,
-            max_redirects=MAX_REDIRECTS,
-            redirect_policy=make_redirect_policy(
-                DomainPolicy(allowed=allowed, blocked=blocked), respect_robots_txt, timeout
-            ),
-        )
+        # failures raise SafeHttpError, so that they are never cached. Through the tool runner: the
+        # page is one that the LLM chose.
+        response = fetch_page_response(url, allowed, blocked, respect_robots_txt, timeout)
         return response, datetime.now(timezone.utc)
 
     try:
@@ -498,12 +577,16 @@ __all__ = [
     "TRUNCATION_MARKER",
     "USER_AGENT",
     "USER_AGENT_TOKEN",
+    "WEBFETCH_TOOL_CALL_KIND",
     "XML_TYPES",
     "FetchedPage",
     "WebFetchError",
+    "WebFetchToolCall",
     "collapse_whitespace",
     "decode",
+    "execute_webfetch_call",
     "fetch_page",
+    "fetch_page_response",
     "html_to_markdown",
     "make_redirect_policy",
     "normalize_url",

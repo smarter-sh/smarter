@@ -1,12 +1,18 @@
 """Tests of smarter.apps.llmtool.extension.toolkit."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from waffle.models import Switch
 
 from smarter.apps.llmtool.extension import toolkit as toolkit_module
 from smarter.apps.llmtool.extension.exceptions import SmarterExtensionLoadError
+from smarter.apps.llmtool.extension.execution import (
+    EXTENSION_TOOL_CALL_KIND,
+    ExtensionToolCall,
+    execute_extension_call,
+)
 from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
+from smarter.apps.llmtool.runner import ToolCall, ToolCallResult, executor_for
 from smarter.apps.llmtool.signals import (
     extension_tool_called,
     extension_tool_completed,
@@ -131,6 +137,58 @@ class TestExtensionToolkit(ExtensionTestMixin):
         finally:
             extension_tool_failed.disconnect(dispatch_uid="tf")
         self.assertEqual(len(failures), 7)
+
+    # =========================================================================
+    # the tool runner
+    # =========================================================================
+    def test_call_goes_through_the_tool_runner(self):
+        """A call reaches the runner resolved: its arguments, decrypted settings, switches and caller, as plain values."""
+        runner = MagicMock()
+        runner.run.return_value = ToolCallResult(value={"echo": "stub"})
+        with patch("smarter.apps.llmtool.extension.toolkit.get_tool_runner", return_value=runner):
+            result = self.toolkit.call("ext_echo_echo", {"text": "world"})
+        self.assertEqual(result, {"echo": "stub"})
+        call = runner.run.call_args.args[0]
+        self.assertIsInstance(call, ExtensionToolCall)
+        self.assertEqual((call.slug, call.version, call.tool_name), ("echo", "1.0.0", "echo"))
+        self.assertEqual(call.sha256, self.extension.installed_version.sha256)  # type: ignore[union-attr]
+        self.assertEqual(call.arguments, {"text": "world"})
+        self.assertEqual(call.settings["api_key"], "a-test-value")
+        self.assertEqual(call.switches, {"verbose": False})
+        self.assertEqual(call.account_number, self.account.account_number)
+        self.assertEqual(call.user_id, self.user_profile.user_id)  # type: ignore[union-attr]
+        self.assertNotIn("a-test-value", repr(call))
+        self.assertEqual(ExtensionToolCall.model_validate_json(call.model_dump_json()), call)
+
+    def test_runner_failure_is_an_error_for_the_llm(self):
+        """A runner's failure reaches the LLM as an error, sends extension_tool_failed, and is never cached."""
+        runner = MagicMock()
+        runner.run.return_value = ToolCallResult(failure="The tool failed: boom")
+        with (
+            patch("smarter.apps.llmtool.extension.toolkit.get_tool_runner", return_value=runner),
+            patch.object(self.toolkit.functions["ext_echo_echo"].tool, "cache_ttl", 60),
+        ):
+            self.assertEqual(self.toolkit.call("ext_echo_echo", {"text": "x"}), {"error": "The tool failed: boom"})
+            self.toolkit.call("ext_echo_echo", {"text": "x"})
+        self.assertEqual(runner.run.call_count, 2)
+
+    def test_extension_kind_is_registered(self):
+        """The tool runner finds the extension executor."""
+        self.assertIs(executor_for(EXTENSION_TOOL_CALL_KIND), execute_extension_call)
+
+    def test_executor_refuses_what_it_cannot_run(self):
+        """The executor fails a call to an unknown archive or tool, or with invalid arguments, and refuses another kind."""
+        sha256 = self.extension.installed_version.sha256  # type: ignore[union-attr]
+        cases = {
+            "no installed version": ExtensionToolCall(slug="echo", version="9", sha256="0" * 64, tool_name="echo"),
+            "has no tool": ExtensionToolCall(slug="echo", version="1.0.0", sha256=sha256, tool_name="nope"),
+            "Invalid arguments": ExtensionToolCall(slug="echo", version="1.0.0", sha256=sha256, tool_name="echo"),
+        }
+        for message, call in cases.items():
+            with self.subTest(message=message):
+                self.assertIn(message, execute_extension_call(call).failure or "")
+        with self.assertRaises(TypeError):
+            execute_extension_call(ToolCall(kind="other"))
 
     def test_completed_is_sent_last(self):
         """Every call to an extension tool ends with extension_tool_completed, which says whether it succeeded."""

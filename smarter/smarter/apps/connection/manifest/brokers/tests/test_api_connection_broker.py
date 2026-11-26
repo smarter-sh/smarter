@@ -145,6 +145,30 @@ class TestSmarterApiConnectionBroker(TestSmarterConnectionBrokerBase):
             ApiConnection.objects.filter(name="test_api_connection", user_profile=self.user_profile).exists()
         )
 
+    def test_describe_never_shows_a_secrets_value(self):
+        """
+        Test that a manifest built from the database names the connection's Secrets, and describe() shows no value.
+
+        It once carried the api key and the proxy password, decrypted: describe() showed them to anyone who
+        could describe the connection, and apply() read them back as the names of Secrets.
+        """
+        self.apply_manifest()
+        connection = required(self.broker.connection, "broker.connection")
+        broker = self.SAMBrokerClass(self.request, name=connection.name, kind=self.broker.kind)
+        manifest = required(broker.manifest, "broker.manifest")
+        self.assertEqual(manifest.spec.connection.apiKey, self.test_secret_name)
+        self.assertEqual(manifest.spec.connection.proxyPassword, self.test_proxy_secret_name)
+        response = broker.describe(self.request, **self.kwargs)
+        self.assertTrue(self.validate_smarter_journaled_json_response_ok(response))
+        described = json.loads(response.content.decode())["data"]["spec"]["connection"]
+        for field, name, value in (
+            ("apiKey", self.test_secret_name, self.test_secret_value),
+            ("proxyPassword", self.test_proxy_secret_name, self.test_proxy_secret_value),
+        ):
+            self.assertNotEqual(name, value, f"the test Secret's value must differ from its name: {field}")
+            self.assertEqual(described[field], name, field)
+            self.assertNotEqual(described[field], value, field)
+
     def test_apply_unchanged_manifest_does_not_save(self):
         """Test that re-applying an unchanged manifest leaves the row alone, and that a changed field is saved."""
         self.apply_manifest()

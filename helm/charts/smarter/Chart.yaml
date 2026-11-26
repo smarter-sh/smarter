@@ -25,7 +25,7 @@ maintainers:
     url: https://lawrencemcdaniel.com
 dependencies:
   - name: alloy
-    version: 1.15.0
+    version: 1.16.0
     repository: https://grafana.github.io/helm-charts
     condition: alloy.enabled
   - name: grafana
@@ -33,7 +33,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: grafana.enabled
   - name: loki
-    version: 7.5.0
+    version: 7.7.0
     repository: https://grafana.github.io/helm-charts
     condition: loki.enabled
   - name: mysql
@@ -41,7 +41,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: mysql.enabled
   - name: mariadb
-    version: 28.1.5
+    version: 28.1.6
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: prometheus
@@ -49,7 +49,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: prometheus.enabled
   - name: redis
-    version: 28.3.10
+    version: 28.3.12
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
   - name: slack-bot

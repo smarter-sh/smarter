@@ -17,25 +17,18 @@ import requests
 from cache_results import lazy_cache
 
 from smarter.apps.llmtool.plugin import safe_http
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .base_classes import (
     SAFE_HTTP_DNS_PATCH,
     SAFE_HTTP_REQUESTS_PATCH,
+    SAFE_HTTP_SETTINGS_PATCH,
     FakeWebHost,
     mock_web_host,
+    resolves_to,
 )
-
-
-def resolves_to(address: str):
-    """Return a stand-in for socket.getaddrinfo that resolves every host to an address."""
-
-    def getaddrinfo(host, port, *args, **kwargs):
-        family = socket.AF_INET6 if ":" in address else socket.AF_INET
-        return [(family, socket.SOCK_STREAM, 6, "", (address, port))]
-
-    return getaddrinfo
 
 
 class TestSafeHttp(SmarterTestBase):
@@ -229,6 +222,114 @@ class TestSafeHttp(SmarterTestBase):
         with mock_web_host(host):
             with self.assertRaises(safe_http.SafeHttpError):
                 safe_http.fetch("https://example.com/a")
+
+    def test_fetch_redirect_to_another_origin_drops_credentials(self):
+        """Test that a redirect to another host doesn't carry the caller's credential headers, and one on the same host does."""
+        host = FakeWebHost()
+        host.add("https://api.example.com/a", status_code=302, headers={"Location": "/b"})
+        host.add("https://api.example.com/b", status_code=302, headers={"Location": "https://elsewhere.example/c"})
+        host.add("https://elsewhere.example/c", b"ok")
+        headers = {"Authorization": "Bearer x", "Cookie": "s=1", "Proxy-Authorization": "y", "Accept": "a/b"}
+        with mock_web_host(host):
+            safe_http.fetch("https://api.example.com/a", headers=headers)
+        same_origin_headers = host.calls[1]["headers"]
+        self.assertEqual(same_origin_headers["Authorization"], "Bearer x")
+        other_origin_headers = host.calls[2]["headers"]
+        for name in ("Authorization", "Cookie", "Proxy-Authorization"):
+            self.assertNotIn(name, other_origin_headers)
+        self.assertEqual(other_origin_headers["Accept"], "a/b")
+        self.assertIn("User-Agent", other_origin_headers)
+        # the first request still went out with the credential.
+        self.assertEqual(host.calls[0]["headers"]["Authorization"], "Bearer x")
+        self.assertEqual(headers["Authorization"], "Bearer x")
+
+    def test_same_origin(self):
+        """Test that the scheme, host and port make the origin."""
+        self.assertTrue(safe_http.same_origin("https://a.example/x", "https://A.example/y?q=1"))
+        self.assertFalse(safe_http.same_origin("https://a.example/", "http://a.example/"))
+        self.assertFalse(safe_http.same_origin("https://a.example/", "https://b.example/"))
+        self.assertFalse(safe_http.same_origin("https://a.example/", "https://a.example:8443/"))
+
+    # =========================================================================
+    # require_https=False, for an ApiConnection, and validate_destination_url()
+    # =========================================================================
+    def test_http_and_any_port_when_https_is_not_required(self):
+        """Test that plain http, and any port, are permitted to a public address when https isn't required."""
+        with mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=resolves_to("93.184.215.14")) as getaddrinfo:
+            for url in ("http://api.example.com/v1/", "http://api.example.com:8080/", "https://api.example.com:8443/"):
+                safe_http.validate_public_url(url, require_https=False)
+        # each url is resolved on its own port, or the scheme's default.
+        ports = [call.args[1] for call in getaddrinfo.call_args_list]
+        self.assertEqual(ports, [80, 8080, 8443])
+
+    def test_non_public_addresses_when_https_is_not_required(self):
+        """Test that an address that isn't public is refused, over http and on any port, e.g. instance metadata."""
+        for address in ("169.254.169.254", "10.0.0.5", "127.0.0.1", "192.168.1.1", "::1"):
+            with mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=resolves_to(address)):
+                for url in ("http://metadata.example/latest/", "http://api.example.com:6379/"):
+                    with self.assertRaises(safe_http.SafeHttpError, msg=f"address={address} url={url}"):
+                        safe_http.validate_public_url(url, require_https=False)
+
+    def test_other_schemes_when_https_is_not_required(self):
+        """Test that schemes other than http and https are still refused."""
+        for url in ("ftp://example.com/", "file:///etc/passwd", "gopher://example.com/"):
+            with self.assertRaises(safe_http.SafeHttpError, msg=f"url={url}"):
+                safe_http.validate_public_url(url, require_https=False)
+
+    def test_validate_destination_url_permits_loopback_in_the_local_environment_only(self):
+        """Test that a loopback host is permitted in the local environment, and refused in a deployed one."""
+        loopback_urls = ("http://localhost:9357/api/v1/", "https://127.0.0.1/", "http://api.localhost:9357/")
+        with mock.patch(SAFE_HTTP_SETTINGS_PATCH) as settings:
+            settings.environment = SmarterEnvironments.LOCAL
+            for url in loopback_urls:
+                safe_http.validate_destination_url(url, require_https=False)
+            for environment in (SmarterEnvironments.ALPHA, SmarterEnvironments.PROD):
+                settings.environment = environment
+                for url in loopback_urls:
+                    with self.assertRaises(safe_http.SafeHttpError, msg=f"{environment} {url}"):
+                        safe_http.validate_destination_url(url, require_https=False)
+
+    def test_fetch_permit_local_loopback(self):
+        """Test that fetch() refuses a loopback host unless the caller permits it, in the local environment."""
+        host = FakeWebHost()
+        host.add("http://localhost:9357/api/", b"ok")
+        with (
+            mock_web_host(host),
+            # localhost resolves to the loopback address, unlike mock_web_host()'s public one.
+            mock.patch(SAFE_HTTP_DNS_PATCH, side_effect=resolves_to("127.0.0.1")),
+            mock.patch(SAFE_HTTP_SETTINGS_PATCH) as settings,
+        ):
+            settings.environment = SmarterEnvironments.LOCAL
+            with self.assertRaises(safe_http.SafeHttpError):
+                safe_http.fetch("http://localhost:9357/api/", require_https=False)
+            response = safe_http.fetch("http://localhost:9357/api/", require_https=False, permit_local_loopback=True)
+            self.assertEqual(response.content, b"ok")
+            settings.environment = SmarterEnvironments.PROD
+            with self.assertRaises(safe_http.SafeHttpError):
+                safe_http.fetch("http://localhost:9357/api/", require_https=False, permit_local_loopback=True)
+        self.assertEqual(host.requested, ["http://localhost:9357/api/"])
+
+    # =========================================================================
+    # SafeResponse.json()
+    # =========================================================================
+    def test_response_json(self):
+        """Test that a response body is parsed as JSON, in its declared charset, or UTF-8."""
+        utf8 = safe_http.SafeResponse(url="u", status_code=200, headers={}, content='{"a": "é"}'.encode())
+        self.assertEqual(utf8.json(), {"a": "é"})
+        latin1 = safe_http.SafeResponse(
+            url="u",
+            status_code=200,
+            headers={"content-type": "application/json; charset=ISO-8859-1"},
+            content='["é"]'.encode("latin-1"),
+        )
+        self.assertEqual(latin1.json(), ["é"])
+        unknown = safe_http.SafeResponse(
+            url="u", status_code=200, headers={"content-type": "application/json; charset=nonsense"}, content=b"[1]"
+        )
+        self.assertEqual(unknown.json(), [1])
+        not_json = safe_http.SafeResponse(url="u", status_code=200, headers={}, content=b"<html>")
+        with self.assertRaises(ValueError):
+            not_json.json()
 
     def test_fetch_too_many_redirects(self):
         """Test that a redirect loop is abandoned."""

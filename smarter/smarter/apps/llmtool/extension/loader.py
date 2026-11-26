@@ -38,7 +38,7 @@ from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
 from .archive import ExtensionArchive
-from .exceptions import SmarterExtensionLoadError
+from .exceptions import SmarterExtensionArchiveError, SmarterExtensionLoadError
 from .lifecycle import SmarterExtensionLifecycle
 from .manifest import ExtensionManifest
 from .protocol import SmarterExtensionTool
@@ -294,6 +294,106 @@ def load_version(version: "ExtensionVersion") -> LoadedExtension:
         return load_archive(ExtensionArchive(archive_bytes))
 
 
+ARCHIVE_CACHE_KEY_PREFIX = "smarter:extension:archive:"
+"""The cache key of an extension version's archive, followed by its sha256, for the tool worker."""
+
+ARCHIVE_CACHE_SECONDS = 24 * 60 * 60
+"""Seconds that an archive stays in the cache since it was last published for a tool call."""
+
+
+def archive_cache_key(sha256: str) -> str:
+    """
+    Return the cache key of an archive, by its sha256.
+
+    :param sha256: The archive's sha256.
+    :returns: The key.
+    """
+    key = f"{ARCHIVE_CACHE_KEY_PREFIX}{sha256}"
+    return key
+
+
+def publish_archive(version: "ExtensionVersion") -> None:
+    """
+    Put an installed version's archive in the cache, Redis, for the tool worker to load, unless it is there.
+
+    The tool worker has no database (ADR-038), so it reads an extension's code from the cache, keyed by
+    the archive's sha256, which it checks. The app publishes it when it resolves a tool call for the
+    remote runner. A published archive's time to live is renewed on each call, so the archive is read
+    from the database and copied only when it isn't in the cache, e.g. after ``manage.py reset_cache``.
+
+    :param version: The installed version.
+    """
+    # pylint: disable=import-outside-toplevel
+    from cache_results import lazy_cache
+
+    key = archive_cache_key(version.sha256)
+    if lazy_cache.touch(key, ARCHIVE_CACHE_SECONDS):
+        return
+    # the archive may have been deferred by the query that fetched the version.
+    archive_bytes = bytes(type(version).objects.values_list("archive", flat=True).get(pk=version.pk))
+    lazy_cache.set(key, archive_bytes, timeout=ARCHIVE_CACHE_SECONDS)
+
+
+def cached_archive(sha256: str) -> Optional[ExtensionArchive]:
+    """
+    Return an archive that :func:`publish_archive` put in the cache, if it is there, and its sha256 matches.
+
+    :param sha256: The archive's sha256.
+    :returns: The archive, or None.
+    :raises SmarterExtensionLoadError: If the cached bytes aren't an archive, or not the one with that sha256.
+    """
+    # pylint: disable=import-outside-toplevel
+    from cache_results import lazy_cache
+
+    archive_bytes = lazy_cache.get(archive_cache_key(sha256))
+    if archive_bytes is None:
+        return None
+    try:
+        archive = ExtensionArchive(bytes(archive_bytes))
+    except SmarterExtensionArchiveError as e:
+        raise SmarterExtensionLoadError(f"the cached archive {sha256[:12]} is not an archive: it is not loaded.") from e
+    if archive.sha256 != sha256:
+        raise SmarterExtensionLoadError(f"the cached archive {sha256[:12]} has another sha256: it is not loaded.")
+    return archive
+
+
+def load_by_key(slug: str, sha256: str) -> LoadedExtension:
+    """
+    Return an extension version's code, by its slug and its archive's sha256, as a tool call names it.
+
+    A version already loaded into this process is returned as it is. Otherwise its archive is read from
+    the cache, where :func:`publish_archive` put it for the tool worker, which has no database, and checked
+    against its sha256; or else from the database, once per process; and loaded.
+
+    :param slug: The extension's slug.
+    :param sha256: The sha256 of the version's archive.
+    :returns: The loaded extension.
+    :raises SmarterExtensionLoadError: If the archive is in neither the cache nor the database, its bytes
+        don't match the sha256, or its code can't be loaded.
+    """
+    key = (slug, sha256)
+    with _lock:
+        if key in _loaded:
+            return _loaded[key]
+    archive = cached_archive(sha256)
+    if archive is not None:
+        return load_archive(archive)
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.conf import smarter_settings
+
+    if smarter_settings.database_unavailable:
+        raise SmarterExtensionLoadError(
+            f"the archive {sha256[:12]} of {slug} isn't in the cache, and this process has no database."
+        )
+    from smarter.apps.llmtool.models import ExtensionVersion
+
+    version = ExtensionVersion.objects.filter(extension__slug=slug, sha256=sha256).select_related("extension").first()
+    if version is None:
+        raise SmarterExtensionLoadError(f"no installed version of {slug} has the archive {sha256[:12]}.")
+    loaded = load_version(version)
+    return loaded
+
+
 def unload(slug: str) -> None:
     """
     Forget every loaded version of an extension, e.g. after it is uninstalled.
@@ -308,6 +408,12 @@ def unload(slug: str) -> None:
 
 
 __all__ = [
+    "ARCHIVE_CACHE_KEY_PREFIX",
+    "ARCHIVE_CACHE_SECONDS",
+    "archive_cache_key",
+    "cached_archive",
+    "load_by_key",
+    "publish_archive",
     "LoadedExtension",
     "extensions_root",
     "load_archive",

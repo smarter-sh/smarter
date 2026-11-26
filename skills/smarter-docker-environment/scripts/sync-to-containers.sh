@@ -19,7 +19,7 @@ set -euo pipefail
 
 HOST_ROOT="smarter/smarter"
 CONTAINER_ROOT="/home/smarter_user/smarter/smarter"
-CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-beat)
+CONTAINERS=(smarter-api smarter-worker smarter-worker-infrastructure smarter-worker-tools smarter-beat)
 SUBPATHS=("${@:-.}")
 
 if [ ! -d "$HOST_ROOT" ]; then

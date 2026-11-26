@@ -84,12 +84,14 @@ Technical Reference
 
    connection/api
    connection/const
+   connection/execution
    connection/manifest
    connection/models
    connection/receivers
    connection/resources
    connection/serializers
    connection/signals
+   connection/ssh
    connection/tasks
    connection/urls
    connection/views

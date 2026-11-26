@@ -11,7 +11,9 @@ Testing a Tool
 :mod:`smarter.apps.llmtool.extension.testing` has two helpers:
 
 - :func:`~smarter.apps.llmtool.extension.testing.tool_context` returns a tool call's context, with
-  the settings you give it.
+  the settings you give it, and, if your tool uses them, a ``caller``
+  (an :class:`~smarter.apps.llmtool.extension.protocol.ExtensionCaller`) and ``switches``, e.g.
+  ``tool_context("weather", switches={"verbose": True})``.
 - :func:`~smarter.apps.llmtool.extension.testing.call_tool` calls a tool as the platform does: it
   validates the arguments, and returns an
   :class:`~smarter.apps.llmtool.extension.protocol.ExtensionToolError`, or invalid arguments, as
