@@ -16,7 +16,6 @@ Each row of a list has the url of its detail, its ``detail_url``, which
 """
 
 import functools
-import json
 from typing import Optional
 
 import yaml
@@ -27,7 +26,7 @@ from pydantic.alias_generators import to_camel
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v1.cli.brokers import Brokers
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.django.listview import ListviewPageRequest
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.models import SAMDependencyTreeNode

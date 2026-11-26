@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.prompt.contract.example`, and the ``export_chat_contract_example`` command."""
 
-import json
 import os
 import tempfile
 import warnings
@@ -15,6 +14,7 @@ from smarter.apps.prompt.contract.example import (
     chat_contract_example_json,
 )
 from smarter.apps.prompt.contract.models import CONTRACT_MODELS
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

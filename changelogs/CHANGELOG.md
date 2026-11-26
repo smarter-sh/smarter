@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.5-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.4...v0.48.5-alpha.1) (2026-11-26)
+
+### Bug Fixes
+
+* **llmtool:** log one labeled line per tool call in the tool worker ([eea7350](https://github.com/smarter-sh/smarter/commit/eea7350a2984e2629529c07ab5d7fca281088095))
+* **logging:** log prompts by id and simplify verbose request messages ([c09e0d6](https://github.com/smarter-sh/smarter/commit/c09e0d63c27037b6a4677f029f9840c824278803))
+
+### Refactoring
+
+* import json from smarter.lib everywhere in the package ([15c4e55](https://github.com/smarter-sh/smarter/commit/15c4e559f76def70a6ec196ddba7e821bc00881d))
+
 ## [0.48.4](https://github.com/smarter-sh/smarter/compare/v0.48.3...v0.48.4) (2026-11-26)
 
 ### Bug Fixes

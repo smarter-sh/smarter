@@ -1,11 +1,11 @@
 """Test Serializer classes for HTTP requests."""
 
-import json
 from unittest.mock import MagicMock
 
 from django.http import HttpRequest
 from pydantic import JsonValue
 
+from smarter.lib import json
 from smarter.lib.django.http.serializers import (
     MAX_SERIALIZED_BODY_SIZE,
     REDACTED_VALUE,

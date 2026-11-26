@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.prompt.contract.builders`."""
 
-import json
 import os
 from http import HTTPStatus
 
@@ -16,6 +15,7 @@ from smarter.apps.prompt.contract.builders import (
 )
 from smarter.apps.prompt.contract.const import CHAT_CONTRACT_V1, CHAT_CONTRACT_V2
 from smarter.apps.prompt.contract.models import PromptChatApiPromptResponse
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase

@@ -25,7 +25,7 @@ SSE payload format
 
 import asyncio
 import contextvars
-import json
+import json as std_json  # one-line JSON: smarter.lib.json.dumps always indents
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -172,7 +172,7 @@ def wants_event_stream(request: HttpRequest) -> bool:
 
 def _arguments_text(arguments: Any) -> str:
     """A tool call's arguments, as text, truncated for display."""
-    text = arguments if isinstance(arguments, str) else json.dumps(arguments, default=str)
+    text = arguments if isinstance(arguments, str) else std_json.dumps(arguments, default=str)
     return text if len(text) <= MAX_ARGUMENTS_LENGTH else text[:MAX_ARGUMENTS_LENGTH] + "..."
 
 
@@ -198,7 +198,7 @@ def _sse(event: Optional[str], data: JsonValue) -> str:
     Its JSON data has no newlines, so it fits on one ``data:`` line.
     """
     prefix = f"event: {event}\n" if event else ""
-    return f"{prefix}data: {json.dumps(data, default=str)}\n\n"
+    return f"{prefix}data: {std_json.dumps(data, default=str)}\n\n"
 
 
 # ------------------------------------------------------------------------------
@@ -350,7 +350,7 @@ def _response_json(response: HttpResponse) -> JsonValue:
     """The JSON content of the prompt api's response, or its text if it isn't JSON."""
     content = response.content.decode(response.charset or "utf-8")
     try:
-        return json.loads(content)
+        return std_json.loads(content)
     except ValueError:
         return {"error": content}
 

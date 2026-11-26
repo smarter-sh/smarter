@@ -65,6 +65,15 @@ What Changes for Tool Calls
   version's archive there, keyed by its sha256, when it sends a call, and the tool worker checks the
   sha256 before it loads the code. An archive that isn't in the cache, e.g. right after
   ``manage.py reset_cache``, is published again by the next call.
+- **The log.** The tool worker logs one line per call: its kind, its task id, its outcome
+  (``succeeded``, ``tool error`` or ``failed``, with the HTTP status when there was a response), how
+  long it took, and its label: the tool's name, the LLMClient, the chat session's key, masked, and the
+  request's id. For example, ``http call 8b96acda-... succeeded (HTTP 200) in 0.586s: tool=image_search
+  llmclient=stackademy (12) session=****a1b2c3 request=-``. A call that failed or that the tool answered
+  with an error is a warning. The line never holds the call's arguments, its result or a failure's text,
+  which can hold a credential or what a database answered. Celery's own lines hide each task's
+  arguments and result. A call made outside a chat, e.g. by an orchestration, is ``unlabeled``. When
+  the tool worker doesn't answer, the app logs a warning with the same label.
 - **Credentials in Redis.** A call's arguments, with its credentials, wait in Redis until the tool
   worker takes the task, and its result waits until the app reads it, then is deleted. Only the
   namespace's pods can reach Redis.

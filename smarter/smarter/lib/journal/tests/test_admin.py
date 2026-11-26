@@ -1,6 +1,5 @@
 """Test the Smarter Journal's Django admin."""
 
-import json
 from unittest.mock import MagicMock
 
 from django.test import RequestFactory
@@ -8,6 +7,7 @@ from openai.types.chat import ChatCompletion
 from pydantic import JsonValue
 
 from smarter.apps.prompt.contract.builders import prompt_result_v2
+from smarter.lib import json
 from smarter.lib.journal.admin import SAMJournalAdmin, prompt_text, response_text
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.journal.models import DOCUMENT_FIELDS, SAMJournal

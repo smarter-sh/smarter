@@ -5,7 +5,6 @@ The view's request-derived properties are replaced, so that each guard is reache
 """
 
 import asyncio
-import json
 from collections.abc import AsyncIterator
 from contextlib import ExitStack
 from http import HTTPStatus
@@ -30,6 +29,7 @@ from smarter.apps.prompt.contract.models import (
 )
 from smarter.apps.prompt.models import Prompt
 from smarter.common.conf import smarter_settings
+from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
 
 MODULE = "smarter.apps.llmclient.api.v1.views.base"

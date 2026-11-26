@@ -1,11 +1,11 @@
 """Test :mod:`smarter.lib.journal.contract.schema`, and the ``export_journal_contract_schema`` command."""
 
-import json
 import os
 import tempfile
 
 from django.core.management import call_command
 
+from smarter.lib import json
 from smarter.lib.journal.contract.const import SCHEMA_PATH
 from smarter.lib.journal.contract.models import CONTRACT_MODELS
 from smarter.lib.journal.contract.schema import (

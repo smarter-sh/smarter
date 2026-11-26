@@ -5,10 +5,9 @@ The JSON Schema of the Smarter Journal api contract, generated from its Pydantic
 this module, and a test fails if the committed file is out of date.
 """
 
-import json
-
 from pydantic.json_schema import models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType
 

@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.llmclient.contract.models`."""
 
-import json
 from typing import get_args
 
 from pydantic import ValidationError
@@ -45,6 +44,7 @@ from smarter.apps.mcpclient.manifest.models.mcpclient.const import (
 from smarter.apps.vectorsearch.manifest.models.vectorsearch.const import (
     MANIFEST_KIND as VECTORSEARCH_KIND,
 )
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 
 NAME = "test_llmclient_contract_models"

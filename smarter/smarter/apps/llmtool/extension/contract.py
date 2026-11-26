@@ -14,7 +14,6 @@ Secret settings' values never leave the platform: a secret setting says only whe
 and the name of its Secret.
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, Union
@@ -23,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from pydantic.alias_generators import to_camel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
+from smarter.lib import json
 from smarter.lib.json_schema import smarter_schema_id
 from smarter.lib.typing import SmarterDictType, required
 

@@ -10,12 +10,12 @@ These functions serve both views, and turn a prompt's result into what the clien
 - :func:`chat_error_response` is the one error response of both apis.
 """
 
-import json
 from http import HTTPStatus
 from typing import Any, Optional
 
 from django.http import HttpRequest
 
+from smarter.lib import json
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.typing import SmarterDictType

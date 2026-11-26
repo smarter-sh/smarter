@@ -6,7 +6,6 @@ them synchronously, in this process.
 """
 
 import datetime
-import json
 import secrets
 from unittest.mock import patch
 
@@ -33,6 +32,7 @@ from smarter.apps.prompt.tasks import (
     purge_prompt_history,
 )
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.django.models import TimestampedModel
 from smarter.lib.typing import SmarterDictType
 

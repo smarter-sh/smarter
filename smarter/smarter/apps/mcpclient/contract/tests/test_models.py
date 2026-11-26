@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.mcpclient.contract.models`."""
 
-import json
 from typing import get_args
 
 from django.db import models
@@ -23,6 +22,7 @@ from smarter.apps.mcpclient.contract.models import (
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.mcpclient.tests.base_classes import MCPClientTestBase
+from smarter.lib import json
 from smarter.lib.typing import required
 
 

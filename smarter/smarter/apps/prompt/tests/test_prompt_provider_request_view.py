@@ -4,7 +4,6 @@ Test the provider request api: a chat session's conversation, as the request bod
 See :mod:`smarter.apps.prompt.views.detailviews.prompt_provider_request_view`.
 """
 
-import json
 import secrets
 from http import HTTPStatus
 from pathlib import Path
@@ -37,6 +36,7 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
 )
 from smarter.common.conf import smarter_settings
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib import json
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.openai import model_quirks
 from smarter.lib.typing import SmarterDictType

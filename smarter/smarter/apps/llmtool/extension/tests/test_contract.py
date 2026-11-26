@@ -1,7 +1,6 @@
 """Tests of smarter.apps.llmtool.extension.contract: the Extensions console api's models and schema."""
 
 import io
-import json
 
 from django.core.management import call_command
 
@@ -12,6 +11,7 @@ from smarter.apps.llmtool.extension.contract import (
     contract_schema,
     contract_schema_json,
 )
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

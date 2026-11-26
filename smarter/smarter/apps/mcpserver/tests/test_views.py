@@ -7,7 +7,6 @@ transport that hands each request to Django's test client, :func:`forward_to_dja
 is never used.
 """
 
-import json
 from unittest import mock
 
 import anyio.to_thread
@@ -29,6 +28,7 @@ from smarter.apps.mcpserver.services.acting_user import (
 )
 from smarter.apps.mcpserver.services.github.issues import GitHubIssue
 from smarter.apps.mcpserver.urls import MCPServerReverseNames
+from smarter.lib import json
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType, required
 

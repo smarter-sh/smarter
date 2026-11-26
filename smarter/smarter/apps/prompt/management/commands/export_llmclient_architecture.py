@@ -1,6 +1,5 @@
 """Write an LLMClient's architecture, the tree of the SAM resources that it is built from, as JSON."""
 
-import json
 from pathlib import Path
 
 from django.core.management.base import CommandError
@@ -10,6 +9,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.llmclient.manifest.brokers.llmclient import SAMLLMClientBroker
 from smarter.apps.llmclient.models import LLMClient
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.lib import json
 from smarter.lib.django.management.base import SmarterCommand
 from smarter.lib.manifest.models import SAMDependencyTreeNode
 from smarter.lib.typing import SmarterDictType

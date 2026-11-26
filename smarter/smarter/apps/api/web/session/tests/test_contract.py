@@ -1,7 +1,6 @@
 """Tests of smarter.apps.api.web.session.contract: the console session's schema."""
 
 import io
-import json
 
 from django.core.management import call_command
 
@@ -10,6 +9,7 @@ from smarter.apps.api.web.session.contract import (
     contract_schema,
     contract_schema_json,
 )
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 

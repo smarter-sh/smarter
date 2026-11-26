@@ -19,7 +19,6 @@ sample, the referrer, the policy or the sender's address.
 """
 
 import hashlib
-import json
 from typing import Optional
 from urllib.parse import urlsplit
 
@@ -32,7 +31,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationError
 
-from smarter.lib import logging
+from smarter.lib import json, logging
 
 logger = logging.getSmarterLogger(__name__)
 

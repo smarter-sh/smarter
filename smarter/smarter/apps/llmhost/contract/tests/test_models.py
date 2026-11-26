@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.llmhost.contract.models`."""
 
-import json
 from dataclasses import asdict
 from decimal import Decimal
 from typing import get_args
@@ -24,6 +23,7 @@ from smarter.apps.llmhost.serializers import LLMHostSerializer
 from smarter.apps.llmhost.services.discovery import ModelInfo
 from smarter.apps.llmhost.services.observability import LLMHostObservation
 from smarter.apps.llmhost.tests.base_classes import LLMHostTestBase
+from smarter.lib import json
 from smarter.lib.typing import required
 
 

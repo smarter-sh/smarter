@@ -24,7 +24,6 @@ Either way, :func:`assistant_text` returns the LLM's answer, and :func:`extract_
 JSON object in it, for an LLMClient that is asked to answer in JSON.
 """
 
-import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
@@ -47,7 +46,7 @@ from smarter.apps.prompt.models import Prompt
 from smarter.common.conf import smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.utils import hash_factory
-from smarter.lib import logging
+from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.typing import SmarterDictType
 

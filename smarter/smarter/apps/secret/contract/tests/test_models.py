@@ -1,12 +1,11 @@
 """Test :mod:`smarter.apps.secret.contract.models`."""
 
-import json
-
 from smarter.apps.account.serializers import user_can_delete
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.secret.contract.models import SecretApiSecret
 from smarter.apps.secret.serializers import SecretSerializer
 from smarter.apps.secret.tests.factories import secret_factory
+from smarter.lib import json
 
 VALUE = "not-a-real-secret-value"
 

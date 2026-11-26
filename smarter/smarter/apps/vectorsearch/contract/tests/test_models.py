@@ -1,6 +1,5 @@
 """Test :mod:`smarter.apps.vectorsearch.contract.models`, and the Vectorsearches' real responses against the OpenAPI document."""
 
-import json
 from http import HTTPStatus
 from typing import get_args
 
@@ -17,6 +16,7 @@ from smarter.apps.vectorsearch.contract.models import (
 from smarter.apps.vectorsearch.models import Vectorsearch
 from smarter.apps.vectorsearch.serializers import VectorsearchSerializer
 from smarter.apps.vectorstore.models import VectorstoreMeta
+from smarter.lib import json
 from smarter.lib.typing import required
 
 
