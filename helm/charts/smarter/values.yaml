@@ -815,12 +815,14 @@ redis:
     #   ~tools_celery_task_queue*   its queue, and kombu's in-flight keys under it (settings/base.py)
     #   ~celery-task-meta-*         the tool calls' results, which Celery reads before it writes
     #   %R~...extension:archive:*   Extensions' archives in the cache, read-only
-    #   ~...robots_rules.*          the robots.txt cache of a page fetch's redirects
+    #   ~tools_cache:*              its own @cache_results cache, e.g. the robots.txt rules of a page
+    #                               fetch's redirects (CACHE_RESULTS["CACHE"] in settings/base.py)
     #   %W~stream:logs:*            the console's log streams, write-only, and the logs:* channels
     # and no command that lists keys or channels, whose names include sessions' keys. The Extension worker
     # (issue #1077), which runs Extensions' code, is the user extensions, with the same rules for its own
-    # queue, extensions_celery_task_queue, and without the robots.txt cache: it can't read the tools
-    # queue, where API, SQL and MCP calls wait with their credentials. Without it, code in
+    # queue, extensions_celery_task_queue, and its own @cache_results cache, extensions_cache:*: it can't
+    # read the tools queue, where API, SQL and MCP calls wait with their credentials, nor the tool worker's
+    # cache. Without it, code in
     # the tool worker could push a task to the infrastructure worker, which holds the Kubernetes Role and
     # the IAM role, or read every session.
     #
@@ -846,11 +848,11 @@ redis:
     preExecCmds:
       - |
         if [[ -f /opt/bitnami/redis/users/tools ]]; then
-          printf '\n%s\n' "user tools on >$(< /opt/bitnami/redis/users/tools) ~tools_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* ~django*:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
+          printf '\n%s\n' "user tools on >$(< /opt/bitnami/redis/users/tools) ~tools_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* ~tools_cache:* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
         fi
       - |
         if [[ -f /opt/bitnami/redis/users/extensions ]]; then
-          printf '\n%s\n' "user extensions on >$(< /opt/bitnami/redis/users/extensions) ~extensions_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
+          printf '\n%s\n' "user extensions on >$(< /opt/bitnami/redis/users/extensions) ~extensions_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* ~extensions_cache:* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
         fi
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"

@@ -166,14 +166,14 @@ class ApiV1CliPromptBaseApiView(CliBaseApiView):
                 self.cache_key,
             )
             self._session_key = self.generate_session_key()
-            cache.delete(self.cache_key)
+            cache.delete(self.required_cache_key)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug("deleted cache_key: %s", self.cache_key)
 
         # 1.) attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
         # and pass it along to the PromptConfigView.
-        session_key = cache.get(self.cache_key)
+        session_key = cache.get(self.required_cache_key)
         if session_key is not None:
             logger.debug(
                 "resetting session_key from %s to cached key: %s",
@@ -457,7 +457,7 @@ class ApiV1CliPromptApiView(ApiV1CliPromptBaseApiView):
                     "initialized session_key from chat_config: %s",
                     self.session_key,
                 )
-            cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+            cache.set(key=self.required_cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
             if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.debug(
                     "caching session_key for prompt config: %s",

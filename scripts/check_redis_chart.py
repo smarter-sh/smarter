@@ -68,6 +68,7 @@ ALLOWED_TO_TOOLS = (
     ("read its own queue", ("LLEN", "tools_celery_task_queue")),
     ("push to its own queue's keys", ("RPUSH", "tools_celery_task_queue.check", "x")),
     ("write a tool call's result", ("SET", "celery-task-meta-check", "x")),
+    ("write its own @cache_results keys", ("-n", "1", "SET", "tools_cache:1:check", "x")),
 )
 """What the tool worker's user must be allowed: a description, and the redis-cli arguments."""
 
@@ -78,29 +79,31 @@ REFUSED_TO_BOTH = (
     ("read the shared unacked messages", ("HLEN", "unacked")),
     ("read a session", ("-n", "2", "EXISTS", ":1:django.contrib.sessions.cachecheck")),
     ("read RedBeat's schedule", ("EXISTS", "redbeat::schedule")),
+    ("write the platform's cache", ("-n", "1", "SET", "django6:1:check", "x")),
     ("list the keys with SCAN", ("SCAN", "0")),
     ("list the keys with KEYS", ("KEYS", "*")),
     ("list the pub/sub channels", ("PUBSUB", "CHANNELS")),
 )
 """What both workers' users must be refused with NOPERM: a description, and the redis-cli arguments."""
 
-REFUSED_TO_TOOLS = REFUSED_TO_BOTH + (("read the Extensions queue", ("LLEN", "extensions_celery_task_queue")),)
+REFUSED_TO_TOOLS = REFUSED_TO_BOTH + (
+    ("read the Extensions queue", ("LLEN", "extensions_celery_task_queue")),
+    ("write the Extension worker's @cache_results keys", ("-n", "1", "SET", "extensions_cache:1:check", "x")),
+)
 """What the tool worker's user must be refused, besides :data:`REFUSED_TO_BOTH`."""
 
 ALLOWED_TO_EXTENSIONS = (
     ("read its own queue", ("LLEN", "extensions_celery_task_queue")),
     ("push to its own queue's keys", ("RPUSH", "extensions_celery_task_queue.check", "x")),
     ("write a tool call's result", ("SET", "celery-task-meta-check", "x")),
+    ("write its own @cache_results keys", ("-n", "1", "SET", "extensions_cache:1:check", "x")),
 )
 """What the Extension worker's user must be allowed."""
 
 REFUSED_TO_EXTENSIONS = REFUSED_TO_BOTH + (
     ("read the tools queue", ("LLEN", "tools_celery_task_queue")),
     ("read the tool worker's in-flight messages", ("HLEN", "tools_celery_task_queue.unacked")),
-    (
-        "write the robots.txt cache",
-        ("-n", "1", "SET", "django6:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.check", "x"),
-    ),
+    ("write the tool worker's @cache_results keys", ("-n", "1", "SET", "tools_cache:1:check", "x")),
 )
 """What the Extension worker's user must be refused: the tool worker's queue above all."""
 

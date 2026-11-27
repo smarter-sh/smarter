@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 """
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
@@ -58,6 +59,10 @@ logger.debug("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
 print_startup_banner()
 
 # the settings checked AWS as they loaded. The rest is checked here, once Django is set up.
-run_startup_checks(WEB_SERVER_CHECKS)
+# uvicorn imports this module inside its event loop, where Django refuses to query the database
+# (SynchronousOnlyOperation), so the checks run in a thread of their own, which has no event loop.
+with ThreadPoolExecutor(max_workers=1, thread_name_prefix="startup-checks") as executor:
+    startup_checks = executor.submit(run_startup_checks, WEB_SERVER_CHECKS)
+    startup_checks.result()
 
 __all__ = ["application"]

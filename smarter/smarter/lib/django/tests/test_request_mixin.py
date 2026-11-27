@@ -15,6 +15,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.prompt.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.conf import smarter_settings
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
 from smarter.lib.django.request import SmarterRequestMixin
@@ -404,6 +405,17 @@ class TestSmarterRequestMixin(TestAccountMixin):
         with self.assertLogs("smarter.lib.django.request", level="WARNING"):
             result = mixin.cache_key
         self.assertIsNone(result)
+
+    def test_required_cache_key(self):
+        """Required_cache_key is cache_key, and raises rather than return None, which callers would share as a key."""
+        mixin = SmarterRequestMixin.__new__(SmarterRequestMixin)
+        mixin._cache_key = "cached_key"
+        self.assertEqual(mixin.required_cache_key, "cached_key")
+        # cache_key is a cached_property: a mixin without a request has cached None.
+        without_request = SmarterRequestMixin.__new__(SmarterRequestMixin)
+        without_request.__dict__["cache_key"] = None
+        with self.assertRaises(SmarterValueError):
+            _ = without_request.required_cache_key
 
     def test_path_returns_none_if_no_request(self):
         """Path returns None if smarter_request is None."""

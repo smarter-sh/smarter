@@ -74,7 +74,8 @@ Its Redis User
 --------------
 
 Every other pod is Redis's ``default`` user, which may do anything. The Extension worker is the user
-``extensions``, with the rules below for its own queue, and without the robots.txt cache. The tool worker is
+``extensions``, with the rules below for its own queue and its own ``@cache_results`` keys,
+``extensions_cache:*``. The tool worker is
 the user ``tools``,
 whose password smarter-infrastructure generates in the Secret ``smarter-redis-users``, and whose ACL lets
 it touch only:
@@ -82,7 +83,12 @@ it touch only:
 - its own queue, ``tools_celery_task_queue``, and the keys under that name where kombu keeps its messages
   in flight (``CELERY_BROKER_TRANSPORT_OPTIONS`` in ``settings/base.py``);
 - the tool calls' results, ``celery-task-meta-*``;
-- Extensions' archives in the cache, read-only, and the robots.txt cache that a page fetch checks;
+- Extensions' archives in the cache, read-only;
+- its own ``@cache_results`` keys, ``tools_cache:*``, e.g. the robots.txt rules that a page fetch checks.
+  The Helm chart (``smarter.toolWorkerEnv``) and docker-compose give each of the two workers the
+  cache-results package's ``CACHE_RESULTS_CACHE``: the cache's database, as the worker's own user, under
+  the key prefix ``<user>_cache``. Every other pod leaves it unset, and caches results in the platform's
+  cache;
 - the console's log streams, write-only.
 
 It may not list keys or channels, whose names include sessions' keys, nor subscribe to a channel. So code

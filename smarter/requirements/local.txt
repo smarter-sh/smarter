@@ -409,9 +409,9 @@ build==1.6.1 \
     --hash=sha256:51cc11666391ab6f092070437ac747002ff46f3e4113a3622177ee6b488bfc53 \
     --hash=sha256:ecd351a4be9d35a9eaaba244a7687143c9c7d4aea6ac964e7e7ddab20cbcf4e7
     # via pip-tools
-cache-results==0.2.2 \
-    --hash=sha256:517e42aec3913c9f61a167d2df171afacf644516a07f79c1717728677d417bf5 \
-    --hash=sha256:84c9007134e4f6fce523731873056d408cdb6835a966e55e26741017a9f0661e
+cache-results==0.4.0 \
+    --hash=sha256:e2e6a01486802806dabdfd10be8be84188998a3699cfe91b2655e57b74946907 \
+    --hash=sha256:eb058d937d7f84676cd9d29147f58d6abe3fd4976bb1baf899bb200766be9765
     # via -r smarter/requirements/in/base.in
 cachetools==7.2.8 \
     --hash=sha256:09b04a85741d0019b3fb7d02b7ee9933a422fa6923af92a0fd63b893b695830c \
