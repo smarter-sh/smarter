@@ -98,7 +98,7 @@ class ApiV1CliPromptConfigApiView(ApiV1CliPromptBaseApiView):
                     f"Misconfigured. Expected a JSON object in response data for prompt config view but received {type(content).__name__}."
                 )
             session_key = content.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
+            cache.set(key=self.required_cache_key, value=session_key, timeout=CACHE_EXPIRATION)
             logger.debug(
                 "cached session key for prompt config view with key %s",
                 self.cache_key,
