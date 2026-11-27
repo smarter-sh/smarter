@@ -345,6 +345,51 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         llmclient.refresh_from_db()
         self.assertFalse(llmclient.deployed)
 
+    def broker_of_a_new_llmclient(self, name: str, **spec) -> SAMLLMClientBroker:
+        """A broker of the test manifest under a new name, with spec changed."""
+        manifest = copy.deepcopy(required(self.manifest_data, "manifest_data"))
+        manifest["metadata"]["name"] = f"{name}_{self.hash_suffix}"
+        manifest["spec"].update(spec)
+        broker = SAMLLMClientBroker(self.request, manifest=parse_manifest(manifest))
+        self.addCleanup(LLMClient.objects.filter(user_profile=self.user_profile, name=broker.name).delete)
+        return broker
+
+    def assert_failed_apply_leaves_no_llmclient(self, broker: SAMLLMClientBroker, message: str):
+        """Apply fails with a 404, logs no error, and doesn't leave the new LLMClient behind."""
+        with self.assertNoLogs("smarter.apps.llmclient.manifest.brokers.llmclient", level="ERROR"):
+            with self.assertRaisesRegex(SAMBrokerErrorNotFound, message):
+                broker.apply(self.request, **self.kwargs)
+        self.assertFalse(LLMClient.objects.filter(user_profile=self.user_profile, name=broker.name).exists())
+        self.assertIsNone(broker.llmclient)
+
+    def test_apply_of_a_new_llmclient_with_a_plugin_that_does_not_exist(self):
+        """A new LLMClient whose manifest names a Plugin that doesn't exist isn't created."""
+        broker = self.broker_of_a_new_llmclient("missing_plugin", plugins=["no_such_plugin"])
+        self.assert_failed_apply_leaves_no_llmclient(broker, "Plugin no_such_plugin not found")
+
+    def test_apply_of_a_new_llmclient_with_an_api_key_that_does_not_exist(self):
+        """A new LLMClient whose manifest names an API Key that doesn't exist isn't created."""
+        broker = self.broker_of_a_new_llmclient("missing_api_key", apiKey="no_such_api_key")
+        self.assert_failed_apply_leaves_no_llmclient(broker, "API Key no_such_api_key not found")
+
+    def test_failed_apply_of_an_existing_llmclient_keeps_it_unchanged(self):
+        """A failed apply of an existing LLMClient rolls back its changed fields, and keeps the LLMClient."""
+        broker = self.broker_of_a_new_llmclient("existing")
+        broker.apply(self.request, **self.kwargs)
+        llmclient = required(broker.llmclient, "broker.llmclient")
+        description = llmclient.description
+        manifest = copy.deepcopy(required(broker.manifest_data, "manifest_data"))
+        manifest["metadata"]["description"] = "changed by an apply that fails"
+        manifest["spec"]["plugins"] = ["no_such_plugin"]
+        failing_broker = SAMLLMClientBroker(self.request, manifest=parse_manifest(manifest))
+        with self.assertRaises(SAMBrokerErrorNotFound):
+            failing_broker.apply(self.request, **self.kwargs)
+        llmclient.refresh_from_db()
+        self.assertEqual(llmclient.description, description)
+        # the broker forgot the instance whose description the rollback undid, and reads it again.
+        reread = required(failing_broker.llmclient, "failing_broker.llmclient")
+        self.assertEqual(reread.description, description)
+
     def test_apply(self):
         """
         Test apply method.

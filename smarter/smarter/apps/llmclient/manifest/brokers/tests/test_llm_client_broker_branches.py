@@ -190,7 +190,7 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
                 self.broker.get(self.request, name=llmclient.name)
 
     def test_apply_guards(self):
-        """Apply needs a ready broker, a manifest spec, and an LLMClient."""
+        """Apply needs a ready broker and a manifest spec."""
         broker = self.broker
         with patch.object(SAMLLMClientBroker, "ready", new_callable=PropertyMock, return_value=False):
             with self.assertRaises(SAMBrokerErrorNotReady):
@@ -199,9 +199,6 @@ class TestSAMLLMClientBrokerBranches(TestSAMBrokerBaseClass):
         manifest.spec = None
         with patch.object(SAMLLMClientBroker, "manifest", new_callable=PropertyMock, return_value=manifest):
             with self.assertRaises(SAMBrokerErrorNotReady):
-                broker.apply(self.request)
-        with patch.object(SAMLLMClientBroker, "llmclient", new_callable=PropertyMock, return_value=None):
-            with self.assertRaises(SAMLLMClientBrokerError):
                 broker.apply(self.request)
 
     def test_apply_staff_only(self):
