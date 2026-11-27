@@ -27,7 +27,7 @@ from smarter.common.conf.util import field_default
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
-from smarter.lib.unittest.environment import without_credentials
+from smarter.lib.unittest.environment import as_restricted_worker
 
 #: The exceptions that a validator may raise for an invalid value.
 EXPECTED_ERRORS = (SmarterConfigurationError, SmarterValueError, ValueError)
@@ -527,7 +527,7 @@ class TestAwsCredentialsWork(SmarterTestBase):
         with (
             patch(f"{self.MODULE}.aws_credentials_work") as works,
             patch("builtins.print") as mock_print,
-            without_credentials(),
+            as_restricted_worker(),
         ):
             settings = Settings(database_unavailable=True)
             self.assertFalse(settings.aws_is_configured)

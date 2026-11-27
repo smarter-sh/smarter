@@ -19,7 +19,7 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib.unittest.base_classes import SmarterTestBase
-from smarter.lib.unittest.environment import without_credentials
+from smarter.lib.unittest.environment import as_restricted_worker
 
 CONFIG_ERRORS = (SmarterConfigurationError, PydanticValidationError)
 
@@ -166,7 +166,7 @@ class TestSettingsValidators(SmarterTestBase):
                 environment=environment, django_secret_key="a-configured-secret-key"
             ).require_django_secret_key()
             # the tool worker, which has no database, is never given the key.
-            with without_credentials():
+            with as_restricted_worker():
                 make_settings(
                     environment=environment, django_secret_key=placeholder, database_unavailable=True
                 ).require_django_secret_key()
@@ -187,7 +187,7 @@ class TestSettingsValidators(SmarterTestBase):
             password = settings.require_redis_password()
             self.assertEqual(password.get_secret_value(), "GeneratedRedisPassword1")
             # the tool worker needs it too: it takes its tasks from the broker.
-            with without_credentials():
+            with as_restricted_worker():
                 settings = make_settings(
                     environment=environment, subsystem_redis_password="", database_unavailable=True
                 )
@@ -205,7 +205,7 @@ class TestSettingsValidators(SmarterTestBase):
 
     def test_tool_worker_queue(self):
         """A worker without a database is the tool worker, unless its queue is the Extensions queue (issue #1077)."""
-        with without_credentials():
+        with as_restricted_worker():
             tool_worker = make_settings(database_unavailable=True, app_tools_worker_queue="")
             extension_worker = make_settings(
                 database_unavailable=True, app_tools_worker_queue=" extensions_celery_task_queue "
@@ -398,7 +398,7 @@ class TestServiceType(SmarterTestBase):
 
     def test_restricted_kinds_match_the_settings(self):
         """The restricted workers are the pods without a database, and only the Extension worker takes its queue."""
-        with without_credentials():
+        with as_restricted_worker():
             tool_worker = make_settings(service_type="worker-tools", database_unavailable=True)
             extension_worker = make_settings(
                 service_type="worker-extensions",
@@ -416,7 +416,7 @@ class TestServiceType(SmarterTestBase):
 
     def test_the_ready_line_names_the_kind_and_its_checks(self):
         """READY names the kind of pod, or says that it is unknown, and the checks made for that kind."""
-        with without_credentials():
+        with as_restricted_worker():
             tool_worker = make_settings(service_type="worker-tools", database_unavailable=True)
         self.assertEqual(tool_worker.pod_description(), "for the tool worker")
         self.assertEqual(tool_worker.readiness_checks(), ["it holds no credential but its own Redis password"])
