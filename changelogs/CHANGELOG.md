@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.13](https://github.com/smarter-sh/smarter/compare/v0.48.12...v0.48.13) (2026-11-27)
+
+### Bug Fixes
+
+* **llmtool:** run extensions' tool calls in a worker of their own ([0cb303a](https://github.com/smarter-sh/smarter/commit/0cb303a9be289e22d1126e8daa68141609c60328)), closes [#1077](https://github.com/smarter-sh/smarter/issues/1077)
+
 ## [0.48.13-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.12...v0.48.13-alpha.1) (2026-11-27)
 
 ### Bug Fixes
