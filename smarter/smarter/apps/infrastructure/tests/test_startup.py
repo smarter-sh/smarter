@@ -521,6 +521,9 @@ class TestToolWorkerRedis(SmarterTestBase):
         output = "\n".join(captured.output)
         self.assertIn("reaches only its own keys", output)
         self.assertNotIn("breach", output)
+        # each line is a sentence: "can't" and the probe's action.
+        self.assertIn("Redis user tools can't read the sessions.", output)
+        self.assertIn("Redis user tools can't list the keys.", output)
 
     def test_an_allowed_probe_is_logged(self):
         """A probe that Redis allows is an ERROR, named."""
