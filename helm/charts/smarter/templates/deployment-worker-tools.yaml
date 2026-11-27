@@ -75,13 +75,18 @@ spec:
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml ($tools.resources | default .Values.worker.resources) | nindent 12 }}
-          # liveness pings the worker through Redis, as the other workers' does (#940).
+          # liveness looks for the worker's process. The other workers' pings the worker through Redis
+          # (smarter.workers.liveness, #940), but the tool worker takes no remote control, and its Redis
+          # user can't reach the channels that a ping uses (ADR-030, rule 8): a ping always fails, and
+          # Kubernetes restarted it every four minutes (2026-11-27). A worker stuck on a dead connection,
+          # #940's case, is caught by the broker's socket timeout and health check instead
+          # (CELERY_BROKER_TRANSPORT_OPTIONS).
           livenessProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - "python -m smarter.workers.liveness tools@$HOSTNAME"
+                - "pgrep -f 'celery.*worker' > /dev/null"
             initialDelaySeconds: 60
             periodSeconds: 60
             timeoutSeconds: 30
