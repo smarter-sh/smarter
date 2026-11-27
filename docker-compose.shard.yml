@@ -33,7 +33,7 @@ services:
     cpus: 0.25
     mem_limit: 1g
     image: redis:latest
-    # the tool worker's ACL user, tools, with the Helm chart's rules (redis.auth.acl.users in values.yaml).
+    # the tool worker's ACL user, tools, with the Helm chart's rules (redis.master.preExecCmds in values.yaml).
     # A list, not a string: compose splits a string command like a shell, and stops at the > of the password.
     command:
       [

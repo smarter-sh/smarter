@@ -52,24 +52,22 @@ COMPOSE_PATHS = (REPOSITORY_ROOT / "docker-compose.yml", REPOSITORY_ROOT / "dock
 CACHE_SETTINGS_PATH = REPOSITORY_ROOT / "smarter" / "smarter" / "common" / "conf" / "settings" / "cache.py"
 
 
-def tools_acl_rules() -> dict[str, str]:
-    """
-    Return the Redis ACL rules of the tool worker's user, from values.yaml's redis.auth.acl.users.
+TOOLS_USER_LINE = re.compile(r'"user tools on >\$\(< /opt/bitnami/redis/users/tools\) (?P<rules>[^"]+)"')
+"""The line that redis.master.preExecCmds appends to Redis's master.conf, with the tools user's rules."""
 
-    :returns: Its username, enabled, keys, channels and commands.
+
+def tools_acl_rules() -> list[str]:
+    """
+    Return the Redis ACL rules of the tool worker's user, from values.yaml's redis.master.preExecCmds.
+
+    :returns: Its key patterns, channels and commands, one per rule.
     """
     values = VALUES_PATH.read_text(encoding="utf-8")
-    match = re.search(
-        r'        - username: "(?P<username>[^"]+)"\n'
-        r'          enabled: "(?P<enabled>[^"]+)"\n'
-        r'          keys: "(?P<keys>[^"]+)"\n'
-        r'          channels: "(?P<channels>[^"]+)"\n'
-        r'          commands: "(?P<commands>[^"]+)"\n',
-        values,
-    )
+    match = TOOLS_USER_LINE.search(values)
     if match is None:
-        raise AssertionError("values.yaml has no redis.auth.acl.users entry")
-    return match.groupdict()
+        raise AssertionError("values.yaml's redis.master.preExecCmds don't define the user tools")
+    rules = match.group("rules").split()
+    return rules
 
 
 def local_tool_worker_password() -> str:
@@ -188,20 +186,30 @@ class TestEnvironment(unittest.TestCase):
         self.assertIn("      REDIS_PASSWORD: SMARTER_SUBSYSTEM_REDIS_PASSWORD\n", values)
         self.assertNotIn('password: "smarter"', values)
 
-    def test_redis_acl_is_enabled_with_the_tools_user(self):
-        """The Redis subchart defines the tool worker's user, whose password is in smarter-infrastructure's Secret."""
+    def test_redis_defines_the_tools_user_at_start(self):
+        """
+        Redis's start script appends the user tools to master.conf, from smarter-infrastructure's Secret.
+
+        Not the subchart's auth.acl, which mounts its ACL file as a subPath inside the ConfigMap's directory:
+        runc couldn't create that mount on the cluster's nodes, and Redis never started (2026-11-27).
+        """
         values = VALUES_PATH.read_text(encoding="utf-8")
-        self.assertIn('      userSecret: "smarter-redis-users"\n', values)
-        self.assertIn("    acl:\n      enabled: true\n", values)
+        self.assertNotIn("\n    acl:\n", values)
+        self.assertNotIn("userSecret", values)
+        self.assertIn("          secretName: smarter-redis-users\n          optional: true\n", values)
+        self.assertIn("        mountPath: /opt/bitnami/redis/users\n", values)
+        self.assertNotIn("mountPath: /opt/bitnami/redis/mounted-etc/", values)
+        self.assertIn("        if [[ -f /opt/bitnami/redis/users/tools ]]; then\n", values)
+        # a newline first: the copy of master.conf ends with a comment and no newline.
+        self.assertIn("printf '\\n%s\\n' \"user tools on >", values)
+        self.assertIn('" >> /opt/bitnami/redis/etc/master.conf\n', values)
         rules = tools_acl_rules()
-        self.assertEqual(rules["username"], "tools")
-        self.assertEqual(rules["enabled"], "on")
-        self.assertTrue(rules["keys"].startswith("~tools_celery_task_queue* "), "the queue must be the tools queue")
-        self.assertNotIn("~* ", rules["keys"] + " ")
-        commands = rules["commands"].split()
+        self.assertEqual(rules[0], "~tools_celery_task_queue*", "the queue must be the tools queue")
+        self.assertNotIn("~*", rules)
+        self.assertNotIn("&*", rules)
         for command in ("-@dangerous", "-scan", "-pubsub", "-subscribe", "-psubscribe"):
             with self.subTest(command=command):
-                self.assertIn(command, commands)
+                self.assertIn(command, rules)
 
     def test_compose_redis_has_the_charts_rules(self):
         """
@@ -209,11 +217,9 @@ class TestEnvironment(unittest.TestCase):
 
         The password is LOCAL_TOOL_WORKER_REDIS_PASSWORD, which the tests connect with.
         """
-        rules = tools_acl_rules()
         password = local_tool_worker_password()
         arguments = ["redis-server", "--requirepass", "smarter", "--user", "tools", "on", f">{password}"]
-        for field in ("keys", "channels", "commands"):
-            arguments.extend(rules[field].split())
+        arguments.extend(tools_acl_rules())
         for path in COMPOSE_PATHS:
             with self.subTest(compose=path.name):
                 text = path.read_text(encoding="utf-8")
