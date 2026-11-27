@@ -289,7 +289,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             if self._llmclient and tags:
                 self._llmclient.tags.set(tags)
             self._created = True
-            logger.warning(
+            logger.debug(
                 "lazily created new LLMClient instance %s owned by %s. This logic should be handled in apply().",
                 self._llmclient,
                 self.user_profile,
@@ -982,9 +982,9 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             )
             self._name = self.manifest.metadata.name
             self._llmclient = None
-        if not isinstance(self.llmclient, LLMClient):
-            raise SAMLLMClientBrokerError(f"LLMClient {self.name} not found", thing=self.kind, command=command)
         with transaction.atomic():
+            if not isinstance(self.llmclient, LLMClient):
+                raise SAMLLMClientBrokerError(f"LLMClient {self.name} not found", thing=self.kind, command=command)
             readonly_fields = ["id", "created_at", "updated_at", "tags"]
             try:
                 data = self.manifest_to_django_orm()
@@ -1069,10 +1069,9 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 try:
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist as e:
-                    logger.error(
+                    logger.warning(
                         "failed to find SmarterAuthToken %s",
                         self.manifest.spec.apiKey,
-                        exc_info=True,
                     )
                     raise SAMBrokerErrorNotFound(
                         f"API Key {self.manifest.spec.apiKey} not found", thing=self.kind, command=command
@@ -1110,10 +1109,9 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     try:
                         plugin_meta = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
                     except PluginMeta.DoesNotExist as e:
-                        logger.error(
+                        logger.warning(
                             "did not find a Plugin named %s",
                             plugin_name,
-                            exc_info=True,
                         )
                         raise SAMBrokerErrorNotFound(
                             f"Plugin {plugin_name} not found for account {self.account.account_number if self.account else 'unknown'}",

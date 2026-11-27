@@ -19,6 +19,7 @@ from smarter.apps.llmclient.manifest.models.llmclient.spec import (
     SAMLLMClientSpecConfig,
 )
 from smarter.apps.llmclient.models import LLMClient, LLMClientAPIKey
+from smarter.apps.provider.models import Provider, get_providers
 from smarter.lib import json, logging
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import (
@@ -41,6 +42,21 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
     """
 
     token_record: SmarterAuthToken
+    openai_provider: Provider
+
+    @classmethod
+    def setUpClass(cls):
+        """Create the active provider required by the class's LLMClient manifests."""
+        super().setUpClass()
+        cls.openai_provider = Provider.objects.create(
+            name="openai",
+            user_profile=cls.user_profile,
+            base_url="https://api.openai.com/v1/",
+            is_active=True,
+        )
+        get_providers.invalidate()
+        cls.addClassCleanup(get_providers.invalidate)
+        cls.addClassCleanup(cls.openai_provider.delete)
 
     def setUp(self):
         """
@@ -344,6 +360,20 @@ class TestSmarterLLMClientBroker(TestSAMBrokerBaseClass):
         self.addCleanup(LLMClient.objects.filter(pk=llmclient.pk).delete)
         llmclient.refresh_from_db()
         self.assertFalse(llmclient.deployed)
+
+    def test_failed_apply_does_not_leave_new_llmclient(self):
+        """A failed first apply rolls back the LLMClient created for the manifest."""
+        manifest = copy.deepcopy(required(self.manifest_data, "manifest_data"))
+        name = f"missing_plugin_{self.hash_suffix}"
+        manifest["metadata"]["name"] = name
+        manifest["spec"]["plugins"] = ["no_such_plugin"]
+        manifest["spec"]["config"]["styles"].pop("appLogoUrl", None)
+        broker = SAMLLMClientBroker(self.request, manifest=parse_manifest(manifest))
+
+        self.assertFalse(LLMClient.objects.filter(user_profile=self.user_profile, name=name).exists())
+        with self.assertRaisesRegex(SAMBrokerErrorNotFound, "Plugin no_such_plugin not found"):
+            broker.apply(self.request, **self.kwargs)
+        self.assertFalse(LLMClient.objects.filter(user_profile=self.user_profile, name=name).exists())
 
     def test_apply(self):
         """

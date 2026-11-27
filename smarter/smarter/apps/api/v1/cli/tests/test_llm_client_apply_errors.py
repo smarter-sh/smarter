@@ -15,6 +15,7 @@ import yaml
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.cli.views.base import BUG_REPORT
 from smarter.apps.llmclient.models import LLMClient
+from smarter.apps.provider.models import Provider, get_providers
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
@@ -50,6 +51,22 @@ def mutated(manifest: SmarterDictType, case: SmarterDictType) -> SmarterDictType
 
 class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
     """Test the status and the description of the response to applying each invalid LLMClient manifest."""
+
+    openai_provider: Provider
+
+    @classmethod
+    def setUpClass(cls):
+        """Create the active provider required by the LLMClient manifests."""
+        super().setUpClass()
+        cls.openai_provider = Provider.objects.create(
+            name="openai",
+            user_profile=cls.user_profile,
+            base_url="https://api.openai.com/v1/",
+            is_active=True,
+        )
+        get_providers.invalidate()
+        cls.addClassCleanup(get_providers.invalidate)
+        cls.addClassCleanup(cls.openai_provider.delete)
 
     def setUp(self):
         super().setUp()
@@ -94,6 +111,29 @@ class TestApiCliV1LLMClientApplyErrors(ApiV1CliTestBase):
         )
         self.assertEqual(llmclient.provider, self.base_manifest["spec"]["config"]["prompt"]["provider"])
         self.assertEqual(llmclient.app_name, self.base_manifest["spec"]["config"]["prompt"]["appName"])
+
+    def test_failed_first_apply_does_not_leave_llmclient(self):
+        """A missing plugin returns 404 without saving the new LLMClient or logging an error."""
+        name = f"{self.name}_missing_plugin"
+        self.addCleanup(LLMClient.objects.filter(user_profile=self.user_profile, name=name).delete)
+        manifest = copy.deepcopy(self.base_manifest)
+        manifest["metadata"]["name"] = name
+        manifest["spec"]["plugins"] = ["no_such_plugin"]
+
+        with self.assertLogs("smarter.apps.llmclient.manifest.brokers.llmclient", level="WARNING") as broker_logs:
+            response, status = self.apply(yaml.safe_dump(manifest))
+
+        self.assertEqual(status, HTTPStatus.NOT_FOUND, response)
+        error = response.get(SmarterJournalApiResponseKeys.ERROR)
+        self.assertIsInstance(error, dict, response)
+        assert error is not None
+        description = error.get(SmarterJournalApiResponseErrorKeys.DESCRIPTION)
+        self.assertIsInstance(description, str, response)
+        self.assertIn("Plugin no_such_plugin not found", description)
+        self.assertFalse(LLMClient.objects.filter(user_profile=self.user_profile, name=name).exists())
+        self.assertTrue(any("did not find a Plugin" in record.getMessage() for record in broker_logs.records))
+        self.assertFalse(any(record.levelname == "ERROR" or record.exc_info for record in broker_logs.records))
+        self.assertFalse(any("lazily created new LLMClient" in record.getMessage() for record in broker_logs.records))
 
     def test_name_that_is_not_snake_case(self):
         """Test that a name is stored in snake_case, and that applying the manifest again updates it."""
