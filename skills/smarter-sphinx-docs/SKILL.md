@@ -203,6 +203,22 @@ skills/smarter-sphinx-docs/scripts/adr-038-diagrams.py
 rsvg-convert -w 1875 docs/source/_static/adr-038/credentials.svg -o <scratchpad>/credentials.png
 ```
 
+ADR-030's two diagrams, `docs/source/adr/030-task-queues.rst`, are in
+`docs/source/_static/adr-030/`: the queues as built (who sends tasks, the three queues, each
+worker, and the tasks that still sleep), and who can reach Redis and what that allows.
+[scripts/adr-030-diagrams.py](scripts/adr-030-diagrams.py) draws them. Update them when a task,
+a queue, a worker, a Beat entry or Redis's access control changes, or a security rule of
+ADR-030 is implemented. ADR-016's map of the security controls, `docs/source/adr/016-security.rst`,
+is `docs/source/_static/adr-016/controls.svg`, drawn by
+[scripts/adr-016-diagrams.py](scripts/adr-016-diagrams.py) from its `CONTROLS` list. Update it
+when a security control is added or a gap closes, with the ADR's inventory:
+
+```console
+skills/smarter-sphinx-docs/scripts/adr-030-diagrams.py
+skills/smarter-sphinx-docs/scripts/adr-016-diagrams.py
+rsvg-convert -w 1875 docs/source/_static/adr-030/queues.svg -o <scratchpad>/queues.png
+```
+
 - **List only what's published.** Check each package on its registry before you
   list it there (`registry.npmjs.org/<name>`, `pypi.org/pypi/<name>/json`,
   `proxy.golang.org/<module>/@latest`, Docker Hub's and Artifact Hub's APIs).
