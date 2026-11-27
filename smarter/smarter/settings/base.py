@@ -2167,6 +2167,33 @@ def default_storage_backend(settings: Mapping[str, object]) -> str:
     return backend
 
 
+def log_smtp_configuration(settings: Mapping[str, object]) -> None:
+    """
+    Log the SMTP server that email is sent through, or warn that there is none.
+
+    The tool worker (``database_unavailable``) sends no email, and is given no SMTP credentials, by
+    design (ADR-038), so it doesn't warn: it confirms, at INFO, that email is disabled there. Called
+    by :func:`log_settings_diagnostics`, its log entries are named after the environment's module,
+    as that function's are.
+
+    :param settings: The environment's settings module's namespace.
+    """
+    if smarter_settings.smtp_is_configured:
+        logger.debug(
+            "SMTP server configured: %s:%s (SSL=%s, TLS=%s)",
+            settings["SMTP_HOST"],
+            settings["SMTP_PORT"],
+            settings["SMTP_USE_SSL"],
+            settings["SMTP_USE_TLS"],
+            stacklevel=3,
+        )
+        return
+    if smarter_settings.database_unavailable:
+        logger.info("SMTP is disabled in the tool worker, by design: it sends no email.", stacklevel=3)
+        return
+    logger.warning("SMTP server not configured", stacklevel=3)
+
+
 def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
     """
     Log the platform's diagnostics, and the settings that every environment shares, outside of manage.py.
@@ -2213,18 +2240,7 @@ def log_settings_diagnostics(settings: Mapping[str, object]) -> None:
     logger.debug("Django v%s", get_version(), stacklevel=2)
     logger.debug("Smarter v%s", smarter_version, stacklevel=2)
     logger.debug("Storages backend: %s", default_storage_backend(settings), stacklevel=2)
-
-    if smarter_settings.smtp_is_configured:
-        logger.debug(
-            "SMTP server configured: %s:%s (SSL=%s, TLS=%s)",
-            settings["SMTP_HOST"],
-            settings["SMTP_PORT"],
-            settings["SMTP_USE_SSL"],
-            settings["SMTP_USE_TLS"],
-            stacklevel=2,
-        )
-    else:
-        logger.warning("SMTP server not configured", stacklevel=2)
+    log_smtp_configuration(settings)
     # the settings have already warned, once, if AWS is not configured.
     logger.debug("AWS is configured: %s", smarter_settings.aws_is_configured, stacklevel=2)
     logger.debug("=" * 80, stacklevel=2)
