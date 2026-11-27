@@ -562,7 +562,7 @@ class TestToolWorkerRedisAcl(SmarterTestBase):
     The test stack's Redis defines the tool worker's user with the Helm chart's rules: check them, for real.
 
     docker-compose.yml and docker-compose.shard.yml give smarter-redis the user ``tools``, with the rules of
-    the Helm chart's ``redis.auth.acl.users``; a chart test keeps the three the same. These tests connect as
+    the Helm chart's ``redis.master.preExecCmds``; a chart test keeps the three the same. These tests connect as
     that user, and as the default user, so a rule that is too narrow, which would break tool calls, or too
     wide, which would let code in the tool worker reach another worker's queue or the sessions, fails here.
     Every key they write is their own, and deleted.
