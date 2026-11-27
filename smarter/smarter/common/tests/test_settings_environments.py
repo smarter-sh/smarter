@@ -190,6 +190,13 @@ class TestSettingsValidators(SmarterTestBase):
         settings = make_settings(environment=SmarterEnvironments.LOCAL, subsystem_redis_password="")
         self.assertEqual(settings.require_redis_password().get_secret_value(), "smarter")
 
+    def test_redis_username(self):
+        """Empty or a placeholder is Redis's default user; a username is trimmed."""
+        self.assertIsNone(make_settings(subsystem_redis_username="").subsystem_redis_username)
+        placeholder = "SET-ME-IN-helm/charts/smarter/values.yaml"
+        self.assertIsNone(make_settings(subsystem_redis_username=placeholder).subsystem_redis_username)
+        self.assertEqual(make_settings(subsystem_redis_username=" tools ").subsystem_redis_username, "tools")
+
     def test_redis_password_is_masked(self):
         """The Redis password is a SecretStr, so a dump of the settings never shows it."""
         settings = make_settings(subsystem_redis_password="GeneratedRedisPassword1")

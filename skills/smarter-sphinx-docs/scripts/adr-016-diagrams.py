@@ -117,8 +117,8 @@ CONTROLS = [
             (DONE, "default deny; other namespaces kept out"),
             (DONE, "MariaDB and Redis: the platform's pods only"),
             (GAP, "egress open on 443: the proxy is phase 4"),
-            (GAP, "any Redis client can queue any task"),
-            (GAP, "no Redis ACL: sessions readable by all"),
+            (DONE, "the tool worker's Redis user: its own keys"),
+            (PARTIAL, "other pods: Redis's default user"),
         ],
     ),
     (

@@ -327,9 +327,10 @@ Phase 2, the tool worker (smarter, Helm chart)
    the arguments to a key that only the tool worker holds would close that, at the cost of a key to
    manage. MariaDB's port stays open to the worker for SQL plugins whose connection is the platform's
    own MariaDB, such as Stackademy's; the worker has no credential for it but the call's. Code running
-   in the tool worker, an Extension's included, holds the broker's and the cache's Redis url, so it can
-   still reach the cache, the sessions and the other workers' queues. A Redis ACL user for the tool
-   worker would close that.
+   in the tool worker, an Extension's included, held the broker's and the cache's Redis url, so it could
+   reach the cache, the sessions and the other workers' queues. The tool worker is now Redis's ``tools``
+   user, which reaches only its own queue, its results and a few cache keys (ADR-030, rule 8). It can
+   still read the other calls waiting on its own queue: isolating Extensions' calls is #1077.
 
 Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    A ServiceAccount, IAM role and Secret per workload, from the phase 0 table. The Kubernetes Role

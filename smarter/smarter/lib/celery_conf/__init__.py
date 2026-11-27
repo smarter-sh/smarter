@@ -63,6 +63,44 @@ def set_result_backend(app: Celery) -> None:
 set_result_backend(APP)
 
 
+def configure_tool_worker(app: Celery) -> None:
+    """
+    In the tool worker, consume its queue without declaring it, and take no remote control.
+
+    The tool worker authenticates to Redis as its own ACL user, which may touch only its queue's keys, its
+    results and a few cache keys (ADR-030, rule 8). Declaring a queue adds it to kombu's routing set,
+    ``_kombu.binding.<queue>``, which the app reads to route each task. A tool worker that could write that
+    set could bind its queue's exchange to another queue, such as the infrastructure queue, whose worker
+    holds the platform's credentials, and the app would deliver tool calls, with their credentials, there.
+    So the queue is ``no_declare``: the app declares it, when it sends the first tool call.
+
+    Remote control (``celery inspect``, ``celery control``), mingle, gossip and heartbeats all go through
+    fanout exchanges and pidbox queues, which the ACL user can't reach. The worker turns off remote control
+    here, and the others with ``--without-mingle --without-gossip --without-heartbeat`` on its command line.
+    Its liveness probe looks for its process instead of pinging it.
+
+    Only the tool worker (``smarter_settings.database_unavailable``): the other workers are unchanged.
+
+    :param app: The Celery app.
+    :returns: None
+    """
+    # pylint: disable=import-outside-toplevel
+    from kombu import Exchange, Queue
+
+    from smarter.common.conf import smarter_settings
+
+    if not smarter_settings.database_unavailable:
+        return
+    queue_name = smarter_settings.app_tools_tasks_celery_task_queue
+    # the exchange and routing key that Celery gives a queue it creates, as the app does when it sends.
+    queue = Queue(queue_name, Exchange(queue_name), routing_key=queue_name, no_declare=True)
+    app.conf.task_queues = [queue]
+    app.conf.worker_enable_remote_control = False
+
+
+configure_tool_worker(APP)
+
+
 class HideTaskDataFilter(logging.Filter):
     """
     Keep a task's arguments and result out of Celery's log records.

@@ -276,21 +276,20 @@ REDIS_CLIENTS = [
     ("worker-infrastructure", "the Kubernetes and IAM roles", "plain"),
     ("smarter-beat", "the schedule", "plain"),
     ("job-init, job-migrate", "initialize_platform", "plain"),
-    ("smarter-worker-tools", "Extensions and tool calls", "warn"),
+    ("smarter-worker-tools", "the user tools: its own keys", "warn"),
 ]
 """The pods that hold Redis's url: a name, what it runs, and its box's kind."""
 
 TOOL_WORKER_REACH = [
-    (
-        "Push a task to the infrastructure queue",
-        ["delete_default_api, destroy_llmhost, …:", "run with the Kubernetes and IAM roles"],
-    ),
-    ("Read the other pending tool calls", ["each with its decrypted credentials"]),
-    ("Write a tool call's result first", ["the app hands a forged result to the LLM"]),
-    ("Read the session keys, database 2", ["each is a valid sessionid cookie"]),
-    ("Add an entry to RedBeat's schedule", ["a task that recurs, past every restart"]),
+    ("Push a task to another queue: no", ["no pattern of its ACL names one"], "data"),
+    ("Rebind its queue, plant in unacked: no", ["the app declares it; its unacked is its own"], "data"),
+    ("Read the sessions, list keys: no", ["database 2 is out of reach; no SCAN, KEYS"], "data"),
+    ("Edit RedBeat's schedule: no", ["no pattern names redbeat:*"], "data"),
+    ("Swap an Extension's archive: no", ["read-only, and the worker checks its sha256"], "data"),
+    ("Read the other pending tool calls: yes", ["its own queue, which it must read: #1077"], "warn"),
+    ("Write a tool call's result first: yes", ["the results are its to write"], "warn"),
 ]
-"""What code in the tool worker can do with Redis's url, by itself: a title and its lines."""
+"""What code in the tool worker can do in Redis as the user tools: a title, its lines and its box's kind."""
 
 
 def redis_trust():
@@ -299,20 +298,19 @@ def redis_trust():
         "redis-trust",
         1300,
         800,
-        "Every pod holds Redis's url, and Redis can't tell them apart",
-        "one password for every client, generated per environment, and no access control list",
-        "Three columns. The pods that hold Redis's url: the app, both workers, beat, the Jobs and the tool worker, "
-        "which holds no other credential. Redis itself, with one password, which smarter-infrastructure generates for "
-        "each environment, and no access control list, so every client may run "
-        "every command on every database: database 0 holds the three task queues, the tool calls' results and "
-        "RedBeat's schedule; database 1 the cache, with Extensions' archives and cached tool results; database 2 the "
-        "users' sessions. Calico's network policies are what keeps other pods out. The last column is what code "
-        "in the tool worker, such as an Extension, can do with the url alone: push a task to the infrastructure "
-        "queue, which smarter-worker-infrastructure runs with the Kubernetes Role and the IAM role; read the other "
-        "pending tool calls in its queue, with their decrypted credentials; write a tool call's result before the "
-        "worker that took it does, so the app hands a forged result to the LLM; read the session keys, each of "
-        "which is a valid session cookie; and add an entry to RedBeat's schedule, which recurs after every restart. "
-        "An Extension's archive can't be swapped: the worker checks its sha256 against the call.",
+        "Redis's ACL: the tool worker reaches only its own keys",
+        "every other pod is Redis's default user; the tool worker is the user tools (ADR-030, rule 8)",
+        "Three columns. The pods that hold Redis's url: the app, both workers, beat and the Jobs, as Redis's default "
+        "user, which may do anything, and the tool worker, which holds no other credential, as the user tools. Redis, "
+        "whose passwords smarter-infrastructure generates for each environment: database 0 holds the three task "
+        "queues, the tool calls' results and RedBeat's schedule; database 1 the cache, with Extensions' archives; "
+        "database 2 the users' sessions. Calico's network policies keep other pods out. The last column is what code "
+        "in the tool worker, such as an Extension, can do as the user tools. Refused by its ACL: pushing a task to "
+        "another queue, such as the infrastructure queue, whose worker holds the Kubernetes Role and the IAM role; "
+        "rebinding its queue or planting a message among other workers' unacknowledged ones; reading the sessions or "
+        "listing keys; editing RedBeat's schedule; and replacing an Extension's archive. Still possible, within the "
+        "tool worker's own trust domain: reading the other tool calls waiting on its own queue, which issue 1077 "
+        "addresses, and writing a tool call's result before the worker that ran it.",
     )
 
     # 1. the clients
@@ -323,8 +321,8 @@ def redis_trust():
         y += height + 22
 
     # 2. Redis
-    d.heading(410, 100, 400, "2 · Redis: one password, no ACL")
-    d.region(398, 116, 424, 560, "smarter-redis", note="one password, smarter-redis-password, for every client")
+    d.heading(410, 100, 400, "2 · Redis: two users")
+    d.region(398, 116, 424, 560, "smarter-redis", note="default user: every pod but one; tools: the tool worker")
     d.box(
         "db0",
         416,
@@ -360,7 +358,7 @@ def redis_trust():
         code="CACHES['sessions'] …/2",
     )
     d.text(416, 640, "Calico keeps other namespaces' pods out.", size=11, fill=MUTED, italic=True)
-    d.text(416, 656, "Nothing inside keeps one client from another.", size=11, fill=MUTED, italic=True)
+    d.text(416, 656, "The default user may do anything.", size=11, fill=MUTED, italic=True)
 
     # every client's arrow to Redis's region
     for index in range(len(REDIS_CLIENTS)):
@@ -371,10 +369,9 @@ def redis_trust():
     # 3. what the tool worker can do
     d.heading(900, 100, 372, "3 · What code in the tool worker can do")
     y = 124
-    for index, (title, lines) in enumerate(TOOL_WORKER_REACH):
-        height = d.box(f"reach{index}", 900, y, 372, title, lines, "warn")
-        y += height + 18
-    d.box("archive", 900, y, 372, "Swap an Extension's archive: no", ["the worker checks its sha256"], "data")
+    for index, (title, lines, kind) in enumerate(TOOL_WORKER_REACH):
+        height = d.box(f"reach{index}", 900, y, 372, title, lines, kind)
+        y += height + 14
 
     # the tool worker's path through Redis to the last column
     tool_index = len(REDIS_CLIENTS) - 1
@@ -382,18 +379,18 @@ def redis_trust():
     d.arrow(
         [(tool_x + tool_w / 2, tool_y + tool_h), (tool_x + tool_w / 2, 712), (860, 712), (860, 140), (898, 140)],
         "red",
-        label="with the url alone",
+        label="as the user tools",
         label_at=(640, 704),
     )
 
     d.legend(
         740,
         [
-            ("grey", False, "holds the url, with every other credential"),
-            ("red", False, "holds the url, and nothing else"),
+            ("grey", False, "the default user, with every other credential"),
+            ("red", False, "the user tools, and nothing else"),
         ],
     )
-    d.text(760, 764, "red boxes: open today · green: closed", size=11, fill=RED)
+    d.text(760, 764, "green: refused by the ACL · red: still possible", size=11, fill=RED)
     d.save()
 
 

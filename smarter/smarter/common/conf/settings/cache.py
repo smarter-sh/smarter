@@ -21,9 +21,58 @@ from smarter.common.exceptions import SmarterConfigurationError
 LOCAL_REDIS_PASSWORD = "smarter"
 """The password of docker-compose.yml's smarter-redis service, the local environment's default."""
 
+TOOL_WORKER_REDIS_USERNAME = "tools"
+"""
+The Redis ACL user of the tool worker, ``smarter-worker-tools`` (ADR-030, rule 8).
+
+The Helm chart's ``redis.auth.acl.users`` and both docker-compose files define it, with the same rules.
+"""
+
+LOCAL_TOOL_WORKER_REDIS_PASSWORD = "smarter-tools"
+"""The password of :data:`TOOL_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
+
 
 class CacheSettings(BaseModel):
     """Redis's password, and how long cached views, prompts, llmclients and responses are kept."""
+
+    subsystem_redis_username: Optional[str] = Field(
+        None,
+        description="The Redis ACL user that this process authenticates as, or empty for Redis's default user.",
+        examples=["tools"],
+        title="Redis Username",
+    )
+    """
+    The Redis ACL user that this process authenticates as.
+
+    Every process but the tool worker uses Redis's ``default`` user, which may do anything. The tool worker
+    is given its own user, ``tools`` (:data:`TOOL_WORKER_REDIS_USERNAME`), which may touch only its own
+    queue, its results, Extensions' archives and a few cache keys (ADR-030, rule 8), with
+    :attr:`subsystem_redis_password` set to that user's password.
+
+    Set it with ``SMARTER_SUBSYSTEM_REDIS_USERNAME``.
+
+    :type: Optional[str]
+    :default: None, Redis's ``default`` user.
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("subsystem_redis_username")
+    def validate_subsystem_redis_username(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate ``subsystem_redis_username``.
+
+        :param v: The username, or empty for the ``default`` user.
+        :returns: The username, or None.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            return None
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"subsystem_redis_username of type {type(v)} is not a str")
+        username = v.strip()
+        if not username:
+            return None
+        return username
 
     subsystem_redis_password: Optional[SecretStr] = Field(
         None,
@@ -264,4 +313,9 @@ class CacheSettings(BaseModel):
         )
 
 
-__all__ = ["CacheSettings"]
+__all__ = [
+    "LOCAL_REDIS_PASSWORD",
+    "LOCAL_TOOL_WORKER_REDIS_PASSWORD",
+    "TOOL_WORKER_REDIS_USERNAME",
+    "CacheSettings",
+]

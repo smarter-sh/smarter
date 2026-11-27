@@ -116,8 +116,8 @@ class TestEnvironmentSettings(SmarterTestBase):
         ]
         for url in urls:
             self.assertTrue(url.startswith("redis://:GeneratedRedisPassword1@"), "the url doesn't use the password")
-        # the password is a module variable, never a Django setting, so the settings never show it.
-        self.assertNotIn("redis_password", module.__all__)
+        # the url is a module variable, never a Django setting, so the settings never show the password.
+        self.assertNotIn("default_redis_server", module.__all__)
 
     def test_redis_password_is_quoted_in_the_urls(self):
         """A password with characters that a url reserves is quoted, so that the url still parses."""

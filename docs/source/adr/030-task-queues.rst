@@ -4,9 +4,9 @@ ADR-030: Operational and Infrastructure Task Queues
 Status
 ------
 Accepted. Rules 1 and 3 hold in the code as of 0.48.8, and rule 4 since ADR-038's phase 2. Rule 2 has four
-exceptions, listed in the inventory below. Of the security rules, 5 to 9, rule 5 is implemented: it takes
-effect when smarter-infrastructure has created Redis's password and the chart is deployed. Rules 6 to 9 are
-proposed.
+exceptions, listed in the inventory below. Of the security rules, 5 to 9, rules 5 and 8 are implemented,
+for the tool worker: each takes effect when smarter-infrastructure has created its Secret and the chart is
+deployed. Rules 6, 7 and 9 are proposed.
 
 Context
 -------
@@ -106,12 +106,13 @@ were written. Since ADR-038 and the hardening of the pods, the queues are the ea
 least privileged pod to the most privileged one.
 
 .. image:: ../_static/adr-030/redis-trust.svg
-   :alt: Every pod holds Redis's url, including the tool worker, which holds no other credential. Redis has one
-         password for every client, which smarter-infrastructure generates, and no access control list. Its
-         database 0 holds the queues, the tool calls' results and RedBeat's schedule, database 1 the cache and database 2 the sessions. With the
-         url alone, code in the tool worker can push a task to the infrastructure queue, read the other pending
-         tool calls with their credentials, forge a tool call's result, read the session keys and add an entry to
-         RedBeat's schedule. It can't swap an Extension's archive, whose sha256 the worker checks.
+   :alt: Every pod but the tool worker is Redis's default user, which may do anything. The tool worker,
+         which holds no other credential, is the user tools. Redis's database 0 holds the queues, the tool calls'
+         results and RedBeat's schedule, database 1 the cache and database 2 the sessions. As the user tools, code
+         in the tool worker is refused pushing to another queue, rebinding its queue, planting a message among
+         other workers' unacknowledged ones, reading the sessions or listing keys, editing RedBeat's schedule and
+         replacing an Extension's archive. It can still read the other tool calls waiting on its own queue, and
+         write a tool call's result first.
 
 What the code does today:
 
@@ -176,6 +177,25 @@ The security rules, proposed:
    database 2. Redis's ACLs restrict keys by pattern, not by database, so the cache's keys need a prefix
    the patterns can name, and kombu's exact keys need checking first. This closes the sessions, the
    schedule and the other queues.
+
+   Implemented for the tool worker, the one workload that runs code no one reviewed: the user ``tools``,
+   whose password smarter-infrastructure generates in the Secret ``smarter-redis-users``, with the rules in
+   the Helm chart's ``redis.auth.acl.users``. Checking kombu's keys found two more ways out, both closed:
+
+   - Every worker shares kombu's ``unacked`` hash, which holds every queue's messages in flight, and a
+     worker that starts restores them to their queues. A tool worker that could write it could plant a
+     message that another worker restores to the infrastructure queue. The tool worker keeps its own under
+     its queue's name (``CELERY_BROKER_TRANSPORT_OPTIONS``).
+   - A worker that declares its queue writes kombu's routing set, ``_kombu.binding.<queue>``, which the app
+     reads to route each task. A tool worker that could write it could route tool calls, with their
+     credentials, to the infrastructure queue. Its queue is ``no_declare``, and the app declares it.
+
+   The user may also read and write the robots.txt cache that a page fetch checks, append to the console's
+   log streams, and publish to ``logs:*`` and the results' channels, but not list keys or channels, nor
+   subscribe. What it can still do is read the other tool calls waiting on its own queue, and write a
+   result before the worker that ran the call does, both within the tool worker's own trust domain:
+   isolating Extensions' calls is #1077. Its startup check confirms each refusal. docker-compose's Redis
+   defines the same user, so the tests check the chart's rules for real.
 9. **What a message carries.** Infrastructure tasks take ids, never data. Only ``run_tool_call`` carries a
    credential (ADR-038). Users' content in operational messages is accepted, as it is in the database, and
    Redis's volume is encrypted at rest, which MariaDB's isn't by default either (see
