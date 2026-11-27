@@ -758,6 +758,10 @@ mariadb:
 
 # -----------------------------------------------------------------------------
 # Redis Configuration
+#
+# **IMPORTANT**:After any change to Redis's values or its image, run make
+# redis-chart-check: it starts this Redis as its pod does, and checks its users,
+# which neither docker-compose nor helm template can show.
 # -----------------------------------------------------------------------------
 redis:
   enabled: true

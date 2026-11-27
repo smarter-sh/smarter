@@ -186,8 +186,10 @@ The security rules, proposed:
    own ``auth.acl``, which mounts its ACL file as a single file (``subPath``) inside the directory where its
    ConfigMap is mounted. runc couldn't create that mount on the cluster's nodes, Redis never started, and
    prod was without Redis for about 12 minutes on 2026-11-27, until the release was rolled back. Neither
-   docker-compose nor ``helm template`` creates that mount, so the change is now checked by starting
-   prod's Redis image with the chart's rendered start script and configuration before it ships.
+   docker-compose nor ``helm template`` creates that mount, so ``make redis-chart-check``
+   (``scripts/check_redis_chart.py``) now checks the chart's Redis before a change ships: it fails when a
+   volume is mounted inside another volume's mount, and starts prod's Redis image with the chart's
+   rendered start script and configuration, as its pod does, to check its users.
    Checking kombu's keys found two more ways out, both closed:
 
    - Every worker shares kombu's ``unacked`` hash, which holds every queue's messages in flight, and a

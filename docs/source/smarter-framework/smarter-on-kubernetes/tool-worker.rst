@@ -69,7 +69,13 @@ When it starts, the tool worker checks this itself (``check_tool_worker_redis`` 
 :mod:`smarter.apps.infrastructure.startup`): it reads its own queue, then tries each read that its user
 must be refused, and logs one line per read, INFO when it is refused and ERROR when it isn't. The ACL's
 rules are in the Helm chart's ``values.yaml``; docker-compose's Redis has the same, which a test keeps
-in step.
+in step. ``make redis-chart-check`` starts the chart's Redis the way its pod does, from the rendered
+chart and the image it pins, and checks what ``tools`` may and may not do: run it after any change to
+Redis's values or its image.
+
+The tool worker's liveness probe looks for its process (``pgrep``), not, as the other workers' does, for an
+answer to a ping: a ping goes through remote control, which the tool worker doesn't take, and its Redis
+user can't reach.
 
 Turning It On
 -------------
