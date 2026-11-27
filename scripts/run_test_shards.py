@@ -55,7 +55,13 @@ ROOT_PASSWORD = "smarter"
 DATABASES = ["smarter", "stackademy"]
 PROJECT_PREFIX = "smarter-shard-"
 STORES = ["smarter-mariadb", "smarter-redis"]
-APPLICATIONS = ["smarter-api", "smarter-worker", "smarter-worker-infrastructure", "smarter-worker-tools"]
+APPLICATIONS = [
+    "smarter-api",
+    "smarter-worker",
+    "smarter-worker-infrastructure",
+    "smarter-worker-tools",
+    "smarter-worker-extensions",
+]
 WORKDIR = "/home/smarter_user/smarter"
 READY_TIMEOUT_SECONDS = 300
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
@@ -66,8 +72,11 @@ DEFAULT_LABELS = ["smarter"]
 # (7,939 tests, 5.6 minutes) on Docker Desktop with 16 CPUs and 47.2 GiB. A shard's five containers peaked at
 # 3.73 GiB together, and averaged at most 0.86 CPU: the api's test process is capped at one CPU by
 # docker-compose.shard.yml, and spends part of its time waiting on MariaDB and Redis.
-# The tool worker, added since, with one process: 0.42 GiB after its tests' calls.
-MEMORY_PER_SHARD_BYTES = int(4.25 * GIB)
+# The tool worker, added since, with one process: 0.42 GiB after its tests' calls. With the Extension worker
+# (issue #1077), one process too, a 10-shard run of 8,309 tests peaked at 4.37 GiB for one shard's seven
+# containers, sampled every 10 seconds: the api 1.12, the two workers 1.03 each, MariaDB 0.58, the Extension
+# worker 0.40, the tool worker 0.39 and Redis 0.02.
+MEMORY_PER_SHARD_BYTES = int(4.75 * GIB)
 CPUS_PER_SHARD = 1.0
 # Left for the dev stack (its api, two workers, Beat, MariaDB and Redis used 3.04 GiB in the same run).
 DEV_STACK_MEMORY_BYTES = 3 * GIB

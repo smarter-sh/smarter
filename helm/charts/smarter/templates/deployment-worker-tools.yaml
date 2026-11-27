@@ -2,8 +2,9 @@
 # Deployment Manifest for the Smarter Celery Tool Worker (ADR-038)
 #
 # This file defines the Deployment resource for the Celery worker that serves the tools
-# queue: the tool calls that the app has resolved, such as an API, SQL or MCP call, an
-# extension's tool or a web search page fetch, each with the credentials it needs. It
+# queue: the tool calls that the app has resolved, such as an API, SQL or MCP call or a web
+# search page fetch, each with the credentials it needs. Extensions' calls go to the
+# Extension worker, deployment-worker-extensions.yaml, instead (issue #1077). It
 # runs what tool calls run, code and requests chosen by manifest authors, extension
 # authors and the LLM, so it holds nothing else of the platform's:
 #

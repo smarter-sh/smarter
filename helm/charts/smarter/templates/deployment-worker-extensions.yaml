@@ -1,0 +1,138 @@
+# -----------------------------------------------------------------------------------
+# Deployment Manifest for the Smarter Celery Extension Worker (issue #1077)
+#
+# This file defines the Deployment resource for the Celery worker that serves the
+# Extensions queue: Extensions' tool calls, which the app has resolved, each with its
+# settings and its secrets. An Extension is third-party Python code, which the worker
+# imports and runs. The tool worker, deployment-worker-tools.yaml, runs every other kind of
+# tool call; this worker is apart from it so that an Extension's code can't see those calls'
+# credentials:
+#
+# - each call runs in a process of its own (--max-tasks-per-child=1), forked from the
+#   worker's loaded parent and discarded after the call, so nothing an Extension's code
+#   leaves behind in its process reaches a later call;
+# - its Redis user, extensions, reaches only its own queue, the results and Extensions'
+#   archives, so it can't read the tools queue, where API, SQL and MCP calls wait;
+# - otherwise it is the tool worker: no database, its own Secret, secret-env-extensions.yaml
+#   (smarter.extensionsEnv in _helpers.tpl), the ServiceAccount <appName>-tools without a
+#   token or an IAM role, and pods in the application-group <appName>-tools, so that the
+#   same network policies apply.
+#
+# - Usage: Managed via Helm; deployed with the tool worker (workerTools.enabled), sized by
+#   workerTools.extensions in values.yaml.
+# - The queue name must match env.SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE.
+# - No -E: task events would copy each call's arguments, its secrets, to the events stream.
+# - No database: no smarter.waitForDatabase init container.
+# -----------------------------------------------------------------------------------
+{{- $tools := .Values.workerTools | default dict }}
+{{- $extensions := $tools.extensions | default dict }}
+{{- if $tools.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    meta.helm.sh/release-name: "{{ .Values.global.appName }}-worker-extensions"
+    meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    meta.helm.sh/application-version: {{ .Chart.Version }}
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-worker-extensions"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}-tools"
+  name: "{{ .Values.global.appName }}-worker-extensions"
+  namespace: {{ .Values.namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ $extensions.replicaCount | default 2 }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-worker-extensions"
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/env: "{{ include (print $.Template.BasePath "/secret-env-extensions.yaml") . | sha256sum }}"
+      labels:
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-worker-extensions"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}-tools"
+        deploymentTimestamp: "{{ now | unixEpoch }}"
+        meta.helm.sh/application-version: {{ .Chart.Version }}
+    spec:
+      serviceAccountName: "{{ $.Values.global.appName }}-tools"
+      automountServiceAccountToken: false
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      containers:
+        - name: "{{ .Values.global.appName }}-worker-extensions"
+          image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
+          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency={{ $extensions.concurrency | default 2 }}", "--loglevel=info", "-Q", "{{ .Values.env.SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE | default "extensions_celery_task_queue" }}", "-n", "extensions@%h", "--max-tasks-per-child=1", "--without-mingle", "--without-gossip", "--without-heartbeat"]
+          imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+          resources:
+            {{- toYaml ($extensions.resources | default $tools.resources) | nindent 12 }}
+          # liveness looks for the worker's process. The other workers' pings the worker through Redis
+          # (smarter.workers.liveness, #940), but the tool worker takes no remote control, and its Redis
+          # user can't reach the channels that a ping uses (ADR-030, rule 8): a ping always fails, and
+          # Kubernetes restarted it every four minutes (2026-11-27). A worker stuck on a dead connection,
+          # #940's case, is caught by the broker's socket timeout and health check instead
+          # (CELERY_BROKER_TRANSPORT_OPTIONS).
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 3
+            successThreshold: 1
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f 'celery.*worker' > /dev/null"
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          # the Extension worker's environment, from its own Secret in secret-env-extensions.yaml
+          envFrom:
+            - secretRef:
+                name: "{{ .Values.global.appName }}-env-extensions"
+          securityContext:
+            {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
+          # the platform's writable directories. Extensions are staged and extracted in /tmp.
+          volumeMounts:
+            {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes:
+        {{- include "smarter.writableVolumes" . | nindent 8 }}
+      dnsPolicy: ClusterFirst
+      # no service links: the tool worker has no use for the namespace's services' addresses.
+      enableServiceLinks: false
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        {{- toYaml .Values.global.podSecurityContext | nindent 8 }}
+      shareProcessNamespace: false
+{{- end }}

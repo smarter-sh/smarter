@@ -3,6 +3,7 @@
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
 from unittest import mock
 
 from cache_results import lazy_cache
@@ -14,6 +15,7 @@ from smarter.apps.llmtool.extension.tests.mixins import ExtensionTestMixin
 from smarter.apps.llmtool.extension.toolkit import ExtensionToolkit
 from smarter.apps.llmtool.plugin.tests.base_classes import FakeWebHost, mock_web_host
 from smarter.apps.llmtool.runner import (
+    EXTENSION_KIND,
     TOOL_CALL_MODELS,
     TOOL_EXECUTORS,
     InProcessToolRunner,
@@ -25,7 +27,9 @@ from smarter.apps.llmtool.runner import (
     carry_tool_call_label,
     current_tool_call_label,
     get_tool_runner,
+    kind_runs_in_this_worker,
     labeled_tool_calls,
+    queue_for_kind,
     running_in_tool_worker,
 )
 from smarter.apps.llmtool.runner.http import HttpToolCall, fetch_with_runner
@@ -86,6 +90,43 @@ class TestRemoteToolRunner(SmarterTestBase):
             with running_in_tool_worker():
                 self.assertIsInstance(get_tool_runner(), InProcessToolRunner)
             self.assertIsInstance(get_tool_runner(), RemoteToolRunner)
+
+    def test_each_kind_has_its_queue(self):
+        """Extensions' calls go to the Extensions queue, every other kind to the tools queue (issue #1077)."""
+        self.assertEqual(queue_for_kind(EXTENSION_KIND), smarter_settings.app_extensions_tasks_celery_task_queue)
+        for kind in TOOL_EXECUTORS:
+            if kind == EXTENSION_KIND:
+                continue
+            with self.subTest(kind=kind):
+                self.assertEqual(queue_for_kind(kind), smarter_settings.app_tools_tasks_celery_task_queue)
+
+    def test_each_worker_runs_its_own_kind(self):
+        """The tool worker runs every kind but an Extension's; the Extension worker only an Extension's."""
+        self.assertTrue(kind_runs_in_this_worker("http"))
+        self.assertFalse(kind_runs_in_this_worker(EXTENSION_KIND))
+        with in_the_extension_worker():
+            self.assertTrue(kind_runs_in_this_worker(EXTENSION_KIND))
+            self.assertFalse(kind_runs_in_this_worker("http"))
+
+    def test_an_extension_call_goes_to_the_extensions_queue(self):
+        """The remote runner sends an Extension's call to its own queue."""
+        answer = ToolCallResult(value="ok").model_dump_json()
+        sent = mock.Mock()
+        sent.get.return_value = answer
+        with mock.patch.object(run_tool_call, "apply_async", return_value=sent) as apply_async:
+            result = RemoteToolRunner().run(ToolCall(kind=EXTENSION_KIND))
+        self.assertEqual(result.value, "ok")
+        queue = apply_async.call_args.kwargs["queue"]
+        self.assertEqual(queue, smarter_settings.app_extensions_tasks_celery_task_queue)
+
+    def test_a_worker_refuses_the_other_kind(self):
+        """In a worker without a database, a call of the other worker's kind is a failure, not run."""
+        with in_the_tool_worker_without_a_database():
+            result = ToolCallResult.model_validate_json(run_tool_call(EXTENSION_KIND, "{}"))
+        self.assertEqual(result.failure, "this worker doesn't run extension calls")
+        with in_the_extension_worker():
+            result = ToolCallResult.model_validate_json(run_tool_call("http", "{}"))
+        self.assertEqual(result.failure, "this worker doesn't run http calls")
 
     def test_timeouts(self):
         """A call's own timeout, or its endpoint's, is multiplied for the remote wait, with a margin and a cap."""
@@ -310,18 +351,20 @@ TOOL_WORKER_PROBE_KIND = "no-such-kind"
 """A kind of call that the tool worker can't read, which it answers at once with a failure, without the network."""
 
 
-def tool_worker_answers(timeout: float) -> bool:
+def tool_worker_answers(timeout: float, kind: str = TOOL_WORKER_PROBE_KIND) -> bool:
     """
-    Whether a tool worker takes a task from the tools queue and answers it, within the timeout.
+    Whether a worker takes a task from a kind's queue and answers it, within the timeout.
 
-    The tool worker takes no remote control, whose keys its Redis user can't reach (ADR-030, rule 8), so
-    ``celery inspect`` can't find it. Instead, it is sent a call of a kind that it can't read, which
-    ``run_tool_call`` answers with a failure.
+    The tool worker and the Extension worker take no remote control, whose keys their Redis users can't reach
+    (ADR-030, rule 8), so ``celery inspect`` can't find them. Instead, each is sent a call that it can't read:
+    a kind that doesn't exist, on the tools queue, or an Extension's call without its fields, on the Extensions
+    queue. ``run_tool_call`` answers it with a failure.
 
     :param timeout: Seconds to wait for the answer.
+    :param kind: The call's kind, which chooses its queue (:func:`queue_for_kind`).
     :returns: True if it answered.
     """
-    sent = run_tool_call.apply_async(args=(TOOL_WORKER_PROBE_KIND, "{}"))
+    sent = run_tool_call.apply_async(args=(kind, "{}"), queue=queue_for_kind(kind))
     try:
         answer = sent.get(timeout=timeout)
     except CeleryTimeoutError:
@@ -330,6 +373,39 @@ def tool_worker_answers(timeout: float) -> bool:
     result = json.loads(answer)
     answered = "failure" in json_object(result)
     return answered
+
+
+def in_the_tool_worker_without_a_database():
+    """
+    Patch the settings so that this process looks like the tool worker: no database, the tools queue.
+
+    The settings are frozen, so their class is patched.
+
+    :returns: The patch, as a context manager.
+    """
+    return mock.patch.object(
+        Settings, "database_unavailable", new_callable=mock.PropertyMock, return_value=True, create=True
+    )
+
+
+def in_the_extension_worker():
+    """
+    Patch the settings so that this process looks like the Extension worker: no database, the Extensions queue.
+
+    :returns: The patches, as one context manager.
+    """
+    stack = ExitStack()
+    stack.enter_context(in_the_tool_worker_without_a_database())
+    stack.enter_context(
+        mock.patch.object(
+            Settings,
+            "app_tools_worker_queue",
+            new_callable=mock.PropertyMock,
+            return_value="extensions_celery_task_queue",
+            create=True,
+        )
+    )
+    return stack
 
 
 def remote_runner():
@@ -356,15 +432,17 @@ class TestThroughTheToolWorker(ExtensionTestMixin):
     def setUpClass(cls):
         super().setUpClass()
         # the test stack waits for its api, not for its workers, which start Django in about 30 seconds.
-        deadline = time.monotonic() + TOOL_WORKER_WAIT_SECONDS
-        answered = tool_worker_answers(timeout=5)
-        while not answered and time.monotonic() < deadline:
-            answered = tool_worker_answers(timeout=5)
-        if not answered:
-            raise AssertionError(
-                "no worker consumes the tools queue: these tests need smarter-worker-tools running "
-                "(docker-compose.yml, docker-compose.shard.yml)."
-            )
+        workers = ((TOOL_WORKER_PROBE_KIND, "smarter-worker-tools"), (EXTENSION_KIND, "smarter-worker-extensions"))
+        for kind, worker in workers:
+            deadline = time.monotonic() + TOOL_WORKER_WAIT_SECONDS
+            answered = tool_worker_answers(timeout=5, kind=kind)
+            while not answered and time.monotonic() < deadline:
+                answered = tool_worker_answers(timeout=5, kind=kind)
+            if not answered:
+                raise AssertionError(
+                    f"no worker consumes {queue_for_kind(kind)}: these tests need {worker} running "
+                    "(docker-compose.yml, docker-compose.shard.yml)."
+                )
 
     def test_call_refused_in_the_worker(self):
         """A call that safe_http refuses comes back with the worker's failure, through Redis."""
@@ -379,9 +457,16 @@ class TestThroughTheToolWorker(ExtensionTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Example Domain", response.content)
 
+    def test_another_kind_refused_by_the_extension_worker(self):
+        """A call of another kind, put on the Extensions queue, is refused there: it wasn't sent by the app."""
+        call = HttpToolCall(url="https://example.com/", timeout=5)
+        sent = run_tool_call.apply_async(args=(call.kind, call.model_dump_json()), queue=queue_for_kind(EXTENSION_KIND))
+        result = ToolCallResult.model_validate_json(sent.get(timeout=30))
+        self.assertEqual(result.failure, "this worker doesn't run http calls")
+
     def test_extension_tool_run_by_the_worker(self):
         """
-        An Extension's tool runs in the worker, which loads its code from the cache, where the app published it.
+        An Extension's tool runs in the Extension worker, which loads its code from the cache, where the app published it.
 
         The archive is removed from the cache first, so that the call publishes it, and the worker, which
         has no database, can only find it there.

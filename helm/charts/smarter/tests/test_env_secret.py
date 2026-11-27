@@ -52,22 +52,49 @@ COMPOSE_PATHS = (REPOSITORY_ROOT / "docker-compose.yml", REPOSITORY_ROOT / "dock
 CACHE_SETTINGS_PATH = REPOSITORY_ROOT / "smarter" / "smarter" / "common" / "conf" / "settings" / "cache.py"
 
 
-TOOLS_USER_LINE = re.compile(r'"user tools on >\$\(< /opt/bitnami/redis/users/tools\) (?P<rules>[^"]+)"')
-"""The line that redis.master.preExecCmds appends to Redis's master.conf, with the tools user's rules."""
-
-
-def tools_acl_rules() -> list[str]:
+def user_line(user: str) -> re.Pattern[str]:
     """
-    Return the Redis ACL rules of the tool worker's user, from values.yaml's redis.master.preExecCmds.
+    Return the pattern of the line that redis.master.preExecCmds appends to master.conf for a Redis ACL user.
 
+    :param user: The user, ``tools`` or ``extensions``.
+    :returns: The pattern, whose group ``rules`` is the user's rules.
+    """
+    pattern = re.compile(rf'"user {user} on >\$\(< /opt/bitnami/redis/users/{user}\) (?P<rules>[^"]+)"')
+    return pattern
+
+
+def acl_rules(user: str) -> list[str]:
+    """
+    Return the Redis ACL rules of a worker's user, from values.yaml's redis.master.preExecCmds.
+
+    :param user: The user, ``tools`` or ``extensions``.
     :returns: Its key patterns, channels and commands, one per rule.
     """
     values = VALUES_PATH.read_text(encoding="utf-8")
-    match = TOOLS_USER_LINE.search(values)
+    match = user_line(user).search(values)
     if match is None:
-        raise AssertionError("values.yaml's redis.master.preExecCmds don't define the user tools")
+        raise AssertionError(f"values.yaml's redis.master.preExecCmds don't define the user {user}")
     rules = match.group("rules").split()
     return rules
+
+
+def tools_acl_rules() -> list[str]:
+    """Return the tool worker's user's rules: :func:`acl_rules` of ``tools``."""
+    return acl_rules("tools")
+
+
+def local_password(constant: str) -> str:
+    """
+    Return one of the compose files' Redis passwords, from the settings' source, which these tests can't import.
+
+    :param constant: The constant's name in cache.py, e.g. ``LOCAL_EXTENSION_WORKER_REDIS_PASSWORD``.
+    :returns: The password.
+    """
+    text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
+    match = re.search(rf'^{constant} = "([^"]+)"$', text, re.MULTILINE)
+    if match is None:
+        raise AssertionError(f"cache.py has no {constant}")
+    return match.group(1)
 
 
 def local_tool_worker_password() -> str:
@@ -211,6 +238,21 @@ class TestEnvironment(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(command, rules)
 
+    def test_extensions_user_reaches_only_its_queue(self):
+        """The Extension worker's user may use its own queue, never the tools queue, and has no robots.txt cache."""
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn("        if [[ -f /opt/bitnami/redis/users/extensions ]]; then\n", values)
+        rules = acl_rules("extensions")
+        self.assertEqual(rules[0], "~extensions_celery_task_queue*")
+        self.assertFalse(any(rule.lstrip("%RW~").startswith("tools_celery_task_queue") for rule in rules))
+        self.assertFalse(any("robots_rules" in rule for rule in rules))
+        self.assertNotIn("~*", rules)
+        for command in ("-@dangerous", "-scan", "-pubsub", "-subscribe", "-psubscribe"):
+            with self.subTest(command=command):
+                self.assertIn(command, rules)
+        tools = acl_rules("tools")
+        self.assertFalse(any(rule.lstrip("%RW~").startswith("extensions_celery_task_queue") for rule in tools))
+
     def test_compose_redis_has_the_charts_rules(self):
         """
         Docker-compose.yml's and docker-compose.shard.yml's Redis define the same user, so the tests check the chart's rules.
@@ -219,7 +261,9 @@ class TestEnvironment(unittest.TestCase):
         """
         password = local_tool_worker_password()
         arguments = ["redis-server", "--requirepass", "smarter", "--user", "tools", "on", f">{password}"]
-        arguments.extend(tools_acl_rules())
+        arguments.extend(acl_rules("tools"))
+        arguments.extend(["--user", "extensions", "on", f">{local_password('LOCAL_EXTENSION_WORKER_REDIS_PASSWORD')}"])
+        arguments.extend(acl_rules("extensions"))
         for path in COMPOSE_PATHS:
             with self.subTest(compose=path.name):
                 text = path.read_text(encoding="utf-8")

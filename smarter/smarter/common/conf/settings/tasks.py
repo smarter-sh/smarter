@@ -268,6 +268,95 @@ class TaskSettings(BaseModel):
             raise SmarterConfigurationError(f"app_tools_tasks_celery_task_queue of type {type(v)} is not a str: {v}")
         return v
 
+    app_extensions_tasks_celery_task_queue: str = Field(
+        "extensions_celery_task_queue",
+        description="The Celery task queue name for Extensions' tool calls, which smarter-worker-extensions runs.",
+        title="Extensions Tasks Celery Task Queue",
+    )
+    """
+    The Celery task queue name for Extensions' tool calls, when ``app_llmtool_tool_runner`` is ``remote``.
+
+    The Extension worker, ``smarter-worker-extensions``, serves it, apart from the tool worker, which runs every
+    other kind of tool call (issue #1077). An Extension is third-party code: in a worker of its own, each call in
+    a process of its own, and with a Redis user that reaches only this queue, it can't see the API, SQL and MCP
+    calls' credentials, neither in its process nor waiting in Redis. Its name doesn't start with
+    ``app_tools_tasks_celery_task_queue``'s, so that the tool worker's Redis user, whose keys are that queue's
+    prefix, can't read it either.
+
+    :type: str
+    :default: ``"extensions_celery_task_queue"``
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("app_extensions_tasks_celery_task_queue")
+    def validate_app_extensions_tasks_celery_task_queue(cls, v: Optional[str]) -> str:
+        """
+        Validate ``app_extensions_tasks_celery_task_queue``.
+
+        :param v: The queue's name, or empty for the default.
+        :returns: The queue's name.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return field_default(cls, "app_extensions_tasks_celery_task_queue")
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(
+                f"app_extensions_tasks_celery_task_queue of type {type(v)} is not a str: {v}"
+            )
+        return v
+
+    app_tools_worker_queue: Optional[str] = Field(
+        None,
+        description=(
+            "The queue that this tool worker consumes: the tools or the Extensions queue. Empty in every other "
+            "process."
+        ),
+        title="Tool Worker Queue",
+    )
+    """
+    The queue that this tool worker consumes, set in the tool worker and in the Extension worker only.
+
+    Both are workers without a database (``database_unavailable``), and they differ only by their queue. Each
+    keeps kombu's in-flight messages under its queue's name (``CELERY_BROKER_TRANSPORT_OPTIONS``), checks that
+    its Redis user reaches that queue and no other, runs only that queue's kind of tool call, and names it in
+    the line that ends its startup checks. Empty, a worker without a database is the tool worker. See
+    :attr:`tool_worker_queue`.
+
+    Set it with ``SMARTER_APP_TOOLS_WORKER_QUEUE``.
+
+    :type: Optional[str]
+    :default: None
+    """
+
+    @before_field_validator("app_tools_worker_queue")
+    def validate_app_tools_worker_queue(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate ``app_tools_worker_queue``.
+
+        :param v: The queue's name, or empty.
+        :returns: The queue's name, or None.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET:
+            return None
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"app_tools_worker_queue of type {type(v)} is not a str: {v}")
+        queue = v.strip()
+        if not queue:
+            return None
+        return queue
+
+    @property
+    def tool_worker_queue(self) -> str:
+        """
+        The queue of this worker without a database: ``app_tools_worker_queue``, or else the tools queue.
+
+        :returns: The queue's name.
+        """
+        if self.app_tools_worker_queue:
+            return self.app_tools_worker_queue
+        return self.app_tools_tasks_celery_task_queue
+
     app_llmtool_tool_runner: Literal["in_process", "remote"] = Field(
         "in_process",
         description=(

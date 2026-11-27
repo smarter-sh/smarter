@@ -53,6 +53,15 @@ TOOL_EXECUTORS: dict[str, str] = {
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""
 
+EXTENSION_KIND = "extension"
+"""
+The kind of an Extension's tool call, its key in :data:`TOOL_EXECUTORS`.
+
+Extensions are third-party code, so the remote runner sends their calls to a worker of their own, the Extension
+worker, ``smarter-worker-extensions``, and every other kind to the tool worker (issue #1077). See
+:func:`queue_for_kind`.
+"""
+
 TOOL_CALL_MODELS: dict[str, str] = {
     "api": "smarter.apps.connection.execution.ApiToolCall",
     "extension": "smarter.apps.llmtool.extension.execution.ExtensionToolCall",
@@ -253,12 +262,47 @@ def describe_remote_failure(error: Exception, timeout: float) -> str:
     return f"the tool worker could not run the tool: {type(error).__name__}: {error}"
 
 
+def queue_for_kind(kind: str) -> str:
+    """
+    Return the queue of the worker that runs a kind of tool call.
+
+    An Extension's call goes to the Extensions queue, which the Extension worker serves, each call in a process
+    of its own, and with a Redis user that reaches no other queue. Every other kind goes to the tools queue,
+    which the tool worker serves (issue #1077).
+
+    :param kind: The call's kind, e.g. ``api`` or ``extension``.
+    :returns: The queue's name.
+    """
+    if kind == EXTENSION_KIND:
+        return smarter_settings.app_extensions_tasks_celery_task_queue
+    return smarter_settings.app_tools_tasks_celery_task_queue
+
+
+def kind_runs_in_this_worker(kind: str) -> bool:
+    """
+    Whether this worker without a database runs a kind of tool call: its own queue's kind, no other.
+
+    The app sends each kind to its own queue (:func:`queue_for_kind`), so a call of the other kind on a worker's
+    queue was put there by something else: an Extension, for instance, that pushes an API call onto the Extensions
+    queue. Refusing it keeps each kind in its own worker.
+
+    :param kind: The call's kind.
+    :returns: True if this worker's queue is the kind's queue.
+    """
+    own_queue = smarter_settings.tool_worker_queue
+    runs_here = queue_for_kind(kind) == own_queue
+    return runs_here
+
+
 class RemoteToolRunner(ToolRunner):
     """
-    Sends each call to the tool worker, ``smarter-worker-tools``, and waits for its result.
+    Sends each call to its worker, and waits for its result.
 
-    The call travels as JSON, in a Celery task on the queue ``app_tools_tasks_celery_task_queue``, and
-    its result comes back through the result backend, the broker's Redis. A worker that doesn't answer
+    An Extension's call goes to the Extension worker, ``smarter-worker-extensions``, and every other kind to the
+    tool worker, ``smarter-worker-tools``.
+
+    The call travels as JSON, in a Celery task on its kind's queue (:func:`queue_for_kind`), and its result
+    comes back through the result backend, the broker's Redis. A worker that doesn't answer
     in time, or a task that fails, is a result with a ``failure``, as any call that couldn't be made is.
 
     .. warning::
@@ -285,7 +329,7 @@ class RemoteToolRunner(ToolRunner):
         label_json = label.model_dump_json() if label is not None else None
         async_result = run_tool_call.apply_async(
             args=(call.kind, call.model_dump_json(), label_json),
-            queue=smarter_settings.app_tools_tasks_celery_task_queue,
+            queue=queue_for_kind(call.kind),
             expires=timeout,
         )
         try:
@@ -327,11 +371,12 @@ def get_tool_runner() -> ToolRunner:
 
 
 __all__ = [
+    "EXTENSION_KIND",
+    "InProcessToolRunner",
     "MAX_REMOTE_TIMEOUT_SECONDS",
+    "RemoteToolRunner",
     "TOOL_CALL_MODELS",
     "TOOL_EXECUTORS",
-    "InProcessToolRunner",
-    "RemoteToolRunner",
     "ToolExecutor",
     "ToolRunner",
     "call_model_for",
@@ -341,7 +386,9 @@ __all__ = [
     "describe_remote_failure",
     "executor_for",
     "get_tool_runner",
+    "kind_runs_in_this_worker",
     "labeled_tool_calls",
+    "queue_for_kind",
     "remote_timeout",
     "running_in_tool_worker",
 ]
