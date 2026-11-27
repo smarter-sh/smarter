@@ -428,22 +428,23 @@ def tool_worker_redis_probes(broker: Redis, cache: Redis, sessions: Redis) -> li
     :param broker: A client of the broker's database, 0.
     :param cache: A client of the cache's database, 1.
     :param sessions: A client of the sessions' database, 2.
-    :returns: Each probe's description, and the probe.
+    :returns: Each probe's description, an action that completes "the user tools can't ...", e.g.
+        ``read the sessions``, and the probe.
     """
     operational_queue = smarter_settings.app_llmclient_tasks_celery_task_queue
     infrastructure_queue = smarter_settings.app_infrastructure_tasks_celery_task_queue
     tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
     cache_key = f"{settings.CACHE_KEY_PREFIX}:1:{CACHE_CHECK_KEY}"
     probes: list[tuple[str, RedisProbe]] = [
-        ("the operational queue", lambda: broker.llen(operational_queue)),
-        ("the infrastructure queue", lambda: broker.llen(infrastructure_queue)),
-        ("the routing of its own queue", lambda: broker.smembers(f"_kombu.binding.{tools_queue}")),
-        ("the other workers' unacknowledged messages", lambda: broker.hlen("unacked")),
-        ("RedBeat's schedule", lambda: broker.exists("redbeat::schedule")),
-        ("the cache", lambda: cache.exists(cache_key)),
-        ("the sessions", lambda: sessions.exists(SESSION_KEY_PROBE)),
-        ("listing the keys", lambda: broker.scan(0, count=1)),
-        ("listing the pub/sub channels", broker.pubsub_channels),
+        ("read the operational queue", lambda: broker.llen(operational_queue)),
+        ("read the infrastructure queue", lambda: broker.llen(infrastructure_queue)),
+        ("read the routing of its own queue", lambda: broker.smembers(f"_kombu.binding.{tools_queue}")),
+        ("read the other workers' unacknowledged messages", lambda: broker.hlen("unacked")),
+        ("read RedBeat's schedule", lambda: broker.exists("redbeat::schedule")),
+        ("read the cache", lambda: cache.exists(cache_key)),
+        ("read the sessions", lambda: sessions.exists(SESSION_KEY_PROBE)),
+        ("list the keys", lambda: broker.scan(0, count=1)),
+        ("list the pub/sub channels", broker.pubsub_channels),
     ]
     return probes
 
@@ -463,7 +464,7 @@ def tool_worker_redis_breaches(probes: Sequence[tuple[str, RedisProbe]]) -> list
         except NoPermissionError:
             continue
         except RedisError as e:
-            logger.warning("The tool worker's access to %s could not be checked: %s", description, error_description(e))
+            logger.warning("Whether the tool worker can %s could not be checked: %s", description, error_description(e))
         breaches.append(description)
     return breaches
 
@@ -521,13 +522,13 @@ def check_tool_worker_redis() -> bool:
     for description, _probe in probes:
         if description in breaches:
             logger.error(
-                "ADR-030 breach: the tool worker's Redis user %s may read %s. Check the Redis ACL in the Helm "
+                "ADR-030 breach: the tool worker's Redis user %s can %s. Check the Redis ACL in the Helm "
                 "chart's redis.master.preExecCmds.",
                 username,
                 description,
             )
         else:
-            logger.info("ADR-030 confirmed: the tool worker's Redis user %s can't read %s.", username, description)
+            logger.info("ADR-030 confirmed: the tool worker's Redis user %s can't %s.", username, description)
     if breaches:
         return False
     logger.info("The tool worker's Redis user %s reaches only its own keys.", username)
