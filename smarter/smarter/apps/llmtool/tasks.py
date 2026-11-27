@@ -281,10 +281,18 @@ def run_tool_call(kind: str, call_json: str, label_json: Optional[str] = None) -
         InProcessToolRunner,
         ToolCallResult,
         call_model_for,
+        kind_runs_in_this_worker,
         running_in_tool_worker,
     )
 
     started = time.monotonic()
+    # each worker without a database runs its own queue's kind of call: the tool worker every kind but an
+    # Extension's, the Extension worker only Extensions' (issue #1077). Another kind on its queue wasn't sent
+    # by the app.
+    if smarter_settings.database_unavailable and not kind_runs_in_this_worker(kind):
+        result = ToolCallResult(failure=f"this worker doesn't run {kind} calls")
+        log_tool_call(kind, label_json, result, started)
+        return result.model_dump_json()
     try:
         model = call_model_for(kind)
         call = model.model_validate_json(call_json)

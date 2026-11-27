@@ -23,6 +23,8 @@ VALUES_PATH = CHART_PATH / "values.yaml"
 HELPERS_PATH = CHART_PATH / "templates" / "_helpers.tpl"
 DEPLOYMENT_PATH = CHART_PATH / "templates" / "deployment-worker-tools.yaml"
 SECRET_PATH = CHART_PATH / "templates" / "secret-env-tools.yaml"
+EXTENSIONS_DEPLOYMENT_PATH = CHART_PATH / "templates" / "deployment-worker-extensions.yaml"
+EXTENSIONS_SECRET_PATH = CHART_PATH / "templates" / "secret-env-extensions.yaml"
 SERVICE_ACCOUNT_PATH = CHART_PATH / "templates" / "serviceaccount.yaml"
 ACTION_PATH = CHART_PATH.parent.parent.parent / ".github" / "actions" / "deploy" / "action.yml"
 
@@ -52,9 +54,9 @@ def tools_env_keys() -> list[str]:
 
     :returns: The names in its allowlist.
     """
-    match = re.search(r"\$keys := list\n((?:\s+\"[A-Z0-9_]+\"\n)+)", template("smarter.toolsEnv"))
+    match = re.search(r"\$keys := list\n((?:\s+\"[A-Z0-9_]+\"\n)+)", template("smarter.toolWorkerEnv"))
     if match is None:
-        raise AssertionError("smarter.toolsEnv has no $keys list")
+        raise AssertionError("smarter.toolWorkerEnv has no $keys list")
     return re.findall(r'"([A-Z0-9_]+)"', match.group(1))
 
 
@@ -73,7 +75,7 @@ class TestToolWorker(unittest.TestCase):
 
     def test_environment_has_no_database(self):
         """The tool worker's environment says that it has no database, and keeps boto3 off the instance metadata."""
-        helper = template("smarter.toolsEnv")
+        helper = template("smarter.toolWorkerEnv")
         self.assertIn('set $env "SMARTER_DATABASE_UNAVAILABLE" "true"', helper)
         self.assertIn('set $env "AWS_EC2_METADATA_DISABLED" "true"', helper)
         self.assertIn('include "smarter.toolsEnv"', SECRET_PATH.read_text(encoding="utf-8"))
@@ -84,13 +86,14 @@ class TestToolWorker(unittest.TestCase):
 
         Without the Secret they are left out, so the worker refuses to start, rather than run as the default user.
         """
-        helper = template("smarter.toolsEnv")
-        self.assertIn('$toolsUser := "tools"', helper)
-        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $toolsUser', helper)
-        self.assertIn('lookup "v1" "Secret" .Release.Namespace "smarter-redis-users"', helper)
-        self.assertIn("{{- if hasKey $usersData $toolsUser -}}", helper)
-        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $toolsPassword', helper)
-        self.assertIn('printf "redis://%s:%s@%s/0" $toolsUser (urlquery $toolsPassword) $redis', helper)
+        helper = template("smarter.toolWorkerEnv")
+        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $user', helper)
+        self.assertIn('lookup "v1" "Secret" $root.Release.Namespace "smarter-redis-users"', helper)
+        self.assertIn("{{- if hasKey $usersData $user -}}", helper)
+        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $password', helper)
+        self.assertIn('printf "redis://%s:%s@%s/0" $user (urlquery $password) $redis', helper)
+        tools = template("smarter.toolsEnv")
+        self.assertIn('include "smarter.toolWorkerEnv" (dict "root" . "user" "tools" "queue" "")', tools)
 
     def test_deployment_takes_no_remote_control(self):
         """Mingle, gossip, heartbeats and remote control use keys that its Redis user can't reach."""
@@ -146,8 +149,63 @@ class TestToolWorker(unittest.TestCase):
 
     def test_alloy_collects_its_logs(self):
         """Alloy's discovery selects the tool worker's pods, whose application-group is not the platform's."""
-        self.assertIn("{{ .Values.global.appName }}-worker-tools,", VALUES_PATH.read_text(encoding="utf-8"))
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn("{{ .Values.global.appName }}-worker-tools,", values)
+        # and the Extension worker's, in the same application-group (issue #1077).
+        self.assertIn("{{ .Values.global.appName }}-worker-extensions,", values)
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestExtensionWorker(unittest.TestCase):
+    """
+    The Extension worker runs Extensions' calls apart from the tool worker, each in a process of its own (issue #1077).
+
+    It is the tool worker in every other way: no database, no token, the same application-group.
+    """
+
+    def test_deployed_with_the_tool_worker(self):
+        """It exists only with workerTools.enabled, and is sized by workerTools.extensions."""
+        text = EXTENSIONS_DEPLOYMENT_PATH.read_text(encoding="utf-8")
+        self.assertIn("{{- $extensions := $tools.extensions | default dict }}", text)
+        self.assertIn("{{- if $tools.enabled }}", text)
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn("\n  extensions:\n    replicaCount: 2\n", values)
+
+    def test_a_process_per_call_on_its_own_queue(self):
+        """It consumes the Extensions queue, with a fresh process per call, and no remote control."""
+        text = EXTENSIONS_DEPLOYMENT_PATH.read_text(encoding="utf-8")
+        self.assertIn(
+            '"-Q", "{{ .Values.env.SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE | default "extensions_celery_task_queue" }}"',
+            text,
+        )
+        self.assertIn('"-n", "extensions@%h", "--max-tasks-per-child=1"', text)
+        for flag in ("--without-mingle", "--without-gossip", "--without-heartbeat"):
+            with self.subTest(flag=flag):
+                self.assertIn(f'"{flag}"', text)
+        self.assertNotIn('"-E"', text)
+        probe = text.split("livenessProbe:", 1)[1].split("startupProbe:", 1)[0]
+        self.assertIn("pgrep -f 'celery.*worker'", probe)
+
+    def test_isolated_like_the_tool_worker(self):
+        """Its own Secret, the tool worker's ServiceAccount without a token, and the same application-group."""
+        text = EXTENSIONS_DEPLOYMENT_PATH.read_text(encoding="utf-8")
+        self.assertIn('name: "{{ .Values.global.appName }}-env-extensions"', text)
+        self.assertNotIn('name: "{{ .Values.global.appName }}-env"\n', text)
+        self.assertIn('serviceAccountName: "{{ $.Values.global.appName }}-tools"', text)
+        self.assertIn("automountServiceAccountToken: false", text)
+        self.assertIn('app.kubernetes.io/application-group: "{{ .Values.global.appName }}-tools"', text)
+        self.assertNotIn('include "smarter.waitForDatabase"', text)
+
+    def test_its_environment_is_the_extensions_users(self):
+        """Its Secret is smarter.extensionsEnv: the Redis user extensions, on the Extensions queue."""
+        secret = EXTENSIONS_SECRET_PATH.read_text(encoding="utf-8")
+        self.assertIn('include "smarter.extensionsEnv"', secret)
+        self.assertIn('-env-extensions"', secret)
+        helper = template("smarter.extensionsEnv")
+        self.assertIn('(dict "root" . "user" "extensions" "queue" $queue)', helper)
+        self.assertIn('| default "extensions_celery_task_queue"', helper)
+        shared = template("smarter.toolWorkerEnv")
+        self.assertIn('set $env "SMARTER_APP_TOOLS_WORKER_QUEUE" .queue', shared)

@@ -415,6 +415,17 @@ RedisProbe = Callable[[], object]
 """A read of Redis that the tool worker's ACL user must be refused."""
 
 
+def tool_worker_name() -> str:
+    """
+    Name this worker without a database, for its log: the tool worker, or the Extension worker.
+
+    :returns: ``tool worker`` or ``Extension worker``.
+    """
+    if smarter_settings.is_extension_worker:
+        return "Extension worker"
+    return "tool worker"
+
+
 def tool_worker_redis_probes(broker: Redis, cache: Redis, sessions: Redis) -> list[tuple[str, RedisProbe]]:
     """
     Name the reads of Redis that the tool worker's ACL user must be refused, each with its probe.
@@ -433,12 +444,19 @@ def tool_worker_redis_probes(broker: Redis, cache: Redis, sessions: Redis) -> li
     """
     operational_queue = smarter_settings.app_llmclient_tasks_celery_task_queue
     infrastructure_queue = smarter_settings.app_infrastructure_tasks_celery_task_queue
-    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    own_queue = smarter_settings.tool_worker_queue
+    # the other worker without a database: the tool worker's queue, or the Extension worker's (issue #1077).
+    other_name = "the Extension worker's queue"
+    other_queue = smarter_settings.app_extensions_tasks_celery_task_queue
+    if smarter_settings.is_extension_worker:
+        other_name = "the tool worker's queue"
+        other_queue = smarter_settings.app_tools_tasks_celery_task_queue
     cache_key = f"{settings.CACHE_KEY_PREFIX}:1:{CACHE_CHECK_KEY}"
     probes: list[tuple[str, RedisProbe]] = [
         ("read the operational queue", lambda: broker.llen(operational_queue)),
         ("read the infrastructure queue", lambda: broker.llen(infrastructure_queue)),
-        ("read the routing of its own queue", lambda: broker.smembers(f"_kombu.binding.{tools_queue}")),
+        (f"read {other_name}", lambda: broker.llen(other_queue)),
+        ("read the routing of its own queue", lambda: broker.smembers(f"_kombu.binding.{own_queue}")),
         ("read the other workers' unacknowledged messages", lambda: broker.hlen("unacked")),
         ("read RedBeat's schedule", lambda: broker.exists("redbeat::schedule")),
         ("read the cache", lambda: cache.exists(cache_key)),
@@ -505,33 +523,36 @@ def check_tool_worker_redis() -> bool:
     broker = redis_client(settings.CELERY_BROKER_URL)
     cache = redis_client(str(settings.CACHES["default"]["LOCATION"]))
     sessions = redis_client(str(settings.CACHES["sessions"]["LOCATION"]))
-    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    worker = tool_worker_name()
+    own_queue = smarter_settings.tool_worker_queue
     try:
-        broker.llen(tools_queue)
+        broker.llen(own_queue)
     except RedisError as e:
         logger.warning(
-            "The tool worker's Redis user %s can't read its own queue, %s: %s. Tool calls will not run.",
+            "The %s's Redis user %s can't read its own queue, %s: %s. Tool calls will not run.",
+            worker,
             username,
-            tools_queue,
+            own_queue,
             error_description(e),
         )
         return False
-    logger.info("The tool worker's Redis user %s reads its own queue, %s.", username, tools_queue)
+    logger.info("The %s's Redis user %s reads its own queue, %s.", worker, username, own_queue)
     probes = tool_worker_redis_probes(broker, cache, sessions)
     breaches = tool_worker_redis_breaches(probes)
     for description, _probe in probes:
         if description in breaches:
             logger.error(
-                "ADR-030 breach: the tool worker's Redis user %s can %s. Check the Redis ACL in the Helm "
+                "ADR-030 breach: the %s's Redis user %s can %s. Check the Redis ACL in the Helm "
                 "chart's redis.master.preExecCmds.",
+                worker,
                 username,
                 description,
             )
         else:
-            logger.info("ADR-030 confirmed: the tool worker's Redis user %s can't %s.", username, description)
+            logger.info("ADR-030 confirmed: the %s's Redis user %s can't %s.", worker, username, description)
     if breaches:
         return False
-    logger.info("The tool worker's Redis user %s reaches only its own keys.", username)
+    logger.info("The %s's Redis user %s reaches only its own keys.", worker, username)
     return True
 
 
@@ -559,10 +580,16 @@ def log_tool_worker_readiness(results: dict[str, bool], tasks: Sequence[str], qu
     for name, passed in results.items():
         if not passed:
             failed.append(name)
+    worker = tool_worker_name()
+    purpose = "tool calls"
+    if smarter_settings.is_extension_worker:
+        purpose = "Extensions' code, each call in a process of its own"
     if failed:
         logger.error(
-            "Startup checks failed: the tool worker is NOT correctly configured to run tool calls (%s). It still "
-            "takes them from %s: see the errors above.",
+            "Startup checks failed: the %s is NOT correctly configured to run %s (%s). It still takes them from "
+            "%s: see the errors above.",
+            worker,
+            purpose,
             ", ".join(sorted(failed)),
             queue,
         )
@@ -571,8 +598,10 @@ def log_tool_worker_readiness(results: dict[str, bool], tasks: Sequence[str], qu
     if not os.environ.get("KUBERNETES_SERVICE_HOST"):
         isolation = "Its isolation (ADR-038) is checked only in Kubernetes"
     logger.info(
-        "Startup checks passed: the tool worker is correctly configured to run tool calls and Extensions' code. "
-        "%s, its Redis user reaches only its own keys (ADR-030), and it runs only %s, from %s.",
+        "Startup checks passed: the %s is correctly configured to run %s. %s, its Redis user reaches only its "
+        "own keys (ADR-030), and it runs only %s, from %s.",
+        worker,
+        purpose,
         isolation,
         ", ".join(tasks),
         queue,
@@ -644,6 +673,7 @@ __all__ = [
     "log_tool_worker_readiness",
     "run_startup_checks",
     "redis_client",
+    "tool_worker_name",
     "tool_worker_forbidden_targets",
     "tool_worker_redis_breaches",
     "tool_worker_redis_probes",

@@ -197,6 +197,19 @@ class TestSettingsValidators(SmarterTestBase):
         self.assertIsNone(make_settings(subsystem_redis_username=placeholder).subsystem_redis_username)
         self.assertEqual(make_settings(subsystem_redis_username=" tools ").subsystem_redis_username, "tools")
 
+    def test_tool_worker_queue(self):
+        """A worker without a database is the tool worker, unless its queue is the Extensions queue (issue #1077)."""
+        settings = make_settings(database_unavailable=True, app_tools_worker_queue="")
+        self.assertEqual(settings.tool_worker_queue, "tools_celery_task_queue")
+        self.assertFalse(settings.is_extension_worker)
+        settings = make_settings(database_unavailable=True, app_tools_worker_queue=" extensions_celery_task_queue ")
+        self.assertEqual(settings.tool_worker_queue, "extensions_celery_task_queue")
+        self.assertTrue(settings.is_extension_worker)
+        # a process with a database is no worker of either kind, whatever the setting says.
+        settings = make_settings(database_unavailable=False, app_tools_worker_queue="extensions_celery_task_queue")
+        self.assertFalse(settings.is_extension_worker)
+        self.assertEqual(make_settings().app_extensions_tasks_celery_task_queue, "extensions_celery_task_queue")
+
     def test_redis_password_is_masked(self):
         """The Redis password is a SecretStr, so a dump of the settings never shows it."""
         settings = make_settings(subsystem_redis_password="GeneratedRedisPassword1")

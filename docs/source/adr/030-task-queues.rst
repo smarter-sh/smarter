@@ -203,8 +203,11 @@ The security rules, proposed:
    The user may also read and write the robots.txt cache that a page fetch checks, append to the console's
    log streams, and publish to ``logs:*`` and the results' channels, but not list keys or channels, nor
    subscribe. What it can still do is read the other tool calls waiting on its own queue, and write a
-   result before the worker that ran the call does, both within the tool worker's own trust domain:
-   isolating Extensions' calls is #1077. Its startup check confirms each refusal. docker-compose's Redis
+   result before the worker that ran the call does, both within the tool worker's own trust domain.
+   Extensions' calls run in a worker of their own (#1077), the Extension worker, each in a process of its
+   own, as the user ``extensions``, which reaches only the Extensions queue, the results and Extensions'
+   archives: an Extension's code can't read the tools queue. Each worker's startup check confirms each
+   refusal, the other worker's queue among them. docker-compose's Redis
    defines the same user, so the tests check the chart's rules for real.
 9. **What a message carries.** Infrastructure tasks take ids, never data. Only ``run_tool_call`` carries a
    credential (ADR-038). Users' content in operational messages is accepted, as it is in the database, and

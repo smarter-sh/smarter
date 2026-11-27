@@ -8,6 +8,7 @@ database and cache checks use the test stack's own database and Redis.
 
 import os
 import uuid
+from contextlib import ExitStack
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -48,6 +49,8 @@ from smarter.apps.infrastructure.startup import (
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.settings import Settings
 from smarter.common.conf.settings.cache import (
+    EXTENSION_WORKER_REDIS_USERNAME,
+    LOCAL_EXTENSION_WORKER_REDIS_PASSWORD,
     LOCAL_TOOL_WORKER_REDIS_PASSWORD,
     TOOL_WORKER_REDIS_USERNAME,
 )
@@ -466,6 +469,30 @@ def with_redis_username(username):
     return patch_
 
 
+def in_the_extension_worker():
+    """
+    Patch the settings so that this process looks like the Extension worker: no database, the Extensions queue.
+
+    The settings are frozen, so their class is patched.
+
+    :returns: The patches, as one context manager.
+    """
+    stack = ExitStack()
+    stack.enter_context(
+        patch.object(Settings, "database_unavailable", new_callable=PropertyMock, return_value=True, create=True)
+    )
+    stack.enter_context(
+        patch.object(
+            Settings,
+            "app_tools_worker_queue",
+            new_callable=PropertyMock,
+            return_value="extensions_celery_task_queue",
+            create=True,
+        )
+    )
+    return stack
+
+
 def refusing_client(allowed_queue: str) -> MagicMock:
     """
     A stand-in Redis client that refuses every probe, as the tools user's ACL does, and reads one queue.
@@ -580,9 +607,25 @@ class TestToolWorkerReadiness(SmarterTestBase):
         self.assertEqual(record.levelname, "INFO")
         message = record.getMessage()
         self.assertIn("Startup checks passed", message)
-        self.assertIn("correctly configured to run tool calls and Extensions' code", message)
+        self.assertIn("the tool worker is correctly configured to run tool calls.", message)
         self.assertIn("runs only smarter.apps.llmtool.tasks.run_tool_call, from tools_celery_task_queue", message)
         self.assertIn("It is isolated (ADR-038)", message)
+
+    def test_the_extension_worker(self):
+        """The Extension worker names itself, and what it runs: Extensions' code, a process per call (issue #1077)."""
+        results = {"check_tool_worker_isolation": True, "check_tool_worker_redis": True}
+        with (
+            in_the_extension_worker(),
+            patch.dict(os.environ, POD_ENVIRONMENT, clear=True),
+            self.assertLogs(MODULE, level="INFO") as captured,
+        ):
+            log_tool_worker_readiness(results, self.TASKS, "extensions_celery_task_queue")
+        message = captured.records[0].getMessage()
+        self.assertIn(
+            "the Extension worker is correctly configured to run Extensions' code, each call in a process of its own.",
+            message,
+        )
+        self.assertIn("from extensions_celery_task_queue", message)
 
     def test_outside_kubernetes_isolation_is_not_claimed(self):
         """In docker-compose the isolation check checks nothing, so the line says so."""
@@ -738,3 +781,76 @@ class TestToolWorkerRedisAcl(SmarterTestBase):
         self.admin_sessions.set(key, "session", ex=60)
         with self.assertRaises(NoPermissionError):
             self.tools_sessions.get(key)
+
+
+class TestExtensionWorkerRedisAcl(SmarterTestBase):
+    """
+    The test stack's Redis defines the Extension worker's user, extensions, with the Helm chart's rules: check them.
+
+    It may use its own queue, never the tools queue, where the tool worker's calls wait with their credentials
+    (issue #1077). Every key the tests write is their own, and deleted.
+    """
+
+    extensions: Redis
+    extensions_cache: Redis
+    extensions_sessions: Redis
+    admin: Redis
+    suffix: str
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        server = redis_server_url(
+            "smarter-redis:6379", EXTENSION_WORKER_REDIS_USERNAME, LOCAL_EXTENSION_WORKER_REDIS_PASSWORD
+        )
+        cls.extensions = Redis.from_url(f"{server}/0")
+        cls.extensions_cache = Redis.from_url(f"{server}/1")
+        cls.extensions_sessions = Redis.from_url(f"{server}/2")
+        cls.admin = Redis.from_url(settings.CELERY_BROKER_URL)
+        cls.suffix = uuid.uuid4().hex
+
+    @classmethod
+    def tearDownClass(cls):
+        for client in (cls.extensions, cls.extensions_cache, cls.extensions_sessions, cls.admin):
+            client.close()
+        super().tearDownClass()
+
+    def test_every_probe_refused(self):
+        """The startup check's probes, as the Extension worker runs them, are all refused to its user."""
+        with in_the_extension_worker():
+            probes = tool_worker_redis_probes(self.extensions, self.extensions_cache, self.extensions_sessions)
+        descriptions = [description for description, _probe in probes]
+        self.assertIn("read the tool worker's queue", descriptions)
+        self.assertEqual(tool_worker_redis_breaches(probes), [])
+
+    def test_its_own_queue(self):
+        """It pushes and pops its queue's keys, where kombu keeps its messages in flight in the Extension worker."""
+        key = f"{smarter_settings.app_extensions_tasks_celery_task_queue}.test-{self.suffix}"
+        self.addCleanup(self.admin.delete, key)
+        self.extensions.rpush(key, "message")
+        self.assertEqual(self.extensions.lpop(key), b"message")
+
+    def test_cannot_read_the_tools_queue(self):
+        """The tool worker's queue, where API, SQL and MCP calls wait with their credentials, is out of reach."""
+        with self.assertRaises(NoPermissionError):
+            self.extensions.llen(smarter_settings.app_tools_tasks_celery_task_queue)
+        with self.assertRaises(NoPermissionError):
+            self.extensions.hlen(f"{smarter_settings.app_tools_tasks_celery_task_queue}.unacked")
+
+    def test_no_robots_txt_cache(self):
+        """Only the tool worker's page fetches use it."""
+        key = (
+            f"{settings.CACHE_KEY_PREFIX}:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules."
+            f"<locals>.get_cached_robots_txt()_test-{self.suffix}"
+        )
+        with self.assertRaises(NoPermissionError):
+            self.extensions_cache.set(key, "rules", ex=60)
+
+    def test_results_and_archives(self):
+        """It writes its calls' results, and reads Extensions' archives."""
+        key = f"celery-task-meta-test-{self.suffix}"
+        self.addCleanup(self.admin.delete, key)
+        self.extensions.set(key, "result", ex=60)
+        self.assertEqual(self.extensions.get(key), b"result")
+        archive = f"{settings.CACHE_KEY_PREFIX}:1:smarter:extension:archive:test-{self.suffix}"
+        self.assertIsNone(self.extensions_cache.get(archive))

@@ -101,7 +101,8 @@ configure the in-memory provider.
 
 Services in `docker-compose.yml`: `smarter-api` (Django dev server on
 `localhost:9357`), `smarter-worker`, `smarter-worker-infrastructure`,
-`smarter-worker-tools` (the tool worker, ADR-038: no database), `smarter-beat`,
+`smarter-worker-tools` (the tool worker, ADR-038: no database),
+`smarter-worker-extensions` (Extensions' tool calls, #1077: no database), `smarter-beat`,
 `smarter-mariadb`, `smarter-redis`.
 
 - **There is no bind mount of the code.** (The only one is `overrides/`,
