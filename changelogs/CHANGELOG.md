@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.12-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.11...v0.48.12-alpha.1) (2026-11-27)
+
+### Bug Fixes
+
+* **infrastructure:** sum up the tool worker's startup checks ([db2b97a](https://github.com/smarter-sh/smarter/commit/db2b97ae34d34200a44122749c3ed29b8c574688))
+
 ## [0.48.11](https://github.com/smarter-sh/smarter/compare/v0.48.10...v0.48.11) (2026-11-27)
 
 ### Bug Fixes

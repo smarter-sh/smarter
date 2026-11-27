@@ -255,7 +255,9 @@ def run_worker_startup_checks(**kwargs) -> None:
 
     Connected to ``worker_init``, so that the checks run once, in the worker's main process, before its
     pool's processes fork. The tool worker (``smarter_settings.database_unavailable``) checks its isolation
-    (ADR-038); every other worker its database, cache and Kubernetes cluster. See
+    (ADR-038) and its Redis user (ADR-030), then logs one line that sums them up, with the tasks it runs:
+    :func:`restrict_tool_worker_tasks`, connected before this, has already left only its own in the
+    registry. Every other worker checks its database, cache and Kubernetes cluster. See
     :mod:`smarter.apps.infrastructure.startup`.
 
     :param kwargs: The signal's arguments, unused.
@@ -265,14 +267,20 @@ def run_worker_startup_checks(**kwargs) -> None:
     from smarter.apps.infrastructure.startup import (
         TOOL_WORKER_CHECKS,
         WORKER_CHECKS,
+        log_tool_worker_readiness,
         run_startup_checks,
     )
     from smarter.common.conf import smarter_settings
 
-    checks = WORKER_CHECKS
-    if smarter_settings.database_unavailable:
-        checks = TOOL_WORKER_CHECKS
-    run_startup_checks(checks)
+    if not smarter_settings.database_unavailable:
+        run_startup_checks(WORKER_CHECKS)
+        return
+    results = run_startup_checks(TOOL_WORKER_CHECKS)
+    tasks = []
+    for name in sorted(APP.tasks.keys()):
+        if not name.startswith(CELERY_BUILTIN_TASK_PREFIX):
+            tasks.append(name)
+    log_tool_worker_readiness(results, tasks, smarter_settings.app_tools_tasks_celery_task_queue)
 
 
 worker_init.connect(run_worker_startup_checks, weak=False)
