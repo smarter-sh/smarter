@@ -48,6 +48,9 @@ Helpers
 .. automodule:: smarter.common.conf.util
    :members:
 
+.. automodule:: smarter.common.conf.credentials
+   :members:
+
 The environment
 ---------------
 

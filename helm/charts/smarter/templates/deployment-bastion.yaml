@@ -150,6 +150,9 @@ spec:
           # as it does in job-mysql-backup.yaml. Not the platform's other secrets.
           # The passwords and AWS keys are read from the Secret in secret-env.yaml.
           env:
+            # the kind of pod, which smarter_settings names, and checks, when it starts.
+            - name: SERVICE_TYPE
+              value: "bastion"
             # the writable emptyDir above. kubectl exec shells inherit it, so bash
             # reads /home/bastion/.bashrc, where the welcome banner is installed.
             - name: HOME
