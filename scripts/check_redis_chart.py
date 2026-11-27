@@ -58,7 +58,8 @@ WRITABLE_PATHS = (
 
 RUN_AS = "1001:1001"
 DEFAULT_PASSWORD = "DefaultCheckPassword1"
-TOOLS_PASSWORD = "ToolsCheckPassword1"
+USER_PASSWORDS = {"tools": "ToolsCheckPassword1", "extensions": "ExtensionsCheckPassword1"}
+"""The throwaway password of each worker's ACL user: the tool worker's, and the Extension worker's (issue #1077)."""
 CONTAINER_PREFIX = "smarter-redis-chart-check"
 READY_LINE = "Ready to accept connections"
 READY_TIMEOUT_SECONDS = 60
@@ -70,7 +71,7 @@ ALLOWED_TO_TOOLS = (
 )
 """What the tool worker's user must be allowed: a description, and the redis-cli arguments."""
 
-REFUSED_TO_TOOLS = (
+REFUSED_TO_BOTH = (
     ("push to the infrastructure queue", ("RPUSH", "infrastructure_celery_task_queue", "x")),
     ("push to the operational queue", ("RPUSH", "default_celery_task_queue", "x")),
     ("write kombu's routing set", ("SADD", "_kombu.binding.tools_celery_task_queue", "x")),
@@ -81,7 +82,33 @@ REFUSED_TO_TOOLS = (
     ("list the keys with KEYS", ("KEYS", "*")),
     ("list the pub/sub channels", ("PUBSUB", "CHANNELS")),
 )
-"""What the tool worker's user must be refused with NOPERM: a description, and the redis-cli arguments."""
+"""What both workers' users must be refused with NOPERM: a description, and the redis-cli arguments."""
+
+REFUSED_TO_TOOLS = REFUSED_TO_BOTH + (("read the Extensions queue", ("LLEN", "extensions_celery_task_queue")),)
+"""What the tool worker's user must be refused, besides :data:`REFUSED_TO_BOTH`."""
+
+ALLOWED_TO_EXTENSIONS = (
+    ("read its own queue", ("LLEN", "extensions_celery_task_queue")),
+    ("push to its own queue's keys", ("RPUSH", "extensions_celery_task_queue.check", "x")),
+    ("write a tool call's result", ("SET", "celery-task-meta-check", "x")),
+)
+"""What the Extension worker's user must be allowed."""
+
+REFUSED_TO_EXTENSIONS = REFUSED_TO_BOTH + (
+    ("read the tools queue", ("LLEN", "tools_celery_task_queue")),
+    ("read the tool worker's in-flight messages", ("HLEN", "tools_celery_task_queue.unacked")),
+    (
+        "write the robots.txt cache",
+        ("-n", "1", "SET", "django6:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.check", "x"),
+    ),
+)
+"""What the Extension worker's user must be refused: the tool worker's queue above all."""
+
+USER_CHECKS = (
+    ("tools", ALLOWED_TO_TOOLS, REFUSED_TO_TOOLS),
+    ("extensions", ALLOWED_TO_EXTENSIONS, REFUSED_TO_EXTENSIONS),
+)
+"""Each worker's user, what it may do, and what it must be refused."""
 
 
 def run(command: list[str], cwd: Path | None = None) -> str:
@@ -283,7 +310,8 @@ def write_pod_files(pod: Path, scripts: dict[str, str], config: dict[str, str], 
         (pod / "config" / name).write_text(text, encoding="utf-8")
     password_file = Path(env.get("REDIS_PASSWORD_FILE", f"{SECRETS_PATH}/redis-password")).name
     (pod / "secrets" / password_file).write_text(DEFAULT_PASSWORD, encoding="utf-8")
-    (pod / "users" / "tools").write_text(TOOLS_PASSWORD, encoding="utf-8")
+    for user, password in USER_PASSWORDS.items():
+        (pod / "users" / user).write_text(password, encoding="utf-8")
     for path in pod.rglob("*"):
         mode = 0o755 if path.is_dir() or path.suffix == ".sh" else 0o644
         path.chmod(mode)
@@ -379,20 +407,23 @@ def check(passed: bool, description: str, failures: list[str]) -> None:
 
 def check_with_tools(name: str, failures: list[str]) -> None:
     """
-    Check Redis started with the tools Secret: both users, and what tools may and may not do.
+    Check Redis started with the users Secret: every user, and what each worker's user may and may not do.
 
     :param name: The container's name.
     :param failures: The failures so far.
     """
     users = acl_users(name)
-    check("default" in users and "tools" in users, f"the users are default and tools ({', '.join(users)})", failures)
-    for description, arguments in ALLOWED_TO_TOOLS:
-        answer = redis_cli(name, "tools", TOOLS_PASSWORD, arguments)
-        allowed = not answer.startswith(("NOPERM", "AUTH failed", "NOAUTH", "WRONGPASS", "ERR"))
-        check(allowed, f"tools may {description}: {answer}", failures)
-    for description, arguments in REFUSED_TO_TOOLS:
-        answer = redis_cli(name, "tools", TOOLS_PASSWORD, arguments)
-        check(answer.startswith("NOPERM"), f"tools can't {description}: {answer}", failures)
+    expected = ["default", *USER_PASSWORDS]
+    check(sorted(users) == sorted(expected), f"the users are {', '.join(expected)} ({', '.join(users)})", failures)
+    for user, allowed_checks, refused_checks in USER_CHECKS:
+        password = USER_PASSWORDS[user]
+        for description, arguments in allowed_checks:
+            answer = redis_cli(name, user, password, arguments)
+            allowed = not answer.startswith(("NOPERM", "AUTH failed", "NOAUTH", "WRONGPASS", "ERR"))
+            check(allowed, f"{user} may {description}: {answer}", failures)
+        for description, arguments in refused_checks:
+            answer = redis_cli(name, user, password, arguments)
+            check(answer.startswith("NOPERM"), f"{user} can't {description}: {answer}", failures)
     answer = redis_cli(name, "default", DEFAULT_PASSWORD, ("LLEN", "infrastructure_celery_task_queue"))
     check(answer.isdigit(), f"default may read the infrastructure queue: {answer}", failures)
 
@@ -424,7 +455,7 @@ def main() -> int:
             print(f"       {description}")
         pod = work / "pod"
         write_pod_files(pod, scripts, config, env)
-        runs = (("with the tools Secret", "users"), ("without the tools Secret", "no-users"))
+        runs = (("with the users Secret", "users"), ("without the users Secret", "no-users"))
         for label, users in runs:
             name = f"{CONTAINER_PREFIX}-{users}"
             remove(name)

@@ -108,9 +108,10 @@ It starts from .Values.env, then:
 {{- end }}
 
 {{/*
-The tool worker's environment, from its own Secret in secret-env-tools.yaml (ADR-038).
+The environment of a worker without a database: the tool worker or the Extension worker, each from its own
+Secret, secret-env-tools.yaml or secret-env-extensions.yaml (ADR-038, issue #1077).
 
-  {{- $env := include "smarter.toolsEnv" . | fromYaml }}
+  {{- $env := include "smarter.toolWorkerEnv" (dict "root" . "user" "tools" "queue" "") | fromYaml }}
 
 Only what it needs to start, take its tasks from the broker and read extension archives from the
 cache, from smarter.env: settings that aren't secret. Never DJANGO_CACHES or smarter.env's broker url,
@@ -120,20 +121,25 @@ needs. Then:
 
 - SMARTER_DATABASE_UNAVAILABLE=true: the worker never opens a database connection, and reads every
   waffle switch as off;
-- Redis's credentials are its own ACL user's, tools, not the default user's (ADR-030, rule 8):
-  SMARTER_SUBSYSTEM_REDIS_USERNAME, SMARTER_SUBSYSTEM_REDIS_PASSWORD from the Secret smarter-redis-users,
-  which smarter-infrastructure generates, and the broker's url built from them. Without that Secret, the
-  password and the url are left out, and the worker refuses to start rather than run as the default user;
+- Redis's credentials are its own ACL user's, "user" (tools or extensions), not the default user's (ADR-030,
+  rule 8): SMARTER_SUBSYSTEM_REDIS_USERNAME, SMARTER_SUBSYSTEM_REDIS_PASSWORD from the Secret
+  smarter-redis-users, which smarter-infrastructure generates, and the broker's url built from them. Without
+  that Secret's key, the password and the url are left out, and the worker refuses to start rather than run
+  as the default user;
+- SMARTER_APP_TOOLS_WORKER_QUEUE, "queue", when it is given: the Extension worker's queue. The tool worker
+  leaves it out, and its queue is the tools queue;
 - AWS_EC2_METADATA_DISABLED=true: boto3, which settings start, doesn't ask the node's instance
   metadata for its IAM role. The network policy blocks it too.
 */}}
-{{- define "smarter.toolsEnv" -}}
-{{- $all := include "smarter.env" . | fromYaml -}}
+{{- define "smarter.toolWorkerEnv" -}}
+{{- $root := .root -}}
+{{- $all := include "smarter.env" $root | fromYaml -}}
 {{- $env := dict -}}
 {{- $keys := list
   "AWS_REGION"
   "DJANGO_SETTINGS_MODULE"
   "SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS"
+  "SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE"
   "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE"
   "SMARTER_DEBUG_MODE"
   "SMARTER_ENVIRONMENT"
@@ -152,17 +158,37 @@ needs. Then:
 {{- end -}}
 {{- $_ := set $env "SMARTER_DATABASE_UNAVAILABLE" "true" -}}
 {{- $_ := set $env "AWS_EC2_METADATA_DISABLED" "true" -}}
-{{- $toolsUser := "tools" -}}
-{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $toolsUser -}}
-{{- $users := lookup "v1" "Secret" .Release.Namespace "smarter-redis-users" -}}
+{{- if .queue -}}
+{{- $_ := set $env "SMARTER_APP_TOOLS_WORKER_QUEUE" .queue -}}
+{{- end -}}
+{{- $user := .user -}}
+{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $user -}}
+{{- $users := lookup "v1" "Secret" $root.Release.Namespace "smarter-redis-users" -}}
 {{- $usersData := get $users "data" | default dict -}}
-{{- if hasKey $usersData $toolsUser -}}
-{{- $toolsPassword := get $usersData $toolsUser | b64dec -}}
-{{- $redis := printf "%s-master.%s.svc.cluster.local:6379" .Values.redis.fullnameOverride .Release.Namespace -}}
-{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $toolsPassword -}}
-{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://%s:%s@%s/0" $toolsUser (urlquery $toolsPassword) $redis) -}}
+{{- if hasKey $usersData $user -}}
+{{- $password := get $usersData $user | b64dec -}}
+{{- $redis := printf "%s-master.%s.svc.cluster.local:6379" $root.Values.redis.fullnameOverride $root.Release.Namespace -}}
+{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $password -}}
+{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://%s:%s@%s/0" $user (urlquery $password) $redis) -}}
 {{- end -}}
 {{- toYaml $env -}}
+{{- end }}
+
+{{/*
+The tool worker's environment, from its own Secret in secret-env-tools.yaml: smarter.toolWorkerEnv, as the
+Redis user tools, on the tools queue.
+*/}}
+{{- define "smarter.toolsEnv" -}}
+{{- include "smarter.toolWorkerEnv" (dict "root" . "user" "tools" "queue" "") -}}
+{{- end }}
+
+{{/*
+The Extension worker's environment, from its own Secret in secret-env-extensions.yaml: smarter.toolWorkerEnv,
+as the Redis user extensions, on the Extensions queue (issue #1077).
+*/}}
+{{- define "smarter.extensionsEnv" -}}
+{{- $queue := .Values.env.SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE | default "extensions_celery_task_queue" -}}
+{{- include "smarter.toolWorkerEnv" (dict "root" . "user" "extensions" "queue" $queue) -}}
 {{- end }}
 
 {{/*

@@ -41,7 +41,13 @@ from smarter.apps.mcpserver.services.logs import (
 )
 
 Component = Literal[
-    "smarter", "smarter-worker", "smarter-worker-infrastructure", "smarter-worker-tools", "smarter-beat", "mariadb"
+    "smarter",
+    "smarter-worker",
+    "smarter-worker-infrastructure",
+    "smarter-worker-tools",
+    "smarter-worker-extensions",
+    "smarter-beat",
+    "mariadb",
 ]
 """
 A component's name, as a tool argument: one of :data:`~smarter.apps.mcpserver.services.logs.COMPONENTS`.
@@ -54,8 +60,8 @@ them, and Pydantic refuses any other.
 COMPONENTS_DESCRIPTION = (
     "The components to read: smarter (the web app and api), smarter-worker (Celery tasks, e.g. prompts' "
     "background work), smarter-worker-infrastructure (deploys, DNS, certificates, Kubernetes), "
-    "smarter-worker-tools (tool calls: API, SQL and MCP calls, extension tools, web page fetches, where the "
-    "tool worker is enabled), smarter-beat "
+    "smarter-worker-tools (tool calls: API, SQL and MCP calls, web page fetches, where the tool worker is "
+    "enabled), smarter-worker-extensions (Extensions' tool calls, where the tool worker is enabled), smarter-beat "
     "(the scheduler) and mariadb (the database). Omit it to read all of them."
 )
 """The description of a tool's ``components`` argument, which says what each component does, for the LLM."""

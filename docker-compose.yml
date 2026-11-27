@@ -27,7 +27,8 @@ services:
     cpus: 0.25
     mem_limit: 1g
     image: redis:latest
-    # the tool worker's ACL user, tools, with the Helm chart's rules (redis.master.preExecCmds in values.yaml).
+    # the ACL users of the tool worker, tools, and of the Extension worker, extensions, with the Helm chart's
+    # rules (redis.master.preExecCmds in values.yaml).
     # A list, not a string: compose splits a string command like a shell, and stops at the > of the password.
     command:
       [
@@ -42,6 +43,25 @@ services:
         "~celery-task-meta-*",
         "%R~django*:1:smarter:extension:archive:*",
         "~django*:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.*",
+        "%W~stream:logs:*",
+        "&logs:*",
+        "&celery-task-meta-*",
+        "+@all",
+        "-@dangerous",
+        "-@admin",
+        "-scan",
+        "-randomkey",
+        "-pubsub",
+        "-subscribe",
+        "-psubscribe",
+        "-ssubscribe",
+        "--user",
+        "extensions",
+        "on",
+        ">smarter-extensions",
+        "~extensions_celery_task_queue*",
+        "~celery-task-meta-*",
+        "%R~django*:1:smarter:extension:archive:*",
         "%W~stream:logs:*",
         "&logs:*",
         "&celery-task-meta-*",
@@ -218,6 +238,40 @@ services:
       # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
       - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools
       - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-tools
+    healthcheck:
+      # it takes no remote control, so celery inspect ping can't reach it.
+      test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # the Extension worker (issue #1077): it runs Extensions' tool calls, which the app sends to its own queue,
+  # each in a process of its own (--max-tasks-per-child=1), as the Redis user extensions, which can't read
+  # the tool worker's queue. Otherwise it is the tool worker: no database, the same image.
+  smarter-worker-extensions:
+    container_name: smarter-worker-extensions
+    mem_limit: 2g
+    cpus: 0.5
+    user: smarter_user
+    image: smarter
+    pull_policy: never
+    # no -E: task events would copy each call's arguments, which hold its credentials.
+    # without mingle, gossip, heartbeats or remote control, whose keys its Redis user can't reach.
+    command: celery -A smarter.workers.celery.app worker --concurrency=2 --loglevel=info -Q extensions_celery_task_queue -n extensions@%h --max-tasks-per-child=1 --without-mingle --without-gossip --without-heartbeat
+    depends_on:
+      - smarter-redis
+    env_file:
+      - ./.env
+    volumes:
+      - ./overrides:/home/smarter_user/overrides:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=worker
+      - SMARTER_DATABASE_UNAVAILABLE=true
+      # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
+      - SMARTER_SUBSYSTEM_REDIS_USERNAME=extensions
+      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-extensions
+      - SMARTER_APP_TOOLS_WORKER_QUEUE=extensions_celery_task_queue
     healthcheck:
       # it takes no remote control, so celery inspect ping can't reach it.
       test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null"]

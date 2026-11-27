@@ -286,7 +286,7 @@ TOOL_WORKER_REACH = [
     ("Read the sessions, list keys: no", ["database 2 is out of reach; no SCAN, KEYS"], "data"),
     ("Edit RedBeat's schedule: no", ["no pattern names redbeat:*"], "data"),
     ("Swap an Extension's archive: no", ["read-only, and the worker checks its sha256"], "data"),
-    ("Read the other pending tool calls: yes", ["its own queue, which it must read: #1077"], "warn"),
+    ("Read the other pending tool calls: yes", ["its own queue's; Extensions' calls are elsewhere"], "warn"),
     ("Write a tool call's result first: yes", ["the results are its to write"], "warn"),
 ]
 """What code in the tool worker can do in Redis as the user tools: a title, its lines and its box's kind."""

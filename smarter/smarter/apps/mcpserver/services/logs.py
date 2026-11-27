@@ -3,7 +3,8 @@ The platform's pod logs: reading them, formatting their lines for an LLM, and gr
 
 The logs come from :data:`smarter.apps.infrastructure.services.infrastructure` ``.logs``: the last
 72 hours of the app (``smarter``), the Celery workers (``smarter-worker``,
-``smarter-worker-infrastructure`` and, where it is enabled, the tool worker ``smarter-worker-tools``),
+``smarter-worker-infrastructure`` and, where they are enabled, the tool worker ``smarter-worker-tools`` and the
+Extension worker ``smarter-worker-extensions``),
 beat (``smarter-beat``) and MariaDB (``mariadb``), kept in Loki.
 Every query is built from structured filters (:func:`log_query`), never from LogQL that a caller
 wrote, so an LLM cannot inject a query of its own.
@@ -54,12 +55,13 @@ COMPONENTS = (
     "smarter-worker",
     "smarter-worker-infrastructure",
     "smarter-worker-tools",
+    "smarter-worker-extensions",
     "smarter-beat",
     "mariadb",
 )
 """The components whose logs are kept: the ``app.kubernetes.io/name`` of their pods."""
 
-OPTIONAL_COMPONENTS = ("smarter-worker-tools",)
+OPTIONAL_COMPONENTS = ("smarter-worker-tools", "smarter-worker-extensions")
 """The components that a platform may not run, e.g. the tool worker, off by default: not missing when they write nothing."""
 
 MAX_MINUTES = int(LOG_RETENTION.total_seconds() // 60)

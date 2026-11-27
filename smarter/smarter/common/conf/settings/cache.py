@@ -31,6 +31,18 @@ The Helm chart's ``redis.master.preExecCmds`` and both docker-compose files defi
 LOCAL_TOOL_WORKER_REDIS_PASSWORD = "smarter-tools"
 """The password of :data:`TOOL_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
 
+EXTENSION_WORKER_REDIS_USERNAME = "extensions"
+"""
+The Redis ACL user of the Extension worker, ``smarter-worker-extensions`` (issue #1077).
+
+It reaches only the Extensions queue, the results and Extensions' archives, so an Extension's code can't read the
+tool worker's queue, where API, SQL and MCP calls wait with their credentials. Defined like
+:data:`TOOL_WORKER_REDIS_USERNAME`.
+"""
+
+LOCAL_EXTENSION_WORKER_REDIS_PASSWORD = "smarter-extensions"
+"""The password of :data:`EXTENSION_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
+
 
 class CacheSettings(BaseModel):
     """Redis's password, and how long cached views, prompts, llmclients and responses are kept."""
@@ -314,6 +326,8 @@ class CacheSettings(BaseModel):
 
 
 __all__ = [
+    "EXTENSION_WORKER_REDIS_USERNAME",
+    "LOCAL_EXTENSION_WORKER_REDIS_PASSWORD",
     "LOCAL_REDIS_PASSWORD",
     "LOCAL_TOOL_WORKER_REDIS_PASSWORD",
     "TOOL_WORKER_REDIS_USERNAME",
