@@ -27,6 +27,7 @@ from smarter.common.conf.util import field_default
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.environment import without_credentials
 
 #: The exceptions that a validator may raise for an invalid value.
 EXPECTED_ERRORS = (SmarterConfigurationError, SmarterValueError, ValueError)
@@ -108,6 +109,20 @@ def call(validator, value, data: SmarterDictType, field_name: Optional[str] = No
         info.field_name = field_name
         return validator(value, info)
     return validator(value)
+
+
+def secret_value(secret: object) -> str:
+    """
+    Return a validator's result's secret, failing the test if the result isn't a SecretStr, e.g. None.
+
+    :param secret: What the validator returned.
+    :returns: The secret.
+    :raises AssertionError: If it isn't a SecretStr.
+    """
+    if not isinstance(secret, SecretStr):
+        raise AssertionError(f"expected a SecretStr, not {type(secret).__name__}")
+    retval = secret.get_secret_value()
+    return retval
 
 
 class TestSettingsValidators(SmarterTestBase):
@@ -212,8 +227,8 @@ class TestSettingsValidators(SmarterTestBase):
     def test_sql_password(self):
         """Test that the database password is a SecretStr, and that a placeholder is no password."""
         validator = Settings.validate_subsystem_sql_password
-        self.assertEqual(call(validator, "s3cret", {}).get_secret_value(), "s3cret")
-        self.assertEqual(call(validator, SecretStr("s3cret"), {}).get_secret_value(), "s3cret")
+        self.assertEqual(secret_value(call(validator, "s3cret", {})), "s3cret")
+        self.assertEqual(secret_value(call(validator, SecretStr("s3cret"), {})), "s3cret")
         self.assertIsNone(call(validator, DEFAULT_MISSING_VALUE, {}))
         self.assertIsNone(call(validator, "SET-ME-IN-helm/charts/smarter/values.yaml", {}))
         with self.assertRaises(SmarterConfigurationError):
@@ -266,7 +281,8 @@ class TestSettingsMethods(SmarterTestBase):
         def smtp_is_configured(**update) -> bool:
             settings = smarter_settings.model_copy(update={**configured, **update})
             # a copy keeps the cached_property of the original, which is computed again here.
-            settings.__dict__.pop("smtp_is_configured", None)
+            # vars() is the instance's own __dict__, typed as the dict it is.
+            vars(settings).pop("smtp_is_configured", None)
             return settings.smtp_is_configured
 
         self.assertTrue(smtp_is_configured())
@@ -309,9 +325,7 @@ class TestSettingsMethods(SmarterTestBase):
                     self.assertIsNone(call(Settings.validate_platform_admin_password, value, {}))
             self.assertEqual(call(Settings.validate_platform_admin_username, "platform-admin", {}), "platform-admin")
             self.assertIsNone(call(Settings.validate_platform_admin_password, SecretStr(DEFAULT_MISSING_VALUE), {}))
-            self.assertEqual(
-                call(Settings.validate_platform_admin_password, SecretStr("pw"), {}).get_secret_value(), "pw"
-            )
+            self.assertEqual(secret_value(call(Settings.validate_platform_admin_password, SecretStr("pw"), {})), "pw")
             with self.assertRaises(SmarterConfigurationError):
                 call(Settings.validate_platform_admin_password, "not a SecretStr", {})
             defaults["platform_admin_username"] = ""
@@ -513,6 +527,7 @@ class TestAwsCredentialsWork(SmarterTestBase):
         with (
             patch(f"{self.MODULE}.aws_credentials_work") as works,
             patch("builtins.print") as mock_print,
+            without_credentials(),
         ):
             settings = Settings(database_unavailable=True)
             self.assertFalse(settings.aws_is_configured)

@@ -13,11 +13,13 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.common.conf import Settings
 from smarter.common.conf.settings import security
+from smarter.common.conf.settings.platform import POD_KINDS, RESTRICTED_POD_KINDS
 from smarter.common.conf.util import validate_throttle_rate
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.environment import without_credentials
 
 CONFIG_ERRORS = (SmarterConfigurationError, PydanticValidationError)
 
@@ -164,9 +166,10 @@ class TestSettingsValidators(SmarterTestBase):
                 environment=environment, django_secret_key="a-configured-secret-key"
             ).require_django_secret_key()
             # the tool worker, which has no database, is never given the key.
-            make_settings(
-                environment=environment, django_secret_key=placeholder, database_unavailable=True
-            ).require_django_secret_key()
+            with without_credentials():
+                make_settings(
+                    environment=environment, django_secret_key=placeholder, database_unavailable=True
+                ).require_django_secret_key()
         with self.assertLogs("smarter.common.conf.settings", level="WARNING"):
             make_settings(
                 environment=SmarterEnvironments.LOCAL, django_secret_key=placeholder
@@ -184,7 +187,10 @@ class TestSettingsValidators(SmarterTestBase):
             password = settings.require_redis_password()
             self.assertEqual(password.get_secret_value(), "GeneratedRedisPassword1")
             # the tool worker needs it too: it takes its tasks from the broker.
-            settings = make_settings(environment=environment, subsystem_redis_password="", database_unavailable=True)
+            with without_credentials():
+                settings = make_settings(
+                    environment=environment, subsystem_redis_password="", database_unavailable=True
+                )
             with self.assertRaises(SmarterConfigurationError):
                 settings.require_redis_password()
         settings = make_settings(environment=SmarterEnvironments.LOCAL, subsystem_redis_password="")
@@ -199,10 +205,15 @@ class TestSettingsValidators(SmarterTestBase):
 
     def test_tool_worker_queue(self):
         """A worker without a database is the tool worker, unless its queue is the Extensions queue (issue #1077)."""
-        settings = make_settings(database_unavailable=True, app_tools_worker_queue="")
+        with without_credentials():
+            tool_worker = make_settings(database_unavailable=True, app_tools_worker_queue="")
+            extension_worker = make_settings(
+                database_unavailable=True, app_tools_worker_queue=" extensions_celery_task_queue "
+            )
+        settings = tool_worker
         self.assertEqual(settings.tool_worker_queue, "tools_celery_task_queue")
         self.assertFalse(settings.is_extension_worker)
-        settings = make_settings(database_unavailable=True, app_tools_worker_queue=" extensions_celery_task_queue ")
+        settings = extension_worker
         self.assertEqual(settings.tool_worker_queue, "extensions_celery_task_queue")
         self.assertTrue(settings.is_extension_worker)
         # a process with a database is no worker of either kind, whatever the setting says.
@@ -369,3 +380,58 @@ class TestSettingsReadyMessage(SmarterTestBase):
         ):
             make_settings()
         self.assertEqual(logger.warning.call_args.kwargs["prefix_format"], SmarterFormattedText.LIGHT_GRAY)
+
+
+class TestServiceType(SmarterTestBase):
+    """The kind of pod (SERVICE_TYPE): validated, checked against what the settings see, and named when READY."""
+
+    def test_valid_kinds(self):
+        """A known kind is kept, trimmed and in lower case; empty is unknown; anything else is refused."""
+        for kind in POD_KINDS:
+            if kind in RESTRICTED_POD_KINDS:
+                continue
+            with self.subTest(kind=kind):
+                self.assertEqual(make_settings(service_type=f" {kind.upper()} ").service_type, kind)
+        self.assertIsNone(make_settings(service_type="").service_type)
+        with self.assertRaises(CONFIG_ERRORS):
+            make_settings(service_type="webserver")
+
+    def test_restricted_kinds_match_the_settings(self):
+        """The restricted workers are the pods without a database, and only the Extension worker takes its queue."""
+        with without_credentials():
+            tool_worker = make_settings(service_type="worker-tools", database_unavailable=True)
+            extension_worker = make_settings(
+                service_type="worker-extensions",
+                database_unavailable=True,
+                app_tools_worker_queue="extensions_celery_task_queue",
+            )
+            with self.assertRaises(CONFIG_ERRORS):
+                make_settings(service_type="api", database_unavailable=True)
+            with self.assertRaises(CONFIG_ERRORS):
+                make_settings(service_type="worker-extensions", database_unavailable=True)
+        self.assertEqual(tool_worker.service_type, "worker-tools")
+        self.assertTrue(extension_worker.is_extension_worker)
+        with self.assertRaises(CONFIG_ERRORS):
+            make_settings(service_type="worker-tools", database_unavailable=False)
+
+    def test_the_ready_line_names_the_kind_and_its_checks(self):
+        """READY names the kind of pod, or says that it is unknown, and the checks made for that kind."""
+        with without_credentials():
+            tool_worker = make_settings(service_type="worker-tools", database_unavailable=True)
+        self.assertEqual(tool_worker.pod_description(), "for the tool worker")
+        self.assertEqual(tool_worker.readiness_checks(), ["it holds no credential but its own Redis password"])
+        api = make_settings(service_type="api", environment=SmarterEnvironments.PROD)
+        self.assertEqual(api.pod_description(), "for the api server")
+        self.assertEqual(api.readiness_checks(), ["the root domain", "AWS credentials"])
+        local = make_settings(service_type="api", environment=SmarterEnvironments.LOCAL)
+        self.assertEqual(local.readiness_checks(), ["AWS credentials"])
+        self.assertIn("SERVICE_TYPE is not set", make_settings(service_type="").pod_description())
+        with (
+            patch.object(Settings, "ready", return_value=True),
+            patch("smarter.common.conf.settings.is_first_worker", return_value=True),
+            patch("smarter.common.conf.settings.logger") as logger,
+        ):
+            make_settings(service_type="api", environment=SmarterEnvironments.PROD)
+        arguments = logger.warning.call_args.args
+        self.assertEqual(arguments[3:], ("for the api server", "the root domain, AWS credentials"))
+        self.assertIn("(checked)", arguments[0])

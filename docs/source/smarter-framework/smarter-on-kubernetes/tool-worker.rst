@@ -55,7 +55,10 @@ What the Chart Deploys
   the database;
 - its Secret, ``smarter-env-tools``, with only its own Redis user's credentials, settings that aren't
   secret, ``SMARTER_DATABASE_UNAVAILABLE=true`` and ``AWS_EC2_METADATA_DISABLED=true``. The template
-  ``smarter.toolsEnv`` in ``_helpers.tpl`` lists them;
+  ``smarter.toolsEnv`` in ``_helpers.tpl`` lists them. The worker refuses to start if its environment gives
+  it any other credential, e.g. a provider's API key or the Fernet key: every ``SecretStr`` setting but
+  its own Redis password (``Settings.check_restricted_worker_credentials()``, and
+  :mod:`smarter.common.conf.credentials`). The error names the settings, never their values;
 - its Redis user, ``tools`` (``redis.master.preExecCmds``), described below;
 - its ServiceAccount, ``smarter-tools``, which has no IAM role and no Kubernetes permissions, and whose
   token isn't mounted.
@@ -157,6 +160,8 @@ Local Development
 -----------------
 
 ``make run`` starts ``smarter-worker-tools`` and ``smarter-worker-extensions`` too, with ``SMARTER_DATABASE_UNAVAILABLE=true``, as Redis's
-``tools`` user, which docker-compose's Redis defines with the chart's rules. It shares ``.env`` with the
-other services, for convenience, so it is not isolated from their credentials locally. It takes calls only
+``tools`` user, which docker-compose's Redis defines with the chart's rules. Like a deployment, neither
+loads ``.env``: each gets only the non-secret settings that the chart gives it, from ``.env`` when it sets
+them and otherwise each setting's own default (``x-restricted-worker-environment`` in both compose files),
+and its own Redis user, so they are isolated from your credentials locally too. It takes calls only
 when ``.env`` sets ``SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote``; the tests use the in-process runner.

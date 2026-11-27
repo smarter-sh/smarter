@@ -5,6 +5,26 @@
 # server, Celery and Beat workers, and the application itself. The application
 # will be available at http://localhost:9357.
 #------------------------------------------------------------------------------
+
+# The environment of the tool worker and the Extension worker, which run code that the platform doesn't control
+# (ADR-038, issue #1077): the non-secret settings that the Helm chart's smarter.toolWorkerEnv gives them, from
+# .env when it sets them, otherwise each setting's own default. Never the whole .env, whose credentials such code
+# could read: smarter_settings refuses to start either worker with any credential but its own Redis password.
+x-restricted-worker-environment: &restricted-worker-environment
+  PYTHONUNBUFFERED: "1"
+  SMARTER_DATABASE_UNAVAILABLE: "true"
+  SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS: ${SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS:-50}
+  SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE: ${SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE:-extensions_celery_task_queue}
+  SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE: ${SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE:-tools_celery_task_queue}
+  SMARTER_DEBUG_MODE: ${SMARTER_DEBUG_MODE:-false}
+  SMARTER_ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
+  SMARTER_LOG_LEVEL: ${SMARTER_LOG_LEVEL:-INFO}
+  SMARTER_PLATFORM_CLOUD_PROVIDER: ${SMARTER_PLATFORM_CLOUD_PROVIDER:-aws}
+  SMARTER_PLATFORM_INTERNAL_IP_PREFIXES: ${SMARTER_PLATFORM_INTERNAL_IP_PREFIXES:-192.168.}
+  SMARTER_PLATFORM_ROOT_DOMAIN: ${SMARTER_PLATFORM_ROOT_DOMAIN:-example.com}
+  SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER: ${SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER:-smarter}
+  SMARTER_PLATFORM_SUBDOMAIN: ${SMARTER_PLATFORM_SUBDOMAIN:-platform}
+
 services:
   smarter-mariadb:
     container_name: smarter-mariadb
@@ -116,7 +136,7 @@ services:
       - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=app
+      - SERVICE_TYPE=api
       # smarter-mariadb's MYSQL_ROOT_PASSWORD, as whom initialize_platform creates the Stackademy
       # course database, with the pre script of its scripts/scripts.yaml.
       - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD=smarter
@@ -198,7 +218,7 @@ services:
       - ./overrides:/home/smarter_user/overrides:ro
     environment:
       - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
+      - SERVICE_TYPE=worker-infrastructure
     # volumes:
     #   - type: bind
     #     source: ./smarter
@@ -212,8 +232,8 @@ services:
 
   # the tool worker (ADR-038): it executes tool calls that the app has resolved, when
   # SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote, and the tests' round trips through Celery. It never reads
-  # the database: each call brings what it needs. Here it shares .env with the other services, for
-  # convenience; a deployment gives it only the broker's url (see the Helm chart's workerTools).
+  # the database: each call brings what it needs. Like a deployment (the Helm chart's workerTools), it gets
+  # only the settings that it needs, not .env (x-restricted-worker-environment, above).
   # It runs the image that the other services build, and has no build of its own, so that
   # make docker-build exports no fifth copy, and CI's cache override needs no entry for it.
   smarter-worker-tools:
@@ -228,20 +248,18 @@ services:
     command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q tools_celery_task_queue -n tools@%h --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
-    env_file:
-      - ./.env
+    # no env_file: only the settings that it needs, never .env's credentials.
     volumes:
       - ./overrides:/home/smarter_user/overrides:ro
     environment:
-      - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
-      - SMARTER_DATABASE_UNAVAILABLE=true
+      <<: *restricted-worker-environment
+      SERVICE_TYPE: worker-tools
       # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
-      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools
-      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-tools
+      SMARTER_SUBSYSTEM_REDIS_USERNAME: tools
+      SMARTER_SUBSYSTEM_REDIS_PASSWORD: smarter-tools
       # @cache_results' own cache (cache-results reads it), as the Helm chart's smarter.toolWorkerEnv sets it:
       # the cache's database, as the same user, under the keys that its ACL rule ~tools_cache:* allows.
-      - 'CACHE_RESULTS_CACHE={"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://tools:smarter-tools@smarter-redis:6379/1", "KEY_PREFIX": "tools_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
+      CACHE_RESULTS_CACHE: '{"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://tools:smarter-tools@smarter-redis:6379/1", "KEY_PREFIX": "tools_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
     healthcheck:
       # it takes no remote control, so celery inspect ping can't reach it.
       test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null"]
@@ -264,20 +282,18 @@ services:
     command: celery -A smarter.workers.celery.app worker --concurrency=2 --loglevel=info -Q extensions_celery_task_queue -n extensions@%h --max-tasks-per-child=1 --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
-    env_file:
-      - ./.env
+    # no env_file: only the settings that it needs, never .env's credentials.
     volumes:
       - ./overrides:/home/smarter_user/overrides:ro
     environment:
-      - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
-      - SMARTER_DATABASE_UNAVAILABLE=true
+      <<: *restricted-worker-environment
+      SERVICE_TYPE: worker-extensions
       # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
-      - SMARTER_SUBSYSTEM_REDIS_USERNAME=extensions
-      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-extensions
+      SMARTER_SUBSYSTEM_REDIS_USERNAME: extensions
+      SMARTER_SUBSYSTEM_REDIS_PASSWORD: smarter-extensions
       # @cache_results' own cache, as for the tool worker, under the keys that ~extensions_cache:* allows.
-      - 'CACHE_RESULTS_CACHE={"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://extensions:smarter-extensions@smarter-redis:6379/1", "KEY_PREFIX": "extensions_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
-      - SMARTER_APP_TOOLS_WORKER_QUEUE=extensions_celery_task_queue
+      CACHE_RESULTS_CACHE: '{"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://extensions:smarter-extensions@smarter-redis:6379/1", "KEY_PREFIX": "extensions_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
+      SMARTER_APP_TOOLS_WORKER_QUEUE: extensions_celery_task_queue
     healthcheck:
       # it takes no remote control, so celery inspect ping can't reach it.
       test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null"]
