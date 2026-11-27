@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.11](https://github.com/smarter-sh/smarter/compare/v0.48.10...v0.48.11) (2026-11-27)
+
+### Bug Fixes
+
+* **helm:** check the tool worker's liveness without pinging it ([89487b4](https://github.com/smarter-sh/smarter/commit/89487b49c6205b0ef50dc267eb3938cad63824e7))
+
 ## [0.48.11-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.10...v0.48.11-alpha.1) (2026-11-27)
 
 ### Bug Fixes
