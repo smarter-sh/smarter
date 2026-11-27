@@ -33,7 +33,34 @@ services:
     cpus: 0.25
     mem_limit: 1g
     image: redis:latest
-    command: redis-server --requirepass smarter
+    # the tool worker's ACL user, tools, with the Helm chart's rules (redis.auth.acl.users in values.yaml).
+    # A list, not a string: compose splits a string command like a shell, and stops at the > of the password.
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "smarter",
+        "--user",
+        "tools",
+        "on",
+        ">smarter-tools",
+        "~tools_celery_task_queue*",
+        "~celery-task-meta-*",
+        "%R~django*:1:smarter:extension:archive:*",
+        "~django*:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.*",
+        "%W~stream:logs:*",
+        "&logs:*",
+        "&celery-task-meta-*",
+        "+@all",
+        "-@dangerous",
+        "-@admin",
+        "-scan",
+        "-randomkey",
+        "-pubsub",
+        "-subscribe",
+        "-psubscribe",
+        "-ssubscribe",
+      ]
 
   smarter-api:
     mem_limit: 4g
@@ -75,7 +102,7 @@ services:
     cpus: 0.5
     user: smarter_user
     image: smarter
-    command: celery -A smarter.workers.celery.app worker --concurrency=1 --loglevel=info -Q tools_celery_task_queue -n tools@%h
+    command: celery -A smarter.workers.celery.app worker --concurrency=1 --loglevel=info -Q tools_celery_task_queue -n tools@%h --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
     env_file:
@@ -84,6 +111,9 @@ services:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
       - SMARTER_DATABASE_UNAVAILABLE=true
+      # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
+      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools
+      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-tools
 
   smarter-worker-infrastructure:
     mem_limit: 2g

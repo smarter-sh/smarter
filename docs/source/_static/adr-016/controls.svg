@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 600" width="1300" height="600" role="img" aria-labelledby="t d">
+<title id="t">Smarter's security controls, layer by layer</title>
+<desc id="d">Six panels, one per layer, each listing its controls with a state: in place, partial, or a known gap. 1 · The request, owned by Django first: ADR-016: TLS at Traefik, HSTS, X-Forwarded-Proto (done); unknown hosts refused: SmarterSecurityMiddleware (done); CORS and CSRF per deployed LLMClient (done); Secure, HttpOnly, SameSite session cookie (done); API keys stored as a digest; rate limits (done); sensitive files and 404 scanners blocked (done); Content Security Policy: report-only (partial). 2 · AI and tools, owned by ADR-038, the security pages: guardrails on prompts and replies (done); safe_http: public addresses only (SSRF) (done); tool calls in a worker with no credentials (done); the extension registry's index is signed (done); an Extension stays loaded in its process (gap); MCP catalogs, custom endpoints: in the app (gap). 3 · Data and secrets, owned by ADR-007, the security pages: Smarter Secrets encrypted with Fernet (done); settings' credentials are SecretStr: no test (partial); no secret, credential or PII in a log (done); backups and exports: private, encrypted S3 (done); Redis's password generated per environment (done); volumes, Kubernetes Secrets: not encrypted (gap). 4 · The pods, owned by the Helm chart, ADR-038: non-root, read-only root, no capabilities (done); seccomp RuntimeDefault, no escalation (done); startup checks refuse an unsafe start (done); the tool worker: no token, no IAM role (done); one Secret, ServiceAccount, IAM role: phase 3 (gap); the app writes to the cluster itself (gap). 5 · The network and the queues, owned by Calico, ADR-030, ADR-038: default deny; other namespaces kept out (done); MariaDB and Redis: the platform's pods only (done); egress open on 443: the proxy is phase 4 (gap); the tool worker's Redis user: its own keys (done); other pods: Redis's default user (partial). 6 · The supply chain, owned by ADR-015, supply-chain.rst: exact pins with hashes; 14-day cooldown (done); pip-audit on every pull request (done); signed image and chart; SBOM, provenance (done); GitHub Actions pinned by SHA (done); no long-lived AWS keys but SES's (done); a bad package still runs in every pod (partial).</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1300" height="600" rx="14" fill="#F6F8FA"/>
+<text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Smarter's security controls, layer by layer</text>
+<text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">what is in place, what is partial, and the known gaps, each owned by an ADR or a security page</text>
+<rect x="28" y="84" width="400" height="218" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="44" y="110" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · The request</text>
+<text x="44" y="128" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Django first: ADR-016</text>
+<circle cx="52" cy="148" r="6" fill="#1A7F37"/>
+<text x="66" y="152" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">TLS at Traefik, HSTS, X-Forwarded-Proto</text>
+<circle cx="52" cy="170" r="6" fill="#1A7F37"/>
+<text x="66" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">unknown hosts refused: SmarterSecurityMiddleware</text>
+<circle cx="52" cy="192" r="6" fill="#1A7F37"/>
+<text x="66" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">CORS and CSRF per deployed LLMClient</text>
+<circle cx="52" cy="214" r="6" fill="#1A7F37"/>
+<text x="66" y="218" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Secure, HttpOnly, SameSite session cookie</text>
+<circle cx="52" cy="236" r="6" fill="#1A7F37"/>
+<text x="66" y="240" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">API keys stored as a digest; rate limits</text>
+<circle cx="52" cy="258" r="6" fill="#1A7F37"/>
+<text x="66" y="262" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">sensitive files and 404 scanners blocked</text>
+<circle cx="52" cy="280" r="6" fill="#8A4600"/>
+<text x="66" y="284" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Content Security Policy: report-only</text>
+<rect x="450" y="84" width="400" height="196" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="466" y="110" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · AI and tools</text>
+<text x="466" y="128" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">ADR-038, the security pages</text>
+<circle cx="474" cy="148" r="6" fill="#1A7F37"/>
+<text x="488" y="152" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">guardrails on prompts and replies</text>
+<circle cx="474" cy="170" r="6" fill="#1A7F37"/>
+<text x="488" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">safe_http: public addresses only (SSRF)</text>
+<circle cx="474" cy="192" r="6" fill="#1A7F37"/>
+<text x="488" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">tool calls in a worker with no credentials</text>
+<circle cx="474" cy="214" r="6" fill="#1A7F37"/>
+<text x="488" y="218" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the extension registry's index is signed</text>
+<circle cx="474" cy="236" r="6" fill="#CF222E"/>
+<text x="488" y="240" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">an Extension stays loaded in its process</text>
+<circle cx="474" cy="258" r="6" fill="#CF222E"/>
+<text x="488" y="262" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MCP catalogs, custom endpoints: in the app</text>
+<rect x="872" y="84" width="400" height="196" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="888" y="110" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · Data and secrets</text>
+<text x="888" y="128" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">ADR-007, the security pages</text>
+<circle cx="896" cy="148" r="6" fill="#1A7F37"/>
+<text x="910" y="152" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Smarter Secrets encrypted with Fernet</text>
+<circle cx="896" cy="170" r="6" fill="#8A4600"/>
+<text x="910" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">settings' credentials are SecretStr: no test</text>
+<circle cx="896" cy="192" r="6" fill="#1A7F37"/>
+<text x="910" y="196" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no secret, credential or PII in a log</text>
+<circle cx="896" cy="214" r="6" fill="#1A7F37"/>
+<text x="910" y="218" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">backups and exports: private, encrypted S3</text>
+<circle cx="896" cy="236" r="6" fill="#1A7F37"/>
+<text x="910" y="240" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Redis's password generated per environment</text>
+<circle cx="896" cy="258" r="6" fill="#CF222E"/>
+<text x="910" y="262" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">volumes, Kubernetes Secrets: not encrypted</text>
+<rect x="28" y="324" width="400" height="196" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="44" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">4 · The pods</text>
+<text x="44" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">the Helm chart, ADR-038</text>
+<circle cx="52" cy="388" r="6" fill="#1A7F37"/>
+<text x="66" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">non-root, read-only root, no capabilities</text>
+<circle cx="52" cy="410" r="6" fill="#1A7F37"/>
+<text x="66" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">seccomp RuntimeDefault, no escalation</text>
+<circle cx="52" cy="432" r="6" fill="#1A7F37"/>
+<text x="66" y="436" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">startup checks refuse an unsafe start</text>
+<circle cx="52" cy="454" r="6" fill="#1A7F37"/>
+<text x="66" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the tool worker: no token, no IAM role</text>
+<circle cx="52" cy="476" r="6" fill="#CF222E"/>
+<text x="66" y="480" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one Secret, ServiceAccount, IAM role: phase 3</text>
+<circle cx="52" cy="498" r="6" fill="#CF222E"/>
+<text x="66" y="502" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the app writes to the cluster itself</text>
+<rect x="450" y="324" width="400" height="174" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="466" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">5 · The network and the queues</text>
+<text x="466" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Calico, ADR-030, ADR-038</text>
+<circle cx="474" cy="388" r="6" fill="#1A7F37"/>
+<text x="488" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">default deny; other namespaces kept out</text>
+<circle cx="474" cy="410" r="6" fill="#1A7F37"/>
+<text x="488" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB and Redis: the platform's pods only</text>
+<circle cx="474" cy="432" r="6" fill="#CF222E"/>
+<text x="488" y="436" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">egress open on 443: the proxy is phase 4</text>
+<circle cx="474" cy="454" r="6" fill="#1A7F37"/>
+<text x="488" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the tool worker's Redis user: its own keys</text>
+<circle cx="474" cy="476" r="6" fill="#8A4600"/>
+<text x="488" y="480" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">other pods: Redis's default user</text>
+<rect x="872" y="324" width="400" height="196" rx="10" fill="#FFFFFF" stroke="#D0D7DE"/>
+<text x="888" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">6 · The supply chain</text>
+<text x="888" y="368" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">ADR-015, supply-chain.rst</text>
+<circle cx="896" cy="388" r="6" fill="#1A7F37"/>
+<text x="910" y="392" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">exact pins with hashes; 14-day cooldown</text>
+<circle cx="896" cy="410" r="6" fill="#1A7F37"/>
+<text x="910" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">pip-audit on every pull request</text>
+<circle cx="896" cy="432" r="6" fill="#1A7F37"/>
+<text x="910" y="436" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">signed image and chart; SBOM, provenance</text>
+<circle cx="896" cy="454" r="6" fill="#1A7F37"/>
+<text x="910" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">GitHub Actions pinned by SHA</text>
+<circle cx="896" cy="476" r="6" fill="#1A7F37"/>
+<text x="910" y="480" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no long-lived AWS keys but SES's</text>
+<circle cx="896" cy="498" r="6" fill="#8A4600"/>
+<text x="910" y="502" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a bad package still runs in every pod</text>
+<rect x="28" y="538" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<circle cx="56" cy="558" r="6" fill="#1A7F37"/>
+<text x="70" y="562" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">in place</text>
+<circle cx="184.8" cy="558" r="6" fill="#8A4600"/>
+<text x="198.8" y="562" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">partial</text>
+<circle cx="307.5" cy="558" r="6" fill="#CF222E"/>
+<text x="321.5" y="562" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a known gap, with a plan in its ADR</text>
+</svg>

@@ -32,7 +32,7 @@ from smarter.common.conf import const, smarter_settings
 from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.resources import log_resource_limits
-from smarter.common.utils.redis_url import redis_url_with_database
+from smarter.common.utils.redis_url import redis_server_url
 from smarter.lib import logging
 from smarter.lib.django.csp import CSP_REPORT_PATH
 from smarter.lib.typing import SmarterDictType
@@ -658,16 +658,32 @@ would load the other's instances. With it, a Django upgrade starts with a cold c
 model instances.
 """
 
+local_redis_server = redis_server_url(
+    "smarter-redis:6379",
+    smarter_settings.subsystem_redis_username,
+    smarter_settings.require_redis_password().get_secret_value(),
+)
+"""
+The url of docker-compose's smarter-redis, with this process's credentials, without a database.
+
+Lower case, so that it is never a Django setting: it holds the password.
+
+Every process authenticates as Redis's ``default`` user, with ``subsystem_redis_password``, except the
+tool worker, which is given its own user, ``tools`` (``subsystem_redis_username``), whose ACL lets it
+touch only its own keys (ADR-030, rule 8). :mod:`smarter.settings.base_aws` replaces it with the
+environment's Redis.
+"""
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:smarter@smarter-redis:6379/1",
+        "LOCATION": f"{local_redis_server}/1",
         "KEY_PREFIX": CACHE_KEY_PREFIX,
         "OPTIONS": CACHE_OPTIONS,
     },
     "sessions": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": redis_url_with_database("redis://:smarter@smarter-redis:6379/1", 2),
+        "LOCATION": f"{local_redis_server}/2",
         "OPTIONS": CACHE_OPTIONS,
     },
 }
@@ -725,7 +741,7 @@ See: https://docs.djangoproject.com/en/6.0/ref/settings/#session-cache-alias
 """
 
 # Default Celery Configuration
-CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/0"
+CELERY_BROKER_URL = f"{local_redis_server}/0"
 """
 The Celery broker URL for Smarter, using Redis as the message broker.
 
@@ -740,7 +756,7 @@ See:
 - https://artifacthub.io/packages/helm/project-smarter/smarter
 """
 
-CELERY_BROKER_TRANSPORT_OPTIONS = {
+CELERY_BROKER_TRANSPORT_OPTIONS: dict[str, int | str] = {
     "socket_timeout": 30,
     "socket_connect_timeout": 5,
     "socket_keepalive": True,
@@ -758,6 +774,22 @@ by default. TCP keepalive and the health check find dead connections sooner.
 
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#broker-transport-options
 """
+
+if smarter_settings.database_unavailable:
+    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    CELERY_BROKER_TRANSPORT_OPTIONS = {
+        **CELERY_BROKER_TRANSPORT_OPTIONS,
+        "unacked_key": f"{tools_queue}.unacked",
+        "unacked_index_key": f"{tools_queue}.unacked_index",
+        "unacked_mutex_key": f"{tools_queue}.unacked_mutex",
+    }
+    del tools_queue
+# In the tool worker, kombu keeps its messages in flight under its queue's name, not in the unacked hash
+# that every other worker shares. That hash holds every queue's messages, and a worker that starts restores
+# them to their queues, so a tool worker that could write it could plant a message that another worker then
+# restores to the infrastructure queue. With these keys, its Redis ACL user (ADR-030, rule 8) touches
+# nothing outside its own queue's prefix. Only consumers read them: the app, which sends the tool worker's
+# tasks, needs nothing.
 
 CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
 """

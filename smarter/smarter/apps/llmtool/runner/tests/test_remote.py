@@ -306,15 +306,30 @@ TOOL_WORKER_WAIT_SECONDS = 120
 """How long the round trips wait for a tool worker to start."""
 
 
-def tool_workers() -> list[str]:
-    """
-    Return the Celery workers that consume the tools queue, by asking every worker through the broker.
+TOOL_WORKER_PROBE_KIND = "no-such-kind"
+"""A kind of call that the tool worker can't read, which it answers at once with a failure, without the network."""
 
-    :returns: Their names, e.g. ``tools@<host>``.
+
+def tool_worker_answers(timeout: float) -> bool:
     """
-    queues = APP.control.inspect(timeout=5).active_queues() or {}
-    queue = smarter_settings.app_tools_tasks_celery_task_queue
-    return [name for name, consumed in queues.items() if any(q.get("name") == queue for q in consumed)]
+    Whether a tool worker takes a task from the tools queue and answers it, within the timeout.
+
+    The tool worker takes no remote control, whose keys its Redis user can't reach (ADR-030, rule 8), so
+    ``celery inspect`` can't find it. Instead, it is sent a call of a kind that it can't read, which
+    ``run_tool_call`` answers with a failure.
+
+    :param timeout: Seconds to wait for the answer.
+    :returns: True if it answered.
+    """
+    sent = run_tool_call.apply_async(args=(TOOL_WORKER_PROBE_KIND, "{}"))
+    try:
+        answer = sent.get(timeout=timeout)
+    except CeleryTimeoutError:
+        sent.forget()
+        return False
+    result = json.loads(answer)
+    answered = "failure" in json_object(result)
+    return answered
 
 
 def remote_runner():
@@ -342,9 +357,10 @@ class TestThroughTheToolWorker(ExtensionTestMixin):
         super().setUpClass()
         # the test stack waits for its api, not for its workers, which start Django in about 30 seconds.
         deadline = time.monotonic() + TOOL_WORKER_WAIT_SECONDS
-        while not tool_workers() and time.monotonic() < deadline:
-            time.sleep(5)
-        if not tool_workers():
+        answered = tool_worker_answers(timeout=5)
+        while not answered and time.monotonic() < deadline:
+            answered = tool_worker_answers(timeout=5)
+        if not answered:
             raise AssertionError(
                 "no worker consumes the tools queue: these tests need smarter-worker-tools running "
                 "(docker-compose.yml, docker-compose.shard.yml)."

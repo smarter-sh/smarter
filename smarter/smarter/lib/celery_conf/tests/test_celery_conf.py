@@ -13,6 +13,7 @@ from smarter.lib.celery_conf import (
     APP,
     TOOL_WORKER_TASK_PACKAGES,
     TOOL_WORKER_TASKS,
+    configure_tool_worker,
     keep_only_tool_worker_tasks,
     restrict_tool_worker_tasks,
     run_worker_startup_checks,
@@ -116,3 +117,28 @@ class TestToolWorkerTasks(SmarterTestBase):
         """Outside the tool worker, the platform's app still has other workers' tasks."""
         self.assertIn(run_tool_call.name, APP.tasks)
         self.assertIn(OTHER_TASK, APP.tasks)
+
+
+class TestToolWorkerQueue(SmarterTestBase):
+    """The tool worker consumes its queue without declaring it, and takes no remote control (ADR-030, rule 8)."""
+
+    def test_in_the_tool_worker(self):
+        """Its queue is no_declare, so it never writes kombu's routing set, and remote control is off."""
+        app = Celery("test_celery_conf_queue", set_as_current=False)
+        with in_the_tool_worker():
+            configure_tool_worker(app)
+        queues = list(app.conf.task_queues)
+        self.assertEqual(len(queues), 1)
+        queue = queues[0]
+        self.assertEqual(queue.name, "tools_celery_task_queue")
+        self.assertEqual(queue.routing_key, "tools_celery_task_queue")
+        self.assertEqual(queue.exchange.name, "tools_celery_task_queue")
+        self.assertTrue(queue.no_declare)
+        self.assertFalse(app.conf.worker_enable_remote_control)
+
+    def test_other_workers_are_unchanged(self):
+        """A worker with a database keeps Celery's queues and its remote control."""
+        app = Celery("test_celery_conf_queue", set_as_current=False)
+        configure_tool_worker(app)
+        self.assertIsNone(app.conf.task_queues)
+        self.assertTrue(app.conf.worker_enable_remote_control)
