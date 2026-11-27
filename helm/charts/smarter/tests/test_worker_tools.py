@@ -92,6 +92,10 @@ class TestToolWorker(unittest.TestCase):
         self.assertIn("{{- if hasKey $usersData $user -}}", helper)
         self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $password', helper)
         self.assertIn('printf "redis://%s:%s@%s/0" $user (urlquery $password) $redis', helper)
+        # @cache_results' own cache: the cache's database, as the same user, under its own key prefix.
+        self.assertIn('printf "redis://%s:%s@%s/1" $user (urlquery $password) $redis', helper)
+        self.assertIn('"KEY_PREFIX" (printf "%s_cache" $user)', helper)
+        self.assertIn('set $env "CACHE_RESULTS_CACHE" (toJson $cache)', helper)
         tools = template("smarter.toolsEnv")
         self.assertIn('include "smarter.toolWorkerEnv" (dict "root" . "user" "tools" "queue" "")', tools)
 
