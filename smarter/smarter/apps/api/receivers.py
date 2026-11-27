@@ -16,28 +16,49 @@ from .signals import api_request_completed, api_request_failed, api_request_init
 logger = logging.getSmarterLogger(__name__, any_switches=[SmarterWaffleSwitches.RECEIVER_LOGGING])
 
 
+def user_for_log(request: Request) -> str:
+    """
+    Identify the request's user for a log entry, by id, never by username.
+
+    ``str(User)`` is the username, which is often a person's name, so the user itself is never logged.
+
+    :param request: The request.
+    :returns: ``user_id=<pk>`` for an authenticated user, ``anonymous`` for an anonymous one, and
+        ``N/A`` when the request has no user.
+    """
+    if not hasattr(request, "user"):
+        return "N/A"
+    user = request.user
+    if not hasattr(user, "is_authenticated"):
+        return "N/A"
+    if not user.is_authenticated:
+        return "anonymous"
+    user_id = f"user_id={user.pk}"
+    return user_id
+
+
 @receiver(api_request_initiated, dispatch_uid="api_request_initiated")
 def handle_api_request_initiated(sender, instance, request: Request, **kwargs):
     """
-    Log the start of an API request: the view's class, path, method and user.
+    Log the start of an API request: the view's class, path, method and user's id.
 
     :param sender: The signal's sender.
     :param instance: The view that handles the request.
     :param request: The request.
     """
     logger.info(
-        "%s - %s - %s - user: %s",
+        "%s - %s - %s - %s",
         instance.__class__.__name__,
         request.path,
         request.method,
-        request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
+        user_for_log(request),
     )
 
 
 @receiver(api_request_completed, dispatch_uid="api_request_completed")
 def handle_api_request_completed(sender, instance, request: Request, response, **kwargs):
     """
-    Log the end of an API request: the view's class, path, method and user.
+    Log the end of an API request: the view's class, path, method and user's id.
 
     :param sender: The signal's sender.
     :param instance: The view that handled the request.
@@ -46,11 +67,11 @@ def handle_api_request_completed(sender, instance, request: Request, response, *
     """
 
     logger.info(
-        "%s - %s - %s - user: %s",
+        "%s - %s - %s - %s",
         instance.__class__.__name__,
         request.path,
         request.method,
-        request.user if hasattr(request, "user") and hasattr(request.user, "is_authenticated") else "N/A",
+        user_for_log(request),
     )
 
 

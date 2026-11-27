@@ -2,7 +2,8 @@
 """Smarter API LLMClient Manifest handler."""
 
 import datetime
-from typing import List, Optional, Type
+from contextlib import contextmanager
+from typing import Iterator, List, Optional, Type
 
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -225,18 +226,12 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
         """
         Provides access to the Django ORM model instance representing the current Smarter LLMClient.
 
-        This property retrieves the LLMClient object associated with the broker's account and name.
-        If a matching LLMClient record exists in the database, it is returned and cached for future access.
-        If no such record exists, and a manifest is available, a new LLMClient instance is created using
-        data extracted from the manifest and then persisted to the database.
+        This property reads the LLMClient that the broker's user profile owns under the broker's name,
+        and caches it for future access. It never creates one: a new LLMClient is created by
+        :py:meth:`apply`, inside its transaction, so that an apply that fails leaves nothing behind.
 
-        This property ensures that the broker always has access to a valid LLMClient model, either by
-        fetching an existing record or by creating one from the manifest specification. The LLMClient
-        model stores the configuration and runtime state of the llmclient, and is used for all database
-        operations related to the llmclient's lifecycle.
-
-        :returns: The Django ORM LLMClient instance if found or created, otherwise ``None`` if neither
-                  a database record nor a manifest is available.
+        :returns: The Django ORM LLMClient instance, or ``None`` if the user profile has no LLMClient
+                  of that name.
         :rtype: Optional[LLMClient]
 
         .. note::
@@ -248,12 +243,6 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
 
             This should be refactored/removed in favor of orm_instance. There is no logic
             in this property that merits it overriding the parent orm_instance property.
-
-        .. admonition:: FIX NOTE
-
-            This is breaking an unwritten rule of Smarter resources in that it is
-            lazily **creating** a database record on a property getter.
-            Creating/updating database records should be handled in apply().
         """
         if self._llmclient:
             return self._llmclient
@@ -267,41 +256,54 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 .select_related("user_profile", "user_profile__account", "user_profile__user")
                 .get(user_profile=self.user_profile, name=self.name)
             )
-            logger.debug(
-                "retrieved existing LLMClient instance %s owned by %s from database.",
-                self._llmclient,
-                self.user_profile,
-            )
-            return self._llmclient
         except LLMClient.DoesNotExist:
-            self._llmclient = None
+            logger.debug("%s %s not found for %s", self.kind, self.name, self.user_profile)
+            return None
 
         logger.debug(
-            "LLMClient instance not found for user_profile %s. Attempting to create a new instance.",
+            "retrieved existing LLMClient instance %s owned by %s from database.",
+            self._llmclient,
             self.user_profile,
         )
-        if self.manifest:
-            data = self.manifest_to_django_orm()
-            data["user_profile"] = self.user_profile
-            logger.debug("Creating new LLMClient with data: %s", data)
-            tags = data.pop("tags", [])
-            self._llmclient = LLMClient.objects.create(**data)
-            if self._llmclient and tags:
-                self._llmclient.tags.set(tags)
-            self._created = True
-            logger.warning(
-                "lazily created new LLMClient instance %s owned by %s. This logic should be handled in apply().",
-                self._llmclient,
-                self.user_profile,
-            )
-        else:
-            logger.warning(
-                "%s not found for user_profile %s",
-                self._llmclient,
-                self.user_profile,
-            )
-
         return self._llmclient
+
+    def new_llmclient(self, data: SmarterDictType) -> LLMClient:
+        """
+        Build, but don't save, the LLMClient that applying the manifest creates.
+
+        :py:meth:`apply` validates and saves it inside its transaction, so that a failed apply
+        rolls the new LLMClient back with everything else it wrote.
+
+        :param data: The manifest's fields, from :py:meth:`manifest_to_django_orm`, without the
+            read-only fields and the tags.
+        :returns: The new, unsaved LLMClient, owned by the broker's user profile.
+        :raises SAMLLMClientBrokerError: If the broker has no user profile to own it.
+        """
+        user_profile = self.user_profile
+        if user_profile is None:
+            raise SAMLLMClientBrokerError(f"{self.kind} {self.name} has no user profile to own it", thing=self.kind)
+        llmclient = LLMClient(**data)
+        llmclient.user_profile = user_profile
+        logger.debug("building a new %s %s for %s", self.kind, self.name, self.user_profile)
+        return llmclient
+
+    @contextmanager
+    def forget_llmclient_on_failure(self) -> Iterator[None]:
+        """
+        Drop the broker's cached LLMClient when the block it wraps raises.
+
+        Used inside :py:meth:`apply`'s transaction. The rollback undoes the LLMClient's row, or its
+        changed fields, in the database, but not the instance that the broker cached, which would then
+        describe an LLMClient that doesn't exist, or values that weren't saved. Without it, the next
+        read of :py:attr:`llmclient` reads the database again.
+
+        :raises Exception: Whatever the block raised, unchanged.
+        """
+        try:
+            yield
+        except Exception:
+            self._llmclient = None
+            raise
 
     @property
     def extensions(self) -> Optional[List[str]]:
@@ -982,9 +984,9 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
             )
             self._name = self.manifest.metadata.name
             self._llmclient = None
-        if not isinstance(self.llmclient, LLMClient):
-            raise SAMLLMClientBrokerError(f"LLMClient {self.name} not found", thing=self.kind, command=command)
-        with transaction.atomic():
+        # a new llmclient is created inside the transaction, so that an apply that fails, e.g. on a
+        # plugin that doesn't exist, rolls it back with everything else, rather than leaving it behind.
+        with transaction.atomic(), self.forget_llmclient_on_failure():
             readonly_fields = ["id", "created_at", "updated_at", "tags"]
             try:
                 data = self.manifest_to_django_orm()
@@ -999,8 +1001,13 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                             f"spec.config.prompt.{manifest_key} cannot be set by apply, because it is assigned when "
                             f"the {self.kind} is deployed. Remove it from the manifest, or set it to null."
                         )
-                changed = bool(self.assign_changed_fields(self.llmclient, data))
-                if self.llmclient.user_profile != self.user_profile:
+                llmclient = self.llmclient
+                if llmclient is None:
+                    llmclient = self.new_llmclient(data)
+                    changed = True
+                else:
+                    changed = bool(self.assign_changed_fields(llmclient, data))
+                if llmclient.user_profile != self.user_profile:
                     raise SAMLLMClientBrokerError(
                         f"User profile mismatch for {self.kind} {self.manifest.metadata.name}",
                         thing=self.kind,
@@ -1009,16 +1016,17 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 # run the model's field validators, e.g. the provider, URLs and maximum lengths,
                 # which save() does not, so that an invalid manifest is a 400 rather than an
                 # invalid row, or a database error.
-                self.llmclient.full_clean(validate_unique=False)
+                llmclient.full_clean(validate_unique=False)
                 # an unchanged llmclient is not saved again: see assign_changed_fields(). Its relations,
                 # below, are applied either way.
                 if changed:
-                    self.llmclient.save()
+                    llmclient.save()
+                self._llmclient = llmclient
 
                 # Fix note: occasionally seeing AttributeError: \'list\' object has no attribute \'set\ in the logs,
                 # which is why this is wrapped in a try/except block.
                 try:
-                    if not isinstance(self.llmclient.tags, (TaggableManager, _TaggableManager)):
+                    if not isinstance(llmclient.tags, (TaggableManager, _TaggableManager)):
                         logger.warning(
                             "llmclient.tags is a list instead of a TaggableManager for %s %s owned by %s. This is unexpected and may indicate an issue with the LLMClient model definition or the database state. Tags=%s",
                             self.kind,
@@ -1026,8 +1034,8 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                             self.user_profile,
                             tags,
                         )
-                    elif self.tags_changed(self.llmclient, tags):
-                        self.llmclient.tags.set(tags)
+                    elif self.tags_changed(llmclient, tags):
+                        llmclient.tags.set(tags)
                 # pylint: disable=broad-except
                 except Exception as e:
                     logger.error(
@@ -1039,7 +1047,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         e,
                         exc_info=True,
                     )
-                self.llmclient.refresh_from_db()
+                llmclient.refresh_from_db()
             except Exception as e:
                 logger.error(
                     "failed to save %s %s owned by %s. Error: %s",
@@ -1069,31 +1077,28 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                 try:
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist as e:
-                    logger.error(
-                        "failed to find SmarterAuthToken %s",
-                        self.manifest.spec.apiKey,
-                        exc_info=True,
-                    )
+                    # the client's error, answered with a 404: not an error of the platform's.
+                    logger.warning("did not find an API Key named %s", self.manifest.spec.apiKey)
                     raise SAMBrokerErrorNotFound(
                         f"API Key {self.manifest.spec.apiKey} not found", thing=self.kind, command=command
                     ) from e
-                for key in LLMClientAPIKey.objects.filter(llmclient=self.llmclient):
+                for key in LLMClientAPIKey.objects.filter(llmclient=llmclient):
                     if key.api_key != api_key:
                         key.delete()
                         relations_changed = True
-                        logger.debug("Detached SmarterAuthToken %s from LLMClient %s", key.api_key.name, self.llmclient.name)  # type: ignore[union-attr]
-                _, created = LLMClientAPIKey.objects.get_or_create(llmclient=self.llmclient, api_key=api_key)
+                        logger.debug("Detached SmarterAuthToken %s from LLMClient %s", key.api_key.name, llmclient.name)  # type: ignore[union-attr]
+                _, created = LLMClientAPIKey.objects.get_or_create(llmclient=llmclient, api_key=api_key)
                 if created:
                     relations_changed = True
                     logger.debug(
                         "SmarterAuthToken %s attached to LLMClient %s",
                         self.manifest.spec.apiKey,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
 
             # LLMClientPlugin: add what's missing, remove what is in the model but is not in the manifest
             # -------------
-            for plugin in LLMClientPlugin.objects.filter(llmclient=self.llmclient):
+            for plugin in LLMClientPlugin.objects.filter(llmclient=llmclient):
                 if not self.manifest.spec.plugins or (
                     self.manifest.spec.plugins and plugin.plugin_meta.name not in self.manifest.spec.plugins
                 ):
@@ -1102,7 +1107,7 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     logger.debug(
                         "Detached Plugin %s from LLMClient %s",
                         plugin.plugin_meta.name,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
             if self.manifest.spec.plugins:
                 for plugin_name in self.manifest.spec.plugins:
@@ -1110,40 +1115,33 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                     try:
                         plugin_meta = PluginMeta.objects.get(name=plugin_name, user_profile=self.user_profile)
                     except PluginMeta.DoesNotExist as e:
-                        logger.error(
-                            "did not find a Plugin named %s",
-                            plugin_name,
-                            exc_info=True,
-                        )
+                        # the client's error, answered with a 404: not an error of the platform's.
+                        logger.warning("did not find a Plugin named %s", plugin_name)
                         raise SAMBrokerErrorNotFound(
                             f"Plugin {plugin_name} not found for account {self.account.account_number if self.account else 'unknown'}",
                             thing=self.kind,
                             command=command,
                         ) from e
-                    _, created = LLMClientPlugin.objects.get_or_create(
-                        llmclient=self.llmclient, plugin_meta=plugin_meta
-                    )
+                    _, created = LLMClientPlugin.objects.get_or_create(llmclient=llmclient, plugin_meta=plugin_meta)
                     if created:
                         relations_changed = True
                         logger.debug(
                             "attached Plugin %s to LLMClient %s",
                             plugin_meta.name,
-                            self.llmclient.name,
+                            llmclient.name,
                         )
 
             # LLMClientExtensions: add what's missing, remove what's in the model but not in the manifest
             # -------------
             extension_slugs = self.manifest.spec.extensions or []
-            for extension_link in LLMClientExtensions.objects.filter(llmclient=self.llmclient).select_related(
-                "extension"
-            ):
+            for extension_link in LLMClientExtensions.objects.filter(llmclient=llmclient).select_related("extension"):
                 if extension_link.extension.slug not in extension_slugs:
                     extension_link.delete()
                     relations_changed = True
                     logger.debug(
                         "detached Extension %s from LLMClient %s",
                         extension_link.extension.slug,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
             for extension_slug in extension_slugs:
                 extension = self.resolve_extension(extension_slug)
@@ -1153,28 +1151,26 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         thing=self.kind,
                         command=command,
                     )
-                _, created = LLMClientExtensions.objects.get_or_create(llmclient=self.llmclient, extension=extension)
+                _, created = LLMClientExtensions.objects.get_or_create(llmclient=llmclient, extension=extension)
                 if created:
                     relations_changed = True
                     logger.debug(
                         "attached Extension %s to LLMClient %s",
                         extension.slug,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
 
             # LLMClientGuardrails: add what's missing, remove what's in the model but not in the manifest
             # -------------
             guardrail_names = self.manifest.spec.guardrails or []
-            for guardrail_link in LLMClientGuardrails.objects.filter(llmclient=self.llmclient).select_related(
-                "guardrail"
-            ):
+            for guardrail_link in LLMClientGuardrails.objects.filter(llmclient=llmclient).select_related("guardrail"):
                 if guardrail_link.guardrail.name not in guardrail_names:
                     guardrail_link.delete()
                     relations_changed = True
                     logger.debug(
                         "detached Guardrail %s from LLMClient %s",
                         guardrail_link.guardrail.name,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
             for guardrail_name in guardrail_names:
                 guardrail = self.resolve_guardrail(guardrail_name)
@@ -1184,28 +1180,26 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         thing=self.kind,
                         command=command,
                     )
-                _, created = LLMClientGuardrails.objects.get_or_create(llmclient=self.llmclient, guardrail=guardrail)
+                _, created = LLMClientGuardrails.objects.get_or_create(llmclient=llmclient, guardrail=guardrail)
                 if created:
                     relations_changed = True
                     logger.debug(
                         "attached Guardrail %s to LLMClient %s",
                         guardrail.name,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
 
             # LLMClientMCPClients: add what's missing, remove what's in the model but not in the manifest
             # -------------
             mcpclient_names = self.manifest.spec.mcpClients or []
-            for mcpclient_link in LLMClientMCPClients.objects.filter(llmclient=self.llmclient).select_related(
-                "mcpclient"
-            ):
+            for mcpclient_link in LLMClientMCPClients.objects.filter(llmclient=llmclient).select_related("mcpclient"):
                 if mcpclient_link.mcpclient.name not in mcpclient_names:
                     mcpclient_link.delete()
                     relations_changed = True
                     logger.debug(
                         "detached MCPClient %s from LLMClient %s",
                         mcpclient_link.mcpclient.name,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
             for mcpclient_name in mcpclient_names:
                 mcpclient = self.resolve_mcpclient(mcpclient_name)
@@ -1215,13 +1209,13 @@ class SAMLLMClientBroker(AbstractBroker[LLMClient, LLMClient]):
                         thing=self.kind,
                         command=command,
                     )
-                _, created = LLMClientMCPClients.objects.get_or_create(llmclient=self.llmclient, mcpclient=mcpclient)
+                _, created = LLMClientMCPClients.objects.get_or_create(llmclient=llmclient, mcpclient=mcpclient)
                 if created:
                     relations_changed = True
                     logger.debug(
                         "attached MCPClient %s to LLMClient %s",
                         mcpclient.name,
-                        self.llmclient.name,
+                        llmclient.name,
                     )
 
             # LLMClientVectorsearches: add what's missing, remove what's in the model but not in the manifest
