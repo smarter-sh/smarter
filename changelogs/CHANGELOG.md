@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.14](https://github.com/smarter-sh/smarter/compare/v0.48.13...v0.48.14) (2026-11-27)
+
+### Bug Fixes
+
+* **asgi:** run the web server's startup checks off uvicorn's event loop ([0ace3e0](https://github.com/smarter-sh/smarter/commit/0ace3e07b01fdd937837e774027b76f03d09ff9f)), closes [#1092](https://github.com/smarter-sh/smarter/issues/1092)
+* **cache:** cache results in the tool workers' own redis keys ([cc31aec](https://github.com/smarter-sh/smarter/commit/cc31aec395a36ca9d4a797807fbf42b0a01ce794))
+
 ## [0.48.14-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.14-alpha.1...v0.48.14-alpha.2) (2026-11-27)
 
 ### Bug Fixes
