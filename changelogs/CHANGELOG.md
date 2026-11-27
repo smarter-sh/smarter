@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.8...v0.48.9-alpha.1) (2026-11-27)
+
+### Bug Fixes
+
+* **settings:** generate redis's password per environment, never public ([d1a7d32](https://github.com/smarter-sh/smarter/commit/d1a7d32524da7335ad78a55255d3c28080998603)), closes [#1073](https://github.com/smarter-sh/smarter/issues/1073)
+
 ## [0.48.8](https://github.com/smarter-sh/smarter/compare/v0.48.7...v0.48.8) (2026-11-27)
 
 ### Bug Fixes
