@@ -522,7 +522,7 @@ def check_tool_worker_redis() -> bool:
         if description in breaches:
             logger.error(
                 "ADR-030 breach: the tool worker's Redis user %s may read %s. Check the Redis ACL in the Helm "
-                "chart's redis.auth.acl.users.",
+                "chart's redis.master.preExecCmds.",
                 username,
                 description,
             )

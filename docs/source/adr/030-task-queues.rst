@@ -180,7 +180,15 @@ The security rules, proposed:
 
    Implemented for the tool worker, the one workload that runs code no one reviewed: the user ``tools``,
    whose password smarter-infrastructure generates in the Secret ``smarter-redis-users``, with the rules in
-   the Helm chart's ``redis.auth.acl.users``. Checking kombu's keys found two more ways out, both closed:
+   the Helm chart's ``redis.master.preExecCmds``. Redis's start script copies its ``master.conf`` to a
+   writable directory, and that command appends the user to the copy, with the password read from the
+   Secret, which is mounted whole beside Redis's other volumes. The first attempt used the Redis subchart's
+   own ``auth.acl``, which mounts its ACL file as a single file (``subPath``) inside the directory where its
+   ConfigMap is mounted. runc couldn't create that mount on the cluster's nodes, Redis never started, and
+   prod was without Redis for about 12 minutes on 2026-11-27, until the release was rolled back. Neither
+   docker-compose nor ``helm template`` creates that mount, so the change is now checked by starting
+   prod's Redis image with the chart's rendered start script and configuration before it ships.
+   Checking kombu's keys found two more ways out, both closed:
 
    - Every worker shares kombu's ``unacked`` hash, which holds every queue's messages in flight, and a
      worker that starts restores them to their queues. A tool worker that could write it could plant a

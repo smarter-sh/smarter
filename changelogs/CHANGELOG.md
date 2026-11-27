@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.10-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.9...v0.48.10-alpha.1) (2026-11-27)
+
+### Bug Fixes
+
+* **helm:** define redis's tools user at start, not with auth.acl ([260bd6e](https://github.com/smarter-sh/smarter/commit/260bd6ef52025d3e178aad167fbab0d93f6ada1c))
+
 ## [0.48.9](https://github.com/smarter-sh/smarter/compare/v0.48.8...v0.48.9) (2026-11-27)
 
 ### Bug Fixes
