@@ -239,7 +239,7 @@ class TestEnvironment(unittest.TestCase):
                 self.assertIn(command, rules)
 
     def test_extensions_user_reaches_only_its_queue(self):
-        """The Extension worker's user may use its own queue, never the tools queue, and has no robots.txt cache."""
+        """The Extension worker's user may use its own queue, never the tools queue."""
         values = VALUES_PATH.read_text(encoding="utf-8")
         self.assertIn("        if [[ -f /opt/bitnami/redis/users/extensions ]]; then\n", values)
         rules = acl_rules("extensions")
@@ -252,6 +252,21 @@ class TestEnvironment(unittest.TestCase):
                 self.assertIn(command, rules)
         tools = acl_rules("tools")
         self.assertFalse(any(rule.lstrip("%RW~").startswith("extensions_celery_task_queue") for rule in tools))
+
+    def test_each_user_has_its_own_cache_results_keys(self):
+        """
+        Each worker's user reads and writes its own @cache_results keys, <user>_cache:*, and no other cache keys.
+
+        CACHE_RESULTS["CACHE"] in settings/base.py puts them there. The only key of the platform's cache that
+        either user reaches is Extensions' archives, read-only: no rule names another key under django*.
+        """
+        for user, other in (("tools", "extensions"), ("extensions", "tools")):
+            with self.subTest(user=user):
+                rules = acl_rules(user)
+                self.assertIn(f"~{user}_cache:*", rules)
+                self.assertFalse(any(rule.lstrip("%RW~").startswith(f"{other}_cache") for rule in rules))
+                platform_cache_rules = [rule for rule in rules if rule.lstrip("%RW~").startswith("django")]
+                self.assertEqual(platform_cache_rules, ["%R~django*:1:smarter:extension:archive:*"])
 
     def test_compose_redis_has_the_charts_rules(self):
         """

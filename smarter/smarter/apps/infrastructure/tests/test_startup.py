@@ -12,6 +12,7 @@ from contextlib import ExitStack
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from cache_results import cache_results
 from django.conf import settings
 from django.db import OperationalError
 from redis import Redis
@@ -55,6 +56,7 @@ from smarter.common.conf.settings.cache import (
     TOOL_WORKER_REDIS_USERNAME,
 )
 from smarter.common.utils.redis_url import redis_server_url
+from smarter.lib import json
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 MODULE = "smarter.apps.infrastructure.startup"
@@ -655,6 +657,55 @@ class TestToolWorkerReadiness(SmarterTestBase):
         logger.error.assert_not_called()
 
 
+def assert_cache_results_caches(test: SmarterTestBase, username: str, password: str, suffix: str) -> None:
+    """
+    Run a @cache_results function as a restricted worker does, and check that its second call is a cache hit.
+
+    It sets cache-results' CACHE_RESULTS_CACHE as the Helm chart's smarter.toolWorkerEnv and docker-compose
+    set it for the worker: the cache's database, as the worker's Redis user, under the key prefix <user>_cache.
+    It reaches the test stack's Redis, so the Redis ACL that the chart gives the user decides. A refused read or
+    write would run the function uncached, with a warning.
+
+    :param test: The test case.
+    :param username: The worker's Redis user, e.g. ``tools``.
+    :param password: The user's password in the test stack.
+    :param suffix: The test's own argument, so that no other test shares its key.
+    """
+    server = redis_server_url("smarter-redis:6379", username, password)
+    own_cache = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"{server}/1",
+        "KEY_PREFIX": f"{username}_cache",
+        "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5},
+    }
+    calls = []
+
+    @cache_results(timeout=60)
+    def cached_double(value: str) -> str:
+        calls.append(value)
+        return value * 2
+
+    with patch.dict(os.environ, {"CACHE_RESULTS_CACHE": json.dumps(own_cache)}):
+        with test.assertNoLogs("cache_results", "WARNING"):
+            first = cached_double(suffix)
+            second = cached_double(suffix)
+        cached_double.invalidate(suffix)
+    test.assertEqual(first, suffix * 2)
+    test.assertEqual(second, suffix * 2)
+    test.assertEqual(calls, [suffix], "the second call must be a cache hit")
+
+
+class TestPlatformCacheResults(SmarterTestBase):
+    """Every pod but the two restricted workers caches results in the default cache, as before."""
+
+    def test_no_cache_of_its_own(self):
+        """The test process, like the api server and the other workers, has no Redis user and no cache of its own."""
+        self.assertFalse(smarter_settings.subsystem_redis_username)
+        self.assertFalse(os.environ.get("CACHE_RESULTS_CACHE"))
+        self.assertNotIn("CACHE", settings.CACHE_RESULTS)
+        self.assertEqual(settings.CACHE_RESULTS["CACHE_ALIAS"], "default")
+
+
 class TestToolWorkerRedisAcl(SmarterTestBase):
     """
     The test stack's Redis defines the tool worker's user with the Helm chart's rules: check them, for real.
@@ -741,15 +792,19 @@ class TestToolWorkerRedisAcl(SmarterTestBase):
         with self.assertRaises(NoPermissionError):
             self.tools_cache.set(key, "replaced")
 
-    def test_robots_txt_cache(self):
-        """It caches a website's robots.txt, which a page fetch checks on each redirect, in the tool worker."""
-        key = (
-            f"{settings.CACHE_KEY_PREFIX}:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules."
-            f"<locals>.get_cached_robots_txt()_test-{self.suffix}"
-        )
-        self.addCleanup(self.admin_cache.delete, key)
-        self.tools_cache.set(key, "rules", ex=60)
-        self.assertEqual(self.tools_cache.get(key), b"rules")
+    def test_cache_results(self):
+        """@cache_results caches in the tool worker, in its own keys, e.g. a page fetch's robots.txt rules."""
+        assert_cache_results_caches(self, TOOL_WORKER_REDIS_USERNAME, LOCAL_TOOL_WORKER_REDIS_PASSWORD, self.suffix)
+
+    def test_no_other_cache(self):
+        """It may write neither the platform's cache nor the Extension worker's @cache_results keys."""
+        for key in (
+            f"{settings.CACHE_KEY_PREFIX}:1:test-{self.suffix}",
+            f"{EXTENSION_WORKER_REDIS_USERNAME}_cache:1:test-{self.suffix}",
+        ):
+            with self.subTest(key=key):
+                with self.assertRaises(NoPermissionError):
+                    self.tools_cache.set(key, "forged", ex=60)
 
     def test_log_streams_are_write_only(self):
         """It adds its log records to the console's streams, and can't read anyone's."""
@@ -837,14 +892,21 @@ class TestExtensionWorkerRedisAcl(SmarterTestBase):
         with self.assertRaises(NoPermissionError):
             self.extensions.hlen(f"{smarter_settings.app_tools_tasks_celery_task_queue}.unacked")
 
-    def test_no_robots_txt_cache(self):
-        """Only the tool worker's page fetches use it."""
-        key = (
-            f"{settings.CACHE_KEY_PREFIX}:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules."
-            f"<locals>.get_cached_robots_txt()_test-{self.suffix}"
+    def test_cache_results(self):
+        """@cache_results caches in the Extension worker, in its own keys."""
+        assert_cache_results_caches(
+            self, EXTENSION_WORKER_REDIS_USERNAME, LOCAL_EXTENSION_WORKER_REDIS_PASSWORD, self.suffix
         )
-        with self.assertRaises(NoPermissionError):
-            self.extensions_cache.set(key, "rules", ex=60)
+
+    def test_no_other_cache(self):
+        """It may write neither the platform's cache nor the tool worker's @cache_results keys."""
+        for key in (
+            f"{settings.CACHE_KEY_PREFIX}:1:test-{self.suffix}",
+            f"{TOOL_WORKER_REDIS_USERNAME}_cache:1:test-{self.suffix}",
+        ):
+            with self.subTest(key=key):
+                with self.assertRaises(NoPermissionError):
+                    self.extensions_cache.set(key, "forged", ex=60)
 
     def test_results_and_archives(self):
         """It writes its calls' results, and reads Extensions' archives."""

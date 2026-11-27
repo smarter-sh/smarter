@@ -200,13 +200,16 @@ The security rules, proposed:
      reads to route each task. A tool worker that could write it could route tool calls, with their
      credentials, to the infrastructure queue. Its queue is ``no_declare``, and the app declares it.
 
-   The user may also read and write the robots.txt cache that a page fetch checks, append to the console's
+   The user may also read and write its own ``@cache_results`` keys, ``tools_cache:*``, where e.g. the
+   robots.txt rules that a page fetch checks are cached (cache-results' ``CACHE_RESULTS_CACHE``, which the
+   Helm chart sets for the two workers only), but none of the platform's cache, append to the console's
    log streams, and publish to ``logs:*`` and the results' channels, but not list keys or channels, nor
    subscribe. What it can still do is read the other tool calls waiting on its own queue, and write a
    result before the worker that ran the call does, both within the tool worker's own trust domain.
    Extensions' calls run in a worker of their own (#1077), the Extension worker, each in a process of its
-   own, as the user ``extensions``, which reaches only the Extensions queue, the results and Extensions'
-   archives: an Extension's code can't read the tools queue. Each worker's startup check confirms each
+   own, as the user ``extensions``, which reaches only the Extensions queue, the results, Extensions'
+   archives and its own ``@cache_results`` keys, ``extensions_cache:*``: an Extension's code can't read the
+   tools queue, nor the tool worker's cache. Each worker's startup check confirms each
    refusal, the other worker's queue among them. docker-compose's Redis
    defines the same user, so the tests check the chart's rules for real.
 9. **What a message carries.** Infrastructure tasks take ids, never data. Only ``run_tool_call`` carries a

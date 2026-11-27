@@ -816,6 +816,22 @@ class SmarterRequestMixin(AccountMixin):
         return self._cache_key
 
     @property
+    def required_cache_key(self) -> str:
+        """
+        Return :attr:`cache_key`, for code that reads or writes the cache with it.
+
+        :attr:`cache_key` is None only without a request, which a view always has. Rather than read or write
+        the cache under the key ``None``, which every such caller would share, this raises.
+
+        :returns: The cache key.
+        :raises SmarterValueError: If there is no request, so no cache key.
+        """
+        key = self.cache_key
+        if key is None:
+            raise SmarterValueError("There is no request, so no cache key.")
+        return key
+
+    @property
     def session_key(self) -> str:
         """
         Getter for the session_key property.
