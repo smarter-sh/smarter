@@ -94,7 +94,7 @@ CONTROLS = [
             (PARTIAL, "settings' credentials are SecretStr: no test"),
             (DONE, "no secret, credential or PII in a log"),
             (DONE, "backups and exports: private, encrypted S3"),
-            (GAP, "Redis's password is public, derived"),
+            (DONE, "Redis's password generated per environment"),
             (GAP, "volumes, Kubernetes Secrets: not encrypted"),
         ],
     ),

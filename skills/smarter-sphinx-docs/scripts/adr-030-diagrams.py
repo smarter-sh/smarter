@@ -299,11 +299,11 @@ def redis_trust():
         "redis-trust",
         1300,
         800,
-        "Redis is the platform's least protected credential",
-        "every pod holds its url, the password is the public default, and Redis can't tell one client from another",
+        "Every pod holds Redis's url, and Redis can't tell them apart",
+        "one password for every client, generated per environment, and no access control list",
         "Three columns. The pods that hold Redis's url: the app, both workers, beat, the Jobs and the tool worker, "
-        "which holds no other credential. Redis itself, with one password, smarter, which is the chart's default and "
-        "the deploy action's, both in this public repository, and no access control list, so every client may run "
+        "which holds no other credential. Redis itself, with one password, which smarter-infrastructure generates for "
+        "each environment, and no access control list, so every client may run "
         "every command on every database: database 0 holds the three task queues, the tool calls' results and "
         "RedBeat's schedule; database 1 the cache, with Extensions' archives and cached tool results; database 2 the "
         "users' sessions. Calico's network policies are what keeps other pods out. The last column is what code "
@@ -324,7 +324,7 @@ def redis_trust():
 
     # 2. Redis
     d.heading(410, 100, 400, "2 · Redis: one password, no ACL")
-    d.region(398, 116, 424, 560, "smarter-redis", note="password: smarter (values.yaml, the deploy action)")
+    d.region(398, 116, 424, 560, "smarter-redis", note="one password, smarter-redis-password, for every client")
     d.box(
         "db0",
         416,

@@ -4,7 +4,9 @@ ADR-030: Operational and Infrastructure Task Queues
 Status
 ------
 Accepted. Rules 1 and 3 hold in the code as of 0.48.8, and rule 4 since ADR-038's phase 2. Rule 2 has four
-exceptions, listed in the inventory below. The security rules, 5 to 9, are proposed and not yet implemented.
+exceptions, listed in the inventory below. Of the security rules, 5 to 9, rule 5 is implemented: it takes
+effect when smarter-infrastructure has created Redis's password and the chart is deployed. Rules 6 to 9 are
+proposed.
 
 Context
 -------
@@ -105,20 +107,21 @@ least privileged pod to the most privileged one.
 
 .. image:: ../_static/adr-030/redis-trust.svg
    :alt: Every pod holds Redis's url, including the tool worker, which holds no other credential. Redis has one
-         password, smarter, which is public, and no access control list. Its database 0 holds the queues, the
-         tool calls' results and RedBeat's schedule, database 1 the cache and database 2 the sessions. With the
+         password for every client, which smarter-infrastructure generates, and no access control list. Its
+         database 0 holds the queues, the tool calls' results and RedBeat's schedule, database 1 the cache and database 2 the sessions. With the
          url alone, code in the tool worker can push a task to the infrastructure queue, read the other pending
          tool calls with their credentials, forge a tool call's result, read the session keys and add an entry to
          RedBeat's schedule. It can't swap an Extension's archive, whose sha256 the worker checks.
 
 What the code does today:
 
-- **Redis's password is public.** ``smarter.settings.base_aws`` builds the broker's and the cache's url
-  with ``smarter_settings.platform_shared_resource_identifier`` as the password, a naming prefix that is
-  ``smarter`` by default. The chart's ``redis.auth.password`` is ``smarter``, and so is the deploy
-  action's ``REDIS_URL``, both in this public repository. Redis has no access control list, so its one
-  password allows every command on every database. Calico's network policies, which admit only the
-  namespace's application pods, are what keeps anyone else out.
+- **Redis's password was public.** In 0.48.8, ``smarter.settings.base_aws`` built the broker's and the
+  cache's url with ``smarter_settings.platform_shared_resource_identifier`` as the password, a naming prefix
+  that is ``smarter`` by default, and the chart's ``redis.auth.password`` and the deploy action's
+  ``REDIS_URL`` were ``smarter`` too, all in this public repository. Rule 5 replaces it with a password that
+  smarter-infrastructure generates for each environment. Redis has no access control list, so its one
+  password still allows every command on every database, to every pod that holds it. Calico's network
+  policies, which admit only the namespace's application pods, are what keeps anyone else out.
 - **Every pod holds the url**, the tool worker included: it needs the broker and the cache. ADR-038 says
   that code there "can still reach the cache, the sessions and the other workers' queues". What that
   allows, with the url alone:
@@ -153,6 +156,11 @@ The security rules, proposed:
    in a Kubernetes Secret, and read by a ``SecretStr`` setting (:doc:`ADR-007 <007-settings>`). Never a
    default in ``values.yaml`` or the deploy action, and never derived from a setting that isn't secret.
    Changing it means restarting every pod and Redis together.
+
+   Implemented: smarter-infrastructure generates it into the Kubernetes Secret ``smarter-redis-password``,
+   the Redis subchart reads it from there (``redis.auth.existingSecret``), and so do the platform's pods,
+   as ``SMARTER_SUBSYSTEM_REDIS_PASSWORD`` (``subsystem_redis_password``). ``base_aws`` builds every Redis
+   url from it, and refuses to start without it (``require_redis_password()``).
 6. **Each worker registers only its own queue's tasks**, as the tool worker does. ``keep_only_tool_worker_tasks()``
    becomes a map from each worker to its tasks, so a message for an infrastructure task that lands on the
    operational queue is rejected, not run. It is cheap, and it narrows what a forged message can reach, but
@@ -173,8 +181,15 @@ The security rules, proposed:
    Redis's volume is encrypted at rest, which MariaDB's isn't by default either (see
    :doc:`../smarter-platform/system-administration/security/application`). Messages are JSON, never pickle.
 
-Rules 5 and 6 are cheap and come first. Rule 7 is the one that closes the escalation. Rule 8 is the most
-work, and covers what 7 doesn't. Until then, Calico's network policies, the hardened pods, and ADR-038's
+The order follows who could use each path. A malicious dependency runs in every pod, including those that
+already hold every credential, so Redis gives it nothing new: ADR-038's phases 3 and 4 are what limit it.
+The queues matter for code that runs only in the tool worker, an Extension above all. For that code, rule 5
+and then rule 8 close every path at once: an ACL user is useless while the default user's password is
+public, and with a real password, the tool worker's own user can't push to another queue, read the sessions
+or edit the schedule. Rule 6 is cheap, and narrows what any forged message reaches. Rule 7 then protects
+against Redis clients that already hold credentials, which makes it defense in depth, and it comes after the
+isolation of Extension calls, which no ACL can give, because the tool worker must read its own queue. Until
+then, Calico's network policies, the hardened pods, and ADR-038's
 tool worker, which keeps Extensions out of the pods that hold credentials, are the protection. The tool
 worker's Extensions and their persistence in its processes are ADR-038's: one option is a queue of their
 own with ``--max-tasks-per-child=1``.

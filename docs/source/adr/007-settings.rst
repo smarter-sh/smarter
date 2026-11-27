@@ -32,9 +32,10 @@ these rules:
    first, and the Django setting that needs it, such as a database's or a broker's url, is built from that.
 
 As of 0.48.8, 71 settings are ``SecretStr``, and the only credential-like ``str`` is the extension
-registry's public key, which is not a secret. The one credential that breaks the rules is Redis's
-password: there is no setting for it, and ``smarter.settings.base_aws`` uses
-``platform_shared_resource_identifier`` (``smarter`` by default) in its place
+registry's public key, which is not a secret. The one credential that broke the rules was Redis's
+password: there was no setting for it, and ``smarter.settings.base_aws`` used
+``platform_shared_resource_identifier`` (``smarter`` by default) in its place. It is now
+``subsystem_redis_password``, which smarter-infrastructure generates for each environment
 (:doc:`ADR-030 <030-task-queues>`, rule 5). Nothing tests the rules yet: a test that every field whose name
 says it is a credential is a ``SecretStr``, with the public key as its one exception, would keep them.
 
