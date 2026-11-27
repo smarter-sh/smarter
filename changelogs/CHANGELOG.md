@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.14-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.13...v0.48.14-alpha.1) (2026-11-27)
+
+### Bug Fixes
+
+* **cache:** cache results in the tool workers' own redis keys ([cc31aec](https://github.com/smarter-sh/smarter/commit/cc31aec395a36ca9d4a797807fbf42b0a01ce794))
+
 ## [0.48.13](https://github.com/smarter-sh/smarter/compare/v0.48.12...v0.48.13) (2026-11-27)
 
 ### Bug Fixes
