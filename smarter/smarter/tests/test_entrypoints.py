@@ -9,6 +9,7 @@ with the live settings, so every test restores it.
 """
 
 import ast
+import asyncio
 import importlib
 import logging
 import os
@@ -16,6 +17,7 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+from typing import Optional
 from unittest.mock import patch
 
 from pydantic import SecretStr
@@ -346,6 +348,29 @@ class TestApplicationEntryPoints(SmarterTestBase):
         self.assertIn("http", module.application.app.application_mapping)
         self.assertIn("websocket", module.application.app.application_mapping)
         self.assertEqual(module.__all__, ["application"])
+
+    def test_asgi_runs_the_startup_checks_without_an_event_loop(self):
+        """
+        Uvicorn imports asgi inside its event loop, where Django refuses to query the database.
+
+        The startup checks run in a thread of their own, which has no event loop, so that check_database can query.
+        """
+        loops_seen: list[Optional[asyncio.AbstractEventLoop]] = []
+
+        def record_event_loop(checks) -> dict[str, bool]:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            loops_seen.append(loop)
+            return {}
+
+        async def import_asgi_in_an_event_loop() -> None:
+            fresh_import("smarter.asgi")
+
+        with patch("smarter.apps.infrastructure.startup.run_startup_checks", side_effect=record_event_loop):
+            asyncio.run(import_asgi_in_an_event_loop())
+        self.assertEqual(loops_seen, [None])
 
     def test_wsgi_application(self):
         """Wsgi wraps the django application with WhiteNoise."""

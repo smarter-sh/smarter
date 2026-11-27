@@ -126,6 +126,9 @@ needs. Then:
   smarter-redis-users, which smarter-infrastructure generates, and the broker's url built from them. Without
   that Secret's key, the password and the url are left out, and the worker refuses to start rather than run
   as the default user;
+- CACHE_RESULTS_CACHE, @cache_results' own cache (the cache-results package reads it): the cache's
+  database, as the same user, under the key prefix <user>_cache, which that user's ACL rule allows. Every
+  other pod leaves it unset, and caches results in the platform's cache;
 - SMARTER_APP_TOOLS_WORKER_QUEUE, "queue", when it is given: the Extension worker's queue. The tool worker
   leaves it out, and its queue is the tools queue;
 - AWS_EC2_METADATA_DISABLED=true: boto3, which settings start, doesn't ask the node's instance
@@ -170,6 +173,13 @@ needs. Then:
 {{- $redis := printf "%s-master.%s.svc.cluster.local:6379" $root.Values.redis.fullnameOverride $root.Release.Namespace -}}
 {{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $password -}}
 {{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://%s:%s@%s/0" $user (urlquery $password) $redis) -}}
+{{- /* @cache_results' own cache (cache-results' CACHE_RESULTS_CACHE): the cache's database, as the same
+user, under keys that only this user's ACL rule, ~<user>_cache:*, allows. The timeouts are settings/base.py's
+CACHE_SOCKET_CONNECT_TIMEOUT and CACHE_SOCKET_TIMEOUT. */ -}}
+{{- $cacheOptions := dict "SOCKET_CONNECT_TIMEOUT" 2 "SOCKET_TIMEOUT" 5 -}}
+{{- $cacheLocation := printf "redis://%s:%s@%s/1" $user (urlquery $password) $redis -}}
+{{- $cache := dict "BACKEND" "django_redis.cache.RedisCache" "LOCATION" $cacheLocation "KEY_PREFIX" (printf "%s_cache" $user) "OPTIONS" $cacheOptions -}}
+{{- $_ := set $env "CACHE_RESULTS_CACHE" (toJson $cache) -}}
 {{- end -}}
 {{- toYaml $env -}}
 {{- end }}
