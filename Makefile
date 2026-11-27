@@ -30,7 +30,7 @@ include .env
 	python-init python-lint python-clean python-requirements python-hashes python-cooldown python-audit check-python \
 	keen-init keen-build keen-server \
 	console console-local \
-	helm-update \
+	helm-update redis-chart-check \
 	sphinx-init sphinx-docs sphinx-linkcheck \
 	help
 
@@ -269,6 +269,12 @@ helm-update: ## Update Helm chart dependencies
 	@echo "==============================================================================="
 	cd helm/charts/smarter && \
 	helm dependency update
+
+# Start the chart's Redis the way its pod starts it, from the rendered chart and the image it pins, and check
+# its ACL users. Run it before a change to the chart's Redis or its image: docker-compose and helm template
+# can't show what kept prod's Redis from starting on 2026-11-27. Needs helm, docker and the network.
+redis-chart-check: ## Start the Helm chart's Redis as its pod does, and check its ACL users
+	python3 -I scripts/check_redis_chart.py
 
 # ---------------------------------------------------------
 # Keen
