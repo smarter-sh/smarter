@@ -98,6 +98,10 @@ class TestToolWorker(unittest.TestCase):
         for flag in ("--without-mingle", "--without-gossip", "--without-heartbeat"):
             with self.subTest(flag=flag):
                 self.assertIn(f'"{flag}"', text)
+        # nor a liveness probe that pings it through remote control: it would always fail.
+        probe = text.split("livenessProbe:", 1)[1].split("startupProbe:", 1)[0]
+        self.assertNotIn("smarter.workers.liveness", probe)
+        self.assertIn("pgrep -f 'celery.*worker'", probe)
 
     def test_deployment_reads_only_its_own_secret(self):
         """The Deployment reads its own Secret, not the platform's, and no other environment."""
