@@ -4,9 +4,11 @@ import logging
 from unittest import TestCase
 
 from smarter.common.conf.settings import Settings
+from smarter.common.conf.settings.cache import CacheSettings
 from smarter.common.conf.settings.security import generated_django_secret_key
 from smarter.common.conf.util import (
     field_default,
+    has_field,
     input_value,
     is_unset,
     with_derived_default,
@@ -22,6 +24,23 @@ class TestFieldDefault(TestCase):
 
     def test_factory_default(self):
         self.assertIs(field_default(Settings, "django_secret_key"), generated_django_secret_key())
+
+
+class TestHasField(TestCase):
+    """A group of fields' validator checks for a field of another group before it reads it."""
+
+    def test_the_settings_class_has_every_group_s_fields(self):
+        self.assertTrue(has_field(Settings, "environment"))
+        self.assertTrue(has_field(Settings, "subsystem_redis_password"))
+
+    def test_a_group_alone_lacks_the_other_groups_fields(self):
+        self.assertTrue(has_field(CacheSettings, "subsystem_redis_password"))
+        self.assertFalse(has_field(CacheSettings, "environment"))
+
+    def test_an_instance_is_read_as_its_class(self):
+        settings = Settings()
+        self.assertTrue(has_field(settings, "environment"))
+        self.assertFalse(has_field(settings, "no_such_field"))
 
 
 class TestDerivedDefaults(TestCase):

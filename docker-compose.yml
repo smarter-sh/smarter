@@ -27,7 +27,34 @@ services:
     cpus: 0.25
     mem_limit: 1g
     image: redis:latest
-    command: redis-server --requirepass smarter
+    # the tool worker's ACL user, tools, with the Helm chart's rules (redis.auth.acl.users in values.yaml).
+    # A list, not a string: compose splits a string command like a shell, and stops at the > of the password.
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "smarter",
+        "--user",
+        "tools",
+        "on",
+        ">smarter-tools",
+        "~tools_celery_task_queue*",
+        "~celery-task-meta-*",
+        "%R~django*:1:smarter:extension:archive:*",
+        "~django*:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.*",
+        "%W~stream:logs:*",
+        "&logs:*",
+        "&celery-task-meta-*",
+        "+@all",
+        "-@dangerous",
+        "-@admin",
+        "-scan",
+        "-randomkey",
+        "-pubsub",
+        "-subscribe",
+        "-psubscribe",
+        "-ssubscribe",
+      ]
     ports:
       - 6379:6379
 
@@ -176,7 +203,8 @@ services:
     image: smarter
     pull_policy: never
     # no -E: task events would copy each call's arguments, which hold its credentials.
-    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q tools_celery_task_queue -n tools@%h
+    # without mingle, gossip, heartbeats or remote control, whose keys its Redis user can't reach.
+    command: celery -A smarter.workers.celery.app worker --concurrency=4 --loglevel=info -Q tools_celery_task_queue -n tools@%h --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
     env_file:
@@ -187,8 +215,12 @@ services:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=worker
       - SMARTER_DATABASE_UNAVAILABLE=true
+      # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
+      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools
+      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-tools
     healthcheck:
-      test: ["CMD", "celery", "-A", "smarter.workers.celery.app", "inspect", "ping"]
+      # it takes no remote control, so celery inspect ping can't reach it.
+      test: ["CMD-SHELL", "pgrep -f 'celery.*worker' > /dev/null"]
       interval: 30s
       timeout: 30s
       retries: 3

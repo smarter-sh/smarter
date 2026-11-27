@@ -26,6 +26,8 @@ from collections.abc import Callable, Sequence
 from cache_results import lazy_cache
 from django.conf import settings
 from django.db import connection
+from redis import Redis
+from redis.exceptions import NoPermissionError, RedisError
 
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.infrastructure.services.kubernetes import (
@@ -76,6 +78,22 @@ a credential that was added by mistake. The broker's and the cache's urls carry 
 the tool worker needs, under names that don't match.
 """
 
+TOOL_WORKER_ALLOWED_CREDENTIALS = ("SMARTER_SUBSYSTEM_REDIS_PASSWORD",)
+"""
+The one credential that the tool worker holds: the password of its own Redis ACL user, ``tools``.
+
+With it, the tool worker takes its tasks from the broker and reads Extensions' archives from the cache.
+The user's ACL limits it to those keys (ADR-030, rule 8), which :func:`check_tool_worker_redis` confirms.
+"""
+
+SESSION_KEY_PROBE = ":1:django.contrib.sessions.cache" + "0" * 32
+"""
+A session's key in Redis's database 2, which the tool worker must not read.
+
+Django's cache session backend keys each session by its cookie's value, so a session's key name is a
+sign-in. No session has this one: the probe only asks whether the tool worker may look.
+"""
+
 
 # ------------------------------------------------------------------------------
 # helpers
@@ -107,6 +125,8 @@ def credential_variables() -> list[str]:
     names = []
     for name, value in os.environ.items():
         if not value:
+            continue
+        if name in TOOL_WORKER_ALLOWED_CREDENTIALS:
             continue
         if name in TOOL_WORKER_FORBIDDEN_VARIABLES:
             names.append(name)
@@ -391,6 +411,129 @@ def check_tool_worker_isolation() -> bool:
     return isolated
 
 
+RedisProbe = Callable[[], object]
+"""A read of Redis that the tool worker's ACL user must be refused."""
+
+
+def tool_worker_redis_probes(broker: Redis, cache: Redis, sessions: Redis) -> list[tuple[str, RedisProbe]]:
+    """
+    Name the reads of Redis that the tool worker's ACL user must be refused, each with its probe.
+
+    Each probe only reads, so that a missing ACL changes nothing: a key that the user can't read, and
+    that no pattern of its ACL names, can't be written either. They cover what code in the tool worker
+    could otherwise do with Redis's url: push a task to another worker's queue, rebind its own queue,
+    plant a message among the other workers' unacknowledged ones, edit RedBeat's schedule, read the cache
+    and the sessions, and list the keys or the channels, whose names include sessions' keys.
+
+    :param broker: A client of the broker's database, 0.
+    :param cache: A client of the cache's database, 1.
+    :param sessions: A client of the sessions' database, 2.
+    :returns: Each probe's description, and the probe.
+    """
+    operational_queue = smarter_settings.app_llmclient_tasks_celery_task_queue
+    infrastructure_queue = smarter_settings.app_infrastructure_tasks_celery_task_queue
+    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    cache_key = f"{settings.CACHE_KEY_PREFIX}:1:{CACHE_CHECK_KEY}"
+    probes: list[tuple[str, RedisProbe]] = [
+        ("the operational queue", lambda: broker.llen(operational_queue)),
+        ("the infrastructure queue", lambda: broker.llen(infrastructure_queue)),
+        ("the routing of its own queue", lambda: broker.smembers(f"_kombu.binding.{tools_queue}")),
+        ("the other workers' unacknowledged messages", lambda: broker.hlen("unacked")),
+        ("RedBeat's schedule", lambda: broker.exists("redbeat::schedule")),
+        ("the cache", lambda: cache.exists(cache_key)),
+        ("the sessions", lambda: sessions.exists(SESSION_KEY_PROBE)),
+        ("listing the keys", lambda: broker.scan(0, count=1)),
+        ("listing the pub/sub channels", broker.pubsub_channels),
+    ]
+    return probes
+
+
+def tool_worker_redis_breaches(probes: Sequence[tuple[str, RedisProbe]]) -> list[str]:
+    """
+    Run the probes, and name those that Redis allowed.
+
+    :param probes: From :func:`tool_worker_redis_probes`.
+    :returns: The description of each probe that wasn't refused with NOPERM. A probe that fails some
+        other way, e.g. a lost connection, is logged and counts as allowed: the ACL wasn't confirmed.
+    """
+    breaches = []
+    for description, probe in probes:
+        try:
+            probe()
+        except NoPermissionError:
+            continue
+        except RedisError as e:
+            logger.warning("The tool worker's access to %s could not be checked: %s", description, error_description(e))
+        breaches.append(description)
+    return breaches
+
+
+def redis_client(url: str) -> Redis:
+    """
+    Return a Redis client for a url, with the startup checks' timeout.
+
+    :param url: A Redis url, with its credentials and database.
+    :returns: The client.
+    """
+    client = Redis.from_url(url, socket_timeout=STARTUP_CHECK_TIMEOUT, socket_connect_timeout=STARTUP_CHECK_TIMEOUT)
+    return client
+
+
+def check_tool_worker_redis() -> bool:
+    """
+    Confirm that the tool worker's Redis ACL user can reach its own queue, and nothing else of the platform's.
+
+    The tool worker holds Redis's url, which it needs to take its tasks and read Extensions' archives. As
+    Redis's ``default`` user, that url would let code in the tool worker, an Extension's included, push a
+    task to the infrastructure worker, which holds the Kubernetes Role and the IAM role, or read every user's
+    session (ADR-030). Its own user, ``tools``, is refused all of that, and :func:`tool_worker_redis_probes`
+    confirms it, one read at a time, each logged on a line of its own.
+
+    It runs wherever the tool worker does, docker-compose included, whose Redis defines the same user.
+
+    :returns: True if the tool worker reads its own queue, and every probe is refused.
+    """
+    username = smarter_settings.subsystem_redis_username
+    if not username:
+        logger.error(
+            "ADR-030 breach: the tool worker authenticates to Redis as its default user, which may read every "
+            "queue and session. Set SMARTER_SUBSYSTEM_REDIS_USERNAME and its password: see the Helm chart's "
+            "smarter.toolsEnv."
+        )
+        return False
+    broker = redis_client(settings.CELERY_BROKER_URL)
+    cache = redis_client(str(settings.CACHES["default"]["LOCATION"]))
+    sessions = redis_client(str(settings.CACHES["sessions"]["LOCATION"]))
+    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    try:
+        broker.llen(tools_queue)
+    except RedisError as e:
+        logger.warning(
+            "The tool worker's Redis user %s can't read its own queue, %s: %s. Tool calls will not run.",
+            username,
+            tools_queue,
+            error_description(e),
+        )
+        return False
+    logger.info("The tool worker's Redis user %s reads its own queue, %s.", username, tools_queue)
+    probes = tool_worker_redis_probes(broker, cache, sessions)
+    breaches = tool_worker_redis_breaches(probes)
+    for description, _probe in probes:
+        if description in breaches:
+            logger.error(
+                "ADR-030 breach: the tool worker's Redis user %s may read %s. Check the Redis ACL in the Helm "
+                "chart's redis.auth.acl.users.",
+                username,
+                description,
+            )
+        else:
+            logger.info("ADR-030 confirmed: the tool worker's Redis user %s can't read %s.", username, description)
+    if breaches:
+        return False
+    logger.info("The tool worker's Redis user %s reaches only its own keys.", username)
+    return True
+
+
 # ------------------------------------------------------------------------------
 # the lists, and the runner
 # ------------------------------------------------------------------------------
@@ -403,7 +546,7 @@ WORKER_CHECKS: tuple[StartupCheck, ...] = (check_database, check_cache, check_ku
 Celery checks its own broker.
 """
 
-TOOL_WORKER_CHECKS: tuple[StartupCheck, ...] = (check_tool_worker_isolation,)
+TOOL_WORKER_CHECKS: tuple[StartupCheck, ...] = (check_tool_worker_isolation, check_tool_worker_redis)
 """The tool worker's checks.
 
 It has no database, and its pods never reach Kubernetes.
@@ -447,10 +590,14 @@ __all__ = [
     "check_database",
     "check_kubernetes",
     "check_tool_worker_isolation",
+    "check_tool_worker_redis",
     "credential_variables",
     "error_description",
     "kubernetes_credentials",
     "kubernetes_problem",
     "run_startup_checks",
+    "redis_client",
     "tool_worker_forbidden_targets",
+    "tool_worker_redis_breaches",
+    "tool_worker_redis_probes",
 ]

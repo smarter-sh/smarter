@@ -55,14 +55,14 @@ It starts from .Values.env, then:
   SET-ME placeholder, so that a setting nobody set gets Smarter's own default rather than the
   placeholder's text;
 - derives what follows from the other values, unless .Values.env sets it:
-  DJANGO_SETTINGS_MODULE from SMARTER_ENVIRONMENT, DJANGO_CELERY_BROKER_URL from the chart's Redis
-  and the release's namespace, SMARTER_SUBSYSTEM_K8S_NAMESPACE (the release's namespace), and
+  DJANGO_SETTINGS_MODULE from SMARTER_ENVIRONMENT, DJANGO_CELERY_BROKER_URL from the chart's Redis,
+  the release's namespace and Redis's password (SMARTER_SUBSYSTEM_REDIS_PASSWORD, read from a Secret below), SMARTER_SUBSYSTEM_K8S_NAMESPACE (the release's namespace), and
   SMARTER_PLATFORM_S3_BUCKET, which smarter-infrastructure names after the environment's platform
   domain: <subdomain>.<root domain> in prod, <environment>.<subdomain>.<root domain> elsewhere;
   and, with workerTools.enabled, SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote, which sends the app's tool
   calls to the tool worker;
 - reads the Kubernetes Secrets that smarter-infrastructure creates in the release's namespace
-  (infrastructureSecrets in values.yaml): the database, administrator, email and Django
+  (infrastructureSecrets in values.yaml): the database, administrator, email, Django and Redis
   credentials. A value read from one of them supersedes .Values.env, because the infrastructure
   created the credential it describes. A Secret that doesn't exist, as in `helm template`, which
   can't read the cluster, is skipped.
@@ -82,7 +82,6 @@ It starts from .Values.env, then:
 {{- $prefix := ternary "" (printf "%s." $environment) (eq $environment "prod") -}}
 {{- $redis := printf "%s-master.%s.svc.cluster.local:6379" .Values.redis.fullnameOverride .Release.Namespace -}}
 {{- $_ := set $env "DJANGO_SETTINGS_MODULE" (get $env "DJANGO_SETTINGS_MODULE" | default (printf "smarter.settings.%s" $environment)) -}}
-{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (get $env "DJANGO_CELERY_BROKER_URL" | default (printf "redis://:%s@%s/0" .Values.redis.auth.password $redis)) -}}
 {{- $_ := set $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" (get $env "SMARTER_SUBSYSTEM_K8S_NAMESPACE" | default .Release.Namespace) -}}
 {{- $_ := set $env "SMARTER_PLATFORM_S3_BUCKET" (get $env "SMARTER_PLATFORM_S3_BUCKET" | default (printf "%s%s.%s" $prefix $subdomain $rootDomain)) -}}
 {{- if (.Values.workerTools | default dict).enabled -}}
@@ -99,6 +98,12 @@ It starts from .Values.env, then:
 {{- end -}}
 {{- end -}}
 {{- end -}}
+{{- /* after the Secrets, which hold Redis's password. Without it, the broker's url is left out, and
+       smarter.settings.base_aws refuses to start with a message that names the missing setting. */ -}}
+{{- $redisPassword := get $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" | default "" -}}
+{{- if and (not (hasKey $env "DJANGO_CELERY_BROKER_URL")) $redisPassword -}}
+{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://:%s@%s/0" (urlquery $redisPassword) $redis) -}}
+{{- end -}}
 {{- toYaml $env -}}
 {{- end }}
 
@@ -108,13 +113,17 @@ The tool worker's environment, from its own Secret in secret-env-tools.yaml (ADR
   {{- $env := include "smarter.toolsEnv" . | fromYaml }}
 
 Only what it needs to start, take its tasks from the broker and read extension archives from the
-cache, from smarter.env: the broker's url, the cache's (DJANGO_CACHES, or the settings that it is
-derived from), and settings that aren't secret. Never the database's, the Django secret key, the
+cache, from smarter.env: settings that aren't secret. Never DJANGO_CACHES or smarter.env's broker url,
+which carry Redis's default user's password. Never the database's, the Django secret key, the
 Fernet key, the LLM providers' keys or the AWS keys: each tool call brings the credentials that it
 needs. Then:
 
 - SMARTER_DATABASE_UNAVAILABLE=true: the worker never opens a database connection, and reads every
   waffle switch as off;
+- Redis's credentials are its own ACL user's, tools, not the default user's (ADR-030, rule 8):
+  SMARTER_SUBSYSTEM_REDIS_USERNAME, SMARTER_SUBSYSTEM_REDIS_PASSWORD from the Secret smarter-redis-users,
+  which smarter-infrastructure generates, and the broker's url built from them. Without that Secret, the
+  password and the url are left out, and the worker refuses to start rather than run as the default user;
 - AWS_EC2_METADATA_DISABLED=true: boto3, which settings start, doesn't ask the node's instance
   metadata for its IAM role. The network policy blocks it too.
 */}}
@@ -123,8 +132,6 @@ needs. Then:
 {{- $env := dict -}}
 {{- $keys := list
   "AWS_REGION"
-  "DJANGO_CACHES"
-  "DJANGO_CELERY_BROKER_URL"
   "DJANGO_SETTINGS_MODULE"
   "SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS"
   "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE"
@@ -145,6 +152,16 @@ needs. Then:
 {{- end -}}
 {{- $_ := set $env "SMARTER_DATABASE_UNAVAILABLE" "true" -}}
 {{- $_ := set $env "AWS_EC2_METADATA_DISABLED" "true" -}}
+{{- $toolsUser := "tools" -}}
+{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $toolsUser -}}
+{{- $users := lookup "v1" "Secret" .Release.Namespace "smarter-redis-users" -}}
+{{- $usersData := get $users "data" | default dict -}}
+{{- if hasKey $usersData $toolsUser -}}
+{{- $toolsPassword := get $usersData $toolsUser | b64dec -}}
+{{- $redis := printf "%s-master.%s.svc.cluster.local:6379" .Values.redis.fullnameOverride .Release.Namespace -}}
+{{- $_ := set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $toolsPassword -}}
+{{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://%s:%s@%s/0" $toolsUser (urlquery $toolsPassword) $redis) -}}
+{{- end -}}
 {{- toYaml $env -}}
 {{- end }}
 

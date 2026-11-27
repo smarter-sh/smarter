@@ -5,7 +5,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from smarter.common.conf import smarter_settings
-from smarter.common.utils.redis_url import redis_url_with_database
+from smarter.common.utils.redis_url import redis_server_url, redis_url_with_database
 from smarter.lib import json
 from smarter.lib.logging import getSmarterLogger
 
@@ -13,7 +13,19 @@ from .base import *
 
 logger = getSmarterLogger(__name__)
 logger.debug("Loading smarter.settings.base_aws")
-default_redis_server = f"redis://:{smarter_settings.platform_shared_resource_identifier}@{smarter_settings.platform_shared_resource_identifier}-redis-master.{smarter_settings.environment_namespace}.svc.cluster.local:6379"
+# Redis's password is generated per environment by smarter-infrastructure (the Kubernetes Secret
+# smarter-redis-password), never a default: it guards the Celery queues, whose workers hold the
+# platform's credentials, and every user's session (ADR-030, rule 5). The tool worker authenticates
+# as its own ACL user, tools, with that user's password (rule 8).
+redis_host = (
+    f"{smarter_settings.platform_shared_resource_identifier}-redis-master."
+    f"{smarter_settings.environment_namespace}.svc.cluster.local:6379"
+)
+default_redis_server = redis_server_url(
+    redis_host,
+    smarter_settings.subsystem_redis_username,
+    smarter_settings.require_redis_password().get_secret_value(),
+)
 # The cache and the Celery broker use different Redis databases, so that cache.clear()
 # can't delete the Celery queues. See CELERY_BROKER_URL in base.py.
 default_redis_location = f"{default_redis_server}/1"

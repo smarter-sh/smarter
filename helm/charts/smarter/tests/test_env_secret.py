@@ -31,14 +31,75 @@ OPTIONAL_KEYS = ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
 
 DERIVED_KEYS = (
     "DJANGO_SETTINGS_MODULE",
-    "DJANGO_CELERY_BROKER_URL",
     "SMARTER_SUBSYSTEM_K8S_NAMESPACE",
     "SMARTER_PLATFORM_S3_BUCKET",
 )
 """The settings that smarter.env derives from the others, which values.yaml therefore doesn't set."""
 
-INFRASTRUCTURE_SECRETS = ("mysql-smarter", "mysql-root", "smarter-admin", "smarter-django-secret-key", "aws-ses-config")
+INFRASTRUCTURE_SECRETS = (
+    "mysql-smarter",
+    "mysql-root",
+    "smarter-admin",
+    "smarter-django-secret-key",
+    "aws-ses-config",
+    "smarter-redis-password",
+)
 """The Kubernetes Secrets that smarter-infrastructure creates in each environment's namespace."""
+
+
+REPOSITORY_ROOT = CHART_PATH.parent.parent.parent
+COMPOSE_PATHS = (REPOSITORY_ROOT / "docker-compose.yml", REPOSITORY_ROOT / "docker-compose.shard.yml")
+CACHE_SETTINGS_PATH = REPOSITORY_ROOT / "smarter" / "smarter" / "common" / "conf" / "settings" / "cache.py"
+
+
+def tools_acl_rules() -> dict[str, str]:
+    """
+    Return the Redis ACL rules of the tool worker's user, from values.yaml's redis.auth.acl.users.
+
+    :returns: Its username, enabled, keys, channels and commands.
+    """
+    values = VALUES_PATH.read_text(encoding="utf-8")
+    match = re.search(
+        r'        - username: "(?P<username>[^"]+)"\n'
+        r'          enabled: "(?P<enabled>[^"]+)"\n'
+        r'          keys: "(?P<keys>[^"]+)"\n'
+        r'          channels: "(?P<channels>[^"]+)"\n'
+        r'          commands: "(?P<commands>[^"]+)"\n',
+        values,
+    )
+    if match is None:
+        raise AssertionError("values.yaml has no redis.auth.acl.users entry")
+    return match.groupdict()
+
+
+def local_tool_worker_password() -> str:
+    """
+    Return LOCAL_TOOL_WORKER_REDIS_PASSWORD, from the settings' source, which these tests can't import.
+
+    :returns: The password.
+    """
+    text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
+    match = re.search(r'^LOCAL_TOOL_WORKER_REDIS_PASSWORD = "([^"]+)"$', text, re.MULTILINE)
+    if match is None:
+        raise AssertionError("cache.py has no LOCAL_TOOL_WORKER_REDIS_PASSWORD")
+    return match.group(1)
+
+
+def compose_redis_command(text: str) -> list[str]:
+    """
+    Return the arguments of a docker-compose file's smarter-redis command.
+
+    It is a list, not a string, because compose splits a string command like a shell, and stops at the
+    ``>`` of the password. Prettier writes the list one argument per line.
+
+    :param text: The docker-compose file.
+    :returns: The command's arguments.
+    """
+    match = re.search(r"\n  smarter-redis:\n(?:    [^\n]*\n)*?    command:\s*\[(?P<arguments>[^\]]*)\]", text)
+    if match is None:
+        raise AssertionError("smarter-redis has no command list")
+    arguments = re.findall(r'"([^"]*)"', match.group("arguments"))
+    return arguments
 
 
 def env_helper() -> str:
@@ -101,6 +162,65 @@ class TestEnvironment(unittest.TestCase):
             with self.subTest(secret=secret_name):
                 self.assertIn(f"\n    {secret_name}:\n", values)
         self.assertIn('lookup "v1" "Secret" $.Release.Namespace $secretName', env_helper())
+
+    def test_broker_url_uses_the_generated_redis_password(self):
+        """
+        The broker's url is built from Redis's password, read from smarter-infrastructure's Secret.
+
+        It is built after the Secrets are read, and only when env doesn't set it. The password used to be
+        values.yaml's public default, smarter (ADR-030, rule 5).
+        """
+        helper = env_helper()
+        secrets_read_at = helper.index('lookup "v1" "Secret"')
+        broker_built_at = helper.index('set $env "DJANGO_CELERY_BROKER_URL"')
+        self.assertLess(secrets_read_at, broker_built_at)
+        self.assertIn('get $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD"', helper)
+        self.assertIn('(not (hasKey $env "DJANGO_CELERY_BROKER_URL"))', helper)
+        self.assertIn("urlquery $redisPassword", helper)
+        self.assertNotIn(".Values.redis.auth.password", helper)
+        self.assertNotIn("\n  DJANGO_CELERY_BROKER_URL:", VALUES_PATH.read_text(encoding="utf-8"))
+
+    def test_redis_reads_the_generated_password(self):
+        """The Redis subchart reads its password from the same Secret as the pods, and values.yaml has none."""
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn('existingSecret: "smarter-redis-password"', values)
+        self.assertIn('existingSecretPasswordKey: "REDIS_PASSWORD"', values)
+        self.assertIn("      REDIS_PASSWORD: SMARTER_SUBSYSTEM_REDIS_PASSWORD\n", values)
+        self.assertNotIn('password: "smarter"', values)
+
+    def test_redis_acl_is_enabled_with_the_tools_user(self):
+        """The Redis subchart defines the tool worker's user, whose password is in smarter-infrastructure's Secret."""
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn('      userSecret: "smarter-redis-users"\n', values)
+        self.assertIn("    acl:\n      enabled: true\n", values)
+        rules = tools_acl_rules()
+        self.assertEqual(rules["username"], "tools")
+        self.assertEqual(rules["enabled"], "on")
+        self.assertTrue(rules["keys"].startswith("~tools_celery_task_queue* "), "the queue must be the tools queue")
+        self.assertNotIn("~* ", rules["keys"] + " ")
+        commands = rules["commands"].split()
+        for command in ("-@dangerous", "-scan", "-pubsub", "-subscribe", "-psubscribe"):
+            with self.subTest(command=command):
+                self.assertIn(command, commands)
+
+    def test_compose_redis_has_the_charts_rules(self):
+        """
+        Docker-compose.yml's and docker-compose.shard.yml's Redis define the same user, so the tests check the chart's rules.
+
+        The password is LOCAL_TOOL_WORKER_REDIS_PASSWORD, which the tests connect with.
+        """
+        rules = tools_acl_rules()
+        password = local_tool_worker_password()
+        arguments = ["redis-server", "--requirepass", "smarter", "--user", "tools", "on", f">{password}"]
+        for field in ("keys", "channels", "commands"):
+            arguments.extend(rules[field].split())
+        for path in COMPOSE_PATHS:
+            with self.subTest(compose=path.name):
+                text = path.read_text(encoding="utf-8")
+                self.assertEqual(compose_redis_command(text), arguments)
+                self.assertIn("      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools\n", text)
+                self.assertIn(f"      - SMARTER_SUBSYSTEM_REDIS_PASSWORD={password}\n", text)
+                self.assertIn("--without-mingle --without-gossip --without-heartbeat", text)
 
     def test_mariadb_reads_the_platform_passwords(self):
         """MariaDB's Secret keeps the subchart's own name, so that its pod spec doesn't change."""

@@ -7,10 +7,15 @@ database and cache checks use the test stack's own database and Redis.
 """
 
 import os
+import uuid
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from django.conf import settings
 from django.db import OperationalError
+from redis import Redis
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import NoPermissionError
 
 from smarter.apps.infrastructure.services import (
     InMemoryKubernetesService,
@@ -28,14 +33,24 @@ from smarter.apps.infrastructure.startup import (
     check_database,
     check_kubernetes,
     check_tool_worker_isolation,
+    check_tool_worker_redis,
     credential_variables,
     error_description,
     kubernetes_credentials,
     kubernetes_problem,
+    redis_client,
     run_startup_checks,
     tool_worker_forbidden_targets,
+    tool_worker_redis_breaches,
+    tool_worker_redis_probes,
 )
 from smarter.common.conf import smarter_settings
+from smarter.common.conf.settings import Settings
+from smarter.common.conf.settings.cache import (
+    LOCAL_TOOL_WORKER_REDIS_PASSWORD,
+    TOOL_WORKER_REDIS_USERNAME,
+)
+from smarter.common.utils.redis_url import redis_server_url
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 MODULE = "smarter.apps.infrastructure.startup"
@@ -342,6 +357,8 @@ class TestToolWorkerIsolation(SmarterTestBase):
             "SMARTER_APP_PROVIDER_OPENAI_API_KEY": "x",
             "DJANGO_SECRET_KEY": "",
             "SMARTER_DEBUG_MODE": "false",
+            # its own Redis user's password, which it needs.
+            "SMARTER_SUBSYSTEM_REDIS_PASSWORD": "x",
         }
         with patch.dict(os.environ, environment, clear=True):
             names = credential_variables()
@@ -410,7 +427,7 @@ class TestRunStartupChecks(SmarterTestBase):
                 self.assertIn(check, checks)
         self.assertIn(check_broker, WEB_SERVER_CHECKS)
         self.assertNotIn(check_broker, WORKER_CHECKS)
-        self.assertEqual(TOOL_WORKER_CHECKS, (check_tool_worker_isolation,))
+        self.assertEqual(TOOL_WORKER_CHECKS, (check_tool_worker_isolation, check_tool_worker_redis))
 
 
 class TestHelpers(SmarterTestBase):
@@ -431,3 +448,238 @@ class TestHelpers(SmarterTestBase):
         create.return_value.__exit__.assert_called_once()
         with patch(f"{MODULE}.socket.create_connection", side_effect=TimeoutError()):
             self.assertFalse(can_connect("example.com", 443))
+
+
+def with_redis_username(username):
+    """
+    Patch the settings' Redis username.
+
+    The settings are frozen, so their class is patched.
+
+    :param username: The username, or None for the default user.
+    :returns: The patch, as a context manager.
+    """
+    patch_ = patch.object(
+        Settings, "subsystem_redis_username", new_callable=PropertyMock, return_value=username, create=True
+    )
+    return patch_
+
+
+def refusing_client(allowed_queue: str) -> MagicMock:
+    """
+    A stand-in Redis client that refuses every probe, as the tools user's ACL does, and reads one queue.
+
+    :param allowed_queue: The queue whose length it returns.
+    :returns: The stand-in.
+    """
+    client = MagicMock()
+
+    def llen(key):
+        if key == allowed_queue:
+            return 0
+        raise NoPermissionError("NOPERM")
+
+    client.llen.side_effect = llen
+    for method in ("smembers", "hlen", "exists", "scan", "pubsub_channels"):
+        getattr(client, method).side_effect = NoPermissionError("NOPERM")
+    return client
+
+
+class TestToolWorkerRedis(SmarterTestBase):
+    """Check_tool_worker_redis() confirms that the tool worker's Redis user reaches only its own keys."""
+
+    def test_breaches(self):
+        """A refused probe is no breach; one that is allowed, or that can't be checked, is."""
+
+        def refused():
+            raise NoPermissionError("NOPERM")
+
+        def lost():
+            raise RedisConnectionError("gone")
+
+        probes = [("refused", refused), ("allowed", lambda: 1), ("lost", lost)]
+        with self.assertLogs(MODULE, level="WARNING"):
+            breaches = tool_worker_redis_breaches(probes)
+        self.assertEqual(breaches, ["allowed", "lost"])
+
+    def test_default_user_is_a_breach(self):
+        """Without a username, the tool worker would be Redis's default user."""
+        with with_redis_username(None), self.assertLogs(MODULE, level="ERROR") as captured:
+            self.assertFalse(check_tool_worker_redis())
+        self.assertIn("default user", "\n".join(captured.output))
+
+    def test_every_probe_refused(self):
+        """The tools user reads its own queue, and is refused every probe."""
+        tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+        client = refusing_client(tools_queue)
+        with (
+            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            patch(f"{MODULE}.redis_client", return_value=client),
+            self.assertLogs(MODULE, level="INFO") as captured,
+        ):
+            self.assertTrue(check_tool_worker_redis())
+        output = "\n".join(captured.output)
+        self.assertIn("reaches only its own keys", output)
+        self.assertNotIn("breach", output)
+
+    def test_an_allowed_probe_is_logged(self):
+        """A probe that Redis allows is an ERROR, named."""
+        tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+        client = refusing_client(tools_queue)
+        client.exists.side_effect = None
+        client.exists.return_value = 0
+        with (
+            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            patch(f"{MODULE}.redis_client", return_value=client),
+            self.assertLogs(MODULE, level="ERROR") as captured,
+        ):
+            self.assertFalse(check_tool_worker_redis())
+        output = "\n".join(captured.output)
+        self.assertIn("the sessions", output)
+        self.assertIn("RedBeat's schedule", output)
+
+    def test_own_queue_unreadable(self):
+        """A user that can't read its own queue runs no tool call."""
+        client = refusing_client("another queue")
+        with (
+            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            patch(f"{MODULE}.redis_client", return_value=client),
+            self.assertLogs(MODULE, level="WARNING") as captured,
+        ):
+            self.assertFalse(check_tool_worker_redis())
+        self.assertIn("can't read its own queue", "\n".join(captured.output))
+
+    def test_redis_client(self):
+        """The client has the startup checks' timeout, and the url's database."""
+        client = redis_client("redis://:pw@smarter-redis:6379/2")
+        kwargs = client.connection_pool.connection_kwargs
+        self.assertEqual(kwargs["db"], 2)
+        self.assertEqual(kwargs["socket_timeout"], 2)
+
+
+class TestToolWorkerRedisAcl(SmarterTestBase):
+    """
+    The test stack's Redis defines the tool worker's user with the Helm chart's rules: check them, for real.
+
+    docker-compose.yml and docker-compose.shard.yml give smarter-redis the user ``tools``, with the rules of
+    the Helm chart's ``redis.auth.acl.users``; a chart test keeps the three the same. These tests connect as
+    that user, and as the default user, so a rule that is too narrow, which would break tool calls, or too
+    wide, which would let code in the tool worker reach another worker's queue or the sessions, fails here.
+    Every key they write is their own, and deleted.
+    """
+
+    tools: Redis
+    tools_cache: Redis
+    tools_sessions: Redis
+    admin: Redis
+    admin_cache: Redis
+    admin_sessions: Redis
+    suffix: str
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        server = redis_server_url("smarter-redis:6379", TOOL_WORKER_REDIS_USERNAME, LOCAL_TOOL_WORKER_REDIS_PASSWORD)
+        cls.tools = Redis.from_url(f"{server}/0")
+        cls.tools_cache = Redis.from_url(f"{server}/1")
+        cls.tools_sessions = Redis.from_url(f"{server}/2")
+        cls.admin = Redis.from_url(settings.CELERY_BROKER_URL)
+        cls.admin_cache = Redis.from_url(str(settings.CACHES["default"]["LOCATION"]))
+        cls.admin_sessions = Redis.from_url(str(settings.CACHES["sessions"]["LOCATION"]))
+        cls.suffix = uuid.uuid4().hex
+
+    @classmethod
+    def tearDownClass(cls):
+        for client in (cls.tools, cls.tools_cache, cls.tools_sessions, cls.admin, cls.admin_cache, cls.admin_sessions):
+            client.close()
+        super().tearDownClass()
+
+    def test_every_probe_refused_to_the_tools_user(self):
+        """The startup check's probes, which are refused to the tools user."""
+        probes = tool_worker_redis_probes(self.tools, self.tools_cache, self.tools_sessions)
+        self.assertEqual(tool_worker_redis_breaches(probes), [])
+
+    def test_every_probe_allowed_to_the_default_user(self):
+        """The same probes, allowed to the default user: they would find a missing ACL."""
+        probes = tool_worker_redis_probes(self.admin, self.admin_cache, self.admin_sessions)
+        breaches = tool_worker_redis_breaches(probes)
+        self.assertEqual(len(breaches), len(probes))
+
+    def test_its_queue_and_kombus_keys_under_it(self):
+        """It pushes and pops its queue's keys, where kombu keeps its messages in flight in the tool worker."""
+        key = f"{smarter_settings.app_tools_tasks_celery_task_queue}.test-{self.suffix}"
+        self.addCleanup(self.admin.delete, key)
+        self.tools.rpush(key, "message")
+        self.assertEqual(self.tools.lpop(key), b"message")
+        unacked = f"{smarter_settings.app_tools_tasks_celery_task_queue}.unacked"
+        self.tools.hlen(unacked)
+
+    def test_cannot_push_to_another_queue(self):
+        """Not the infrastructure queue, whose worker holds the Kubernetes Role and the IAM role."""
+        queue = smarter_settings.app_infrastructure_tasks_celery_task_queue
+        with self.assertRaises(NoPermissionError):
+            self.tools.rpush(queue, "forged")
+
+    def test_cannot_rebind_its_queue(self):
+        """Kombu's routing set, which the app reads, is the app's to write."""
+        binding = f"_kombu.binding.{smarter_settings.app_tools_tasks_celery_task_queue}"
+        with self.assertRaises(NoPermissionError):
+            self.tools.sadd(binding, "forged")
+
+    def test_results(self):
+        """It reads and writes the tool calls' results, and publishes them."""
+        key = f"celery-task-meta-test-{self.suffix}"
+        self.addCleanup(self.admin.delete, key)
+        self.tools.set(key, "result", ex=60)
+        self.assertEqual(self.tools.get(key), b"result")
+        self.tools.publish(key, "result")
+
+    def test_extension_archives_are_read_only(self):
+        """It reads an Extension's archive from the cache, and can't replace one."""
+        key = f"{settings.CACHE_KEY_PREFIX}:1:smarter:extension:archive:test-{self.suffix}"
+        self.addCleanup(self.admin_cache.delete, key)
+        self.admin_cache.set(key, "archive", ex=60)
+        self.assertEqual(self.tools_cache.get(key), b"archive")
+        with self.assertRaises(NoPermissionError):
+            self.tools_cache.set(key, "replaced")
+
+    def test_robots_txt_cache(self):
+        """It caches a website's robots.txt, which a page fetch checks on each redirect, in the tool worker."""
+        key = (
+            f"{settings.CACHE_KEY_PREFIX}:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules."
+            f"<locals>.get_cached_robots_txt()_test-{self.suffix}"
+        )
+        self.addCleanup(self.admin_cache.delete, key)
+        self.tools_cache.set(key, "rules", ex=60)
+        self.assertEqual(self.tools_cache.get(key), b"rules")
+
+    def test_log_streams_are_write_only(self):
+        """It adds its log records to the console's streams, and can't read anyone's."""
+        key = f"stream:logs:test-{self.suffix}"
+        self.addCleanup(self.admin_cache.delete, key)
+        self.tools_cache.xadd(key, {"data": "record"})
+        self.tools_cache.publish(f"logs:test-{self.suffix}", "record")
+        with self.assertRaises(NoPermissionError):
+            self.tools_cache.xrange(key)
+
+    def test_cannot_list_or_subscribe(self):
+        """Key and channel names include sessions' keys and users' log channels."""
+        with self.assertRaises(NoPermissionError):
+            self.tools.keys("*")
+        with self.assertRaises(NoPermissionError):
+            self.tools.scan(0)
+        with self.assertRaises(NoPermissionError):
+            self.tools.pubsub_channels()
+        pubsub = self.tools.pubsub()
+        self.addCleanup(pubsub.close)
+        with self.assertRaises(NoPermissionError):
+            pubsub.subscribe("logs:global")
+            pubsub.get_message(timeout=1)
+
+    def test_cannot_read_a_session(self):
+        """A session in database 2, written by the default user, is out of the tools user's reach."""
+        key = f":1:django.contrib.sessions.cachetest{self.suffix}"
+        self.addCleanup(self.admin_sessions.delete, key)
+        self.admin_sessions.set(key, "session", ex=60)
+        with self.assertRaises(NoPermissionError):
+            self.tools_sessions.get(key)
