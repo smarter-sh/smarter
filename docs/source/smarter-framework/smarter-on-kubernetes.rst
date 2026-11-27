@@ -72,6 +72,11 @@ differs.
      - Deployment ``smarter-worker-tools``, same queue, off by default (``workerTools.enabled``),
        without a database, a Secret of the platform's, a token or an IAM role. See
        :doc:`smarter-on-kubernetes/tool-worker`.
+   * - Extension Celery worker
+     - ``smarter-worker-extensions``, queue ``extensions_celery_task_queue``, without a database, each
+       call in a process of its own. It takes Extensions' calls when the tool runner is ``remote``.
+     - Deployment ``smarter-worker-extensions``, same queue, deployed with the tool worker
+       (``workerTools.extensions``). See :doc:`smarter-on-kubernetes/tool-worker`.
    * - Celery Beat
      - ``smarter-beat``.
      - Deployment ``smarter-beat``. Run exactly one replica, or scheduled tasks run more than once.

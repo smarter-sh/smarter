@@ -308,6 +308,18 @@ class Settings(
             )
         logger.warning("DJANGO_SECRET_KEY is not set. Using a randomized value.")
 
+    @property
+    def is_extension_worker(self) -> bool:
+        """
+        Whether this process is the Extension worker, ``smarter-worker-extensions`` (issue #1077).
+
+        :returns: True if it is a worker without a database whose queue is the Extensions queue.
+        """
+        if not self.database_unavailable:
+            return False
+        is_extensions_queue = self.tool_worker_queue == self.app_extensions_tasks_celery_task_queue
+        return is_extensions_queue
+
     def require_redis_password(self) -> SecretStr:
         """
         Return Redis's password, or refuse to run outside of the local environment without one.

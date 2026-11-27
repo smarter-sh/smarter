@@ -140,12 +140,14 @@ class TestToolWorkerQueue(SmarterTestBase):
         with in_the_tool_worker():
             configure_tool_worker(app)
         queues = list(app.conf.task_queues)
-        self.assertEqual(len(queues), 1)
-        queue = queues[0]
-        self.assertEqual(queue.name, "tools_celery_task_queue")
-        self.assertEqual(queue.routing_key, "tools_celery_task_queue")
-        self.assertEqual(queue.exchange.name, "tools_celery_task_queue")
-        self.assertTrue(queue.no_declare)
+        names = [queue.name for queue in queues]
+        # both workers without a database: -Q picks each one's own (issue #1077).
+        self.assertEqual(names, ["tools_celery_task_queue", "extensions_celery_task_queue"])
+        for queue in queues:
+            with self.subTest(queue=queue.name):
+                self.assertEqual(queue.routing_key, queue.name)
+                self.assertEqual(queue.exchange.name, queue.name)
+                self.assertTrue(queue.no_declare)
         self.assertFalse(app.conf.worker_enable_remote_control)
 
     def test_other_workers_are_unchanged(self):

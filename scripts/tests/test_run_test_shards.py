@@ -117,9 +117,9 @@ class TestIdealShards(unittest.TestCase):
     GIB = run_test_shards.GIB
 
     def test_memory_is_the_limit(self):
-        """Docker Desktop with 16 CPUs and 47.2 GiB: (47.2 - 3) / 4.25 = 10 by memory, (16 - 1) / 1 = 15 by CPU."""
+        """Docker Desktop with 16 CPUs and 47.2 GiB: (47.2 - 3) / 4.75 = 9 by memory, (16 - 1) / 1 = 15 by CPU."""
         resources = run_test_shards.DockerResources(cpus=16, memory_bytes=50651189248)
-        self.assertEqual(run_test_shards.ideal_shards(resources), 10)
+        self.assertEqual(run_test_shards.ideal_shards(resources), 9)
 
     def test_cpus_are_the_limit(self):
         resources = run_test_shards.DockerResources(cpus=4, memory_bytes=64 * self.GIB)
@@ -157,8 +157,8 @@ class TestDockerResources(unittest.TestCase):
         output = io.StringIO()
         with patch.object(run_test_shards, "docker_resources", return_value=resources), redirect_stdout(output):
             shards = run_test_shards.choose_shards(None, ["smarter"])
-        self.assertEqual(shards, 10)
-        self.assertIn("Docker has 16 CPUs and 47.2 GiB of memory: room for 10 shards.", output.getvalue())
+        self.assertEqual(shards, 9)
+        self.assertIn("Docker has 16 CPUs and 47.2 GiB of memory: room for 9 shards.", output.getvalue())
 
 
 class TestMain(unittest.TestCase):
