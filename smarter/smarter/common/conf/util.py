@@ -35,6 +35,26 @@ def field_default(model: Union[type[BaseModel], BaseModel], field_name: str) -> 
     return default
 
 
+def has_field(model: Union[type[BaseModel], BaseModel], field_name: str) -> bool:
+    """
+    Return True if a settings class declares a field.
+
+    A group of fields' model validator can need a field of another group, e.g. ``environment``. The group's
+    class is also validated on its own, without that field, so the validator checks for it first.
+
+    :param model: The settings class, or the class of one group of its fields. An instance of one is
+        read as its class, as in :func:`field_default`.
+    :param field_name: The field, e.g. ``environment``.
+    :returns: Whether the class declares it.
+    """
+    if isinstance(model, BaseModel):
+        model_class = type(model)
+    else:
+        model_class = model
+    fields = model_class.model_fields
+    return field_name in fields
+
+
 def is_unset(data: object, field_name: str) -> bool:
     """
     Return True if the values to validate leave a field out, or set it to an empty value.

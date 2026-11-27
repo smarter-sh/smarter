@@ -10,6 +10,7 @@ from smarter.common.conf.const import THE_EMPTY_SET
 from smarter.common.conf.util import (
     before_field_validator,
     field_default,
+    has_field,
     input_value,
     with_derived_default,
 )
@@ -863,7 +864,7 @@ class BrandingSettings(BaseModel):
         cdn_url = input_value(cls, data, "platform_branding_cdn_url")
         logo = urljoin(str(cdn_url), "/images/logo/smarter-crop.png")
         data = with_derived_default(data, "platform_branding_logo", logo)
-        if "platform_root_domain" not in cls.model_fields:
+        if not has_field(cls, "platform_root_domain"):
             return data
         root_domain = input_value(cls, data, "platform_root_domain")
         marketing_site_url = f"https://{root_domain}"

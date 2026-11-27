@@ -308,6 +308,29 @@ class Settings(
             )
         logger.warning("DJANGO_SECRET_KEY is not set. Using a randomized value.")
 
+    def require_redis_password(self) -> SecretStr:
+        """
+        Return Redis's password, or refuse to run outside of the local environment without one.
+
+        Redis holds the Celery queues, RedBeat's schedule, the cache and every user's session, and the
+        workers behind the queues hold the platform's credentials. It is generated per environment
+        (ADR-030, rule 5), so a process that doesn't have it
+        stops here, with a clear message, rather than failing on its first connection. Every process needs
+        it, the tool worker included, which takes its tasks from the broker and reads Extensions' archives
+        from the cache. Locally, :attr:`subsystem_redis_password` defaults to docker-compose's password.
+
+        :returns: The password.
+        :raises SmarterConfigurationError: If the password is not set.
+        """
+        password = self.subsystem_redis_password
+        if password is None:
+            raise SmarterConfigurationError(
+                f"SMARTER_SUBSYSTEM_REDIS_PASSWORD is not set. It is required in the {self.environment} environment. "
+                "On a cluster that smarter-infrastructure built, it is read from the Kubernetes Secret "
+                "smarter-redis-password."
+            )
+        return password
+
     def to_json(self) -> SmarterDictType:
         """
         Dump all settings.

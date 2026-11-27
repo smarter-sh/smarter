@@ -29,6 +29,14 @@ ACTION_PATH = CHART_PATH.parent.parent.parent / ".github" / "actions" / "deploy"
 SECRET_WORDS = ("PASSWORD", "SECRET", "TOKEN", "API_KEY", "FERNET", "AWS_ACCESS", "SQL", "PAT", "SMTP", "ADMIN")
 """Words in the names of the settings that hold credentials, none of which the tool worker may have."""
 
+REDIS_PASSWORD_SETTING = "SMARTER_SUBSYSTEM_REDIS_PASSWORD"
+"""
+The one credential that the tool worker holds: Redis's password, with which it takes its tasks from the broker and.
+
+reads Extensions' archives from the cache. Its broker url carried the password before the setting existed. A
+Redis user of its own, with only those keys, is issue #1065.
+"""
+
 
 def template(name: str) -> str:
     """
@@ -63,7 +71,10 @@ class TestToolWorker(unittest.TestCase):
         keys = tools_env_keys()
         self.assertIn("DJANGO_CELERY_BROKER_URL", keys)
         self.assertIn("SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE", keys)
+        self.assertIn(REDIS_PASSWORD_SETTING, keys)
         for key in keys:
+            if key == REDIS_PASSWORD_SETTING:
+                continue
             for word in SECRET_WORDS:
                 self.assertNotIn(word, key, key)
 

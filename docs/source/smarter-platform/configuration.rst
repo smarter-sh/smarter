@@ -19,7 +19,7 @@ declared on the field, then validates and freezes its final settings. Django's s
 
 .. image:: ../_static/settings-data-flow.svg
    :alt: Sources (GitHub Actions secrets, the Kubernetes Secrets mysql-smarter, mysql-root, smarter-admin,
-         aws-ses-config and smarter-django-secret-key, the Helm chart's values, .env and
+         aws-ses-config, smarter-django-secret-key and smarter-redis-password, the Helm chart's values, .env and
          overrides/settings.yaml) become environment variables through the deploy action and the Helm
          release's env Secret, or Docker Compose. smarter_settings reads each of its fields from its
          variable, else uses the default declared on the field, and validates them. Django's settings modules,

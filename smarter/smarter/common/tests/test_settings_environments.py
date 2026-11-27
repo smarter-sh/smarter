@@ -8,6 +8,7 @@ import os
 import warnings
 from unittest.mock import patch
 
+from pydantic import SecretStr
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.common.conf import Settings
@@ -170,6 +171,31 @@ class TestSettingsValidators(SmarterTestBase):
             make_settings(
                 environment=SmarterEnvironments.LOCAL, django_secret_key=placeholder
             ).require_django_secret_key()
+
+    def test_require_redis_password(self):
+        """Outside of the local environment, a missing Redis password is fatal; locally, it is docker-compose's."""
+        placeholder = "SET-ME-IN-helm/charts/smarter/values.yaml"
+        for environment in SmarterEnvironments.aws_environments:
+            settings = make_settings(environment=environment, subsystem_redis_password=placeholder)
+            self.assertIsNone(settings.subsystem_redis_password)
+            with self.assertRaises(SmarterConfigurationError):
+                settings.require_redis_password()
+            settings = make_settings(environment=environment, subsystem_redis_password="GeneratedRedisPassword1")
+            password = settings.require_redis_password()
+            self.assertEqual(password.get_secret_value(), "GeneratedRedisPassword1")
+            # the tool worker needs it too: it takes its tasks from the broker.
+            settings = make_settings(environment=environment, subsystem_redis_password="", database_unavailable=True)
+            with self.assertRaises(SmarterConfigurationError):
+                settings.require_redis_password()
+        settings = make_settings(environment=SmarterEnvironments.LOCAL, subsystem_redis_password="")
+        self.assertEqual(settings.require_redis_password().get_secret_value(), "smarter")
+
+    def test_redis_password_is_masked(self):
+        """The Redis password is a SecretStr, so a dump of the settings never shows it."""
+        settings = make_settings(subsystem_redis_password="GeneratedRedisPassword1")
+        self.assertIsInstance(settings.subsystem_redis_password, SecretStr)
+        self.assertNotIn("GeneratedRedisPassword1", repr(settings))
+        self.assertNotIn("GeneratedRedisPassword1", str(settings.model_dump()))
 
     def test_throttle_rates(self):
         """Throttle rates accept DRF rates and the disabled values, and reject anything else."""

@@ -46,7 +46,8 @@ env:
   # and try the change in alpha before prod.
   DJANGO_AUTHENTICATION_BACKENDS: "social_core.backends.google.GoogleOAuth2,social_core.backends.github.GithubOAuth2,django.contrib.auth.backends.ModelBackend"
   # DJANGO_CELERY_BROKER_URL: Celery's broker, also the workers' liveness probe's and RedBeat's Redis.
-  # Left out, the chart's own Redis in the release's namespace. The cache is the chart's Redis too,
+  # Left out, the chart's own Redis in the release's namespace, with SMARTER_SUBSYSTEM_REDIS_PASSWORD,
+  # which smarter-infrastructure generates (infrastructureSecrets, below). The cache is the chart's Redis too,
   # databases 1 and 2: for another, set DJANGO_CACHES, as JSON, with its default and sessions caches.
   # DJANGO_SETTINGS_MODULE: left out, smarter.settings.<SMARTER_ENVIRONMENT>.
   # DJANGO_SECRET_KEY: smarter_settings.django_secret_key, Django's SECRET_KEY. On a cluster that
@@ -284,6 +285,9 @@ infrastructureSecrets:
       SMARTER_ADMIN_PASSWORD: SMARTER_PLATFORM_ADMIN_PASSWORD
     smarter-django-secret-key:
       SECRET_KEY: DJANGO_SECRET_KEY
+    # Redis's password, which the Redis subchart reads from the same Secret (redis.auth below).
+    smarter-redis-password:
+      REDIS_PASSWORD: SMARTER_SUBSYSTEM_REDIS_PASSWORD
     aws-ses-config:
       SMTP_HOST: SMARTER_SUBSYSTEM_SMTP_HOST
       SMTP_PORT: SMARTER_SUBSYSTEM_SMTP_PORT
@@ -762,9 +766,16 @@ redis:
     port: 6379
     password: ""
   fullnameOverride: "smarter-redis"
+  # Redis's password is generated per environment by smarter-infrastructure, in the Kubernetes Secret
+  # smarter-redis-password, which the platform's pods read too (infrastructureSecrets, above). It guards
+  # the Celery queues, whose workers hold the platform's credentials, and every user's session, so it is
+  # never a default here (smarter ADR-030, rule 5). On a cluster that smarter-infrastructure didn't build,
+  # create that Secret, with the key REDIS_PASSWORD, before installing. Letters and digits only: the pods
+  # put it in a redis:// url.
   auth:
     enabled: true
-    password: "smarter"
+    existingSecret: "smarter-redis-password"
+    existingSecretPasswordKey: "REDIS_PASSWORD"
   architecture: standalone
   # Bitnami publishes bitnami/redis only as `latest`, so a version tag can't be pinned. The
   # digest pins the image, so that a restarted pod runs the same Redis as before. A digest

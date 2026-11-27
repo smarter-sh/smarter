@@ -143,7 +143,11 @@ box(
     222,
     w,
     "Kubernetes Secrets",
-    ["mysql-smarter · mysql-root", "smarter-admin · aws-ses-config", "smarter-django-secret-key"],
+    [
+        "mysql-smarter · mysql-root",
+        "smarter-admin · smarter-django-secret-key",
+        "aws-ses-config · smarter-redis-password",
+    ],
     "source",
     code="Terraform: smarter-infrastructure",
 )

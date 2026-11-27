@@ -102,6 +102,30 @@ class TestEnvironmentSettings(SmarterTestBase):
         }
         self.assertEqual(len(locations), 3)
 
+    def test_redis_urls_use_the_redis_password(self):
+        """The broker's, RedBeat's and the caches' urls carry subsystem_redis_password, not a public default."""
+        # the settings are frozen, so the method that base_aws reads the password with is patched, on the class.
+        password = SecretStr("GeneratedRedisPassword1")
+        with patch.object(type(smarter_settings), "require_redis_password", return_value=password):
+            module = fresh_import("smarter.settings.base_aws")
+        urls = [
+            module.CELERY_BROKER_URL,
+            module.CELERY_REDBEAT_REDIS_URL,
+            module.CACHES["default"]["LOCATION"],
+            module.CACHES["sessions"]["LOCATION"],
+        ]
+        for url in urls:
+            self.assertTrue(url.startswith("redis://:GeneratedRedisPassword1@"), "the url doesn't use the password")
+        # the password is a module variable, never a Django setting, so the settings never show it.
+        self.assertNotIn("redis_password", module.__all__)
+
+    def test_redis_password_is_quoted_in_the_urls(self):
+        """A password with characters that a url reserves is quoted, so that the url still parses."""
+        password = SecretStr("pa@ss%word")
+        with patch.object(type(smarter_settings), "require_redis_password", return_value=password):
+            module = fresh_import("smarter.settings.base_aws")
+        self.assertTrue(module.CELERY_BROKER_URL.startswith("redis://:pa%40ss%25word@"))
+
     def _assert_environment(self, environment: str, domain_fragment: str):
         module = fresh_import(f"smarter.settings.{environment}")
         self.assertEqual(module.environment_name, environment)

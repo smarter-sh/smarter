@@ -31,13 +31,19 @@ OPTIONAL_KEYS = ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
 
 DERIVED_KEYS = (
     "DJANGO_SETTINGS_MODULE",
-    "DJANGO_CELERY_BROKER_URL",
     "SMARTER_SUBSYSTEM_K8S_NAMESPACE",
     "SMARTER_PLATFORM_S3_BUCKET",
 )
 """The settings that smarter.env derives from the others, which values.yaml therefore doesn't set."""
 
-INFRASTRUCTURE_SECRETS = ("mysql-smarter", "mysql-root", "smarter-admin", "smarter-django-secret-key", "aws-ses-config")
+INFRASTRUCTURE_SECRETS = (
+    "mysql-smarter",
+    "mysql-root",
+    "smarter-admin",
+    "smarter-django-secret-key",
+    "aws-ses-config",
+    "smarter-redis-password",
+)
 """The Kubernetes Secrets that smarter-infrastructure creates in each environment's namespace."""
 
 
@@ -101,6 +107,31 @@ class TestEnvironment(unittest.TestCase):
             with self.subTest(secret=secret_name):
                 self.assertIn(f"\n    {secret_name}:\n", values)
         self.assertIn('lookup "v1" "Secret" $.Release.Namespace $secretName', env_helper())
+
+    def test_broker_url_uses_the_generated_redis_password(self):
+        """
+        The broker's url is built from Redis's password, read from smarter-infrastructure's Secret.
+
+        It is built after the Secrets are read, and only when env doesn't set it. The password used to be
+        values.yaml's public default, smarter (ADR-030, rule 5).
+        """
+        helper = env_helper()
+        secrets_read_at = helper.index('lookup "v1" "Secret"')
+        broker_built_at = helper.index('set $env "DJANGO_CELERY_BROKER_URL"')
+        self.assertLess(secrets_read_at, broker_built_at)
+        self.assertIn('get $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD"', helper)
+        self.assertIn('(not (hasKey $env "DJANGO_CELERY_BROKER_URL"))', helper)
+        self.assertIn("urlquery $redisPassword", helper)
+        self.assertNotIn(".Values.redis.auth.password", helper)
+        self.assertNotIn("\n  DJANGO_CELERY_BROKER_URL:", VALUES_PATH.read_text(encoding="utf-8"))
+
+    def test_redis_reads_the_generated_password(self):
+        """The Redis subchart reads its password from the same Secret as the pods, and values.yaml has none."""
+        values = VALUES_PATH.read_text(encoding="utf-8")
+        self.assertIn('existingSecret: "smarter-redis-password"', values)
+        self.assertIn('existingSecretPasswordKey: "REDIS_PASSWORD"', values)
+        self.assertIn("      REDIS_PASSWORD: SMARTER_SUBSYSTEM_REDIS_PASSWORD\n", values)
+        self.assertNotIn('password: "smarter"', values)
 
     def test_mariadb_reads_the_platform_passwords(self):
         """MariaDB's Secret keeps the subchart's own name, so that its pod spec doesn't change."""
