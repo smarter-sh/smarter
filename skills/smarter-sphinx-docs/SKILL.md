@@ -191,6 +191,18 @@ skills/smarter-sphinx-docs/scripts/tool-runner-diagram.py
 rsvg-convert -w 1875 docs/source/_static/tool-runner.svg -o <scratchpad>/tool-runner.png
 ```
 
+The three diagrams of ADR-038's phase 0, `docs/source/adr/038-tool-isolation-and-egress.rst`,
+are in `docs/source/_static/adr-038/`: the credentials each workload holds and uses (a matrix),
+who writes to the cluster and the cloud, and the hosts each process contacts.
+[scripts/adr-038-diagrams.py](scripts/adr-038-diagrams.py) draws them, with the same `Diagram`
+class. Update them when a workload's credentials, Kubernetes or AWS calls, or outbound hosts
+change, or when a phase of ADR-038 changes what they show:
+
+```console
+skills/smarter-sphinx-docs/scripts/adr-038-diagrams.py
+rsvg-convert -w 1875 docs/source/_static/adr-038/credentials.svg -o <scratchpad>/credentials.png
+```
+
 - **List only what's published.** Check each package on its registry before you
   list it there (`registry.npmjs.org/<name>`, `pypi.org/pypi/<name>/json`,
   `proxy.golang.org/<module>/@latest`, Docker Hub's and Artifact Hub's APIs).

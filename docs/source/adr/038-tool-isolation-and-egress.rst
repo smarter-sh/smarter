@@ -3,7 +3,8 @@ ADR-038: Tool Isolation and Egress Control
 
 Status
 ------
-Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phases 0, 3 and 4
+Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phase 0's
+inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phases 3 and 4
 are not started.
 
 Context
@@ -133,8 +134,122 @@ Plan
 ----
 Phase 0, inventory
    For each process, which settings it reads, which AWS and Kubernetes calls it makes, and which hosts it
-   contacts, from the code and from a week of the proxy in log-only mode (phase 3's proxy, allowing
+   contacts, from the code and from a week of the proxy in log-only mode (phase 4's proxy, allowing
    everything). The table in part 2 is corrected from this.
+
+   The code's half is done, as of 0.48.8. It was read, not traced, so the proxy's log confirms it and
+   finds what a search of the code misses: a host built at run time, or a library's own calls. What it
+   found:
+
+   .. image:: ../_static/adr-038/credentials.svg
+      :alt: A matrix of the platform's credentials against its workloads. The LLM providers' and services'
+            keys, the MariaDB root password and the administrator's password are used only by the init Job
+            (and the root password by the bastion), but every pod but the tool worker holds them. Every
+            process with a database holds DJANGO_SECRET_KEY only because a startup check requires it. The
+            app uses the SMTP password, the Kubernetes Role and the IAM role. The tool worker holds none.
+
+   **Where each credential is read.** Everything is in one Secret, ``secret-env.yaml``, which the app,
+   both workers, beat and the Jobs read with ``envFrom``. The bastion reads only the database's and
+   AWS's keys, one by one, and has no ServiceAccount token. The backup CronJob has its own
+   ServiceAccount and IAM role. The code reads each credential in these places:
+
+   - **The LLM providers' keys** (OpenAI, Anthropic, Gemini, Mistral, Cohere, Fireworks, Together AI,
+     Llama), the Google service account, Google Maps', Tavily's, Brave Search's and Pinecone's keys:
+     only ``initialize_platform``'s commands read them from the environment (``initialize_providers``,
+     ``initialize_llmtool_api_keys``, ``initialize_vectorstore_providers``), and each stores them as a
+     Smarter Secret. Every other process reads them from the database, decrypted with the Fernet key.
+     The app and the workers need the Fernet key, then, but not these keys: only the init Job does.
+   - **The Fernet key** (``apps/secret/models.py``): every process that decrypts a Smarter Secret.
+     That includes ``smarter-worker-infrastructure``, which part 2 leaves out: ``deploy_vectorstore``
+     writes a self-hosted vectorstore's api key into a Kubernetes Secret.
+   - **The database's password**: every process but the tool worker. ``require_django_secret_key()``
+     makes every process with a database refuse to start without ``DJANGO_SECRET_KEY``, outside the
+     local environment, so beat and the workers hold it too, though they sign nothing. Phase 3 has to
+     relax that check for them.
+   - **The MariaDB root password**: ``load_from_github``, for a repository's SQL scripts
+     (``repository_scripts.py``), so the init Job, and the bastion. No running pod uses it.
+   - **The backup account's password**: the backup CronJob and the bastion.
+   - **The platform administrator's password**: ``initialize_platform`` only.
+   - **The SMTP (SES) password**: every process that sends email. That includes the app, which part 2
+     leaves out: activation, password reset and account contacts' emails are sent inside the request.
+     Also the worker (data exports, notifications) and the Jobs (``email_job_log``).
+   - **The social sign-in keys** (Google, GitHub, LinkedIn): Django's settings, used by the app only.
+   - **The GitHub token** (``GITHUB_TOKEN``): skill downloads (``skill_sources.py``), bug reports, and the indexing of
+     The Smarter Project's repositories (``mcpserver.services.github``).
+   - **The Slack bot's token**: ``infrastructure.slack``, for the Jobs' notifications. The Slack app
+     token is read only by the separate Slack bot chart. ``DOCKERHUB_*`` is read by no Python.
+
+   .. image:: ../_static/adr-038/cluster-writes.svg
+      :alt: The LLMClient broker hands its writes to tasks on the infrastructure queue, which
+            smarter-worker-infrastructure runs against the Kubernetes api, Route53, ACM and EKS. The LLMHost
+            and vectorstore brokers write to the Kubernetes api, and the LLMHostCompute broker to EKS, from
+            the app's own request. The app's status pages and tools read the Kubernetes api.
+
+   **Where the Kubernetes and AWS calls are made.** Part 2 gives the cluster and the cloud to
+   ``smarter-worker-infrastructure`` alone. The code calls them from the app as well:
+
+   - **The cluster, written from the app's request**: an LLMHost's ``deploy``, ``undeploy`` and
+     ``delete`` (``LLMHostService.launch()``, ``destroy()``, ``delete()``: Deployments, Services,
+     Ingresses, Secrets), and a vectorstore's ``apply`` and ``delete`` (``backend.provision()`` and
+     ``destroy()``: a StatefulSet, Service, Secret and volume). The LLMClients' ingresses, DNS records
+     and certificates are already infrastructure tasks.
+   - **EKS and Auto Scaling, written from the app's request**: an LLMHostCompute's ``deploy``
+     (``ComputeProvisioner.reconcile()``) creates and scales its node group, and its ``delete`` (a
+     ``pre_delete`` receiver) deletes it.
+   - **The cluster, read by the app**: an LLMHost's observation and logs, a vectorstore's conditions
+     and logs, the MCPServer's status tools (pods, nodes), ``smarter status``
+     (``get_kubernetes_cluster_info()``), and the startup check ``check_kubernetes``, which the app and
+     every Celery worker but the tool worker run.
+   - **AWS, read by every process with a database**: ``sts:GetCallerIdentity`` when the settings are
+     checked (``aws_credentials_work()``). Without AWS it only warns.
+   - **S3**: the data exports (worker: ``put_object``, a presigned url, and ``delete_object`` when they
+     expire), and the static files on the CDN (init Job, ``collectstatic``).
+   - **The init Job** reads Route53 (``verify_dns_configuration``), rewrites the LLMClients' ingresses
+     (``retarget_llmclient_ingresses``) and reads the cluster for the inventory
+     (``sync_infrastructure_inventory``, which beat also schedules on the infrastructure queue).
+
+   So the Kubernetes Role can't move to ``smarter-worker-infrastructure`` alone until the LLMHost,
+   LLMHostCompute and vectorstore brokers hand their writes to infrastructure tasks, as the LLMClient's
+   already do. Until then the app needs the write Role and the EKS permissions. Its reads need a
+   read-only Role of their own either way.
+
+   .. image:: ../_static/adr-038/egress.svg
+      :alt: For each process, the services in the cluster it reaches, the fixed hosts on the internet,
+            which seed phase 4's allowlist, and the hosts that a manifest author chooses. The app and the
+            default worker reach MCPClients' servers and vectorstores' ApiConnections, and the app custom
+            LLM endpoints, outside the tool worker. The tool worker reaches every host a tool call chooses.
+
+   **Which hosts each process contacts.** The fixed hosts, the seed of phase 4's allowlist:
+
+   - App: the LLM providers' apis, Pinecone's, the social sign-in providers', GitHub's
+     (``api.github.com``, ``raw.githubusercontent.com``, ``codeload.github.com``; ``smarter version``
+     fetches the cli's ``VERSION`` file), the account manager's subscription api
+     (``api.am.<root domain>``), SES's SMTP endpoint, and AWS's STS and S3. In-cluster: MariaDB,
+     Redis, Loki, the Kubernetes api, the LLMHosts and the self-hosted vectorstores.
+   - ``smarter-worker``: the LLM providers (prompts, embeddings, the LLM price checker), Pinecone,
+     GitHub and the blog (indexing), the extension registry (``smarter-sh.github.io``), SES and S3.
+   - ``smarter-worker-infrastructure``: Route53, ACM, EKS, the Kubernetes api, and public DNS
+     (``resolve_domain()``).
+   - beat: Redis (RedBeat), and STS when the settings are checked. It only sends tasks.
+   - Jobs: all of the above, and GitHub's clones (``load_from_github``), the extension registry
+     (``install_official_extensions``) and Slack's api.
+
+   And the hosts that a manifest author chooses, reached outside the tool worker. These decide phase
+   4's custom-endpoint question for more than LLMs:
+
+   - **An MCPClient's catalog.** Each tool call goes through the runner, but the connection that
+     lists the server's tools (``mcpclient.caching.connect()``) is made in the app, when a chat builds
+     its tools and when the console refreshes it, and in the worker (``mcpclient.tasks``), with the
+     MCPClient's credential.
+   - **A vectorstore's ApiConnection**, e.g. Qdrant Cloud: the app (search) and the worker (loading
+     documents).
+   - **An LLMClient's or LLMHost's custom endpoint**, as part 3 says.
+   - **A provider's website, terms and docs urls** (``provider.verification``), and an LLM price's
+     ``source_url`` (``llm_price_checker``): the worker.
+   - ``PluginDataApi.execute_request()`` still calls ``requests.get()`` itself, outside the runner.
+     Nothing calls it, or the ``test()`` and ``sanitized_return_data()`` that wrap it, so they can be
+     deleted. ``smarter.apps.api.utils.apply_manifest()``, which posts a manifest to the platform's
+     own url, has no caller either.
 
 Phase 1, the boundary (smarter)
    ``ToolRunner``, its call and result models, and the in-process runner, with every tool call in
