@@ -370,7 +370,9 @@
           "type": "object",
           "properties": {
             "enabled": { "type": "boolean" },
-            "password": { "type": "string" }
+            "password": { "type": "string" },
+            "existingSecret": { "type": "string" },
+            "existingSecretPasswordKey": { "type": "string" }
           }
         },
         "architecture": { "type": "string" },

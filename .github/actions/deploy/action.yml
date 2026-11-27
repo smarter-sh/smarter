@@ -229,11 +229,9 @@ runs:
       run: |-
         echo "NAMESPACE=${{ inputs.namespace-base }}-${{ inputs.environment }}" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
-        # The broker, for Django and the workers' liveness probe. The cache is the same Redis,
-        # databases 1 and 2, which smarter.settings.base_aws computes.
-        echo "DJANGO_CELERY_BROKER_URL=${{ env.REDIS_URL }}/0" >> $GITHUB_ENV
+        # The broker's url isn't set here: the chart builds it from Redis's password, which
+        # smarter-infrastructure generates in the Secret smarter-redis-password (ADR-030, rule 5).
       env:
-        REDIS_URL: redis://:smarter@smarter-redis-master.${{ inputs.namespace-base }}-${{ inputs.environment }}.svc.cluster.local:6379
         DJANGO_SETTINGS_BASE: smarter.settings
 
     # Checkout all code referenced by this action
@@ -444,7 +442,6 @@ runs:
             "AWS_SECRET_ACCESS_KEY": ${{ !inputs.aws-iam-role-arn && inputs.aws-secret-access-key && format('"{0}"', inputs.aws-secret-access-key) || 'null' }},
             "SMARTER_DEBUG_MODE": ${{ inputs.debug-mode && format('"{0}"', inputs.debug-mode) || 'null' }},
             "DJANGO_AUTHENTICATION_BACKENDS": ${{ inputs.authentication-backends && format('"{0}"', inputs.authentication-backends) || 'null' }},
-            "DJANGO_CELERY_BROKER_URL": ${{ env.DJANGO_CELERY_BROKER_URL && format('"{0}"', env.DJANGO_CELERY_BROKER_URL) || 'null' }},
             "DJANGO_SECRET_KEY": ${{ env.SECRET_KEY && format('"{0}"', env.SECRET_KEY) || 'null' }},
             "DJANGO_SETTINGS_MODULE": ${{ env.DJANGO_SETTINGS_MODULE && format('"{0}"', env.DJANGO_SETTINGS_MODULE) || 'null' }},
             "DOCKERHUB_PAT": ${{ inputs.dockerhub-pat && format('"{0}"', inputs.dockerhub-pat) || 'null' }},

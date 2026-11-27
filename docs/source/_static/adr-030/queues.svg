@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 840" width="1300" height="840" role="img" aria-labelledby="t d">
+<title id="t">Smarter's task queues, as built</title>
+<desc id="d">Three columns. The senders: the app, which queues tasks from its brokers, chats and signals; Celery Beat, whose 20 schedule entries name 14 operational tasks and 6 infrastructure tasks; the infrastructure tasks themselves, which check again later with apply_async and a countdown; and the init Job. The queues, all in Redis's database 0: default_celery_task_queue with 33 operational tasks, infrastructure_celery_task_queue with 22 infrastructure tasks, and tools_celery_task_queue with one task, run_tool_call, whose results the app waits for in the result backend, also in Redis. The workers: smarter-worker runs the default queue and smarter-worker-infrastructure the infrastructure queue; both register all 56 of the platform's tasks, so either would run any task that lands on its queue. smarter-worker-tools runs the tools queue, and registers only run_tool_call. Four infrastructure tasks still wait by sleeping, against the ADR's second rule: verify_certificate, up to nine and a half minutes, though nothing queues it; register_custom_domain and verify_custom_domain, up to ten minutes for a certificate's validation records and two and a quarter minutes for each record; and create_custom_domain_dns_record, two and a quarter minutes.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1300" height="840" rx="14" fill="#F6F8FA"/>
+<text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Smarter's task queues, as built</text>
+<text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">three queues in one Redis, one worker each; the queue a task runs in is routing, not a permission</text>
+<text x="28" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · Who sends tasks</text>
+<rect x="28" y="106" width="330" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="124" width="330" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,133 a9,9 0 0 1 9,-9 h312 a9,9 0 0 1 9,9 v17 h-330 z" fill="#EAEEF2"/>
+<text x="40" y="142" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-api</text>
+<text x="40" y="166" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">task.delay(), on_commit</text>
+<text x="40" y="184" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">brokers: deploy, delete, apply</text>
+<text x="40" y="201" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">chats: history, charges, journal</text>
+<text x="40" y="218" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each tool call, when remote</text>
+<rect x="28" y="268" width="330" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,277 a9,9 0 0 1 9,-9 h312 a9,9 0 0 1 9,9 v17 h-330 z" fill="#EAEEF2"/>
+<text x="40" y="286" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-beat</text>
+<text x="40" y="310" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">RedBeat, its schedule in Redis</text>
+<text x="40" y="328" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">20 entries: 14 operational,</text>
+<text x="40" y="345" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">6 infrastructure (each names its queue)</text>
+<rect x="28" y="394" width="330" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,403 a9,9 0 0 1 9,-9 h312 a9,9 0 0 1 9,9 v17 h-330 z" fill="#EAEEF2"/>
+<text x="40" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">The infrastructure tasks</text>
+<text x="40" y="436" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">apply_async(countdown=…)</text>
+<text x="40" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a wait is a check, then a check later:</text>
+<text x="40" y="471" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">deploy_default_api, verify_domain, …</text>
+<rect x="28" y="520" width="330" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,529 a9,9 0 0 1 9,-9 h312 a9,9 0 0 1 9,9 v17 h-330 z" fill="#EAEEF2"/>
+<text x="40" y="538" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">job-init</text>
+<text x="40" y="562" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">index_repositories.delay()</text>
+<text x="40" y="580" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">initialize_platform: indexing,</text>
+<text x="40" y="597" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a repository's manifests</text>
+<text x="470" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · Redis, database 0</text>
+<rect x="470" y="106" width="340" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="458" y="116" width="364" height="520" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="470" y="135" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">smarter-redis</text>
+<text x="470" y="151" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">one server, one password</text>
+<rect x="476" y="170" width="328" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M476,179 a9,9 0 0 1 9,-9 h310 a9,9 0 0 1 9,9 v17 h-328 z" fill="#E7F6EC"/>
+<text x="488" y="188" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Operational: 33 tasks</text>
+<text x="488" y="212" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">default_celery_task_queue</text>
+<text x="488" y="230" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">prompt history, charges, budgets,</text>
+<text x="488" y="247" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">journal, indexing, data exports</text>
+<rect x="476" y="296" width="328" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M476,305 a9,9 0 0 1 9,-9 h310 a9,9 0 0 1 9,9 v17 h-328 z" fill="#E7F6EC"/>
+<text x="488" y="314" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Infrastructure: 22 tasks</text>
+<text x="488" y="338" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">infrastructure_celery_task_queue</text>
+<text x="488" y="356" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">DNS, certificates, ingresses,</text>
+<text x="488" y="373" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMHosts, node groups, vectorstores</text>
+<rect x="476" y="422" width="328" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M476,431 a9,9 0 0 1 9,-9 h310 a9,9 0 0 1 9,9 v17 h-328 z" fill="#E7F6EC"/>
+<text x="488" y="440" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Tool calls: 1 task</text>
+<text x="488" y="464" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">tools_celery_task_queue</text>
+<text x="488" y="482" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">run_tool_call: a resolved call,</text>
+<text x="488" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">with its decrypted credentials</text>
+<rect x="476" y="548" width="328" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M476,557 a9,9 0 0 1 9,-9 h310 a9,9 0 0 1 9,9 v17 h-328 z" fill="#E7F6EC"/>
+<text x="488" y="566" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">The result backend</text>
+<text x="488" y="590" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">celery-task-meta-&lt;task id&gt;</text>
+<text x="488" y="608" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">run_tool_call's results only, 300 s</text>
+<text x="930" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · Who runs them</text>
+<rect x="930" y="106" width="342" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="930" y="170" width="342" height="96" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M930,179 a9,9 0 0 1 9,-9 h324 a9,9 0 0 1 9,9 v17 h-342 z" fill="#2980B9"/>
+<text x="942" y="188" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-worker</text>
+<text x="942" y="212" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">-Q default_celery_task_queue</text>
+<text x="942" y="230" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">concurrency 5 · database, every credential</text>
+<text x="942" y="247" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">registers all 56 platform tasks</text>
+<rect x="930" y="296" width="342" height="96" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M930,305 a9,9 0 0 1 9,-9 h324 a9,9 0 0 1 9,9 v17 h-342 z" fill="#2980B9"/>
+<text x="942" y="314" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-worker-infrastructure</text>
+<text x="942" y="338" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">-Q infrastructure_celery_task_queue</text>
+<text x="942" y="356" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">concurrency 4 · the Kubernetes and IAM roles</text>
+<text x="942" y="373" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">registers all 56 platform tasks</text>
+<rect x="930" y="422" width="342" height="96" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M930,431 a9,9 0 0 1 9,-9 h324 a9,9 0 0 1 9,9 v17 h-342 z" fill="#2980B9"/>
+<text x="942" y="440" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-worker-tools</text>
+<text x="942" y="464" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">-Q tools_celery_task_queue</text>
+<text x="942" y="482" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">no database, no credential, no token</text>
+<text x="942" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">registers run_tool_call only</text>
+<path d="M358,160.5 L400,160.5 L400,218.0 L474,218.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,180.5 L412,180.5 L412,330.0 L474,330.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,200.5 L424,200.5 L424,470.0 L474,470.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,308.0 L436,308.0 L436,236.0 L474,236.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,324.0 L436,324.0 L436,344.0 L474,344.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,442.0 L448,442.0 L448,358.0 L474,358.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M358,568.0 L388,568.0 L388,248.0 L474,248.0" fill="none" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<path d="M804,218.0 L928,218.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M804,344.0 L928,344.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M804,470.0 L928,470.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M990,518 L990,587.5 L806,587.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="1000" y="579.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#1A7F37" text-anchor="start" font-style="italic">its result</text>
+<path d="M474,587.5 L376,587.5 L376,150 L360,150" fill="none" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="468" y="605.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="end" font-style="italic">the app waits for it</text>
+<rect x="28" y="660" width="1244" height="112" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,669 a9,9 0 0 1 9,-9 h1226 a9,9 0 0 1 9,9 v17 h-1244 z" fill="#FFEBE9"/>
+<text x="40" y="678" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Waits that still sleep in a task, against rule 2 (all on the infrastructure queue)</text>
+<text x="40" y="702" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">verify_certificate: wait_until_issued(), 20 checks 30 s apart, up to 9½ minutes. Nothing queues it.</text>
+<text x="40" y="719" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">register_custom_domain, verify_custom_domain: create_validation_records(), 120 checks 5 s apart, up to 10 minutes, then 2¼ minutes per record.</text>
+<text x="40" y="736" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">create_custom_domain_dns_record: get_or_create_record(), 10 checks 15 s apart, up to 2¼ minutes.</text>
+<text x="40" y="753" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Each holds one of the infrastructure worker's 4 processes while it sleeps. deploy_default_api passes max_attempts=1, and complies.</text>
+<rect x="28" y="784" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,804 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="92" y="808" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">queues a task</text>
+<path d="M207.3,804 h34" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="251.3" y="808" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the init Job; the app waiting for a result</text>
+<path d="M543.5,804 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="587.5" y="808" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the worker takes it; its result</text>
+</svg>

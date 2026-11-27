@@ -71,7 +71,7 @@ spec:
       containers:
         - name: "{{ .Values.global.appName }}-worker-tools"
           image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency={{ $tools.concurrency | default 4 }}", "--loglevel=info", "-Q", "{{ .Values.env.SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE | default "tools_celery_task_queue" }}", "-n", "tools@%h"]
+          command: ["celery", "-A", "smarter.workers.celery.app", "worker", "--concurrency={{ $tools.concurrency | default 4 }}", "--loglevel=info", "-Q", "{{ .Values.env.SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE | default "tools_celery_task_queue" }}", "-n", "tools@%h", "--without-mingle", "--without-gossip", "--without-heartbeat"]
           imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
           resources:
             {{- toYaml ($tools.resources | default .Values.worker.resources) | nindent 12 }}

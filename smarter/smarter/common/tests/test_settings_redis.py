@@ -29,7 +29,10 @@ class TestRedisSettings(SmarterTestBase):
         """A socket timeout above BRPOP's 1 second, keepalive and a health check, for the broker and RedBeat."""
         for options in (settings.CELERY_BROKER_TRANSPORT_OPTIONS, settings.CELERY_REDBEAT_REDIS_OPTIONS):
             with self.subTest(options=options):
-                self.assertGreater(options["socket_timeout"], 1)
+                socket_timeout = options["socket_timeout"]
+                self.assertIsInstance(socket_timeout, int)
+                assert isinstance(socket_timeout, int)
+                self.assertGreater(socket_timeout, 1)
                 self.assertTrue(options["socket_keepalive"])
                 self.assertEqual(options["health_check_interval"], REDIS_HEALTH_CHECK_INTERVAL)
 

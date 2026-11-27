@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 800" width="1300" height="800" role="img" aria-labelledby="t d">
+<title id="t">Redis's ACL: the tool worker reaches only its own keys</title>
+<desc id="d">Three columns. The pods that hold Redis's url: the app, both workers, beat and the Jobs, as Redis's default user, which may do anything, and the tool worker, which holds no other credential, as the user tools. Redis, whose passwords smarter-infrastructure generates for each environment: database 0 holds the three task queues, the tool calls' results and RedBeat's schedule; database 1 the cache, with Extensions' archives; database 2 the users' sessions. Calico's network policies keep other pods out. The last column is what code in the tool worker, such as an Extension, can do as the user tools. Refused by its ACL: pushing a task to another queue, such as the infrastructure queue, whose worker holds the Kubernetes Role and the IAM role; rebinding its queue or planting a message among other workers' unacknowledged ones; reading the sessions or listing keys; editing RedBeat's schedule; and replacing an Extension's archive. Still possible, within the tool worker's own trust domain: reading the other tool calls waiting on its own queue, which issue 1077 addresses, and writing a tool call's result before the worker that ran it.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1300" height="800" rx="14" fill="#F6F8FA"/>
+<text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Redis's ACL: the tool worker reaches only its own keys</text>
+<text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">every other pod is Redis's default user; the tool worker is the user tools (ADR-030, rule 8)</text>
+<text x="28" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · Who holds Redis's url</text>
+<rect x="28" y="106" width="300" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="124" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,133 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="142" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-api</text>
+<text x="40" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">sends every kind of task</text>
+<rect x="28" y="207" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,216 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-worker</text>
+<text x="40" y="249" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">operational tasks</text>
+<rect x="28" y="290" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,299 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="308" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">worker-infrastructure</text>
+<text x="40" y="332" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Kubernetes and IAM roles</text>
+<rect x="28" y="373" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,382 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="391" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-beat</text>
+<text x="40" y="415" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the schedule</text>
+<rect x="28" y="456" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,465 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="40" y="474" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">job-init, job-migrate</text>
+<text x="40" y="498" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">initialize_platform</text>
+<rect x="28" y="539" width="300" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,548 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#FFEBE9"/>
+<text x="40" y="557" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">smarter-worker-tools</text>
+<text x="40" y="581" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the user tools: its own keys</text>
+<text x="410" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · Redis: two users</text>
+<rect x="410" y="106" width="400" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="398" y="116" width="424" height="560" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="410" y="135" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">smarter-redis</text>
+<text x="410" y="151" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">default user: every pod but one; tools: the tool worker</text>
+<rect x="416" y="172" width="388" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M416,181 a9,9 0 0 1 9,-9 h370 a9,9 0 0 1 9,9 v17 h-388 z" fill="#E7F6EC"/>
+<text x="428" y="190" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Database 0: the broker</text>
+<text x="428" y="214" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">CELERY_BROKER_URL …/0</text>
+<text x="428" y="232" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">default, infrastructure and tools queues</text>
+<text x="428" y="249" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">run_tool_call's arguments and results</text>
+<text x="428" y="266" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">RedBeat's schedule and lock</text>
+<rect x="416" y="330" width="388" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M416,339 a9,9 0 0 1 9,-9 h370 a9,9 0 0 1 9,9 v17 h-388 z" fill="#E7F6EC"/>
+<text x="428" y="348" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Database 1: the cache</text>
+<text x="428" y="372" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">CACHES['default'] …/1</text>
+<text x="428" y="390" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">cached objects and tool results</text>
+<text x="428" y="407" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Extensions' archives, by sha256</text>
+<rect x="416" y="470" width="388" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M416,479 a9,9 0 0 1 9,-9 h370 a9,9 0 0 1 9,9 v17 h-388 z" fill="#E7F6EC"/>
+<text x="428" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Database 2: sessions</text>
+<text x="428" y="512" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">CACHES['sessions'] …/2</text>
+<text x="428" y="530" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">every signed-in user's session,</text>
+<text x="428" y="547" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">keyed by its cookie's value</text>
+<text x="416" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">Calico keeps other namespaces' pods out.</text>
+<text x="416" y="656" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">The default user may do anything.</text>
+<path d="M328,154.5 L396,154.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M328,237.5 L396,237.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M328,320.5 L396,320.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M328,403.5 L396,403.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M328,486.5 L396,486.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M328,569.5 L396,569.5" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<text x="900" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · What code in the tool worker can do</text>
+<rect x="900" y="106" width="372" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="900" y="124" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,133 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="142" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Push a task to another queue: no</text>
+<text x="912" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no pattern of its ACL names one</text>
+<rect x="900" y="199" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,208 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="217" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Rebind its queue, plant in unacked: no</text>
+<text x="912" y="241" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the app declares it; its unacked is its own</text>
+<rect x="900" y="274" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,283 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="292" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Read the sessions, list keys: no</text>
+<text x="912" y="316" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">database 2 is out of reach; no SCAN, KEYS</text>
+<rect x="900" y="349" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,358 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="367" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Edit RedBeat's schedule: no</text>
+<text x="912" y="391" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">no pattern names redbeat:*</text>
+<rect x="900" y="424" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,433 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="442" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Swap an Extension's archive: no</text>
+<text x="912" y="466" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">read-only, and the worker checks its sha256</text>
+<rect x="900" y="499" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,508 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#FFEBE9"/>
+<text x="912" y="517" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Read the other pending tool calls: yes</text>
+<text x="912" y="541" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its own queue, which it must read: #1077</text>
+<rect x="900" y="574" width="372" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,583 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#FFEBE9"/>
+<text x="912" y="592" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Write a tool call's result first: yes</text>
+<text x="912" y="616" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the results are its to write</text>
+<path d="M178.0,600 L178.0,712 L860,712 L860,140 L898,140" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<text x="640" y="704" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#CF222E" text-anchor="middle" font-style="italic">as the user tools</text>
+<rect x="28" y="740" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,760 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="92" y="764" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the default user, with every other credential</text>
+<path d="M402.5,760 h34" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<text x="446.5" y="764" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the user tools, and nothing else</text>
+<text x="760" y="764" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#CF222E" text-anchor="start">green: refused by the ACL · red: still possible</text>
+</svg>

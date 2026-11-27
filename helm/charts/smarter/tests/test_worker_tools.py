@@ -29,6 +29,9 @@ ACTION_PATH = CHART_PATH.parent.parent.parent / ".github" / "actions" / "deploy"
 SECRET_WORDS = ("PASSWORD", "SECRET", "TOKEN", "API_KEY", "FERNET", "AWS_ACCESS", "SQL", "PAT", "SMTP", "ADMIN")
 """Words in the names of the settings that hold credentials, none of which the tool worker may have."""
 
+REDIS_DEFAULT_USER_SETTINGS = ("DJANGO_CACHES", "DJANGO_CELERY_BROKER_URL", "SMARTER_SUBSYSTEM_REDIS_PASSWORD")
+"""The settings that carry Redis's default user's password, which smarter.toolsEnv never copies (ADR-030, rule 8)."""
+
 
 def template(name: str) -> str:
     """
@@ -61,8 +64,9 @@ class TestToolWorker(unittest.TestCase):
     def test_allowlist_has_no_credential(self):
         """No setting that holds a credential is in the tool worker's environment."""
         keys = tools_env_keys()
-        self.assertIn("DJANGO_CELERY_BROKER_URL", keys)
         self.assertIn("SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE", keys)
+        for key in REDIS_DEFAULT_USER_SETTINGS:
+            self.assertNotIn(key, keys)
         for key in keys:
             for word in SECRET_WORDS:
                 self.assertNotIn(word, key, key)
@@ -73,6 +77,27 @@ class TestToolWorker(unittest.TestCase):
         self.assertIn('set $env "SMARTER_DATABASE_UNAVAILABLE" "true"', helper)
         self.assertIn('set $env "AWS_EC2_METADATA_DISABLED" "true"', helper)
         self.assertIn('include "smarter.toolsEnv"', SECRET_PATH.read_text(encoding="utf-8"))
+
+    def test_its_own_redis_user(self):
+        """
+        Its Redis credentials are the tools user's, from smarter-infrastructure's Secret, and the broker's url is built from them.
+
+        Without the Secret they are left out, so the worker refuses to start, rather than run as the default user.
+        """
+        helper = template("smarter.toolsEnv")
+        self.assertIn('$toolsUser := "tools"', helper)
+        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_USERNAME" $toolsUser', helper)
+        self.assertIn('lookup "v1" "Secret" .Release.Namespace "smarter-redis-users"', helper)
+        self.assertIn("{{- if hasKey $usersData $toolsUser -}}", helper)
+        self.assertIn('set $env "SMARTER_SUBSYSTEM_REDIS_PASSWORD" $toolsPassword', helper)
+        self.assertIn('printf "redis://%s:%s@%s/0" $toolsUser (urlquery $toolsPassword) $redis', helper)
+
+    def test_deployment_takes_no_remote_control(self):
+        """Mingle, gossip, heartbeats and remote control use keys that its Redis user can't reach."""
+        text = DEPLOYMENT_PATH.read_text(encoding="utf-8")
+        for flag in ("--without-mingle", "--without-gossip", "--without-heartbeat"):
+            with self.subTest(flag=flag):
+                self.assertIn(f'"{flag}"', text)
 
     def test_deployment_reads_only_its_own_secret(self):
         """The Deployment reads its own Secret, not the platform's, and no other environment."""

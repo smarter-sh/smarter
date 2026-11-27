@@ -241,10 +241,11 @@ RUN mkdir -p /home/smarter_user/data/manifests/example_manifests
 # any .mo files on the host. This must run before the permissions stage, which makes every
 # directory read-only outside of the local environment, so compilemessages could not write the
 # .mo files there. compilemessages loads the Django settings, which refuse to start outside of
-# the local environment without SECRET_KEY, so it gets a throwaway random key that exists only
-# for this RUN step, as collectstatic does below.
+# the local environment without SECRET_KEY or Redis's password, so it gets throwaway random ones
+# that exist only for this RUN step, as collectstatic does below. It connects to neither.
 WORKDIR /home/smarter_user/smarter
 RUN DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+    SMARTER_SUBSYSTEM_REDIS_PASSWORD="$(python -c 'import secrets; print(secrets.token_hex(16))')" \
       python manage.py compilemessages --ignore=react --ignore=node_modules --ignore=static --ignore=staticfiles
 WORKDIR /home/smarter_user/
 
@@ -306,15 +307,16 @@ WORKDIR /home/smarter_user/smarter
 ENV DOCKER_COLLECT_STATIC_FILES=${DOCKER_COLLECT_STATIC_FILES}
 
 # collectstatic loads the full Django settings, which refuse to start outside of
-# the local environment without SECRET_KEY. collectstatic signs nothing, so it gets
-# a throwaway random key that exists only for this RUN step and is never written to
-# the image. The real key is still supplied at runtime.
+# the local environment without SECRET_KEY or Redis's password. collectstatic signs
+# nothing and doesn't use Redis, so it gets throwaway random ones that exist only for
+# this RUN step and are never written to the image. The real ones are supplied at runtime.
 
 RUN if [ "$DOCKER_COLLECT_STATIC_FILES" = "true" ]; then \
       if [ ! -d "smarter/static/react" ] || [ -z "$(ls -A smarter/static/react)" ]; then \
         echo "Error: smarter/static/react is missing or empty" >&2; ls -lha smarter/static; exit 1; \
       fi; \
       DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" \
+      SMARTER_SUBSYSTEM_REDIS_PASSWORD="$(python -c 'import secrets; print(secrets.token_hex(16))')" \
         python manage.py collectstatic --noinput; \
     else \
       echo "Skipping collectstatic"; \
