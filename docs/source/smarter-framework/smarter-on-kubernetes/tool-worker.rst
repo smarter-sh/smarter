@@ -2,9 +2,9 @@ The Tool Worker
 ===============
 
 The tool worker, ``smarter-worker-tools``, is the Celery worker that executes LLM tool calls: API, SQL
-and MCP calls, Extensions' tools, and the web search plugin's searches and page fetches. These run
-requests and code that manifest authors, Extension authors and the LLM choose, so the tool worker
-holds nothing else of the platform's: no database, no Smarter Secret, no Django or Fernet key, no LLM
+and MCP calls, and the web search plugin's searches and page fetches. Extensions' tools run in a worker
+of their own, the Extension worker, ``smarter-worker-extensions`` (below). These run requests and code
+that manifest authors, Extension authors and the LLM choose, so both hold nothing else of the platform's: no database, no Smarter Secret, no Django or Fernet key, no LLM
 provider's key, no IAM role and no Kubernetes token. Each call brings the credentials that it needs,
 resolved by the app. :doc:`ADR-038 </adr/038-tool-isolation-and-egress>` is the design, and
 :doc:`/smarter-resources/llmtool/runner` describes the runner that sends calls to it.
@@ -16,6 +16,31 @@ that one task, and it rejects any other message on its queue as an unregistered 
 
 Without the tool worker, which is the default, the app runs each tool call in its own process, where
 the platform's credentials are.
+
+The Extension Worker
+--------------------
+
+An Extension is third-party Python code, which the worker imports and runs. In the tool worker, it would
+share its processes and its Redis user with every other kind of tool call, and could see their credentials:
+code that an Extension runs at import stays in its process for every later call there, and the tools queue,
+which the tool worker must read, holds every waiting call with its credentials. So Extensions' calls run
+apart, in the Extension worker, ``smarter-worker-extensions`` (issue #1077):
+
+- the app sends each Extension's call to its own queue, ``extensions_celery_task_queue``
+  (``SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE``), and every other kind to ``tools_celery_task_queue``
+  (``queue_for_kind`` in :mod:`smarter.apps.llmtool.runner`);
+- each call runs in a process of its own (``--max-tasks-per-child=1``), forked from the worker's loaded
+  parent and discarded after the call, so nothing an Extension leaves behind reaches a later call;
+- its Redis user is ``extensions``, which reaches only its own queue, the results and Extensions' archives:
+  not the tools queue, where API, SQL and MCP calls wait;
+- each worker refuses a call of the other's kind, which only something other than the app could have put on
+  its queue, e.g. an Extension that pushes an API call onto the Extensions queue.
+
+Otherwise it is the tool worker: the same image, no database, its own Secret (``smarter-env-extensions``),
+the ServiceAccount ``smarter-tools`` without a token or an IAM role, and pods in the application-group
+``smarter-tools``, so that the same network policies apply. The chart deploys it with the tool worker,
+sized by ``workerTools.extensions``. Two things remain within its reach: the other Extensions' calls
+waiting on its own queue, and the results of every tool call, which Celery reads before it writes.
 
 What the Chart Deploys
 ----------------------
@@ -48,7 +73,9 @@ policies admit them. Nothing may connect to the tool worker.
 Its Redis User
 --------------
 
-Every other pod is Redis's ``default`` user, which may do anything. The tool worker is the user ``tools``,
+Every other pod is Redis's ``default`` user, which may do anything. The Extension worker is the user
+``extensions``, with the rules below for its own queue, and without the robots.txt cache. The tool worker is
+the user ``tools``,
 whose password smarter-infrastructure generates in the Secret ``smarter-redis-users``, and whose ACL lets
 it touch only:
 
@@ -81,7 +108,8 @@ Turning It On
 -------------
 
 1. Apply smarter-infrastructure's network policies for ``smarter-tools`` in the environment, and its
-   Secrets ``smarter-redis-password`` and ``smarter-redis-users``. Without the policies, the namespace's
+   Secrets ``smarter-redis-password`` and ``smarter-redis-users`` (with its keys ``tools`` and
+   ``extensions``). Without the policies, the namespace's
    default-deny policy keeps the tool worker from reaching Redis: it starts, but takes no task, and every
    tool call fails after its timeout. Without ``smarter-redis-users``, the tool worker has no Redis
    password, and refuses to start.
@@ -122,7 +150,7 @@ What Changes for Tool Calls
 Local Development
 -----------------
 
-``make run`` starts ``smarter-worker-tools`` too, with ``SMARTER_DATABASE_UNAVAILABLE=true``, as Redis's
+``make run`` starts ``smarter-worker-tools`` and ``smarter-worker-extensions`` too, with ``SMARTER_DATABASE_UNAVAILABLE=true``, as Redis's
 ``tools`` user, which docker-compose's Redis defines with the chart's rules. It shares ``.env`` with the
 other services, for convenience, so it is not isolated from their credentials locally. It takes calls only
 when ``.env`` sets ``SMARTER_APP_LLMTOOL_TOOL_RUNNER=remote``; the tests use the in-process runner.

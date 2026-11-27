@@ -72,7 +72,9 @@ def configure_tool_worker(app: Celery) -> None:
     ``_kombu.binding.<queue>``, which the app reads to route each task. A tool worker that could write that
     set could bind its queue's exchange to another queue, such as the infrastructure queue, whose worker
     holds the platform's credentials, and the app would deliver tool calls, with their credentials, there.
-    So the queue is ``no_declare``: the app declares it, when it sends the first tool call.
+    So the queue is ``no_declare``: the app declares it, when it sends the first tool call. The same goes
+    for the Extension worker (issue #1077), which runs the same code on the Extensions queue: both queues
+    are defined, ``no_declare``, and each worker's ``-Q`` picks its own.
 
     Remote control (``celery inspect``, ``celery control``), mingle, gossip and heartbeats all go through
     fanout exchanges and pidbox queues, which the ACL user can't reach. The worker turns off remote control
@@ -91,10 +93,16 @@ def configure_tool_worker(app: Celery) -> None:
 
     if not smarter_settings.database_unavailable:
         return
-    queue_name = smarter_settings.app_tools_tasks_celery_task_queue
-    # the exchange and routing key that Celery gives a queue it creates, as the app does when it sends.
-    queue = Queue(queue_name, Exchange(queue_name), routing_key=queue_name, no_declare=True)
-    app.conf.task_queues = [queue]
+    queue_names = (
+        smarter_settings.app_tools_tasks_celery_task_queue,
+        smarter_settings.app_extensions_tasks_celery_task_queue,
+    )
+    queues = []
+    for queue_name in queue_names:
+        # the exchange and routing key that Celery gives a queue it creates, as the app does when it sends.
+        queue = Queue(queue_name, Exchange(queue_name), routing_key=queue_name, no_declare=True)
+        queues.append(queue)
+    app.conf.task_queues = queues
     app.conf.worker_enable_remote_control = False
 
 
@@ -280,7 +288,7 @@ def run_worker_startup_checks(**kwargs) -> None:
     for name in sorted(APP.tasks.keys()):
         if not name.startswith(CELERY_BUILTIN_TASK_PREFIX):
             tasks.append(name)
-    log_tool_worker_readiness(results, tasks, smarter_settings.app_tools_tasks_celery_task_queue)
+    log_tool_worker_readiness(results, tasks, smarter_settings.tool_worker_queue)
 
 
 worker_init.connect(run_worker_startup_checks, weak=False)

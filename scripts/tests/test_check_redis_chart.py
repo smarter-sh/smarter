@@ -131,6 +131,14 @@ class TestNestedMounts(unittest.TestCase):
 class TestChecks(unittest.TestCase):
     """The lists of what the tool worker's user may and may not do."""
 
+    def test_each_worker_is_refused_the_others_queue(self):
+        """The tool worker's user can't read the Extensions queue, nor the Extension worker's the tools queue."""
+        tools = " ".join(description for description, _ in check_redis_chart.REFUSED_TO_TOOLS)
+        self.assertIn("Extensions queue", tools)
+        extensions = " ".join(description for description, _ in check_redis_chart.REFUSED_TO_EXTENSIONS)
+        self.assertIn("tools queue", extensions)
+        self.assertEqual(sorted(check_redis_chart.USER_PASSWORDS), ["extensions", "tools"])
+
     def test_the_escalations_are_refused(self):
         refused = " ".join(description for description, _ in check_redis_chart.REFUSED_TO_TOOLS)
         for what in ("infrastructure queue", "routing set", "session", "RedBeat", "SCAN", "KEYS", "channels"):

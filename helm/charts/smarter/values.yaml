@@ -482,6 +482,25 @@ workerTools:
     limits:
       cpu: "1"
       memory: "2Gi"
+  # The Extension worker (issue #1077), deployed with the tool worker: it runs Extensions' tool calls, which
+  # the app sends to their own queue, each in a process of its own (--max-tasks-per-child=1), as the Redis
+  # user extensions, which can't read the tool worker's queue. Extensions are third-party code: apart from
+  # the tool worker, they can't see the API, SQL and MCP calls' credentials, in their process or in Redis.
+  # Its pods are in the same application-group, so the same network policies apply. Its Secret holds the
+  # Redis user extensions' password, from smarter-infrastructure's smarter-redis-users. See
+  # templates/deployment-worker-extensions.yaml.
+  extensions:
+    replicaCount: 2
+    # concurrent Extension calls per pod, each in a process forked for it from the worker's loaded parent,
+    # and discarded after it.
+    concurrency: 2
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "1"
+        memory: "1Gi"
 
 beat:
   replicaCount: 1
@@ -798,11 +817,15 @@ redis:
     #   %R~...extension:archive:*   Extensions' archives in the cache, read-only
     #   ~...robots_rules.*          the robots.txt cache of a page fetch's redirects
     #   %W~stream:logs:*            the console's log streams, write-only, and the logs:* channels
-    # and no command that lists keys or channels, whose names include sessions' keys. Without it, code in
+    # and no command that lists keys or channels, whose names include sessions' keys. The Extension worker
+    # (issue #1077), which runs Extensions' code, is the user extensions, with the same rules for its own
+    # queue, extensions_celery_task_queue, and without the robots.txt cache: it can't read the tools
+    # queue, where API, SQL and MCP calls wait with their credentials. Without it, code in
     # the tool worker could push a task to the infrastructure worker, which holds the Kubernetes Role and
     # the IAM role, or read every session.
     #
-    # The user's password is in smarter-infrastructure's Secret smarter-redis-users, key tools, mounted
+    # The users' passwords are in smarter-infrastructure's Secret smarter-redis-users, keys tools and
+    # extensions, mounted
     # whole at /opt/bitnami/redis/users. When Redis starts, the start script has copied master.conf to a
     # writable directory; this appends the user to that copy, which Redis includes, after a newline: the
     # copy doesn't end with one, and its last line is a comment, which would swallow the user. Not the subchart's
@@ -824,6 +847,10 @@ redis:
       - |
         if [[ -f /opt/bitnami/redis/users/tools ]]; then
           printf '\n%s\n' "user tools on >$(< /opt/bitnami/redis/users/tools) ~tools_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* ~django*:1:smarter.apps.llmtool.plugin.websearch_fetch.robots_rules.* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
+        fi
+      - |
+        if [[ -f /opt/bitnami/redis/users/extensions ]]; then
+          printf '\n%s\n' "user extensions on >$(< /opt/bitnami/redis/users/extensions) ~extensions_celery_task_queue* ~celery-task-meta-* %R~django*:1:smarter:extension:archive:* %W~stream:logs:* &logs:* &celery-task-meta-* +@all -@dangerous -@admin -scan -randomkey -pubsub -subscribe -psubscribe -ssubscribe" >> /opt/bitnami/redis/etc/master.conf
         fi
     podLabels:
       app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
@@ -1045,7 +1072,7 @@ alloy:
           }
           selectors {
             role  = "pod"
-            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-worker-tools,{{ .Values.global.appName }}-beat,mariadb)"
+            label = "app.kubernetes.io/name in ({{ .Values.global.appName }},{{ .Values.global.appName }}-api,{{ .Values.global.appName }}-worker,{{ .Values.global.appName }}-worker-infrastructure,{{ .Values.global.appName }}-worker-tools,{{ .Values.global.appName }}-worker-extensions,{{ .Values.global.appName }}-beat,mariadb)"
           }
         }
 

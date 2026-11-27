@@ -776,7 +776,8 @@ See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#broker-tran
 """
 
 if smarter_settings.database_unavailable:
-    tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
+    # the tool worker's queue, or the Extension worker's (app_tools_worker_queue).
+    tools_queue = smarter_settings.tool_worker_queue
     CELERY_BROKER_TRANSPORT_OPTIONS = {
         **CELERY_BROKER_TRANSPORT_OPTIONS,
         "unacked_key": f"{tools_queue}.unacked",

@@ -82,7 +82,7 @@ CONTROLS = [
             (DONE, "safe_http: public addresses only (SSRF)"),
             (DONE, "tool calls in a worker with no credentials"),
             (DONE, "the extension registry's index is signed"),
-            (GAP, "an Extension stays loaded in its process"),
+            (DONE, "Extensions: own worker, a process per call"),
             (GAP, "MCP catalogs, custom endpoints: in the app"),
         ],
     ),

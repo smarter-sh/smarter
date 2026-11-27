@@ -87,7 +87,15 @@
         "enabled": { "type": "boolean" },
         "replicaCount": { "type": "integer", "minimum": 1 },
         "concurrency": { "type": "integer", "minimum": 1 },
-        "resources": { "type": "object" }
+        "resources": { "type": "object" },
+        "extensions": {
+          "type": "object",
+          "properties": {
+            "replicaCount": { "type": "integer", "minimum": 1 },
+            "concurrency": { "type": "integer", "minimum": 1 },
+            "resources": { "type": "object" }
+          }
+        }
       }
     },
     "beat": {
