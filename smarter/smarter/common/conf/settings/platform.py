@@ -11,6 +11,22 @@ from smarter.common.conf.util import before_field_validator, field_default
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterConfigurationError
 
+POD_KINDS = {
+    "api": "the api server",
+    "worker": "the worker",
+    "worker-infrastructure": "the infrastructure worker",
+    "beat": "Celery Beat",
+    "worker-tools": "the tool worker",
+    "worker-extensions": "the Extension worker",
+    "job-init": "the init job",
+    "job-migrate": "the migrate job",
+    "bastion": "the bastion",
+}
+"""Each kind of pod (``SERVICE_TYPE``) that the Helm chart and docker-compose run, and how its name reads in a sentence."""
+
+RESTRICTED_POD_KINDS = ("worker-tools", "worker-extensions")
+"""The pods without a database, which run code that the platform doesn't control (ADR-038, issue #1077)."""
+
 
 class PlatformSettings(BaseModel):
     """The platform's identity: its environment, root domain, platform subdomain, and shared resources."""
@@ -53,6 +69,46 @@ class PlatformSettings(BaseModel):
     :type: str
     :default: ``"/home/smarter_user/overrides/settings.yaml"``
     """
+
+    service_type: Optional[str] = Field(
+        None,
+        validation_alias="SERVICE_TYPE",
+        description="The kind of pod this process runs in, e.g. api or worker-tools. Empty: unknown.",
+        examples=["api"],
+        title="Service Type",
+    )
+    """
+    The kind of pod this process runs in: one of :data:`POD_KINDS`, e.g. ``api`` or ``worker-extensions``.
+
+    The Helm chart sets ``SERVICE_TYPE`` on every pod, and docker-compose on every service. It isn't a secret.
+    ``smarter_settings`` names the kind when it reports that it is READY, with the checks that it made for
+    that kind, and refuses to start a pod whose kind contradicts what it can see for itself, e.g. a
+    ``worker-extensions`` pod with a database (:meth:`~smarter.common.conf.settings.Settings.check_service_type`).
+    Unset, e.g. in a local script or a ``manage.py`` shell, the kind is unknown, and is reported so.
+
+    :type: Optional[str]
+    :default: None, an unknown kind.
+    :raises SmarterConfigurationError: If the value is not one of :data:`POD_KINDS`.
+    """
+
+    @before_field_validator("service_type")
+    def validate_service_type(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate ``service_type``: one of :data:`POD_KINDS`, trimmed and in lower case, or None.
+
+        :param v: The kind, or empty.
+        :returns: The kind, or None.
+        :raises SmarterConfigurationError: If the value is not one of :data:`POD_KINDS`.
+        """
+        if v in THE_EMPTY_SET:
+            return None
+        kind = str(v).strip().lower()
+        if not kind:
+            return None
+        if kind not in POD_KINDS:
+            known = ", ".join(POD_KINDS)
+            raise SmarterConfigurationError(f"SERVICE_TYPE {kind!r} is not one of: {known}.")
+        return kind
 
     @before_field_validator("subsystem_logging_loki_url")
     def validate_subsystem_logging_loki_url(cls, v: Optional[str]) -> str:

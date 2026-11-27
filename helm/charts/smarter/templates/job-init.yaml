@@ -124,6 +124,9 @@ spec:
             - secretRef:
                 name: "{{ .Values.global.appName }}-env"
           env:
+            # the kind of pod, which smarter_settings names, and checks, when it starts.
+            - name: SERVICE_TYPE
+              value: "job-init"
             # Python block-buffers stdout when it is piped, here to tee, so the commands' summaries
             # would otherwise come out after all of their logging, which goes to unbuffered stderr.
             - name: PYTHONUNBUFFERED

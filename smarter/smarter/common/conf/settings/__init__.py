@@ -29,6 +29,7 @@ prioritization sequence:
     sits upstream of Django and is intended to be used independently of Django.
 """
 
+import os
 from functools import lru_cache
 from typing import Any, get_args
 
@@ -36,6 +37,7 @@ from pydantic import SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from smarter.common.conf.credentials import forbidden_credentials
 from smarter.common.conf.env import unquoted
 from smarter.common.conf.settings.app_keys import AppKeySettings
 from smarter.common.conf.settings.aws import AwsSettings
@@ -47,7 +49,11 @@ from smarter.common.conf.settings.email import EmailSettings
 from smarter.common.conf.settings.features import FeatureSettings
 from smarter.common.conf.settings.integrations import IntegrationSettings
 from smarter.common.conf.settings.llm import LLMSettings
-from smarter.common.conf.settings.platform import PlatformSettings
+from smarter.common.conf.settings.platform import (
+    POD_KINDS,
+    RESTRICTED_POD_KINDS,
+    PlatformSettings,
+)
 from smarter.common.conf.settings.project import ProjectSettings
 from smarter.common.conf.settings.security import SecuritySettings
 from smarter.common.conf.settings.tasks import TaskSettings
@@ -189,6 +195,8 @@ class Settings(
         super().__init__(**data)
         self._to_json = None
         self._ready = False
+        self.check_service_type()
+        self.check_restricted_worker_credentials()
         # need to be mindful that __init__ is called before Django startup has begun.
         # one consequence is that logging is not yet configured, so have have to
         # use janky logging levels in order to ensure that these log messages are seen.
@@ -200,27 +208,114 @@ class Settings(
             # the tool worker has no AWS credentials, by design (ADR-038): its ServiceAccount has no
             # IAM role. STS isn't asked, and nothing warns that they are missing.
             self._aws_is_configured = False
+        pod = self.pod_description()
+        checks = ", ".join(self.readiness_checks())
         if not self.ready():
             logger.warning(
-                "Pydantic version: %s smarter_settings are %s.",
+                "Pydantic version: %s smarter_settings are %s %s: %s, see the warnings above.",
                 pydantic_version,
                 SmarterFormattedText.text("NOT_READY", SmarterFormattedText.DARK_RED),
+                pod,
+                checks,
                 prefix_format=prefix_format,
             )
         elif is_first_worker("settings-ready"):
             logger.warning(
-                "Pydantic version: %s smarter_settings are %s.",
+                "Pydantic version: %s smarter_settings are %s %s: %s (checked).",
                 pydantic_version,
                 SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
+                pod,
+                checks,
                 prefix_format=prefix_format,
             )
         else:
             logger.debug(
-                "Pydantic version: %s smarter_settings are %s.",
+                "Pydantic version: %s smarter_settings are %s %s: %s (checked).",
                 pydantic_version,
                 SmarterFormattedText.text("READY", SmarterFormattedText.BRIGHT_GREEN),
+                pod,
+                checks,
                 prefix_format=prefix_format,
             )
+
+    def pod_description(self) -> str:
+        """
+        Return the kind of pod this process runs in, for the READY line: e.g. ``for the tool worker``.
+
+        :returns: ``for <the kind>``, from :attr:`service_type`, or a note that the kind is unknown.
+        """
+        if self.service_type is None:
+            return "for an unknown kind of pod (SERVICE_TYPE is not set)"
+        label = POD_KINDS[self.service_type]
+        retval = f"for {label}"
+        return retval
+
+    def readiness_checks(self) -> list[str]:
+        """
+        Return what the settings check for this kind of pod when they start, as the READY line names them.
+
+        - A restricted worker (:attr:`database_unavailable`): that it holds no credential but its own Redis
+          password (:meth:`check_restricted_worker_credentials`).
+        - Every other pod: AWS credentials, and outside the local environment, the root domain (:meth:`ready`).
+
+        :returns: The checks, in a few words each.
+        """
+        if self.database_unavailable:
+            return ["it holds no credential but its own Redis password"]
+        checks = []
+        if not self.environment_is_local:
+            checks.append("the root domain")
+        checks.append("AWS credentials")
+        return checks
+
+    def check_service_type(self) -> None:
+        """
+        Refuse to start a pod whose ``SERVICE_TYPE`` contradicts what the settings can see for themselves.
+
+        The two restricted workers are the pods without a database, and the Extension worker is the one whose
+        queue is the Extensions queue. A pod named one of them that has a database, or the reverse, would be
+        reported as the wrong kind, and checked as the wrong kind, so it doesn't start. An unknown kind
+        (``SERVICE_TYPE`` unset) is allowed, and reported as unknown.
+
+        :raises SmarterConfigurationError: If the kind and the settings disagree.
+        """
+        kind = self.service_type
+        if kind is None:
+            return
+        restricted = kind in RESTRICTED_POD_KINDS
+        if restricted != self.database_unavailable:
+            raise SmarterConfigurationError(
+                f"SERVICE_TYPE is {kind}, but SMARTER_DATABASE_UNAVAILABLE is {self.database_unavailable}: "
+                f"only {' and '.join(RESTRICTED_POD_KINDS)} run without a database."
+            )
+        if restricted and (kind == "worker-extensions") != self.is_extension_worker:
+            raise SmarterConfigurationError(
+                f"SERVICE_TYPE is {kind}, but its queue is {self.tool_worker_queue}: "
+                "the Extension worker, and only it, takes the Extensions queue."
+            )
+
+    def check_restricted_worker_credentials(self) -> None:
+        """
+        Refuse to start a tool worker or an Extension worker that was given a credential it must not hold.
+
+        Those two workers run code that the platform doesn't control (ADR-038, issue #1077), and are the
+        processes with :attr:`database_unavailable`. Their only credential is their own Redis user's password;
+        any other credential setting, e.g. a provider's API key or the Fernet key, would be within that code's
+        reach. See :mod:`smarter.common.conf.credentials`. Every other process is left alone.
+
+        :raises SmarterConfigurationError: If the worker was given a credential it must not hold. The message
+            names the settings, never their values.
+        """
+        if not self.database_unavailable:
+            return
+        forbidden = forbidden_credentials(self, os.environ)
+        if not forbidden:
+            return
+        names = ", ".join(forbidden)
+        raise SmarterConfigurationError(
+            f"This worker runs code that the platform doesn't control, and must hold no credential but its own "
+            f"Redis user's password (ADR-038). It was given: {names}. Remove them from its environment."
+        )
 
     def ready(self) -> bool:
         """

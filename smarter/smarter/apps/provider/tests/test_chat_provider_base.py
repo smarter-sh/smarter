@@ -160,9 +160,12 @@ class TestGetMessageThread(SmarterTestBase):
 
     def test_a_prompt_without_an_llmclient_gets_the_date_time_only(self):
         self.set_prompt(MagicMock(llmclient=None))
-        messages = self.client.get_message_thread(injected_first_request())
+        # a fixed date and time: called twice, the clock could cross a second in between.
+        date_time = "The current date/time is Friday, 2026-11-27T23:09:41+0000\n"
+        with patch.object(module, "get_date_time_string", return_value=date_time):
+            messages = self.client.get_message_thread(injected_first_request())
         self.assertEqual([message["role"] for message in messages], ["system", "user"])
-        self.assertEqual(messages[0]["content"], module.get_date_time_string())
+        self.assertEqual(messages[0]["content"], date_time)
 
     def test_an_overriding_system_message_is_logged_without_its_content(self):
         capture = WrappedLoggerCapture(self, module.logger)
@@ -210,7 +213,11 @@ class TestGetMessageThread(SmarterTestBase):
                 ("assistant", module.example_prompts_message(EXAMPLE_PROMPTS)),
             ],
         )
-        self.assertEqual(module.introduction_messages(None)[0]["content"], module.get_date_time_string())
+        # a fixed date and time: called twice, the clock could cross a second in between.
+        date_time = "The current date/time is Friday, 2026-11-27T23:09:41+0000\n"
+        with patch.object(module, "get_date_time_string", return_value=date_time):
+            introduction = module.introduction_messages(None)
+        self.assertEqual(introduction[0]["content"], date_time)
 
     def test_introduction_ignores_values_that_are_not_text(self):
         """A welcome message or example prompts of the wrong type are left out."""

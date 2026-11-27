@@ -15,6 +15,24 @@
 # own network. There is no Celery Beat: its scheduled tasks would change the rows
 # of running tests. The image is the one make build builds.
 #------------------------------------------------------------------------------
+
+# The tool worker's and the Extension worker's environment, as docker-compose.yml's: the non-secret settings that
+# the Helm chart's smarter.toolWorkerEnv gives them, never .env's credentials.
+x-restricted-worker-environment: &restricted-worker-environment
+  PYTHONUNBUFFERED: "1"
+  SMARTER_DATABASE_UNAVAILABLE: "true"
+  SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS: ${SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS:-50}
+  SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE: ${SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE:-extensions_celery_task_queue}
+  SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE: ${SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE:-tools_celery_task_queue}
+  SMARTER_DEBUG_MODE: ${SMARTER_DEBUG_MODE:-false}
+  SMARTER_ENVIRONMENT: ${SMARTER_ENVIRONMENT:-local}
+  SMARTER_LOG_LEVEL: ${SMARTER_LOG_LEVEL:-INFO}
+  SMARTER_PLATFORM_CLOUD_PROVIDER: ${SMARTER_PLATFORM_CLOUD_PROVIDER:-aws}
+  SMARTER_PLATFORM_INTERNAL_IP_PREFIXES: ${SMARTER_PLATFORM_INTERNAL_IP_PREFIXES:-192.168.}
+  SMARTER_PLATFORM_ROOT_DOMAIN: ${SMARTER_PLATFORM_ROOT_DOMAIN:-example.com}
+  SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER: ${SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER:-smarter}
+  SMARTER_PLATFORM_SUBDOMAIN: ${SMARTER_PLATFORM_SUBDOMAIN:-platform}
+
 services:
   smarter-mariadb:
     mem_limit: 2g
@@ -96,7 +114,7 @@ services:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=app
+      - SERVICE_TYPE=api
       - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD=smarter
 
   smarter-worker:
@@ -126,18 +144,16 @@ services:
     command: celery -A smarter.workers.celery.app worker --concurrency=1 --loglevel=info -Q tools_celery_task_queue -n tools@%h --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
-    env_file:
-      - ./.env
+    # no env_file: only the settings that it needs, never .env's credentials.
     environment:
-      - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
-      - SMARTER_DATABASE_UNAVAILABLE=true
+      <<: *restricted-worker-environment
+      SERVICE_TYPE: worker-tools
       # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
-      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools
-      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-tools
+      SMARTER_SUBSYSTEM_REDIS_USERNAME: tools
+      SMARTER_SUBSYSTEM_REDIS_PASSWORD: smarter-tools
       # @cache_results' own cache (cache-results reads it), as the Helm chart's smarter.toolWorkerEnv sets it:
       # the cache's database, as the same user, under the keys that its ACL rule ~tools_cache:* allows.
-      - 'CACHE_RESULTS_CACHE={"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://tools:smarter-tools@smarter-redis:6379/1", "KEY_PREFIX": "tools_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
+      CACHE_RESULTS_CACHE: '{"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://tools:smarter-tools@smarter-redis:6379/1", "KEY_PREFIX": "tools_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
 
   # the Extension worker (issue #1077): it runs Extensions' tool calls, which the app sends to its own queue,
   # each in a process of its own (--max-tasks-per-child=1), as the Redis user extensions, which can't read
@@ -150,18 +166,16 @@ services:
     command: celery -A smarter.workers.celery.app worker --concurrency=1 --loglevel=info -Q extensions_celery_task_queue -n extensions@%h --max-tasks-per-child=1 --without-mingle --without-gossip --without-heartbeat
     depends_on:
       - smarter-redis
-    env_file:
-      - ./.env
+    # no env_file: only the settings that it needs, never .env's credentials.
     environment:
-      - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
-      - SMARTER_DATABASE_UNAVAILABLE=true
+      <<: *restricted-worker-environment
+      SERVICE_TYPE: worker-extensions
       # its own Redis user, which may touch only its own keys (ADR-030, rule 8).
-      - SMARTER_SUBSYSTEM_REDIS_USERNAME=extensions
-      - SMARTER_SUBSYSTEM_REDIS_PASSWORD=smarter-extensions
+      SMARTER_SUBSYSTEM_REDIS_USERNAME: extensions
+      SMARTER_SUBSYSTEM_REDIS_PASSWORD: smarter-extensions
       # @cache_results' own cache, as for the tool worker, under the keys that ~extensions_cache:* allows.
-      - 'CACHE_RESULTS_CACHE={"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://extensions:smarter-extensions@smarter-redis:6379/1", "KEY_PREFIX": "extensions_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
-      - SMARTER_APP_TOOLS_WORKER_QUEUE=extensions_celery_task_queue
+      CACHE_RESULTS_CACHE: '{"BACKEND": "django_redis.cache.RedisCache", "LOCATION": "redis://extensions:smarter-extensions@smarter-redis:6379/1", "KEY_PREFIX": "extensions_cache", "OPTIONS": {"SOCKET_CONNECT_TIMEOUT": 2, "SOCKET_TIMEOUT": 5}}'
+      SMARTER_APP_TOOLS_WORKER_QUEUE: extensions_celery_task_queue
 
   smarter-worker-infrastructure:
     mem_limit: 2g
@@ -176,4 +190,4 @@ services:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
-      - SERVICE_TYPE=worker
+      - SERVICE_TYPE=worker-infrastructure
