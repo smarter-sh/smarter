@@ -25,7 +25,7 @@ TOOL_WORKER_REDIS_USERNAME = "tools"
 """
 The Redis ACL user of the tool worker, ``smarter-worker-tools`` (ADR-030, rule 8).
 
-The Helm chart's ``redis.auth.acl.users`` and both docker-compose files define it, with the same rules.
+The Helm chart's ``redis.master.preExecCmds`` and both docker-compose files define it, with the same rules.
 """
 
 LOCAL_TOOL_WORKER_REDIS_PASSWORD = "smarter-tools"

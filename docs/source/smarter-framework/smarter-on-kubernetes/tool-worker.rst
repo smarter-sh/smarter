@@ -31,7 +31,7 @@ What the Chart Deploys
 - its Secret, ``smarter-env-tools``, with only its own Redis user's credentials, settings that aren't
   secret, ``SMARTER_DATABASE_UNAVAILABLE=true`` and ``AWS_EC2_METADATA_DISABLED=true``. The template
   ``smarter.toolsEnv`` in ``_helpers.tpl`` lists them;
-- its Redis user, ``tools`` (``redis.auth.acl.users``), described below;
+- its Redis user, ``tools`` (``redis.master.preExecCmds``), described below;
 - its ServiceAccount, ``smarter-tools``, which has no IAM role and no Kubernetes permissions, and whose
   token isn't mounted.
 
