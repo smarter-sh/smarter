@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.9-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.9-alpha.1...v0.48.9-alpha.2) (2026-11-27)
+
+### Bug Fixes
+
+* **docker:** give build-time manage.py a throwaway redis password ([0274b0a](https://github.com/smarter-sh/smarter/commit/0274b0a3308ce73daa70874cfb4d0a3ddcfc7e0e)), closes [#1073](https://github.com/smarter-sh/smarter/issues/1073)
+* **llmtool:** give the tool worker a redis acl user of its own ([5e20664](https://github.com/smarter-sh/smarter/commit/5e206644b075af8993298d450b078f52bb845026)), closes [#1065](https://github.com/smarter-sh/smarter/issues/1065) [#1073](https://github.com/smarter-sh/smarter/issues/1073) [#1077](https://github.com/smarter-sh/smarter/issues/1077)
+
 ## [0.48.9-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.8...v0.48.9-alpha.1) (2026-11-27)
 
 ### Bug Fixes
