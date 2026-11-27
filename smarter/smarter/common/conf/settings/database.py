@@ -10,6 +10,7 @@ from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
     field_default,
+    has_field,
     input_value,
     parse_int_setting,
     with_derived_default,
@@ -264,7 +265,7 @@ class DatabaseSettings(BaseModel):
         :param data: The values to validate: the constructor's and the environment's.
         :returns: The values, with the derived default added in the local environment.
         """
-        if "environment" not in cls.model_fields:
+        if not has_field(cls, "environment"):
             return data
         environment = input_value(cls, data, "environment")
         if environment != SmarterEnvironments.LOCAL:

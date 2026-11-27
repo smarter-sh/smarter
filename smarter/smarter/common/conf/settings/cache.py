@@ -1,19 +1,141 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
-"""The cache expiration settings."""
+"""The cache settings: Redis's password, and how long cached data is kept."""
 
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr, model_validator
 
+from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
     field_default,
+    has_field,
+    input_value,
     parse_int_setting,
+    with_derived_default,
 )
+from smarter.common.const import SmarterEnvironments
+from smarter.common.exceptions import SmarterConfigurationError
+
+LOCAL_REDIS_PASSWORD = "smarter"
+"""The password of docker-compose.yml's smarter-redis service, the local environment's default."""
+
+TOOL_WORKER_REDIS_USERNAME = "tools"
+"""
+The Redis ACL user of the tool worker, ``smarter-worker-tools`` (ADR-030, rule 8).
+
+The Helm chart's ``redis.auth.acl.users`` and both docker-compose files define it, with the same rules.
+"""
+
+LOCAL_TOOL_WORKER_REDIS_PASSWORD = "smarter-tools"
+"""The password of :data:`TOOL_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
 
 
 class CacheSettings(BaseModel):
-    """How long cached views, prompts, llmclients and responses are kept."""
+    """Redis's password, and how long cached views, prompts, llmclients and responses are kept."""
+
+    subsystem_redis_username: Optional[str] = Field(
+        None,
+        description="The Redis ACL user that this process authenticates as, or empty for Redis's default user.",
+        examples=["tools"],
+        title="Redis Username",
+    )
+    """
+    The Redis ACL user that this process authenticates as.
+
+    Every process but the tool worker uses Redis's ``default`` user, which may do anything. The tool worker
+    is given its own user, ``tools`` (:data:`TOOL_WORKER_REDIS_USERNAME`), which may touch only its own
+    queue, its results, Extensions' archives and a few cache keys (ADR-030, rule 8), with
+    :attr:`subsystem_redis_password` set to that user's password.
+
+    Set it with ``SMARTER_SUBSYSTEM_REDIS_USERNAME``.
+
+    :type: Optional[str]
+    :default: None, Redis's ``default`` user.
+    :raises SmarterConfigurationError: If the value is not a string.
+    """
+
+    @before_field_validator("subsystem_redis_username")
+    def validate_subsystem_redis_username(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate ``subsystem_redis_username``.
+
+        :param v: The username, or empty for the ``default`` user.
+        :returns: The username, or None.
+        :raises SmarterConfigurationError: If the value is not a string.
+        """
+        if v in THE_EMPTY_SET or is_missing_value(v):
+            return None
+        if not isinstance(v, str):
+            raise SmarterConfigurationError(f"subsystem_redis_username of type {type(v)} is not a str")
+        username = v.strip()
+        if not username:
+            return None
+        return username
+
+    subsystem_redis_password: Optional[SecretStr] = Field(
+        None,
+        description="The password of the platform's Redis: the Celery broker, the cache and the sessions.",
+        examples=["your-redis-password"],
+        title="Redis Password",
+    )
+    """
+    The password of the platform's Redis, which holds the Celery broker, RedBeat's schedule, the cache and the.
+
+    sessions.
+
+    Set it with ``SMARTER_SUBSYSTEM_REDIS_PASSWORD``. On a cluster that smarter-infrastructure built, the Helm
+    chart reads it from the Kubernetes Secret ``smarter-redis-password``, which smarter-infrastructure
+    generates, and gives the same Secret to its Redis. :mod:`smarter.settings.base_aws` builds the broker's,
+    RedBeat's and the caches' urls from it, and :meth:`~smarter.common.conf.settings.Settings.require_redis_password`
+    refuses to start without it outside the local environment (ADR-030, rule 5).
+
+    In the local environment it defaults to the password of docker-compose.yml's smarter-redis service.
+    Elsewhere there is no default: a missing password, or a placeholder such as ``SET-ME-PLEASE``, is None.
+
+    :type: Optional[SecretStr]
+    :default: ``"smarter"`` in the local environment, and None elsewhere. See :meth:`derive_cache_defaults`.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("subsystem_redis_password")
+    def validate_subsystem_redis_password(cls, v: Optional[Union[SecretStr, str]]) -> Optional[SecretStr]:
+        """
+        Validate ``subsystem_redis_password``.
+
+        :param v: The password, or empty for the default.
+        :returns: The password, or None if it is missing or a placeholder.
+        :raises SmarterConfigurationError: If the value is not a SecretStr.
+        """
+        if v in THE_EMPTY_SET:
+            v = field_default(cls, "subsystem_redis_password")
+        if isinstance(v, str):
+            v = SecretStr(v)
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"subsystem_redis_password of type {type(v)} is not a SecretStr")
+        return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def derive_cache_defaults(cls, data: object) -> object:
+        """
+        Derive the local environment's Redis password, unless it is set.
+
+        In the local environment, the password is docker-compose.yml's smarter-redis service's,
+        ``smarter``. Elsewhere there is no default.
+
+        :param data: The values to validate: the constructor's and the environment's.
+        :returns: The values, with the derived default added in the local environment.
+        """
+        if not has_field(cls, "environment"):
+            return data
+        environment = input_value(cls, data, "environment")
+        if environment != SmarterEnvironments.LOCAL:
+            return data
+        return with_derived_default(data, "subsystem_redis_password", LOCAL_REDIS_PASSWORD)
 
     subsystem_cache_expiration: int = Field(
         60 * 1,
@@ -191,4 +313,9 @@ class CacheSettings(BaseModel):
         )
 
 
-__all__ = ["CacheSettings"]
+__all__ = [
+    "LOCAL_REDIS_PASSWORD",
+    "LOCAL_TOOL_WORKER_REDIS_PASSWORD",
+    "TOOL_WORKER_REDIS_USERNAME",
+    "CacheSettings",
+]

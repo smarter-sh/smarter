@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 918" width="1300" height="918" role="img" aria-labelledby="t d">
+<title id="t">Which hosts each process contacts</title>
+<desc id="d">For each process, three lanes: the services in the cluster that it reaches, the fixed hosts on the internet that it reaches, which are the seed of phase 4's allowlist, and the hosts that a manifest author chooses. The app reaches MariaDB, Redis, Loki, the Kubernetes api, the LLMHosts and the self-hosted vectorstores; the LLM providers' apis, Pinecone, the social sign-in providers, GitHub, the account manager's api, SES's SMTP endpoint and AWS's STS, EKS and Auto Scaling; and, chosen by a manifest author, the MCPClients' servers, whose catalogs it lists, the vectorstores' ApiConnections, and the LLMClients' and LLMHosts' custom endpoints. The default worker reaches the LLM providers, Pinecone, GitHub and the blog, the extension registry, SES and S3; and, chosen by a manifest author, the MCPClients' servers, the vectorstores' ApiConnections, the providers' pages and the LLM prices' source pages. The infrastructure worker reaches Route53, ACM, EKS, STS and public DNS; beat only Redis and STS; the init Job GitHub, the extension registry, the LLM providers, SES, Slack and AWS. The tool worker reaches only Redis and MariaDB's port in the cluster, and every host that a tool call chooses on the internet: that is its purpose. Every host that a manifest author chooses outside the tool worker must be moved behind it or added to the allowlist before phase 4 enforces.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1300" height="918" rx="14" fill="#F6F8FA"/>
+<text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Which hosts each process contacts</text>
+<text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">the fixed hosts are the seed of phase 4's allowlist; the hosts a manifest author chooses decide its open questions</text>
+<text x="252" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · In the cluster</text>
+<rect x="252" y="106" width="284" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<text x="560" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · Fixed hosts: the allowlist</text>
+<rect x="560" y="106" width="364" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<text x="948" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · Chosen by a manifest author</text>
+<rect x="948" y="106" width="324" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="28" y="130" width="200" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,139 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#EAEEF2"/>
+<text x="40" y="148" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-api</text>
+<text x="40" y="172" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the app</text>
+<rect x="252" y="130" width="284" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,139 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="148" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="172" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB · Redis · Loki</text>
+<text x="264" y="189" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Kubernetes api</text>
+<text x="264" y="206" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMHosts · self-hosted vectorstores</text>
+<rect x="560" y="130" width="364" height="129" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,139 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="148" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="172" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the LLM providers' apis · Pinecone</text>
+<text x="572" y="189" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Google, GitHub, LinkedIn sign-in</text>
+<text x="572" y="206" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">api.github.com · raw.githubusercontent.com</text>
+<text x="572" y="223" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">api.am.&lt;root domain&gt; · SES's SMTP</text>
+<text x="572" y="240" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">AWS: STS, EKS, Auto Scaling</text>
+<rect x="948" y="130" width="324" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,139 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#FFEBE9"/>
+<text x="960" y="148" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Chosen hosts</text>
+<text x="960" y="172" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MCPClients' servers: the catalog</text>
+<text x="960" y="189" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">vectorstores' ApiConnections</text>
+<text x="960" y="206" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMClients' and LLMHosts' endpoints</text>
+<path d="M228,160.5 L248,160.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="281" width="200" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,290 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#EAEEF2"/>
+<text x="40" y="299" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-worker</text>
+<text x="40" y="323" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">default queue</text>
+<rect x="252" y="281" width="284" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,290 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="299" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="323" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB · Redis</text>
+<text x="264" y="340" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">self-hosted vectorstores</text>
+<rect x="560" y="281" width="364" height="112" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,290 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="299" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="323" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the LLM providers' apis · Pinecone</text>
+<text x="572" y="340" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">GitHub · the blog: indexing</text>
+<text x="572" y="357" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">smarter-sh.github.io: the registry</text>
+<text x="572" y="374" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">SES's SMTP · AWS: STS, S3</text>
+<rect x="948" y="281" width="324" height="112" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,290 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#FFEBE9"/>
+<text x="960" y="299" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Chosen hosts</text>
+<text x="960" y="323" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MCPClients' servers: the catalog</text>
+<text x="960" y="340" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">vectorstores' ApiConnections</text>
+<text x="960" y="357" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">providers' website, terms, docs</text>
+<text x="960" y="374" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLM prices' source pages</text>
+<path d="M228,311.5 L248,311.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="415" width="200" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,424 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#EAEEF2"/>
+<text x="40" y="433" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">worker-infrastructure</text>
+<text x="40" y="457" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">infrastructure queue</text>
+<rect x="252" y="415" width="284" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,424 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="433" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="457" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB · Redis</text>
+<text x="264" y="474" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Kubernetes api</text>
+<rect x="560" y="415" width="364" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,424 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="433" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="457" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">AWS: Route53, ACM, EKS, STS</text>
+<text x="572" y="474" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">public DNS: resolve_domain()</text>
+<rect x="948" y="415" width="324" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,424 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#EAEEF2"/>
+<text x="960" y="433" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Chosen hosts</text>
+<text x="960" y="457" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">none</text>
+<path d="M228,445.5 L248,445.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="515" width="200" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,524 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#EAEEF2"/>
+<text x="40" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-beat</text>
+<text x="40" y="557" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the schedule</text>
+<rect x="252" y="515" width="284" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,524 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="557" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Redis: RedBeat</text>
+<rect x="560" y="515" width="364" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,524 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="557" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">AWS: STS, the settings' check</text>
+<rect x="948" y="515" width="324" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,524 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#EAEEF2"/>
+<text x="960" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Chosen hosts</text>
+<text x="960" y="557" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">none</text>
+<path d="M228,545.5 L248,545.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="598" width="200" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M28,607 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#EAEEF2"/>
+<text x="40" y="616" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">job-init</text>
+<text x="40" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">initialize_platform</text>
+<rect x="252" y="598" width="284" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,607 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="616" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB · Redis</text>
+<text x="264" y="657" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Kubernetes api</text>
+<rect x="560" y="598" width="364" height="112" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,607 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="616" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">GitHub: load_from_github's clones</text>
+<text x="572" y="657" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">smarter-sh.github.io · the LLM providers</text>
+<text x="572" y="674" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">SES's SMTP · Slack's api</text>
+<text x="572" y="691" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">AWS: S3, Route53, STS</text>
+<rect x="948" y="598" width="324" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,607 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#EAEEF2"/>
+<text x="960" y="616" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Chosen hosts</text>
+<text x="960" y="640" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">none found</text>
+<path d="M228,628.5 L248,628.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="732" width="200" height="61" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M28,741 a9,9 0 0 1 9,-9 h182 a9,9 0 0 1 9,9 v17 h-200 z" fill="#2980B9"/>
+<text x="40" y="750" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-worker-tools</text>
+<text x="40" y="774" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">tool calls</text>
+<rect x="252" y="732" width="284" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M252,741 a9,9 0 0 1 9,-9 h266 a9,9 0 0 1 9,9 v17 h-284 z" fill="#E7F6EC"/>
+<text x="264" y="750" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">In the cluster</text>
+<text x="264" y="774" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Redis</text>
+<text x="264" y="791" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MariaDB's port: SQL plugins</text>
+<rect x="560" y="732" width="364" height="61" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M560,741 a9,9 0 0 1 9,-9 h346 a9,9 0 0 1 9,9 v17 h-364 z" fill="#FFF1E5"/>
+<text x="572" y="750" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Fixed hosts</text>
+<text x="572" y="774" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">none of its own</text>
+<rect x="948" y="732" width="324" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M948,741 a9,9 0 0 1 9,-9 h306 a9,9 0 0 1 9,9 v17 h-324 z" fill="#E7F6EC"/>
+<text x="960" y="750" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Chosen hosts</text>
+<text x="960" y="774" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">every tool call: MCP servers, APIs,</text>
+<text x="960" y="791" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">databases, searches, web pages,</text>
+<text x="960" y="808" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">extensions' services</text>
+<path d="M228,762.5 L248,762.5" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<rect x="28" y="850" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,870 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="92" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the process reaches each host in its row</text>
+<text x="560" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#CF222E" text-anchor="start">red: a chosen host outside the tool worker, which phase 4 must move or allow</text>
+</svg>

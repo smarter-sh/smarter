@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 910" width="1300" height="910" role="img" aria-labelledby="t d">
+<title id="t">Who writes to the cluster and the cloud</title>
+<desc id="d">Two paths from the app to the Kubernetes api and the cloud's apis. The LLMClient broker hands its ingresses, DNS records and certificates to Celery tasks on the infrastructure queue, which smarter-worker-infrastructure runs with the Kubernetes Role and the IAM role for Route53 and ACM. Celery Beat schedules the inventory and the vectorstores' maintenance on the same queue. The LLMHost broker's deploy, undeploy and delete, and the vectorstore broker's apply and delete, call the Kubernetes api from the app's own request, and the LLMHostCompute broker's deploy and delete create, scale and delete its EKS node group from the app too. The app also reads the cluster: an LLMHost's observation and logs, a vectorstore's conditions and logs, the MCPServer's status tools, smarter status, and its startup check. So phase 3 can move the Kubernetes Role to the infrastructure worker only after those three brokers hand their writes to infrastructure tasks, as the LLMClient's broker does; the app's reads need a read-only Role either way.</desc>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
+<rect width="1300" height="910" rx="14" fill="#F6F8FA"/>
+<text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Who writes to the cluster and the cloud</text>
+<text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">LLMClients go through the infrastructure worker; LLMHosts, their computes and vectorstores write from the app</text>
+<text x="28" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · The app, inside the request</text>
+<rect x="28" y="106" width="330" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="18" y="116" width="350" height="712" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="30" y="135" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">smarter-api</text>
+<text x="30" y="151" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">the cli api and the web console's brokers</text>
+<rect x="36" y="170" width="314" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M36,179 a9,9 0 0 1 9,-9 h296 a9,9 0 0 1 9,9 v17 h-314 z" fill="#EAEEF2"/>
+<text x="48" y="188" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">LLMClient broker</text>
+<text x="48" y="212" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">deploy_default_api.delay() …</text>
+<text x="48" y="230" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ingresses, DNS records, certificates</text>
+<text x="48" y="247" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">deploy, undeploy, custom domains</text>
+<rect x="36" y="300" width="314" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M36,309 a9,9 0 0 1 9,-9 h296 a9,9 0 0 1 9,9 v17 h-314 z" fill="#EAEEF2"/>
+<text x="48" y="318" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Status pages and tools</text>
+<text x="48" y="342" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMHost, vectorstore: status, logs</text>
+<text x="48" y="359" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">MCPServer status tools · smarter status</text>
+<text x="48" y="376" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">startup check: check_kubernetes</text>
+<rect x="36" y="430" width="314" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M36,439 a9,9 0 0 1 9,-9 h296 a9,9 0 0 1 9,9 v17 h-314 z" fill="#FFEBE9"/>
+<text x="48" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">LLMHost broker</text>
+<text x="48" y="472" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">LLMHostService.launch()</text>
+<text x="48" y="490" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">deploy · undeploy · delete:</text>
+<text x="48" y="507" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Deployments, Services, Ingresses, Secrets</text>
+<rect x="36" y="570" width="314" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M36,579 a9,9 0 0 1 9,-9 h296 a9,9 0 0 1 9,9 v17 h-314 z" fill="#FFEBE9"/>
+<text x="48" y="588" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">Vectorstore broker</text>
+<text x="48" y="612" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">backend.provision()</text>
+<text x="48" y="630" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">apply · delete: a StatefulSet,</text>
+<text x="48" y="647" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its Service, Secret and volume</text>
+<rect x="36" y="710" width="314" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M36,719 a9,9 0 0 1 9,-9 h296 a9,9 0 0 1 9,9 v17 h-314 z" fill="#FFEBE9"/>
+<text x="48" y="728" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#CF222E" text-anchor="start">LLMHostCompute broker</text>
+<text x="48" y="752" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ComputeProvisioner.reconcile()</text>
+<text x="48" y="770" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">deploy · delete: its node group,</text>
+<text x="48" y="787" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">created, scaled and deleted</text>
+<text x="470" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">2 · The apis</text>
+<rect x="470" y="106" width="340" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="470" y="320" width="340" height="130" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M470,329 a9,9 0 0 1 9,-9 h322 a9,9 0 0 1 9,9 v17 h-340 z" fill="#FBEFFF"/>
+<text x="482" y="338" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">The Kubernetes api</text>
+<text x="482" y="362" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">kubectl, as ServiceAccount smarter</text>
+<text x="482" y="380" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">this namespace: the Role</text>
+<text x="482" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the cluster: a read-only ClusterRole</text>
+<text x="482" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Deployments, StatefulSets, Ingresses,</text>
+<text x="482" y="431" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Services, Secrets, volumes</text>
+<rect x="470" y="500" width="340" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M470,509 a9,9 0 0 1 9,-9 h322 a9,9 0 0 1 9,9 v17 h-340 z" fill="#FFF1E5"/>
+<text x="482" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Route53 and ACM</text>
+<text x="482" y="542" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">boto3, the IAM role</text>
+<text x="482" y="560" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">DNS records, hosted zones</text>
+<text x="482" y="577" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">certificates and their validation</text>
+<rect x="470" y="660" width="340" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M470,669 a9,9 0 0 1 9,-9 h322 a9,9 0 0 1 9,9 v17 h-340 z" fill="#FFF1E5"/>
+<text x="482" y="678" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">EKS and Auto Scaling</text>
+<text x="482" y="702" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">boto3, the IAM role</text>
+<text x="482" y="720" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">managed node groups for LLMHosts</text>
+<text x="482" y="737" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the cluster's description</text>
+<text x="900" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · The infrastructure queue</text>
+<rect x="900" y="106" width="372" height="2" fill="#2980B9" fill-opacity="0.35"/>
+<rect x="900" y="170" width="372" height="78" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,179 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#EAEEF2"/>
+<text x="912" y="188" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-beat</text>
+<text x="912" y="212" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the inventory, every 15 minutes</text>
+<text x="912" y="229" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the vectorstores' maintenance</text>
+<rect x="900" y="300" width="372" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M900,309 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#E7F6EC"/>
+<text x="912" y="318" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Redis</text>
+<text x="912" y="342" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">infrastructure_celery_task_queue</text>
+<text x="912" y="360" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one queue for every cloud and cluster write</text>
+<rect x="900" y="440" width="372" height="96" rx="9" fill="#2980B9" stroke="#2980B9"/>
+<path d="M900,449 a9,9 0 0 1 9,-9 h354 a9,9 0 0 1 9,9 v17 h-372 z" fill="#2980B9"/>
+<text x="912" y="458" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">smarter-worker-infrastructure</text>
+<text x="912" y="482" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#DCEBF7" text-anchor="start">celery -Q infrastructure_…</text>
+<text x="912" y="500" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the Kubernetes Role</text>
+<text x="912" y="517" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the IAM role: Route53, ACM, EKS</text>
+<path d="M350,218.0 L860,218.0 L860,339.5 L898,339.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="640" y="210.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="middle" font-style="italic">a task</text>
+<path d="M1086.0,248 L1086.0,298" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="1098" y="288" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">scheduled tasks</text>
+<path d="M1086.0,379 L1086.0,438" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="1098" y="428" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">the worker takes it</text>
+<path d="M900,470 L850,470 L850,385.0 L812,385.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M900,495 L870,495 L870,548.0 L812,548.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M900,520 L885,520 L885,708.0 L812,708.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M350,347.5 L468,347.5" fill="none" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="410" y="339.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="middle" font-style="italic">reads</text>
+<path d="M350,478.0 L400,478.0 L400,405.0 L468,405.0" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<path d="M350,618.0 L430,618.0 L430,431.0 L468,431.0" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<path d="M350,758.0 L410,758.0 L410,728.0 L468,728.0" fill="none" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<rect x="28" y="850" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,870 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="92" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a task, through Redis</text>
+<path d="M256.1,870 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="300.1" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a write from the infrastructure worker</text>
+<path d="M567.9,870 h34" stroke="#CF222E" stroke-width="1.8" marker-end="url(#head-red)"/>
+<text x="611.9" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a write from the app's request: blocks phase 3</text>
+<path d="M928.5,870 h34" stroke="#8C959F" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="972.5" y="874" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a read</text>
+</svg>
