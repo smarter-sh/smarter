@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.8-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.7...v0.48.8-alpha.1) (2026-11-27)
+
+### Bug Fixes
+
+* **api:** log api requests' users by id, not username ([395248b](https://github.com/smarter-sh/smarter/commit/395248bb96c431fc70729e6ced7c339e03acd097)), closes [#1067](https://github.com/smarter-sh/smarter/issues/1067)
+
 ## [0.48.7](https://github.com/smarter-sh/smarter/compare/v0.48.6...v0.48.7) (2026-11-26)
 
 ### Bug Fixes
