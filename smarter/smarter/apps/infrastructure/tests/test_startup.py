@@ -38,6 +38,7 @@ from smarter.apps.infrastructure.startup import (
     error_description,
     kubernetes_credentials,
     kubernetes_problem,
+    log_tool_worker_readiness,
     redis_client,
     run_startup_checks,
     tool_worker_forbidden_targets,
@@ -558,6 +559,57 @@ class TestToolWorkerRedis(SmarterTestBase):
         kwargs = client.connection_pool.connection_kwargs
         self.assertEqual(kwargs["db"], 2)
         self.assertEqual(kwargs["socket_timeout"], 2)
+
+
+class TestToolWorkerReadiness(SmarterTestBase):
+    """The line that ends the tool worker's startup checks, from log_tool_worker_readiness(), sums them up."""
+
+    TASKS = ["smarter.apps.llmtool.tasks.run_tool_call"]
+    QUEUE = "tools_celery_task_queue"
+
+    def test_every_check_passed(self):
+        """One INFO line: correctly configured, with what it runs and where it takes it from."""
+        results = {"check_tool_worker_isolation": True, "check_tool_worker_redis": True}
+        with (
+            patch.dict(os.environ, POD_ENVIRONMENT, clear=True),
+            self.assertLogs(MODULE, level="INFO") as captured,
+        ):
+            self.assertTrue(log_tool_worker_readiness(results, self.TASKS, self.QUEUE))
+        self.assertEqual(len(captured.records), 1)
+        record = captured.records[0]
+        self.assertEqual(record.levelname, "INFO")
+        message = record.getMessage()
+        self.assertIn("Startup checks passed", message)
+        self.assertIn("correctly configured to run tool calls and Extensions' code", message)
+        self.assertIn("runs only smarter.apps.llmtool.tasks.run_tool_call, from tools_celery_task_queue", message)
+        self.assertIn("It is isolated (ADR-038)", message)
+
+    def test_outside_kubernetes_isolation_is_not_claimed(self):
+        """In docker-compose the isolation check checks nothing, so the line says so."""
+        results = {"check_tool_worker_isolation": True, "check_tool_worker_redis": True}
+        with patch.dict(os.environ, {}, clear=True), self.assertLogs(MODULE, level="INFO") as captured:
+            log_tool_worker_readiness(results, self.TASKS, self.QUEUE)
+        message = captured.records[0].getMessage()
+        self.assertNotIn("It is isolated", message)
+        self.assertIn("Its isolation (ADR-038) is checked only in Kubernetes", message)
+
+    def test_a_check_failed(self):
+        """An ERROR naming each failed check, and never a claim that it is correctly configured."""
+        results = {"check_tool_worker_isolation": True, "check_tool_worker_redis": False}
+        with self.assertLogs(MODULE, level="INFO") as captured:
+            self.assertFalse(log_tool_worker_readiness(results, self.TASKS, self.QUEUE))
+        self.assertEqual(len(captured.records), 1)
+        record = captured.records[0]
+        self.assertEqual(record.levelname, "ERROR")
+        self.assertIn("NOT correctly configured", record.getMessage())
+        self.assertIn("check_tool_worker_redis", record.getMessage())
+
+    def test_nothing_when_the_checks_did_not_run(self):
+        """The unit tests, and every worker but the first, run no checks, and so claim nothing."""
+        with patch(f"{MODULE}.logger") as logger:
+            self.assertFalse(log_tool_worker_readiness({}, self.TASKS, self.QUEUE))
+        logger.info.assert_not_called()
+        logger.error.assert_not_called()
 
 
 class TestToolWorkerRedisAcl(SmarterTestBase):
