@@ -213,3 +213,32 @@ class TestExtensionWorker(unittest.TestCase):
         self.assertIn('| default "extensions_celery_task_queue"', helper)
         shared = template("smarter.toolWorkerEnv")
         self.assertIn('set $env "SMARTER_APP_TOOLS_WORKER_QUEUE" .queue', shared)
+
+
+class TestServiceType(unittest.TestCase):
+    """Every pod names its kind in SERVICE_TYPE, which smarter_settings checks, and names when READY."""
+
+    KINDS = {
+        "deployment-api.yaml": "api",
+        "deployment-beat.yaml": "beat",
+        "deployment-worker.yaml": "worker",
+        "deployment-worker-infrastructure.yaml": "worker-infrastructure",
+        "job-init.yaml": "job-init",
+        "job-migrate.yaml": "job-migrate",
+        "deployment-bastion.yaml": "bastion",
+    }
+    """Each pod template with a Smarter container, and its kind: smarter.common.conf.settings.platform.POD_KINDS."""
+
+    def test_each_pod_names_its_kind(self):
+        """Each pod template sets SERVICE_TYPE to its own kind."""
+        for name, kind in self.KINDS.items():
+            with self.subTest(template=name):
+                text = (CHART_PATH / "templates" / name).read_text(encoding="utf-8")
+                self.assertIn(f'            - name: SERVICE_TYPE\n              value: "{kind}"\n', text)
+
+    def test_the_restricted_workers_name_theirs(self):
+        """The tool worker and the Extension worker, whose environment smarter.toolWorkerEnv builds, name theirs."""
+        helper = template("smarter.toolWorkerEnv")
+        self.assertIn(
+            'set $env "SERVICE_TYPE" (ternary "worker-extensions" "worker-tools" (eq .user "extensions"))', helper
+        )

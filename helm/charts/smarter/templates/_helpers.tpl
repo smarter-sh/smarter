@@ -161,6 +161,8 @@ needs. Then:
 {{- end -}}
 {{- $_ := set $env "SMARTER_DATABASE_UNAVAILABLE" "true" -}}
 {{- $_ := set $env "AWS_EC2_METADATA_DISABLED" "true" -}}
+{{- /* the kind of pod, which smarter_settings names, and checks, when it starts. */ -}}
+{{- $_ := set $env "SERVICE_TYPE" (ternary "worker-extensions" "worker-tools" (eq .user "extensions")) -}}
 {{- if .queue -}}
 {{- $_ := set $env "SMARTER_APP_TOOLS_WORKER_QUEUE" .queue -}}
 {{- end -}}

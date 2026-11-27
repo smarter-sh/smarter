@@ -1,11 +1,12 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """The cache settings: Redis's password, and how long cached data is kept."""
 
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.credentials import RestrictedWorkerCredential
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -86,7 +87,8 @@ class CacheSettings(BaseModel):
             return None
         return username
 
-    subsystem_redis_password: Optional[SecretStr] = Field(
+    # the one credential that the tool worker and the Extension worker may hold: their own Redis user's password.
+    subsystem_redis_password: Annotated[Optional[SecretStr], RestrictedWorkerCredential()] = Field(
         None,
         description="The password of the platform's Redis: the Celery broker, the cache and the sessions.",
         examples=["your-redis-password"],
