@@ -57,6 +57,14 @@ Three parts, each useful by itself.
      and the internet.
    - The tool worker runs the same image. A malicious dependency runs there too, but finds nothing to
      steal except the one call's credentials, which the call was going to send to that host anyway.
+   - The settings enforce it. In a worker without a database, the tool worker and the Extension worker,
+     ``Settings.check_restricted_worker_credentials()`` refuses to start if the environment gives it any
+     credential but its own Redis user's password. A credential is any ``SecretStr`` setting, so a new
+     one is covered without being listed, and the one exception is marked on its field
+     (:mod:`smarter.common.conf.credentials`). A deployment that passed the worker the platform's whole
+     environment would fail at once, rather than run with every key in reach. docker-compose gives both
+     workers only the settings that the Helm chart does, never ``.env``, so local development is isolated
+     the same way.
    - ``ToolRunner`` has two implementations: in-process (today's behavior, for local development and
      tests) and remote. A setting chooses between them, so the change can ship turned off.
    - Transport: a Celery task on its own queue, ``tools_celery_task_queue``, whose result the app

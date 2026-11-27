@@ -283,9 +283,28 @@ class TestEnvironment(unittest.TestCase):
             with self.subTest(compose=path.name):
                 text = path.read_text(encoding="utf-8")
                 self.assertEqual(compose_redis_command(text), arguments)
-                self.assertIn("      - SMARTER_SUBSYSTEM_REDIS_USERNAME=tools\n", text)
-                self.assertIn(f"      - SMARTER_SUBSYSTEM_REDIS_PASSWORD={password}\n", text)
+                self.assertIn("      SMARTER_SUBSYSTEM_REDIS_USERNAME: tools\n", text)
+                self.assertIn(f"      SMARTER_SUBSYSTEM_REDIS_PASSWORD: {password}\n", text)
                 self.assertIn("--without-mingle --without-gossip --without-heartbeat", text)
+
+    def test_compose_restricted_workers_load_no_env_file(self):
+        """
+        The tool worker and the Extension worker don't load .env, whose credentials their code could read.
+
+        Each gets only the anchor x-restricted-worker-environment, the non-secret settings of the Helm chart's
+        smarter.toolWorkerEnv, and its own Redis user. smarter_settings refuses to start either with any other
+        credential (Settings.check_restricted_worker_credentials).
+        """
+        for path in COMPOSE_PATHS:
+            text = path.read_text(encoding="utf-8")
+            services = text.split("\nservices:\n", 1)[1]
+            for service in ("smarter-worker-tools", "smarter-worker-extensions"):
+                with self.subTest(compose=path.name, service=service):
+                    block = services.split(f"\n  {service}:\n", 1)[1].split("\n\n  ", 1)[0]
+                    # the key, not the comment that says why there is none.
+                    self.assertIsNone(re.search(r"^    env_file:", block, re.MULTILINE))
+                    self.assertIn("<<: *restricted-worker-environment", block)
+                    self.assertNotIn("API_KEY", block)
 
     def test_mariadb_reads_the_platform_passwords(self):
         """MariaDB's Secret keeps the subchart's own name, so that its pod spec doesn't change."""

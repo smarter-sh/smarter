@@ -85,6 +85,9 @@ spec:
             - secretRef:
                 name: "{{ .Values.global.appName }}-env-migrate"
           env:
+            # the kind of pod, which smarter_settings names, and checks, when it starts.
+            - name: SERVICE_TYPE
+              value: "job-migrate"
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- range $env := .Values.api.env }}
