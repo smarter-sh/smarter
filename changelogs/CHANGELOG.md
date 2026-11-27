@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.15](https://github.com/smarter-sh/smarter/compare/v0.48.14...v0.48.15) (2026-11-27)
+
+### Bug Fixes
+
+* **settings:** keep credentials out of the tool workers, name each pod ([6dbbc20](https://github.com/smarter-sh/smarter/commit/6dbbc20bd9183600450912ad2ff29d150468c414)), closes [#1077](https://github.com/smarter-sh/smarter/issues/1077)
+
 ## [0.48.15-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.14...v0.48.15-alpha.1) (2026-11-27)
 
 ### Bug Fixes
