@@ -97,14 +97,26 @@ class TestToolWorkerTasks(SmarterTestBase):
             keep_only.assert_called_once_with(APP)
 
     def test_startup_checks(self):
-        """A worker runs the workers' startup checks; the tool worker only its isolation check."""
-        with mock.patch("smarter.apps.infrastructure.startup.run_startup_checks") as run:
+        """A worker runs the workers' startup checks; the tool worker its own, then sums them up."""
+        with (
+            mock.patch("smarter.apps.infrastructure.startup.run_startup_checks") as run,
+            mock.patch("smarter.apps.infrastructure.startup.log_tool_worker_readiness") as readiness,
+        ):
             run_worker_startup_checks()
             run.assert_called_once_with(WORKER_CHECKS)
+            readiness.assert_not_called()
             run.reset_mock()
+            run.return_value = {"check_tool_worker_isolation": True, "check_tool_worker_redis": True}
             with in_the_tool_worker():
                 run_worker_startup_checks()
             run.assert_called_once_with(TOOL_WORKER_CHECKS)
+            readiness.assert_called_once()
+            results, tasks, queue = readiness.call_args.args
+            self.assertEqual(results, run.return_value)
+            self.assertIn(TOOL_WORKER_TASKS[0], tasks)
+            for name in tasks:
+                self.assertFalse(name.startswith("celery."), name)
+            self.assertEqual(queue, "tools_celery_task_queue")
 
     def test_task_packages(self):
         """The tool worker discovers only llmtool's tasks; the other workers every installed app's."""

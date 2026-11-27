@@ -535,6 +535,51 @@ def check_tool_worker_redis() -> bool:
     return True
 
 
+def log_tool_worker_readiness(results: dict[str, bool], tasks: Sequence[str], queue: str) -> bool:
+    """
+    Sum up the tool worker's startup checks on one last line: ready to run tool calls, or not.
+
+    Each check logs its own lines; this says what they add up to, so that a pod's log ends with one line
+    that an operator can look for. It names what the worker runs and where it takes it from, read from the
+    worker itself, not from its settings: the tasks left in its registry after
+    :func:`smarter.lib.celery_conf.keep_only_tool_worker_tasks`, and the queue it consumes.
+
+    Outside Kubernetes, :func:`check_tool_worker_isolation` checks nothing and passes, so the line says that
+    the isolation wasn't checked, rather than claim it.
+
+    :param results: Each check's result, by name, from :func:`run_startup_checks`. Empty when the checks
+        didn't run (the unit tests, or a worker but the first), and then nothing is logged.
+    :param tasks: The tasks that the worker runs.
+    :param queue: The queue that it consumes.
+    :returns: True if every check passed.
+    """
+    if not results:
+        return False
+    failed = []
+    for name, passed in results.items():
+        if not passed:
+            failed.append(name)
+    if failed:
+        logger.error(
+            "Startup checks failed: the tool worker is NOT correctly configured to run tool calls (%s). It still "
+            "takes them from %s: see the errors above.",
+            ", ".join(sorted(failed)),
+            queue,
+        )
+        return False
+    isolation = "It is isolated (ADR-038)"
+    if not os.environ.get("KUBERNETES_SERVICE_HOST"):
+        isolation = "Its isolation (ADR-038) is checked only in Kubernetes"
+    logger.info(
+        "Startup checks passed: the tool worker is correctly configured to run tool calls and Extensions' code. "
+        "%s, its Redis user reaches only its own keys (ADR-030), and it runs only %s, from %s.",
+        isolation,
+        ", ".join(tasks),
+        queue,
+    )
+    return True
+
+
 # ------------------------------------------------------------------------------
 # the lists, and the runner
 # ------------------------------------------------------------------------------
@@ -596,6 +641,7 @@ __all__ = [
     "error_description",
     "kubernetes_credentials",
     "kubernetes_problem",
+    "log_tool_worker_readiness",
     "run_startup_checks",
     "redis_client",
     "tool_worker_forbidden_targets",
