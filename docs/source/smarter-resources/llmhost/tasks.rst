@@ -2,7 +2,12 @@ Asynchronous Tasks
 ==================
 
 .. automodule:: smarter.apps.llmhost.tasks
-    :members:
-    :undoc-members:
-    :show-inheritance:
     :no-index:
+
+.. toctree::
+   :maxdepth: 1
+
+   tasks/llmhost
+   tasks/compute
+   tasks/dns
+   tasks/queue

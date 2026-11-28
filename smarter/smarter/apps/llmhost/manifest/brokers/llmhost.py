@@ -487,19 +487,23 @@ class SAMLLMHostBroker(AbstractBroker[LLMHost, LLMHost]):
         return []
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Destroy the LLMHost's Kubernetes resources, including its model volume, then delete it."""
+        """
+        Queue the deletion of the LLMHost: its Kubernetes resources, including its model volume, then the LLMHost.
+
+        The infrastructure worker does it (``delete_llmhost``). The LLMHost is listed, with the message
+        :attr:`~smarter.apps.llmhost.enum.SAMLLMHostQueuedMessage.DELETE`, until its resources are destroyed.
+        """
         command = SmarterJournalCliCommands(self.delete.__name__)
         llmhost = self.llmhost
         if self.name is None or not llmhost:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         self.verify_no_dependencies(command)
         # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmhost.tasks import destroy_dns_record
+        from smarter.apps.llmhost.tasks import queue_delete
 
         try:
             self.cache_invalidations()
-            destroy_dns_record(llmhost)
-            self.service.delete(llmhost)
+            queue_delete(llmhost, service=self.service)
             self._llmhost = None
         except Exception as e:
             raise SAMLLMHostBrokerError(
@@ -509,9 +513,11 @@ class SAMLLMHostBroker(AbstractBroker[LLMHost, LLMHost]):
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """
-        Launch the LLMHost on Kubernetes.
+        Check that the LLMHost can be launched on Kubernetes, then queue its launch.
 
-        It returns when the cluster accepts the resources. Use ``describe`` to follow the status,
+        It returns at once. What can be checked without the cluster's write access is an error now: a
+        budget that refuses, an invalid spec, a missing Secret, a cluster that can't be reached. The
+        infrastructure worker launches it (``launch_llmhost``). Use ``describe`` to follow the status,
         which Celery Beat refreshes every few minutes.
         """
         command = SmarterJournalCliCommands(self.deploy.__name__)
@@ -519,37 +525,37 @@ class SAMLLMHostBroker(AbstractBroker[LLMHost, LLMHost]):
         if self.name is None or not llmhost:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmhost.tasks import create_dns_record
+        from smarter.apps.llmhost.tasks import queue_launch
 
         try:
-            observation = self.service.launch(llmhost)
+            observation = queue_launch(llmhost, service=self.service)
         except LLMHostServiceError as e:
             raise SAMLLMHostBrokerError(
                 f"Failed to deploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
-        create_dns_record(llmhost)
         self.cache_invalidations()
         return self.json_response_ok(command=command, data=observation.to_dict())
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Destroy the LLMHost's Kubernetes resources.
+        """
+        Queue the destruction of the LLMHost's Kubernetes resources.
 
-        Its model volume is kept, unless storage.retain is false.
+        Its model volume is kept, unless storage.retain is false. The infrastructure worker does it
+        (``destroy_llmhost``).
         """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         llmhost = self.llmhost
         if self.name is None or not llmhost:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
         # pylint: disable=import-outside-toplevel
-        from smarter.apps.llmhost.tasks import destroy_dns_record
+        from smarter.apps.llmhost.tasks import queue_destroy
 
         try:
-            self.service.destroy(llmhost)
+            queue_destroy(llmhost, service=self.service)
         except LLMHostServiceError as e:
             raise SAMLLMHostBrokerError(
                 f"Failed to undeploy {self.kind} {self.name}: {e}", thing=self.kind, command=command
             ) from e
-        destroy_dns_record(llmhost)
         self.cache_invalidations()
         return self.json_response_ok(
             command=command, data={"status": llmhost.status, "message": llmhost.status_message}

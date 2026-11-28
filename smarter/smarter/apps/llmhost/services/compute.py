@@ -449,7 +449,7 @@ class ComputeProvisioner:
         """
         if compute.llmhosts.filter(status__in=SAMLLMHostStatusEnum.deployed()).exists():  # type: ignore[attr-defined]
             raise LLMHostComputeError(f"LLMHosts are deployed on {compute.name}. Destroy them first.")
-        self.nodegroups.delete(compute)
+        self.nodegroups.delete(compute.nodegroup_name)
 
 
 __all__ = [

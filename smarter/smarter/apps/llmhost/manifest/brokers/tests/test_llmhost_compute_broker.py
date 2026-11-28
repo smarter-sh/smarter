@@ -7,20 +7,13 @@ from decimal import Decimal
 from smarter.apps.llmhost.manifest.brokers.llmhost_compute import (
     SAMLLMHostComputeBroker,
 )
+from smarter.apps.llmhost.manifest.enum import SAMLLMHostQueuedMessage
 from smarter.apps.llmhost.manifest.models.llmhost_compute.model import (
     SAMLLMHostCompute,
 )
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute
-from smarter.apps.llmhost.services.cluster import (
-    InMemoryClusterBackend,
-    configure_cluster,
-)
-from smarter.apps.llmhost.services.nodegroups import (
-    InMemoryNodeGroupBackend,
-    configure_nodegroups,
-    get_nodegroups,
-)
 from smarter.apps.llmhost.tests.base_classes import (
+    InMemoryLLMHostInfrastructureMixin,
     delete_builtin_fixtures,
     ensure_builtin_computes,
     get_test_data,
@@ -41,22 +34,14 @@ COMPUTE_NAME = "test_broker_compute"
 
 
 # pylint: disable=too-many-public-methods
-class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
-    """Test the Smarter SAMLLMHostComputeBroker, with in-memory node groups."""
+class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass, InMemoryLLMHostInfrastructureMixin):
+    """Test the Smarter SAMLLMHostComputeBroker, with in-memory node groups, and its queued tasks run here."""
 
-    cluster: InMemoryClusterBackend
-    nodegroups: InMemoryNodeGroupBackend
     builtin_computes_created: list[LLMHostCompute]
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.cluster = InMemoryClusterBackend(namespace="smarter-platform-test")
-        configure_cluster(lambda: cls.cluster)
-        cls.nodegroups = InMemoryNodeGroupBackend()
-        configure_nodegroups(lambda: cls.nodegroups)
-        # a safety net: tests must never create real node groups.
-        assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
         cls.builtin_computes_created = ensure_builtin_computes()
 
     @classmethod
@@ -64,18 +49,12 @@ class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
         LLMHost.objects.filter(user_profile__account=cls.account).delete()
         LLMHostCompute.objects.filter(user_profile__account=cls.account).delete()
         delete_builtin_fixtures([], cls.builtin_computes_created)
-        configure_cluster(None)
-        configure_nodegroups(None)
         super().tearDownClass()
 
     def setUp(self):
         super().setUp()
         self._here = os.path.abspath(os.path.dirname(__file__))
         self._manifest_filespec = self.get_data_full_filepath("llmhost_compute.yaml")
-        self.cluster.resources.clear()
-        self.nodegroups.nodegroups.clear()
-        self.nodegroups.created.clear()
-        self.nodegroups.deleted.clear()
         self.addCleanup(LLMHostCompute.objects.filter(user_profile=self.user_profile).delete)
         self.addCleanup(LLMHost.objects.filter(user_profile=self.user_profile).delete)
 
@@ -180,20 +159,32 @@ class TestSmarterLLMHostComputeBroker(TestSAMBrokerBaseClass):
         self.assertEqual(named["metadata"]["count"], 1)
 
     def test_deploy(self):
-        """Test that deploy reconciles the node group: no LLMHost uses it, so it is not created."""
+        """Test that deploy queues the node group's reconcile: no LLMHost uses it, so it is not created."""
         self.broker.apply(self.request, **self.kwargs)
         data = self.data(self.fresh_broker().deploy(self.request, **self.kwargs))
-        self.assertEqual((data["needed"], data["desired"], data["nodegroup_status"]), (0, 0, "absent"))
+        self.assertEqual((data["desired"], data["nodegroup_status"]), (0, "absent"))
+        self.assertEqual(data["message"], SAMLLMHostQueuedMessage.RECONCILE.value)
+        self.queued_tasks["reconcile_llmhost_compute"].assert_called_once_with(self.compute().pk)
         self.assertEqual(self.nodegroups.created, [])
         self.assertIsNotNone(self.compute().last_reconciled_at)
 
+    def test_deploy_writes_nothing_to_the_cloud(self):
+        """Deploy only queues the reconcile: the infrastructure worker calls the cloud (#1080)."""
+        self.broker.apply(self.request, **self.kwargs)
+        with self.holding_queued_tasks() as queued:
+            self.fresh_broker().deploy(self.request, **self.kwargs)
+        queued["reconcile_llmhost_compute"].assert_called_once_with(self.compute().pk)
+        self.assertIsNone(self.compute().last_reconciled_at)
+
     def test_deploy_error(self):
-        """Test that a node group error is a broker error."""
+        """Test that a node group error is the task's: it is logged, and the reconcile is queued again."""
         self.broker.apply(self.request, **self.kwargs)
         self.nodegroups.fail = "AWS is down"
         self.addCleanup(setattr, self.nodegroups, "fail", None)
-        with self.assertRaises(SAMBrokerError):
+        with self.assertLogs("smarter.apps.llmhost.tasks.compute", level="ERROR") as logs:
             self.fresh_broker().deploy(self.request, **self.kwargs)
+        self.assertIn("AWS is down", logs.output[0])
+        self.assertEqual(self.requeued.call_count, 1)
 
     def test_delete(self):
         """Test that delete() deletes the LLMHostCompute and its node group."""

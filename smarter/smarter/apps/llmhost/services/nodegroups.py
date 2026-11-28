@@ -104,13 +104,14 @@ class NodeGroupBackend(ABC):
         """
 
     @abstractmethod
-    def delete(self, compute: LLMHostCompute) -> None:
+    def delete(self, nodegroup_name: str) -> None:
         """
-        Delete the compute's node group, and its nodes.
+        Delete a node group, and its nodes.
 
-        Idempotent.
+        Idempotent. It takes the node group's name, :attr:`LLMHostCompute.nodegroup_name`, rather than the
+        compute, because the compute has been deleted when the ``delete_llmhost_nodegroup`` task runs.
 
-        :param compute: The LLMHostCompute.
+        :param nodegroup_name: The node group's name.
         :raises LLMHostComputeError: if the cloud refuses.
         """
 
@@ -325,15 +326,15 @@ class EKSNodeGroupBackend(NodeGroupBackend):
             compute.nodegroup_name,
         )
 
-    def delete(self, compute: LLMHostCompute) -> None:
+    def delete(self, nodegroup_name: str) -> None:
         """
-        Delete the compute's EKS node group, and so its nodes.
+        Delete an EKS node group, and so its nodes.
 
         Calls eks:DeleteNodegroup.
 
         A node group that does not exist is not an error.
 
-        :param compute: The LLMHostCompute.
+        :param nodegroup_name: The node group's name.
         :raises LLMHostComputeError: if the call fails otherwise.
         """
         try:
@@ -341,12 +342,12 @@ class EKSNodeGroupBackend(NodeGroupBackend):
                 "eks:DeleteNodegroup",
                 self.eks.delete_nodegroup,
                 clusterName=self.cluster_name,
-                nodegroupName=compute.nodegroup_name,
+                nodegroupName=nodegroup_name,
             )
         except Exception as e:  # pylint: disable=broad-except
             if type(e).__name__ != "ResourceNotFoundException":
                 raise
-        logger.info("deleted node group %s", compute.nodegroup_name)
+        logger.info("deleted node group %s", nodegroup_name)
 
 
 class InMemoryNodeGroupBackend(NodeGroupBackend):
@@ -440,16 +441,16 @@ class InMemoryNodeGroupBackend(NodeGroupBackend):
         self.nodegroups[compute.nodegroup_name].desired -= 1
         self.removed.append(provider_id)
 
-    def delete(self, compute: LLMHostCompute) -> None:
+    def delete(self, nodegroup_name: str) -> None:
         """
         Remove the stored node group, if any, and record its name in :attr:`deleted`.
 
-        :param compute: The LLMHostCompute.
+        :param nodegroup_name: The node group's name.
         :raises LLMHostComputeError: if :attr:`fail` is set.
         """
         self._check()
-        self.nodegroups.pop(compute.nodegroup_name, None)
-        self.deleted.append(compute.nodegroup_name)
+        self.nodegroups.pop(nodegroup_name, None)
+        self.deleted.append(nodegroup_name)
 
 
 _nodegroup_factory: Optional[Callable[[], NodeGroupBackend]] = None

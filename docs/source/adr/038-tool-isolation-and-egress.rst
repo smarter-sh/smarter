@@ -224,6 +224,14 @@ Phase 0, inventory
    already do. Until then the app needs the write Role and the EKS permissions. Its reads need a
    read-only Role of their own either way.
 
+   The LLMHost and LLMHostCompute writes are now infrastructure tasks (issue #1080). The broker, the
+   REST api, the admin's reconcile action and the compute's ``pre_delete`` receiver call
+   :mod:`smarter.apps.llmhost.tasks.queue`. Its functions check what can be checked with reads alone,
+   e.g. budgets, the spec, Secrets and whether the cluster is reachable, record the queued change as the
+   status message, and queue ``launch_llmhost``, ``destroy_llmhost``, ``delete_llmhost``,
+   ``reconcile_llmhost_compute`` or ``delete_llmhost_nodegroup``. The vectorstore's ``apply``,
+   ``undeploy`` and ``delete`` still write to the cluster from the request.
+
    .. image:: ../_static/adr-038/egress.svg
       :alt: For each process, the services in the cluster it reaches, the fixed hosts on the internet,
             which seed phase 4's allowlist, and the hosts that a manifest author chooses. The app and the
