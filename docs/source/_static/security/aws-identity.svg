@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 880" width="1250" height="880" role="img" aria-labelledby="t d">
 <title id="t">Who may do what in AWS</title>
-<desc id="d">The platform's pods (smarter-api, the Celery workers, beat, the init and migrate Jobs) each run as their own ServiceAccount, smarter-&lt;pod&gt;, which EKS's OIDC provider maps to the IAM role &lt;namespace&gt;-smarter-irsa, with short-lived credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 buckets. The nightly backup runs as smarter-backup, whose role &lt;namespace&gt;-smarter-backup-irsa may only write to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.</desc>
+<desc id="d">The platform's pods (smarter-api, the Celery workers, beat, the init and migrate Jobs) each run as their own ServiceAccount, smarter-&lt;pod&gt;, which EKS's OIDC provider maps to its own IAM role, &lt;namespace&gt;-smarter-&lt;pod&gt;-irsa, with short-lived credentials. Only the infrastructure worker's may change Route53 records and hosted zones, request ACM certificates, and create and change LLMHost node groups tagged with the environment; the init Job's writes the platform's own DNS records. The app's and the init Job's use the environment's bucket, the worker's only the data exports bucket. Celery Beat and the migrate Job have no role. The nightly backup runs as smarter-backup, whose role &lt;namespace&gt;-smarter-backup-irsa may only write to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.</desc>
 <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
 <rect width="1250" height="880" rx="14" fill="#F6F8FA"/>
 <text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Who may do what in AWS</text>
@@ -24,21 +24,22 @@
 <text x="302" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-&lt;pod&gt;</text>
 <text x="302" y="190" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ServiceAccounts</text>
 <text x="302" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one per kind of pod,</text>
-<text x="302" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each annotated with the role</text>
-<rect x="532" y="156" width="250" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M532,165 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#FBEFFF"/>
-<text x="544" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">&lt;namespace&gt;-smarter-irsa</text>
-<text x="544" y="198" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM role</text>
-<text x="544" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">this environment only</text>
+<text x="302" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each annotated with its role</text>
+<rect x="532" y="148" width="250" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M532,157 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#FBEFFF"/>
+<text x="544" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">&lt;namespace&gt;-smarter-&lt;pod&gt;-irsa</text>
+<text x="544" y="190" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">IAM roles</text>
+<text x="544" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one per kind of pod, trusted by</text>
+<text x="544" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its ServiceAccount only</text>
 <rect x="814" y="123" width="408" height="146" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M814,132 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
 <text x="826" y="141" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">AWS</text>
-<text x="826" y="165" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Route53: records and hosted zones, for deployed</text>
-<text x="826" y="182" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">LLMClients and custom domains</text>
-<text x="826" y="199" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">ACM: request and delete certificates</text>
-<text x="826" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">EKS: read the cluster; LLMHost node groups, only</text>
-<text x="826" y="233" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">with this environment's tag and name prefix</text>
-<text x="826" y="250" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">S3: this environment's static and exports buckets</text>
+<text x="826" y="165" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">infrastructure worker: Route53, ACM, and LLMHost</text>
+<text x="826" y="182" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">node groups, only with this environment's tag</text>
+<text x="826" y="199" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">api: read the cluster; the environment's bucket</text>
+<text x="826" y="216" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">worker: the data exports bucket only</text>
+<text x="826" y="233" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">init Job: Route53, the environment's bucket</text>
+<text x="826" y="250" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">beat, migrate Job: no role</text>
 <rect x="814" y="300" width="408" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M814,309 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
 <text x="826" y="318" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Kubernetes (RBAC, not IAM)</text>
@@ -65,8 +66,8 @@
 <text x="826" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">S3: put and list under backups/sql/, in the private</text>
 <text x="826" y="550" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">backup bucket. It can't read or delete a backup.</text>
 <path d="M258,195.5 L288,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
-<path d="M500,196.0 L530,195.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
-<path d="M782,195.5 L812,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M500,196.0 L530,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<path d="M782,196.0 L812,196.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
 <path d="M258,530.5 L288,529.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
 <path d="M500,529.5 L530,529.5" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
 <path d="M782,529.5 L812,530.0" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>

@@ -22,6 +22,10 @@ Topics
    :members:
    :no-index:
 
+.. autoclass:: smarter.common.const.SmarterPodCapabilities
+   :members:
+   :no-index:
+
 .. autopydantic_model:: smarter.common.conf.settings.domains.DomainSettings
 
 .. autopydantic_model:: smarter.common.conf.settings.aws.AwsSettings

@@ -7,10 +7,10 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, Field, SecretStr
 
 from smarter.common.conf.const import DEFAULT_MISSING_VALUE, THE_EMPTY_SET
-from smarter.common.conf.credentials import JOB_LOG_POD_KINDS, HeldBy
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import before_field_validator, field_default
-from smarter.common.const import SmarterKubernetesPodKinds
+from smarter.common.const import SmarterKubernetesPodKinds, SmarterPodCapabilities
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -318,7 +318,7 @@ class IntegrationSettings(BaseModel):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
-    subsystem_slack_bot_token: Annotated[Optional[SecretStr], HeldBy(*JOB_LOG_POD_KINDS)] = Field(
+    subsystem_slack_bot_token: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.job_logs)] = Field(
         None,
         description="A Slack app's bot token, xoxb-..., which the platform posts its Kubernetes jobs' logs to Slack with. Masked by pydantic SecretStr.",
         examples=["xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"],
