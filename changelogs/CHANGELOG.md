@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-11-28)
+
+### Bug Fixes
+
+* **celery:** prefetch one task per process, and never sleep in a task ([80bc4d8](https://github.com/smarter-sh/smarter/commit/80bc4d8c04f9266856f8ac6edddd2d71eeed3ecf)), closes [#1097](https://github.com/smarter-sh/smarter/issues/1097) [#1097](https://github.com/smarter-sh/smarter/issues/1097)
+
 ## [1.0.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-11-28)
 
 ### ⚠ BREAKING CHANGES
