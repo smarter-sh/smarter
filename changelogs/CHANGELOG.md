@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.16-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.16-alpha.1...v0.48.16-alpha.2) (2026-11-28)
+
+### Bug Fixes
+
+* **celery:** each worker registers only its own queue's tasks ([ab4d0cf](https://github.com/smarter-sh/smarter/commit/ab4d0cfdc134519b2308e0a57d85f040b41fb41c))
+
 ## [0.48.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.15...v0.48.16-alpha.1) (2026-11-28)
 
 ### Bug Fixes
