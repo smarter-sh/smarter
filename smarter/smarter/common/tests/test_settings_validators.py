@@ -547,6 +547,32 @@ class TestAwsCredentialsWork(SmarterTestBase):
         for call in mock_print.call_args_list:
             self.assertNotIn("AWS is not configured", str(call))
 
+    def test_pods_without_aws_never_ask(self):
+        """Celery Beat and the migrate Job have no IAM role (ADR-038, phase 3): STS isn't asked, and nothing warns."""
+        for kind in ("beat", "job-migrate"):
+            with (
+                self.subTest(kind=kind),
+                patch(f"{self.MODULE}.aws_credentials_work") as works,
+                patch("builtins.print") as mock_print,
+            ):
+                settings = Settings(service_type=kind)
+                self.assertFalse(settings.uses_aws)
+                self.assertFalse(settings.aws_is_configured)
+                self.assertNotIn("AWS credentials", settings.readiness_checks())
+            works.assert_not_called()
+            for call in mock_print.call_args_list:
+                self.assertNotIn("AWS is not configured", str(call))
+
+    def test_pods_with_aws_ask(self):
+        """The kinds in SmarterPodCapabilities.aws, and a process of no known kind, ask STS, and say so in the READY line."""
+        for kind in ("api", "worker", "worker-infrastructure", "job-init", "job-backup", "bastion", ""):
+            with self.subTest(kind=kind), patch(f"{self.MODULE}.aws_credentials_work", return_value=True) as works:
+                settings = Settings(service_type=kind)
+                self.assertTrue(settings.uses_aws)
+                self.assertTrue(settings.aws_is_configured)
+                self.assertIn("AWS credentials", settings.readiness_checks())
+            self.assertEqual(works.call_count, 1)
+
     def test_aws_is_configured_asks_each_settings_once(self):
         """Each Settings instance asks for itself, so that a new one sees credentials that have changed."""
         with patch(f"{self.MODULE}.aws_credentials_work", side_effect=[False, True]) as works:

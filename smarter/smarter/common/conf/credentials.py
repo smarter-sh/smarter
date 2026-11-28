@@ -36,40 +36,6 @@ ENVIRONMENT_PREFIX = "SMARTER_"
 """The prefix of a setting's environment variable, as ``Settings.model_config``'s ``env_prefix``."""
 
 
-AWS_POD_KINDS: tuple[str, ...] = (
-    SmarterKubernetesPodKinds.API,
-    SmarterKubernetesPodKinds.WORKER,
-    SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
-    SmarterKubernetesPodKinds.JOB_INIT,
-    SmarterKubernetesPodKinds.JOB_BACKUP,
-    SmarterKubernetesPodKinds.BASTION,
-)
-"""The kinds of pod that call AWS: S3, SES, Route53, ACM and EKS.
-
-The backup Job saves its dump to S3.
-
-On Kubernetes, their IAM role does, with no key.
-"""
-
-SMTP_POD_KINDS: tuple[str, ...] = (*SmarterKubernetesPodKinds.platform, SmarterKubernetesPodKinds.JOB_BACKUP)
-"""The kinds of pod that send email: the platform's, and the backup Job, which emails its own result."""
-
-JOB_LOG_POD_KINDS: tuple[str, ...] = (SmarterKubernetesPodKinds.JOB_INIT, SmarterKubernetesPodKinds.JOB_BACKUP)
-"""The kinds of pod that post their log to Slack, with ``manage.py email_job_log``: the init Job and the backup Job."""
-
-DATABASE_ADMIN_POD_KINDS: tuple[str, ...] = (
-    SmarterKubernetesPodKinds.JOB_INIT,
-    SmarterKubernetesPodKinds.JOB_BACKUP,
-    SmarterKubernetesPodKinds.BASTION,
-)
-"""
-The kinds of pod that administer the database server, as its administrator or the backup account.
-
-The init Job creates the database, its user and the backup account. The backup Job dumps the database as the
-backup account, or as the administrator until that account exists. The bastion is for a person who does either.
-"""
-
-
 @dataclass(frozen=True)
 class HeldBy:
     """
@@ -259,13 +225,9 @@ def write_chart_credentials(settings_class: type[BaseModel], path: str = CHART_C
 
 
 __all__ = [
-    "AWS_POD_KINDS",
     "CHART_CREDENTIALS_PATH",
-    "DATABASE_ADMIN_POD_KINDS",
     "ENVIRONMENT_PREFIX",
     "HeldBy",
-    "JOB_LOG_POD_KINDS",
-    "SMTP_POD_KINDS",
     "credential_holders",
     "credential_holders_by_variable",
     "environment_variables",

@@ -118,9 +118,10 @@ AWS: roles, not access keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ../../../_static/security/aws-identity.svg
-   :alt: The platform's pods each run as their own ServiceAccount, smarter-<pod>, which assumes the IAM role
-         <namespace>-smarter-irsa: Route53, ACM, reading the cluster, LLMHost node groups with the environment's
-         tag, and the environment's S3 buckets. Kubernetes permissions come from RBAC: a Role per kind of pod in the
+   :alt: The platform's pods each run as their own ServiceAccount, smarter-<pod>, which assumes its own IAM
+         role, <namespace>-smarter-<pod>-irsa. Only the infrastructure worker changes Route53, ACM and LLMHost node
+         groups; the app and the init Job use the environment's bucket; the worker, the data exports bucket.
+         Celery Beat and the migrate Job have no role. Kubernetes permissions come from RBAC: a Role per kind of pod in the
          namespace, where only the infrastructure worker writes or reads Secrets, and each kind's own cluster-wide
          reads. The nightly backup runs as smarter-backup, whose role may only write to
          backups/sql/. Two IAM users still have access keys: the deploy user, which GitHub Actions uses to push the
@@ -133,14 +134,22 @@ with `IAM Roles for Service Accounts <https://docs.aws.amazon.com/eks/latest/use
 that role only. Each environment has its own roles, so ``alpha`` can't touch ``prod``'s buckets or
 node groups.
 
-- ``<namespace>-smarter-irsa``, the ServiceAccounts of the app, the workers, beat, the init Job and the
-  migrate Job (``smarter-api``, ``smarter-worker``, and so on, one per kind of pod): Route53 and ACM for deployed LLMClients' and custom domains' DNS and certificates; read
-  access to the cluster's status; LLMHost node groups, which it may create only with the
-  environment's tag and change only by the environment's name prefix; and read and write access to
-  the environment's own S3 buckets.
+- ``<namespace>-smarter-<pod>-irsa``, one role per kind of pod, each trusted by its own ServiceAccount
+  only, with only what its code does in AWS:
+
+  - ``smarter-worker-infrastructure``: Route53 and ACM, for deployed LLMClients' and custom domains' DNS
+    and certificates; LLMHost node groups, which it may create only with the environment's tag and change
+    only by the environment's name prefix; and read access to the cluster's status, for the inventory.
+  - ``smarter-api``, the app: read access to the cluster's status, and the environment's bucket (profile
+    images, Provider logos, static files). It can't change DNS, certificates or node groups.
+  - ``smarter-worker``: the data exports bucket, whose downloads it signs. Nothing else.
+  - ``smarter-job-init``: Route53, for the platform's own DNS records, read access to the cluster's status,
+    and the environment's bucket (static files, Provider logos).
+  - Celery Beat and the migrate Job make no AWS call, and have no role.
 - ``<namespace>-smarter-backup-irsa``, the ServiceAccount ``smarter-backup`` (the nightly backup):
   write-only access to ``backups/sql/`` in the backup bucket. It can't read or delete a backup, so a
-  compromised backup pod can't destroy earlier ones.
+  compromised backup pod can't destroy earlier ones. It may also write a log too large to email to
+  ``job-logs/`` in the environment's bucket.
 - The cluster's own components (the VPC CNI, the EBS CSI driver, cert-manager, the cluster autoscaler)
   each have their own IRSA role too.
 

@@ -549,6 +549,27 @@ runs:
           /tmp/values.json > /tmp/values_bootstrap.json
         mv /tmp/values_bootstrap.json /tmp/values.json
 
+    # each kind of pod's own IAM role (ADR-038, phase 3, step 4), derived from the shared role's ARN by
+    # smarter-infrastructure's naming (aws/terraform/smarter/iam-irsa.tf): <namespace>-smarter-irsa is the
+    # shared role, <namespace>-smarter-<pod>-irsa each kind's. Celery Beat and the migrate Job get none.
+    # An ARN of another shape is used as it is, for every kind, through serviceAccount.awsRoleArn.
+    - name: Add each pod's IAM role to the values file
+      shell: bash
+      env:
+        AWS_IAM_ROLE_ARN: ${{ inputs.aws-iam-role-arn }}
+      run: |-
+        jq --arg arn "$AWS_IAM_ROLE_ARN" '
+          if ($arn | endswith("-smarter-irsa")) then
+            ($arn | rtrimstr("-smarter-irsa")) as $prefix
+            | .serviceAccount.awsRoleArns = (
+                ["api", "worker", "worker-infrastructure", "job-init"]
+                | map({key: ., value: "\($prefix)-smarter-\(.)-irsa"})
+                | from_entries
+              )
+          else . end
+        ' /tmp/values.json > /tmp/values_roles.json
+        mv /tmp/values_roles.json /tmp/values.json
+
     - name: Convert values file from json to yaml
       id: convert-to-yaml
       shell: bash

@@ -513,11 +513,12 @@ def aws_identity():
         "Who may do what in AWS",
         "EKS gives each ServiceAccount short-lived credentials for its own IAM role; only email still uses a key",
         "The platform's pods (smarter-api, the Celery workers, beat, the init and migrate Jobs) each run as their own "
-        "ServiceAccount, smarter-<pod>, which EKS's OIDC provider maps to the IAM role <namespace>-smarter-irsa, with "
-        "short-lived "
-        "credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the "
-        "cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 "
-        "buckets. The nightly backup runs as smarter-backup, whose role <namespace>-smarter-backup-irsa may only write "
+        "ServiceAccount, smarter-<pod>, which EKS's OIDC provider maps to its own IAM role, "
+        "<namespace>-smarter-<pod>-irsa, with short-lived credentials. Only the infrastructure worker's may change "
+        "Route53 records and hosted zones, request ACM certificates, and create and change LLMHost node groups "
+        "tagged with the environment; the init Job's writes the platform's own DNS records. The app's and the init "
+        "Job's use the environment's bucket, the worker's only the data exports bucket. Celery Beat and the migrate "
+        "Job have no role. The nightly backup runs as smarter-backup, whose role <namespace>-smarter-backup-irsa may only write "
         "to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub "
         "Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the "
         "SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.",
@@ -548,23 +549,31 @@ def aws_identity():
                 290,
                 210,
                 "smarter-<pod>",
-                ["one per kind of pod,", "each annotated with the role"],
+                ["one per kind of pod,", "each annotated with its role"],
                 "plain",
                 "ServiceAccounts",
             ),
-            ("role", 532, 250, "<namespace>-smarter-irsa", ["this environment only"], "role", "IAM role"),
+            (
+                "role",
+                532,
+                250,
+                "<namespace>-smarter-<pod>-irsa",
+                ["one per kind of pod, trusted by", "its ServiceAccount only"],
+                "role",
+                "IAM roles",
+            ),
             (
                 "may",
                 814,
                 408,
                 "AWS",
                 [
-                    "Route53: records and hosted zones, for deployed",
-                    "LLMClients and custom domains",
-                    "ACM: request and delete certificates",
-                    "EKS: read the cluster; LLMHost node groups, only",
-                    "with this environment's tag and name prefix",
-                    "S3: this environment's static and exports buckets",
+                    "infrastructure worker: Route53, ACM, and LLMHost",
+                    "node groups, only with this environment's tag",
+                    "api: read the cluster; the environment's bucket",
+                    "worker: the data exports bucket only",
+                    "init Job: Route53, the environment's bucket",
+                    "beat, migrate Job: no role",
                 ],
                 "data",
                 None,
