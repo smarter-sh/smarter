@@ -41,6 +41,36 @@ OWN_SECRETS = {
 
 ENV_SECRET_PREFIX = f"{APP_NAME}-env"
 
+HELPERS_PATH = CHART_PATH / "templates" / "_helpers.tpl"
+
+
+def pod_keys() -> dict[str, set[str]]:
+    """The allowlists of smarter.podKeys in _helpers.tpl: each listed kind, and the keys that its Secret may hold."""
+    text = HELPERS_PATH.read_text(encoding="utf-8")
+    block = text.split('{{- define "smarter.podKeys" -}}', 1)[1].split("{{- end }}", 1)[0]
+    retval: dict[str, set[str]] = {}
+    kind = ""
+    for line in block.splitlines():
+        kind_line = re.match(r"^([a-z-]+):$", line)
+        key_line = re.match(r"^  - (\w+\*?)$", line)
+        if kind_line is not None:
+            kind = kind_line.group(1)
+            retval[kind] = set()
+        elif key_line is not None:
+            retval[kind].add(key_line.group(1))
+    return retval
+
+
+POD_KEYS = pod_keys()
+"""The kinds whose Secret holds only the keys that they read (smarter.podKeys in _helpers.tpl)."""
+
+
+def is_listed(key: str, allowed: set[str]) -> bool:
+    """Whether a key is on a kind's list: by name, or as a DJANGO_* key when the list has ``DJANGO_*``."""
+    if key in allowed:
+        return True
+    return "DJANGO_*" in allowed and key.startswith("DJANGO_")
+
 
 def secret_name(pod: str) -> str:
     """The environment Secret of a kind of pod."""
@@ -89,13 +119,21 @@ class TestPodSecrets(unittest.TestCase):
         cls.workloads = workloads(cls.documents)
 
     def test_each_secret_holds_only_its_kinds_credentials(self):
-        """A credential is in a kind's Secret if, and only if, credentials.json names the kind."""
+        """
+        A credential is in a kind's Secret if, and only if, credentials.json names the kind.
+
+        A kind with an allowlist of the keys its pods read (smarter.podKeys) gets only those of its credentials.
+        """
         pods = ("api", "worker", "worker-infrastructure", "beat", "bastion", "job-init", "job-backup", "job-migrate")
         for pod in pods:
             with self.subTest(pod=pod):
                 data = self.secrets[secret_name(pod)]
+                allowed = POD_KEYS.get(pod)
                 for variable, kinds in self.holders.items():
-                    if pod in kinds:
+                    held = pod in kinds
+                    if allowed is not None:
+                        held = held and is_listed(variable, allowed)
+                    if held:
                         self.assertEqual(data.get(variable), self.env[variable], variable)
                     else:
                         self.assertNotIn(variable, data)
@@ -211,6 +249,78 @@ class TestRestrictedWorkerSecrets(unittest.TestCase):
                 # both queues' names: the worker declares both, and the Extension worker checks the tool worker's.
                 self.assertIn("SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE", keys)
                 self.assertIn("SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE", keys)
+
+
+@needs_helm
+class TestChartOnlyValues(unittest.TestCase):
+    """The Docker Hub credentials reach the image-pull Secret only, and no pod (#1103)."""
+
+    def test_no_pod_gets_the_docker_hub_credentials(self):
+        env = {"DOCKERHUB_USERNAME": "test-docker-user", "DOCKERHUB_PAT": "test-docker-pat"}
+        documents = render({"env": env, "workerTools": {"enabled": True}, "slackBot": {"enabled": True}})
+        rendered = secrets(documents)
+        self.assertIn(f"{APP_NAME}-env-api", rendered)
+        for name, data in rendered.items():
+            with self.subTest(secret=name):
+                self.assertNotIn("DOCKERHUB_PAT", data)
+                self.assertNotIn("DOCKERHUB_USERNAME", data)
+                self.assertNotIn("test-docker-pat", str(data))
+        for document in documents:
+            if "test-docker-pat" in document:
+                self.fail(f"the Docker Hub token is in plain text in {kind_and_name(document)}")
+        pull_secret = next(d for d in documents if kind_and_name(d) == ("Secret", "dockerhub-secret"))
+        self.assertIn(".dockerconfigjson:", pull_secret)
+
+
+@needs_helm
+class TestPodKeys(unittest.TestCase):
+    """A kind whose pods read only a few named keys gets those keys alone in its Secret (#1103)."""
+
+    def test_the_bastion_gets_only_the_keys_it_names(self):
+        """The bastion's Secret holds exactly the keys that its Deployment reads with secretKeyRef."""
+        env = credential_values()
+        env["SMARTER_PLATFORM_BRANDING_CITY"] = "a setting that the bastion doesn't read"
+        documents = render_env(env)
+        data = secrets(documents)[secret_name("bastion")]
+        bastion = workloads(documents)[f"{APP_NAME}-bastion"]
+        self.assertNotIn("envFrom", bastion)
+        named = set(re.findall(r"secretKeyRef:\n\s+name: \"?[^\"\n]+\"?\n\s+key: (\w+)", bastion))
+        self.assertEqual(
+            named,
+            {
+                "SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD",
+                "SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+            },
+        )
+        self.assertEqual(set(data), named)
+
+    def test_an_allowlisted_secret_holds_its_keys_alone(self):
+        """Every key of a listed kind's Secret is on its list, and every key that its pods name is too."""
+        self.assertEqual(set(POD_KEYS), {"bastion", "job-backup", "job-migrate", "beat"})
+        env = credential_values()
+        env["SMARTER_PLATFORM_BRANDING_CITY"] = "a setting that neither reads"
+        documents = render_env(env)
+        rendered = secrets(documents)
+        for pod, allowed in POD_KEYS.items():
+            with self.subTest(pod=pod):
+                data = rendered[secret_name(pod)]
+                for key in data:
+                    self.assertTrue(is_listed(key, allowed), key)
+                self.assertNotIn("SMARTER_PLATFORM_BRANDING_CITY", data)
+                if pod in ("bastion", "job-backup"):
+                    self.assertNotIn(
+                        "SMARTER_SUBSYSTEM_SQL_PASSWORD", data, "it doesn't use the app's database account"
+                    )
+                if pod in ("job-backup", "job-migrate", "beat"):
+                    # Django's prod settings need the broker's url, which smarter.env derives, and Redis's password.
+                    self.assertIn("DJANGO_CELERY_BROKER_URL", data)
+                    self.assertIn("SMARTER_SUBSYSTEM_REDIS_PASSWORD", data)
+        backup = next(d for d in workloads(documents).values() if service_type(d) == "job-backup")
+        named = set(re.findall(r"secretKeyRef:\n\s+name: \"?[^\"\n]+\"?\n\s+key: (\w+)", backup))
+        self.assertTrue(named)
+        self.assertLessEqual(named, POD_KEYS["job-backup"])
 
 
 if __name__ == "__main__":

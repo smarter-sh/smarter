@@ -34,7 +34,10 @@ pods' environment, so Smarter's own default applies.
 The chart stores `env` in [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/),
 one per kind of pod, `<global.appName>-env-<pod>`, and each pod reads its own with `envFrom`, so passwords
 and API keys aren't written into the pod specs of the Deployments, the init Job or the backup CronJob.
-Each Secret holds only the credentials that its kind of pod uses, as `files/credentials.json` says (ADR-038).
+Each Secret holds only the credentials that its kind of pod uses, as `files/credentials.json` says (ADR-038),
+and the bastion, the backup and migrate Jobs and Celery Beat get only the settings they read
+(`smarter.podKeys` in `templates/_helpers.tpl`). `env.DOCKERHUB_USERNAME` and `env.DOCKERHUB_PAT` reach the
+image-pull Secret only, never a pod.
 A changed value rolls the Deployments whose Secret holds it. Keep your values file out of source control, or supply its secrets with `--set` from your
 CI's secret store.
 

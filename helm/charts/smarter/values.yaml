@@ -54,6 +54,8 @@ env:
   # smarter-infrastructure built, read from its Kubernetes Secret smarter-django-secret-key
   # (infrastructureSecrets, below). Otherwise, set it.
 
+  # The Docker Hub account that pulls Smarter's image: only the image-pull Secret, secret-docker.yaml,
+  # reads them. Unlike the rest of env, they reach no pod's environment (smarter.env in _helpers.tpl).
   DOCKERHUB_PAT: "SET-ME-IN-helm/charts/smarter/values.yaml"
   DOCKERHUB_USERNAME: "SET-ME-IN-helm/charts/smarter/values.yaml"
   # Optional. The platform's GitHub token, smarter_settings.github_token: SkillPlugin skill downloads
