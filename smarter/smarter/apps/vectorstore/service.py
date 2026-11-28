@@ -424,7 +424,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             self.set_status(VectorstoreStatus.PROVISIONING, message)
         return seconds
 
-    def reconcile(self) -> str:
+    def reconcile(self, take_over: bool = True) -> str:
         """
         Check a deployed database, record its status, conditions and statistics, and create a missing index.
 
@@ -432,6 +432,10 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         deploy task, unless the deploy lost its task, and then it takes the deploy over. An error
         marks the vectorstore failed, until a later check succeeds. It never raises.
 
+        :param take_over: Whether it may take a stalled deploy over, which creates the database's cluster
+            resources. True for Beat's check, which runs on the infrastructure worker. The api's status view
+            passes False: the app's Kubernetes Role is read-only (ADR-038, phase 3), so it observes the deploy
+            and leaves its provisioning to Beat's next check.
         :returns: the status.
         """
         vectorstore = self.vectorstore
@@ -447,7 +451,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         if state.in_progress and not state.is_stalled():
             return vectorstore.status
         try:
-            provision = state.in_progress and not state.provisioned
+            provision = take_over and state.in_progress and not state.provisioned
             status = self.advance_deployment(provision=provision)
             if status == VectorstoreStatus.READY and state.in_progress:
                 self.finish_deployment()

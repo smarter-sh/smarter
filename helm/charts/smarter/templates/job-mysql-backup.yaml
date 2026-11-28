@@ -65,7 +65,9 @@ spec:
           tolerations:
             {{- toYaml .Values.global.tolerations | nindent 12 }}
           serviceAccountName: "{{ $.Values.global.appName }}-backup"
-          automountServiceAccountToken: true
+          # the backup never calls Kubernetes. Its IAM role (IRSA) comes with a token of its own, which
+          # the EKS pod identity webhook mounts whatever this says.
+          automountServiceAccountToken: false
 
           volumes:
             - name: debian-setup-script

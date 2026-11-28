@@ -174,7 +174,8 @@ class VectorstoreStatusView(VectorstoreViewBase):
         :raises Http404: If it does not exist, or the user may not read it.
         """
         vectorstore = self.get_vectorstore(request, **kwargs)
-        status = self.get_service(vectorstore).reconcile()
+        # the app's Kubernetes Role is read-only: a stalled deploy is provisioned by Beat's check, not here.
+        status = self.get_service(vectorstore).reconcile(take_over=False)
         response = VectorstoreApiStatus(
             vectorstore=vectorstore.name,
             status=status,  # type: ignore[arg-type]

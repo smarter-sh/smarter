@@ -382,6 +382,18 @@ Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    credential settings now, so that the map says who holds them; the app token, ``HeldBy()``, reaches only
    the Slack bot, from a Secret of its own, ``<appName>-env-slack-bot``.
 
+   Each kind of pod also runs as its own ServiceAccount, ``<appName>-<pod>``, whose Role and ClusterRole allow
+   only what an inventory of every Kubernetes call found its code does (``templates/rbac.yaml``). Every cluster
+   write is ``smarter-worker-infrastructure``'s, which alone may read a Secret. The app only reads: pods, their
+   logs, events and metrics, Deployments, StatefulSets and volumes, and no Secret; the web console's superuser
+   terminal runs a shell with its token, so it can do no more. The init Job may write only the LLMClient
+   Ingresses that ``initialize_platform`` retargets; ``smarter-worker`` reads only its namespace, when it starts;
+   Celery Beat, the migrate Job and the backup mount no token. The inventory found one write left in the app: a
+   vectorstore's status view took a stalled deploy over, and created its cluster resources, in the request. It
+   now leaves that to Beat's check, on the infrastructure worker (``VectorstoreService.reconcile(take_over=...)``).
+   Until step 4 gives each its own IAM role, every one of these ServiceAccounts has the shared
+   ``<namespace>-smarter-irsa``, whose trust policy names each of them.
+
    A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
    stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector
    databases') have no setting and no environment variable (issue #1099). The chart's ``bootstrapSecrets``

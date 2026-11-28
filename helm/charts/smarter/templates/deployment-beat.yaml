@@ -53,7 +53,9 @@ spec:
         meta.helm.sh/application-version: "{{ .Chart.Version }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
-      serviceAccountName: "{{ $.Values.global.appName }}"
+      serviceAccountName: "{{ $.Values.global.appName }}-beat"
+      # Celery Beat only schedules tasks: it never calls Kubernetes, so its token isn't mounted.
+      automountServiceAccountToken: false
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:

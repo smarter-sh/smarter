@@ -223,6 +223,20 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertFalse(service.deployment.in_progress)
         self.assertIsNotNone(service.vectorstore.last_checked_at)
 
+    def test_reconcile_without_take_over_never_provisions(self):
+        """Test that the api's reconcile observes a stalled deploy, and leaves its provisioning to Beat's (ADR-038)."""
+        service = self.service(self.new_vectorstore("test_service_no_take_over"))
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
+        service.deploy()
+        service.deployment.nextRetryAt = timezone.now() - timedelta(hours=1)
+        service.save_deployment()
+        self.assertFalse(service.deployment.provisioned)
+        self.assertEqual(service.reconcile(take_over=False), VectorstoreStatus.PROVISIONING)
+        self.assertEqual(self.kubernetes.applied, [])
+        # Beat's check, on the infrastructure worker, takes it over.
+        service.reconcile()
+        self.assertNotEqual(self.kubernetes.applied, [])
+
     def test_reconcile_failure_and_inactive(self):
         """Test that reconcile marks a ready database failed when it can't be reached, and deploy refuses an inactive one."""
         service = self.ready_service("test_service_failure")

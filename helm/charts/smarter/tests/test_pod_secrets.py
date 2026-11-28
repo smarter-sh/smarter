@@ -6,10 +6,8 @@ every credential that files/credentials.json says the kind doesn't hold. These t
 ``helm template``, with a distinct value for every credential, and check what each Secret holds, which Secret each
 workload reads, and which pods a changed credential rolls. A text match can't tell what a template filters.
 
-The chart is rendered from a copy without its subcharts (Chart.yaml's dependencies), which ``helm template`` would
-otherwise have to download, and with a valid version in place of the placeholder that the release sets. The
-Kubernetes Secrets that the chart reads from the cluster don't exist in ``helm template``, so every value comes from
-env.
+The chart is rendered by chart_render.py. The Kubernetes Secrets that the chart reads from the cluster don't exist in
+``helm template``, so every value comes from env.
 
 They need helm, and are skipped without it, except on GitHub Actions, whose runners have it. Run them from the
 repository's root:
@@ -18,19 +16,21 @@ repository's root:
 """
 
 import json
-import os
 import re
-import shutil
-import subprocess
-import tempfile
 import unittest
-from pathlib import Path
 
-CHART_PATH = Path(__file__).resolve().parent.parent
+from chart_render import (
+    APP_NAME,
+    CHART_PATH,
+    kind_and_name,
+    needs_helm,
+    render,
+    service_type,
+    workloads,
+)
+
 CREDENTIALS_PATH = CHART_PATH / "files" / "credentials.json"
 SLACK_BOT_DEPLOYMENT_PATH = CHART_PATH.parent / "slack-bot" / "templates" / "deployment.yaml"
-APP_NAME = "smarter"
-HELM = shutil.which("helm")
 
 OWN_SECRETS = {
     "job-migrate": f"{APP_NAME}-env-migrate",
@@ -56,44 +56,9 @@ def credential_values() -> dict[str, str]:
     return values
 
 
-def render(env: dict[str, str]) -> list[str]:
-    """
-    Render the chart with these env values, and the Slack bot on.
-
-    :param env: Values of env, by variable.
-    :returns: The rendered documents.
-    """
-    with tempfile.TemporaryDirectory() as folder:
-        chart = Path(folder) / "smarter"
-        shutil.copytree(CHART_PATH, chart, ignore=shutil.ignore_patterns("charts", "tests", "__pycache__", "*.lock"))
-        chart_yaml = (chart / "Chart.yaml").read_text(encoding="utf-8")
-        chart_yaml = re.sub(r"^(version|appVersion): .*$", r"\1: 0.0.1", chart_yaml, flags=re.MULTILINE)
-        chart_yaml = chart_yaml[: chart_yaml.index("dependencies:")]
-        (chart / "Chart.yaml").write_text(chart_yaml, encoding="utf-8")
-        # JSON is YAML: a values file without quoting rules to get wrong.
-        values = {"env": env, "slackBot": {"enabled": True}}
-        values_path = Path(folder) / "values.json"
-        values_path.write_text(json.dumps(values), encoding="utf-8")
-        command = [HELM, "template", APP_NAME, str(chart), "--namespace", "smarter-test", "-f", str(values_path)]
-        completed = subprocess.run(command, capture_output=True, text=True, check=False)  # nosec B603
-    if completed.returncode != 0:
-        raise AssertionError(f"helm template failed:\n{completed.stderr}")
-    return completed.stdout.split("\n---\n")
-
-
-def kind_and_name(document: str) -> tuple[str, str]:
-    """A rendered document's kind and name, its metadata's name wherever it is in the block, or empty strings."""
-    kind = re.search(r"^kind: (\w+)$", document, re.MULTILINE)
-    if kind is None or "\nmetadata:\n" not in document:
-        return "", ""
-    metadata = document.split("\nmetadata:\n", 1)[1]
-    for line in metadata.splitlines():
-        if not line.startswith(" "):
-            break
-        name = re.match(r'^  name: "?([^"\n]+?)"?$', line)
-        if name is not None:
-            return kind.group(1), name.group(1)
-    return "", ""
+def render_env(env: dict[str, str]) -> list[str]:
+    """Render the chart with these env values, and the Slack bot on."""
+    return render({"env": env, "slackBot": {"enabled": True}})
 
 
 def secrets(documents: list[str]) -> dict[str, dict[str, str]]:
@@ -111,27 +76,15 @@ def secrets(documents: list[str]) -> dict[str, dict[str, str]]:
     return retval
 
 
-def workloads(documents: list[str]) -> dict[str, str]:
-    """Each rendered Deployment, Job and CronJob, by name."""
-    retval = {}
-    for document in documents:
-        kind, name = kind_and_name(document)
-        if kind in ("Deployment", "Job", "CronJob"):
-            retval[name] = document
-    return retval
-
-
-@unittest.skipUnless(HELM or os.environ.get("GITHUB_ACTIONS"), "helm isn't installed")
+@needs_helm
 class TestPodSecrets(unittest.TestCase):
     """Each kind of pod reads its own Secret, which holds only the credentials that its kind holds."""
 
     @classmethod
     def setUpClass(cls):
-        if HELM is None:
-            raise AssertionError("helm isn't installed, and GitHub Actions' runners have it.")
         cls.holders = json.loads(CREDENTIALS_PATH.read_text(encoding="utf-8"))
         cls.env = credential_values()
-        cls.documents = render(cls.env)
+        cls.documents = render_env(cls.env)
         cls.secrets = secrets(cls.documents)
         cls.workloads = workloads(cls.documents)
 
@@ -172,10 +125,10 @@ class TestPodSecrets(unittest.TestCase):
                     env_references.add(reference)
             if not env_references:
                 continue
-            service_types = set(re.findall(r"- name: SERVICE_TYPE\n\s+value: \"?([a-z-]+)\"?", document))
+            pod = service_type(document)
             with self.subTest(workload=name):
-                self.assertEqual(len(service_types), 1, service_types)
-                pod = service_types.pop()
+                self.assertIsNotNone(pod)
+                assert pod is not None
                 self.assertEqual(env_references, {secret_name(pod)})
             checked.append(pod)
         for pod in ("api", "worker", "worker-infrastructure", "beat", "bastion", "job-init", "job-backup"):
@@ -186,7 +139,7 @@ class TestPodSecrets(unittest.TestCase):
         changed = dict(self.env)
         changed["SMARTER_SUBSYSTEM_SMTP_PASSWORD"] = "test-a-new-smtp-password"
         before = workloads(self.documents)
-        after = workloads(render(changed))
+        after = workloads(render_env(changed))
         expected = {"smarter-api": True, "smarter-worker": True, "smarter-beat": False, "smarter-bastion": False}
         for name, rolls in expected.items():
             with self.subTest(workload=name):
