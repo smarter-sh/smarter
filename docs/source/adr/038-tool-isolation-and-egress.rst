@@ -6,7 +6,7 @@ Status
 Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phase 0's
 inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phase 3 is in
 progress (issue #1084): each credential says which kinds of pod hold it, and pods report the ones they
-hold but don't use. Phase 4 is not started.
+hold but don't use. Phase 4 is in progress (issue #1085): the chart deploys the proxy in report mode.
 
 Context
 -------
@@ -440,6 +440,20 @@ Phase 4, the egress proxy (Helm chart, smarter-infrastructure)
    Smokescreen in the namespace, in log-only mode, then enforcing, and the network policies of every pod
    but the tool worker narrowed to the proxy. The decisions on custom LLM endpoints and email are made
    before this phase.
+
+   Stage 1 is in the chart: ``egressProxy`` in ``values.yaml``, off by default, deploys Smokescreen
+   (``ghcr.io/stripe/smokescreen``, pinned by digest) with an ACL whose default rule reports: it allows
+   every host and logs the ones its allowlist doesn't list, with ``enforce_would_deny``. The allowlist is
+   seeded with the fixed hosts above. The pods present no client certificate, so every request gets the
+   default rule (``allow_missing_role``), and the log tells the pods apart by their addresses. The app,
+   both Django workers, Beat and the Jobs get ``HTTPS_PROXY``, ``HTTP_PROXY`` and ``NO_PROXY``; the tool
+   worker, the Extension worker and the bastion don't. Smokescreen refuses private addresses whatever the
+   action, so ``NO_PROXY`` sends the cluster's services, its api and the metadata service around it.
+   :doc:`/smarter-framework/smarter-on-kubernetes/egress-proxy` describes it.
+
+   Stage 2's allowlists are per workload, and Smokescreen tells its clients apart only by their TLS
+   client certificates. Either the pods present one, or each kind of pod gets a proxy of its own. The
+   week of stage 1's log decides how much the lists differ, and so which.
 
 Decisions for the maintainers
 -----------------------------

@@ -168,6 +168,10 @@ jobs:
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-pat: ${{ secrets.DOCKERHUB_PAT }}
           dockerhub-tag: ${{ env.VERSION }}
+          # the egress proxy (ADR-038, phase 4): on with the repository variable
+          # EGRESS_PROXY_ENABLED=true, once smarter-infrastructure's network
+          # policies for it are applied.
+          egress-proxy-enabled: ${{ vars.EGRESS_PROXY_ENABLED == 'true' }}
           fernet-encryption-key: ${{ secrets.FERNET_ENCRYPTION_KEY }}
           fireworks-api-key: ${{ secrets.FIREWORKS_API_KEY }}
           google-service-account-b64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
