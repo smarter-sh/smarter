@@ -159,7 +159,9 @@ class TestPineconeBackend(VectorstoreTestBase):
         results = backend.search("q", k=3, metadata_filter={"team": "a"})
         self.assertEqual([(r.id, r.text, r.score) for r in results], [("c1", "one", 0.9), ("c2", "two", 0.2)])
         self.assertEqual(results[0].metadata, {"team": "a"})
-        query.assert_called_with(vector=[1.0, 0.0], top_k=3, include_metadata=True, filter={"team": "a"})
+        query.assert_called_with(
+            vector=[1.0, 0.0], top_k=3, include_values=False, include_metadata=True, filter={"team": "a"}
+        )
         results = backend.search("q", search_type="similarity_score_threshold", score_threshold=0.5)
         self.assertEqual([r.score for r in results], [0.9])
 
@@ -192,4 +194,6 @@ class TestPineconeBackend(VectorstoreTestBase):
         )
         vectorstore.connection = None
         with self.assertRaises(VectorStoreBackendCredentialsError):
-            _ = PineconeBackend(vectorstore).client
+            PineconeBackend(vectorstore).api_key()
+        with self.assertRaises(VectorStoreBackendCredentialsError):
+            PineconeBackend(vectorstore).exists()
