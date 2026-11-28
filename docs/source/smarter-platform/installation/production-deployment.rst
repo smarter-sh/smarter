@@ -201,7 +201,8 @@ your values file holds only the settings below.
         - The key that Smarter encrypts Secrets with. Without it, each pod generates its own key, and a
           Secret saved by one pod can't be read by another, or after a restart.
       * - ``env.DOCKERHUB_USERNAME``, ``env.DOCKERHUB_PAT``
-        - The Docker Hub account from Step 2, which pulls Smarter's image.
+        - The Docker Hub account from Step 2, which pulls Smarter's image. Only the chart's image-pull
+          Secret holds them: unlike the rest of ``env``, they reach no pod's environment.
       * - ``bootstrapSecrets.openai_api_key``
         - OpenAI is the default LLM provider, and the example resources and Stackademy use it. Each key
           under ``bootstrapSecrets`` becomes a Smarter Secret of that name, owned by the Smarter admin. The
