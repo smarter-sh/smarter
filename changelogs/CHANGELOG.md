@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.3](https://github.com/smarter-sh/smarter/compare/v1.0.2...v1.0.3) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give each small pod only the settings it reads ([38eb208](https://github.com/smarter-sh/smarter/commit/38eb208dd1221f662a5b2cf9abf28176b06a6e1a)), closes [#1103](https://github.com/smarter-sh/smarter/issues/1103)
+
+## [1.0.3-alpha.1](https://github.com/smarter-sh/smarter/compare/v1.0.2...v1.0.3-alpha.1) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give each small pod only the settings it reads ([38eb208](https://github.com/smarter-sh/smarter/commit/38eb208dd1221f662a5b2cf9abf28176b06a6e1a)), closes [#1103](https://github.com/smarter-sh/smarter/issues/1103)
+
 ## [1.0.2](https://github.com/smarter-sh/smarter/compare/v1.0.1...v1.0.2) (2026-11-28)
 
 ### Bug Fixes
