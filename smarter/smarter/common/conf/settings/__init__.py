@@ -55,7 +55,7 @@ from smarter.common.conf.settings.project import ProjectSettings
 from smarter.common.conf.settings.security import SecuritySettings
 from smarter.common.conf.settings.tasks import TaskSettings
 from smarter.common.conf.util import field_default
-from smarter.common.const import SmarterKubernetesPodKinds
+from smarter.common.const import SmarterKubernetesPodKinds, SmarterPodCapabilities
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.processes import is_first_worker
@@ -202,8 +202,8 @@ class Settings(
         # look like an error. READY is logged by one uvicorn worker per server, and
         # NOT_READY by every process.
         prefix_format = SmarterFormattedText.LIGHT_GRAY
-        if self.database_unavailable:
-            # the tool worker has no AWS credentials, by design (ADR-038): its ServiceAccount has no
+        if not self.uses_aws:
+            # this kind of pod has no AWS credentials, by design (ADR-038): its ServiceAccount has no
             # IAM role. STS isn't asked, and nothing warns that they are missing.
             self._aws_is_configured = False
         pod = self.pod_description()
@@ -254,7 +254,8 @@ class Settings(
 
         - A restricted worker (:attr:`database_unavailable`): that it holds no credential but its own Redis
           password (:meth:`check_restricted_worker_credentials`).
-        - Every other pod: AWS credentials, and outside the local environment, the root domain (:meth:`ready`).
+        - Every other pod: outside the local environment, the root domain, and AWS credentials if its kind
+          uses AWS (:attr:`uses_aws`, :meth:`ready`).
 
         :returns: The checks, in a few words each.
         """
@@ -263,8 +264,29 @@ class Settings(
         checks = []
         if not self.environment_is_local:
             checks.append("the root domain")
-        checks.append("AWS credentials")
+        if self.uses_aws:
+            checks.append("AWS credentials")
         return checks
+
+    @property
+    def uses_aws(self) -> bool:
+        """
+        Whether this kind of pod calls AWS, and so has an IAM role (ADR-038, phase 3).
+
+        The kinds in :attr:`SmarterPodCapabilities.aws <smarter.common.const.SmarterPodCapabilities.aws>` do: the app, both workers, the init
+        Job, the backup Job and the bastion. Celery Beat and the migrate Job make no AWS call, and the Helm chart
+        gives their ServiceAccounts no IAM role; the restricted workers have none either. For those, the settings
+        don't ask STS for credentials when they start, and don't warn that there are none. A process of no known
+        kind (``SERVICE_TYPE`` unset, e.g. a ``manage.py shell``) is assumed to, as before.
+
+        :type: bool
+        """
+        if self.database_unavailable:
+            return False
+        kind = self.service_type
+        if kind is None:
+            return True
+        return kind in SmarterPodCapabilities.aws
 
     def check_service_type(self) -> None:
         """
@@ -355,7 +377,8 @@ class Settings(
           the platform from localhost.
         - is AWS configured? Needed for DNS, TLS certificates, and deploying LLMClients to
           Kubernetes when ``cloud_provider`` is ``aws``. Not checked in the tool worker
-          (``database_unavailable``), which has no AWS credentials, by design (ADR-038).
+          (``database_unavailable``), Celery Beat or the migrate Job, which have no AWS credentials, by design
+          (ADR-038, :attr:`uses_aws`).
 
         SMTP is not checked: without it, email is not sent, and each email that is not sent is
         logged with instructions. See :attr:`smtp_is_configured`.
@@ -381,7 +404,7 @@ class Settings(
             )
             retval = False
 
-        if not self.aws_is_configured and not self.database_unavailable:
+        if self.uses_aws and not self.aws_is_configured:
             print(
                 SmarterFormattedText.text(
                     "\n"

@@ -588,10 +588,14 @@ databaseScheduledBackup:
 # Celery workers, beat, the init Job and the migrate Job (ADR-038, phase 3). kubectl
 # authenticates as it, with only its kind's Role and ClusterRole in templates/rbac.yaml.
 serviceAccount:
-  # the IAM role (IRSA) that the pods use for Route53, ACM, EKS node groups and S3, e.g.
-  # arn:aws:iam::<account>:role/<namespace>-smarter-irsa, on each of those ServiceAccounts, whose
-  # names its trust policy must list. smarter-infrastructure creates one per environment.
-  # Empty: the pods use env.AWS_ACCESS_KEY_ID and env.AWS_SECRET_ACCESS_KEY.
+  # each kind of pod's own IAM role (IRSA), whose trust policy names its ServiceAccount, e.g.
+  # api: arn:aws:iam::<account>:role/<namespace>-smarter-api-irsa. smarter-infrastructure creates
+  # them, one per kind and environment, with only what that kind does in AWS (ADR-038, phase 3).
+  # The kinds that call AWS: api, worker, worker-infrastructure, job-init. Celery Beat and the
+  # migrate Job make no AWS call, and get no role.
+  awsRoleArns: {}
+  # the IAM role of a kind that awsRoleArns leaves out, e.g. one role for every kind.
+  # Empty, and no awsRoleArns: the pods use env.AWS_ACCESS_KEY_ID and env.AWS_SECRET_ACCESS_KEY.
   awsRoleArn: ""
   # create the ServiceAccounts' read-only ClusterRoles (their namespace, nodes, PersistentVolumes,
   # node metrics, each kind's own), which need a deployer with cluster-wide permissions. smarter-sh's
