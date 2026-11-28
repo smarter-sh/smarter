@@ -13,7 +13,8 @@ e.g. ``600/minute``. Either can be set to ``none`` to disable it.
 
 A client that exceeds a rate receives HTTP 429 Too Many Requests, with a
 ``Retry-After`` header. The counters are kept in the Redis cache, through
-:data:`cache_results.lazy.lazy_cache`, so that every pod shares them.
+:data:`cache_results.lazy.lazy_cache`, so that every pod shares them. While Redis can't be reached, every throttle
+lets its requests through, as :class:`SmarterCacheFailOpenThrottleMixin` explains.
 """
 
 from typing import Optional
@@ -28,11 +29,46 @@ from rest_framework.throttling import (
 
 from smarter.common.conf import smarter_settings
 from smarter.lib import logging
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 
 logger = logging.getSmarterLogger(__name__)
 
 
-class SmarterAnonRateThrottle(AnonRateThrottle):
+class SmarterCacheFailOpenThrottleMixin:
+    """
+    Let a request through when the throttle's counters, in Redis, can't be read or written.
+
+    Django REST Framework's ``SimpleRateThrottle.allow_request()`` reads and writes its cache without catching its
+    errors, so during a Redis outage every throttled view, the web console's and a deployed LLMClient's included,
+    would answer 500 (issue #1091). The rate limits, including :class:`SmarterCredentialsRateThrottle`'s, are
+    instead off for as long as Redis is away, and each request that passes unchecked logs one warning line, as
+    ``@cache_results`` computes uncached during an outage (issue #1052).
+    """
+
+    def allow_request(self, request, view) -> bool:
+        """
+        Check the request against the throttle, or let it through if the cache fails.
+
+        :param request: The request.
+        :param view: The view that serves the request.
+        :returns: True if the request may proceed.
+        """
+        try:
+            allowed = super().allow_request(request, view)  # type: ignore[misc]
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            logger.warning(
+                "the cache failed, letting %s %s through %s unthrottled: %s",
+                request.method,
+                request.path,
+                type(self).__name__,
+                e,
+            )
+            return True
+        return allowed
+
+
+class SmarterAnonRateThrottle(SmarterCacheFailOpenThrottleMixin, AnonRateThrottle):
     """
     Limit the request rate of each anonymous client, by IP address.
 
@@ -51,7 +87,7 @@ class SmarterAnonRateThrottle(AnonRateThrottle):
         return smarter_settings.app_api_throttle_rate_anon
 
 
-class SmarterUserRateThrottle(UserRateThrottle):
+class SmarterUserRateThrottle(SmarterCacheFailOpenThrottleMixin, UserRateThrottle):
     """
     Limit the request rate of each authenticated user.
 
@@ -79,7 +115,7 @@ guesses a password or sends an email.
 """
 
 
-class SmarterCredentialsRateThrottle(SimpleRateThrottle):
+class SmarterCredentialsRateThrottle(SmarterCacheFailOpenThrottleMixin, SimpleRateThrottle):
     """
     Limit the rate of the actions that take a password or send an email, by IP address.
 
@@ -177,6 +213,7 @@ __all__ = [
     "CREDENTIALS_THROTTLE_RATE",
     "SMARTER_THROTTLE_CLASSES",
     "SmarterAnonRateThrottle",
+    "SmarterCacheFailOpenThrottleMixin",
     "SmarterCredentialsRateThrottle",
     "SmarterUserRateThrottle",
     "credentials_throttle_wait",

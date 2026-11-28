@@ -187,6 +187,9 @@ class Command(SmarterCommand):
         self.call_command_or_log(
             "queue the indexing of The Smarter Project's repositories", "index_smarter_project", queue=True
         )
+        # the Smarter admin's Secrets from the bootstrap folder (issue #1099): the built-in Providers', the search
+        # services' and the managed vector databases' keys, which the next commands find as Secrets.
+        self.call_command_or_log("initialize the bootstrap secrets", "initialize_bootstrap_secrets")
         # the builtin LLM providers: openai, metaai, googleai, ...
         self.call_command_or_log("initialize providers", "initialize_providers")
         # the prices of the built-in providers' default models, so that charges have a cost, and budgets

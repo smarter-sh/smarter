@@ -61,15 +61,19 @@ class TestWaitForDatabase(unittest.TestCase):
 
     def test_only_on_an_install(self):
         """Upgrades have migrated before the rollout, so their pods don't wait."""
-        self.assertTrue(wait_for_database().startswith("{{- if .Release.IsInstall -}}\ninitContainers:"))
+        self.assertTrue(
+            wait_for_database().startswith(
+                "{{- $root := .root -}}\n{{- if $root.Release.IsInstall -}}\ninitContainers:"
+            )
+        )
 
     def test_waits_for_the_migrations(self):
         """It retries manage.py migrate --check until it passes."""
         self.assertIn("until python manage.py migrate --check", wait_for_database())
 
-    def test_reads_the_platform_environment(self):
-        """It connects with the database credentials of the platform's Secret."""
-        self.assertIn('name: "{{ .Values.global.appName }}-env"', wait_for_database())
+    def test_reads_the_pods_own_environment(self):
+        """It connects with the database credentials of its pod's own Secret (ADR-038, phase 3)."""
+        self.assertIn('name: "{{ include "smarter.podEnvName" . }}"', wait_for_database())
 
     def test_every_database_client_waits(self):
         """The api, the Celery workers and beat include it in their pods' spec."""
@@ -77,7 +81,9 @@ class TestWaitForDatabase(unittest.TestCase):
             with self.subTest(deployment=name):
                 text = (TEMPLATES_PATH / name).read_text(encoding="utf-8")
                 self.assertRegex(
-                    text, r'\n      {{- include "smarter.waitForDatabase" [.$] \| nindent 6 }}\n      containers:\n'
+                    text,
+                    r'\n      {{- include "smarter.waitForDatabase" \(dict "root" [.$] "pod" "[a-z-]+"\) \| nindent 6 }}'
+                    r"\n      containers:\n",
                 )
 
 

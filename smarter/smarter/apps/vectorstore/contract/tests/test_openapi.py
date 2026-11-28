@@ -85,5 +85,5 @@ class TestVectorstoreOpenApi(OpenApiResponseMixin, VectorstoreTestBase):
             "post", "/vectorstores/{id}/snapshots/{snapshot_id}/restore/", HTTPStatus.OK, snapshot_id=snapshot["id"]
         )
         self.call("post", "/vectorstores/{id}/snapshots/{snapshot_id}/restore/", HTTPStatus.NOT_FOUND, snapshot_id=0)
-        self.call("post", "/vectorstores/{id}/undeploy/", HTTPStatus.OK)
+        self.call("post", "/vectorstores/{id}/undeploy/", HTTPStatus.ACCEPTED)
         self.call("post", "/vectorstores/{id}/deploy/", HTTPStatus.ACCEPTED)

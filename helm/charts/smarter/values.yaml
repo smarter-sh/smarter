@@ -216,16 +216,11 @@ env:
 
   # llmtool: plugins and extensions.
   SMARTER_APP_LLMTOOL_ENABLE: true
-  # The search plugins' keys, which manage.py initialize_llmtool_api_keys stores as the Secrets
-  # tavily_api_key and brave_search_api_key: web search (Tavily), and image search and the Brave web
-  # search samples (Brave Search). A plugin without its key fails, and says which Secret is missing.
-  SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
   # The Smarter Extension registry's base64 Ed25519 public key. This is a
   # public key, not a secret. An empty value disables the registry.
   SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY: "i0kR0g3ZEf6YzyyjnQbIwq85D7QGwTrvzubYsw6sdtg="
   SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_URL: "https://smarter-sh.github.io/extensions-registry/index.json"
   SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS: "50"
-  SMARTER_APP_LLMTOOL_TAVILY_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
 
   SMARTER_APP_MCPCLIENT_ENABLE: true
 
@@ -234,31 +229,32 @@ env:
 
   SMARTER_APP_ORCHESTRATOR_ENABLE: true
 
-  # provider: the built-in LLM Providers. manage.py initialize_providers stores each key as a Secret,
-  # named without SMARTER_APP_PROVIDER_ (e.g. openai_api_key), for the Providers and the weather extension
-  # (Google Maps). A Provider without its key still exists, and its prompts fail with instructions.
+  # provider: the built-in LLM Providers. Their keys are bootstrapSecrets, below, not env.
   SMARTER_APP_PROVIDER_ENABLE: true
-  SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_COHERE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_FIREWORKS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_GEMINI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_LLAMA_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_MISTRAL_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_OPENAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
 
   SMARTER_APP_PROXY_ENABLE: true
   SMARTER_APP_SECRET_ENABLE: true
   SMARTER_APP_VECTORSEARCH_ENABLE: true
 
   # vectorstore: the managed vector databases, which manage.py initialize_vectorstore_providers
-  # connects. Qdrant Cloud needs both of its values.
+  # connects. Their keys are bootstrapSecrets, below; Qdrant Cloud also needs its url.
   SMARTER_APP_VECTORSTORE_ENABLE: true
-  SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: "SET-ME-IN-helm/charts/smarter/values.yaml"
-  # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_API_KEY: "your-qdrant-cloud-api-key"
   # SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_URL: "https://xyz-example.us-east-1-0.aws.cloud.qdrant.io:6333"
+
+# -----------------------------------------------------------------------------
+## The platform's bootstrap secrets: the Smarter Secrets that the init Job creates (issue #1099), by name, e.g.
+## openai_api_key: "sk-...". The chart puts them in the Kubernetes Secret smarter-bootstrap-secrets, which only
+## the init Job mounts, at smarter_settings.bootstrap_secrets_dir, and manage.py initialize_bootstrap_secrets
+## turns each into the Smarter admin's Secret of that name. Every service then reads the Secret, never an
+## environment variable. An empty value is skipped. Each key is optional: a Provider, plugin or connection whose
+## Secret doesn't exist says which Secret to set. An existing platform's Secrets are kept when a key is left out.
+##
+## The built-in Providers: anthropic_api_key, cohere_api_key, fireworks_api_key, gemini_api_key, llama_api_key,
+## mistral_api_key, openai_api_key, togetherai_api_key. Google: google_maps_api_key (the weather extension), and
+## google_service_account (its json, for Google Cloud bearer tokens). The search plugins: tavily_api_key,
+## brave_search_api_key. The managed vector databases: pinecone_api_key, qdrant_cloud_api_key.
+# -----------------------------------------------------------------------------
+bootstrapSecrets: {}
 
 # -----------------------------------------------------------------------------
 ## @param infrastructureSecrets The Kubernetes Secrets that smarter-infrastructure creates in each
@@ -586,19 +582,21 @@ databaseScheduledBackup:
   awsRoleArn: ""
 
 # -----------------------------------------------------------------------------
-# The platform's ServiceAccount (templates/serviceaccount.yaml, templates/rbac.yaml)
+# The platform's ServiceAccounts (templates/serviceaccount.yaml, templates/rbac.yaml)
 # -----------------------------------------------------------------------------
-# The app, the Celery workers, beat and the init job run as the smarter ServiceAccount.
-# kubectl authenticates as it, with the Role and ClusterRole in templates/rbac.yaml.
+# Each kind of pod runs as its own ServiceAccount, <appName>-<pod>: the app (api), the
+# Celery workers, beat, the init Job and the migrate Job (ADR-038, phase 3). kubectl
+# authenticates as it, with only its kind's Role and ClusterRole in templates/rbac.yaml.
 serviceAccount:
   # the IAM role (IRSA) that the pods use for Route53, ACM, EKS node groups and S3, e.g.
-  # arn:aws:iam::<account>:role/<namespace>-smarter. smarter-infrastructure creates one per
-  # environment. Empty: the pods use env.AWS_ACCESS_KEY_ID and env.AWS_SECRET_ACCESS_KEY.
+  # arn:aws:iam::<account>:role/<namespace>-smarter-irsa, on each of those ServiceAccounts, whose
+  # names its trust policy must list. smarter-infrastructure creates one per environment.
+  # Empty: the pods use env.AWS_ACCESS_KEY_ID and env.AWS_SECRET_ACCESS_KEY.
   awsRoleArn: ""
-  # create the ServiceAccount's read-only ClusterRole (nodes, PersistentVolumes, node metrics), which
-  # needs a deployer with cluster-wide permissions. smarter-sh's own deploy workflow turns it off,
-  # because smarter-infrastructure creates the same ClusterRole, so that each environment deploys with
-  # namespace-scoped permissions only. See templates/rbac.yaml.
+  # create the ServiceAccounts' read-only ClusterRoles (their namespace, nodes, PersistentVolumes,
+  # node metrics, each kind's own), which need a deployer with cluster-wide permissions. smarter-sh's
+  # own deploy workflow turns it off, because smarter-infrastructure creates the same ClusterRoles, so
+  # that each environment deploys with namespace-scoped permissions only. See templates/rbac.yaml.
   createClusterRole: true
 
 # -----------------------------------------------------------------------------

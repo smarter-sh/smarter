@@ -14,6 +14,9 @@ from smarter.lib.django.static_storage import (
     mark_uploaded,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.cache_outage import unreachable_cache
+
+MODULE = "smarter.lib.django.static_storage"
 
 
 class TestStaticStorage(SmarterTestBase):
@@ -93,3 +96,23 @@ class TestUploadedRecord(SmarterTestBase):
         with failing, patch("smarter.lib.django.static_storage.logger") as logger:
             self.assertFalse(is_uploaded(self.name))
         logger.warning.assert_called_once()
+
+    def test_while_the_cache_is_down_the_bucket_is_asked(self):
+        """During a Redis outage the console's page asks the bucket, rather than answering 500 (issue #1091)."""
+        exists = patch("django.contrib.staticfiles.storage.staticfiles_storage.exists", return_value=True)
+        with (
+            patch(f"{MODULE}.lazy_cache", unreachable_cache()),
+            exists as bucket_exists,
+            self.assertLogs(MODULE, level="WARNING") as logs,
+        ):
+            self.assertTrue(is_uploaded(self.name))
+        bucket_exists.assert_called_once_with(self.name)
+        self.assertIn("asking the bucket", logs.output[0])
+        self.assertIn("not recording", logs.output[1])
+        self.assertNotIn("Traceback", "\n".join(logs.output))
+
+    def test_while_the_cache_is_down_nothing_is_recorded(self):
+        with patch(f"{MODULE}.lazy_cache", unreachable_cache()), self.assertLogs(MODULE, level="WARNING") as logs:
+            mark_uploaded(self.name)
+        self.assertEqual(len(logs.output), 1)
+        self.assertIsNone(lazy_cache.get(UPLOADED_CACHE_KEY_PREFIX + self.name))

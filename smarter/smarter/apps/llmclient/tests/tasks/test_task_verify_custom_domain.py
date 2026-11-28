@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import dns.resolver
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.infrastructure.exceptions import CertificateTimeout
 from smarter.apps.infrastructure.services.dns import DNSZone
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
 from smarter.apps.llmclient.tasks.exceptions import LLMClientTaskError
@@ -163,7 +164,16 @@ class TestVerifyCustomDomain(TestAccountMixin):
         with patch(f"{MODULE}._ns_records_verified", return_value=True):
             _verification_blocker(self.hosted_zone_id, self.domain_name, None)
         certificates.get_or_create_certificate.assert_called_once_with(self.domain_name)
-        certificates.create_validation_records.assert_called_once_with("arn:new")
+        certificates.create_validation_records.assert_called_once_with("arn:new", max_attempts=1)
+
+    def test_a_pending_certificate_gets_its_records_on_each_check(self):
+        """Its records are created, or found, on every check, so a first check that was too early is made up for."""
+        certificates = self.infrastructure.certificates
+        certificates.get_or_create_certificate.return_value = ("arn:existing", False)
+        certificates.certificate_status.return_value = "PENDING_VALIDATION"
+        certificates.create_validation_records.side_effect = CertificateTimeout("not generated yet")
+        self.assertEqual(_certificate_status(self.domain_name), "PENDING_VALIDATION")
+        certificates.create_validation_records.assert_called_once_with("arn:existing", max_attempts=1)
 
     def test_certificate_issued(self):
         """A domain whose NS records are delegated, and whose certificate is issued, is verified."""

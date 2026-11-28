@@ -42,6 +42,9 @@ celerybeat-schedule
 mariadb-data
 # a developer's own Django settings. See overrides/README.md.
 overrides/settings.yaml
+# the platform's bootstrap secrets, the local keys of the built-in Providers and others (issue #1099).
+# See scripts/bootstrap_secrets.py.
+bootstrap-secrets/
 db.sqlite3
 .cache.sqlite
 staticfiles

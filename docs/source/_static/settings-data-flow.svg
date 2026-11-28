@@ -60,9 +60,9 @@
 <path d="M336,329 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
 <text x="348" y="338" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Helm release</text>
 <text x="348" y="362" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" fill="#57606A">templates/secret-env.yaml</text>
-<text x="348" y="380" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the Secret &lt;appName&gt;-env holds env;</text>
-<text x="348" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">every pod reads it with envFrom:</text>
-<text x="348" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">api, workers, beat, init and migrate</text>
+<text x="348" y="380" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a Secret per kind of pod, &lt;appName&gt;-env-&lt;pod&gt;,</text>
+<text x="348" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">holds env, without others' credentials;</text>
+<text x="348" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each pod reads its own with envFrom</text>
 <rect x="336" y="500" width="250" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M336,509 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
 <text x="348" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Docker Compose</text>

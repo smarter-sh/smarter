@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 880" width="1250" height="880" role="img" aria-labelledby="t d">
 <title id="t">Who may do what in AWS</title>
-<desc id="d">The platform's pods (smarter-api, the Celery workers, beat and the init Job) run as the ServiceAccount smarter, which EKS's OIDC provider maps to the IAM role &lt;namespace&gt;-smarter-irsa, with short-lived credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 buckets. The nightly backup runs as smarter-backup, whose role &lt;namespace&gt;-smarter-backup-irsa may only write to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.</desc>
+<desc id="d">The platform's pods (smarter-api, the Celery workers, beat, the init and migrate Jobs) each run as their own ServiceAccount, smarter-&lt;pod&gt;, which EKS's OIDC provider maps to the IAM role &lt;namespace&gt;-smarter-irsa, with short-lived credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 buckets. The nightly backup runs as smarter-backup, whose role &lt;namespace&gt;-smarter-backup-irsa may only write to backups/sql/ in the backup bucket. Two IAM users still have access keys: the deploy user, which the GitHub Actions Deploy workflow uses to push the image to ECR and run helm in the environment's namespace, and the SMTP user, whose SES SMTP password the pods read from the Kubernetes Secret aws-ses-config to send email.</desc>
 <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
 <rect width="1250" height="880" rx="14" fill="#F6F8FA"/>
 <text x="625.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">Who may do what in AWS</text>
@@ -18,13 +18,13 @@
 <text x="40" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">The platform's pods</text>
 <text x="40" y="190" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">smarter-api</text>
 <text x="40" y="207" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">Celery workers and beat</text>
-<text x="40" y="224" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the init Job</text>
+<text x="40" y="224" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#FFFFFF" text-anchor="start">the init and migrate Jobs</text>
 <rect x="290" y="148" width="210" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M290,157 a9,9 0 0 1 9,-9 h192 a9,9 0 0 1 9,9 v17 h-210 z" fill="#EAEEF2"/>
-<text x="302" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter</text>
-<text x="302" y="190" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ServiceAccount</text>
-<text x="302" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">annotated with its role</text>
-<text x="302" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">by the Helm chart</text>
+<text x="302" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">smarter-&lt;pod&gt;</text>
+<text x="302" y="190" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">ServiceAccounts</text>
+<text x="302" y="208" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">one per kind of pod,</text>
+<text x="302" y="225" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">each annotated with the role</text>
 <rect x="532" y="156" width="250" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M532,165 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#FBEFFF"/>
 <text x="544" y="174" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#6639BA" text-anchor="start">&lt;namespace&gt;-smarter-irsa</text>
@@ -42,9 +42,9 @@
 <rect x="814" y="300" width="408" height="95" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M814,309 a9,9 0 0 1 9,-9 h390 a9,9 0 0 1 9,9 v17 h-408 z" fill="#E7F6EC"/>
 <text x="826" y="318" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Kubernetes (RBAC, not IAM)</text>
-<text x="826" y="342" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a Role in its own namespace: deployed LLMClients'</text>
-<text x="826" y="359" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Deployments, Services, Ingresses, Secrets</text>
-<text x="826" y="376" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">cluster-wide: read-only (nodes, metrics, volumes)</text>
+<text x="826" y="342" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a Role per kind of pod, in its own namespace:</text>
+<text x="826" y="359" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">only the infrastructure worker writes, or reads Secrets;</text>
+<text x="826" y="376" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the app reads; cluster-wide: each kind's own reads</text>
 <rect x="28" y="500" width="230" height="61" rx="9" fill="#2980B9" stroke="#2980B9"/>
 <path d="M28,509 a9,9 0 0 1 9,-9 h212 a9,9 0 0 1 9,9 v17 h-230 z" fill="#2980B9"/>
 <text x="40" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="start">The nightly backup</text>
@@ -74,7 +74,7 @@
 <rect x="290" y="392" width="492" height="62" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <text x="306" y="414" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#24292F" text-anchor="start">How a pod gets its credentials (IRSA)</text>
 <text x="306" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">EKS's OIDC provider signs the ServiceAccount's token; STS exchanges it for</text>
-<text x="306" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">credentials that expire within hours. A role trusts exactly one ServiceAccount.</text>
+<text x="306" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">credentials that expire within hours. A role trusts only the ServiceAccounts it names.</text>
 <rect x="28" y="606" width="1194" height="2" fill="#CF222E" fill-opacity="0.3"/>
 <text x="28" y="634" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#CF222E" text-anchor="start">Still on access keys: two IAM users, each with one narrow job</text>
 <text x="28" y="654" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#57606A" text-anchor="start">Their secret keys are in the Terraform state. Rotate a key by tainting its aws_iam_access_key and applying.</text>

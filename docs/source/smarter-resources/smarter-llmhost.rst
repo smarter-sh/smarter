@@ -78,8 +78,12 @@ own, then:
    smarter apply -f qwen3-0.6b.yaml
    smarter deploy llmhost qwen3_0_6b
 
-``deploy`` returns as soon as Kubernetes accepts the resources. A new GPU node takes a few minutes
-to start, and downloading and loading the weights takes a few more.
+``deploy`` checks what it can at once (your budgets, the spec, its Secrets, and that the cluster is
+reachable), so a mistake is an error right away. Then it queues the launch for the platform's
+infrastructure worker and returns, with the status message ``Launch queued.`` The worker applies the
+Kubernetes resources and adds a node to the compute's node group. A new GPU node takes a few minutes
+to start, and downloading and loading the weights takes a few more. A launch that fails in the
+worker, for example because a Secret was deleted in the meantime, says why in the status message.
 
 **2. Follow its status.**
 
@@ -117,9 +121,12 @@ certificate. To use the model in your AI applications, register its endpoint and
 
    smarter undeploy llmhost qwen3_0_6b
 
-This removes its Kubernetes resources. The downloaded weights are kept on their volume, so the next
-launch is faster, unless ``spec.storage.retain`` is ``false``. The node is removed once no LLMHost
-needs it.
+This queues the removal of its Kubernetes resources, which the infrastructure worker carries out. The
+downloaded weights are kept on their volume, so the next launch is faster, unless
+``spec.storage.retain`` is ``false``. The node is removed once no LLMHost needs it. ``smarter delete
+llmhost`` also deletes the volume, and then the LLMHost itself. Until the worker has done that, the
+LLMHost is still listed, with the message ``Delete queued.``, and if it fails, the LLMHost stays, with
+the reason, so that you can delete it again.
 
 Gated models, such as Llama, Gemma and Mistral, also need a Hugging Face access token, in a Smarter
 Secret named in ``spec.model.tokenSecret``, and their license accepted on huggingface.co. The other

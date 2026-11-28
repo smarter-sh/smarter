@@ -20,9 +20,10 @@ Trouble Shooting & FAQ
 
 .. dropdown:: Still stuck?
 
-  - Verify that `SMARTER_APP_PROVIDER_OPENAI_API_KEY` has been set in your .env file in the root of the repository.
-    Without it, the built-in LLMClients answer with an error that names it. After you set it, restart the
-    platform and run `docker exec smarter-api python manage.py initialize_providers`.
+  - Verify that OpenAI's key is in the file ``bootstrap-secrets/openai_api_key``, in the root of the repository
+    (not in ``.env``). Without it, the built-in LLMClients answer with an error that names the Smarter Secret
+    to set, ``openai_api_key``. After you write the file, run
+    ``docker exec smarter-api python manage.py initialize_platform``, which creates the Secret.
   - Try running `docker compose ps` to see the status of your containers.
   - Check the Docker Desktop dashboard for error logs.
   - Ask for help, in one of the places below.

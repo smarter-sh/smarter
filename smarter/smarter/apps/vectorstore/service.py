@@ -63,6 +63,7 @@ from .deployment import (
     VectorstoreDeploymentState,
 )
 from .embeddings import get_embeddings
+from .enum import VectorstoreQueuedMessage
 from .extract import extract_text
 from .manifest.models.vectorstore.const import (
     DEFAULT_CHUNK_OVERLAP,
@@ -423,7 +424,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
             self.set_status(VectorstoreStatus.PROVISIONING, message)
         return seconds
 
-    def reconcile(self) -> str:
+    def reconcile(self, take_over: bool = True) -> str:
         """
         Check a deployed database, record its status, conditions and statistics, and create a missing index.
 
@@ -431,6 +432,10 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         deploy task, unless the deploy lost its task, and then it takes the deploy over. An error
         marks the vectorstore failed, until a later check succeeds. It never raises.
 
+        :param take_over: Whether it may take a stalled deploy over, which creates the database's cluster
+            resources. True for Beat's check, which runs on the infrastructure worker. The api's status view
+            passes False: the app's Kubernetes Role is read-only (ADR-038, phase 3), so it observes the deploy
+            and leaves its provisioning to Beat's next check.
         :returns: the status.
         """
         vectorstore = self.vectorstore
@@ -446,7 +451,7 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         if state.in_progress and not state.is_stalled():
             return vectorstore.status
         try:
-            provision = state.in_progress and not state.provisioned
+            provision = take_over and state.in_progress and not state.provisioned
             status = self.advance_deployment(provision=provision)
             if status == VectorstoreStatus.READY and state.in_progress:
                 self.finish_deployment()
@@ -472,10 +477,91 @@ class VectorstoreService:  # pylint: disable=too-many-public-methods
         self.vectorstore.save(update_fields=["stats", "vector_count", "updated_at"])
         return stats
 
+    def queue_provision(self) -> None:
+        """
+        Queue :func:`~smarter.apps.vectorstore.tasks.provision_vectorstore`, which applies a self-hosted server's changed spec.
+
+        The manifest broker's ``apply`` calls it when a deployed self-hosted vectorstore's spec changes, e.g. its
+        cpu or memory. The web server doesn't write to the cluster (ADR-038, phase 3, issue #1080): the
+        infrastructure worker does. The status is unchanged.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import provision_vectorstore
+
+        vectorstore = self.vectorstore
+        vectorstore.status_message = VectorstoreQueuedMessage.PROVISION.value
+        vectorstore.save(update_fields=["status_message", "updated_at"])
+        vectorstore_id = vectorstore.pk
+        transaction.on_commit(lambda: provision_vectorstore.delay(vectorstore_id))
+
+    def queue_undeploy(self) -> None:
+        """
+        End the deploy in progress, if any, and queue :func:`~smarter.apps.vectorstore.tasks.undeploy_vectorstore`.
+
+        The manifest broker's ``undeploy`` and the api's undeploy view call it. The infrastructure worker stops
+        serving (:meth:`undeploy`), e.g. deletes a self-hosted server, keeping its volume.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import undeploy_vectorstore
+
+        self.finish_deployment()
+        self.set_status(self.vectorstore.status, VectorstoreQueuedMessage.UNDEPLOY.value)
+        vectorstore_id = self.vectorstore.pk
+        transaction.on_commit(lambda: undeploy_vectorstore.delay(vectorstore_id))
+
+    def queue_delete(self) -> bool:
+        """
+        Delete the vectorstore: at once if it was never deployed, else by queuing :func:`~smarter.apps.vectorstore.tasks.delete_vectorstore`.
+
+        The manifest broker's ``delete`` and the console's delete call it. A deployed vectorstore is kept, deleting,
+        with the message :attr:`VectorstoreQueuedMessage.DELETE`, until the infrastructure worker has destroyed its
+        database (:meth:`delete`), so that a failure leaves it to delete again. One that was never deployed has no
+        database, and is deleted now, with its api key Secret.
+
+        :returns: True if it was deleted now, False if its deletion was queued.
+        :raises VectorstoreServiceError: If deletionProtection is enabled.
+        """
+        # pylint: disable=import-outside-toplevel
+        from .tasks import delete_vectorstore
+
+        vectorstore = self.vectorstore
+        if vectorstore.deletion_protection:
+            raise VectorstoreServiceError(
+                f"Vectorstore {vectorstore.name} has deletionProtection. Disable it, and apply, to destroy it."
+            )
+        if not vectorstore.deployed_at:
+            self.delete()
+            return True
+        self.finish_deployment()
+        self.set_status(VectorstoreStatus.DELETING, VectorstoreQueuedMessage.DELETE.value)
+        vectorstore_id = vectorstore.pk
+        transaction.on_commit(lambda: delete_vectorstore.delay(vectorstore_id))
+        return False
+
+    def delete(self) -> None:
+        """
+        Destroy the vectorstore's database, if it was deployed, then delete the vectorstore and its api key Secret.
+
+        The work of :func:`~smarter.apps.vectorstore.tasks.delete_vectorstore`, and of :meth:`queue_delete` for a
+        vectorstore that was never deployed.
+
+        :raises VectorstoreServiceError: If deletionProtection is enabled.
+        :raises Exception: Whatever the backend raises when it destroys the database, which :meth:`destroy`
+            records as a failed status. The vectorstore is then kept.
+        """
+        vectorstore = self.vectorstore
+        if vectorstore.deployed_at:
+            self.destroy()
+        secret = vectorstore.api_key_secret
+        vectorstore.delete()
+        if secret is not None:
+            secret.delete()
+
     def undeploy(self) -> None:
         """Stop serving.
 
-        A self-hosted server is deleted, but its volume and data are kept.
+        A self-hosted server is deleted, but its volume and data are kept. The work of
+        :func:`~smarter.apps.vectorstore.tasks.undeploy_vectorstore`, which :meth:`queue_undeploy` queues.
         """
         self.backend.stop()
         self.finish_deployment()

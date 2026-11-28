@@ -37,9 +37,8 @@ from pydantic import SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic import __version__ as pydantic_version
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from smarter.common.conf.credentials import forbidden_credentials
+from smarter.common.conf.credentials import forbidden_credentials, may_hold
 from smarter.common.conf.env import unquoted
-from smarter.common.conf.settings.app_keys import AppKeySettings
 from smarter.common.conf.settings.aws import AwsSettings
 from smarter.common.conf.settings.branding import BrandingSettings
 from smarter.common.conf.settings.cache import CacheSettings
@@ -50,14 +49,13 @@ from smarter.common.conf.settings.features import FeatureSettings
 from smarter.common.conf.settings.integrations import IntegrationSettings
 from smarter.common.conf.settings.llm import LLMSettings
 from smarter.common.conf.settings.platform import (
-    POD_KINDS,
-    RESTRICTED_POD_KINDS,
     PlatformSettings,
 )
 from smarter.common.conf.settings.project import ProjectSettings
 from smarter.common.conf.settings.security import SecuritySettings
 from smarter.common.conf.settings.tasks import TaskSettings
 from smarter.common.conf.util import field_default
+from smarter.common.const import SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.common.helpers.processes import is_first_worker
@@ -70,7 +68,6 @@ logger = logging.getSmarterLogger(__name__)
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods,too-many-ancestors
 class Settings(
-    AppKeySettings,
     DomainSettings,
     EmailSettings,
     AwsSettings,
@@ -197,6 +194,7 @@ class Settings(
         self._ready = False
         self.check_service_type()
         self.check_restricted_worker_credentials()
+        self.check_pod_credentials()
         # need to be mindful that __init__ is called before Django startup has begun.
         # one consequence is that logging is not yet configured, so have have to
         # use janky logging levels in order to ensure that these log messages are seen.
@@ -246,7 +244,7 @@ class Settings(
         """
         if self.service_type is None:
             return "for an unknown kind of pod (SERVICE_TYPE is not set)"
-        label = POD_KINDS[self.service_type]
+        label = SmarterKubernetesPodKinds.labels[self.service_type]
         retval = f"for {label}"
         return retval
 
@@ -282,11 +280,11 @@ class Settings(
         kind = self.service_type
         if kind is None:
             return
-        restricted = kind in RESTRICTED_POD_KINDS
+        restricted = kind in SmarterKubernetesPodKinds.restricted
         if restricted != self.database_unavailable:
             raise SmarterConfigurationError(
                 f"SERVICE_TYPE is {kind}, but SMARTER_DATABASE_UNAVAILABLE is {self.database_unavailable}: "
-                f"only {' and '.join(RESTRICTED_POD_KINDS)} run without a database."
+                f"only {' and '.join(SmarterKubernetesPodKinds.restricted)} run without a database."
             )
         if restricted and (kind == "worker-extensions") != self.is_extension_worker:
             raise SmarterConfigurationError(
@@ -308,13 +306,42 @@ class Settings(
         """
         if not self.database_unavailable:
             return
-        forbidden = forbidden_credentials(self, os.environ)
+        forbidden = forbidden_credentials(self, os.environ, SmarterKubernetesPodKinds.WORKER_TOOLS)
         if not forbidden:
             return
         names = ", ".join(forbidden)
         raise SmarterConfigurationError(
             f"This worker runs code that the platform doesn't control, and must hold no credential but its own "
             f"Redis user's password (ADR-038). It was given: {names}. Remove them from its environment."
+        )
+
+    def check_pod_credentials(self) -> None:
+        """
+        Report each credential that this pod was given, but that its kind of pod doesn't use (ADR-038, phase 3).
+
+        Each credential says which kinds of pod hold it (:mod:`smarter.common.conf.credentials`), and the Helm chart
+        gives each pod only its own. A pod that holds more, e.g. from a deployment that still passes every pod the
+        platform's whole environment, logs one error line that names them, never their values, and starts. A later
+        release refuses to start it, as :meth:`check_restricted_worker_credentials` already refuses the tool worker
+        and the Extension worker, which it leaves to that check. A process of no known kind (``SERVICE_TYPE`` unset,
+        e.g. a ``manage.py shell``) is left alone, and so is the local environment, where every docker-compose
+        service reads the same ``.env``.
+        """
+        kind = self.service_type
+        if kind is None:
+            return
+        if self.database_unavailable:
+            return
+        if self.environment_is_local:
+            return
+        forbidden = forbidden_credentials(self, os.environ, kind)
+        if not forbidden:
+            return
+        logger.error(
+            "%s holds credentials that it doesn't use, which a later release will refuse (ADR-038, phase 3): %s. "
+            "Remove them from its environment.",
+            SmarterKubernetesPodKinds.labels[kind],
+            ", ".join(forbidden),
         )
 
     def ready(self) -> bool:
@@ -384,9 +411,10 @@ class Settings(
         placeholder key is worse: it is published in this repository, so anyone could forge
         signed values with it. Locally, a generated key is fine, and only logs a warning.
 
-        The tool worker (``database_unavailable``) is never given the key: it signs nothing, and
-        with the key, code that a tool call runs there could forge the platform's sessions. It
-        uses its own random key.
+        Only the kinds of pod that sign what another pod verifies need the key, and are given it
+        (:mod:`smarter.common.conf.credentials`): the app, the two workers that send email, and the
+        init Job. Celery Beat and the migrate Job sign nothing, and use a random key of their own, as
+        the tool worker does, which with the key could forge the platform's sessions.
 
         :raises SmarterConfigurationError: If the secret key is not configured, the environment is
             not local, and this process has a database.
@@ -396,6 +424,11 @@ class Settings(
         """
         if self.django_secret_key_is_set or self.database_unavailable:
             return
+        kind = self.service_type
+        if kind is not None:
+            field = type(self).model_fields["django_secret_key"]
+            if not may_hold(field, kind):
+                return
         if not self.environment_is_local:
             raise SmarterConfigurationError(
                 f"DJANGO_SECRET_KEY is not set. It is required in the {self.environment} environment. "

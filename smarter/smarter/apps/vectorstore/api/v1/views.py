@@ -174,7 +174,8 @@ class VectorstoreStatusView(VectorstoreViewBase):
         :raises Http404: If it does not exist, or the user may not read it.
         """
         vectorstore = self.get_vectorstore(request, **kwargs)
-        status = self.get_service(vectorstore).reconcile()
+        # the app's Kubernetes Role is read-only: a stalled deploy is provisioned by Beat's check, not here.
+        status = self.get_service(vectorstore).reconcile(take_over=False)
         response = VectorstoreApiStatus(
             vectorstore=vectorstore.name,
             status=status,  # type: ignore[arg-type]
@@ -223,23 +224,27 @@ class VectorstoreUndeployView(VectorstoreViewBase):
 
     def post(self, request: Request, *args, **kwargs):
         """
-        Undeploy the vectorstore: stop serving it, and keep its data.
+        Undeploy the vectorstore: queue stopping serving it, keeping its data, and return at once.
 
-        Invalidates the owner's cached vectorstores.
+        The infrastructure worker stops it (``undeploy_vectorstore``). Invalidates the owner's cached
+        vectorstores.
 
         :param request: The request.
         :param kwargs: The url's arguments: ``hashed_id`` or ``vectorstore_id``.
-        :returns: The vectorstore, or 400 Bad Request if it could not be undeployed.
+        :returns: The vectorstore, 202 Accepted, with the message ``Undeploy queued.``, or 400 Bad Request.
         :raises Http404: If it does not exist, or the user does not own it.
         """
         vectorstore = self.get_vectorstore(request, owner=True, **kwargs)
         try:
-            self.get_service(vectorstore).undeploy()
+            self.get_service(vectorstore).queue_undeploy()
         except SmarterException as e:
             return error(str(e))
         vectorstore.refresh_from_db()
         invalidate_all_cached_vectorstores_for_user_profile(vectorstore.user_profile)
-        return Response(VectorstoreApiVectorstore.from_model(vectorstore, request.user).model_dump(mode="json"))
+        return Response(
+            VectorstoreApiVectorstore.from_model(vectorstore, request.user).model_dump(mode="json"),
+            status=HTTPStatus.ACCEPTED,
+        )
 
 
 class VectorstoreDocumentsView(VectorstoreViewBase):

@@ -148,7 +148,9 @@ def llmhost_paths() -> dict[str, OpenApiPathItem]:
                 family.operation_id("deploy"),
                 f"Deploy {family.a}",
                 f"Launch the {resource}'s inference server on the platform's Kubernetes cluster. It creates billable "
-                f"infrastructure, e.g. GPU nodes, and returns before the server is ready. {owner}",
+                "infrastructure, e.g. GPU nodes. It checks the budgets, the spec, its Secrets and the cluster, then "
+                "queues the launch and returns at once: follow the status, which the platform's infrastructure worker "
+                f"updates. {owner}",
                 tag,
                 LLMHostApiStatus.__name__,
                 parameters=[llmhost_id],
@@ -159,7 +161,8 @@ def llmhost_paths() -> dict[str, OpenApiPathItem]:
             post=rest_operation(
                 family.operation_id("undeploy"),
                 f"Undeploy {family.a}",
-                f"Destroy the {resource}'s Kubernetes resources. The {resource} remains. {owner}",
+                f"Queue the destruction of the {resource}'s Kubernetes resources, and return at once, with the "
+                f"message Undeploy queued. The {resource} remains. {owner}",
                 tag,
                 LLMHostApiUndeployed.__name__,
                 parameters=[
@@ -170,6 +173,7 @@ def llmhost_paths() -> dict[str, OpenApiPathItem]:
                         {"type": "string", "enum": ["true", "false"], "default": "false"},
                     ),
                 ],
+                status="202",
             )
         ),
     }

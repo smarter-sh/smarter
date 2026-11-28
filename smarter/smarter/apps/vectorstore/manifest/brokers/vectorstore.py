@@ -529,8 +529,8 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
             and existing.is_self_hosted
             and existing.status in (VectorstoreStatus.PROVISIONING, VectorstoreStatus.READY)
         ):
-            # e.g. its cpu or memory changed.
-            VectorstoreService(vectorstore).backend.provision()
+            # e.g. its cpu or memory changed: the infrastructure worker applies it.
+            VectorstoreService(vectorstore).queue_provision()
         if reload_documents:
             self.reload_documents(vectorstore)
         self.cache_invalidations()
@@ -636,20 +636,18 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
         return self.dependency_brokers_for(self.vectorstore)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Destroy the database and its data, unless deletionProtection is enabled, then delete the Vectorstore."""
+        """
+        Delete the Vectorstore, unless deletionProtection is enabled, and its database and data.
+
+        One that was never deployed is deleted now. A deployed one is deleting until the infrastructure
+        worker has destroyed its database (``delete_vectorstore``), and then it is deleted.
+        """
         command = SmarterJournalCliCommands(self.delete.__name__)
         vectorstore = self.owned_vectorstore(command)
         self.verify_no_dependencies(command)
         service = VectorstoreService(vectorstore)
         try:
-            if vectorstore.deployed_at:
-                service.destroy()
-            elif vectorstore.deletion_protection:
-                service.destroy()  # raises
-            secret = vectorstore.api_key_secret
-            vectorstore.delete()
-            if secret is not None:
-                secret.delete()
+            service.queue_delete()
         except Exception as e:
             raise SAMVectorstoreBrokerError(
                 f"Failed to delete {self.kind} {self.name}: {e}", thing=self.kind, command=command
@@ -678,14 +676,14 @@ class SAMVectorstoreBroker(AbstractBroker[VectorstoreMeta, VectorstoreMeta]):
         return self.json_response_ok(command=command, data=self.django_orm_to_manifest_dict() or {})
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Stop serving.
+        """Queue stopping serving, which the infrastructure worker does (``undeploy_vectorstore``).
 
         A self-hosted server's data is kept, and a managed index is left as it is.
         """
         command = SmarterJournalCliCommands(self.undeploy.__name__)
         vectorstore = self.owned_vectorstore(command)
         try:
-            VectorstoreService(vectorstore).undeploy()
+            VectorstoreService(vectorstore).queue_undeploy()
         except Exception as e:
             raise SAMVectorstoreBrokerError(
                 f"Failed to undeploy {self.kind} {self.name}: {e}", thing=self.kind, command=command

@@ -15,7 +15,10 @@ from smarter.common.utils import (
     log_environment_settings,
     log_environment_variables,
 )
-from smarter.common.utils.environment_settings import ENVIRONMENT_VARIABLE_LOG_INDENT
+from smarter.common.utils.environment_settings import (
+    ENVIRONMENT_VARIABLE_LOG_INDENT,
+    looks_like_a_secret,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -78,17 +81,19 @@ class TestEnvironmentVariables(SmarterTestBase):
         )
 
     def test_a_variable_without_a_setting_shows_its_value(self):
-        """A variable that no field reads shows its value; an api key is a field, so it is masked."""
+        """A variable that no field reads shows its value, unless its name says it is a secret, which is masked."""
         secret = f"sk-unit-test-{self.hash_suffix}"
         environ = {
             "SMARTER_APP_PROVIDER_OPENAI_API_KEY": secret,
+            "APP_PROVIDER_GEMINI_API_KEY": secret,
             "APP_PROVIDER_EXAMPLE_REGION": "us-east-1",
             "SMARTER_APP_PROXY_ENABLE": "true",
             "OPENAI_API_KEY": secret,
         }
         variables = get_environment_variables(smarter_settings, "app_provider", environ)
         openai_api_key = variables["SMARTER_APP_PROVIDER_OPENAI_API_KEY"]
-        self.assertTrue(openai_api_key == "not set" or openai_api_key.startswith("****"), openai_api_key)
+        self.assertEqual(openai_api_key, "****" + secret[-4:])
+        self.assertEqual(variables["APP_PROVIDER_GEMINI_API_KEY"], "****" + secret[-4:])
         self.assertEqual(variables["APP_PROVIDER_EXAMPLE_REGION"], "us-east-1")
         self.assertNotIn("SMARTER_APP_PROXY_ENABLE", variables)
         self.assertNotIn("OPENAI_API_KEY", variables)
@@ -109,3 +114,21 @@ class TestEnvironmentVariables(SmarterTestBase):
         self.assertTrue(all(line[:2] == ("%s - %s: %s", ENVIRONMENT_VARIABLE_LOG_INDENT) for line in lines))
         first_line = lines[0][0] % lines[0][1:]
         self.assertTrue(first_line.startswith(f"{ENVIRONMENT_VARIABLE_LOG_INDENT} - SMARTER_APP_LLMCLIENT_"))
+
+
+class TestLooksLikeASecret(SmarterTestBase):
+    """A variable's name says it is a secret, whatever app it belongs to."""
+
+    def test_names(self):
+        for name in (
+            "SMARTER_APP_PROVIDER_OPENAI_API_KEY",
+            "SMARTER_APP_EXAMPLE_SECRET",
+            "SMARTER_APP_EXAMPLE_PASSWORD",
+            "SMARTER_APP_EXAMPLE_TOKEN",
+            "SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64",
+        ):
+            with self.subTest(name=name):
+                self.assertTrue(looks_like_a_secret(name))
+        for name in ("SMARTER_APP_PROVIDER_ENABLE", "SMARTER_APP_EXAMPLE_REGION", "SMARTER_APP_KEYWORDS"):
+            with self.subTest(name=name):
+                self.assertFalse(looks_like_a_secret(name))

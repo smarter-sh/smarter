@@ -2,7 +2,7 @@
 The vendor's model quirks, surveyed live: real, billed requests to OpenAI's v1/chat/completions.
 
 These tests are tagged ``vendor`` and skipped unless they are asked for, since every run sends a
-few hundred small requests (a few cents) with the OpenAI api key of the environment:
+few hundred small requests (a few cents) with the Smarter admin's OpenAI api key Secret, ``openai_api_key``:
 
 .. code-block:: console
 
@@ -19,13 +19,14 @@ prompt fails with a 400 from the vendor. They check that:
 - every model answers every kind of request that Smarter sends, through the chat provider's own code.
 """
 
-import os
 from unittest.mock import patch
 
 import openai
 from django.test import tag
 from openai.types.chat import ChatCompletion
 
+from smarter.apps.account.utils import smarter_cached_objects
+from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_SECRET_NAMES
 from smarter.apps.provider.services.text_completion.const import (
     VALID_CHAT_COMPLETION_MODELS,
 )
@@ -33,12 +34,13 @@ from smarter.apps.provider.services.text_completion.lib.openai_compatible_chat_p
     OpenAISmarterClient,
 )
 from smarter.apps.provider.tests.vendor_profiles import simulate
+from smarter.apps.secret.models import Secret
 from smarter.lib.openai.model_quirks import rejected_parameter
 from smarter.lib.typing import SmarterDictType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.runner import VENDOR
 
-API_KEY_ENVIRONMENT_VARIABLE = "APP_PROVIDER_OPENAI_API_KEY"
+API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["openai"]
 MAX_COMPLETION_TOKENS = 32
 """Enough for the vendor to accept or reject a request.
 
@@ -91,9 +93,11 @@ class TestVendorQuirksLive(SmarterTestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        api_key = os.environ.get(API_KEY_ENVIRONMENT_VARIABLE)
+        user_profile = smarter_cached_objects.smarter_admin_user_profile
+        secret = Secret.objects.filter(name=API_KEY_SECRET_NAME, user_profile=user_profile).first()
+        api_key = secret.get_secret(update_last_accessed=False) if secret else None
         if not api_key:
-            raise cls.failureException(f"the vendor tests need {API_KEY_ENVIRONMENT_VARIABLE}")
+            raise cls.failureException(f"the vendor tests need the Smarter admin's Secret {API_KEY_SECRET_NAME}")
         cls.client = openai.OpenAI(api_key=api_key)
 
     def send(self, request: SmarterDictType) -> openai.APIStatusError | None:

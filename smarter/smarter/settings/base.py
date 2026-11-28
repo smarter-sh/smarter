@@ -843,11 +843,11 @@ See: https://redbeat.readthedocs.io/en/latest/config.html
 
 CELERY_TASK_TIME_LIMIT = 30 * 60
 """
-The maximum time limit (in seconds) for Celery tasks in Smarter.
+The longest that one run of a Celery task may take, in seconds: 30 minutes, after which Celery kills it.
 
-Default is 30 minutes.
-Smarter sets this primarily due to indeterminate AWS Route53 DNS resolution and propagation
-times when deploying LLMClients/Agents.
+It is a safety net, not a budget. No task waits by sleeping (ADR-030, rule 2): one that waits for something
+outside Smarter, e.g. DNS propagation, a certificate's issue or a server's start, checks once and queues
+itself again with a countdown, so that it never holds a worker process while it waits.
 
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-task_time_limit
 """
@@ -879,6 +879,21 @@ on every lost connection while it is False, e.g. during a Redis restart. Smarter
 don't use late acknowledgement, so this changes no task's behavior.
 
 See: https://docs.celeryq.dev/en/stable/userguide/configuration.html#worker-cancel-long-running-tasks-on-connection-loss
+"""
+
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+"""
+How many messages each worker process reserves from its queue: one, the message it is about to run.
+
+Celery's default is 4. A pod of 4 processes then holds up to 16 messages that have already left Redis's list,
+and those reserved behind a long task wait for it, even while another pod, or a new replica, is idle. The
+queue's length also stops counting them, which is the metric that #1097 scales the workers on. With 1, a
+message stays in Redis until a process is free to run it, so any free process of any pod takes it.
+
+The cost is one round trip to Redis per task, which is nothing beside a task's own work. The pool already
+gives a task only to an idle process: ``-O default`` is the fair strategy (``SCHED_STRATEGY_FAIR``) in Celery 5.
+
+See: https://docs.celeryq.dev/en/stable/userguide/optimizing.html#prefetch-limits
 """
 
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False

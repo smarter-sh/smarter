@@ -12,8 +12,9 @@ How execution gets here on Kubernetes, where the Helm chart deploys Smarter:
    ``env`` in its values. It always adds ``DJANGO_CELERY_BROKER_URL``, the chart's own Redis, unless
    the values set one. The values' ``env`` sets ``DJANGO_AUTHENTICATION_BACKENDS`` by default. So every
    pod that the chart deploys overrides at least those two settings, with no change by anyone.
-2. ``templates/secret-env.yaml`` writes that environment into the Secret ``<appName>-env``, and every
-   Deployment and Job reads it with ``envFrom``. Each ``DJANGO_*`` variable in it is in the process's
+2. ``templates/secret-env.yaml`` writes that environment into one Secret per kind of pod,
+   ``<appName>-env-<pod>``, without the credentials that the kind doesn't hold (``smarter.podEnv``), and
+   each Deployment and Job reads its own with ``envFrom``. Each ``DJANGO_*`` variable in it is in the process's
    environment, ``os.environ``.
 3. The container starts its process, and Django imports the settings module
    ``smarter.settings.<environment>``, e.g. :mod:`smarter.settings.prod`. The app server's uvicorn

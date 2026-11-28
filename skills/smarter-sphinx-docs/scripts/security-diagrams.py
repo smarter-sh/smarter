@@ -512,8 +512,9 @@ def aws_identity():
         880,
         "Who may do what in AWS",
         "EKS gives each ServiceAccount short-lived credentials for its own IAM role; only email still uses a key",
-        "The platform's pods (smarter-api, the Celery workers, beat and the init Job) run as the ServiceAccount "
-        "smarter, which EKS's OIDC provider maps to the IAM role <namespace>-smarter-irsa, with short-lived "
+        "The platform's pods (smarter-api, the Celery workers, beat, the init and migrate Jobs) each run as their own "
+        "ServiceAccount, smarter-<pod>, which EKS's OIDC provider maps to the IAM role <namespace>-smarter-irsa, with "
+        "short-lived "
         "credentials. That role may change Route53 records and hosted zones, request ACM certificates, read the "
         "cluster, create and change LLMHost node groups tagged with the environment, and use the environment's own S3 "
         "buckets. The nightly backup runs as smarter-backup, whose role <namespace>-smarter-backup-irsa may only write "
@@ -538,11 +539,19 @@ def aws_identity():
                 28,
                 230,
                 "The platform's pods",
-                ["smarter-api", "Celery workers and beat", "the init Job"],
+                ["smarter-api", "Celery workers and beat", "the init and migrate Jobs"],
                 "core",
                 None,
             ),
-            ("sa", 290, 210, "smarter", ["annotated with its role", "by the Helm chart"], "plain", "ServiceAccount"),
+            (
+                "sa",
+                290,
+                210,
+                "smarter-<pod>",
+                ["one per kind of pod,", "each annotated with the role"],
+                "plain",
+                "ServiceAccounts",
+            ),
             ("role", 532, 250, "<namespace>-smarter-irsa", ["this environment only"], "role", "IAM role"),
             (
                 "may",
@@ -570,9 +579,9 @@ def aws_identity():
         408,
         "Kubernetes (RBAC, not IAM)",
         [
-            "a Role in its own namespace: deployed LLMClients'",
-            "Deployments, Services, Ingresses, Secrets",
-            "cluster-wide: read-only (nodes, metrics, volumes)",
+            "a Role per kind of pod, in its own namespace:",
+            "only the infrastructure worker writes, or reads Secrets;",
+            "the app reads; cluster-wide: each kind's own reads",
         ],
         "data",
     )
@@ -614,7 +623,9 @@ def aws_identity():
     d.parts.append(f'<rect x="290" y="392" width="492" height="62" rx="9" fill="#FFFFFF" stroke="{LINE}"/>')
     d.text(306, 414, "How a pod gets its credentials (IRSA)", size=12.5, weight="bold")
     d.text(306, 434, "EKS's OIDC provider signs the ServiceAccount's token; STS exchanges it for", size=11.5)
-    d.text(306, 448, "credentials that expire within hours. A role trusts exactly one ServiceAccount.", size=11.5)
+    d.text(
+        306, 448, "credentials that expire within hours. A role trusts only the ServiceAccounts it names.", size=11.5
+    )
 
     # the users with access keys
     d.parts.append(f'<rect x="28" y="606" width="{1250 - 56}" height="2" fill="{RED}" fill-opacity="0.3"/>')

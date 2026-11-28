@@ -82,12 +82,6 @@ class CertificateService(InfrastructureService):
     A provider generates validation records in seconds.
     """
 
-    issue_wait_attempts: int = 20
-    """How many times :meth:`wait_until_issued` checks the certificate."""
-
-    issue_wait_seconds: float = 30
-    """Seconds between the checks."""
-
     def __init__(self, provider_name: str, dns: DNSService, *args, **kwargs):
         super().__init__(provider_name, *args, **kwargs)
         self.dns = dns
@@ -169,38 +163,48 @@ class CertificateService(InfrastructureService):
         self.created_resource(resource, resource_id=certificate_id)
         return certificate_id, True
 
-    def wait_for_validation_records(self, certificate_id: str) -> Certificate:
+    def wait_for_validation_records(self, certificate_id: str, max_attempts: Optional[int] = None) -> Certificate:
         """
         Return a certificate once its provider has generated its validation records.
 
         :param certificate_id: The provider's id of the certificate.
+        :param max_attempts: How many times to look, :attr:`validation_wait_seconds` apart. A Celery task
+            passes 1, so that it never sleeps, and checks again later itself (ADR-030, rule 2). By default
+            :attr:`validation_wait_attempts`, e.g. for a management command.
         :raises CertificateTimeout: If the records are not generated in time.
         :raises CertificateNotFound: If the certificate does not exist, after the last attempt.
         """
-        for attempt in range(1, self.validation_wait_attempts + 1):
+        attempts = max_attempts or self.validation_wait_attempts
+        for attempt in range(1, attempts + 1):
             try:
                 certificate = self.get_certificate(certificate_id)
                 if certificate.validation_records:
                     return certificate
             except CertificateNotFound:
                 # a new certificate can take a few seconds to exist.
-                if attempt >= self.validation_wait_attempts:
+                if attempt >= attempts:
                     raise
-            if attempt < self.validation_wait_attempts:
+            if attempt < attempts:
                 self._sleep(self.validation_wait_seconds)
         raise CertificateTimeout(f"Timed out waiting for the validation records of certificate {certificate_id}.")
 
-    def create_validation_records(self, certificate_id: str) -> list[DNSRecord]:
+    def create_validation_records(self, certificate_id: str, max_attempts: Optional[int] = None) -> list[DNSRecord]:
         """
         Create the DNS records that validate a certificate, in its domain's zone.
 
         The zone is created if it does not exist. The provider can only read the records once
-        the domain is delegated to the zone.
+        the domain is delegated to the zone. It can be called again: each record is found, or created.
 
         :param certificate_id: The provider's id of the certificate.
+        :param max_attempts: How many times each wait looks: for the validation records
+            (:meth:`wait_for_validation_records`) and for each record in the zone
+            (:meth:`~smarter.apps.infrastructure.services.dns.DNSService.get_or_create_record`). A Celery task
+            passes 1. By default, each wait's own.
         :returns: The validation records.
+        :raises CertificateTimeout: If the validation records are not generated in time.
+        :raises DNSRecordTimeout: If a record does not appear in the zone in time.
         """
-        certificate = self.wait_for_validation_records(certificate_id)
+        certificate = self.wait_for_validation_records(certificate_id, max_attempts=max_attempts)
         zone, _ = self.dns.get_or_create_zone(certificate.domain_name)
         records: list[DNSRecord] = []
         seen: set[tuple[str, str]] = set()
@@ -216,6 +220,7 @@ class CertificateService(InfrastructureService):
                 record_type=wanted.type,
                 ttl=VALIDATION_RECORD_TTL,
                 values=wanted.values,
+                max_attempts=max_attempts,
             )
             records.append(record)
         return records
@@ -231,24 +236,6 @@ class CertificateService(InfrastructureService):
     def is_issued(self, certificate_id: str) -> bool:
         """Whether a certificate is issued, i.e. its domain is validated."""
         return self.certificate_status(certificate_id) == CertificateStatus.ISSUED
-
-    def wait_until_issued(self, certificate_id: str) -> bool:
-        """
-        Wait for a certificate to be issued.
-
-        :param certificate_id: The provider's id of the certificate.
-        :returns: True if it is issued, False if it is not after :attr:`issue_wait_attempts` checks.
-        """
-        for attempt in range(1, self.issue_wait_attempts + 1):
-            if self.is_issued(certificate_id):
-                return True
-            if attempt < self.issue_wait_attempts:
-                self._sleep(self.issue_wait_seconds)
-        logger.error(
-            "certificate %s was not issued in time",
-            certificate_id,
-        )
-        return False
 
     def delete_certificate(self, certificate_id: str) -> bool:
         """

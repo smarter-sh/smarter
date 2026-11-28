@@ -57,6 +57,11 @@ import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.apps.infrastructure.const import CertificateStatus
+from smarter.apps.infrastructure.exceptions import (
+    CertificateNotFound,
+    CertificateTimeout,
+    DNSRecordTimeout,
+)
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.infrastructure.services.dns import normalize_name
 from smarter.apps.llmclient.models import LLMClient, LLMClientCustomDomain
@@ -141,7 +146,7 @@ def verify_custom_domain(
             logger.warning("%s task_id: %s", message, task_id)
             custom_domain.set_verification_status(Status.FAILED, message)
             return False
-        hosted_zone_id = custom_domain.aws_hosted_zone_id
+        hosted_zone_id = str(custom_domain.aws_hosted_zone_id)
     if not is_taskable():
         return False
     hours = 24
@@ -286,13 +291,22 @@ def _certificate_status(domain_name: str) -> str:
     """
     Return the status of the domain's TLS certificate, e.g. PENDING_VALIDATION or ISSUED.
 
-    If the domain has no certificate, one is requested, with its DNS validation records.
+    If the domain has no certificate, one is requested. While it is pending validation, its DNS validation
+    records are created, or found, on each check, with one look each (ADR-030, rule 2): a provider takes a few
+    seconds to generate them, and the next check, which the task schedules, creates what is missing. Before,
+    they were created only with the certificate, after a wait of up to ten minutes, and a certificate whose
+    wait ran out never got them.
     """
     certificates = infrastructure.certificates
-    certificate_id, created = certificates.get_or_create_certificate(domain_name)
-    if created:
-        certificates.create_validation_records(certificate_id)
-    return certificates.certificate_status(certificate_id)
+    certificate_id, _ = certificates.get_or_create_certificate(domain_name)
+    status = certificates.certificate_status(certificate_id)
+    if status != CertificateStatus.PENDING_VALIDATION:
+        return status
+    try:
+        certificates.create_validation_records(certificate_id, max_attempts=1)
+    except (CertificateNotFound, CertificateTimeout, DNSRecordTimeout) as e:
+        logger.info("the validation records of %s are not ready yet: %s", domain_name, e)
+    return status
 
 
 def _deploy_llmclient_on(custom_domain: LLMClientCustomDomain) -> None:
