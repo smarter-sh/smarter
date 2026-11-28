@@ -3,8 +3,8 @@ ADR-030: Operational and Infrastructure Task Queues
 
 Status
 ------
-Accepted. Rules 1 and 3 hold in the code as of 0.48.8, and rule 4 since ADR-038's phase 2. Rule 2 has four
-exceptions, listed in the inventory below. Of the security rules, 5 to 9, rules 5 and 8 are implemented,
+Accepted. Rules 1 and 3 hold in the code as of 0.48.8, and rule 4 since ADR-038's phase 2. Rule 2 holds for
+the tasks that the inventory below listed as sleeping (issue #1076), with one exception left, listed there. Of the security rules, 5 to 9, rules 5 and 8 are implemented,
 for the tool worker: each takes effect when smarter-infrastructure has created its Secret and the chart is
 deployed. Rule 6 is implemented for every worker. Rule 7 is declined (issue #1074). Rule 9 is proposed.
 
@@ -44,8 +44,9 @@ Decision
 2. **Never wait in a task.** A task that waits for something outside Smarter checks once, and if it
    is not ready, schedules itself to check again later, with ``apply_async(countdown=...)``, passing the
    number of attempts made. It does not ``time.sleep()``, so it holds a worker only while it works.
-   This includes the sleeps inside the services that a task calls, such as
-   ``infrastructure.certificates.wait_until_issued()``: a task calls them with one attempt.
+   This includes the waits inside the services that a task calls, such as
+   ``infrastructure.certificates.wait_for_validation_records()``: each takes ``max_attempts``, which a
+   task passes as 1, while a management command keeps the service's own count.
 3. **Each task declares its queue** in its ``@app.task(queue=...)``, and each Celery Beat entry names
    the same queue in its ``options``, because Beat sends a task by name, without importing it. A queue
    that no worker consumes is never processed.
@@ -71,26 +72,37 @@ Helm chart and ``docker-compose.yml``.
 queue, and each of Beat's 20 entries (14 operational, 6 infrastructure) names the queue its task
 declares. Each queue has exactly one worker that consumes it (``-Q``). Rules 1, 3 and 4 hold.
 
-**Waits that still sleep**, against rule 2. Each holds one of the infrastructure worker's four
-processes while it sleeps, so four of them at once stop every deployment, and the 30-minute task time
-limit is still what bounds them:
+**Waits that slept**, against rule 2, until issue #1076. Each held one of the infrastructure worker's four
+processes while it slept, so four of them at once stopped every deployment, and only the 30-minute task
+time limit bounded them:
 
-- ``verify_certificate`` calls ``certificates.wait_until_issued()``: 20 checks 30 seconds apart, up to
-  9½ minutes. Nothing queues the task. It can be deleted.
-- ``register_custom_domain`` and ``verify_custom_domain`` call ``certificates.create_validation_records()``,
-  which waits for the certificate's validation records with ``wait_for_validation_records()``: 120 checks
-  5 seconds apart, up to 10 minutes. Then, for each record, ``dns.get_or_create_record()`` waits for it to
-  appear in its zone: 10 checks 15 seconds apart, up to 2¼ minutes.
-- ``create_custom_domain_dns_record`` calls ``dns.get_or_create_record()``: up to 2¼ minutes.
-- ``deploy_default_api`` passes ``max_attempts=1`` to ``kubernetes.verify_ingress_resources()``, and
-  complies. So do ``verify_domain``, ``verify_custom_domain``'s own re-checks, the LLMHost compute's
-  reconciliation and the vectorstore's deployment.
+- ``verify_certificate`` called ``certificates.wait_until_issued()``: 20 checks 30 seconds apart, up to 9½
+  minutes. Nothing queued it, and it is deleted, with ``wait_until_issued()``, its signals and receivers.
+- ``register_custom_domain`` and ``verify_custom_domain`` called ``certificates.create_validation_records()``,
+  which waited for the certificate's validation records (``wait_for_validation_records()``: 120 checks 5
+  seconds apart, up to 10 minutes), then for each record in its zone (``dns.get_or_create_record()``: 10
+  checks 15 seconds apart, up to 2¼ minutes each).
+- ``create_custom_domain_dns_record`` called ``dns.get_or_create_record()``: up to 2¼ minutes.
 
-The fix is the same for each: the service's wait takes an attempt count, the task passes one, and
-checks again with ``apply_async(countdown=...)``.
+Each wait now takes ``max_attempts``. ``register_custom_domain`` and ``create_custom_domain_dns_record``
+pass 1, and queue themselves again with the service's interval as the countdown and the next attempt,
+up to the service's own count, so the overall budget is the same. ``verify_custom_domain`` already checked
+again every 30 minutes: it now creates, or finds, a pending certificate's validation records on every
+check, with one look, rather than only on the run that requested the certificate, whose wait could run
+out and leave the certificate without them. ``deploy_default_api`` passes ``max_attempts=1`` to
+``kubernetes.verify_ingress_resources()``, and so complies, as do ``verify_domain``, the LLMHost compute's
+reconciliation and the vectorstore's deployment.
 
-**The time limit.** ``CELERY_TASK_TIME_LIMIT`` is 30 minutes, and its docstring still gives Route53's
-propagation as the reason, which rule 2 removed. It applies to every queue.
+One wait is left. ``dns.create_domain_a_record()``, which ``deploy_default_api``, ``deploy_custom_api`` and
+``launch_llmhost`` call, goes through ``get_or_create_record()`` with its default of 10 checks. It waits only
+when Route53 doesn't list a record it has just written, which it normally does at once.
+
+**Prefetch.** Each worker process reserves one message (``CELERY_WORKER_PREFETCH_MULTIPLIER = 1``), rather
+than Celery's default of four, so a backlog stays in Redis, where any free process of any pod takes it, and
+the queue's length counts it (issue #1097).
+
+**The time limit.** ``CELERY_TASK_TIME_LIMIT`` is 30 minutes. It is a safety net for a task that hangs, not a
+budget for one that waits. It applies to every queue.
 
 **Long operational tasks.** Rule 1 keeps deployments away from the operational queue, but some
 operational tasks are slow for reasons of their own: ``index_repositories`` (GitHub and the blog, every

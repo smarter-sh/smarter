@@ -58,7 +58,6 @@ from .signals import (
     post_destroy_domain_A_record,
     post_register_custom_domain,
     post_undeploy_default_api,
-    post_verify_certificate,
     post_verify_custom_domain,
     post_verify_domain,
     pre_create_custom_domain_dns_record,
@@ -69,7 +68,6 @@ from .signals import (
     pre_destroy_domain_A_record,
     pre_register_custom_domain,
     pre_undeploy_default_api,
-    pre_verify_certificate,
     pre_verify_custom_domain,
     pre_verify_domain,
 )
@@ -458,28 +456,6 @@ def handle_llmclient_called(sender, **kwargs):
 ###############################################################################
 # custom task receivers
 ###############################################################################
-
-
-@receiver(pre_verify_certificate, dispatch_uid="pre_verify_certificate")
-def handle_pre_verify_certificate(sender, **kwargs):
-    """Log that a certificate's verification started."""
-    logger.info("verifying certificate %s task_id: %s", kwargs.get("certificate_arn"), kwargs.get("task_id"))
-
-
-@receiver(post_verify_certificate, dispatch_uid="post_verify_certificate")
-def handle_post_verify_certificate(sender, **kwargs):
-    """
-    Log whether a certificate was verified.
-
-    :param sender: The signal's sender, the ``verify_certificate`` task.
-    :param kwargs: The signal's arguments: ``certificate_arn``, ``verified`` and ``task_id``.
-    """
-    certificate_arn = kwargs.get("certificate_arn")
-    task_id = kwargs.get("task_id")
-    if kwargs.get("verified"):
-        logger.info("certificate %s verified. task_id: %s", certificate_arn, task_id)
-    else:
-        logger.error("certificate %s verification failed. task_id: %s", certificate_arn, task_id)
 
 
 @receiver(pre_create_llmclient_request, dispatch_uid="pre_create_llmclient_request")

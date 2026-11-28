@@ -280,6 +280,13 @@ class TestQueueTasks(SmarterTestBase):
         self.assertIn(OTHER_TASK, APP.tasks)
 
 
+class TestPrefetch(SmarterTestBase):
+    """Each worker process reserves one message, so a backlog stays in Redis, where any free process takes it."""
+
+    def test_the_app_reads_the_setting(self):
+        self.assertEqual(APP.conf.worker_prefetch_multiplier, 1)
+
+
 class TestToolWorkerQueue(SmarterTestBase):
     """The tool worker consumes its queue without declaring it, and takes no remote control (ADR-030, rule 8)."""
 
