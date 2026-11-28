@@ -32,6 +32,7 @@ from django.views.decorators.csrf import csrf_exempt
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationError
 
 from smarter.lib import json, logging
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -204,7 +205,13 @@ def log_violation(violation: CspViolation) -> bool:
     identity = "|".join([directive, blocked, page, source, str(line_number)])
     digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()
     cache_key = f"{CACHE_KEY_PREFIX}{digest}"
-    is_new = lazy_cache.add(cache_key, True, timeout=DEDUPLICATION_SECONDS)
+    try:
+        is_new = lazy_cache.add(cache_key, True, timeout=DEDUPLICATION_SECONDS)
+    except CACHE_EXCEPTIONS as e:
+        # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+        # The violation is logged, undeduplicated, until Redis is back (issue #1091).
+        logger.warning("the cache failed, logging the violation without deduplicating it: %s", e)
+        is_new = True
     if not is_new:
         return False
 

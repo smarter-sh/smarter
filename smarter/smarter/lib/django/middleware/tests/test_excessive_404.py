@@ -13,6 +13,7 @@ from smarter.lib.django.middleware.excessive_404 import (
     SmarterBlockExcessive404Middleware,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.cache_outage import unreachable_cache
 from smarter.lib.unittest.narrowing import http_response
 
 MODULE = "smarter.lib.django.middleware.excessive_404"
@@ -125,3 +126,20 @@ class TestSmarterBlockExcessive404Middleware(SmarterTestBase):
             assert asyncio.iscoroutine(response)
             self.assertEqual(http_response(asyncio.run(response)).status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(cache.get(self.key), 1)
+
+    def test_404s_pass_while_the_cache_is_down(self):
+        """During a Redis outage a 404 is answered, not a 500, and nothing is counted (issue #1091)."""
+        middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
+        with patch(f"{MODULE}.cache", unreachable_cache()), self.assertLogs(MODULE, level="WARNING") as logs:
+            for _ in range(SmarterBlockExcessive404Middleware.THROTTLE_LIMIT + 1):
+                self.assertEqual(http_response(middleware(self.request())).status_code, HTTPStatus.NOT_FOUND)
+        self.assertIn("not counting the 404 of /not-found/", logs.output[0])
+        self.assertNotIn(self.ip, "\n".join(logs.output))
+        self.assertNotIn("Traceback", "\n".join(logs.output))
+
+    def test_a_count_that_cannot_be_written_is_skipped(self):
+        middleware = SmarterBlockExcessive404Middleware(lambda request: HttpResponseNotFound())
+        with patch(f"{MODULE}.cache", unreachable_cache()), self.assertLogs(MODULE, level="WARNING") as logs:
+            middleware.increment_throttle(self.key)
+        self.assertEqual(len(logs.output), 1)
+        self.assertIsNone(cache.get(self.key))

@@ -12,11 +12,10 @@ from django.apps import apps
 from django.core.exceptions import AppRegistryNotReady
 from django.db.models.signals import post_delete, post_save
 from django.db.utils import OperationalError, ProgrammingError
-from django_redis.exceptions import ConnectionInterrupted
-from redis.exceptions import RedisError
 from waffle import get_waffle_switch_model
 from waffle.utils import get_cache
 
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 from smarter.lib.logging.waffle_switched_logger import WaffleSwitchedLoggerWrapper
 
 from .ready import is_database_ready
@@ -76,9 +75,6 @@ for _driver_error in (MySQLdbOperationalError, MariaDBOperationalError):
 
 SWITCH_NOT_READY_EXCEPTIONS: tuple[type[BaseException], ...] = (*DB_EXCEPTIONS, AppRegistryNotReady)
 """The :data:`DB_EXCEPTIONS`, and Django's app registry not being ready yet: a switch can't be read, so it is off."""
-
-CACHE_EXCEPTIONS: tuple[type[BaseException], ...] = (ConnectionInterrupted, RedisError)
-"""The errors of waffle's cache, Redis, e.g. while Redis restarts, after which a switch is read from the database."""
 
 
 def switch_from_database(switch_name: str) -> bool:
