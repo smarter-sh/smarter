@@ -23,6 +23,7 @@ chose Docker and Kubernetes (AWS EKS) in the first place.
 .. toctree::
    :maxdepth: 1
 
+   smarter-on-kubernetes/egress-proxy
    smarter-on-kubernetes/llmclient-deploy
    smarter-on-kubernetes/operations
    smarter-on-kubernetes/slack-bot
@@ -77,6 +78,11 @@ differs.
        call in a process of its own. It takes Extensions' calls when the tool runner is ``remote``.
      - Deployment ``smarter-worker-extensions``, same queue, deployed with the tool worker
        (``workerTools.extensions``). See :doc:`smarter-on-kubernetes/tool-worker`.
+   * - Egress proxy
+     - None: the containers reach the internet directly.
+     - Deployment ``smarter-egress-proxy``, Smokescreen, off by default (``egressProxy.enabled``). The
+       app, the workers, Beat and the Jobs send their HTTP and HTTPS requests through it, and it logs
+       every host they contact. See :doc:`smarter-on-kubernetes/egress-proxy`.
    * - Celery Beat
      - ``smarter-beat``.
      - Deployment ``smarter-beat``. Run exactly one replica, or scheduled tasks run more than once.

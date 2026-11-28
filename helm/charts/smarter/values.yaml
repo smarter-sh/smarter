@@ -510,6 +510,71 @@ beat:
       cpu: "500m"
       memory: "1Gi"
 
+# The egress proxy (ADR-038, phase 4, #1085): Stripe's Smokescreen, an HTTP CONNECT proxy, in the
+# namespace. With enabled, the app, the workers, Beat and the Jobs send their HTTP and HTTPS requests
+# through it (HTTPS_PROXY, HTTP_PROXY and NO_PROXY, smarter.egressProxyEnv in _helpers.tpl), and it
+# logs one CANONICAL-PROXY-DECISION line per connection: the host, the client pod's address, and
+# whether the allowlist would refuse it (enforce_would_deny). It refuses private, link-local and
+# metadata addresses whatever the action, so NO_PROXY sends the cluster's own services around it. The
+# tool worker, the Extension worker and the bastion don't use it: their network policies are their own.
+#
+# Enable it after smarter-infrastructure's network policies for its pods (application-group
+# <appName>-egress), which let the platform's pods reach it, and it reach the internet. See
+# templates/deployment-egress-proxy.yaml.
+egressProxy:
+  enabled: false
+  # ghcr.io/stripe/smokescreen, Stripe's own image (distroless, non-root), pinned by digest.
+  image: "ghcr.io/stripe/smokescreen:v1.0.1@sha256:e62052a184ce5ef97c32b00a32583fc5376d4ca5d9ec941cf9a4566eef0556e8"
+  replicaCount: 2
+  port: 4750
+  # report: allow every host, and log the ones that allowedDomains doesn't list (stage 1, a week of
+  # the live traffic's inventory). enforce: refuse them (stage 2).
+  action: report
+  # The fixed hosts of ADR-038's inventory of the code (docs/source/_static/adr-038/egress.svg), the
+  # seed of stage 2's allowlist, which stage 1's log corrects. A leading "*." matches every subdomain,
+  # not the domain itself.
+  allowedDomains:
+    # the LLM providers
+    - api.openai.com
+    - api.anthropic.com
+    - generativelanguage.googleapis.com
+    - api.mistral.ai
+    - api.cohere.com
+    - api.cohere.ai
+    - api.fireworks.ai
+    - api.together.xyz
+    - api.together.ai
+    - api.llama.com
+    # Pinecone, the managed vectorstore's control plane and indexes
+    - api.pinecone.io
+    - "*.pinecone.io"
+    # GitHub: load_from_github, skills, bug reports, indexing, smarter version, the extension registry
+    - github.com
+    - api.github.com
+    - codeload.github.com
+    - raw.githubusercontent.com
+    - objects.githubusercontent.com
+    - smarter-sh.github.io
+    # social sign-in
+    - accounts.google.com
+    - oauth2.googleapis.com
+    - www.googleapis.com
+    - www.linkedin.com
+    - api.linkedin.com
+    # Slack, the Jobs' notifications
+    - slack.com
+    # the blog, which the worker indexes
+    - blog.smarter.sh
+  # More hosts to send around the proxy, after the chart's own (smarter.egressProxyNoProxy).
+  noProxy: []
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
 database:
   type: mysql   # Options: mysql, mariadb, external
 

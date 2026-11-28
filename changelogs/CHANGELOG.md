@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.4](https://github.com/smarter-sh/smarter/compare/v1.0.3...v1.0.4) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** add the egress proxy, Smokescreen, in report mode ([f3d35f6](https://github.com/smarter-sh/smarter/commit/f3d35f6c91e302944de55ed69bc14de915430162)), closes [#1085](https://github.com/smarter-sh/smarter/issues/1085)
+
+## [1.0.4-alpha.1](https://github.com/smarter-sh/smarter/compare/v1.0.3...v1.0.4-alpha.1) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** add the egress proxy, Smokescreen, in report mode ([f3d35f6](https://github.com/smarter-sh/smarter/commit/f3d35f6c91e302944de55ed69bc14de915430162)), closes [#1085](https://github.com/smarter-sh/smarter/issues/1085)
+
 ## [1.0.3](https://github.com/smarter-sh/smarter/compare/v1.0.2...v1.0.3) (2026-11-28)
 
 ### Bug Fixes

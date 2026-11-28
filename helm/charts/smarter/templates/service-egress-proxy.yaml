@@ -1,0 +1,30 @@
+# -----------------------------------------------------------------------------------
+# Purpose: the egress proxy's Service (ADR-038, phase 4, #1085), which the platform's pods
+# reach at smarter.egressProxyUrl. See deployment-egress-proxy.yaml.
+#
+# Note:
+# The app.kubernetes.io/application-group label is used to identify pods to Calico
+# and kubernetes_network_policy_v1 resources. The proxy's pods are in <appName>-egress,
+# whose network policies, in smarter-infrastructure, admit the platform's pods.
+# -----------------------------------------------------------------------------------
+{{- if .Values.egressProxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.global.appName }}-egress-proxy"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}-egress"
+spec:
+  selector:
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+  ports:
+    - name: proxy
+      port: {{ .Values.egressProxy.port | default 4750 }}
+      protocol: TCP
+      targetPort: proxy
+  sessionAffinity: None
+  type: ClusterIP
+{{- end }}
