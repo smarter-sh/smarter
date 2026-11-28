@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.16-alpha.2...v1.0.0-alpha.1) (2026-11-28)
+
+### ⚠ BREAKING CHANGES
+
+* **llmhost:** to the REST api (pre-1.0, so no breaking-change marker): POST /api/v1/llmhosts/{id}/undeploy/ now answers 202 instead of 200, and DELETE /api/v1/llmhosts/{id}/ answers 202 instead of 204. Deploy already answered 202. All three return before the infrastructure worker has acted, so a client follows the status, whose message is the queued one until the task replaces it. openapi.json is regenerated with make api-contract: the two descriptions and undeploy's status changed. The SDKs that copy it (smarter-python, smarter-nodejs, smarter-golang) pick this up with make contracts. The cli's deploy, undeploy and delete return the same journaled response as before, with the queued message.
+
+Tests:
+
+- New InMemoryLLMHostInfrastructureMixin (tests/base_classes.py) owns the in-memory cluster and node groups, disables DNS, and patches the .delay of each queued task to run it in the test process, and reconcile_llmhost_compute.apply_async to record only. It is listed last among the bases, so it is set up before any fixture is created and torn down after every fixture is deleted. That matters because deleting a compute, e.g. when the test account's deletion cascades, now queues delete_llmhost_nodegroup, and an unpatched .delay would reach a shard's real infrastructure worker. holding_queued_tasks() records the tasks without running them, so a test can see what the request alone did. LLMHostTestBase and both broker test classes use it, in place of their own copies of that setup, and it also resets the backends before each test.
+
+- New test_tasks_queue.py: each queue function queues its task and writes nothing to the cluster; refuses at once on a missing Secret or an unreachable cluster, queuing nothing; delete allows an undeployed LLMHost without the cluster and refuses a deployed one; the receiver queues the node group's deletion by name, and not for an absent node group; and the admin action queues and reports.
+
+- test_tasks.py: a launch, destroy or delete that fails in the task is recorded on the LLMHost; delete_llmhost deletes the LLMHost and its resources and reconciles the compute; delete_llmhost_nodegroup succeeds, and logs a cloud error; every task keeps its name. Its own apply_async patch gave way to the mixin's.
+
+- The broker and api tests: the response carries the queued message, the task's result shows in describe, the status and the in-memory cluster, and with the tasks held the request applies, deletes and creates nothing. The compute broker's node group error is now the task's: logged, and the reconcile queued again.
+
+- make docker-test: 8361 tests in 9 shards, OK; the llmhost app alone, 256. The pre-commit hooks and check-docs.sh pass. Not run by hand: a real deploy, because the dev stack's infrastructure worker would launch on the shared EKS cluster and could add a billable GPU node.
+
+Docs: the LLMHost page says what deploy checks at once, that the worker launches and undeploys, and how delete behaves until the worker is done. The tasks reference is one page per module. ADR-038's inventory of the app's cluster writes records that the LLMHost and LLMHostCompute writes are infrastructure tasks now, and that the vectorstore's remain.
+
+Follow-ups: the vectorstore's apply (re-provisioning a self-hosted server), undeploy and delete, from the broker, the REST api and the console's list view, are the rest of #1080. ComputeProvisioner.delete_nodegroup is now called only by its test.
+
+Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>
+
+### Bug Fixes
+
+* **llmhost:** queue LLMHost and compute writes for the infra worker ([e49c17a](https://github.com/smarter-sh/smarter/commit/e49c17a25376a478118a72fba75bf42b1292680a)), closes [#1080](https://github.com/smarter-sh/smarter/issues/1080) [#1084](https://github.com/smarter-sh/smarter/issues/1084)
+
 ## [0.48.16-alpha.2](https://github.com/smarter-sh/smarter/compare/v0.48.16-alpha.1...v0.48.16-alpha.2) (2026-11-28)
 
 ### Bug Fixes
