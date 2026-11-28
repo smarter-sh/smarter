@@ -87,27 +87,24 @@ def local_password(constant: str) -> str:
     """
     Return one of the compose files' Redis passwords, from the settings' source, which these tests can't import.
 
-    :param constant: The constant's name in cache.py, e.g. ``LOCAL_EXTENSION_WORKER_REDIS_PASSWORD``.
+    :param constant: The attribute's name in cache.py's RedisAclUsers, e.g. ``LOCAL_EXTENSION_WORKER_PASSWORD``.
     :returns: The password.
     """
     text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
-    match = re.search(rf'^{constant} = "([^"]+)"$', text, re.MULTILINE)
+    match = re.search(rf'^    {constant} = "([^"]+)"$', text, re.MULTILINE)
     if match is None:
-        raise AssertionError(f"cache.py has no {constant}")
+        raise AssertionError(f"cache.py's RedisAclUsers has no {constant}")
     return match.group(1)
 
 
 def local_tool_worker_password() -> str:
     """
-    Return LOCAL_TOOL_WORKER_REDIS_PASSWORD, from the settings' source, which these tests can't import.
+    Return RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD, from the settings' source, which these tests can't import.
 
     :returns: The password.
     """
-    text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
-    match = re.search(r'^LOCAL_TOOL_WORKER_REDIS_PASSWORD = "([^"]+)"$', text, re.MULTILINE)
-    if match is None:
-        raise AssertionError("cache.py has no LOCAL_TOOL_WORKER_REDIS_PASSWORD")
-    return match.group(1)
+    password = local_password("LOCAL_TOOL_WORKER_PASSWORD")
+    return password
 
 
 def compose_redis_command(text: str) -> list[str]:
@@ -272,12 +269,12 @@ class TestEnvironment(unittest.TestCase):
         """
         Docker-compose.yml's and docker-compose.shard.yml's Redis define the same user, so the tests check the chart's rules.
 
-        The password is LOCAL_TOOL_WORKER_REDIS_PASSWORD, which the tests connect with.
+        The password is RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD, which the tests connect with.
         """
         password = local_tool_worker_password()
         arguments = ["redis-server", "--requirepass", "smarter", "--user", "tools", "on", f">{password}"]
         arguments.extend(acl_rules("tools"))
-        arguments.extend(["--user", "extensions", "on", f">{local_password('LOCAL_EXTENSION_WORKER_REDIS_PASSWORD')}"])
+        arguments.extend(["--user", "extensions", "on", f">{local_password('LOCAL_EXTENSION_WORKER_PASSWORD')}"])
         arguments.extend(acl_rules("extensions"))
         for path in COMPOSE_PATHS:
             with self.subTest(compose=path.name):

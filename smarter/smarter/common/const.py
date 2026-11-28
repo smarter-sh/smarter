@@ -57,6 +57,59 @@ class SmarterEnvironments:
     aws_environments = [ALPHA, BETA, NEXT, PROD]
 
 
+class SmarterKubernetesPodKinds:
+    """
+    The fixed set of kinds of pod that the platform runs: the values of ``SERVICE_TYPE``.
+
+    The Helm chart sets ``SERVICE_TYPE`` on each Deployment and Job, and docker-compose on each service, and
+    ``smarter_settings.service_type`` validates it against :attr:`all`. The settings check each kind for what it
+    should and shouldn't hold (ADR-038), and :mod:`smarter.common.conf.credentials` says which kinds hold each
+    credential.
+    """
+
+    API = "api"
+    WORKER = "worker"
+    WORKER_INFRASTRUCTURE = "worker-infrastructure"
+    BEAT = "beat"
+    WORKER_TOOLS = "worker-tools"
+    WORKER_EXTENSIONS = "worker-extensions"
+    JOB_INIT = "job-init"
+    JOB_MIGRATE = "job-migrate"
+    BASTION = "bastion"
+
+    labels: Dict[str, str] = {
+        API: "the api server",
+        WORKER: "the worker",
+        WORKER_INFRASTRUCTURE: "the infrastructure worker",
+        BEAT: "Celery Beat",
+        WORKER_TOOLS: "the tool worker",
+        WORKER_EXTENSIONS: "the Extension worker",
+        JOB_INIT: "the init job",
+        JOB_MIGRATE: "the migrate job",
+        BASTION: "the bastion",
+    }
+    """How each kind's name reads in a sentence, e.g. in the settings' READY line: ``for the tool worker``."""
+
+    all = list(labels)
+    """Every kind of pod."""
+
+    restricted = [WORKER_TOOLS, WORKER_EXTENSIONS]
+    """The kinds without a database, which run code that the platform doesn't control (ADR-038, issue #1077)."""
+
+    with_database = [API, WORKER, WORKER_INFRASTRUCTURE, BEAT, JOB_INIT, JOB_MIGRATE, BASTION]
+    """The kinds with a database: every one but the :attr:`restricted` workers, which a test checks."""
+
+    platform = [API, WORKER, WORKER_INFRASTRUCTURE, JOB_INIT]
+    """
+    The kinds that do the platform's work: serve requests, run its tasks, and initialize it.
+
+    The app, ``smarter-worker``, ``smarter-worker-infrastructure`` and the init Job. They decrypt Smarter Secrets
+    (the Fernet key), send email (SMTP), and sign what the app verifies (the Django secret key): e.g. an account
+    contact's email, which the workers send, carries an unsubscribe token signed with ``SECRET_KEY``. It is narrower
+    than :attr:`with_database`: Celery Beat, the migrate Job and the bastion have a database, but do none of that.
+    """
+
+
 class SmarterHttpMethods:
     """A class representing the fixed set of HTTP methods used in the Smarter API."""
 

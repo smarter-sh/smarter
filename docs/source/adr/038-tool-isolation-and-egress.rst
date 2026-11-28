@@ -4,8 +4,9 @@ ADR-038: Tool Isolation and Egress Control
 Status
 ------
 Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phase 0's
-inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phases 3 and 4
-are not started.
+inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phase 3 is in
+progress (issue #1084): each credential says which kinds of pod hold it, and pods report the ones they
+hold but don't use. Phase 4 is not started.
 
 Context
 -------
@@ -359,7 +360,29 @@ Phase 2, the tool worker (smarter, Helm chart)
 
 Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    A ServiceAccount, IAM role and Secret per workload, from the phase 0 table. The Kubernetes Role
-   moves to ``smarter-worker-infrastructure`` only.
+   moves to ``smarter-worker-infrastructure`` only, and the app keeps a read-only Role that leaves out
+   Secrets: today's shared Role lets every pod that has it read every Secret in the namespace.
+
+   It is done in four steps, each shipped on its own. First, each credential setting says which kinds of
+   pod hold it, with ``HeldBy`` (:mod:`smarter.common.conf.credentials`), and ``make chart-credentials``
+   writes that for the chart (``files/credentials.json``). A pod that holds a credential its kind doesn't
+   use logs it, by name, and starts; a later release refuses it, as the tool worker already is. Then each
+   pod's Secret is built from that map, then each gets its ServiceAccount and Role, and smarter-infrastructure
+   its IAM roles.
+
+   A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
+   stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector
+   databases') have no setting: only the init Job reads their environment variables
+   (``SecretBootstrapVariable``), and every service reads the Secret. Google Maps' key used to fall back to
+   its environment variable when its Secret was missing, and no longer does; a Provider without a key now
+   says to set its Secret.
+
+   Checking each credential's readers corrected phase 0 twice. ``smarter-worker-infrastructure`` sends email
+   (a custom domain's verification result), so it holds the SMTP credentials. Both workers sign what the
+   app verifies: an account contact's email carries an unsubscribe token signed with ``SECRET_KEY``. So
+   ``require_django_secret_key()`` still requires the key in the app, both workers and the init Job, and no
+   longer in Celery Beat and the migrate Job, which sign nothing. The Stripe keys are read by nothing, and
+   held by no pod.
 
 Phase 4, the egress proxy (Helm chart, smarter-infrastructure)
    Smokescreen in the namespace, in log-only mode, then enforcing, and the network policies of every pod

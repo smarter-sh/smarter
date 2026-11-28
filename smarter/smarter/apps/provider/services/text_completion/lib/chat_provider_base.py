@@ -414,9 +414,11 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         Log, with instructions, that the provider has no API key, and raise.
 
-        A built-in Provider is created without a key when its environment variable is not set, so
+        A built-in Provider is created without a key when the init Job's variable is not set, so
         that the platform runs without it. Its prompts fail here, with an error that the prompt's
-        response reports, rather than in the provider's SDK.
+        response reports, rather than in the provider's SDK. The key's only source is the Provider's
+        API key Secret, which no service reads from the environment (ADR-038, phase 3): the error says
+        how to set the Secret.
 
         :raises SmarterConfigurationError: Always.
         """
@@ -424,19 +426,16 @@ class SmarterChatProviderBase(ChatDbMixin):
             str(self.provider_name), f"APP_PROVIDER_{str(self.provider_name).upper()}_API_KEY"
         )
         message = (
-            f"The {self.provider_name} Provider has no API key. Add SMARTER_{env_var} to .env, restart the "
-            "platform, and run: docker exec smarter-api python manage.py initialize_providers. "
-            "Or set the Provider's API key Secret in the web console."
+            f"The {self.provider_name} Provider has no API key. Set the Provider's API key Secret, in the web "
+            f"console or with smarter apply. On a new platform, the init Job creates it from SMARTER_{env_var}."
         )
         logger.error(
             SmarterFormattedText.banner(
                 f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
-                "To set it, add the key to .env, restart the platform, and run:",
+                "Set the Provider's API key Secret, in the web console or with smarter apply.",
                 "",
-                f"    SMARTER_{env_var}=<your key>",
-                "    docker exec smarter-api python manage.py initialize_providers",
-                "",
-                "Or set the Provider's API key Secret in the web console.",
+                f"On a new platform, the init Job creates it from SMARTER_{env_var}, which",
+                "only the init Job reads: no service reads the key from its environment.",
             )
         )
         raise SmarterConfigurationError(message)

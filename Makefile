@@ -23,7 +23,7 @@ include .env
 # workspace, published to npm as @smarter.sh/ui-chat.
 
 
-.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract chart-credentials chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
@@ -490,6 +490,12 @@ console-session-contract: ## Regenerate the web console session contract schema
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
 # journal contract or the cli api, and commit the files.
 API_CONTRACT_DIR := smarter/apps/api/v1/contract
+chart-credentials: ## Regenerate the map of each credential to the pods that hold it, and copy it into the Helm chart
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chart_credentials"
+	docker cp smarter-api:/home/smarter_user/smarter/smarter/common/conf/credentials.json smarter/smarter/common/conf/credentials.json
+	mkdir -p helm/charts/smarter/files
+	cp smarter/smarter/common/conf/credentials.json helm/charts/smarter/files/credentials.json
+
 api-contract: ## Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
 	docker cp smarter-api:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json

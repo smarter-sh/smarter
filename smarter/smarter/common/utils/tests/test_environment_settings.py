@@ -78,17 +78,19 @@ class TestEnvironmentVariables(SmarterTestBase):
         )
 
     def test_a_variable_without_a_setting_shows_its_value(self):
-        """A variable that no field reads shows its value; an api key is a field, so it is masked."""
+        """A variable that no field reads shows its value, except a key that the init Job stores as a Secret, which is masked."""
         secret = f"sk-unit-test-{self.hash_suffix}"
         environ = {
             "SMARTER_APP_PROVIDER_OPENAI_API_KEY": secret,
+            "APP_PROVIDER_GEMINI_API_KEY": secret,
             "APP_PROVIDER_EXAMPLE_REGION": "us-east-1",
             "SMARTER_APP_PROXY_ENABLE": "true",
             "OPENAI_API_KEY": secret,
         }
         variables = get_environment_variables(smarter_settings, "app_provider", environ)
         openai_api_key = variables["SMARTER_APP_PROVIDER_OPENAI_API_KEY"]
-        self.assertTrue(openai_api_key == "not set" or openai_api_key.startswith("****"), openai_api_key)
+        self.assertEqual(openai_api_key, "****" + secret[-4:])
+        self.assertEqual(variables["APP_PROVIDER_GEMINI_API_KEY"], "****" + secret[-4:])
         self.assertEqual(variables["APP_PROVIDER_EXAMPLE_REGION"], "us-east-1")
         self.assertNotIn("SMARTER_APP_PROXY_ENABLE", variables)
         self.assertNotIn("OPENAI_API_KEY", variables)

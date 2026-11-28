@@ -2,11 +2,12 @@
 """The email settings: SMTP, the administrator's address, and the mailing list."""
 
 from functools import cached_property
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import EmailStr, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.settings.aws import AwsSettings
 from smarter.common.conf.settings.platform import PlatformSettings
@@ -17,6 +18,7 @@ from smarter.common.conf.util import (
     parse_int_setting,
     with_derived_default,
 )
+from smarter.common.const import SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -157,7 +159,7 @@ class EmailSettings(AwsSettings, PlatformSettings):
             raise SmarterConfigurationError(f"of type {type(v)} is not a str.")
         return v.strip()
 
-    subsystem_smtp_password: Optional[SecretStr] = Field(
+    subsystem_smtp_password: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.platform)] = Field(
         None,
         description="The SMTP password for authentication. Assumed to be an AWS SES-generated IAM keypair secret.",
         examples=["your-smtp-password"],
@@ -288,7 +290,7 @@ class EmailSettings(AwsSettings, PlatformSettings):
             return field_default(cls, "subsystem_smtp_use_tls")
         return str(v).lower() in ["true", "1", "yes", "on"]
 
-    subsystem_smtp_username: Optional[SecretStr] = Field(
+    subsystem_smtp_username: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.platform)] = Field(
         None,
         description="The SMTP username for authentication. Assumed to be an AWS SES-generatred IAM keypair username.",
         examples=["your-smtp-username"],

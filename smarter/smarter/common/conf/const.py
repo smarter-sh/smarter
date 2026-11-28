@@ -53,7 +53,7 @@ SERVICE_TYPE = str(os.environ.get("SERVICE_TYPE")).lower() if os.environ.get("SE
 The kind of pod this process runs in, unvalidated, from the ``SERVICE_TYPE`` environment variable.
 
 Read the validated value, ``smarter_settings.service_type``, instead: its docstring, and
-:data:`smarter.common.conf.settings.platform.POD_KINDS`, list the kinds that the Helm chart and docker-compose set.
+:class:`smarter.common.const.SmarterKubernetesPodKinds`, list the kinds that the Helm chart and docker-compose set.
 """
 
 __all__ = [

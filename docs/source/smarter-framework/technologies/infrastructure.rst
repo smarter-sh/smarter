@@ -165,8 +165,22 @@ Helm chart sets it on each Deployment and Job, and docker-compose on each servic
 (``smarter_settings.service_type``). The settings refuse to start a pod whose kind contradicts what
 they see, e.g. a ``worker-tools`` pod with a database, and the tool worker or the Extension worker
 if its environment gives it any credential but its own Redis password
-(``Settings.check_restricted_worker_credentials()``, ADR-038). Their first line then names the kind
-and the checks made for it::
+(``Settings.check_restricted_worker_credentials()``, ADR-038).
+
+Each credential setting also says which kinds of pod use it (``HeldBy`` in its annotation, in
+:mod:`smarter.common.conf.credentials`): e.g. Celery Beat holds only the database's and Redis's passwords.
+A credential that has a Smarter Secret, such as a built-in Provider's, a search service's or a managed vector
+database's key, has the Secret as its only source: no setting exists for it, and every service reads the
+Secret. Only the init Job holds its environment variable (``SecretBootstrapVariable``), from which
+``initialize_platform`` creates the Secret; any other pod that holds one reports it, and the startup log
+masks it. Outside the
+local environment, a pod that holds a credential that its kind doesn't use logs one error line naming
+it, never its value (``Settings.check_pod_credentials()``), and starts; a later release will refuse it.
+Only those kinds of pod need the platform's Django secret key, too: Beat and the migrate Job, which sign
+nothing, start without it. ``make chart-credentials`` writes the same map, as JSON, for the Helm chart
+(``helm/charts/smarter/files/credentials.json``), and a test fails when either copy is out of date.
+
+Their first line then names the kind and the checks made for it::
 
     Pydantic version: 2.14.3 smarter_settings are READY for the tool worker: it holds no credential but its own Redis password (checked).
     Pydantic version: 2.14.3 smarter_settings are READY for the api server: the root domain, AWS credentials (checked).

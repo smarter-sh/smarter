@@ -18,10 +18,9 @@ Topics
 
 .. autopydantic_model:: smarter.common.conf.settings.platform.PlatformSettings
 
-.. autodata:: smarter.common.conf.settings.platform.POD_KINDS
-   :no-value:
-
-.. autodata:: smarter.common.conf.settings.platform.RESTRICTED_POD_KINDS
+.. autoclass:: smarter.common.const.SmarterKubernetesPodKinds
+   :members:
+   :no-index:
 
 .. autopydantic_model:: smarter.common.conf.settings.domains.DomainSettings
 

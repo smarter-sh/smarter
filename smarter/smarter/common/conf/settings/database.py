@@ -1,11 +1,12 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """The database settings, from which Django's ``DATABASES`` is built."""
 
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -15,7 +16,7 @@ from smarter.common.conf.util import (
     parse_int_setting,
     with_derived_default,
 )
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -56,7 +57,9 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_root_username of type {type(v)} is not a non-empty string.")
         return v
 
-    subsystem_sql_root_password: Optional[SecretStr] = Field(
+    subsystem_sql_root_password: Annotated[
+        Optional[SecretStr], HeldBy(SmarterKubernetesPodKinds.JOB_INIT, SmarterKubernetesPodKinds.BASTION)
+    ] = Field(
         None,
         description="The password of the database server's administrator, sql_root_username.",
         examples=["your-root-password"],
@@ -216,7 +219,7 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_user of type {type(v)} is not a non-empty string.")
         return v.strip()
 
-    subsystem_sql_password: Optional[SecretStr] = Field(
+    subsystem_sql_password: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.with_database)] = Field(
         None,
         description="The password of sql_user, the database user that the platform connects as.",
         examples=["your-database-password"],

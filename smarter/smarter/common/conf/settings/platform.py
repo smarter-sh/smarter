@@ -8,24 +8,8 @@ from pydantic import BaseModel, Field
 
 from smarter.common.conf.const import THE_EMPTY_SET
 from smarter.common.conf.util import before_field_validator, field_default
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
-
-POD_KINDS = {
-    "api": "the api server",
-    "worker": "the worker",
-    "worker-infrastructure": "the infrastructure worker",
-    "beat": "Celery Beat",
-    "worker-tools": "the tool worker",
-    "worker-extensions": "the Extension worker",
-    "job-init": "the init job",
-    "job-migrate": "the migrate job",
-    "bastion": "the bastion",
-}
-"""Each kind of pod (``SERVICE_TYPE``) that the Helm chart and docker-compose run, and how its name reads in a sentence."""
-
-RESTRICTED_POD_KINDS = ("worker-tools", "worker-extensions")
-"""The pods without a database, which run code that the platform doesn't control (ADR-038, issue #1077)."""
 
 
 class PlatformSettings(BaseModel):
@@ -78,7 +62,7 @@ class PlatformSettings(BaseModel):
         title="Service Type",
     )
     """
-    The kind of pod this process runs in: one of :data:`POD_KINDS`, e.g. ``api`` or ``worker-extensions``.
+    The kind of pod this process runs in: one of :attr:`smarter.common.const.SmarterKubernetesPodKinds.all`, e.g. ``api`` or ``worker-extensions``.
 
     The Helm chart sets ``SERVICE_TYPE`` on every pod, and docker-compose on every service. It isn't a secret.
     ``smarter_settings`` names the kind when it reports that it is READY, with the checks that it made for
@@ -88,25 +72,25 @@ class PlatformSettings(BaseModel):
 
     :type: Optional[str]
     :default: None, an unknown kind.
-    :raises SmarterConfigurationError: If the value is not one of :data:`POD_KINDS`.
+    :raises SmarterConfigurationError: If the value is not one of :attr:`smarter.common.const.SmarterKubernetesPodKinds.all`.
     """
 
     @before_field_validator("service_type")
     def validate_service_type(cls, v: Optional[str]) -> Optional[str]:
         """
-        Validate ``service_type``: one of :data:`POD_KINDS`, trimmed and in lower case, or None.
+        Validate ``service_type``: one of :attr:`smarter.common.const.SmarterKubernetesPodKinds.all`, trimmed and in lower case, or None.
 
         :param v: The kind, or empty.
         :returns: The kind, or None.
-        :raises SmarterConfigurationError: If the value is not one of :data:`POD_KINDS`.
+        :raises SmarterConfigurationError: If the value is not one of :attr:`smarter.common.const.SmarterKubernetesPodKinds.all`.
         """
         if v in THE_EMPTY_SET:
             return None
         kind = str(v).strip().lower()
         if not kind:
             return None
-        if kind not in POD_KINDS:
-            known = ", ".join(POD_KINDS)
+        if kind not in SmarterKubernetesPodKinds.all:
+            known = ", ".join(SmarterKubernetesPodKinds.all)
             raise SmarterConfigurationError(f"SERVICE_TYPE {kind!r} is not one of: {known}.")
         return kind
 

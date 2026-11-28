@@ -119,8 +119,9 @@ def get_environment_variables(
     It scans the environment for ``SMARTER_<group>_*``, and ``<group>_*``, which
     :func:`smarter.common.conf.env.get_env` reads too. A variable that a field of ``settings`` reads
     shows the field's value, which is what the platform runs with, and a ``SecretStr`` only its last
-    four characters; any other variable shows its own value. Every secret is a field: e.g. the apps' api keys,
-    :class:`smarter.common.conf.settings.app_keys.AppKeySettings`.
+    four characters; any other variable shows its own value, except the variables from which the init Job creates
+    Smarter Secrets (:class:`smarter.common.conf.credentials.SecretBootstrapVariable`), which have no field and
+    are masked the same way.
 
     **Example:**
 
@@ -132,6 +133,11 @@ def get_environment_variables(
     :param environ: The environment; ``os.environ`` by default.
     :returns: Each variable that is set, and its value, sorted by name.
     """
+    # imported here: smarter.common.conf imports this package.
+    from smarter.common.conf.credentials import (  # pylint: disable=import-outside-toplevel
+        is_bootstrap_variable,
+    )
+
     if environ is None:
         environ = os.environ
     group_prefix = f"{group.upper()}_"
@@ -144,6 +150,8 @@ def get_environment_variables(
         field_name = name.lower()
         if field_name in fields:
             retval[variable] = environment_setting_log_value(field_name, getattr(settings, field_name))
+        elif is_bootstrap_variable(variable):
+            retval[variable] = environment_setting_log_value(field_name, SecretStr(environ[variable]))
         else:
             retval[variable] = environ[variable]
     return retval

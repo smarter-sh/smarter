@@ -38,7 +38,7 @@ class TestProviderUtils(ProviderTestBase):
             self.assertFalse(utils.test_web_page("https://example.com/tos", ""))
 
     def test_get_google_maps_api_key(self):
-        """Test that the key is read from the smarter admin's secret, which is initialized when it is missing."""
+        """Test that the key is read from the smarter admin's Secret, its only source, never from the environment."""
         secret = MagicMock()
         secret.get_secret.return_value = "maps-key"
         with patch.object(Secret, "get_cached_object", return_value=secret):
@@ -47,23 +47,18 @@ class TestProviderUtils(ProviderTestBase):
             secret.get_secret.return_value = missing
             with patch.object(Secret, "get_cached_object", return_value=secret):
                 self.assertIsNone(utils.get_google_maps_api_key())
+        environment = {"SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY": "maps-key-from-the-environment"}
         with (
+            patch.dict("os.environ", environment),
             patch.object(Secret, "get_cached_object", side_effect=Secret.DoesNotExist),
-            patch.object(utils, "initialize_google_maps") as initialize,
+            patch.object(utils, "logger") as logger,
         ):
             self.assertIsNone(utils.get_google_maps_api_key())
-        initialize.assert_called_once()
+        logged = str(logger.error.call_args)
+        self.assertIn("google_maps_api_key", logged)
+        self.assertNotIn("maps-key-from-the-environment", logged)
         with patch.object(Secret, "get_cached_object", side_effect=RuntimeError("cache down")):
             self.assertIsNone(utils.get_google_maps_api_key())
-
-    def test_initialize_google_maps(self):
-        with patch.object(utils, "get_env", return_value="maps-key"), patch.object(utils, "initialize_secret") as init:
-            utils.initialize_google_maps()
-        self.assertEqual(init.call_args.kwargs["secret_string"], "maps-key")
-        for missing in ("", "SET-ME-PLEASE"):
-            with patch.object(utils, "get_env", return_value=missing), patch.object(utils, "initialize_secret") as init:
-                utils.initialize_google_maps()
-            init.assert_not_called()
 
     def test_google_service_account_bearer_token_errors(self):
         """Test that a missing, empty or invalid service account returns None."""

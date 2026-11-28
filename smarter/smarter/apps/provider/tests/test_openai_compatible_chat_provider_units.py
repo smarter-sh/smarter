@@ -732,8 +732,9 @@ class TestChatProviderBaseUnits(SmarterTestBase):
                 with self.assertRaises(SmarterConfigurationError) as context:
                     self.client.validate()
                 self.assertIn(f"SMARTER_{env_var}", str(context.exception))
-                self.assertIn("initialize_providers", str(context.exception))
-                self.assertIn(f"SMARTER_{env_var}=<your key>", logger.error.call_args.args[0])
+                self.assertIn("API key Secret", str(context.exception))
+                self.assertNotIn("docker exec smarter-api", str(context.exception))
+                self.assertIn(f"SMARTER_{env_var}", logger.error.call_args.args[0])
 
     def test_default_model_from_the_provider(self):
         self.patch_properties(provider=MagicMock(default_model="provider-model"))

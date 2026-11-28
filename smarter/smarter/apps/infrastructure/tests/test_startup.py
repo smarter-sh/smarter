@@ -50,10 +50,7 @@ from smarter.apps.infrastructure.startup import (
 from smarter.common.conf import smarter_settings
 from smarter.common.conf.settings import Settings
 from smarter.common.conf.settings.cache import (
-    EXTENSION_WORKER_REDIS_USERNAME,
-    LOCAL_EXTENSION_WORKER_REDIS_PASSWORD,
-    LOCAL_TOOL_WORKER_REDIS_PASSWORD,
-    TOOL_WORKER_REDIS_USERNAME,
+    RedisAclUsers,
 )
 from smarter.common.utils.redis_url import redis_server_url
 from smarter.lib import json
@@ -543,7 +540,7 @@ class TestToolWorkerRedis(SmarterTestBase):
         tools_queue = smarter_settings.app_tools_tasks_celery_task_queue
         client = refusing_client(tools_queue)
         with (
-            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            with_redis_username(RedisAclUsers.TOOL_WORKER),
             patch(f"{MODULE}.redis_client", return_value=client),
             self.assertLogs(MODULE, level="INFO") as captured,
         ):
@@ -562,7 +559,7 @@ class TestToolWorkerRedis(SmarterTestBase):
         client.exists.side_effect = None
         client.exists.return_value = 0
         with (
-            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            with_redis_username(RedisAclUsers.TOOL_WORKER),
             patch(f"{MODULE}.redis_client", return_value=client),
             self.assertLogs(MODULE, level="ERROR") as captured,
         ):
@@ -575,7 +572,7 @@ class TestToolWorkerRedis(SmarterTestBase):
         """A user that can't read its own queue runs no tool call."""
         client = refusing_client("another queue")
         with (
-            with_redis_username(TOOL_WORKER_REDIS_USERNAME),
+            with_redis_username(RedisAclUsers.TOOL_WORKER),
             patch(f"{MODULE}.redis_client", return_value=client),
             self.assertLogs(MODULE, level="WARNING") as captured,
         ):
@@ -728,7 +725,9 @@ class TestToolWorkerRedisAcl(SmarterTestBase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        server = redis_server_url("smarter-redis:6379", TOOL_WORKER_REDIS_USERNAME, LOCAL_TOOL_WORKER_REDIS_PASSWORD)
+        server = redis_server_url(
+            "smarter-redis:6379", RedisAclUsers.TOOL_WORKER, RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD
+        )
         cls.tools = Redis.from_url(f"{server}/0")
         cls.tools_cache = Redis.from_url(f"{server}/1")
         cls.tools_sessions = Redis.from_url(f"{server}/2")
@@ -794,13 +793,15 @@ class TestToolWorkerRedisAcl(SmarterTestBase):
 
     def test_cache_results(self):
         """@cache_results caches in the tool worker, in its own keys, e.g. a page fetch's robots.txt rules."""
-        assert_cache_results_caches(self, TOOL_WORKER_REDIS_USERNAME, LOCAL_TOOL_WORKER_REDIS_PASSWORD, self.suffix)
+        assert_cache_results_caches(
+            self, RedisAclUsers.TOOL_WORKER, RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD, self.suffix
+        )
 
     def test_no_other_cache(self):
         """It may write neither the platform's cache nor the Extension worker's @cache_results keys."""
         for key in (
             f"{settings.CACHE_KEY_PREFIX}:1:test-{self.suffix}",
-            f"{EXTENSION_WORKER_REDIS_USERNAME}_cache:1:test-{self.suffix}",
+            f"{RedisAclUsers.EXTENSION_WORKER}_cache:1:test-{self.suffix}",
         ):
             with self.subTest(key=key):
                 with self.assertRaises(NoPermissionError):
@@ -856,7 +857,7 @@ class TestExtensionWorkerRedisAcl(SmarterTestBase):
     def setUpClass(cls):
         super().setUpClass()
         server = redis_server_url(
-            "smarter-redis:6379", EXTENSION_WORKER_REDIS_USERNAME, LOCAL_EXTENSION_WORKER_REDIS_PASSWORD
+            "smarter-redis:6379", RedisAclUsers.EXTENSION_WORKER, RedisAclUsers.LOCAL_EXTENSION_WORKER_PASSWORD
         )
         cls.extensions = Redis.from_url(f"{server}/0")
         cls.extensions_cache = Redis.from_url(f"{server}/1")
@@ -895,14 +896,14 @@ class TestExtensionWorkerRedisAcl(SmarterTestBase):
     def test_cache_results(self):
         """@cache_results caches in the Extension worker, in its own keys."""
         assert_cache_results_caches(
-            self, EXTENSION_WORKER_REDIS_USERNAME, LOCAL_EXTENSION_WORKER_REDIS_PASSWORD, self.suffix
+            self, RedisAclUsers.EXTENSION_WORKER, RedisAclUsers.LOCAL_EXTENSION_WORKER_PASSWORD, self.suffix
         )
 
     def test_no_other_cache(self):
         """It may write neither the platform's cache nor the tool worker's @cache_results keys."""
         for key in (
             f"{settings.CACHE_KEY_PREFIX}:1:test-{self.suffix}",
-            f"{TOOL_WORKER_REDIS_USERNAME}_cache:1:test-{self.suffix}",
+            f"{RedisAclUsers.TOOL_WORKER}_cache:1:test-{self.suffix}",
         ):
             with self.subTest(key=key):
                 with self.assertRaises(NoPermissionError):
