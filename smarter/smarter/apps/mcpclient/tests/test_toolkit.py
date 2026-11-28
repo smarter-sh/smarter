@@ -41,7 +41,7 @@ from .base_classes import (
     mock_mcp_server,
 )
 
-RUNNER_PATCH = "smarter.apps.mcpclient.toolkit.get_tool_runner"
+RUNNER_PATCH = "smarter.apps.mcpclient.execution.get_tool_runner"
 
 
 class TestMCPToolkit(MCPClientTestBase):
@@ -323,7 +323,8 @@ class TestMCPToolkit(MCPClientTestBase):
         real_discover = MCPServerConnection.discover
 
         def discover(connection):
-            if connection.mcpclient.pk == down.pk:
+            # the executor's connection is built from the resolved endpoint, which names the MCPClient.
+            if connection.name == down.name:
                 raise SmarterMCPClientConnectionError("server is down")
             return real_discover(connection)
 

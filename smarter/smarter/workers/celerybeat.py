@@ -3,13 +3,15 @@
 import os
 from datetime import timedelta
 
-# Set the default Django settings module for the 'celery' program
-# and then instantiate the Celery singleton. The imports must follow it,
-# because importing the Celery app reads the Django settings.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
+from smarter.common.conf import smarter_settings
+
+# Set the default Django settings module for the 'celery' program, and then instantiate the Celery
+# singleton: importing the Celery app reads the Django settings, so the imports must follow. The default is
+# the module of the environment that smarter_settings name (SMARTER_ENVIRONMENT), as manage.py, asgi.py and
+# wsgi.py choose it, so that beat needs no DJANGO_SETTINGS_MODULE of its own. One that is set still wins.
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings." + smarter_settings.environment)
 
 # pylint: disable=wrong-import-position,unused-import
-from smarter.common.conf import smarter_settings  # noqa: E402
 from smarter.lib.celery_conf import APP as app  # noqa: E402
 
 # Each entry names the queue of its task, the same queue that the task's @app.task declares,

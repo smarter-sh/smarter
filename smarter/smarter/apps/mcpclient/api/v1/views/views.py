@@ -53,6 +53,7 @@ from smarter.apps.mcpclient.exceptions import (
     SmarterMCPClientException,
     SmarterMCPClientPermissionError,
 )
+from smarter.apps.mcpclient.execution import call_tool
 from smarter.apps.mcpclient.models import MCPClient
 from smarter.apps.mcpclient.serializers import MCPClientSerializer
 from smarter.apps.mcpclient.signals import mcpclient_called
@@ -195,7 +196,8 @@ class MCPClientToolCallView(MCPClientViewBase):
             # smarter.apps.mcpserver.services.acting_user.
             with acting_user(request.user):
                 connection = MCPServerConnection(mcpclient)
-            result = connection.call_tool(tool_name, arguments)
+            # through the tool runner, like every connection to the server (ADR-038).
+            result = call_tool(connection, tool_name, arguments)
         except SmarterMCPClientException as e:
             return Response({"detail": e.message}, status=error_status(e))
         return Response(MCPClientApiToolResult.from_result(mcpclient, tool_name, result).model_dump(mode="json"))

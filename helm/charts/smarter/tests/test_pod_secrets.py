@@ -161,5 +161,57 @@ class TestPodSecrets(unittest.TestCase):
         self.assertNotIn('name: "{{ .Values.global.appName }}-env"\n', deployment)
 
 
+RESTRICTED_WORKER_KEYS = {
+    "AWS_EC2_METADATA_DISABLED",
+    "CACHE_RESULTS_CACHE",
+    "DJANGO_CELERY_BROKER_URL",
+    "SERVICE_TYPE",
+    "SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE",
+    "SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS",
+    "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE",
+    "SMARTER_DATABASE_UNAVAILABLE",
+    "SMARTER_DEBUG_MODE",
+    "SMARTER_ENVIRONMENT",
+    "SMARTER_LOG_LEVEL",
+    "SMARTER_PLATFORM_INTERNAL_IP_PREFIXES",
+    "SMARTER_PLATFORM_ROOT_DOMAIN",
+    "SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER",
+    "SMARTER_PLATFORM_SUBDOMAIN",
+    "SMARTER_SUBSYSTEM_REDIS_PASSWORD",
+    "SMARTER_SUBSYSTEM_REDIS_USERNAME",
+}
+"""What the tool worker's and the Extension worker's Secrets may hold: what they read, and no more."""
+
+
+@needs_helm
+class TestRestrictedWorkerSecrets(unittest.TestCase):
+    """The tool worker's and the Extension worker's Secrets hold only what they read (ADR-038)."""
+
+    def test_only_what_they_read(self):
+        """No AWS region, cloud provider, Kubernetes namespace or settings module: they read none of them."""
+        env = {
+            "AWS_REGION": "ca-central-1",
+            "SMARTER_PLATFORM_CLOUD_PROVIDER": "aws",
+            "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE": "tools_celery_task_queue",
+            "SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE": "extensions_celery_task_queue",
+        }
+        documents = render({"env": env, "workerTools": {"enabled": True}})
+        rendered = secrets(documents)
+        for name in (f"{APP_NAME}-env-tools", f"{APP_NAME}-env-extensions"):
+            with self.subTest(secret=name):
+                keys = set(rendered[name])
+                self.assertLessEqual(keys, RESTRICTED_WORKER_KEYS | {"SMARTER_APP_TOOLS_WORKER_QUEUE"})
+                for key in (
+                    "AWS_REGION",
+                    "DJANGO_SETTINGS_MODULE",
+                    "SMARTER_PLATFORM_CLOUD_PROVIDER",
+                    "SMARTER_SUBSYSTEM_K8S_NAMESPACE",
+                ):
+                    self.assertNotIn(key, keys)
+                # both queues' names: the worker declares both, and the Extension worker checks the tool worker's.
+                self.assertIn("SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE", keys)
+                self.assertIn("SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE", keys)
+
+
 if __name__ == "__main__":
     unittest.main()

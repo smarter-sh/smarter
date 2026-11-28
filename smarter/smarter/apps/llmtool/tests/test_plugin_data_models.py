@@ -1,13 +1,10 @@
 """
-Test the request and query building, and the field validation, of PluginDataApi and PluginDataSql.
+Test the query building and the field validation of PluginDataApi and PluginDataSql, and that PluginDataApi makes no request.
 
-These methods don't touch the database, so the tests use unsaved instances, and patch the HTTP
-request and the SQL connection.
+These methods don't touch the database, so the tests use unsaved instances, and patch the SQL connection.
 """
 
 from unittest.mock import MagicMock, patch
-
-import requests
 
 from smarter.apps.connection.models import ApiConnection
 from smarter.apps.llmtool.models import PluginDataApi, PluginDataSql
@@ -37,30 +34,14 @@ class TestPluginDataApi(SmarterTestBase):
         self.assertEqual(data["body"], {"a": 1})
         self.assertEqual(data["parameters"], PARAMETERS)
 
-    def test_prepare_request(self):
-        plugin_data = self.plugin_data(url_params=[{"key": "units", "value": "metric"}])
-        request_data = plugin_data.prepare_request({"city": "Paris"})
-        self.assertEqual(request_data["url"], "https://api.example.com/v1/weather/")
-        self.assertEqual(request_data["params"], {"city": "Paris"})
-        self.assertEqual(request_data["headers"], {})
-        self.assertEqual(request_data["json"], {})
-        self.assertEqual(plugin_data.prepare_request(None)["params"], {})
-
-    def test_execute_request(self):
-        """Test that the API response is returned as json, and that a failed request returns False."""
+    def test_makes_no_request_of_its_own(self):
+        """The model makes no request: an ApiPlugin's data comes from its tool call, through the tool runner (#1082)."""
         plugin_data = self.plugin_data(test_values=[{"name": "city", "value": "Paris"}])
-        response = MagicMock()
-        response.json.return_value = {"temperature": 20}
-        with patch("smarter.apps.llmtool.models.plugin_data_api.requests.get", return_value=response) as get:
-            self.assertEqual(plugin_data.sanitized_return_data({"city": "Paris"}), {"temperature": 20})
-            self.assertEqual(get.call_args.kwargs["timeout"], 5)
-            self.assertEqual(plugin_data.test(), {"temperature": 20})
-
-        with patch(
-            "smarter.apps.llmtool.models.plugin_data_api.requests.get",
-            side_effect=requests.exceptions.ConnectionError("unreachable"),
-        ):
-            self.assertFalse(plugin_data.execute_request({"city": "Paris"}))
+        with self.assertRaises(NotImplementedError):
+            plugin_data.sanitized_return_data({"city": "Paris"})
+        for name in ("prepare_request", "execute_request", "test"):
+            with self.subTest(method=name):
+                self.assertFalse(hasattr(plugin_data, name))
 
     def test_validate_endpoint(self):
         self.plugin_data().validate_endpoint()
