@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-11-28)
+
+### Bug Fixes
+
+* **secret:** bootstrap the app keys from a Kubernetes Secret ([24932d1](https://github.com/smarter-sh/smarter/commit/24932d1b62a8b582e7d10c720d32d4e14e327bfe))
+
 ## [1.0.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-11-28)
 
 ### Bug Fixes
