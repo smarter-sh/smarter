@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [0.48.16-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.15...v0.48.16-alpha.1) (2026-11-28)
+
+### Bug Fixes
+
+* **cache:** serve the console and LLMClients while Redis is down ([508e4f7](https://github.com/smarter-sh/smarter/commit/508e4f7702af4abddeccc4147350faed8320251f)), closes [#1052](https://github.com/smarter-sh/smarter/issues/1052) [#1052](https://github.com/smarter-sh/smarter/issues/1052)
+
 ## [0.48.15](https://github.com/smarter-sh/smarter/compare/v0.48.14...v0.48.15) (2026-11-27)
 
 ### Bug Fixes
