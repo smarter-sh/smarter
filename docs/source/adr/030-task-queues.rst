@@ -6,7 +6,7 @@ Status
 Accepted. Rules 1 and 3 hold in the code as of 0.48.8, and rule 4 since ADR-038's phase 2. Rule 2 has four
 exceptions, listed in the inventory below. Of the security rules, 5 to 9, rules 5 and 8 are implemented,
 for the tool worker: each takes effect when smarter-infrastructure has created its Secret and the chart is
-deployed. Rules 6, 7 and 9 are proposed.
+deployed. Rule 6 is implemented for every worker. Rule 7 is declined (issue #1074). Rule 9 is proposed.
 
 Context
 -------
@@ -162,16 +162,30 @@ The security rules, proposed:
    the Redis subchart reads it from there (``redis.auth.existingSecret``), and so do the platform's pods,
    as ``SMARTER_SUBSYSTEM_REDIS_PASSWORD`` (``subsystem_redis_password``). ``base_aws`` builds every Redis
    url from it, and refuses to start without it (``require_redis_password()``).
-6. **Each worker registers only its own queue's tasks**, as the tool worker does. ``keep_only_tool_worker_tasks()``
-   becomes a map from each worker to its tasks, so a message for an infrastructure task that lands on the
-   operational queue is rejected, not run. It is cheap, and it narrows what a forged message can reach, but
-   doesn't stop one sent to the right queue.
-7. **Messages to the workers that hold credentials are signed.** Celery's message signing
-   (``app.setup_security()``, the ``auth`` serializer) with a key that every sender holds (the app, beat,
-   the two workers that hold credentials, which re-queue their own checks, and the Jobs) and the tool
-   worker doesn't. ``smarter-worker`` and ``smarter-worker-infrastructure`` accept only signed messages,
-   so a message from anything else that reaches Redis is refused. This closes the way from the tool worker
-   to the Kubernetes Role.
+6. **Each worker registers only its own queue's tasks**, so a message for an infrastructure task that
+   lands on the operational queue is rejected ("Received unregistered task"), not run, and the reverse. It
+   is cheap, and it narrows what a forged message can reach, but doesn't stop one sent to the right queue.
+
+   Implemented: at ``worker_init``, :func:`smarter.lib.celery_conf.restrict_worker_tasks` keeps, in a
+   worker with a database, only the tasks whose ``@app.task(queue=...)`` is a queue that the worker
+   consumes, read from its own ``-Q``, not from a setting, so the registry always matches what the worker
+   takes. ``smarter-worker`` keeps the operational queue's tasks, ``smarter-worker-infrastructure`` the
+   infrastructure queue's, and a worker that would keep none, e.g. one started without ``-Q``, refuses to
+   start. The tool worker and the Extension worker keep ``TOOL_WORKER_TASKS``, ``run_tool_call`` alone,
+   which the Extension worker takes from a queue the task doesn't declare. Every worker keeps Celery's own
+   tasks, and the app, beat and the Jobs, which send tasks but aren't workers, keep every task.
+7. **Declined: signing the messages to the workers that hold credentials** (issue #1074). Celery's message
+   signing (``app.setup_security()``, the ``auth`` serializer) was to close the way from the tool worker to
+   the Kubernetes Role. Rule 8 closed it first: the tool worker's Redis user can't write another queue,
+   kombu's routing set or the shared ``unacked`` hash. Signing would then protect only against a Redis
+   client that holds the default user's password but not the signing key, and every workload that holds
+   that password also sends tasks, so it would hold the key too. Celery 5.6's signing also signs only a
+   message's body: under protocol 2 the task's name and id are unsigned headers, it has no nonce or expiry,
+   so a client that can read a queue can replay what it reads, and it reads its key and certificates from
+   files, for the whole process. Its cost, a key that every sender holds and that smarter-infrastructure
+   generates and rotates, and the risk that a mismatch leaves every worker refusing every message, buy
+   nothing that rules 5 and 8 don't already give. Reopen it if a workload ever holds Redis's default
+   password without being a sender; its own ACL user is then probably the better fix.
 8. **One Redis ACL user per workload.** The tool worker's user may read and write only its own queue's
    keys, kombu's, and its results, and read Extensions' archives; not the other queues, RedBeat or
    database 2. Redis's ACLs restrict keys by pattern, not by database, so the cache's keys need a prefix
@@ -222,13 +236,12 @@ already hold every credential, so Redis gives it nothing new: ADR-038's phases 3
 The queues matter for code that runs only in the tool worker, an Extension above all. For that code, rule 5
 and then rule 8 close every path at once: an ACL user is useless while the default user's password is
 public, and with a real password, the tool worker's own user can't push to another queue, read the sessions
-or edit the schedule. Rule 6 is cheap, and narrows what any forged message reaches. Rule 7 then protects
-against Redis clients that already hold credentials, which makes it defense in depth, and it comes after the
-isolation of Extension calls, which no ACL can give, because the tool worker must read its own queue. Until
-then, Calico's network policies, the hardened pods, and ADR-038's
-tool worker, which keeps Extensions out of the pods that hold credentials, are the protection. The tool
-worker's Extensions and their persistence in its processes are ADR-038's: one option is a queue of their
-own with ``--max-tasks-per-child=1``.
+or edit the schedule. Rule 6 is cheap, and narrows what any forged message reaches. Rule 7 would have
+protected against Redis clients that already hold credentials, as defense in depth, and was declined: every
+such client is a sender that would hold the signing key too. Extension calls run in a worker of their own
+(#1077), since no ACL can keep the tool worker from reading its own queue. Calico's network policies, the
+hardened pods, and ADR-038's tool worker, which keeps Extensions out of the pods that hold credentials,
+protect what the queues don't.
 
 Alternatives Considered
 -----------------------
@@ -256,8 +269,8 @@ Consequences
     ``templates/deployment-worker-tools.yaml``) and docker-compose services.
   - A new task must be assigned to the right queue, and a task that waits must be written as a sequence
     of checks rather than a loop.
-  - Until rules 5 to 8 are in place, the queues let code in any pod that reaches Redis act with the
-    infrastructure worker's credentials.
+  - A client that holds Redis's default password can still send any task to the queue its worker
+    consumes. Every such client is a pod that holds the platform's credentials already.
 
 Related ADRs
 ------------

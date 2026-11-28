@@ -2,11 +2,14 @@
 The Smarter platform's Celery app.
 
 It is configured from the Django settings whose names start with ``CELERY_``, and finds the
-``tasks`` modules of every installed Django app. In the tool worker, ``smarter-worker-tools``, it
-registers only the tool worker's own task (:data:`TOOL_WORKER_TASKS`).
+``tasks`` modules of every installed Django app. Each worker then registers only its own tasks
+(ADR-030, rule 6): the tool worker, ``smarter-worker-tools``, and the Extension worker only
+:data:`TOOL_WORKER_TASKS`, and every other worker only the tasks of the queues it consumes
+(:func:`restrict_worker_tasks`).
 """
 
 import logging
+from collections.abc import Sequence
 
 from celery import Celery
 from celery.signals import worker_init, worker_process_init
@@ -202,15 +205,38 @@ def task_packages() -> list[str]:
     return packages
 
 
+def keep_only_tasks(app: Celery, kept: Sequence[str]) -> list[str]:
+    """
+    Remove every task from the app's registry except ``kept`` and Celery's own.
+
+    A worker rejects a message for a task that isn't in its registry ("Received unregistered task"), so
+    after this it runs nothing but ``kept``, whatever lands on its queue.
+
+    :param app: The Celery app.
+    :param kept: The names of the tasks to keep.
+    :returns: The names of the tasks removed, sorted.
+    """
+    registry = app.tasks
+    removed = []
+    for name in sorted(registry.keys()):
+        if name in kept:
+            continue
+        if name.startswith(CELERY_BUILTIN_TASK_PREFIX):
+            continue
+        registry.unregister(name)
+        removed.append(name)
+    return removed
+
+
 def keep_only_tool_worker_tasks(app: Celery) -> list[str]:
     """
     Remove every task from the app's registry except :data:`TOOL_WORKER_TASKS` and Celery's own.
 
     Django's app loading imports many apps' ``tasks`` modules, through their receivers, whatever
     :func:`task_packages` says, and so registers tasks that deploy LLMClients, write DNS records or
-    charge accounts. The tool worker must never run them. A worker rejects a message for a task that
-    isn't in its registry ("Received unregistered task"), so after this it runs nothing but tool calls,
-    whatever lands on its queue.
+    charge accounts. The tool worker must never run them. The tool worker and the Extension worker keep
+    this list, rather than the tasks of the queue they consume (:func:`keep_only_queue_tasks`), because the
+    Extension worker runs ``run_tool_call`` from the Extensions queue, which the task doesn't declare.
 
     :param app: The Celery app.
     :returns: The names of the tasks removed, sorted.
@@ -224,37 +250,117 @@ def keep_only_tool_worker_tasks(app: Celery) -> list[str]:
     for name in TOOL_WORKER_TASKS:
         if name not in registry:
             raise SmarterConfigurationError(f"The tool worker's task {name} is not registered.")
-    removed = []
-    for name in sorted(registry.keys()):
-        if name in TOOL_WORKER_TASKS:
-            continue
-        if name.startswith(CELERY_BUILTIN_TASK_PREFIX):
-            continue
-        registry.unregister(name)
-        removed.append(name)
+    removed = keep_only_tasks(app, TOOL_WORKER_TASKS)
     return removed
 
 
-def restrict_tool_worker_tasks(**kwargs) -> None:
+def consumed_queue_names(app: Celery) -> list[str]:
     """
-    In the tool worker, keep only its own tasks in the registry (:func:`keep_only_tool_worker_tasks`).
+    Name the queues that this worker consumes, as its ``-Q`` selected them.
 
-    Connected to ``worker_init``, which the worker sends before it prints its banner and before its
-    pool's processes fork, so that they inherit the restricted registry. Only the tool worker
-    (``smarter_settings.database_unavailable``): the other workers keep every task.
+    The worker selects its queues before it sends ``worker_init``. Without ``-Q``, it consumes the app's
+    default queue.
+
+    :param app: The worker's Celery app.
+    :returns: The queues' names, sorted.
+    """
+    consume_from = app.amqp.queues.consume_from
+    names = sorted(consume_from.keys())
+    return names
+
+
+def queue_task_names(app: Celery, queue_names: Sequence[str]) -> list[str]:
+    """
+    Name the platform's tasks that declare one of the queues, in their ``@app.task(queue=...)``.
+
+    A task that declares no queue is sent to the app's default queue. Celery's own tasks are left out:
+    every worker keeps them.
+
+    :param app: The Celery app.
+    :param queue_names: The queues.
+    :returns: The tasks' names, sorted.
+    """
+    names = []
+    for name in sorted(app.tasks.keys()):
+        if name.startswith(CELERY_BUILTIN_TASK_PREFIX):
+            continue
+        task = app.tasks[name]
+        # Celery's Task sets queue from @app.task(queue=...), but its type stubs don't declare it.
+        declared_queue = getattr(task, "queue", None)
+        if declared_queue is None:
+            declared_queue = app.conf.task_default_queue
+        if declared_queue in queue_names:
+            names.append(name)
+    return names
+
+
+def keep_only_queue_tasks(app: Celery) -> list[str]:
+    """
+    Remove every task from the app's registry except those of the queues this worker consumes, and Celery's own.
+
+    ADR-030, rule 6. Every worker registers every task, because Django's app loading imports every
+    app's ``tasks`` modules. Without this, the queue a task runs in would be routing, not a permission: a
+    message for an infrastructure task, e.g. ``delete_default_api``, pushed onto the operational queue
+    would run in ``smarter-worker``, and an operational task pushed onto the infrastructure queue would
+    run with the Kubernetes Role and the IAM role. After this, ``smarter-worker`` runs only the operational
+    queue's tasks, and ``smarter-worker-infrastructure`` only the infrastructure queue's.
+
+    The queues are the worker's own, from its ``-Q`` (:func:`consumed_queue_names`), not from a setting,
+    so the registry always matches what the worker takes.
+
+    :param app: The worker's Celery app.
+    :returns: The names of the tasks removed, sorted.
+    :raises SmarterConfigurationError: If no task declares a queue that the worker consumes: the worker
+        would run nothing, e.g. one started without ``-Q``.
+    """
+    # pylint: disable=import-outside-toplevel
+    from smarter.common.exceptions import SmarterConfigurationError
+
+    queue_names = consumed_queue_names(app)
+    kept = queue_task_names(app, queue_names)
+    if not kept:
+        raise SmarterConfigurationError(
+            f"No task declares the queues that this worker consumes ({', '.join(queue_names)}): it would run nothing."
+        )
+    removed = keep_only_tasks(app, kept)
+    return removed
+
+
+def restrict_worker_tasks(**kwargs) -> None:
+    """
+    Keep only this worker's own tasks in its registry (ADR-030, rule 6).
+
+    The tool worker and the Extension worker (``smarter_settings.database_unavailable``) keep only
+    :data:`TOOL_WORKER_TASKS` (:func:`keep_only_tool_worker_tasks`). Every other worker keeps the tasks of
+    the queues it consumes (:func:`keep_only_queue_tasks`), and logs how many it runs.
+
+    Connected to ``worker_init``, which the worker sends after it selects its queues, and before it prints
+    its banner and its pool's processes fork, so that they inherit the restricted registry. Only workers
+    send it: the app, beat and the Jobs keep every task, which they send.
 
     :param kwargs: The signal's arguments, unused.
     :returns: None
     """
     # pylint: disable=import-outside-toplevel
     from smarter.common.conf import smarter_settings
+    from smarter.lib import logging as smarter_logging
 
-    if not smarter_settings.database_unavailable:
+    if smarter_settings.database_unavailable:
+        keep_only_tool_worker_tasks(APP)
         return
-    keep_only_tool_worker_tasks(APP)
+    removed = keep_only_queue_tasks(APP)
+    queue_names = consumed_queue_names(APP)
+    kept = queue_task_names(APP, queue_names)
+    logger = smarter_logging.getSmarterLogger(__name__)
+    logger.info(
+        "this worker runs only the %d tasks of %s (ADR-030, rule 6); %d other tasks are unregistered.",
+        len(kept),
+        ", ".join(queue_names),
+        len(removed),
+    )
 
 
-worker_init.connect(restrict_tool_worker_tasks, weak=False)
+worker_init.connect(restrict_worker_tasks, weak=False)
 
 
 def run_worker_startup_checks(**kwargs) -> None:
@@ -264,7 +370,7 @@ def run_worker_startup_checks(**kwargs) -> None:
     Connected to ``worker_init``, so that the checks run once, in the worker's main process, before its
     pool's processes fork. The tool worker (``smarter_settings.database_unavailable``) checks its isolation
     (ADR-038) and its Redis user (ADR-030), then logs one line that sums them up, with the tasks it runs:
-    :func:`restrict_tool_worker_tasks`, connected before this, has already left only its own in the
+    :func:`restrict_worker_tasks`, connected before this, has already left only its own in the
     registry. Every other worker checks its database, cache and Kubernetes cluster. See
     :mod:`smarter.apps.infrastructure.startup`.
 
