@@ -390,6 +390,14 @@ Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    credential settings now, so that the map says who holds them; the app token, ``HeldBy()``, reaches only
    the Slack bot, from a Secret of its own, ``<appName>-env-slack-bot``.
 
+   The map filters credentials only, so the other settings still reached every kind (#1103). The Docker Hub
+   account, which only the chart's image-pull Secret needs, was in every pod's environment; ``smarter.env``
+   now leaves it out. And the kinds that read few settings get those alone (``smarter.podKeys``): the
+   bastion the four keys its pod spec names, the backup Job, the migrate Job and Celery Beat what their
+   commands read and what Django's prod settings need to start. Each list was found by running the kind's
+   command, from the image, with nothing else, and a render test pins it. The app and both workers read
+   most settings, and keep every one but the credentials they don't hold.
+
    Each kind of pod also runs as its own ServiceAccount, ``<appName>-<pod>``, whose Role and ClusterRole allow
    only what an inventory of every Kubernetes call found its code does (``templates/rbac.yaml``). Every cluster
    write is ``smarter-worker-infrastructure``'s, which alone may read a Secret. The app only reads: pods, their
