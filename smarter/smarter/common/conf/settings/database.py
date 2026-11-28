@@ -6,7 +6,7 @@ from typing import Annotated, Optional, Union
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.credentials import DATABASE_ADMIN_POD_KINDS, HeldBy
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -16,7 +16,11 @@ from smarter.common.conf.util import (
     parse_int_setting,
     with_derived_default,
 )
-from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
+from smarter.common.const import (
+    SmarterEnvironments,
+    SmarterKubernetesPodKinds,
+    SmarterPodCapabilities,
+)
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -57,7 +61,7 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_root_username of type {type(v)} is not a non-empty string.")
         return v
 
-    subsystem_sql_root_password: Annotated[Optional[SecretStr], HeldBy(*DATABASE_ADMIN_POD_KINDS)] = Field(
+    subsystem_sql_root_password: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.database_admin)] = Field(
         None,
         description="The password of the database server's administrator, sql_root_username.",
         examples=["your-root-password"],
@@ -92,11 +96,13 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_root_password of type {type(v)} is not a SecretStr")
         return v
 
-    subsystem_sql_backup_password: Annotated[Optional[SecretStr], HeldBy(*DATABASE_ADMIN_POD_KINDS)] = Field(
-        None,
-        description="The password of the read-only account that the nightly database backup dumps the database as.",
-        examples=["your-backup-password"],
-        title="MySQL Backup Password",
+    subsystem_sql_backup_password: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.database_admin)] = (
+        Field(
+            None,
+            description="The password of the read-only account that the nightly database backup dumps the database as.",
+            examples=["your-backup-password"],
+            title="MySQL Backup Password",
+        )
     )
     """
     The password of the database's read-only backup account, ``smarter_backup`` by default.

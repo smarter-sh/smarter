@@ -63,8 +63,8 @@ class SmarterKubernetesPodKinds:
 
     The Helm chart sets ``SERVICE_TYPE`` on each Deployment and Job, and docker-compose on each service, and
     ``smarter_settings.service_type`` validates it against :attr:`all`. The settings check each kind for what it
-    should and shouldn't hold (ADR-038), and :mod:`smarter.common.conf.credentials` says which kinds hold each
-    credential.
+    should and shouldn't hold (ADR-038). This class says what each kind *is*; what each kind *does* with a
+    credential is :class:`SmarterPodCapabilities`.
     """
 
     API = "api"
@@ -101,15 +101,90 @@ class SmarterKubernetesPodKinds:
     with_database = [API, WORKER, WORKER_INFRASTRUCTURE, BEAT, JOB_INIT, JOB_MIGRATE, JOB_BACKUP, BASTION]
     """The kinds with a database: every one but the :attr:`restricted` workers, which a test checks."""
 
-    platform = [API, WORKER, WORKER_INFRASTRUCTURE, JOB_INIT]
-    """
-    The kinds that do the platform's work: serve requests, run its tasks, and initialize it.
 
-    The app, ``smarter-worker``, ``smarter-worker-infrastructure`` and the init Job. They decrypt Smarter Secrets
-    (the Fernet key), send email (SMTP), and sign what the app verifies (the Django secret key): e.g. an account
-    contact's email, which the workers send, carries an unsubscribe token signed with ``SECRET_KEY``. It is narrower
-    than :attr:`with_database`: Celery Beat, the migrate Job, the backup Job and the bastion have a database, but do
-    none of that. The backup Job sends one email, its own result, which is why it holds SMTP's credentials too.
+class SmarterPodCapabilities:
+    """
+    What a kind of pod does that needs a credential: each capability lists the kinds of pod that have it (ADR-038).
+
+    A credential setting names the capability that uses it, e.g. ``HeldBy(*SmarterPodCapabilities.email)`` on SMTP's
+    password, so that only those kinds hold it (:mod:`smarter.common.conf.credentials`). They are lists of members,
+    not the Kubernetes Roles or the IAM roles that the Helm chart and smarter-infrastructure create: those are one
+    per kind of pod, for all of its capabilities at once. What a pod *is*, e.g. whether it has a database, is on
+    :class:`SmarterKubernetesPodKinds`.
+    """
+
+    smarter_secrets = [
+        SmarterKubernetesPodKinds.API,
+        SmarterKubernetesPodKinds.WORKER,
+        SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
+        SmarterKubernetesPodKinds.JOB_INIT,
+    ]
+    """
+    Decrypt and encrypt Smarter Secrets, with the Fernet key: the app, both workers and the init Job.
+
+    The tasks that use a Secret's value, e.g. an LLMHost's api key or a plugin's connection, run in the workers, and
+    the init Job creates the bootstrap Secrets.
+    """
+
+    signing = [
+        SmarterKubernetesPodKinds.API,
+        SmarterKubernetesPodKinds.WORKER,
+        SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
+        SmarterKubernetesPodKinds.JOB_INIT,
+    ]
+    """
+    Sign what the app verifies, with the Django secret key: the app, both workers and the init Job.
+
+    E.g. an account contact's email, which the workers send, carries an unsubscribe token signed with ``SECRET_KEY``.
+    Celery Beat and the migrate Job sign nothing, and start with a random key of their own.
+    """
+
+    email = [
+        SmarterKubernetesPodKinds.API,
+        SmarterKubernetesPodKinds.WORKER,
+        SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
+        SmarterKubernetesPodKinds.JOB_INIT,
+        SmarterKubernetesPodKinds.JOB_BACKUP,
+    ]
+    """
+    Send email, with SMTP's credentials: the app, both workers, the init Job, and the backup Job.
+
+    ``smarter-worker-infrastructure`` emails a custom domain's verification result, and the backup Job its own result.
+    """
+
+    aws = [
+        SmarterKubernetesPodKinds.API,
+        SmarterKubernetesPodKinds.WORKER,
+        SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
+        SmarterKubernetesPodKinds.JOB_INIT,
+        SmarterKubernetesPodKinds.JOB_BACKUP,
+        SmarterKubernetesPodKinds.BASTION,
+    ]
+    """
+    Call AWS: S3, Route53, ACM and EKS.
+
+    On Kubernetes, each kind with its own IAM role, and no key.
+
+    The backup Job saves its dump to S3. Celery Beat and the migrate Job make no AWS call, and have no role
+    (ADR-038, phase 3), so the settings don't ask STS for credentials there (``Settings.uses_aws``).
+    """
+
+    job_logs = [
+        SmarterKubernetesPodKinds.JOB_INIT,
+        SmarterKubernetesPodKinds.JOB_BACKUP,
+    ]
+    """Post a Job's log to Slack, with ``manage.py email_job_log``: the init Job and the backup Job."""
+
+    database_admin = [
+        SmarterKubernetesPodKinds.JOB_INIT,
+        SmarterKubernetesPodKinds.JOB_BACKUP,
+        SmarterKubernetesPodKinds.BASTION,
+    ]
+    """
+    Administer the database server, as its administrator or the backup account.
+
+    The init Job creates the database, its user and the backup account. The backup Job dumps the database as the
+    backup account, or as the administrator until that account exists. The bastion is for a person who does either.
     """
 
 

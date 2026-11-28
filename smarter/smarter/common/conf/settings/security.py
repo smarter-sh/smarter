@@ -18,7 +18,7 @@ from smarter.common.conf.util import (
     field_default,
     validate_throttle_rate,
 )
-from smarter.common.const import SmarterKubernetesPodKinds
+from smarter.common.const import SmarterKubernetesPodKinds, SmarterPodCapabilities
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.utils.utils import generate_fernet_encryption_key
 
@@ -164,10 +164,7 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
         return v
 
-    platform_fernet_encryption_key: Annotated[
-        SecretStr,
-        HeldBy(*SmarterKubernetesPodKinds.platform),
-    ] = Field(
+    platform_fernet_encryption_key: Annotated[SecretStr, HeldBy(*SmarterPodCapabilities.smarter_secrets)] = Field(
         default_factory=generated_fernet_encryption_key,
         description="The Fernet encryption key used for encrypting Smarter Secrets data.",
         examples=["gAAAAABh..."],
@@ -258,7 +255,7 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"internal_ip_prefixes of type {type(v)} is not a list: {v}")
         return v
 
-    django_secret_key: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.platform)] = Field(
+    django_secret_key: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.signing)] = Field(
         validation_alias="DJANGO_SECRET_KEY",
         default_factory=generated_django_secret_key,
         description="The Django secret key for cryptographic signing.",

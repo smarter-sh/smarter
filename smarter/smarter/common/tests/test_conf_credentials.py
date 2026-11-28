@@ -22,7 +22,7 @@ from smarter.common.conf.credentials import (
     render_chart_credentials,
     restricted_workers_may_hold,
 )
-from smarter.common.const import SmarterKubernetesPodKinds
+from smarter.common.const import SmarterKubernetesPodKinds, SmarterPodCapabilities
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -98,23 +98,40 @@ class TestHolders(SmarterTestBase):
         expected = [kind for kind in SmarterKubernetesPodKinds.all if kind not in SmarterKubernetesPodKinds.restricted]
         self.assertEqual(SmarterKubernetesPodKinds.with_database, expected)
 
-    def test_the_platform_pods(self):
-        """The pods that do the platform's work hold its Fernet key, Django key and SMTP credentials; beat doesn't."""
-        platform = SmarterKubernetesPodKinds.platform
-        self.assertLess(set(platform), set(SmarterKubernetesPodKinds.with_database))
-        for kind in (
-            SmarterKubernetesPodKinds.BEAT,
-            SmarterKubernetesPodKinds.JOB_MIGRATE,
-            SmarterKubernetesPodKinds.BASTION,
-        ):
-            self.assertNotIn(kind, platform)
+    def test_the_capabilities(self):
+        """Each capability names known kinds of pod with a database; Beat and the migrate Job have only its password."""
+        capabilities = {
+            name: value
+            for name, value in vars(SmarterPodCapabilities).items()
+            if not name.startswith("_") and isinstance(value, list)
+        }
+        self.assertEqual(
+            set(capabilities), {"smarter_secrets", "signing", "email", "aws", "job_logs", "database_admin"}
+        )
+        for name, kinds in capabilities.items():
+            with self.subTest(capability=name):
+                self.assertLessEqual(set(kinds), set(SmarterKubernetesPodKinds.with_database))
+                self.assertNotIn(SmarterKubernetesPodKinds.BEAT, kinds)
+                self.assertNotIn(SmarterKubernetesPodKinds.JOB_MIGRATE, kinds)
+
+    def test_each_credential_follows_its_capability(self):
+        """The Fernet key decrypts Smarter Secrets, the Django key signs, SMTP's credentials send email."""
         fields = Settings.model_fields
-        for name in ("platform_fernet_encryption_key", "django_secret_key"):
+        expected = {
+            "platform_fernet_encryption_key": SmarterPodCapabilities.smarter_secrets,
+            "django_secret_key": SmarterPodCapabilities.signing,
+            "subsystem_smtp_password": SmarterPodCapabilities.email,
+            "subsystem_smtp_username": SmarterPodCapabilities.email,
+            "aws_access_key_id": SmarterPodCapabilities.aws,
+            "subsystem_slack_bot_token": SmarterPodCapabilities.job_logs,
+            "subsystem_sql_root_password": SmarterPodCapabilities.database_admin,
+        }
+        for name, kinds in expected.items():
             with self.subTest(credential=name):
-                self.assertEqual(credential_holders(fields[name]), frozenset(platform))
-        # the backup Job emails its own result, so it holds SMTP's credentials too.
-        smtp_holders = frozenset({*platform, SmarterKubernetesPodKinds.JOB_BACKUP})
-        self.assertEqual(credential_holders(fields["subsystem_smtp_password"]), smtp_holders)
+                self.assertEqual(credential_holders(fields[name]), frozenset(kinds))
+        # the backup Job emails its own result, so it holds SMTP's credentials, but signs nothing.
+        self.assertIn(SmarterKubernetesPodKinds.JOB_BACKUP, SmarterPodCapabilities.email)
+        self.assertNotIn(SmarterKubernetesPodKinds.JOB_BACKUP, SmarterPodCapabilities.signing)
 
     def test_the_backup_job(self):
         """The backup Job dumps the database, saves it to S3, and emails and posts its result: no more (#1084)."""
