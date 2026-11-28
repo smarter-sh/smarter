@@ -51,7 +51,7 @@ def tool_runner():
     d = Diagram(
         "tool-runner",
         1300,
-        1090,
+        1200,
         "How an LLM tool call runs",
         "resolved in the app, where the credentials are; executed by the tool runner, without them (ADR-038)",
         "When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or "
@@ -64,10 +64,11 @@ def tool_runner():
         "execute_extension_call for Extensions, whose third-party code gets its settings, switches and caller as "
         "plain values, "
         "execute_http_call for the web search apis (Brave, Tavily), the Brave image search, the checks of each image's "
-        "url and websites' robots.txt, and execute_webfetch_call for the pages the web search plugin reads, with its "
-        "domain policy and robots.txt checked again on each redirect. The executor reads no database and no Secret: "
-        "it calls the MCP server, the api, the search api or the website, through safe_http, to public addresses "
-        "only. It "
+        "url and websites' robots.txt, execute_webfetch_call for the pages the web search plugin reads, with its "
+        "domain policy and robots.txt checked again on each redirect, and execute_vectorstore_call for a managed "
+        "vectorstore's operations, on Pinecone or Qdrant Cloud, with its vectors embedded in the app. The executor "
+        "reads no database and no Secret: it calls the MCP server, the api, the search api, the website or the vector "
+        "database, to public addresses only. It "
         "returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app "
         "sends the signals, stores the result in the cache, and gives it to the LLM. The in-process runner executes "
         "the call in the app's process. The remote runner sends it, as JSON, in a Celery task through Redis to the "
@@ -151,13 +152,14 @@ def tool_runner():
             "extension: execute_extension_call",
             "http: execute_http_call",
             "webfetch: execute_webfetch_call",
+            "vectorstore: execute_vectorstore_call",
         ],
         code="TOOL_EXECUTORS",
     )
     d.box(
         "result",
         380,
-        900,
+        1010,
         250,
         "ToolCallResult",
         ["value · is_error", "failure · status_code", "remote: back through Redis"],
@@ -167,7 +169,7 @@ def tool_runner():
     # 3. execution, without the database
     d.heading(690, 100, 300, "3 · Execution")
     d.region(
-        676, 150, 328, 716, "no database · no Secrets", note="smarter-worker-tools (remote), or the app (in_process)"
+        676, 150, 328, 826, "no database · no Secrets", note="smarter-worker-tools (remote), or the app (in_process)"
     )
     d.box(
         "exec_mcp",
@@ -223,6 +225,15 @@ def tool_runner():
         ["a page that the LLM chose", "policy and robots.txt on each hop"],
         code="safe_http.fetch(redirect_policy=)",
     )
+    d.box(
+        "exec_vectorstore",
+        690,
+        860,
+        300,
+        "execute_vectorstore_call()",
+        ["a managed vectorstore's operation,", "its vectors embedded in the app"],
+        code="QdrantClient · Pinecone",
+    )
 
     # 4. the internet
     d.heading(1046, 100, 226, "4 · The internet")
@@ -267,6 +278,16 @@ def tool_runner():
         ["the pages the LLM reads", "and their robots.txt"],
         "outside",
         code="https · 443",
+    )
+    d.box(
+        "vectordbs",
+        1046,
+        860,
+        226,
+        "Vector databases",
+        ["Pinecone, or the Qdrant Cloud", "cluster of the ApiConnection"],
+        "outside",
+        code="https · 443 or 6333",
     )
 
     # the call, down the app
@@ -320,7 +341,7 @@ def tool_runner():
         label_anchor="start",
     )
     registry_x, registry_y = d.right("registry")
-    for key in ("exec_mcp", "exec_api", "exec_sql", "exec_extension", "exec_http", "exec_webfetch"):
+    for key in ("exec_mcp", "exec_api", "exec_sql", "exec_extension", "exec_http", "exec_webfetch", "exec_vectorstore"):
         exec_x, exec_y = d.left(key)
         d.arrow([(registry_x, registry_y), (660, registry_y), (660, exec_y), (exec_x, exec_y)])
 
@@ -331,10 +352,11 @@ def tool_runner():
     d.arrow([d.right("exec_extension"), d.left("services")], "green")
     d.arrow([d.right("exec_http"), d.left("searches")], "green")
     d.arrow([d.right("exec_webfetch"), d.left("pages")], "green")
+    d.arrow([d.right("exec_vectorstore"), d.left("vectordbs")], "green")
 
     # the result, from either executor (the region's edge), back to the tool's code
     region_bottom_x = 676 + 328 / 2
-    region_bottom_y = 150 + 716
+    region_bottom_y = 150 + 826
     result_x, result_y = d.right("result")
     d.arrow(
         [(region_bottom_x, region_bottom_y), (region_bottom_x, result_y), (result_x, result_y)],
@@ -350,7 +372,7 @@ def tool_runner():
     )
 
     d.legend(
-        1026,
+        1136,
         [
             ("blue", False, "the call"),
             ("blue", True, "its result"),

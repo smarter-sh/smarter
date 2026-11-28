@@ -56,6 +56,7 @@ from smarter.lib.typing import SmarterDictType
 
 from .connection import MCPServerCatalog, MCPServerConnection, is_tool_allowed
 from .exceptions import SmarterMCPClientConnectionError
+from .execution import discover_catalog
 from .models import MCPClient, MCPConnectionStatus
 from .signals import mcpclient_connected, mcpclient_connection_failed
 
@@ -289,7 +290,7 @@ def record_connection_failure(mcpclient: MCPClient, error: str) -> None:
 
 def connect(mcpclient: MCPClient) -> MCPServerCatalog:
     """
-    Connect to an MCPClient's server, and return its catalog, without caching.
+    Connect to an MCPClient's server, through the tool runner, and return its catalog, without caching.
 
     The result is recorded in the MCPClient's status fields, and
     :data:`~smarter.apps.mcpclient.signals.mcpclient_connected` or
@@ -302,7 +303,8 @@ def connect(mcpclient: MCPClient) -> MCPServerCatalog:
     :raises SmarterMCPClientConfigurationError: If the MCPClient is misconfigured.
     """
     try:
-        catalog = MCPServerConnection(mcpclient).discover()
+        # listed through the tool runner, like every connection to the server (ADR-038).
+        catalog = discover_catalog(MCPServerConnection(mcpclient))
     except SmarterMCPClientConnectionError as e:
         record_connection_failure(mcpclient, e.message)
         mcpclient_connection_failed.send(sender=get_cached_catalog, mcpclient=mcpclient, error=e.message)

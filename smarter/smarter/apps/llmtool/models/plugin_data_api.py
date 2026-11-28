@@ -4,7 +4,6 @@ import re
 from typing import Optional, Self, Union
 from urllib.parse import urljoin
 
-import requests
 from cache_results import cache_results
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -145,38 +144,19 @@ class PluginDataApi(PluginDataBase):
             "body": self.body,
         }
 
-    def prepare_request(self, params: Optional[SmarterDictType]) -> SmarterDictType:
-        """Prepare the API request by merging parameters, headers, and body."""
-        params = params or {}
-        self.validate_url_params()
-
-        request_data = {
-            "url": f"{self.connection.base_url}{self.endpoint}",
-            "headers": self.headers or {},
-            "params": params,
-            "json": self.body or {},
-        }
-        return request_data
-
-    def execute_request(self, params: Optional[SmarterDictType]) -> Union[SmarterDictType, bool]:
-        """Execute the API request and return the results."""
-        request_data = self.prepare_request(params)
-        try:
-            response = requests.get(**request_data, timeout=self.connection.timeout)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logger.error("API request failed: %s", e)
-            return False
-
-    def test(self) -> Union[SmarterDictType, bool]:
-        """Test the API request using the test_values in the record."""
-        return self.execute_request(self.test_values)
-
     def sanitized_return_data(self, params: Optional[SmarterDictType] = None) -> Union[SmarterDictType, bool]:
-        """Return a dict by executing the API request with the provided params."""
-        logger.info("called. - %s", params)
-        return self.execute_request(params)
+        """
+        An ApiPlugin's data is its api's response, which the plugin's tool call fetches.
+
+        The call goes through the tool runner (:class:`~smarter.apps.llmtool.plugin.api.ApiPlugin`, ADR-038), which checks
+        the url and holds no credential of the platform's. This model makes no request of its own: a request made here
+        would bypass both.
+
+        :raises NotImplementedError: Always.
+        """
+        raise NotImplementedError(
+            "An ApiPlugin's data comes from its tool call, through the tool runner: see smarter.apps.llmtool.plugin.api."
+        )
 
     def validate_endpoint(self) -> None:
         """Validate the endpoint format."""

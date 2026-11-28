@@ -122,9 +122,9 @@ command.
    its Kubernetes Secrets, IAM roles, DNS zones, certificates, SES email, S3 buckets and CloudFront
    distribution.
 5. Note three values for Step 3: the cluster's name, the output ``cluster_name`` of ``aws/stack/kubernetes``;
-   and the IAM roles of the pods and of the nightly database backup, the outputs ``smarter_iam_role_arn``
-   and ``smarter_backup_iam_role_arn`` of ``aws/environments/<environment>``. Read each with
-   ``terragrunt output -raw <name>`` in its folder.
+   and the IAM roles of the pods, one per kind of pod, and of the nightly database backup, the outputs
+   ``smarter_pod_iam_role_arns`` and ``smarter_backup_iam_role_arn`` of
+   ``aws/environments/<environment>``. Read each with ``terragrunt output <name>`` in its folder.
 
 .. warning::
 
@@ -173,7 +173,11 @@ your values file holds only the settings below.
       bootstrapSecrets:
         openai_api_key: "<your OpenAI API key>"
       serviceAccount:
-        awsRoleArn: "<smarter_iam_role_arn>"
+        awsRoleArns:
+          api: "<smarter_pod_iam_role_arns.api>"
+          worker: "<smarter_pod_iam_role_arns.worker>"
+          worker-infrastructure: "<smarter_pod_iam_role_arns.worker-infrastructure>"
+          job-init: "<smarter_pod_iam_role_arns.job-init>"
         createClusterRole: false
       databaseScheduledBackup:
         awsRoleArn: "<smarter_backup_iam_role_arn>"
@@ -189,9 +193,10 @@ your values file holds only the settings below.
         - The common settings, from Step 1.
       * - ``env.SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME``
         - The cluster's name, from Step 2. Smarter deploys LLMClients into it.
-      * - ``serviceAccount.awsRoleArn``, ``databaseScheduledBackup.awsRoleArn``
-        - The IAM roles, from Step 2. ``createClusterRole: false``: smarter-infrastructure has already
-          created the pods' cluster role.
+      * - ``serviceAccount.awsRoleArns``, ``databaseScheduledBackup.awsRoleArn``
+        - The IAM roles, from Step 2: one per kind of pod that calls AWS, with only what it does there,
+          and the backup's. Celery Beat and the migrate Job have none. ``createClusterRole: false``:
+          smarter-infrastructure has already created the pods' cluster roles.
       * - ``env.SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY``
         - The key that Smarter encrypts Secrets with. Without it, each pod generates its own key, and a
           Secret saved by one pod can't be read by another, or after a restart.

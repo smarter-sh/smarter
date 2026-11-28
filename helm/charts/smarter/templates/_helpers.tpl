@@ -153,7 +153,10 @@ Secret, secret-env-tools.yaml or secret-env-extensions.yaml (ADR-038, issue #107
   {{- $env := include "smarter.toolWorkerEnv" (dict "root" . "user" "tools" "queue" "") | fromYaml }}
 
 Only what it needs to start, take its tasks from the broker and read extension archives from the
-cache, from smarter.env: settings that aren't secret. Never DJANGO_CACHES or smarter.env's broker url,
+cache, from smarter.env: settings that aren't secret. Not DJANGO_SETTINGS_MODULE, which the Celery app derives
+from SMARTER_ENVIRONMENT (smarter.workers.celery), nor the AWS region, the cloud provider or the Kubernetes
+namespace, which it never reads: it calls neither AWS nor Kubernetes. Both queues' names, because it declares
+both, and the Extension worker's startup check proves that it can't read the tool worker's queue, by name. Never DJANGO_CACHES or smarter.env's broker url,
 which carry Redis's default user's password. Never the database's, the Django secret key, the
 Fernet key, the LLM providers' keys or the AWS keys: each tool call brings the credentials that it
 needs. Then:
@@ -178,20 +181,16 @@ needs. Then:
 {{- $all := include "smarter.env" $root | fromYaml -}}
 {{- $env := dict -}}
 {{- $keys := list
-  "AWS_REGION"
-  "DJANGO_SETTINGS_MODULE"
   "SMARTER_APP_LLMTOOL_PLUGIN_MAX_DATA_RESULTS"
   "SMARTER_APP_EXTENSIONS_TASKS_CELERY_TASK_QUEUE"
   "SMARTER_APP_TOOLS_TASKS_CELERY_TASK_QUEUE"
   "SMARTER_DEBUG_MODE"
   "SMARTER_ENVIRONMENT"
   "SMARTER_LOG_LEVEL"
-  "SMARTER_PLATFORM_CLOUD_PROVIDER"
   "SMARTER_PLATFORM_INTERNAL_IP_PREFIXES"
   "SMARTER_PLATFORM_ROOT_DOMAIN"
   "SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER"
   "SMARTER_PLATFORM_SUBDOMAIN"
-  "SMARTER_SUBSYSTEM_K8S_NAMESPACE"
 -}}
 {{- range $key := $keys -}}
 {{- if hasKey $all $key -}}
