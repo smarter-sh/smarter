@@ -36,12 +36,15 @@ include .env
 
 # A bare `make` prints the menu of commands. Each target's description is the `## `
 # comment after the colon on the target's own line, e.g. `build: ## Build Docker containers`.
+# A `##@ <heading>` line starts a section of the menu: the targets below it, in file order.
 .DEFAULT_GOAL := help
 
 all: help
 
 # initialize local development environment.
 # takes between 5 and 20 minutes to complete
+##@ Getting started
+
 init: ## Initialize local and Docker environments
 	@echo "==============================================================================="
 	@echo "Initializing local development environment. This will verify and set up your"
@@ -118,6 +121,8 @@ tear-down: ## Destroy all Docker build and local artifacts
 # ---------------------------------------------------------
 # Code management
 # ---------------------------------------------------------
+##@ Code management
+
 
 lint: ## Run all code linters and formatters
 	make python-lint
@@ -170,6 +175,7 @@ release: ## Force a new Github release
 # ---------------------------------------------------------
 # Docker
 # ---------------------------------------------------------
+##@ Docker
 docker-check: ## Verify Docker is installed and running
 	@echo ""
 	@echo "==============================================================================="
@@ -263,6 +269,7 @@ docker-prune: ## Remove unused Docker objects and clean up Docker artifacts
 # -------------------------------------------------------------------------
 # Helm
 # -------------------------------------------------------------------------
+##@ Helm
 helm-update: ## Update Helm chart dependencies
 	@echo "==============================================================================="
 	@echo "Updating Helm chart dependencies for smarter/charts/smarter ..."
@@ -279,6 +286,7 @@ redis-chart-check: ## Start the Helm chart's Redis as its pod does, and check it
 # ---------------------------------------------------------
 # Keen
 # ---------------------------------------------------------
+##@ Keen
 keen-init: ## Install gulp, yarn and dependencies for Keen
 	cd keen_v3.0.6/tools && npm install --global yarn && \
 	npm install gulp@^4.0.2 && \
@@ -297,6 +305,7 @@ keen-server: ## Start local Keen web server using gulp
 # ---------------------------------------------------------
 # Python
 # ---------------------------------------------------------
+##@ Python
 check-python: ## Verify Python 3.14 is installed
 	@echo ""
 	@echo "==============================================================================="
@@ -412,6 +421,7 @@ python-audit: ## Fail when a Python lockfile pins a release with a known vulnera
 # ---------------------------------------------------------
 # Web console
 # ---------------------------------------------------------
+##@ Web console
 # The web console, smarter-sh/smarter-console: its release that smarter-console-version.txt pins, into
 # smarter/smarter/static/react/, where collectstatic and the Docker build pick it up. See scripts/fetch_console.py.
 console: ## Install the pinned release of the web console into the static folder
@@ -425,6 +435,7 @@ console-local: ## Install a local smarter-console build: CONSOLE_DIST=../smarter
 # ---------------------------------------------------------
 # Bootstrap secrets (issue #1099)
 # ---------------------------------------------------------
+##@ Bootstrap secrets
 # The local keys of the built-in Providers, the search plugins and the managed vector databases:
 # from .env's SMARTER_APP_*_API_KEY variables into bootstrap-secrets/, one file per Smarter Secret,
 # which smarter-api mounts and initialize_platform turns into Secrets. Then delete those variables
@@ -432,6 +443,10 @@ console-local: ## Install a local smarter-console build: CONSOLE_DIST=../smarter
 bootstrap-secrets: ## Write .env's AI service keys into bootstrap-secrets/, one file per Smarter Secret
 	python3 -I scripts/bootstrap_secrets.py --env-file .env
 
+# ---------------------------------------------------------
+# Contracts
+# ---------------------------------------------------------
+##@ Contracts
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
 # (smarter.apps.prompt.contract.models), in the smarter-api container. Run it after changing the
 # models, and commit the changes. smarter-console copies the schema into Smarter Chat, which generates
@@ -521,6 +536,7 @@ api-contract: ## Regenerate the SAM JSON Schemas and examples, and the api OpenA
 # our local build target for Sphinx documentation is intended to try to match
 # what ReadTheDocs does as closely as possible.
 # -------------------------------------------------------------------------
+##@ Documentation
 sphinx-init: ## Initialize Sphinx documentation environment
 	@echo ""
 	@echo "==============================================================================="
@@ -567,6 +583,12 @@ terraform-apply: ## Apply terraform/docs/tfplan
 	$(TF) apply tfplan
 	rm -f terraform/docs/tfplan
 
+# ---------------------------------------------------------
+# Help
+# ---------------------------------------------------------
+##@ Help
 help: ## Show this menu of commands
-	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-32s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z0-9_-]+:.*## |^##@ ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*## "} \
+			/^##@ / {printf "\n\033[1m%s\033[0m\n", substr($$0, 5); next} \
+			{printf "  \033[36m%-32s\033[0m %s\n", $$1, $$2}'
