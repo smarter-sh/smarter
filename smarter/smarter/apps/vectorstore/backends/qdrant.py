@@ -3,18 +3,25 @@ The Qdrant backend: self-hosted on Kubernetes, or Qdrant Cloud.
 
 See https://qdrant.tech/. A vectorstore is one Qdrant collection, with one dense vector per
 chunk. Its text is in the payload's ``page_content``, and its metadata in ``metadata``,
-as LangChain's QdrantVectorStore stores them.
+as LangChain's QdrantVectorStore stores them, so that its collections stay readable.
+
+Every operation is one of :mod:`smarter.apps.vectorstore.execution`'s. The texts are embedded here, in the app. A Qdrant
+Cloud collection, at its ApiConnection's url, is reached through the tool runner, in the tool worker (ADR-038); a
+self-hosted server, which Smarter runs in the cluster, in process.
 """
 
 from typing import Optional
 
-from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
-from langchain_qdrant import QdrantVectorStore
-from qdrant_client import QdrantClient, models
-from qdrant_client.http.exceptions import UnexpectedResponse
+from qdrant_client import QdrantClient
 
 from smarter.apps.vectorstore.deployment import FALSE, SERVER, TRUE, VOLUME
+from smarter.apps.vectorstore.execution import (
+    QDRANT,
+    QDRANT_TIMEOUT,
+    qdrant_filter,
+    run_vectorstore_operation,
+)
 from smarter.apps.vectorstore.kubernetes import (
     SNAPSHOTS_PATH,
     QdrantKubernetes,
@@ -31,18 +38,17 @@ from .base import (
     SmarterVectorstoreBackend,
     SnapshotInfo,
     VectorStoreBackendConnectionError,
-    VectorStoreBackendCredentialsError,
     VectorStoreBackendError,
+    json_dict,
+    json_dicts,
+    json_int,
+    mmr_fetch_k,
+    result_of,
+    select_mmr,
 )
 
-TIMEOUT = 30
-DISTANCES = {
-    "cosine": models.Distance.COSINE,
-    "euclidean": models.Distance.EUCLID,
-    "dotproduct": models.Distance.DOT,
-}
-DOCUMENT_ID_KEY = "metadata.document_id"
-REFUSED_KEY_STATUSES = (401, 403)
+RESTORE_TIMEOUT_SECONDS = 600.0
+"""How long recovering a snapshot may take."""
 
 
 def condition_of(condition_type, observation: QdrantObservation) -> SAMVectorstoreCondition:
@@ -58,18 +64,6 @@ def condition_of(condition_type, observation: QdrantObservation) -> SAMVectorsto
         type=condition_type, status=status, reason=observation.reason, message=observation.message
     )
     return condition
-
-
-def qdrant_filter(metadata_filter: Optional[SmarterDictType]) -> Optional[models.Filter]:
-    """A Qdrant filter that matches chunks whose metadata has every value of metadata_filter."""
-    if not metadata_filter:
-        return None
-    return models.Filter(
-        must=[
-            models.FieldCondition(key=f"metadata.{key}", match=models.MatchValue(value=value))
-            for key, value in metadata_filter.items()
-        ]
-    )
 
 
 class QdrantBackend(SmarterVectorstoreBackend):
@@ -102,40 +96,56 @@ class QdrantBackend(SmarterVectorstoreBackend):
     @property
     def client(self) -> QdrantClient:
         """
-        The Qdrant client, created when it is first used.
+        The Qdrant client of a self-hosted server, created when it is first used, or the one a test injected.
 
-        A self-hosted server is reached at its in-cluster endpoint, with its generated API key, and Qdrant
-        Cloud at the url and API key of the vectorstore's ApiConnection.
+        A self-hosted server is reached at its in-cluster endpoint, with its generated API key. A Qdrant Cloud
+        collection has no client here: its operations go to the tool runner (:meth:`operation`).
 
-        :raises VectorStoreBackendConnectionError: If a Qdrant Cloud vectorstore has no ApiConnection url.
+        :raises VectorStoreBackendError: For a Qdrant Cloud vectorstore without an injected client.
         """
         if self._client is None:
-            url, api_key = self._url_and_api_key()
-            self._client = QdrantClient(url=url, api_key=api_key, timeout=TIMEOUT)
-        return self._client
-
-    def _url_and_api_key(self) -> tuple[str, Optional[str]]:
-        vectorstore = self.vectorstore
-        api_key: Optional[str] = None
-        if vectorstore.is_self_hosted:
-            secret = vectorstore.api_key_secret
+            if not self.vectorstore.is_self_hosted:
+                raise VectorStoreBackendError(
+                    f"Vectorstore {self.vectorstore.name} is Qdrant Cloud, which the tool runner reaches, not the app."
+                )
+            api_key: Optional[str] = None
+            secret = self.vectorstore.api_key_secret
             if secret:
                 api_key = secret.get_secret()
-            return self.kubernetes.endpoint, api_key
-        connection = vectorstore.connection
+            self._client = QdrantClient(url=self.kubernetes.endpoint, api_key=api_key, timeout=QDRANT_TIMEOUT)
+        return self._client
+
+    def managed_url_and_api_key(self) -> tuple[str, str]:
+        """
+        The url and the api key of a Qdrant Cloud vectorstore's ApiConnection, read here, in the app.
+
+        :raises VectorStoreBackendConnectionError: If the vectorstore has no ApiConnection url.
+        """
+        connection = self.vectorstore.connection
         if connection is None or not connection.base_url:
-            raise VectorStoreBackendConnectionError(f"Vectorstore {vectorstore.name} has no ApiConnection URL.")
+            raise VectorStoreBackendConnectionError(f"Vectorstore {self.vectorstore.name} has no ApiConnection URL.")
+        api_key = ""
         if connection.api_key:
-            api_key = connection.api_key.get_secret()
+            api_key = connection.api_key.get_secret() or ""
         return connection.base_url, api_key
 
-    def vector_store(self) -> QdrantVectorStore:
-        """Return the LangChain vector store of the collection, which embeds texts and queries."""
-        return QdrantVectorStore(
-            client=self.client,
-            collection_name=self.index_name,
-            embedding=self.embeddings,
-            distance=DISTANCES[self.vectorstore.metric],
+    def operation(self, name: str, params: Optional[SmarterDictType] = None, timeout: float = QDRANT_TIMEOUT):
+        """
+        Run one of the collection's operations: in process on a self-hosted server, or through the tool runner for Qdrant Cloud.
+
+        :param name: The operation, e.g. ``exists``.
+        :param params: Its parameters, as JSON.
+        :param timeout: Seconds that it may take.
+        :returns: Its result.
+        :raises VectorStoreBackendError: If it fails, classified as credentials, rejected or connection.
+        """
+        if self._client is not None or self.vectorstore.is_self_hosted:
+            return run_vectorstore_operation(
+                QDRANT, name, params, index_name=self.index_name, client=self.client, timeout=timeout
+            )
+        url, api_key = self.managed_url_and_api_key()
+        return run_vectorstore_operation(
+            QDRANT, name, params, index_name=self.index_name, url=url, api_key=api_key, timeout=timeout
         )
 
     # --- lifecycle --------------------------------------------------------------
@@ -195,34 +205,15 @@ class QdrantBackend(SmarterVectorstoreBackend):
         :raises VectorStoreBackendCredentialsError: If Qdrant refuses the api key.
         :raises VectorStoreBackendConnectionError: If Qdrant is unreachable.
         """
-        try:
-            return self.client.collection_exists(self.index_name)
-        except UnexpectedResponse as e:
-            if e.status_code in REFUSED_KEY_STATUSES:
-                raise VectorStoreBackendCredentialsError(f"Qdrant refused the api key: {e}") from e
-            raise VectorStoreBackendConnectionError(f"Qdrant is unreachable: {e}") from e
-        except Exception as e:
-            raise VectorStoreBackendConnectionError(f"Qdrant is unreachable: {e}") from e
+        return bool(self.operation("exists"))
 
     def create(self) -> None:
         """Create the Qdrant collection, with a payload index on each chunk's document id."""
-        self.client.create_collection(
-            collection_name=self.index_name,
-            vectors_config=models.VectorParams(
-                size=self.vectorstore.dimension, distance=DISTANCES[self.vectorstore.metric]
-            ),
-        )
-        # chunks are found by document when a document is deleted, or loaded again.
-        self.client.create_payload_index(
-            collection_name=self.index_name,
-            field_name=DOCUMENT_ID_KEY,
-            field_schema=models.PayloadSchemaType.INTEGER,
-        )
+        self.operation("create", {"dimension": self.vectorstore.dimension, "metric": self.vectorstore.metric})
 
     def drop(self) -> None:
         """Delete the Qdrant collection, if it exists, and its data."""
-        if self.exists():
-            self.client.delete_collection(self.index_name)
+        self.operation("drop")
 
     def destroy(self) -> None:
         """
@@ -238,25 +229,30 @@ class QdrantBackend(SmarterVectorstoreBackend):
 
     def stats(self) -> SmarterDictType:
         """The collection's exact vector count, status, segments count and indexed vectors count."""
-        info = self.client.get_collection(self.index_name)
-        return {
-            "vector_count": self.client.count(self.index_name, exact=True).count,
-            "status": str(getattr(info.status, "value", info.status)),
-            "segments_count": info.segments_count,
-            "indexed_vectors_count": info.indexed_vectors_count,
-        }
+        stats = json_dict(self.operation("stats"))
+        return stats
 
     # --- data -------------------------------------------------------------------
     def upsert(self, ids: list[str], texts: list[str], metadatas: list[SmarterDictType], batch_size: int = 64) -> None:
         """
-        Embed and insert, or replace, chunks, with the LangChain vector store.
+        Embed, here, and insert, or replace, chunks, a batch at a time.
 
         :param ids: The chunks' ids.
         :param texts: The chunks' texts.
         :param metadatas: The chunks' metadata.
         :param batch_size: How many chunks to embed and upsert at a time.
         """
-        self.vector_store().add_texts(texts=texts, metadatas=metadatas, ids=ids, batch_size=batch_size)
+        for start in range(0, len(texts), batch_size):
+            end = start + batch_size
+            batch_texts = texts[start:end]
+            vectors = self.embeddings.embed_documents(batch_texts)
+            params: SmarterDictType = {
+                "ids": ids[start:end],
+                "vectors": vectors,
+                "texts": batch_texts,
+                "metadatas": metadatas[start:end],
+            }
+            self.operation("upsert", params)
 
     def delete(self, ids: list[str]) -> None:
         """
@@ -267,21 +263,11 @@ class QdrantBackend(SmarterVectorstoreBackend):
         :param ids: The chunks' ids.
         """
         if ids:
-            # PointIdsList.points is an invariant List[ExtendedPointId], which a list[str] does not match.
-            points: list[models.ExtendedPointId] = list(ids)
-            points_selector = models.PointIdsList(points=points)
-            self.client.delete(self.index_name, points_selector=points_selector)
+            self.operation("delete", {"ids": ids})
 
     def delete_document(self, document_id: int) -> None:
         """Delete every chunk of a document, whatever their number."""
-        self.client.delete(
-            self.index_name,
-            points_selector=models.FilterSelector(
-                filter=models.Filter(
-                    must=[models.FieldCondition(key=DOCUMENT_ID_KEY, match=models.MatchValue(value=document_id))]
-                )
-            ),
-        )
+        self.operation("delete_document", {"document_id": document_id})
 
     def search(  # pylint: disable=too-many-positional-arguments,too-many-arguments
         self,
@@ -294,7 +280,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
         metadata_filter: Optional[SmarterDictType] = None,
     ) -> list[SearchResult]:
         """
-        Find the chunks that are closest in meaning to a query, with the LangChain vector store.
+        Find the chunks that are closest in meaning to a query, embedded here.
 
         :param query: The query.
         :param k: How many results.
@@ -305,25 +291,18 @@ class QdrantBackend(SmarterVectorstoreBackend):
         :param metadata_filter: Chunks whose metadata has these values, e.g. ``{"source": "faq"}``.
         :returns: The results. MMR's have no score.
         """
-        store = self.vector_store()
-        query_filter = qdrant_filter(metadata_filter)
+        vector = self.embeddings.embed_query(query)
+        params: SmarterDictType = {"vector": vector, "filter": metadata_filter}
         if search_type == "mmr":
-            documents = store.max_marginal_relevance_search(
-                query, k=k, fetch_k=fetch_k or max(20, k * 4), lambda_mult=lambda_mult or 0.5, filter=query_filter
-            )
-            return [self._result(document, None) for document in documents]
-        threshold = score_threshold if search_type == "similarity_score_threshold" else None
-        pairs = store.similarity_search_with_score(query, k=k, filter=query_filter, score_threshold=threshold)
-        return [self._result(document, score) for document, score in pairs]
-
-    @staticmethod
-    def _result(document: Document, score: Optional[float]) -> SearchResult:
-        metadata = dict(document.metadata or {})
-        point_id = document.id or metadata.pop("_id", None)
-        metadata.pop("_collection_name", None)
-        return SearchResult(
-            id=str(point_id) if point_id else None, text=document.page_content, metadata=metadata, score=score
-        )
+            params.update({"limit": mmr_fetch_k(k, fetch_k), "with_vectors": True})
+            matches = json_dicts(self.operation("query", params))
+            return select_mmr(vector, matches, k, lambda_mult)
+        params["limit"] = k
+        if search_type == "similarity_score_threshold":
+            params["score_threshold"] = score_threshold
+        matches = json_dicts(self.operation("query", params))
+        results = [result_of(match, score=match.get("score")) for match in matches]
+        return results
 
     # --- dumps ------------------------------------------------------------------
     def create_snapshot(self, name: str) -> SnapshotInfo:
@@ -334,10 +313,10 @@ class QdrantBackend(SmarterVectorstoreBackend):
         :returns: The snapshot's name and size.
         :raises VectorStoreBackendError: If Qdrant did not create it.
         """
-        description = self.client.create_snapshot(self.index_name, wait=True)
-        if description is None:
+        description = json_dict(self.operation("create_snapshot", timeout=RESTORE_TIMEOUT_SECONDS))
+        if not description.get("name"):
             raise VectorStoreBackendError(f"Qdrant did not create a snapshot of {self.index_name}.")
-        return SnapshotInfo(name=description.name, size_bytes=description.size)
+        return SnapshotInfo(name=str(description["name"]), size_bytes=json_int(description.get("size_bytes")))
 
     def delete_snapshot(self, name: str) -> None:
         """
@@ -345,7 +324,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
 
         :param name: The snapshot's name.
         """
-        self.client.delete_snapshot(self.index_name, name, wait=True)
+        self.operation("delete_snapshot", {"name": name})
 
     def restore_snapshot(self, name: str) -> None:
         """
@@ -359,7 +338,7 @@ class QdrantBackend(SmarterVectorstoreBackend):
                 "Restoring a Qdrant Cloud snapshot is done in the Qdrant Cloud console, where its snapshots are kept."
             )
         location = f"file://{SNAPSHOTS_PATH}/{self.index_name}/{name}"
-        self.client.recover_snapshot(self.index_name, location=location, wait=True)
+        self.operation("restore_snapshot", {"location": location}, timeout=RESTORE_TIMEOUT_SECONDS)
 
     def logs(self, tail: int = 200) -> Optional[str]:
         """

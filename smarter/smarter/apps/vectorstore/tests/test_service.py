@@ -8,9 +8,11 @@ from httpx import Headers
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 
+from smarter.apps.llmtool.runner import ToolCallResult
 from smarter.apps.vectorstore.backends import (
     QdrantBackend,
     VectorStoreBackendCredentialsError,
+    VectorStoreBackendError,
     VectorStoreBackendRejectedError,
 )
 from smarter.apps.vectorstore.deployment import (
@@ -427,14 +429,26 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertTrue(VectorstoreMeta.objects.filter(pk=protected.vectorstore.pk).exists())
 
     def test_managed_qdrant_connection(self):
-        """Test that a managed Qdrant database is reached at its ApiConnection's URL, with its API key."""
+        """Test that a managed Qdrant database is reached through the tool runner, at its ApiConnection's URL, with its API key."""
         vectorstore = self.new_vectorstore("test_service_managed", hosting="managed", selfHosted=None)
         service = VectorstoreService(vectorstore)
-        with patch("smarter.apps.vectorstore.backends.qdrant.QdrantClient") as client:
+        runner = MagicMock()
+        runner.run.return_value = ToolCallResult(value=True)
+        with (
+            patch("smarter.apps.vectorstore.execution.get_tool_runner", return_value=runner),
+            patch("smarter.apps.vectorstore.backends.qdrant.QdrantClient") as client,
+        ):
             backend = service.backend
             assert isinstance(backend, QdrantBackend)
+            self.assertTrue(backend.exists())
+        # nothing connects from the app: the tool worker does (ADR-038, issue #1081).
+        client.assert_not_called()
+        call = runner.run.call_args.args[0]
+        self.assertEqual((call.backend, call.operation), ("qdrant", "exists"))
+        self.assertEqual((call.url, call.api_key), ("https://qdrant.example.com:6333", "test-api-key"))
+        self.assertEqual(call.index_name, backend.index_name)
+        with self.assertRaises(VectorStoreBackendError):
             _ = backend.client
-        client.assert_called_once_with(url="https://qdrant.example.com:6333", api_key="test-api-key", timeout=30)
         self.assertEqual(service.backend.infrastructure_ready(), (True, ""))
 
     def test_snapshots(self):

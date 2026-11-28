@@ -262,16 +262,24 @@ Phase 0, inventory
    - **An MCPClient's catalog.** Each tool call goes through the runner, but the connection that
      lists the server's tools (``mcpclient.caching.connect()``) is made in the app, when a chat builds
      its tools and when the console refreshes it, and in the worker (``mcpclient.tasks``), with the
-     MCPClient's credential.
+     MCPClient's credential. It now goes through the runner, as an MCP call whose operation is
+     ``discover`` (#1081), and so does the MCPClient api's own tool call view, which the inventory
+     missed: ``mcpclient.execution.run_mcp_call()`` sends every MCP operation.
    - **A vectorstore's ApiConnection**, e.g. Qdrant Cloud: the app (search) and the worker (loading
-     documents).
+     documents). A managed Qdrant's url is its owner's ApiConnection's, any url, which the vendor's
+     client reached from those pods with no check of its address: a manifest could point them at the
+     cluster's private network. Every operation of a managed database now goes through the runner, as
+     the ``vectorstore`` kind (#1081), with the vectors embedded in the app, and the executor refuses a
+     private address; the tool worker's network policy opens Qdrant Cloud's port, 6333.
    - **An LLMClient's or LLMHost's custom endpoint**, as part 3 says.
    - **A provider's website, terms and docs urls** (``provider.verification``), and an LLM price's
      ``source_url`` (``llm_price_checker``): the worker.
    - ``PluginDataApi.execute_request()`` still calls ``requests.get()`` itself, outside the runner.
      Nothing calls it, or the ``test()`` and ``sanitized_return_data()`` that wrap it, so they can be
      deleted. ``smarter.apps.api.utils.apply_manifest()``, which posts a manifest to the platform's
-     own url, has no caller either.
+     own url, has no caller either. Both are gone (#1082): the platform's test fixtures used that
+     ``apply_manifest()``, and now apply with the broker, in process, as its ``apply_manifest_v2()``
+     did, which took its name.
 
 Phase 1, the boundary (smarter)
    ``ToolRunner``, its call and result models, and the in-process runner, with every tool call in

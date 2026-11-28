@@ -50,6 +50,7 @@ TOOL_EXECUTORS: dict[str, str] = {
     "webfetch": "smarter.apps.llmtool.plugin.websearch_fetch.execute_webfetch_call",
     "mcp": "smarter.apps.mcpclient.execution.execute_mcp_call",
     "sql": "smarter.apps.connection.execution.execute_sql_call",
+    "vectorstore": "smarter.apps.vectorstore.execution.execute_vectorstore_call",
 }
 """Each kind of :class:`~smarter.apps.llmtool.runner.models.ToolCall`, and the dotted path of its executor."""
 
@@ -69,6 +70,7 @@ TOOL_CALL_MODELS: dict[str, str] = {
     "webfetch": "smarter.apps.llmtool.plugin.websearch_fetch.WebFetchToolCall",
     "mcp": "smarter.apps.mcpclient.execution.MCPToolCall",
     "sql": "smarter.apps.connection.execution.SqlToolCall",
+    "vectorstore": "smarter.apps.vectorstore.execution.VectorstoreToolCall",
 }
 """Each kind of tool call, and the dotted path of its model, which rebuilds a call from its JSON in the tool worker."""
 
