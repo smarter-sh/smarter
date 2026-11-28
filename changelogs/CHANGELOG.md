@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [1.0.2-alpha.1](https://github.com/smarter-sh/smarter/compare/v1.0.1...v1.0.2-alpha.1) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give the restricted workers only the settings they read ([082ca37](https://github.com/smarter-sh/smarter/commit/082ca3747d024038b447552aaaf1b482c4b4b3ce))
+* **llmtool:** send MCP catalogs and vectorstores through the runner ([cdfc2fc](https://github.com/smarter-sh/smarter/commit/cdfc2fc4b3fa8353649cb003a71efa4ff6c9a94c)), closes [#1081](https://github.com/smarter-sh/smarter/issues/1081) [#1082](https://github.com/smarter-sh/smarter/issues/1082) [#1082](https://github.com/smarter-sh/smarter/issues/1082) [#1099](https://github.com/smarter-sh/smarter/issues/1099)
+
 ## [1.0.1](https://github.com/smarter-sh/smarter/compare/v1.0.0...v1.0.1) (2026-11-28)
 
 ### Bug Fixes
