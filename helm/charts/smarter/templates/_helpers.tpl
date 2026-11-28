@@ -51,6 +51,8 @@ The platform's environment: every setting, which smarter.podEnv filters into eac
 
 It starts from .Values.env, then:
 
+- leaves out the values that only the chart reads, when it renders, and no pod: DOCKERHUB_PAT and
+  DOCKERHUB_USERNAME, which only the image-pull Secret, secret-docker.yaml, needs (#1103);
 - leaves out every null value, e.g. the AWS keys when the pods have an IAM role, and every
   SET-ME placeholder, so that a setting nobody set gets Smarter's own default rather than the
   placeholder's text;
@@ -69,10 +71,13 @@ It starts from .Values.env, then:
 */}}
 {{- define "smarter.env" -}}
 {{- $env := dict -}}
+{{- /* values of env that only the chart reads, when it renders, and no pod: the image-pull Secret's
+       Docker Hub credentials (secret-docker.yaml). They never reach a pod's Secret, or its environment (#1103). */ -}}
+{{- $chartOnly := list "DOCKERHUB_PAT" "DOCKERHUB_USERNAME" -}}
 {{- range $key, $value := .Values.env -}}
 {{- $isNull := kindIs "invalid" $value -}}
 {{- $isPlaceholder := and (kindIs "string" $value) (hasPrefix "SET-ME" $value) -}}
-{{- if not (or $isNull $isPlaceholder) -}}
+{{- if and (not (or $isNull $isPlaceholder)) (not (has $key $chartOnly)) -}}
 {{- $_ := set $env $key $value -}}
 {{- end -}}
 {{- end -}}
@@ -121,20 +126,118 @@ e.g. the Slack bot's app token, is left out of every one. A variable that isn't 
 and every kind receives it.
 
 The derived broker url carries Redis's password, which every kind holds.
+
+A kind whose pods read only a few named keys, with secretKeyRef, has an allowlist in smarter.podKeys, and its
+Secret holds those keys alone (#1103).
 */}}
 {{- define "smarter.podEnv" -}}
 {{- $all := include "smarter.env" .root | fromYaml -}}
 {{- $holders := .root.Files.Get "files/credentials.json" | fromJson -}}
 {{- $pod := .pod -}}
+{{- $allowed := get (include "smarter.podKeys" . | fromYaml) $pod -}}
 {{- $env := dict -}}
 {{- range $key, $value := $all -}}
-{{- if not (hasKey $holders $key) -}}
+{{- $listed := or (has $key ($allowed | default list)) (and (has "DJANGO_*" ($allowed | default list)) (hasPrefix "DJANGO_" $key)) -}}
+{{- if and $allowed (not $listed) -}}
+{{- /* not one of the few keys that this kind's pods read */ -}}
+{{- else if not (hasKey $holders $key) -}}
 {{- $_ := set $env $key $value -}}
 {{- else if has $pod (get $holders $key) -}}
 {{- $_ := set $env $key $value -}}
 {{- end -}}
 {{- end -}}
 {{- toYaml $env -}}
+{{- end }}
+
+{{/*
+The keys that the pods of a kind read from its Secret, for each kind that reads few of the platform's
+settings: smarter.podEnv gives its Secret those keys alone (#1103). A kind not listed here gets every setting
+but the credentials it doesn't hold. Each list is what the kind was found to read, by running it with
+nothing else; a key that a kind reads and that is missing here is a pod that can't start or do its job.
+
+- bastion: the database's administrator and backup accounts' passwords, and AWS's key pair, for its shell's
+  mariadb and backup-to-s3.sh, with secretKeyRef. The rest of what it reads, the database's host, port and
+  name, the bucket and the region, is written into its pod spec as plain values (deployment-bastion.yaml).
+- job-backup: the dump container's keys (the database's administrator and backup accounts' passwords,
+  AWS's key pair), and what its email container's manage.py email_job_log reads: the bucket and the region,
+  where a log too large to email is saved; SMTP; the Slack bot token; and the admin's address. Not the
+  database's own password, nor branding: nothing there reads them.
+- job-migrate: the database's host, port, name, user and password, for manage.py migrate.
+- beat: the database, which its pod's wait-for-database init container checks, and the queues of its
+  schedule (smarter.workers.celerybeat).
+
+Every kind that runs Django (job-backup's email container, job-migrate, beat) also gets what Django's prod
+settings need to start: Redis's password; the environment, the root domain, the subdomain and the shared
+resource identifier, which name Redis's host, <identifier>-redis-master.<namespace>, and the platform's
+domains; logging; and every DJANGO_* key, each of which overrides the Django setting it names, the broker's
+url and the caches' among them (smarter.settings.overrides). "DJANGO_*" in a list stands for them.
+
+  {{- $keys := get (include "smarter.podKeys" . | fromYaml) "bastion" }}
+*/}}
+{{- define "smarter.podKeys" -}}
+bastion:
+  - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
+  - SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+job-backup:
+  - SMARTER_SUBSYSTEM_SQL_ROOT_PASSWORD
+  - SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - AWS_REGION
+  - SMARTER_PLATFORM_S3_BUCKET
+  - SMARTER_SUBSYSTEM_SMTP_HOST
+  - SMARTER_SUBSYSTEM_SMTP_PORT
+  - SMARTER_SUBSYSTEM_SMTP_USE_SSL
+  - SMARTER_SUBSYSTEM_SMTP_USE_TLS
+  - SMARTER_SUBSYSTEM_SMTP_USERNAME
+  - SMARTER_SUBSYSTEM_SMTP_PASSWORD
+  - SMARTER_SUBSYSTEM_SMTP_FROM_EMAIL
+  - SMARTER_SUBSYSTEM_SMTP_SENDER
+  - SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
+  - SMARTER_PLATFORM_EMAIL_ADMIN
+  - SMARTER_SUBSYSTEM_REDIS_PASSWORD
+  - SMARTER_ENVIRONMENT
+  - SMARTER_PLATFORM_ROOT_DOMAIN
+  - SMARTER_PLATFORM_SUBDOMAIN
+  - SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER
+  - SMARTER_LOG_LEVEL
+  - SMARTER_DEBUG_MODE
+  - SMARTER_SUBSYSTEM_LOGGING_LOKI_URL
+  - DJANGO_*
+job-migrate:
+  - SMARTER_SUBSYSTEM_SQL_HOST
+  - SMARTER_SUBSYSTEM_SQL_PORT
+  - SMARTER_SUBSYSTEM_SQL_DATABASE
+  - SMARTER_SUBSYSTEM_SQL_USER
+  - SMARTER_SUBSYSTEM_SQL_PASSWORD
+  - SMARTER_SUBSYSTEM_REDIS_PASSWORD
+  - SMARTER_ENVIRONMENT
+  - SMARTER_PLATFORM_ROOT_DOMAIN
+  - SMARTER_PLATFORM_SUBDOMAIN
+  - SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER
+  - SMARTER_LOG_LEVEL
+  - SMARTER_DEBUG_MODE
+  - SMARTER_SUBSYSTEM_LOGGING_LOKI_URL
+  - DJANGO_*
+beat:
+  - SMARTER_SUBSYSTEM_SQL_HOST
+  - SMARTER_SUBSYSTEM_SQL_PORT
+  - SMARTER_SUBSYSTEM_SQL_DATABASE
+  - SMARTER_SUBSYSTEM_SQL_USER
+  - SMARTER_SUBSYSTEM_SQL_PASSWORD
+  - SMARTER_APP_LLMCLIENT_TASKS_CELERY_TASK_QUEUE
+  - SMARTER_APP_INFRASTRUCTURE_TASKS_CELERY_TASK_QUEUE
+  - SMARTER_SUBSYSTEM_REDIS_PASSWORD
+  - SMARTER_ENVIRONMENT
+  - SMARTER_PLATFORM_ROOT_DOMAIN
+  - SMARTER_PLATFORM_SUBDOMAIN
+  - SMARTER_PLATFORM_SHARED_RESOURCE_IDENTIFIER
+  - SMARTER_LOG_LEVEL
+  - SMARTER_DEBUG_MODE
+  - SMARTER_SUBSYSTEM_LOGGING_LOKI_URL
+  - DJANGO_*
 {{- end }}
 
 {{/*
