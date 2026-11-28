@@ -224,13 +224,15 @@ Phase 0, inventory
    already do. Until then the app needs the write Role and the EKS permissions. Its reads need a
    read-only Role of their own either way.
 
-   The LLMHost and LLMHostCompute writes are now infrastructure tasks (issue #1080). The broker, the
-   REST api, the admin's reconcile action and the compute's ``pre_delete`` receiver call
-   :mod:`smarter.apps.llmhost.tasks.queue`. Its functions check what can be checked with reads alone,
-   e.g. budgets, the spec, Secrets and whether the cluster is reachable, record the queued change as the
-   status message, and queue ``launch_llmhost``, ``destroy_llmhost``, ``delete_llmhost``,
-   ``reconcile_llmhost_compute`` or ``delete_llmhost_nodegroup``. The vectorstore's ``apply``,
-   ``undeploy`` and ``delete`` still write to the cluster from the request.
+   Those writes are now infrastructure tasks (issue #1080), so the app only reads the cluster. The
+   LLMHost broker, the REST api, the admin's reconcile action and the compute's ``pre_delete`` receiver
+   call :mod:`smarter.apps.llmhost.tasks.queue`. Its functions check what can be checked with reads
+   alone, e.g. budgets, the spec, Secrets and whether the cluster is reachable, record the queued change
+   as the status message, and queue ``launch_llmhost``, ``destroy_llmhost``, ``delete_llmhost``,
+   ``reconcile_llmhost_compute`` or ``delete_llmhost_nodegroup``. The vectorstore broker, its REST api
+   and the console's delete call ``VectorstoreService.queue_provision()``, ``queue_undeploy()`` and
+   ``queue_delete()``, which queue ``provision_vectorstore``, ``undeploy_vectorstore`` and
+   ``delete_vectorstore``, as ``deploy()`` already queued ``deploy_vectorstore``.
 
    .. image:: ../_static/adr-038/egress.svg
       :alt: For each process, the services in the cluster it reaches, the fixed hosts on the internet,

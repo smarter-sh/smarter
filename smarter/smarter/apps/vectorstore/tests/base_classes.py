@@ -6,9 +6,10 @@ Nothing reaches a real cluster or service:
 - :class:`FakeKubernetes` replaces the Kubernetes service, with :func:`configure_kubernetes`. The
   smarter-api container's kubeconfig is a real cluster's, so a self-hosted vectorstore must never
   be deployed without it.
-- No Celery task is queued: ``deploy_vectorstore.delay``, ``load_vectorstore_document.delay`` and
-  ``delete_vectorstore_document.delay`` are patched for each test (as ``deploy_task``, ``load_task``
-  and ``delete_task``), and
+- No Celery task is queued: ``deploy_vectorstore.delay``, ``load_vectorstore_document.delay``,
+  ``delete_vectorstore_document.delay``, ``provision_vectorstore.delay``, ``undeploy_vectorstore.delay``
+  and ``delete_vectorstore.delay`` are patched for each test (as ``deploy_task``, ``load_task``,
+  ``delete_task``, ``provision_task``, ``undeploy_task`` and ``delete_vectorstore_task``), and
   :meth:`VectorstoreTestBase.deploy_now` runs its checks in the test instead. A queued task would
   run in a worker, which has neither the fake cluster nor the in-memory database.
 - The Qdrant backend uses an in-memory QdrantClient, which supports everything but snapshots.
@@ -90,6 +91,9 @@ class VectorstoreTestBase(TestAccountMixin):
     deploy_task: MagicMock
     load_task: MagicMock
     delete_task: MagicMock
+    provision_task: MagicMock
+    undeploy_task: MagicMock
+    delete_vectorstore_task: MagicMock
     provider: Provider
     secret: Secret
     connection: ApiConnection
@@ -143,6 +147,15 @@ class VectorstoreTestBase(TestAccountMixin):
         self.addCleanup(patcher.stop)
         patcher = patch("smarter.apps.vectorstore.tasks.delete_vectorstore_document.delay")
         self.delete_task = patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch("smarter.apps.vectorstore.tasks.provision_vectorstore.delay")
+        self.provision_task = patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch("smarter.apps.vectorstore.tasks.undeploy_vectorstore.delay")
+        self.undeploy_task = patcher.start()
+        self.addCleanup(patcher.stop)
+        patcher = patch("smarter.apps.vectorstore.tasks.delete_vectorstore.delay")
+        self.delete_vectorstore_task = patcher.start()
         self.addCleanup(patcher.stop)
 
     def spec(self, **overrides) -> SmarterDictType:

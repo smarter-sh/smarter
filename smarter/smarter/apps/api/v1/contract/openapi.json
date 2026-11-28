@@ -28847,7 +28847,7 @@
     },
     "/vectorstores/{id}/undeploy/": {
       "post": {
-        "description": "Stop serving the vectorstore. A self-hosted server's data is kept. Only the vectorstore's owner may call it.",
+        "description": "Queue stopping serving the vectorstore, and return at once: the platform's infrastructure worker stops it. A self-hosted server's data is kept. Only the vectorstore's owner may call it.",
         "operationId": "vectorstore_undeploy",
         "parameters": [
           {
@@ -28861,7 +28861,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
