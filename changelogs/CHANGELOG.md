@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.4](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2026-11-28)
+
+### Bug Fixes
+
+* **settings:** say which pods hold each credential (ADR-038, phase 3) ([7bb6904](https://github.com/smarter-sh/smarter/commit/7bb6904395aeffd342f2809ce78234a4c0f7c8e2)), closes [#1084](https://github.com/smarter-sh/smarter/issues/1084)
+
 ## [1.0.0-alpha.3](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2026-11-28)
 
 ### Bug Fixes
