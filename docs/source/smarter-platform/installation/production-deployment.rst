@@ -168,9 +168,10 @@ your values file holds only the settings below.
         AWS_REGION: "ca-central-1"
         SMARTER_SUBSYSTEM_K8S_CLUSTER_NAME: "smarter-platform-ca-202602121853"
         SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY: "<a URL-safe base64-encoded 32-byte key>"
-        SMARTER_APP_PROVIDER_OPENAI_API_KEY: "<your OpenAI API key>"
         DOCKERHUB_USERNAME: "<DOCKER_USERNAME>"
         DOCKERHUB_PAT: "<DOCKER_PAT>"
+      bootstrapSecrets:
+        openai_api_key: "<your OpenAI API key>"
       serviceAccount:
         awsRoleArn: "<smarter_iam_role_arn>"
         createClusterRole: false
@@ -194,10 +195,14 @@ your values file holds only the settings below.
       * - ``env.SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY``
         - The key that Smarter encrypts Secrets with. Without it, each pod generates its own key, and a
           Secret saved by one pod can't be read by another, or after a restart.
-      * - ``env.SMARTER_APP_PROVIDER_OPENAI_API_KEY``
-        - OpenAI is the default LLM provider, and the example resources and Stackademy use it.
       * - ``env.DOCKERHUB_USERNAME``, ``env.DOCKERHUB_PAT``
         - The Docker Hub account from Step 2, which pulls Smarter's image.
+      * - ``bootstrapSecrets.openai_api_key``
+        - OpenAI is the default LLM provider, and the example resources and Stackademy use it. Each key
+          under ``bootstrapSecrets`` becomes a Smarter Secret of that name, owned by the Smarter admin. The
+          chart puts them in the Kubernetes Secret ``smarter-bootstrap-secrets``, which only the init job
+          mounts, and ``manage.py initialize_bootstrap_secrets`` creates the Smarter Secrets from it. No
+          other pod receives them, as environment variables or files.
 
    **What else can go in the file.** Five kinds of values, each to change a default or turn on a feature:
 
@@ -223,7 +228,7 @@ your values file holds only the settings below.
           replaces Smarter's value outright; read :doc:`../overrides` first.
       * - The chart's own options
         - top-level keys, e.g. ``app``, ``hpa``, ``worker``, ``beat``, ``databaseInit``,
-          ``databaseScheduledBackup``, ``slackBot``
+          ``databaseScheduledBackup``, ``slackBot``, ``bootstrapSecrets``
         - The chart's `values.yaml <https://github.com/smarter-sh/smarter/blob/main/helm/charts/smarter/values.yaml>`__: replicas, resources, autoscaling, the init job, the nightly backup, and the
           Slack bot.
       * - MariaDB and Redis
@@ -245,10 +250,10 @@ your values file holds only the settings below.
       * - ``env.SMARTER_PLATFORM_BRANDING_*``
         - Your organization's name, address, support email, contact URL and logo, as the web console and
           its emails show them. Unset, they show The Smarter Project's.
-      * - ``env.SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``, ``_GEMINI_API_KEY``, ``_MISTRAL_API_KEY``, ...
-        - The other LLM providers.
-      * - ``env.SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY``, ``env.SMARTER_APP_LLMTOOL_TAVILY_API_KEY``,
-          ``_BRAVE_SEARCH_API_KEY``, ``env.SMARTER_APP_VECTORSTORE_PINECONE_API_KEY``
+      * - ``bootstrapSecrets.anthropic_api_key``, ``gemini_api_key``, ``mistral_api_key``, ...
+        - The other LLM providers. The chart's ``values.yaml`` lists every Secret name.
+      * - ``bootstrapSecrets.google_maps_api_key``, ``tavily_api_key``, ``brave_search_api_key``,
+          ``pinecone_api_key``
         - Tools and vector stores that the example resources use.
       * - ``env.SMARTER_SUBSYSTEM_SOCIAL_AUTH_*``
         - Sign-in with Google, GitHub or LinkedIn.

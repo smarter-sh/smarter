@@ -23,7 +23,7 @@ include .env
 # workspace, published to npm as @smarter.sh/ui-chat.
 
 
-.PHONY: api-contract chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract bootstrap-secrets chart-credentials chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
@@ -422,6 +422,16 @@ console: ## Install the pinned release of the web console into the static folder
 console-local: ## Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist
 	python3 -I scripts/fetch_console.py --from-dir $(or $(CONSOLE_DIST),../smarter-console/dist)
 
+# ---------------------------------------------------------
+# Bootstrap secrets (issue #1099)
+# ---------------------------------------------------------
+# The local keys of the built-in Providers, the search plugins and the managed vector databases:
+# from .env's SMARTER_APP_*_API_KEY variables into bootstrap-secrets/, one file per Smarter Secret,
+# which smarter-api mounts and initialize_platform turns into Secrets. Then delete those variables
+# from .env, and run make docker-init. See scripts/bootstrap_secrets.py.
+bootstrap-secrets: ## Write .env's AI service keys into bootstrap-secrets/, one file per Smarter Secret
+	python3 -I scripts/bootstrap_secrets.py --env-file .env
+
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
 # (smarter.apps.prompt.contract.models), in the smarter-api container. Run it after changing the
 # models, and commit the changes. smarter-console copies the schema into Smarter Chat, which generates
@@ -490,6 +500,12 @@ console-session-contract: ## Regenerate the web console session contract schema
 # smarter cli and the SDKs generate their clients from. Run it after changing a SAM model, the
 # journal contract or the cli api, and commit the files.
 API_CONTRACT_DIR := smarter/apps/api/v1/contract
+chart-credentials: ## Regenerate the map of each credential to the pods that hold it, and copy it into the Helm chart
+	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_chart_credentials"
+	docker cp smarter-api:/home/smarter_user/smarter/smarter/common/conf/credentials.json smarter/smarter/common/conf/credentials.json
+	mkdir -p helm/charts/smarter/files
+	cp smarter/smarter/common/conf/credentials.json helm/charts/smarter/files/credentials.json
+
 api-contract: ## Regenerate the SAM JSON Schemas and examples, and the api OpenAPI document
 	docker exec smarter-api bash -c "cd /home/smarter_user/smarter && python manage.py export_api_contract"
 	docker cp smarter-api:/home/smarter_user/smarter/$(API_CONTRACT_DIR)/openapi.json smarter/$(API_CONTRACT_DIR)/openapi.json

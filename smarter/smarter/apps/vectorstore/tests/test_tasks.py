@@ -8,11 +8,13 @@ from unittest.mock import MagicMock, patch
 
 from django.utils import timezone
 
+from smarter.apps.secret.models import Secret
 from smarter.apps.vectorstore import tasks
 from smarter.apps.vectorstore.deployment import DEPLOY_CHECK_INTERVAL
 from smarter.apps.vectorstore.models import (
     VectorstoreDocument,
     VectorstoreDocumentStatus,
+    VectorstoreMeta,
     VectorstoreStatus,
 )
 
@@ -117,3 +119,60 @@ class TestVectorstoreTasks(VectorstoreTestBase):
         self.assertTrue(tasks.snapshot_vectorstore(service.vectorstore.pk))
         self.assertFalse(service.vectorstore.snapshots.get().scheduled)  # type: ignore[attr-defined]
         self.assertIsNone(tasks.snapshot_vectorstore(0))
+
+    def test_provision_vectorstore(self):
+        """The task applies a self-hosted server's changed spec; a cluster error is the vectorstore's message."""
+        service = self.ready_service("test_tasks_provision")
+        self.patch_service(service)
+        applied_before = len(self.kubernetes.applied)
+        self.assertEqual(tasks.provision_vectorstore(service.vectorstore.pk), VectorstoreStatus.READY)
+        self.assertGreater(len(self.kubernetes.applied), applied_before)
+        self.kubernetes.fail_apply = "the cluster refused"
+        self.assertEqual(tasks.provision_vectorstore(service.vectorstore.pk), VectorstoreStatus.READY)
+        service.vectorstore.refresh_from_db()
+        self.assertTrue(service.vectorstore.status_message.startswith("Provisioning failed: "))
+        self.assertIn("the cluster refused", service.vectorstore.status_message)
+        self.assertIsNone(tasks.provision_vectorstore(0))
+
+    def test_undeploy_vectorstore(self):
+        """The task stops serving; a failure keeps the status, with why."""
+        service = self.ready_service("test_tasks_undeploy")
+        self.patch_service(service)
+        with patch.object(service.backend, "stop", side_effect=RuntimeError("the cluster is away")):
+            self.assertEqual(tasks.undeploy_vectorstore(service.vectorstore.pk), VectorstoreStatus.READY)
+        service.vectorstore.refresh_from_db()
+        self.assertEqual(service.vectorstore.status_message, "Undeploy failed: the cluster is away")
+        self.assertEqual(tasks.undeploy_vectorstore(service.vectorstore.pk), VectorstoreStatus.STOPPED)
+        self.assertIsNone(tasks.undeploy_vectorstore(0))
+
+    def test_delete_vectorstore(self):
+        """The task destroys the database, then deletes the vectorstore and its api key Secret."""
+        service = self.ready_service("test_tasks_delete")
+        self.patch_service(service)
+        vectorstore = service.vectorstore
+        secret = vectorstore.api_key_secret
+        assert secret is not None
+        secret_id = secret.pk
+        self.assertTrue(tasks.delete_vectorstore(vectorstore.pk))
+        self.assertFalse(VectorstoreMeta.objects.filter(pk=vectorstore.pk).exists())
+        self.assertFalse(Secret.objects.filter(pk=secret_id).exists())
+        self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
+        self.assertFalse(tasks.delete_vectorstore(0))
+
+    def test_a_failed_delete_keeps_the_vectorstore(self):
+        """DeletionProtection enabled since the deletion was queued, or a backend error, keeps it, with why."""
+        service = self.ready_service("test_tasks_delete_failed")
+        self.patch_service(service)
+        vectorstore = service.vectorstore
+        VectorstoreMeta.objects.filter(pk=vectorstore.pk).update(deletion_protection=True)
+        vectorstore.refresh_from_db()
+        self.assertFalse(tasks.delete_vectorstore(vectorstore.pk))
+        vectorstore.refresh_from_db()
+        self.assertTrue(vectorstore.status_message.startswith("Delete failed: "))
+        VectorstoreMeta.objects.filter(pk=vectorstore.pk).update(deletion_protection=False)
+        vectorstore.refresh_from_db()
+        with patch.object(service.backend, "destroy", side_effect=RuntimeError("the database is away")):
+            self.assertFalse(tasks.delete_vectorstore(vectorstore.pk))
+        vectorstore.refresh_from_db()
+        self.assertEqual(vectorstore.status, VectorstoreStatus.FAILED)
+        self.assertIn("the database is away", vectorstore.status_message)

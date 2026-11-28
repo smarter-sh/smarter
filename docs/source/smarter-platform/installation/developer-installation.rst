@@ -156,20 +156,32 @@ Recommended
 
 The platform runs without any other value. A feature whose setting is missing logs an error that
 says what to set when you use it. For example, a prompt to an LLM provider that has no key fails
-with an error that names the key. To try the example LLMClients, set at least:
+with an error that names the Smarter Secret to set.
 
-``SMARTER_APP_PROVIDER_OPENAI_API_KEY``
+The LLM providers' and tools' keys are not ``.env`` variables: every container receives ``.env``,
+and a key's only source is its Smarter Secret. Write each key into a file named after its Secret,
+in the repository's ``bootstrap-secrets/`` folder, which git ignores and docker-compose mounts,
+read-only, into ``smarter-api`` only. To try the example LLMClients, set at least:
+
+``bootstrap-secrets/openai_api_key``
    OpenAI is the default LLM provider, used by most of the example LLMClients.
-
-The other providers (``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``, ``..._GEMINI_API_KEY``,
-``..._MISTRAL_API_KEY`` and so on), the web search tools (``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``,
-``SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY``) and ``GITHUB_TOKEN`` are optional. ``make init``
-stores the provider keys as Smarter Secrets. If you add one later, restart the platform, then run
-the command that stores it:
 
 .. code-block:: console
 
-   docker exec smarter-api python manage.py initialize_providers
+   mkdir -p bootstrap-secrets
+   printf %s 'sk-...' > bootstrap-secrets/openai_api_key
+
+The other providers (``anthropic_api_key``, ``gemini_api_key``, ``mistral_api_key`` and so on),
+the web search tools (``tavily_api_key``, ``brave_search_api_key``) and ``GITHUB_TOKEN`` (in
+``.env``) are optional. Section 3 of ``.env.example`` lists every file name. If your ``.env`` still
+has the keys as variables, such as ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``, ``make
+bootstrap-secrets`` writes the files from them; then delete them from ``.env``. ``make init``
+creates a Smarter Secret, owned by the Smarter admin, from each file. If you add one later, run
+the command that creates it:
+
+.. code-block:: console
+
+   docker exec smarter-api python manage.py initialize_platform
 
 The cloud deployment, email and social sign-in values are for deployed platforms; you don't need
 them locally. :doc:`Configuration </smarter-platform/configuration>` explains how these values

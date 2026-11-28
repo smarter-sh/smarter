@@ -56,4 +56,23 @@ class VectorstoreMetric(SmarterEnumAbstract):
     DOTPRODUCT = "dotproduct"
 
 
-__all__ = ["SmarterVectorStoreBackends", "VectorstoreHosting", "VectorstoreMetric"]
+class VectorstoreQueuedMessage(SmarterEnumAbstract):
+    """
+    The status message of a vectorstore whose change is queued for the infrastructure worker.
+
+    The web server checks a change, records one of these as the status message, and queues the task that
+    makes it (:class:`~smarter.apps.vectorstore.service.VectorstoreService`'s ``queue_*`` methods). The
+    task's own status, or its failure, replaces it.
+    """
+
+    PROVISION = "Provisioning queued."
+    """A self-hosted vectorstore whose changed server, e.g. its cpu or memory, ``provision_vectorstore`` applies."""
+
+    UNDEPLOY = "Undeploy queued."
+    """A vectorstore whose ``undeploy_vectorstore`` task is queued."""
+
+    DELETE = "Delete queued."
+    """A vectorstore whose ``delete_vectorstore`` task is queued."""
+
+
+__all__ = ["SmarterVectorStoreBackends", "VectorstoreHosting", "VectorstoreMetric", "VectorstoreQueuedMessage"]

@@ -49,6 +49,6 @@ class TestLLMHostOpenApi(OpenApiResponseMixin, LLMHostTestBase):
         self.cluster.pod_logs = "INFO started"
         self.call("get", "/llmhosts/{id}/logs/", HTTPStatus.OK)
         self.call("get", "/llmhosts/{id}/logs/", HTTPStatus.BAD_REQUEST, "?tail=x")
-        self.call("post", "/llmhosts/{id}/undeploy/", HTTPStatus.OK, "?purge=true")
+        self.call("post", "/llmhosts/{id}/undeploy/", HTTPStatus.ACCEPTED, "?purge=true")
         self.cluster.ready = False
         self.call("post", "/llmhosts/{id}/deploy/", HTTPStatus.SERVICE_UNAVAILABLE)

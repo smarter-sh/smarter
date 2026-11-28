@@ -31,10 +31,11 @@ See [values.yaml](https://github.com/smarter-sh/smarter/blob/main/helm/charts/sm
 for all available configuration options. A value left at its `SET-ME` placeholder is left out of the
 pods' environment, so Smarter's own default applies.
 
-The chart stores `env` in a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/),
-`<global.appName>-env`, and every pod reads it with `envFrom`, so passwords and API keys aren't written
-into the pod specs of the Deployments, the init Job or the backup CronJob. A changed value rolls the
-Deployments. Keep your values file out of source control, or supply its secrets with `--set` from your
+The chart stores `env` in [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/),
+one per kind of pod, `<global.appName>-env-<pod>`, and each pod reads its own with `envFrom`, so passwords
+and API keys aren't written into the pod specs of the Deployments, the init Job or the backup CronJob.
+Each Secret holds only the credentials that its kind of pod uses, as `files/credentials.json` says (ADR-038).
+A changed value rolls the Deployments whose Secret holds it. Keep your values file out of source control, or supply its secrets with `--set` from your
 CI's secret store.
 
 ## Prerequisites

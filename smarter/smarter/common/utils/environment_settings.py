@@ -110,6 +110,25 @@ def log_environment_settings(logger: SmarterDebugLogger, settings: BaseModel, gr
     logger.debug("*" * 80, stacklevel=2)
 
 
+SECRET_NAME_SUFFIXES = ("_KEY", "_SECRET", "_PASSWORD", "_TOKEN", "_B64")
+"""The endings of an environment variable's name that say its value is a secret, e.g. ``..._API_KEY``."""
+
+
+def looks_like_a_secret(variable: str) -> bool:
+    """
+    Return whether an environment variable's name says that its value is a secret.
+
+    A rule on the name, rather than a list of variables, so that it knows no app's variables, and covers one
+    that nobody listed.
+
+    :param variable: The variable's name, e.g. ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``.
+    :returns: True if its name ends with one of :data:`SECRET_NAME_SUFFIXES`.
+    """
+    name = variable.upper()
+    retval = name.endswith(SECRET_NAME_SUFFIXES)
+    return retval
+
+
 def get_environment_variables(
     settings: BaseModel, group: str, environ: Optional[Mapping[str, str]] = None
 ) -> dict[str, str]:
@@ -119,8 +138,9 @@ def get_environment_variables(
     It scans the environment for ``SMARTER_<group>_*``, and ``<group>_*``, which
     :func:`smarter.common.conf.env.get_env` reads too. A variable that a field of ``settings`` reads
     shows the field's value, which is what the platform runs with, and a ``SecretStr`` only its last
-    four characters; any other variable shows its own value. Every secret is a field: e.g. the apps' api keys,
-    :class:`smarter.common.conf.settings.app_keys.AppKeySettings`.
+    four characters; any other variable shows its own value, unless its name says it is a secret
+    (:func:`looks_like_a_secret`), e.g. a key that an operator still sets as a variable though its only source is a
+    Smarter Secret: that is masked the same way.
 
     **Example:**
 
@@ -144,6 +164,8 @@ def get_environment_variables(
         field_name = name.lower()
         if field_name in fields:
             retval[variable] = environment_setting_log_value(field_name, getattr(settings, field_name))
+        elif looks_like_a_secret(variable):
+            retval[variable] = environment_setting_log_value(field_name, SecretStr(environ[variable]))
         else:
             retval[variable] = environ[variable]
     return retval

@@ -323,6 +323,7 @@ class DNSService(InfrastructureService):
         ttl: Optional[int] = DEFAULT_DNS_RECORD_TTL,
         values: Optional[list[str]] = None,
         alias: Optional[SmarterDictType] = None,
+        max_attempts: Optional[int] = None,
     ) -> tuple[DNSRecord, bool]:
         """
         Return a record, and create it, or update its values, if it does not match.
@@ -333,9 +334,14 @@ class DNSService(InfrastructureService):
         :param ttl: Seconds. Ignored for an alias record.
         :param values: The record's values, e.g. IP addresses.
         :param alias: A provider-specific alias target, in place of values.
+        :param max_attempts: How many times to look for a written record, :attr:`record_wait_seconds` apart. A
+            Celery task passes 1, so that it never sleeps, and checks again later itself (ADR-030, rule 2). By
+            default :attr:`record_wait_attempts`, e.g. for a management command. Calling it again finds the
+            record that the first call wrote.
         :returns: The record, and whether it was created, rather than found or updated.
         :raises DNSRecordTimeout: If the record does not appear in the zone in time.
         """
+        attempts = max_attempts or self.record_wait_attempts
         wanted = DNSRecord(
             name=self.resolve_record_name(name),
             type=record_type,
@@ -352,24 +358,23 @@ class DNSService(InfrastructureService):
         with self.operation("upsert_record"):
             self._upsert_record(zone_id, wanted, create=create)
 
-        for attempt in range(1, self.record_wait_attempts + 1):
+        for attempt in range(1, attempts + 1):
             record = self.get_record(zone_id, wanted.name, wanted.type)
             if record is not None:
                 self.created_resource(resource, resource_id=zone_id)
                 return record, create
-            if attempt < self.record_wait_attempts:
+            if attempt < attempts:
                 logger.debug(
                     "waiting %s seconds for %s %s, attempt %s of %s",
                     self.record_wait_seconds,
                     wanted.name,
                     wanted.type,
                     attempt,
-                    self.record_wait_attempts,
+                    attempts,
                 )
                 self._sleep(self.record_wait_seconds)
         raise DNSRecordTimeout(
-            f"DNS record {wanted.name} {wanted.type} did not appear in zone {zone_id} "
-            f"after {self.record_wait_attempts} attempts."
+            f"DNS record {wanted.name} {wanted.type} did not appear in zone {zone_id} after {attempts} attempts."
         )
 
     def delete_record(self, zone_id: str, name: str, record_type: str) -> bool:

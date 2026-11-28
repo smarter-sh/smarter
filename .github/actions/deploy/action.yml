@@ -448,20 +448,7 @@ runs:
             "DOCKERHUB_USERNAME": ${{ inputs.dockerhub-username && format('"{0}"', inputs.dockerhub-username) || 'null' }},
             "SMARTER_ENVIRONMENT": ${{ inputs.environment && format('"{0}"', inputs.environment) || 'null' }},
             "SMARTER_APP_DASHBOARD_WEB_CONSOLE_TERMINAL_ENABLE": ${{ inputs.smarter-enable-web-console-terminal && (inputs.smarter-enable-web-console-terminal == 'true' && 'true' || 'false') || 'null' }},
-            "SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY": ${{ inputs.brave-search-api-key && format('"{0}"', inputs.brave-search-api-key) || 'null' }},
             "SMARTER_APP_LLMTOOL_EXTENSION_REGISTRY_PUBLIC_KEY": ${{ inputs.extension-registry-public-key && format('"{0}"', inputs.extension-registry-public-key) || 'null' }},
-            "SMARTER_APP_LLMTOOL_TAVILY_API_KEY": ${{ inputs.tavily-api-key && format('"{0}"', inputs.tavily-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY": ${{ inputs.anthropic-api-key && format('"{0}"', inputs.anthropic-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_COHERE_API_KEY": ${{ inputs.cohere-api-key && format('"{0}"', inputs.cohere-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_FIREWORKS_API_KEY": ${{ inputs.fireworks-api-key && format('"{0}"', inputs.fireworks-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_GEMINI_API_KEY": ${{ inputs.gemini-api-key && format('"{0}"', inputs.gemini-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY": ${{ inputs.google-maps-api-key && format('"{0}"', inputs.google-maps-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": ${{ inputs.google-service-account-b64 && format('"{0}"', inputs.google-service-account-b64) || 'null' }},
-            "SMARTER_APP_PROVIDER_LLAMA_API_KEY": ${{ inputs.llama-api-key && format('"{0}"', inputs.llama-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_MISTRAL_API_KEY": ${{ inputs.mistral-api-key && format('"{0}"', inputs.mistral-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_OPENAI_API_KEY": ${{ inputs.openai-api-key && format('"{0}"', inputs.openai-api-key) || 'null' }},
-            "SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY": ${{ inputs.togetherai-api-key && format('"{0}"', inputs.togetherai-api-key) || 'null' }},
-            "SMARTER_APP_VECTORSTORE_PINECONE_API_KEY": ${{ inputs.pinecone-api-key && format('"{0}"', inputs.pinecone-api-key) || 'null' }},
             "SMARTER_DOCKER_IMAGE": ${{ env.SMARTER_DOCKER_IMAGE && format('"{0}"', env.SMARTER_DOCKER_IMAGE) || 'null' }},
             "SMARTER_PLATFORM_ADMIN_PASSWORD": ${{ env.SMARTER_ADMIN_PASSWORD && format('"{0}"', env.SMARTER_ADMIN_PASSWORD) || 'null' }},
             "SMARTER_PLATFORM_ADMIN_USERNAME": ${{ env.SMARTER_ADMIN_USERNAME && format('"{0}"', env.SMARTER_ADMIN_USERNAME) || 'null' }},
@@ -517,6 +504,50 @@ runs:
           }
         }
         EOF
+
+    # the platform's bootstrap secrets (issue #1099): the Smarter Secrets that the init Job creates, by name,
+    # which the chart puts in a Kubernetes Secret that only the init Job mounts, never in a pod's environment.
+    # jq --arg quotes each value, and the inputs reach the script as variables, never pasted into its text.
+    # Google's service account arrives base64 encoded; its Secret holds the json itself.
+    - name: Add the bootstrap secrets to the values file
+      id: bootstrap-secrets
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        BRAVE_SEARCH_API_KEY: ${{ inputs.brave-search-api-key }}
+        COHERE_API_KEY: ${{ inputs.cohere-api-key }}
+        FIREWORKS_API_KEY: ${{ inputs.fireworks-api-key }}
+        GEMINI_API_KEY: ${{ inputs.gemini-api-key }}
+        GOOGLE_MAPS_API_KEY: ${{ inputs.google-maps-api-key }}
+        GOOGLE_SERVICE_ACCOUNT_B64: ${{ inputs.google-service-account-b64 }}
+        LLAMA_API_KEY: ${{ inputs.llama-api-key }}
+        MISTRAL_API_KEY: ${{ inputs.mistral-api-key }}
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
+        TAVILY_API_KEY: ${{ inputs.tavily-api-key }}
+        TOGETHERAI_API_KEY: ${{ inputs.togetherai-api-key }}
+      run: |-
+        GOOGLE_SERVICE_ACCOUNT=""
+        if [ -n "$GOOGLE_SERVICE_ACCOUNT_B64" ]; then
+          GOOGLE_SERVICE_ACCOUNT="$(printf '%s' "$GOOGLE_SERVICE_ACCOUNT_B64" | base64 -d)"
+        fi
+        jq \
+          --arg anthropic_api_key "$ANTHROPIC_API_KEY" \
+          --arg brave_search_api_key "$BRAVE_SEARCH_API_KEY" \
+          --arg cohere_api_key "$COHERE_API_KEY" \
+          --arg fireworks_api_key "$FIREWORKS_API_KEY" \
+          --arg gemini_api_key "$GEMINI_API_KEY" \
+          --arg google_maps_api_key "$GOOGLE_MAPS_API_KEY" \
+          --arg google_service_account "$GOOGLE_SERVICE_ACCOUNT" \
+          --arg llama_api_key "$LLAMA_API_KEY" \
+          --arg mistral_api_key "$MISTRAL_API_KEY" \
+          --arg openai_api_key "$OPENAI_API_KEY" \
+          --arg pinecone_api_key "$PINECONE_API_KEY" \
+          --arg tavily_api_key "$TAVILY_API_KEY" \
+          --arg togetherai_api_key "$TOGETHERAI_API_KEY" \
+          '.bootstrapSecrets = ($ARGS.named | with_entries(select(.value != "")))' \
+          /tmp/values.json > /tmp/values_bootstrap.json
+        mv /tmp/values_bootstrap.json /tmp/values.json
 
     - name: Convert values file from json to yaml
       id: convert-to-yaml

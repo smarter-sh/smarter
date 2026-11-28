@@ -8,8 +8,6 @@ change, so they run its methods for a test account, with a test provider name, a
 provider's models api mocked.
 """
 
-import base64
-import os
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -18,14 +16,19 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
+from smarter.apps.provider.const import (
+    BUILTIN_PROVIDER_API_KEY_SECRET_NAMES,
+    GOOGLE_MAPS_API_KEY_SECRET_NAME,
+    GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
+)
 from smarter.apps.provider.management.commands import initialize_providers
 from smarter.apps.provider.management.commands.initialize_providers import Command
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
 from smarter.apps.secret.models import Secret
 from smarter.lib import json
 
-ENV_VAR = "TEST_INITIALIZE_PROVIDERS_API_KEY"
+SECRET_NAME = "test_initialize_providers_api_key"
+"""The test Provider's API key Secret, which every key's only source is (issue #1099)."""
 LOGO = "logo.svg"
 
 
@@ -42,7 +45,7 @@ class TestInitializeProviders(TestAccountMixin):
         super().setUp()
         self.name = f"test_init_provider_{self.hash_suffix}"
         self.addCleanup(Provider.objects.filter(name=self.name).delete)
-        self.addCleanup(Secret.objects.filter(user_profile=self.user_profile, name=ENV_VAR.lower()).delete)
+        self.secret = self.admin_secret(SECRET_NAME, "sk-test-initialize")
         self.command = Command(stdout=StringIO(), stderr=StringIO())
         self.command.user_profile = self.user_profile
         self.command.missing_api_keys = []
@@ -54,7 +57,6 @@ class TestInitializeProviders(TestAccountMixin):
         (Path(tmp.name) / "data" / "logos" / self.name / LOGO).write_text("<svg/>")
         for patcher in (
             patch.object(initialize_providers, "HERE", Path(tmp.name)),
-            patch.dict(os.environ, {ENV_VAR: "sk-test-initialize"}),
             # creating a ProviderModel queues verify_provider_model. Celery is not eager in tests, so,
             # unpatched, it runs in the live worker, which writes ProviderModelVerifications while the
             # cleanup deletes the provider, and the delete fails on their foreign key.
@@ -63,9 +65,15 @@ class TestInitializeProviders(TestAccountMixin):
             patcher.start()
             self.addCleanup(patcher.stop)
 
-    def initialize(self):
+    def admin_secret(self, name: str, value: str) -> Secret:
+        """Create one of the test admin's Secrets, deleted when the test ends."""
+        secret = Secret.objects.create(name=name, user_profile=self.user_profile, encrypted_value=Secret.encrypt(value))
+        self.addCleanup(Secret.objects.filter(pk=secret.pk).delete)
+        return secret
+
+    def initialize(self, api_key_secret_name: str = SECRET_NAME):
         self.command.initialize_generic_provider(
-            api_key_env_var=ENV_VAR,
+            api_key_secret_name=api_key_secret_name,
             name=self.name,
             provider_configuration={
                 "description": "a test provider",
@@ -162,9 +170,8 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(models.get(name="model-a").description, f"model-a model for {provider.name}.")
 
         # without an api key, only the default model is initialized, and it too keeps its is_active.
-        with patch.dict(os.environ, {}), patch.object(initialize_providers.requests, "get") as get:
-            os.environ.pop(ENV_VAR, None)
-            self.initialize()
+        with patch.object(initialize_providers.requests, "get") as get:
+            self.initialize(api_key_secret_name="test_initialize_providers_no_such_secret")
             get.assert_not_called()
         self.assertFalse(models.get(name="model-b").is_active)
 
@@ -193,7 +200,7 @@ class TestInitializeProviders(TestAccountMixin):
         """Test that a provider's auth headers and query parameters are sent to its models api."""
         with patch.object(initialize_providers.requests, "get", return_value=models_response()) as get:
             self.command.initialize_generic_provider(
-                api_key_env_var=ENV_VAR,
+                api_key_secret_name=SECRET_NAME,
                 name=self.name,
                 provider_configuration={
                     "description": "a test provider",
@@ -234,20 +241,16 @@ class TestInitializeProviders(TestAccountMixin):
 
     def test_initialize_generic_provider_without_api_key(self):
         """
-        Test that a provider whose api key is not set, or is a placeholder, is created without a key.
+        Test that a provider whose API key Secret doesn't exist, or is empty or a placeholder, is created without a key.
 
         The built-in LLMClients that use it must be applied, so it is created, with its default
-        model, and the missing key is recorded for the summary that handle() logs.
+        model, and the missing Secret is recorded for the summary that handle() logs.
         """
         for value in (None, "SET-ME-PLEASE", "SET-ME-IN-helm/charts/smarter/values.yaml"):
-            with (
-                self.subTest(value=value),
-                patch.dict(os.environ, {}),
-                patch.object(initialize_providers.requests, "get") as get,
-            ):
-                os.environ.pop(ENV_VAR, None)
+            with self.subTest(value=value), patch.object(initialize_providers.requests, "get") as get:
+                Secret.objects.filter(pk=self.secret.pk).delete()
                 if value:
-                    os.environ[ENV_VAR] = value
+                    self.secret = self.admin_secret(SECRET_NAME, value)
                 self.command.missing_api_keys = []
                 self.initialize()
                 get.assert_not_called()
@@ -258,16 +261,14 @@ class TestInitializeProviders(TestAccountMixin):
                 models = ProviderModel.objects.filter(provider=provider)
                 self.assertEqual(list(models.values_list("name", flat=True)), ["model-b"])
                 self.assertTrue(models.get().is_default)
-                self.assertEqual(self.command.missing_api_keys[0][0], ENV_VAR)
-                self.assertFalse(Secret.objects.filter(user_profile=self.user_profile, name=ENV_VAR.lower()).exists())
+                self.assertEqual(self.command.missing_api_keys[0][0], SECRET_NAME)
+                Provider.objects.filter(name=self.name).delete()
 
     def test_initialize_generic_provider_without_api_key_keeps_the_existing_key(self):
-        """Test that an api key Secret that was set before, e.g. in the web console, is not removed."""
+        """Test that a provider keeps an api key Secret that was set before, e.g. in the web console."""
         with patch.object(initialize_providers.requests, "get", return_value=models_response()):
             self.initialize()
-        with patch.dict(os.environ, {}):
-            os.environ.pop(ENV_VAR, None)
-            self.initialize()
+        self.initialize(api_key_secret_name="test_initialize_providers_no_such_secret")
         provider = Provider.objects.get(name=self.name)
         self.addCleanup(provider.logo.delete, save=False)
         assert provider.api_key is not None
@@ -320,82 +321,52 @@ class TestInitializeProviders(TestAccountMixin):
         self.assertEqual(generic.call_count, len(methods))
         for call in generic.call_args_list:
             with self.subTest(provider=call.kwargs["name"]):
-                # the env var that a prompt's missing api key error names.
-                self.assertEqual(BUILTIN_PROVIDER_API_KEY_ENV_VARS[call.kwargs["name"]], call.kwargs["api_key_env_var"])
+                # the Secret that a prompt's missing api key error names.
+                self.assertEqual(
+                    BUILTIN_PROVIDER_API_KEY_SECRET_NAMES[call.kwargs["name"]], call.kwargs["api_key_secret_name"]
+                )
                 self.assertTrue(call.kwargs["provider_configuration"]["base_url"].startswith("https://"))
                 self.assertTrue((logos / call.kwargs["name"] / call.kwargs["logo_filename"]).exists())
 
     def test_google_maps(self):
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_MAPS_API_KEY": "maps-key"}),
-        ):
-            self.command.initialize_google_maps()
-        self.assertEqual(initialize_secret.call_args.kwargs["secret_string"], "maps-key")
-
-    def test_google_maps_missing(self):
-        """Test that no Secret is stored, and the missing key is recorded, when the Google Maps api key is not set."""
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_MAPS_API_KEY": "SET-ME-PLEASE"}),
-        ):
-            self.command.initialize_google_maps()
-        initialize_secret.assert_not_called()
-        self.assertEqual(self.command.missing_api_keys[0][0], "APP_PROVIDER_GOOGLE_MAPS_API_KEY")
-
-    def test_google_service_account_missing(self):
-        """Test that no Secret is stored, and the missing credential is recorded, when it is not set."""
-        with (
-            patch.object(initialize_providers, "initialize_secret") as initialize_secret,
-            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": "SET-ME-PLEASE"}),
-        ):
-            self.command.initialize_google_service_account()
-        initialize_secret.assert_not_called()
-        self.assertEqual(self.command.missing_api_keys[0][0], "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64")
+        """Test that the Google Maps key's Secret is found, or recorded as missing."""
+        self.command.initialize_google_maps()
+        missing = [entry[0] for entry in self.command.missing_api_keys]
+        self.assertEqual(missing, [GOOGLE_MAPS_API_KEY_SECRET_NAME])
+        self.command.missing_api_keys = []
+        self.admin_secret(GOOGLE_MAPS_API_KEY_SECRET_NAME, "maps-key")
+        self.command.initialize_google_maps()
+        self.assertEqual(self.command.missing_api_keys, [])
 
     def test_log_missing_api_keys(self):
-        """Test that the missing api keys are logged in one banner, with how to set them, and nothing when none are."""
+        """Test that the missing Secrets are logged in one banner, with how to set them, and nothing when none are."""
         with patch.object(initialize_providers.logger, "error") as error:
             self.command.log_missing_api_keys()
             error.assert_not_called()
-            self.command.missing_api_key(
-                "APP_PROVIDER_OPENAI_API_KEY", "the openai Provider", "https://example.com/keys"
-            )
+            self.command.missing_api_key("openai_api_key", "the openai Provider", "https://example.com/keys")
             self.command.log_missing_api_keys()
         banner = error.call_args.args[0]
-        self.assertIn("1 API keys are not set", banner)
-        self.assertIn("SMARTER_APP_PROVIDER_OPENAI_API_KEY", banner)
+        self.assertIn("1 API key Secrets do not exist", banner)
+        self.assertIn("openai_api_key", banner)
         self.assertIn("https://example.com/keys", banner)
-        self.assertIn("manage.py initialize_providers", banner)
-
-    def test_google_service_account_invalid(self):
-        """Test that a service account that is not base64 encoded json is not stored."""
-        with patch.object(initialize_providers, "initialize_secret") as initialize_secret:
-            for value in ("not base64 json", base64.b64encode(b"\xff\xfe").decode()):
-                with patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": value}):
-                    self.command.initialize_google_service_account()
-        initialize_secret.assert_not_called()
+        self.assertIn("bootstrap", banner)
+        self.assertNotIn("SMARTER_APP_PROVIDER", banner)
 
     def test_google_service_account(self):
-        """Test that the Google service account's json is stored as a Secret."""
-        account = {"type": "service_account", "project_id": "test"}
-        value = base64.b64encode(json.dumps(account).encode()).decode()
-        name = initialize_providers.GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
-        self.addCleanup(Secret.objects.filter(user_profile=self.user_profile, name=name).delete)
-        with (
-            patch.dict(os.environ, {"APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64": value}),
-            patch.object(
-                initialize_providers, "initialize_secret", wraps=initialize_providers.initialize_secret
-            ) as initialize_secret,
-        ):
+        """Test that the service account's Secret is found, recorded as missing, or reported when it isn't json."""
+        self.command.initialize_google_service_account()
+        self.assertEqual(self.command.missing_api_keys[0][0], GOOGLE_SERVICE_ACCOUNT_SECRET_NAME)
+        self.command.missing_api_keys = []
+        secret = self.admin_secret(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, json.dumps({"type": "service_account"}))
+        with patch.object(initialize_providers.logger, "error") as error:
             self.command.initialize_google_service_account()
-        stored = initialize_secret.call_args.kwargs["secret_string"]
-        self.assertIsInstance(stored, str)
-        self.assertEqual(json.loads(stored), account)
-        secret = Secret.objects.get(user_profile=self.user_profile, name=name)
-        secret_string = secret.get_secret()
-        assert secret_string is not None
-        self.assertEqual(json.loads(secret_string), account)
+        error.assert_not_called()
+        self.assertEqual(self.command.missing_api_keys, [])
+        Secret.objects.filter(pk=secret.pk).delete()
+        self.admin_secret(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, "not json")
+        with patch.object(initialize_providers.logger, "error") as error:
+            self.command.initialize_google_service_account()
+        self.assertIn("not a service account's json", error.call_args_list[0].args[0])
 
     def test_handle(self):
         """Test that handle() initializes each provider for the smarter admin, and reports an error."""

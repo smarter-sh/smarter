@@ -13,9 +13,8 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.common.conf import Settings
 from smarter.common.conf.settings import security
-from smarter.common.conf.settings.platform import POD_KINDS, RESTRICTED_POD_KINDS
 from smarter.common.conf.util import validate_throttle_rate
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -387,8 +386,8 @@ class TestServiceType(SmarterTestBase):
 
     def test_valid_kinds(self):
         """A known kind is kept, trimmed and in lower case; empty is unknown; anything else is refused."""
-        for kind in POD_KINDS:
-            if kind in RESTRICTED_POD_KINDS:
+        for kind in SmarterKubernetesPodKinds.all:
+            if kind in SmarterKubernetesPodKinds.restricted:
                 continue
             with self.subTest(kind=kind):
                 self.assertEqual(make_settings(service_type=f" {kind.upper()} ").service_type, kind)

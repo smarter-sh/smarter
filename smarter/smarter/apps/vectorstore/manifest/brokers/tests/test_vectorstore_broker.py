@@ -14,10 +14,12 @@ from rest_framework.test import APIClient
 
 from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.vectorstore import tasks
 from smarter.apps.vectorstore.backends import (
     QdrantBackend,
     VectorStoreBackendCredentialsError,
 )
+from smarter.apps.vectorstore.enum import VectorstoreQueuedMessage
 from smarter.apps.vectorstore.manifest.brokers.vectorstore import (
     SAMVectorstoreBroker,
     SAMVectorstoreBrokerError,
@@ -157,10 +159,19 @@ class TestVectorstoreBroker(VectorstoreTestBase, TestSAMBrokerBaseClass):
         logs = self.data(self.broker_for(self.manifest_text()).logs(self.request, **self.kwargs))
         self.assertIn("vectorstore=", logs["logs"])
 
+        # undeploy and delete only queue their tasks: the request writes nothing to the cluster (#1080).
+        deleted_before = len(self.kubernetes.deleted)
         data = self.data(self.broker_for(self.manifest_text()).undeploy(self.request, **self.kwargs))
-        self.assertEqual(data["status"]["vectorstoreStatus"], "stopped")
+        self.assertEqual(data["status"]["message"], VectorstoreQueuedMessage.UNDEPLOY.value)
+        vectorstore_id = VectorstoreMeta.objects.get(name=self.vs_name).pk
+        self.undeploy_task.assert_called_once_with(vectorstore_id)
+        self.assertEqual(len(self.kubernetes.deleted), deleted_before)
+        self.assertEqual(tasks.undeploy_vectorstore(vectorstore_id), "stopped")
 
         self.broker_for(self.manifest_text()).delete(self.request, **self.kwargs)
+        self.delete_vectorstore_task.assert_called_once_with(vectorstore_id)
+        self.assertEqual(VectorstoreMeta.objects.get(pk=vectorstore_id).status, "deleting")
+        self.assertTrue(tasks.delete_vectorstore(vectorstore_id))
         self.assertFalse(VectorstoreMeta.objects.filter(name=self.vs_name).exists())
         self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
 

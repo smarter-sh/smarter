@@ -81,27 +81,29 @@ Setup
 1. **Get an API key.** Create an account at `tavily.com <https://tavily.com>`_, and copy an API
    key from its dashboard. Tavily keys begin with ``tvly-``.
 
-2. **Set the environment variable.** Set ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``, one of the
-   llmtool app's variables. As with every Smarter setting, the ``SMARTER_`` prefix is optional,
-   ``APP_LLMTOOL_TAVILY_API_KEY``: the two are the same setting. For local development, add it to ``.env``, which ``.env.example`` documents:
+2. **Add it to the platform's bootstrap secrets.** The key is never an environment variable: its
+   only source is the Smarter Secret ``tavily_api_key``, owned by the smarter admin. For local
+   development, write it into a file of that name in the repository's gitignored
+   ``bootstrap-secrets/`` folder, which ``.env.example`` documents. On Kubernetes, set the Helm
+   chart's ``bootstrapSecrets.tavily_api_key`` instead.
 
    .. code-block:: bash
 
-       SMARTER_APP_LLMTOOL_TAVILY_API_KEY=tvly-...
+       printf %s 'tvly-...' > bootstrap-secrets/tavily_api_key
 
-3. **Create the Secret.** ``manage.py initialize_llmtool_api_keys``, which ``manage.py
-   initialize_platform`` runs, stores the key as the Smarter Secret ``tavily_api_key``, owned by
-   the smarter admin. It updates the Secret if it already exists, so running it again rotates
-   the key.
+3. **Create the Secret.** ``manage.py initialize_bootstrap_secrets``, which ``manage.py
+   initialize_platform`` runs, stores the file's key as the Secret ``tavily_api_key``. It updates
+   the Secret when the key has changed, so running it again rotates the key.
 
    .. code-block:: bash
 
-       python manage.py initialize_llmtool_api_keys
+       python manage.py initialize_platform
 
-   If ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY`` is not set, or is still a placeholder, such as ``SET-ME-PLEASE`` or
-   ``values.yaml``'s ``SET-ME-IN-helm/charts/smarter/values.yaml``, the command does not create
-   the Secret, and lists the key in the ``[API KEYS NOT SET]`` console error that it logs at the
-   end, with the other missing API keys. It never stores a placeholder as the key.
+   An empty file, or one that still holds a placeholder, such as ``SET-ME-PLEASE``, is skipped: the
+   command never stores a placeholder as the key. ``manage.py initialize_llmtool_api_keys``, which
+   ``initialize_platform`` runs next, then lists the Secret in the ``[API KEYS NOT SET]`` console
+   error that it logs, with the other missing API keys. An admin can also set the Secret in the web
+   console, or with ``smarter apply``.
 
 4. **Apply the sample plugins.**
 
@@ -124,23 +126,26 @@ CI/CD Considerations
 secret ``TAVILY_API_KEY``. Add it in the repository's *Settings > Secrets and variables >
 Actions*. It is never committed: neither ``values.yaml`` nor any manifest contains the key.
 
-**Tests (.github/workflows/test.yml).** The workflow passes the secret to the test
-containers' ``.env``, as ``APP_LLMTOOL_TAVILY_API_KEY``, with the other API keys. The unit tests do not call Tavily: they serve the
+**Tests (.github/workflows/test.yml).** The workflow writes the secret, with the other API keys,
+into ``bootstrap-secrets/tavily_api_key``, with ``scripts/bootstrap_secrets.py``, never into the
+test containers' ``.env``. The unit tests do not call Tavily: they serve the
 Tavily API from a fake web host, and create a test Secret, so they pass without the GitHub
 secret.
 
 **Deployments (.github/workflows/deploy.yml).** The workflow passes the GitHub secret to the
 ``tavily-api-key`` input of ``.github/actions/deploy``, which sets the Helm value
-``env.SMARTER_APP_LLMTOOL_TAVILY_API_KEY``. The chart's init Job, ``templates/job-init.yaml``, is a Helm
-``post-install`` and ``post-upgrade`` hook, so every deployment runs ``initialize_platform``,
-which creates or updates the Secret, and applies the sample plugins. Consequently:
+``bootstrapSecrets.tavily_api_key``. The chart puts it in the Kubernetes Secret
+``smarter-bootstrap-secrets``, which only the init Job mounts. The init Job,
+``templates/job-init.yaml``, is a Helm ``post-install`` and ``post-upgrade`` hook, so every
+deployment runs ``initialize_platform``, which creates or updates the Secret, and applies the
+sample plugins. Consequently:
 
 - **Adding the key** to an existing installation takes effect on the next deployment.
 - **Rotating the key**: update the GitHub secret, and deploy. The Secret is updated in place.
 - **A deployment without the key** completes, but the init Job logs that the ``tavily_api_key``
-  Secret was not created, and that ``smarter_project_websearch`` could not be applied. When the
-  GitHub secret is not set, the deploy action passes no value, and Helm falls back to the
-  ``values.yaml`` placeholder, which the init command recognizes and ignores.
+  Secret does not exist, and that ``smarter_project_websearch`` could not be applied. When the
+  GitHub secret is not set, the deploy action leaves ``tavily_api_key`` out of
+  ``bootstrapSecrets``, and an existing Secret is kept.
 - **Every environment** that uses a Tavily WebsearchPlugin needs the key: local, alpha, beta
   and production. Each may use its own Tavily key, for separate usage and billing.
 
@@ -165,14 +170,14 @@ Troubleshooting
 ---------------
 
 ``the web search api key Secret tavily_api_key does not exist, or is not accessible``
-    The plugin was applied before the Secret existed, or by a user who cannot read it. Set
-    ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY``, run ``manage.py initialize_llmtool_api_keys``, and apply the plugin again.
+    The plugin was applied before the Secret existed, or by a user who cannot read it. Write
+    ``bootstrap-secrets/tavily_api_key``, run ``manage.py initialize_platform``, and apply the plugin again.
 
 ``Plugin smarter_project_websearch not found for account ...``
     An LLMClient that names the plugin was applied, but the plugin was not, almost always because
     of the missing Secret above. Fix the Secret, apply the plugin again, e.g. with ``manage.py
     load_from_github --include_kind WebsearchPlugin``, and apply the LLMClient again.
 
-``APP_LLMTOOL_TAVILY_API_KEY is not set``, and ``SMARTER_APP_LLMTOOL_TAVILY_API_KEY`` in the ``[API KEYS NOT SET]`` console error
-    The init command found no key, or only a placeholder. Set the environment variable, or, in a
-    deployment, the GitHub secret ``TAVILY_API_KEY``.
+``The Secret tavily_api_key does not exist``, and ``tavily_api_key`` in the ``[API KEYS NOT SET]`` console error
+    The platform's bootstrap secrets held no key, or only a placeholder. Write
+    ``bootstrap-secrets/tavily_api_key``, or, in a deployment, set the GitHub secret ``TAVILY_API_KEY``.

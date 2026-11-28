@@ -134,6 +134,10 @@ services:
       # the local overrides file, overrides/settings.yaml, read-only. Its values overwrite
       # Smarter's Django settings. See smarter/smarter/settings/overrides.py.
       - ./overrides:/home/smarter_user/overrides:ro
+      # the platform's bootstrap secrets (issue #1099), read-only, in this container only, where
+      # make docker-init runs initialize_platform: one file per Smarter Secret, which
+      # make bootstrap-secrets writes. The chart mounts them in its init Job, at the same path.
+      - ./bootstrap-secrets:/home/smarter_user/bootstrap-secrets:ro
     environment:
       - PYTHONUNBUFFERED=1
       - SERVICE_TYPE=api

@@ -9,6 +9,7 @@ from django.db.models import ProtectedError
 from django.test import Client
 from django.urls import reverse
 
+from smarter.apps.vectorstore import tasks
 from smarter.apps.vectorstore.api.web.urls import (
     VectorstoreApiWebReverseNames as WebNames,
 )
@@ -121,12 +122,26 @@ class TestVectorstoreConsole(VectorstoreTestBase):
         self.assertEqual((vectorstore.name, vectorstore.kubernetes_name), (name, kubernetes_name))
 
     def test_delete(self):
-        """Test that delete destroys a deployed database, and refuses a protected one."""
+        """Test that delete queues the destruction of a deployed database, deletes an undeployed one now, and refuses a protected one."""
         service = self.ready_service("test_views_delete")
-        response = self.client.post(web_url(WebNames.delete, vectorstore_id=service.vectorstore.pk))
+        vectorstore_id = service.vectorstore.pk
+        deleted_before = len(self.kubernetes.deleted)
+        response = self.client.post(web_url(WebNames.delete, vectorstore_id=vectorstore_id))
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertFalse(VectorstoreMeta.objects.filter(pk=service.vectorstore.pk).exists())
+        self.assertIn("is being deleted", response.json()["message"])
+        self.delete_vectorstore_task.assert_called_once_with(vectorstore_id)
+        self.assertEqual(VectorstoreMeta.objects.get(pk=vectorstore_id).status, "deleting")
+        self.assertEqual(len(self.kubernetes.deleted), deleted_before)
+        self.assertTrue(tasks.delete_vectorstore(vectorstore_id))
+        self.assertFalse(VectorstoreMeta.objects.filter(pk=vectorstore_id).exists())
         self.assertIn("persistentvolumeclaim", self.kubernetes.deleted[-1][0])
+
+        never_deployed = self.new_vectorstore("test_views_never_deployed")
+        response = self.client.post(web_url(WebNames.delete, vectorstore_id=never_deployed.pk))
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIn("deleted", response.json()["message"])
+        self.assertFalse(VectorstoreMeta.objects.filter(pk=never_deployed.pk).exists())
+        self.assertEqual(self.delete_vectorstore_task.call_count, 1)
 
         protected = self.new_vectorstore("test_views_protected")
         VectorstoreMeta.objects.filter(pk=protected.pk).update(deletion_protection=True)

@@ -185,6 +185,27 @@ class SAMLLMHostStatusEnum(SmarterEnumAbstract):
         ]
 
 
+class SAMLLMHostQueuedMessage(SmarterEnumAbstract):
+    """
+    The status message of an LLMHost, or an LLMHostCompute, whose change is queued for the infrastructure worker.
+
+    The web server checks a change, records one of these as the status message, and queues the task that
+    makes it (:mod:`smarter.apps.llmhost.tasks`). The task's own status, or its failure, replaces it.
+    """
+
+    LAUNCH = "Launch queued."
+    """An LLMHost whose ``launch_llmhost`` task is queued."""
+
+    UNDEPLOY = "Undeploy queued."
+    """An LLMHost whose ``destroy_llmhost`` task is queued."""
+
+    DELETE = "Delete queued."
+    """An LLMHost whose ``delete_llmhost`` task is queued."""
+
+    RECONCILE = "Reconcile queued."
+    """An LLMHostCompute whose ``reconcile_llmhost_compute`` task is queued."""
+
+
 class SAMLLMHostEventType(SmarterEnumAbstract):
     """The type of an LLMHost lifecycle event."""
 

@@ -1,111 +1,139 @@
 ###############################################################################
-# The platform's Kubernetes permissions
+# The platform's Kubernetes permissions: one Role per kind of pod (ADR-038,
+# phase 3, #1084)
 #
-# Smarter runs kubectl as the {{ .Values.global.appName }} ServiceAccount
-# (templates/serviceaccount.yaml). This is everything that it needs:
+# Smarter runs kubectl as the pod's ServiceAccount, {{ .Values.global.appName }}-<pod>
+# (templates/serviceaccount.yaml), whose token kubectl reads in the pod. Each kind
+# gets only what its code does. The inventory, by call site, is in ADR-038.
 #
 # Role, in this namespace only:
-#   - LLMClient ingresses, and their cert-manager Certificates and TLS Secrets
-#     (smarter.apps.llmclient).
-#   - LLMHosts: Deployments, Services, Ingresses, Secrets and
-#     PersistentVolumeClaims (smarter.apps.llmhost).
-#   - vectorstores: StatefulSets, Services, Secrets and PersistentVolumeClaims
-#     (smarter.apps.vectorstore).
-#   - pods, their logs, events and metrics, for status pages and the inventory.
+#   - worker-infrastructure: every cluster write, on the infrastructure queue.
+#     LLMClient ingresses, their cert-manager Certificates and TLS Secrets
+#     (smarter.apps.llmclient); LLMHosts' Deployments, Services, Ingresses,
+#     Secrets and PersistentVolumeClaims (smarter.apps.llmhost); vectorstores'
+#     StatefulSets, Services, Secrets and PersistentVolumeClaims
+#     (smarter.apps.vectorstore); pods, for LLMHost capacity.
+#   - api: reads only, and no Secrets: LLMHost and vectorstore status and logs,
+#     and the staff MCP tool platform_status (pods, their logs, events and
+#     metrics). The web console's superuser terminal runs a shell in this pod,
+#     with its token, so the Role is all that a terminal user can do in the
+#     cluster.
+#   - job-init: the LLMClient ingresses that initialize_platform retargets
+#     (retarget_llmclient_ingresses), and the inventory's lists.
+#   - worker, beat, the migrate Job: none. The worker reads its namespace when
+#     it starts (startup.check_kubernetes); beat and the migrate Job mount no
+#     token.
 #
 # ClusterRole, read only, with serviceAccount.createClusterRole: the cluster
 #   is shared by every environment, so the only cluster-wide reads are the
 #   namespace check, nodes (LLMHost capacity, cluster status), PersistentVolumes
-#   (the inventory) and node metrics. It is named after the namespace: every
-#   environment's release is named smarter, and they would otherwise claim the
-#   same ClusterRole. smarter-sh's deploy workflow turns it off, so that the
-#   chart creates nothing outside its namespace and deploys with
-#   namespace-scoped permissions; then smarter-infrastructure creates the same
-#   ClusterRole (kubernetes-rbac.tf). Without either, those reads fail, and the
-#   pages that show them say so.
+#   (the inventory) and node metrics, each kind's own. They are named after the
+#   namespace: every environment's release is named smarter, and they would
+#   otherwise claim the same ClusterRoles. smarter-sh's deploy workflow turns
+#   them off, so that the chart creates nothing outside its namespace and
+#   deploys with namespace-scoped permissions; then smarter-infrastructure
+#   creates the same ClusterRoles (kubernetes-rbac.tf). Without either, those
+#   reads fail, and the pages that show them say so.
 ###############################################################################
+{{- $roles := dict }}
+{{- $_ := set $roles "worker-infrastructure" (list
+  (dict "apiGroups" (list "") "resources" (list "secrets" "services" "persistentvolumeclaims") "verbs" (list "get" "list" "watch" "create" "update" "patch" "delete"))
+  (dict "apiGroups" (list "apps") "resources" (list "deployments" "statefulsets") "verbs" (list "get" "list" "watch" "create" "update" "patch" "delete"))
+  (dict "apiGroups" (list "networking.k8s.io") "resources" (list "ingresses") "verbs" (list "get" "list" "watch" "create" "update" "patch" "delete"))
+  (dict "apiGroups" (list "cert-manager.io") "resources" (list "certificates") "verbs" (list "get" "list" "watch" "delete"))
+  (dict "apiGroups" (list "") "resources" (list "pods") "verbs" (list "get" "list"))
+) }}
+{{- $_ := set $roles "api" (list
+  (dict "apiGroups" (list "") "resources" (list "pods" "persistentvolumeclaims") "verbs" (list "get" "list"))
+  (dict "apiGroups" (list "") "resources" (list "pods/log") "verbs" (list "get"))
+  (dict "apiGroups" (list "") "resources" (list "events") "verbs" (list "get" "list"))
+  (dict "apiGroups" (list "apps") "resources" (list "deployments" "statefulsets") "verbs" (list "get" "list"))
+  (dict "apiGroups" (list "metrics.k8s.io") "resources" (list "pods") "verbs" (list "get" "list"))
+) }}
+{{- if .Values.databaseInit.enabled }}
+{{- $_ := set $roles "job-init" (list
+  (dict "apiGroups" (list "networking.k8s.io") "resources" (list "ingresses") "verbs" (list "get" "list" "create" "patch"))
+  (dict "apiGroups" (list "") "resources" (list "services") "verbs" (list "list"))
+  (dict "apiGroups" (list "cert-manager.io") "resources" (list "certificates") "verbs" (list "list"))
+) }}
+{{- end }}
+{{- range $index, $pod := keys $roles | sortAlpha }}
+{{- $name := printf "%s-%s" $.Values.global.appName $pod }}
+{{- if $index }}
+---
+{{- end }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: "{{ .Values.global.appName }}"
-  namespace: "{{ .Release.Namespace }}"
+  name: "{{ $name }}"
+  namespace: "{{ $.Release.Namespace }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $name }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 rules:
-  - apiGroups: [""]
-    resources: ["secrets", "services", "persistentvolumeclaims"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["networking.k8s.io"]
-    resources: ["ingresses"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["cert-manager.io"]
-    resources: ["certificates"]
-    verbs: ["get", "list", "watch", "delete"]
-  - apiGroups: [""]
-    resources: ["pods", "pods/log", "events"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["metrics.k8s.io"]
-    resources: ["pods"]
-    verbs: ["get", "list"]
+  {{- toYaml (get $roles $pod) | nindent 2 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: "{{ .Values.global.appName }}"
-  namespace: "{{ .Release.Namespace }}"
+  name: "{{ $name }}"
+  namespace: "{{ $.Release.Namespace }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $name }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "{{ .Values.global.appName }}"
+  name: "{{ $name }}"
 subjects:
   - kind: ServiceAccount
-    name: "{{ .Values.global.appName }}"
-    namespace: "{{ .Release.Namespace }}"
+    name: "{{ $name }}"
+    namespace: "{{ $.Release.Namespace }}"
+{{- end }}
 {{- if .Values.serviceAccount.createClusterRole }}
+{{- $namespaceRule := dict "apiGroups" (list "") "resources" (list "namespaces") "resourceNames" (list .Release.Namespace) "verbs" (list "get") }}
+{{- $nodesRule := dict "apiGroups" (list "") "resources" (list "nodes") "verbs" (list "get" "list") }}
+{{- $volumesRule := dict "apiGroups" (list "") "resources" (list "persistentvolumes") "verbs" (list "get" "list") }}
+{{- $nodeMetricsRule := dict "apiGroups" (list "metrics.k8s.io") "resources" (list "nodes") "verbs" (list "get" "list") }}
+{{- $clusterRoles := dict
+  "api" (list $namespaceRule $nodesRule $nodeMetricsRule)
+  "worker" (list $namespaceRule)
+  "worker-infrastructure" (list $namespaceRule $nodesRule $volumesRule)
+}}
+{{- if .Values.databaseInit.enabled }}
+{{- $_ := set $clusterRoles "job-init" (list $namespaceRule $nodesRule $volumesRule) }}
+{{- end }}
+{{- range $pod := keys $clusterRoles | sortAlpha }}
+{{- $name := printf "%s-%s-%s" $.Values.global.appName $.Release.Namespace $pod }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+  name: "{{ $name }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $.Values.global.appName }}-{{ $pod }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 rules:
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    resourceNames: ["{{ .Release.Namespace }}"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["nodes", "persistentvolumes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["metrics.k8s.io"]
-    resources: ["nodes"]
-    verbs: ["get", "list"]
+  {{- toYaml (get $clusterRoles $pod) | nindent 2 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+  name: "{{ $name }}"
   labels:
-    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ .Values.global.appName }}"
-    app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
+    helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $.Values.global.appName }}-{{ $pod }}"
+    app.kubernetes.io/application-group: "{{ $.Values.global.appName }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: "{{ .Values.global.appName }}-{{ .Release.Namespace }}"
+  name: "{{ $name }}"
 subjects:
   - kind: ServiceAccount
-    name: "{{ .Values.global.appName }}"
-    namespace: "{{ .Release.Namespace }}"
+    name: "{{ $.Values.global.appName }}-{{ $pod }}"
+    namespace: "{{ $.Release.Namespace }}"
+{{- end }}
 {{- end }}

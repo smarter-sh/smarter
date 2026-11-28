@@ -16,7 +16,6 @@ from .exceptions import (
 from .register_custom_domain import register_custom_domain
 from .undeploy_default_api import undeploy_default_api
 from .utils import is_taskable
-from .verify_certificate import verify_certificate
 from .verify_custom_domain import verify_custom_domain
 from .verify_domain import verify_domain
 
@@ -31,7 +30,6 @@ __all__ = [
     "destroy_domain_A_record",
     "register_custom_domain",
     "undeploy_default_api",
-    "verify_certificate",
     "verify_custom_domain",
     "verify_domain",
     "LLMClientCustomDomainExists",

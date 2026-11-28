@@ -24,6 +24,7 @@ from smarter.apps.vectorstore.deployment import (
     VOLUME,
     VectorstoreDeploymentState,
 )
+from smarter.apps.vectorstore.enum import VectorstoreQueuedMessage
 from smarter.apps.vectorstore.models import (
     PAGE_BREAK,
     VectorstoreDocument,
@@ -222,6 +223,20 @@ class TestVectorstoreService(VectorstoreTestBase):
         self.assertFalse(service.deployment.in_progress)
         self.assertIsNotNone(service.vectorstore.last_checked_at)
 
+    def test_reconcile_without_take_over_never_provisions(self):
+        """Test that the api's reconcile observes a stalled deploy, and leaves its provisioning to Beat's (ADR-038)."""
+        service = self.service(self.new_vectorstore("test_service_no_take_over"))
+        self.kubernetes.statefulset = {"status": {"readyReplicas": 0}}
+        service.deploy()
+        service.deployment.nextRetryAt = timezone.now() - timedelta(hours=1)
+        service.save_deployment()
+        self.assertFalse(service.deployment.provisioned)
+        self.assertEqual(service.reconcile(take_over=False), VectorstoreStatus.PROVISIONING)
+        self.assertEqual(self.kubernetes.applied, [])
+        # Beat's check, on the infrastructure worker, takes it over.
+        service.reconcile()
+        self.assertNotEqual(self.kubernetes.applied, [])
+
     def test_reconcile_failure_and_inactive(self):
         """Test that reconcile marks a ready database failed when it can't be reached, and deploy refuses an inactive one."""
         service = self.ready_service("test_service_failure")
@@ -371,6 +386,45 @@ class TestVectorstoreService(VectorstoreTestBase):
         with self.assertRaisesRegex(VectorstoreServiceError, "deletionProtection"):
             protected.destroy()
         self.assertEqual(protected.vectorstore.status, VectorstoreStatus.READY)
+
+    def test_queue_provision_and_undeploy(self):
+        """They record the queued change and queue its task; the request writes nothing to the cluster (#1080)."""
+        service = self.ready_service("test_service_queue_undeploy")
+        applied_before = len(self.kubernetes.applied)
+        deleted_before = len(self.kubernetes.deleted)
+        service.queue_provision()
+        self.provision_task.assert_called_once_with(service.vectorstore.pk)
+        self.assertEqual(service.vectorstore.status_message, VectorstoreQueuedMessage.PROVISION.value)
+        service.queue_undeploy()
+        self.undeploy_task.assert_called_once_with(service.vectorstore.pk)
+        service.vectorstore.refresh_from_db()
+        self.assertEqual(service.vectorstore.status, VectorstoreStatus.READY)
+        self.assertEqual(service.vectorstore.status_message, VectorstoreQueuedMessage.UNDEPLOY.value)
+        self.assertEqual(len(self.kubernetes.applied), applied_before)
+        self.assertEqual(len(self.kubernetes.deleted), deleted_before)
+
+    def test_queue_delete(self):
+        """A deployed vectorstore is deleting until its task runs; one never deployed is deleted now; a protected one is refused."""
+        service = self.ready_service("test_service_queue_delete")
+        deleted_before = len(self.kubernetes.deleted)
+        self.assertFalse(service.queue_delete())
+        self.delete_vectorstore_task.assert_called_once_with(service.vectorstore.pk)
+        service.vectorstore.refresh_from_db()
+        self.assertEqual(service.vectorstore.status, VectorstoreStatus.DELETING)
+        self.assertEqual(service.vectorstore.status_message, VectorstoreQueuedMessage.DELETE.value)
+        self.assertEqual(len(self.kubernetes.deleted), deleted_before)
+
+        never_deployed = self.service(self.new_vectorstore("test_service_queue_delete_now"))
+        pk = never_deployed.vectorstore.pk
+        self.assertTrue(never_deployed.queue_delete())
+        self.assertFalse(VectorstoreMeta.objects.filter(pk=pk).exists())
+        self.assertEqual(self.delete_vectorstore_task.call_count, 1)
+
+        protected = self.service(self.new_vectorstore("test_service_queue_delete_protected"))
+        protected.vectorstore.deletion_protection = True
+        with self.assertRaisesRegex(VectorstoreServiceError, "deletionProtection"):
+            protected.queue_delete()
+        self.assertTrue(VectorstoreMeta.objects.filter(pk=protected.vectorstore.pk).exists())
 
     def test_managed_qdrant_connection(self):
         """Test that a managed Qdrant database is reached at its ApiConnection's URL, with its API key."""

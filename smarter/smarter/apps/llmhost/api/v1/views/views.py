@@ -47,6 +47,7 @@ from smarter.apps.llmhost.services import (
     LLMHostService,
     LLMHostServiceError,
 )
+from smarter.apps.llmhost.tasks import queue_delete, queue_destroy, queue_launch
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.drf.views.contract import ContractListMixin
@@ -152,15 +153,19 @@ class LLMHostView(LLMHostViewBase):
         return Response(LLMHostApiLLMHost.from_model(llmhost, request.user).model_dump(mode="json"))
 
     def delete(self, request: Request, *args, **kwargs):
-        """Destroy the Kubernetes resources of an LLMHost that the user owns, then delete it."""
+        """
+        Queue the deletion of an LLMHost that the user owns: its Kubernetes resources, then the LLMHost.
+
+        :returns: 202. The infrastructure worker deletes it (``delete_llmhost``).
+        """
         llmhost = self.get_llmhost(request, owner=True, **kwargs)
         user_profile = llmhost.user_profile
         try:
-            self.get_service().delete(llmhost)
+            queue_delete(llmhost, service=self.get_service())
         except LLMHostServiceError as e:
             return service_error(e)
         invalidate_all_cached_llmhosts_for_user_profile(user_profile)
-        return Response(status=HTTPStatus.NO_CONTENT)
+        return Response(status=HTTPStatus.ACCEPTED)
 
 
 class LLMHostStatusView(LLMHostViewBase):
@@ -226,14 +231,16 @@ class LLMHostDeployView(LLMHostViewBase):
 
     def post(self, request: Request, *args, **kwargs):
         """
-        Launch an LLMHost that the user owns: apply its Kubernetes resources, and invalidate the cache.
+        Check that an LLMHost that the user owns can be launched, queue its launch, and invalidate the cache.
+
+        The infrastructure worker applies its Kubernetes resources (``launch_llmhost``).
 
         :param request: The request.
-        :returns: 202 with the LLMHost's status.
+        :returns: 202 with the LLMHost's status, and the message :attr:`~smarter.apps.llmhost.enum.SAMLLMHostQueuedMessage.LAUNCH`
         """
         llmhost = self.get_llmhost(request, owner=True, **kwargs)
         try:
-            observation = self.get_service().launch(llmhost)
+            observation = queue_launch(llmhost, service=self.get_service())
         except LLMHostServiceError as e:
             return service_error(e)
         invalidate_all_cached_llmhosts_for_user_profile(llmhost.user_profile)
@@ -248,22 +255,24 @@ class LLMHostUndeployView(LLMHostViewBase):
 
     def post(self, request: Request, *args, **kwargs):
         """
-        Destroy the Kubernetes resources of an LLMHost that the user owns, and invalidate the cache.
+        Queue the destruction of the Kubernetes resources of an LLMHost that the user owns, and invalidate the cache.
+
+        The infrastructure worker destroys them (``destroy_llmhost``).
 
         :param request: The request. ``?purge=true`` also deletes the model volume.
-        :returns: The LLMHost's status after it was undeployed.
+        :returns: 202 with the LLMHost's status, and the message :attr:`~smarter.apps.llmhost.enum.SAMLLMHostQueuedMessage.UNDEPLOY`
         """
         llmhost = self.get_llmhost(request, owner=True, **kwargs)
         purge = str(request.query_params.get("purge", "false")).lower() == "true"
         try:
-            self.get_service().destroy(llmhost, purge=purge)
+            queue_destroy(llmhost, purge=purge, service=self.get_service())
         except LLMHostServiceError as e:
             return service_error(e)
         invalidate_all_cached_llmhosts_for_user_profile(llmhost.user_profile)
         response = LLMHostApiUndeployed(
             llmhost=llmhost.name, status=llmhost.status, message=llmhost.status_message  # type: ignore[arg-type]
         )
-        return Response(response.model_dump(mode="json"))
+        return Response(response.model_dump(mode="json"), status=HTTPStatus.ACCEPTED)
 
 
 class LLMHostReportView(SmarterAuthenticatedAPIView):

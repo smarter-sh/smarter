@@ -5,11 +5,12 @@ import base64
 import binascii
 import os
 import warnings
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from pydantic import BaseModel, Field, SecretStr, ValidationError
 
 from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import get_env, is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -17,6 +18,7 @@ from smarter.common.conf.util import (
     field_default,
     validate_throttle_rate,
 )
+from smarter.common.const import SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.utils.utils import generate_fernet_encryption_key
 
@@ -127,7 +129,7 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"admin_username of type {type(v)} is not a non-empty string.")
         return v
 
-    platform_admin_password: Optional[SecretStr] = Field(
+    platform_admin_password: Annotated[Optional[SecretStr], HeldBy(SmarterKubernetesPodKinds.JOB_INIT)] = Field(
         None,
         description="The password of the platform's superuser, which manage.py initialize_platform creates.",
         examples=["your-admin-password"],
@@ -162,7 +164,10 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"admin_password of type {type(v)} is not a SecretStr")
         return v
 
-    platform_fernet_encryption_key: SecretStr = Field(
+    platform_fernet_encryption_key: Annotated[
+        SecretStr,
+        HeldBy(*SmarterKubernetesPodKinds.platform),
+    ] = Field(
         default_factory=generated_fernet_encryption_key,
         description="The Fernet encryption key used for encrypting Smarter Secrets data.",
         examples=["gAAAAABh..."],
@@ -253,7 +258,7 @@ class SecuritySettings(BaseModel):
             raise SmarterConfigurationError(f"internal_ip_prefixes of type {type(v)} is not a list: {v}")
         return v
 
-    django_secret_key: Optional[SecretStr] = Field(
+    django_secret_key: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.platform)] = Field(
         validation_alias="DJANGO_SECRET_KEY",
         default_factory=generated_django_secret_key,
         description="The Django secret key for cryptographic signing.",

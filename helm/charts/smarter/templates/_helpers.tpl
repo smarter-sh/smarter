@@ -45,7 +45,7 @@ The rest of data/ stays the image's own, read from the image.
 {{- end }}
 
 {{/*
-The platform's environment: the settings that every pod reads, from the Secret in secret-env.yaml.
+The platform's environment: every setting, which smarter.podEnv filters into each kind of pod's own Secret.
 
   {{- $env := include "smarter.env" . | fromYaml }}
 
@@ -105,6 +105,45 @@ It starts from .Values.env, then:
 {{- $_ := set $env "DJANGO_CELERY_BROKER_URL" (printf "redis://:%s@%s/0" (urlquery $redisPassword) $redis) -}}
 {{- end -}}
 {{- toYaml $env -}}
+{{- end }}
+
+{{/*
+The environment of one kind of pod, from its own Secret, <appName>-env-<pod> in secret-env.yaml (ADR-038,
+phase 3, issue #1084): smarter.env without the credentials that the kind doesn't hold.
+
+  {{- $env := include "smarter.podEnv" (dict "root" . "pod" "worker") | fromYaml }}
+
+"pod" is a kind of pod, as SERVICE_TYPE names it (smarter.common.const.SmarterKubernetesPodKinds). Each
+credential setting says which kinds hold it (HeldBy, in smarter.common.conf.credentials), and
+files/credentials.json, which make chart-credentials copies from the settings, maps each of its environment
+variables to them. A variable in the map is left out unless it names "pod"; a credential that no pod holds,
+e.g. the Slack bot's app token, is left out of every one. A variable that isn't in the map isn't a credential,
+and every kind receives it.
+
+The derived broker url carries Redis's password, which every kind holds.
+*/}}
+{{- define "smarter.podEnv" -}}
+{{- $all := include "smarter.env" .root | fromYaml -}}
+{{- $holders := .root.Files.Get "files/credentials.json" | fromJson -}}
+{{- $pod := .pod -}}
+{{- $env := dict -}}
+{{- range $key, $value := $all -}}
+{{- if not (hasKey $holders $key) -}}
+{{- $_ := set $env $key $value -}}
+{{- else if has $pod (get $holders $key) -}}
+{{- $_ := set $env $key $value -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $env -}}
+{{- end }}
+
+{{/*
+The name of one kind of pod's environment Secret, which smarter.podEnv fills: <appName>-env-<pod>.
+
+  name: "{{ include "smarter.podEnvName" (dict "root" . "pod" "worker") }}"
+*/}}
+{{- define "smarter.podEnvName" -}}
+{{- printf "%s-env-%s" .root.Values.global.appName .pod -}}
 {{- end }}
 
 {{/*
@@ -217,14 +256,18 @@ Only on an install: on an upgrade, the pre-upgrade Job (job-migrate.yaml) has al
 before the rollout, so new pods don't wait, and don't pay for a Django start of their own. The next
 upgrade's pods have no init container.
 
-  {{- include "smarter.waitForDatabase" . | nindent 6 }}   (in a pod's spec, at its initContainers' level)
+  {{- include "smarter.waitForDatabase" (dict "root" . "pod" "api") | nindent 6 }}   (in a pod's spec, at its initContainers' level)
+
+"pod" is the pod's kind, whose environment Secret, smarter.podEnvName, the container reads, as the pod's own
+containers do.
 */}}
 {{- define "smarter.waitForDatabase" -}}
-{{- if .Release.IsInstall -}}
+{{- $root := .root -}}
+{{- if $root.Release.IsInstall -}}
 initContainers:
-  - name: "{{ .Values.global.appName }}-wait-for-database"
-    image: '{{ .Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" .Values.global.image.repository .Values.global.image.tag) }}'
-    imagePullPolicy: {{ .Values.global.image.pullPolicy | default "Always" }}
+  - name: "{{ $root.Values.global.appName }}-wait-for-database"
+    image: '{{ $root.Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" $root.Values.global.image.repository $root.Values.global.image.tag) }}'
+    imagePullPolicy: {{ $root.Values.global.image.pullPolicy | default "Always" }}
     command:
       - /bin/sh
       - -c
@@ -241,17 +284,17 @@ initContainers:
       limits:
         memory: "1Gi"
         cpu: "1"
-    # the platform's environment, from the Secret in secret-env.yaml, for the database's credentials.
+    # the pod's own environment, from its Secret in secret-env.yaml, for the database's credentials.
     envFrom:
       - secretRef:
-          name: "{{ .Values.global.appName }}-env"
+          name: "{{ include "smarter.podEnvName" . }}"
     env:
       - name: PYTHONUNBUFFERED
         value: "1"
     securityContext:
-      {{- toYaml .Values.global.containerSecurityContext | nindent 6 }}
+      {{- toYaml $root.Values.global.containerSecurityContext | nindent 6 }}
     volumeMounts:
-      {{- include "smarter.writableVolumeMounts" . | nindent 6 }}
+      {{- include "smarter.writableVolumeMounts" $root | nindent 6 }}
 {{- end }}
 {{- end }}
 

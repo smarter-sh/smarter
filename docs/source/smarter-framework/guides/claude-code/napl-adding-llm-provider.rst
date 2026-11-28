@@ -43,26 +43,26 @@ Setup
 Smarter supports two categories of LLM providers.
 
 **Built-in providers** are pre-initialized automatically during deployment
-and only require an API key in ``.env``:
+and only require an API key, stored as a Smarter Secret:
 
 .. list-table::
    :header-rows: 1
    :widths: 20 40 40
 
    * - Provider
-     - Environment Variable
+     - Smarter Secret
      - API Key Console
    * - OpenAI *(required)*
-     - ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``
+     - ``openai_api_key``
      - `platform.openai.com/api-keys <https://platform.openai.com/api-keys>`_
    * - GoogleAI
-     - ``SMARTER_APP_PROVIDER_GEMINI_API_KEY``
+     - ``gemini_api_key``
      - `aistudio.google.com/app/apikey <https://aistudio.google.com/app/apikey>`_
    * - MetaAI
-     - ``SMARTER_APP_PROVIDER_LLAMA_API_KEY``
+     - ``llama_api_key``
      - `console.apillm.com <https://console.apillm.com/en/dashboard/api-token>`_
 
-**Additional providers** require both an API key in ``.env`` **and** a
+**Additional providers** require both an API key, stored as a Smarter Secret, **and** a
 Provider manifest applied via the CLI:
 
 .. list-table::
@@ -70,22 +70,22 @@ Provider manifest applied via the CLI:
    :widths: 20 40 40
 
    * - Provider
-     - Environment Variable
+     - Smarter Secret
      - API Key Console
    * - **Anthropic**
-     - ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``
+     - ``anthropic_api_key``
      - `console.anthropic.com <https://console.anthropic.com/>`_
    * - Cohere
-     - ``SMARTER_APP_PROVIDER_COHERE_API_KEY``
+     - ``cohere_api_key``
      - `dashboard.cohere.com/api-keys <https://dashboard.cohere.com/api-keys>`_
    * - Fireworks
-     - ``SMARTER_APP_PROVIDER_FIREWORKS_API_KEY``
+     - ``fireworks_api_key``
      - `fireworks.ai/api-keys <https://fireworks.ai/api-keys/>`_
    * - Mistral
-     - ``SMARTER_APP_PROVIDER_MISTRAL_API_KEY``
+     - ``mistral_api_key``
      - `console.mistral.ai/api-keys <https://console.mistral.ai/api-keys/>`_
    * - TogetherAI
-     - ``SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY``
+     - ``togetherai_api_key``
      - `together.ai/settings/api-keys <https://together.ai/settings/api-keys>`_
 
 This tutorial walks through adding **Anthropic** as an additional provider.
@@ -123,23 +123,30 @@ Step 1: Obtain an Anthropic API Key
 .. danger::
 
    Never commit API keys to version control or share them in plain text.
-   The key will be stored in the Smarter ``.env`` file on the server, which
-   should be excluded from source control.
+   The key will be stored as a Smarter Secret, from a file in the
+   ``bootstrap-secrets/`` folder, which git ignores.
 
 Step 2: Add the Key to the Smarter Environment
 ------------------------------------------------
 
-Open the ``.env`` file at the root of your Smarter deployment and add:
+Each provider's key is a Smarter Secret owned by the Smarter admin, here
+``anthropic_api_key``, never an environment variable. In local development,
+write the key into a file named after the Secret, in the repository's
+gitignored ``bootstrap-secrets/`` folder:
 
 .. code-block:: bash
 
-   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   mkdir -p bootstrap-secrets
+   printf %s 'sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' > bootstrap-secrets/anthropic_api_key
 
-Restart the application so it picks up the new credential:
+On Kubernetes, put it in the Helm chart's values instead, as
+``bootstrapSecrets.anthropic_api_key``. Then create the Secret from it:
 
 .. code-block:: bash
 
-   make restart
+   docker exec smarter-api python manage.py initialize_platform
+
+On Kubernetes, the chart's init job runs this command on every deployment.
 
 Step 3: Generate a Manifest Template
 --------------------------------------
@@ -263,14 +270,16 @@ are ready for use in llmclients and the Workbench.
 Troubleshooting
 ===============
 
-**"API key not found" on startup**
-   The ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or
-   the application was not restarted after adding it. Run ``make restart``.
+**A prompt fails with an error naming the Secret ``anthropic_api_key``**
+   The Secret doesn't exist: ``bootstrap-secrets/anthropic_api_key`` is
+   missing or empty, or ``manage.py initialize_platform`` has not run since
+   you wrote it. Run it.
 
 **Provider status shows "verification failed"**
    The API key is invalid, expired, or has been revoked. Generate a new key
-   at `console.anthropic.com <https://console.anthropic.com/>`_ and update
-   the ``.env`` file.
+   at `console.anthropic.com <https://console.anthropic.com/>`_, update
+   ``bootstrap-secrets/anthropic_api_key``, and run
+   ``manage.py initialize_platform``, which updates the Secret.
 
 **"Model not found" when applying a manifest**
    The ``model`` value does not match the provider's published identifier.
