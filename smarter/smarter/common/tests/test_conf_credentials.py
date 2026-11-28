@@ -109,9 +109,50 @@ class TestHolders(SmarterTestBase):
         ):
             self.assertNotIn(kind, platform)
         fields = Settings.model_fields
-        for name in ("platform_fernet_encryption_key", "django_secret_key", "subsystem_smtp_password"):
+        for name in ("platform_fernet_encryption_key", "django_secret_key"):
             with self.subTest(credential=name):
                 self.assertEqual(credential_holders(fields[name]), frozenset(platform))
+        # the backup Job emails its own result, so it holds SMTP's credentials too.
+        smtp_holders = frozenset({*platform, SmarterKubernetesPodKinds.JOB_BACKUP})
+        self.assertEqual(credential_holders(fields["subsystem_smtp_password"]), smtp_holders)
+
+    def test_the_backup_job(self):
+        """The backup Job dumps the database, saves it to S3, and emails and posts its result: no more (#1084)."""
+        held_by_backup = []
+        for name, field in Settings.model_fields.items():
+            if is_credential(field) and may_hold(field, SmarterKubernetesPodKinds.JOB_BACKUP):
+                held_by_backup.append(name)
+        expected = [
+            "aws_access_key_id",
+            "aws_secret_access_key",
+            "subsystem_redis_password",
+            "subsystem_slack_bot_token",
+            "subsystem_smtp_password",
+            "subsystem_smtp_username",
+            "subsystem_sql_backup_password",
+            "subsystem_sql_password",
+            "subsystem_sql_root_password",
+        ]
+        self.assertEqual(sorted(held_by_backup), expected)
+
+    def test_the_chart_only_credentials(self):
+        """The backup account's password and the Slack app token are settings, so that the map says who holds them."""
+        fields = Settings.model_fields
+        self.assertEqual(
+            credential_holders(fields["subsystem_sql_backup_password"]),
+            frozenset(
+                {
+                    SmarterKubernetesPodKinds.JOB_INIT,
+                    SmarterKubernetesPodKinds.JOB_BACKUP,
+                    SmarterKubernetesPodKinds.BASTION,
+                }
+            ),
+        )
+        # only the Slack bot, which isn't a kind of Smarter pod, holds the app token.
+        self.assertEqual(credential_holders(fields["subsystem_slack_app_token"]), frozenset())
+        holders = credential_holders_by_variable(Settings)
+        self.assertEqual(holders["SMARTER_SUBSYSTEM_SLACK_APP_TOKEN"], [])
+        self.assertEqual(holders["SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD"], ["bastion", "job-backup", "job-init"])
 
     def test_phase_0s_findings(self):
         """The init Job alone holds the admin password; beat holds only the database's and Redis's passwords."""

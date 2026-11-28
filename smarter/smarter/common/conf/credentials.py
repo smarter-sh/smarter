@@ -11,7 +11,7 @@ which kinds of pod (``SERVICE_TYPE``, :attr:`smarter.common.const.SmarterKuberne
 - Every setting whose type is ``SecretStr`` is a credential, and must say who holds it, even nobody
   (``HeldBy()``): a test fails otherwise. Deriving the credentials from the type, rather than marking each one,
   means that a new ``SecretStr`` setting can't be left out.
-- The Helm chart gives each pod only its own credentials, from ``helm/charts/smarter/files/credentials.yaml``,
+- The Helm chart gives each pod only its own credentials, from ``helm/charts/smarter/files/credentials.json``,
   which :func:`credential_holders_by_variable` writes (``make chart-credentials``).
 - When a pod starts, :meth:`smarter.common.conf.settings.Settings.check_pod_credentials` reports each credential
   it was given but doesn't use (:func:`forbidden_credentials`). The tool worker and the Extension worker, which
@@ -41,11 +41,32 @@ AWS_POD_KINDS: tuple[str, ...] = (
     SmarterKubernetesPodKinds.WORKER,
     SmarterKubernetesPodKinds.WORKER_INFRASTRUCTURE,
     SmarterKubernetesPodKinds.JOB_INIT,
+    SmarterKubernetesPodKinds.JOB_BACKUP,
     SmarterKubernetesPodKinds.BASTION,
 )
 """The kinds of pod that call AWS: S3, SES, Route53, ACM and EKS.
 
+The backup Job saves its dump to S3.
+
 On Kubernetes, their IAM role does, with no key.
+"""
+
+SMTP_POD_KINDS: tuple[str, ...] = (*SmarterKubernetesPodKinds.platform, SmarterKubernetesPodKinds.JOB_BACKUP)
+"""The kinds of pod that send email: the platform's, and the backup Job, which emails its own result."""
+
+JOB_LOG_POD_KINDS: tuple[str, ...] = (SmarterKubernetesPodKinds.JOB_INIT, SmarterKubernetesPodKinds.JOB_BACKUP)
+"""The kinds of pod that post their log to Slack, with ``manage.py email_job_log``: the init Job and the backup Job."""
+
+DATABASE_ADMIN_POD_KINDS: tuple[str, ...] = (
+    SmarterKubernetesPodKinds.JOB_INIT,
+    SmarterKubernetesPodKinds.JOB_BACKUP,
+    SmarterKubernetesPodKinds.BASTION,
+)
+"""
+The kinds of pod that administer the database server, as its administrator or the backup account.
+
+The init Job creates the database, its user and the backup account. The backup Job dumps the database as the
+backup account, or as the administrator until that account exists. The bastion is for a person who does either.
 """
 
 
@@ -240,8 +261,11 @@ def write_chart_credentials(settings_class: type[BaseModel], path: str = CHART_C
 __all__ = [
     "AWS_POD_KINDS",
     "CHART_CREDENTIALS_PATH",
+    "DATABASE_ADMIN_POD_KINDS",
     "ENVIRONMENT_PREFIX",
     "HeldBy",
+    "JOB_LOG_POD_KINDS",
+    "SMTP_POD_KINDS",
     "credential_holders",
     "credential_holders_by_variable",
     "environment_variables",

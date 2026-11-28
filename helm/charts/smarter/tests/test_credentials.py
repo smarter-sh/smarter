@@ -29,6 +29,7 @@ POD_KINDS = (
     "worker-extensions",
     "job-init",
     "job-migrate",
+    "job-backup",
     "bastion",
 )
 """The kinds of pod, as SERVICE_TYPE names them: smarter.common.const.SmarterKubernetesPodKinds.all."""

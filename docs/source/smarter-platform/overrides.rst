@@ -143,9 +143,10 @@ dictionary is JSON:
      DJANGO_ADMINS: '["ops@example.com"]'
      DJANGO_DATA_UPLOAD_MAX_MEMORY_SIZE: "10485760"
 
-The chart stores ``env`` in the Kubernetes Secret ``<appName>-env``, which every pod reads as its
-environment, so a value may be a password. A change to it changes the pods' ``checksum/env`` annotation,
-so ``helm upgrade`` rolls the api, worker and beat pods, which then read the new settings.
+The chart stores ``env`` in Kubernetes Secrets, one per kind of pod, ``<appName>-env-<pod>``, which each
+pod reads as its environment, so a value may be a password: a credential reaches only the kinds of pod that
+hold it (ADR-038). A change to a pod's Secret changes its ``checksum/env`` annotation, so ``helm upgrade``
+rolls the pods whose Secret changed, which then read the new settings.
 
 ``DJANGO_*`` environment variables
 ----------------------------------
@@ -170,7 +171,7 @@ Where to set one:
        Compose reads ``.env`` when it creates them.
    * - alpha, prod, and every other environment on AWS
      - ``env`` in the Helm chart's values, e.g. ``DJANGO_SESSION_COOKIE_AGE: "3600"``. The chart stores
-       ``env`` in the Secret ``<appName>-env``, which every pod reads as its environment.
+       ``env`` in each kind of pod's Secret, ``<appName>-env-<pod>``, which the pod reads as its environment.
 
 A variable's value is text, and is converted to the type of the setting's value, as `Writing values`_
 explains: ``true`` for a boolean, ``3600`` for an integer, ``a,b`` or a JSON list for a list. A nested

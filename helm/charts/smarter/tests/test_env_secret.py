@@ -124,14 +124,15 @@ def compose_redis_command(text: str) -> list[str]:
     return arguments
 
 
-def env_helper() -> str:
+def env_helper(name: str = "smarter.env") -> str:
     """
-    Return the smarter.env template of _helpers.tpl.
+    Return a template of _helpers.tpl, smarter.env by default.
 
+    :param name: The template's name.
     :returns: Its text, from its define to its end.
     """
     text = HELPERS_PATH.read_text(encoding="utf-8")
-    start = text.index('{{- define "smarter.env" -}}')
+    start = text.index(f'{{{{- define "{name}" -}}}}')
     end = text.index("{{- end }}", start)
     return text[start:end]
 
@@ -159,7 +160,8 @@ class TestOptionalAwsKeys(unittest.TestCase):
     def test_secret_leaves_out_null_values(self):
         """The env Secret skips a null value, rather than rendering an empty one."""
         self.assertIn('{{- $isNull := kindIs "invalid" $value -}}', env_helper())
-        self.assertIn('include "smarter.env" . | fromYaml', TEMPLATE_PATH.read_text(encoding="utf-8"))
+        self.assertIn('include "smarter.env" .root | fromYaml', env_helper("smarter.podEnv"))
+        self.assertIn('include "smarter.podEnv" (dict "root" $ "pod" $pod)', TEMPLATE_PATH.read_text(encoding="utf-8"))
 
 
 class TestEnvironment(unittest.TestCase):
@@ -344,10 +346,10 @@ class TestMigrateEnvironment(unittest.TestCase):
         self.assertNotIn('name: "{{ .Values.global.appName }}-env"\n', job)
 
     def test_hook_secret_has_the_platform_settings(self):
-        """The hook Secret is built by smarter.env, like the env Secret, so it has the new release's names."""
+        """The hook Secret is built by smarter.podEnv, like the env Secrets, so it has the new release's names."""
         secret = MIGRATE_SECRET_PATH.read_text(encoding="utf-8")
         self.assertIn('name: "{{ .Values.global.appName }}-env-migrate"', secret)
-        self.assertIn('include "smarter.env" . | fromYaml', secret)
+        self.assertIn('include "smarter.podEnv" (dict "root" . "pod" "job-migrate") | fromYaml', secret)
 
     def test_hook_secret_is_created_before_the_job(self):
         """Both are pre-upgrade hooks, and the Secret's lower weight makes Helm create it first."""

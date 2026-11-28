@@ -7,7 +7,7 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, Field, SecretStr
 
 from smarter.common.conf.const import DEFAULT_MISSING_VALUE, THE_EMPTY_SET
-from smarter.common.conf.credentials import HeldBy
+from smarter.common.conf.credentials import JOB_LOG_POD_KINDS, HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import before_field_validator, field_default
 from smarter.common.const import SmarterKubernetesPodKinds
@@ -318,7 +318,7 @@ class IntegrationSettings(BaseModel):
             raise SmarterConfigurationError(f"social_auth_linkedin_oauth2_secret of type {type(v)} is not a SecretStr.")
         return v
 
-    subsystem_slack_bot_token: Annotated[Optional[SecretStr], HeldBy(SmarterKubernetesPodKinds.JOB_INIT)] = Field(
+    subsystem_slack_bot_token: Annotated[Optional[SecretStr], HeldBy(*JOB_LOG_POD_KINDS)] = Field(
         None,
         description="A Slack app's bot token, xoxb-..., which the platform posts its Kubernetes jobs' logs to Slack with. Masked by pydantic SecretStr.",
         examples=["xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"],
@@ -331,8 +331,8 @@ class IntegrationSettings(BaseModel):
     Slack channel with it, when the chart's ``databaseInit.notifySlackChannel`` or
     ``databaseScheduledBackup.notifySlackChannel`` names one. The bot needs the scopes
     ``chat:write`` and ``files:write``, and must be a member of the channel. The optional Slack
-    bot, the Helm chart's ``slack-bot`` subchart, reads the same token from
-    ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``.
+    bot, the Helm chart's ``slack-bot`` subchart, reads the same token from a Secret of its own,
+    ``<appName>-env-slack-bot``, which holds only its two tokens.
 
     The token is sent only to ``slack.com``. See
     :py:class:`smarter.apps.infrastructure.services.slack.SlackWebApiService`.
@@ -358,6 +358,42 @@ class IntegrationSettings(BaseModel):
 
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"slack_bot_token of type {type(v)} is not a SecretStr")
+        return v
+
+    subsystem_slack_app_token: Annotated[Optional[SecretStr], HeldBy()] = Field(
+        None,
+        description="The Slack bot's app-level token, xapp-..., for Socket Mode. Only the Slack bot holds it.",
+        examples=["xapp-1-xxxxxxxxxxx-xxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"],
+        title="Slack App Token",
+    )
+    """
+    The Slack bot's app-level token, ``xapp-...``, with which it connects to Slack in Socket Mode.
+
+    Set it with ``SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``. Only the optional Slack bot, the Helm chart's
+    ``slack-bot`` subchart, uses it, from its own Secret, ``<appName>-env-slack-bot``. No kind of Smarter pod
+    holds it (``HeldBy()``): it is a setting so that the credentials map (:mod:`smarter.common.conf.credentials`)
+    keeps it out of every pod's environment.
+
+    :type: Optional[SecretStr]
+    :default: None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("subsystem_slack_app_token")
+    def validate_subsystem_slack_app_token(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `slack_app_token` field.
+
+        Args:
+            v (Optional[SecretStr]): The Slack app token to validate.
+        Returns:
+            Optional[SecretStr]: The validated Slack app token, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = field_default(cls, "subsystem_slack_app_token")
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"slack_app_token of type {type(v)} is not a SecretStr")
         return v
 
     stripe_live_secret_key: Annotated[Optional[SecretStr], HeldBy()] = Field(

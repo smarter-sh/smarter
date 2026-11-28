@@ -5,11 +5,11 @@
 # A subchart of the smarter chart, where these values live under slackBot, and
 # where slackBot.enabled (false by default) turns it on. See files/bot.py.
 #
-# The Slack tokens are not values of this chart. The bot reads them from the
-# smarter chart's environment Secret, <global.appName>-env, under the keys
-# SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN (xoxb-...) and SMARTER_SUBSYSTEM_SLACK_APP_TOKEN (xapp-...),
-# which the smarter chart's env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN and
-# env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN fill.
+# The Slack tokens are not values of this chart. The bot reads them from a Secret
+# that the smarter chart renders for it alone, <global.appName>-env-slack-bot
+# (secret-env-slack-bot.yaml), under the keys SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
+# (xoxb-...) and SMARTER_SUBSYSTEM_SLACK_APP_TOKEN (xapp-...), which the smarter
+# chart's env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN and env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN fill.
 # ==============================================================================
 
 # Required. The deployed LLMClient that answers, e.g.

@@ -370,6 +370,18 @@ Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    pod's Secret is built from that map, then each gets its ServiceAccount and Role, and smarter-infrastructure
    its IAM roles.
 
+   Each kind of pod reads its own Secret, ``<appName>-env-<pod>`` (``templates/secret-env.yaml``), which
+   ``smarter.podEnv`` builds from the chart's ``env`` without the credentials that the map doesn't give that
+   kind; the shared ``<appName>-env`` is gone. Celery Beat and the migrate Job hold only the database's and
+   Redis's passwords, and only the init Job, the backup Job and the bastion the database administrator's.
+   Each pod's ``checksum/env`` is its own Secret's, so a changed credential rolls only the pods that hold it.
+   Making the map complete took a kind of pod and two settings. The backup CronJob is ``job-backup``: it
+   dumps the database, saves the dump to S3 and emails and posts its result, so it holds the administrator's
+   and the backup account's passwords, AWS's keys, SMTP's and the Slack bot token. The backup account's
+   password and the Slack bot's app token, which only the chart's scripts and the Slack bot use, are
+   credential settings now, so that the map says who holds them; the app token, ``HeldBy()``, reaches only
+   the Slack bot, from a Secret of its own, ``<appName>-env-slack-bot``.
+
    A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
    stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector
    databases') have no setting and no environment variable (issue #1099). The chart's ``bootstrapSecrets``

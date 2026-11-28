@@ -75,6 +75,7 @@ class SmarterKubernetesPodKinds:
     WORKER_EXTENSIONS = "worker-extensions"
     JOB_INIT = "job-init"
     JOB_MIGRATE = "job-migrate"
+    JOB_BACKUP = "job-backup"
     BASTION = "bastion"
 
     labels: Dict[str, str] = {
@@ -86,6 +87,7 @@ class SmarterKubernetesPodKinds:
         WORKER_EXTENSIONS: "the Extension worker",
         JOB_INIT: "the init job",
         JOB_MIGRATE: "the migrate job",
+        JOB_BACKUP: "the backup job",
         BASTION: "the bastion",
     }
     """How each kind's name reads in a sentence, e.g. in the settings' READY line: ``for the tool worker``."""
@@ -96,7 +98,7 @@ class SmarterKubernetesPodKinds:
     restricted = [WORKER_TOOLS, WORKER_EXTENSIONS]
     """The kinds without a database, which run code that the platform doesn't control (ADR-038, issue #1077)."""
 
-    with_database = [API, WORKER, WORKER_INFRASTRUCTURE, BEAT, JOB_INIT, JOB_MIGRATE, BASTION]
+    with_database = [API, WORKER, WORKER_INFRASTRUCTURE, BEAT, JOB_INIT, JOB_MIGRATE, JOB_BACKUP, BASTION]
     """The kinds with a database: every one but the :attr:`restricted` workers, which a test checks."""
 
     platform = [API, WORKER, WORKER_INFRASTRUCTURE, JOB_INIT]
@@ -106,7 +108,8 @@ class SmarterKubernetesPodKinds:
     The app, ``smarter-worker``, ``smarter-worker-infrastructure`` and the init Job. They decrypt Smarter Secrets
     (the Fernet key), send email (SMTP), and sign what the app verifies (the Django secret key): e.g. an account
     contact's email, which the workers send, carries an unsubscribe token signed with ``SECRET_KEY``. It is narrower
-    than :attr:`with_database`: Celery Beat, the migrate Job and the bastion have a database, but do none of that.
+    than :attr:`with_database`: Celery Beat, the migrate Job, the backup Job and the bastion have a database, but do
+    none of that. The backup Job sends one email, its own result, which is why it holds SMTP's credentials too.
     """
 
 

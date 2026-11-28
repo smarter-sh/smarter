@@ -55,7 +55,9 @@ How the Job is built
   password reaches ``mariadb-dump`` in a temporary option file, not on its command line, where every
   process in the pod could read it.
 - **A second container, from the Smarter image, sends the result** with ``manage.py email_job_log``,
-  as the init Job does. Email needs SMTP, and Slack needs ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, from
+  as the init Job does. Both containers read the backup Job's own Secret, ``<appName>-env-job-backup``,
+  which holds only the credentials of the kind of pod ``job-backup``: the database's, its administrator's
+  and the backup account's, AWS's, SMTP's and the Slack bot token. Email needs SMTP, and Slack needs ``SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, from
   a bot with the scopes ``chat:write`` and ``files:write`` that is a member of the channel. Neither
   changes the backup's outcome.
 

@@ -74,7 +74,7 @@ spec:
                   echo "--- $*"
                   "$@" || { echo "FAILED: $*"; status=1; }
                 }
-                # The credentials come from the environment, i.e. the Secret in secret-env.yaml, never from
+                # The credentials come from the environment, i.e. the init Job's Secret in secret-env.yaml, never from
                 # this template, so they aren't written into the Job's spec. The root password is passed
                 # in MYSQL_PWD, where the mariadb client reads it, which keeps it off the command line.
                 # The client doesn't count MYSQL_PWD as a password, so it already skips checking the server's
@@ -119,10 +119,10 @@ spec:
           command:
             - /bin/sh
             - -c
-          # the platform's environment, from the Secret in secret-env.yaml
+          # this kind of pod's environment, from its own Secret in secret-env.yaml: only its own credentials (ADR-038)
           envFrom:
             - secretRef:
-                name: "{{ .Values.global.appName }}-env"
+                name: "{{ include "smarter.podEnvName" (dict "root" . "pod" "job-init") }}"
           env:
             # the kind of pod, which smarter_settings names, and checks, when it starts.
             - name: SERVICE_TYPE
