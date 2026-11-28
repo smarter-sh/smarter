@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.7](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give each kind of pod its own ServiceAccount and Role ([e6258f3](https://github.com/smarter-sh/smarter/commit/e6258f37a1f12e4175f04d77a785a024a6df3e96)), closes [#1084](https://github.com/smarter-sh/smarter/issues/1084) [smarter-sh/smarter-infrastructure#21](https://github.com/smarter-sh/smarter-infrastructure/issues/21) [#1080](https://github.com/smarter-sh/smarter/issues/1080) [smarter-sh/smarter-infrastructure#21](https://github.com/smarter-sh/smarter-infrastructure/issues/21)
+
 ## [1.0.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-28)
 
 ### Bug Fixes
