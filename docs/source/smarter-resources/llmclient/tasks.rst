@@ -16,6 +16,5 @@ Tasks
    tasks/register_custom_domain
    tasks/undeploy_default_api
    tasks/utils
-   tasks/verify_certificate
    tasks/verify_custom_domain
    tasks/verify_domain

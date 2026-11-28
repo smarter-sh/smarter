@@ -170,12 +170,6 @@ class TestLLMClientTaskLogging(SmarterTestBase):
         )
         self.assertIn("cannot undeploy llmclient 7: it was not found", self.capture.text(logging.ERROR))
 
-    def test_certificate_verification(self):
-        receivers.handle_post_verify_certificate(sender=None, certificate_arn="arn", verified=True)
-        self.assertIn("certificate arn verified", self.capture.text(logging.INFO))
-        receivers.handle_post_verify_certificate(sender=None, certificate_arn="arn", verified=False)
-        self.assertIn("certificate arn verification failed", self.capture.text(logging.ERROR))
-
     def test_custom_domain_verification(self):
         receivers.handle_post_verify_custom_domain(sender=None, domain_name="example.com", verified=True)
         self.assertIn("example.com is verified", self.capture.text(logging.INFO))

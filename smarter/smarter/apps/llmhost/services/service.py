@@ -351,6 +351,56 @@ class LLMHostService:
             llmhost_launch_failed.send(sender=self.__class__, llmhost=llmhost, error=e.message)
             raise LLMHostBudgetExceeded(e.message) from e
 
+    def check_launch(self, llmhost: LLMHost) -> tuple[SAMLLMHostSpec, RenderContext]:
+        """
+        Check what :meth:`launch` needs, without changing the cluster or the cloud.
+
+        The manifest broker and the api call it before they queue the ``launch_llmhost`` task, so that what
+        can be checked at once is an error at once: a budget that refuses, an invalid spec, a spec that fits
+        no compute, a Secret that doesn't exist or is empty, or a cluster that can't be reached. The task
+        calls it again, through :meth:`launch`. It reads the cluster, and writes only the database: the
+        LLMHost's compute, if it had none yet, and the status of a refused budget.
+
+        :param llmhost: The LLMHost.
+        :returns: Its spec, and the render context of its resources.
+        :raises LLMHostBudgetExceeded: if a budget forbids more charges to its compute, its owner, or their account.
+        :raises LLMHostConfigurationError: if the spec is invalid, fits no compute, or a Secret is missing or empty.
+        :raises LLMHostClusterError: if the cluster is unavailable.
+        """
+        self.authorize_budgets(llmhost)
+        spec = self.spec_of(llmhost)
+        if not self.cluster.ready:
+            raise LLMHostClusterError("The Kubernetes cluster is not available.")
+        ctx = self.context_for(llmhost, spec)
+        if spec.model.tokenSecret:
+            self.secret_value(llmhost, spec.model.tokenSecret)
+        if spec.network.apiKeySecret:
+            self.find_secret(llmhost, spec.network.apiKeySecret)
+        return spec, ctx
+
+    def queued(self, llmhost: LLMHost, message: str) -> LLMHostObservation:
+        """
+        Record that a change to the LLMHost was queued, as its status message, and return what is known of it now.
+
+        Its status is unchanged: the task that makes the change sets it, and :meth:`observe` follows it.
+
+        :param llmhost: The LLMHost.
+        :param message: What was queued, a :class:`~smarter.apps.llmhost.enum.SAMLLMHostQueuedMessage` value
+        :returns: The LLMHost's stored state, with the message.
+        """
+        llmhost.status_message = message
+        llmhost.save(update_fields=["status_message", "updated_at"])
+        observation = LLMHostObservation(
+            status=llmhost.status,
+            message=message,
+            replicas=llmhost.replicas,
+            ready_replicas=llmhost.ready_replicas,
+            endpoint=llmhost.endpoint_url or None,
+            public_url=llmhost.public_url or None,
+            checked_at=timezone.now(),
+        )
+        return observation
+
     def launch(self, llmhost: LLMHost) -> LLMHostObservation:
         """
         Launch the LLMHost: apply its Kubernetes resources, then give its compute's node group the nodes that it needs.
@@ -369,11 +419,7 @@ class LLMHostService:
         :raises LLMHostBudgetExceeded: if a budget forbids more charges to its compute, its owner,
             or their account. Nothing is applied.
         """
-        self.authorize_budgets(llmhost)
-        spec = self.spec_of(llmhost)
-        if not self.cluster.ready:
-            raise LLMHostClusterError("The Kubernetes cluster is not available.")
-        ctx = self.context_for(llmhost, spec)
+        spec, ctx = self.check_launch(llmhost)
         hf_token = self.secret_value(llmhost, spec.model.tokenSecret) if spec.model.tokenSecret else None
         api_key_secret, api_key = (None, None)
         if ctx.api_key:

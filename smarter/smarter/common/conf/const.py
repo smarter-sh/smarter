@@ -50,10 +50,10 @@ DOT_ENV_LOADED = load_dotenv()
 
 SERVICE_TYPE = str(os.environ.get("SERVICE_TYPE")).lower() if os.environ.get("SERVICE_TYPE") else None
 """
-Describes the type of service this instance is running as.
+The kind of pod this process runs in, unvalidated, from the ``SERVICE_TYPE`` environment variable.
 
-valid values are: app, worker, beat.
-This value can be set in .env or docker-compose.yml or set as an environment variable.
+Read the validated value, ``smarter_settings.service_type``, instead: its docstring, and
+:class:`smarter.common.const.SmarterKubernetesPodKinds`, list the kinds that the Helm chart and docker-compose set.
 """
 
 __all__ = [

@@ -34,6 +34,25 @@ The web console's resource lists build on it: each list api caches its pages per
 lists keep the pages they showed in the browser, and saving or deleting a resource makes its list's
 cached pages stale at once. See :doc:`django/listview`.
 
+When Redis Is Unavailable
+-------------------------
+
+Requests keep being served while Redis restarts or can't be reached. A ``@cache_results`` function
+computes its result uncached. :data:`~cache_results.lazy.lazy_cache` mirrors Django's cache api, so it
+raises the backend's errors, and each caller on a request's path catches
+:data:`smarter.lib.cache.exceptions.CACHE_EXCEPTIONS`, logs one warning line without a traceback, and
+does without the cache:
+
+- waffle switches are read from the database;
+- the console's page asks the CDN's bucket whether its build is uploaded (see
+  :mod:`smarter.lib.django.static_storage`);
+- the api's rate limits, the sign-in limit included, let every request through (see
+  :mod:`smarter.lib.drf.throttling`), and the middlewares that block clients probing for sensitive
+  files or sending too many 404s stop counting, so no client is blocked until Redis is back;
+- Content Security Policy violations are logged every time, rather than once an hour.
+
+Signed-in console pages still need Redis, which holds the sessions.
+
 Tool Calls and Prompts
 ----------------------
 
@@ -75,5 +94,6 @@ message whose LLM called a tool that can't be cached, or failed, isn't either. S
    :maxdepth: 1
    :caption: Technical References
 
+   caching/exceptions
    caching/hooks
    caching/tool-results

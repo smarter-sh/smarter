@@ -13,9 +13,10 @@ from smarter.apps.account.tests.factories import (
     factory_account_teardown,
 )
 from smarter.apps.llmtool.plugin.safe_http import SafeResponse
-from smarter.apps.vectorstore import sources
+from smarter.apps.vectorstore import sources, tasks
 from smarter.apps.vectorstore.api.v1 import views
 from smarter.apps.vectorstore.api.v1.urls import VectorstoreApiV1ReverseViews as Names
+from smarter.apps.vectorstore.enum import VectorstoreQueuedMessage
 from smarter.apps.vectorstore.models import VectorstoreDocument, VectorstoreMeta
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
@@ -167,9 +168,12 @@ class TestVectorstoreApi(VectorstoreTestBase):
 
     def test_undeploy_and_deploy(self):
         hashed_id = self.vectorstore.hashed_id
-        self.assertEqual(
-            self.request("post", url(Names.undeploy_by_hashed_id, hashed_id=hashed_id))["status"], "stopped"
+        undeployed = self.request(
+            "post", url(Names.undeploy_by_hashed_id, hashed_id=hashed_id), status=HTTPStatus.ACCEPTED
         )
+        self.assertEqual(undeployed["statusMessage"], VectorstoreQueuedMessage.UNDEPLOY.value)
+        self.undeploy_task.assert_called_once_with(self.vectorstore.pk)
+        self.assertEqual(tasks.undeploy_vectorstore(self.vectorstore.pk), "stopped")
         data = self.request("post", url(Names.deploy_by_hashed_id, hashed_id=hashed_id), status=HTTPStatus.ACCEPTED)
         self.assertEqual(data["status"], "provisioning")
         self.assertEqual([c["type"] for c in data["conditions"]], ["Credentials", "Index"])

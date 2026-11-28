@@ -11,8 +11,9 @@
 # - Runs on a stock Python image, as a non-root user with a read-only root file
 #   system. It installs Slack Bolt into an emptyDir when it starts, and runs the
 #   program from the ConfigMap in configmap.yaml.
-# - Receives only the two Slack tokens, from the smarter chart's environment
-#   Secret, <global.appName>-env, and mounts no Kubernetes service account token.
+# - Receives only the two Slack tokens, from a Secret that the smarter chart renders
+#   for it alone, <global.appName>-env-slack-bot, and mounts no Kubernetes service
+#   account token.
 #
 # Read its log with:
 #
@@ -118,10 +119,10 @@ spec:
             - name: SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Values.global.appName }}-env"
+                  name: "{{ .Values.global.appName }}-env-slack-bot"
                   key: SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN
             - name: SMARTER_SUBSYSTEM_SLACK_APP_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: "{{ .Values.global.appName }}-env"
+                  name: "{{ .Values.global.appName }}-env-slack-bot"
                   key: SMARTER_SUBSYSTEM_SLACK_APP_TOKEN

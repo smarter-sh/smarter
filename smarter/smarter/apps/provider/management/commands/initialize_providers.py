@@ -1,6 +1,5 @@
 """Initialize 3rd party providers."""
 
-import base64
 from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
@@ -10,19 +9,18 @@ from urllib.parse import urljoin
 import requests
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from pydantic import SecretStr
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.provider.const import (
+    BUILTIN_PROVIDER_API_KEY_SECRET_NAMES,
     GOOGLE_MAPS_API_KEY_SECRET_NAME,
     GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
-    PROVIDER_ENV_PREFIX,
 )
 from smarter.apps.provider.models import Provider, ProviderModel, ProviderStatus
-from smarter.apps.provider.utils import initialize_secret
+from smarter.apps.secret.models import Secret
 from smarter.common.conf import smarter_settings
-from smarter.common.conf.env import get_env, is_missing_value
+from smarter.common.conf.env import is_missing_value
 from smarter.common.helpers.console_helpers import SmarterFormattedText
 from smarter.lib import json, logging
 from smarter.lib.django.management.base import SmarterCommand
@@ -124,42 +122,42 @@ class Command(SmarterCommand):
             service_account_b64 = base64.b64encode(json.dumps(service_account_json).encode("utf-8")).decode("ascii")
             print(service_account_b64)
         """
-        svc_acct_b64 = get_env("APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64", "", is_secret=True)
-        if is_missing_value(svc_acct_b64):
+        # the Secret holds the service account's json, which initialize_bootstrap_secrets creates (issue #1099).
+        secret, value = self.admin_secret(GOOGLE_SERVICE_ACCOUNT_SECRET_NAME)
+        if secret is None:
             self.missing_api_key(
-                "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64",
-                "Google service account credentials, for Google Cloud bearer tokens. Encode them with "
-                "./scripts/google-service-account.sh",
+                GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
+                "Google service account credentials, for Google Cloud bearer tokens: the service account's json",
                 "https://console.cloud.google.com/iam-admin/serviceaccounts",
             )
             return
         try:
-            svc_acct_json = base64.b64decode(svc_acct_b64).decode("utf-8")
-            # parsed only to validate it: the Secret stores the json string, which
-            # get_google_service_account_bearer_token() parses.
-            json.loads(svc_acct_json)
-            secret_string = SecretStr(svc_acct_json)
-        except (json.JSONDecodeError, UnicodeDecodeError) as e:
-            logger.error("Failed to load Google service account: %s", e)
+            # parsed only to validate it: get_google_service_account_bearer_token() parses it when it is used.
+            json.loads(str(value))
+        except json.JSONDecodeError as e:
+            logger.error("The Secret %s is not a service account's json: %s", GOOGLE_SERVICE_ACCOUNT_SECRET_NAME, e)
             logger.error(
                 "See https://console.cloud.google.com/projectselector2/iam-admin/serviceaccounts?supportedpurview=project"
             )
-            return
-        # pylint: disable=broad-except
-        except Exception as e:
-            logger.error("Unexpected error loading Google service account: %s", e)
-            return
 
-        initialize_secret(
-            secret_string=secret_string.get_secret_value(),
-            secret_name=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME,
-            description="Google service account credentials.",
-            user_profile=self.user_profile,
-        )
+    def admin_secret(self, name: str) -> tuple[Optional[Secret], Optional[str]]:
+        """
+        Return the Smarter admin's Secret of a name, and its value, if it exists and isn't empty.
+
+        :param name: The Secret's name, e.g. ``openai_api_key``.
+        :returns: The Secret and its value, or (None, None).
+        """
+        secret = Secret.objects.filter(name=name, user_profile=self.user_profile).first()
+        if secret is None:
+            return None, None
+        value = secret.get_secret(update_last_accessed=False)
+        if value is None or is_missing_value(value):
+            return None, None
+        return secret, value
 
     def initialize_generic_provider(
         self,
-        api_key_env_var: str,
+        api_key_secret_name: str,
         name: str,
         provider_configuration: SmarterDictType,
         logo_filename: str,
@@ -338,22 +336,10 @@ class Command(SmarterCommand):
         }
         # a missing key does not stop the provider from being created: the built-in LLMClients
         # and Proxies that use it must be applied. Its prompts fail, with instructions, until a key is set.
-        api_key = get_env(api_key_env_var, "", is_secret=True)
-        secret = None
-        if is_missing_value(api_key):
-            self.missing_api_key(api_key_env_var, f"the {name} Provider", provider_api_url)
-        else:
-            secret = initialize_secret(
-                secret_string=api_key,
-                secret_name=api_key_env_var.removeprefix(PROVIDER_ENV_PREFIX).lower(),
-                description=f"API key for {name} services.",
-                user_profile=self.user_profile,
-            )
-            if not secret:
-                self.stdout.write(
-                    self.style.ERROR(f"initialize_{name}: Failed to initialize secret for {name} provider.")
-                )
-                return
+        # the key's only source is its Smarter Secret, which initialize_bootstrap_secrets creates (issue #1099).
+        secret, api_key = self.admin_secret(api_key_secret_name)
+        if secret is None:
+            self.missing_api_key(api_key_secret_name, f"the {name} Provider", provider_api_url)
 
         try:
             defaults = {
@@ -382,7 +368,7 @@ class Command(SmarterCommand):
         if not self.has_logo(provider, logo):
             provider.logo.save(logo_filename, ContentFile(logo), save=True)
 
-        if secret is None:
+        if secret is None or api_key is None:
             # the models cannot be listed without a key, so only the default model is created.
             defaults = {
                 "description": f"{provider_configuration['default_model']} model for {provider.name}.",
@@ -404,12 +390,12 @@ class Command(SmarterCommand):
 
     def initialize_anthropic(self):
         """Initialize Anthropic provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_ANTHROPIC_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["anthropic"]
         NAME = "anthropic"
         DEFAULT_MODEL = "claude-sonnet-4-6"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Anthropic provides advanced AI models and APIs.",
@@ -430,12 +416,12 @@ class Command(SmarterCommand):
 
     def initialize_cohere(self):
         """Initialize Cohere provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_COHERE_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["cohere"]
         NAME = "cohere"
         DEFAULT_MODEL = "command-a-03-2025"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Cohere provides advanced AI models and APIs.",
@@ -453,12 +439,12 @@ class Command(SmarterCommand):
 
     def initialize_fireworks(self):
         """Initialize Fireworks provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_FIREWORKS_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["fireworks"]
         NAME = "fireworks"
         DEFAULT_MODEL = "accounts/fireworks/models/gpt-oss-120b"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Fireworks provides advanced AI models and APIs.",
@@ -476,12 +462,12 @@ class Command(SmarterCommand):
 
     def initialize_googleai(self):
         """Initialize Google AI provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_GEMINI_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["googleai"]
         NAME = "googleai"
         DEFAULT_MODEL = "gemini-flash-latest"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Google AI provides a range of AI and machine learning services.",
@@ -501,35 +487,23 @@ class Command(SmarterCommand):
         )
 
     def initialize_google_maps(self):
-        """Initialize Google Maps provider."""
-        NAME = "google maps"
-        API_KEY_ENV_VAR = "APP_PROVIDER_GOOGLE_MAPS_API_KEY"
-        API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
-
-        api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
-        if is_missing_value(api_key):
+        """Report whether the Google Maps API key's Secret, which the weather extension uses, exists."""
+        secret, _ = self.admin_secret(GOOGLE_MAPS_API_KEY_SECRET_NAME)
+        if secret is None:
             self.missing_api_key(
-                API_KEY_ENV_VAR,
+                GOOGLE_MAPS_API_KEY_SECRET_NAME,
                 "the weather extension",
                 "https://developers.google.com/maps/documentation/geocoding/get-api-key",
             )
-            return
-
-        initialize_secret(
-            secret_string=api_key,
-            secret_name=API_KEY_NAME,
-            description=f"API key for {NAME} services.",
-            user_profile=self.user_profile,
-        )
 
     def initialize_metaai(self):
         """Initialize Meta AI provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_LLAMA_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["metaai"]
         NAME = "metaai"
         DEFAULT_MODEL = "muse-spark-1.3-contributor"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Meta AI provides a range of AI and machine learning services.",
@@ -547,12 +521,12 @@ class Command(SmarterCommand):
 
     def initialize_mistral(self):
         """Initialize Mistral provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_MISTRAL_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["mistral"]
         NAME = "mistral"
         DEFAULT_MODEL = "mistral-medium-latest"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "Mistral AI provides a range of AI and machine learning services.",
@@ -571,12 +545,12 @@ class Command(SmarterCommand):
 
     def initialize_openai(self):
         """Initialize OpenAI provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_OPENAI_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["openai"]
         NAME = "openai"
         DEFAULT_MODEL = "gpt-6-luna"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "OpenAI provides advanced AI models and APIs.",
@@ -594,12 +568,12 @@ class Command(SmarterCommand):
 
     def initialize_togetheria(self):
         """Initialize TogetherAI provider and its models."""
-        API_KEY_ENV_VAR = "APP_PROVIDER_TOGETHERAI_API_KEY"
+        API_KEY_SECRET_NAME = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["togetherai"]
         NAME = "togetherai"
         DEFAULT_MODEL = "openai/gpt-oss-120b"
 
         self.initialize_generic_provider(
-            api_key_env_var=API_KEY_ENV_VAR,
+            api_key_secret_name=API_KEY_SECRET_NAME,
             name=NAME,
             provider_configuration={
                 "description": "TogetherAI provides advanced AI models and APIs.",
@@ -640,16 +614,16 @@ class Command(SmarterCommand):
             logger.debug("could not read the logo of %s: %s", provider.name, e)
             return False
 
-    def missing_api_key(self, env_var: str, used_for: str, url: str):
+    def missing_api_key(self, secret_name: str, used_for: str, url: str):
         """
-        Record an API key that is not set, for the summary that :meth:`handle` logs.
+        Record an API key whose Smarter Secret doesn't exist, for the summary that :meth:`handle` logs.
 
-        :param env_var: The environment variable, without the optional ``SMARTER_`` prefix.
+        :param secret_name: The Secret's name, e.g. ``openai_api_key``.
         :param used_for: What the key is used for.
         :param url: Where to get the key.
         """
-        self.missing_api_keys.append((env_var, used_for, url))
-        self.stdout.write(self.style.WARNING(f"{env_var} is not set. It is used for {used_for}."))
+        self.missing_api_keys.append((secret_name, used_for, url))
+        self.stdout.write(self.style.WARNING(f"The Secret {secret_name} does not exist. It is used for {used_for}."))
 
     def log_missing_api_keys(self):
         """Log one banner that lists the API keys that are not set, and how to set them."""
@@ -659,17 +633,17 @@ class Command(SmarterCommand):
             "The platform runs without them, but the features that use them fail, with an error, until they are set.",
             "",
         ]
-        for env_var, used_for, url in self.missing_api_keys:
-            lines += [f"  SMARTER_{env_var}", f"      for {used_for}", f"      get one at {url}"]
+        for secret_name, used_for, url in self.missing_api_keys:
+            lines += [f"  {secret_name}", f"      for {used_for}", f"      get one at {url}"]
         lines += [
             "",
-            "To set them, add them to .env, restart the platform, and run:",
-            "",
-            "    docker exec smarter-api python manage.py initialize_providers",
+            "Each is a Smarter Secret of the Smarter admin's. Set it in the web console or with smarter apply, or add",
+            "it to the platform's bootstrap secrets, from which the init Job creates it: the Helm chart's",
+            "bootstrapSecrets, or, locally, a file of that name in bootstrap-secrets/ (make bootstrap-secrets).",
         ]
         logger.error(
             SmarterFormattedText.banner(
-                f"[API KEYS NOT SET] {len(self.missing_api_keys)} API keys are not set:", *lines
+                f"[API KEYS NOT SET] {len(self.missing_api_keys)} API key Secrets do not exist:", *lines
             )
         )
 

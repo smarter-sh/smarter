@@ -4,27 +4,20 @@
 import os
 from contextlib import ExitStack
 from decimal import Decimal
-from typing import TYPE_CHECKING, Union
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from smarter.apps.llmhost.manifest.brokers.llmhost import (
     SAMLLMHostBroker,
     SAMLLMHostBrokerError,
 )
+from smarter.apps.llmhost.manifest.enum import SAMLLMHostQueuedMessage
 from smarter.apps.llmhost.manifest.models.llmhost.model import SAMLLMHost
 from smarter.apps.llmhost.models import LLMHost, LLMHostCompute, LLMHostEvent
 from smarter.apps.llmhost.services import LLMHostServiceError
-from smarter.apps.llmhost.services.cluster import (
-    InMemoryClusterBackend,
-    configure_cluster,
-)
-from smarter.apps.llmhost.services.nodegroups import (
-    InMemoryNodeGroupBackend,
-    configure_nodegroups,
-    get_nodegroups,
-)
 from smarter.apps.llmhost.services.renderer import resource_name
 from smarter.apps.llmhost.tests.base_classes import (
+    InMemoryLLMHostInfrastructureMixin,
     delete_builtin_fixtures,
     ensure_builtin_computes,
 )
@@ -41,7 +34,7 @@ from smarter.lib.manifest.tests.test_broker_base import TestSAMBrokerBaseClass
 from smarter.lib.typing import SmarterDictType, required
 
 if TYPE_CHECKING:
-    from unittest.mock import _patch
+    pass
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -49,32 +42,18 @@ LLMHOST_NAME = "test_broker_llmhost"
 
 
 # pylint: disable=too-many-public-methods
-class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
-    """Test the Smarter SAMLLMHostBroker, on an in-memory cluster."""
+class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass, InMemoryLLMHostInfrastructureMixin):
+    """Test the Smarter SAMLLMHostBroker, on an in-memory cluster, with its queued tasks run here."""
 
-    cluster: InMemoryClusterBackend
-    nodegroups: InMemoryNodeGroupBackend
     builtin_computes_created: list[LLMHostCompute]
-    _dns_patcher: "_patch[Union[MagicMock, AsyncMock]]"
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.cluster = InMemoryClusterBackend(namespace="smarter-platform-test")
-        configure_cluster(lambda: cls.cluster)
-        cls.nodegroups = InMemoryNodeGroupBackend()
-        configure_nodegroups(lambda: cls.nodegroups)
-        # a safety net: tests must never create real node groups.
-        assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
         cls.builtin_computes_created = ensure_builtin_computes()
-        cls._dns_patcher = patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)
-        cls._dns_patcher.start()
 
     @classmethod
     def tearDownClass(cls):
-        cls._dns_patcher.stop()
-        configure_cluster(None)
-        configure_nodegroups(None)
         LLMHostEvent.objects.filter(llmhost_name__startswith="test_broker").delete()
         LLMHost.objects.filter(user_profile__account=cls.account).delete()
         Secret.objects.filter(user_profile__account=cls.account, name__startswith="llmhost_").delete()
@@ -85,10 +64,6 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         super().setUp()
         self._here = os.path.abspath(os.path.dirname(__file__))
         self._manifest_filespec = self.get_data_full_filepath("llmhost.yaml")
-        self.cluster.resources.clear()
-        self.cluster.ready = True
-        self.nodegroups.nodegroups.clear()
-        self.nodegroups.created.clear()
         self.addCleanup(LLMHost.objects.filter(user_profile=self.user_profile).delete)
         self.addCleanup(Secret.objects.filter(user_profile=self.user_profile, name__startswith="llmhost_").delete)
 
@@ -163,30 +138,56 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         self.assertEqual(named["metadata"]["count"], 1)
 
     def test_deploy_undeploy(self):
-        """Test that deploy launches the LLMHost, and undeploy destroys it, keeping the model volume."""
+        """Test that deploy's queued task launches the LLMHost, and undeploy's destroys it, keeping the model volume."""
         self.broker.apply(self.request, **self.kwargs)
         broker = self.fresh_broker()
         data = self.data(broker.deploy(self.request, **self.kwargs))
-        # the pods wait for the node that the compute's node group is adding.
-        self.assertEqual(data["status"], "provisioning")
+        # the broker answers before the task runs.
+        self.assertEqual(data["message"], SAMLLMHostQueuedMessage.LAUNCH.value)
+        self.queued_tasks["launch_llmhost"].assert_called_once_with(self.llmhost().pk)
         base_name = resource_name(self.llmhost().pk, LLMHOST_NAME)
         self.assertIsNotNone(self.cluster.get("deployment", base_name))
         compute = required(self.llmhost().compute, "llmhost.compute")
         self.assertEqual(self.nodegroups.created, [compute.nodegroup_name])
         status = self.data(self.fresh_broker().describe(self.request, **self.kwargs))["status"]
+        # the pods wait for the node that the compute's node group is adding.
         self.assertEqual(status["hostStatus"], "provisioning")
         self.assertEqual(status["apiKeySecret"], f"llmhost_{LLMHOST_NAME}_api_key")
         self.assertTrue(status["endpoint"].startswith(f"http://{base_name}."))
         data = self.data(self.fresh_broker().undeploy(self.request, **self.kwargs))
-        self.assertEqual(data["status"], "inactive")
+        self.assertEqual(data["message"], SAMLLMHostQueuedMessage.UNDEPLOY.value)
+        self.queued_tasks["destroy_llmhost"].assert_called_once_with(self.llmhost().pk, purge=False)
+        self.assertEqual(self.llmhost().status, "inactive")
         self.assertEqual([kind for kind, _ in self.cluster.resources], ["persistentvolumeclaim"])
 
+    def test_the_request_writes_nothing_to_the_cluster(self):
+        """Deploy, undeploy and delete only queue tasks: the infrastructure worker makes every change (#1080)."""
+        self.broker.apply(self.request, **self.kwargs)
+        with self.holding_queued_tasks() as queued:
+            self.fresh_broker().deploy(self.request, **self.kwargs)
+            self.fresh_broker().undeploy(self.request, **self.kwargs)
+            self.fresh_broker().delete(self.request, **self.kwargs)
+        pk = self.llmhost().pk
+        queued["launch_llmhost"].assert_called_once_with(pk)
+        queued["destroy_llmhost"].assert_called_once_with(pk, purge=False)
+        queued["delete_llmhost"].assert_called_once_with(pk)
+        self.assertEqual(self.cluster.applied, [])
+        self.assertEqual(self.cluster.deleted, [])
+        self.assertEqual(self.nodegroups.created, [])
+        # the LLMHost stays until its task has destroyed what it deployed.
+        self.assertEqual(self.llmhost().status_message, SAMLLMHostQueuedMessage.DELETE.value)
+
     def test_deploy_error(self):
-        """Test that a launch error is a broker error."""
+        """Test that what can be checked at once is a broker error at once, and queues nothing."""
         self.broker.apply(self.request, **self.kwargs)
         self.cluster.ready = False
-        with self.assertRaises(SAMBrokerError):
-            self.fresh_broker().deploy(self.request, **self.kwargs)
+        with self.holding_queued_tasks() as queued:
+            for command in ("deploy", "undeploy"):
+                with self.subTest(command=command):
+                    with self.assertRaises(SAMBrokerError):
+                        getattr(self.fresh_broker(), command)(self.request, **self.kwargs)
+        queued["launch_llmhost"].assert_not_called()
+        queued["destroy_llmhost"].assert_not_called()
 
     def test_logs(self):
         self.broker.apply(self.request, **self.kwargs)
@@ -250,13 +251,14 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
         broker = self.fresh_broker()
         service = MagicMock()
         error = LLMHostServiceError("cluster down")
-        service.delete.side_effect = RuntimeError("cluster down")
-        service.destroy.side_effect = error
+        # undeploy and delete fail at once only when the cluster can't be reached, to destroy a deployed LLMHost.
+        service.cluster.ready = False
         service.logs.side_effect = error
+        llmhost = MagicMock(is_deployed=True)
         with (
-            self.patched(llmhost=MagicMock(), service=service),
+            self.patched(llmhost=llmhost, service=service),
             patch.object(SAMLLMHostBroker, "verify_no_dependencies"),
-            patch("smarter.apps.llmhost.tasks.destroy_dns_record"),
+            self.holding_queued_tasks() as queued,
         ):
             for command in (broker.delete, broker.undeploy, broker.logs):
                 with self.subTest(command=command.__name__):
@@ -265,3 +267,5 @@ class TestSmarterLLMHostBroker(TestSAMBrokerBaseClass):
             with patch.object(SAMLLMHostBroker, "django_orm_to_manifest_dict", side_effect=RuntimeError("bad")):
                 with self.assertRaises(SAMLLMHostBrokerError):
                     broker.describe(self.request, **self.kwargs)
+        queued["destroy_llmhost"].assert_not_called()
+        queued["delete_llmhost"].assert_not_called()

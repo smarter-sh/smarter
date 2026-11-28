@@ -91,22 +91,19 @@ def llmhost_deleted(sender, instance: LLMHost, **kwargs):
 @receiver(pre_delete, sender=LLMHostCompute)
 def llmhost_compute_deleted(sender, instance: LLMHostCompute, **kwargs):
     """
-    Delete the compute's node group, and its nodes.
+    Queue the deletion of the compute's node group, and its nodes, by the infrastructure worker.
 
-    A compute that LLMHosts use cannot be deleted:
-    the foreign key protects it.
+    The web server doesn't call the cloud (ADR-038, phase 3, issue #1080): the
+    ``delete_llmhost_nodegroup`` task deletes the node group, by name, once the compute's deletion is
+    committed. A compute that LLMHosts use cannot be deleted: the foreign key protects it.
     """
     # pylint: disable=import-outside-toplevel
-    from .services.compute import ComputeProvisioner
-    from .services.exceptions import LLMHostComputeError
+    from .tasks import queue_nodegroup_deletion
 
     if instance.nodegroup_status == LLMHostComputeNodeGroupStatus.ABSENT:
         return
-    try:
-        ComputeProvisioner().delete_nodegroup(instance)
-        logger.info("deleted the node group of %s", instance)
-    except LLMHostComputeError as e:
-        logger.error("the node group of %s was not deleted: %s", instance, e)
+    queue_nodegroup_deletion(instance)
+    logger.info("queued the deletion of the node group of %s", instance)
 
 
 # the list view's cached pages are stale when the resources that it shows change. See smarter.lib.django.listview.

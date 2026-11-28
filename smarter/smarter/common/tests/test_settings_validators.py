@@ -378,6 +378,18 @@ class TestSettingsMethods(SmarterTestBase):
         with self.assertRaises(SmarterConfigurationError):
             call(Settings.validate_subsystem_slack_bot_token, "xoxb-test", {})
 
+    def test_chart_only_credentials(self):
+        """Test that the Slack app token and the backup password are None when missing, and must be SecretStr."""
+        validators = (Settings.validate_subsystem_slack_app_token, Settings.validate_subsystem_sql_backup_password)
+        for validator in validators:
+            for value in (None, "", DEFAULT_MISSING_VALUE, SecretStr("SET-ME-IN-helm/charts/smarter/values.yaml")):
+                with self.subTest(validator=validator.__name__, value=value):
+                    self.assertIsNone(call(validator, value, {}))
+            secret = SecretStr("a-test-value")
+            self.assertIs(call(validator, secret, {}), secret)
+            with self.assertRaises(SmarterConfigurationError):
+                call(validator, "a-test-value", {})
+
     def test_versions(self):
         for name in ("version", "python_version", "pydantic_version", "drf_version", "linux_distribution"):
             with self.subTest(name=name):

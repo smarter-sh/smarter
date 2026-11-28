@@ -227,6 +227,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.conf.const import SENSITIVE_FILES_AMNESTY_PATTERNS
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.lib import logging
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -544,12 +545,19 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         """
         Return whether a client has reached the throttle limit of sensitive-file probes.
 
+        While the cache can't be read, e.g. during a Redis outage, no client is throttled (issue #1091).
+
         :param client_ip: The client's ip address.
         :returns: True if the client's count, in the cache, is at least ``THROTTLE_LIMIT``.
         """
         throttle_key = self.get_throttle_key(client_ip)
 
-        blocked_count = cache.get(throttle_key, 0)
+        try:
+            blocked_count = cache.get(throttle_key, 0)
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            logger.warning("the cache failed, not throttling the request: %s", e)
+            return False
 
         return blocked_count >= self.THROTTLE_LIMIT
 
@@ -557,26 +565,32 @@ class SmarterBlockSensitiveFilesMiddleware(SmarterMiddlewareMixin):
         """
         Add one to a client's probe count in the cache, and reset its ``THROTTLE_TIMEOUT``.
 
+        While the cache can't be written, e.g. during a Redis outage, the probe isn't counted.
+
         :param client_ip: The client's ip address.
         """
         throttle_key = self.get_throttle_key(client_ip)
 
         try:
-            blocked_count = cache.incr(throttle_key)
+            try:
+                blocked_count = cache.incr(throttle_key)
 
-        except ValueError:
-            cache.set(
-                throttle_key,
-                1,
-                timeout=self.THROTTLE_TIMEOUT,
-            )
+            except ValueError:
+                cache.set(
+                    throttle_key,
+                    1,
+                    timeout=self.THROTTLE_TIMEOUT,
+                )
 
-        else:
-            cache.set(
-                throttle_key,
-                blocked_count,
-                timeout=self.THROTTLE_TIMEOUT,
-            )
+            else:
+                cache.set(
+                    throttle_key,
+                    blocked_count,
+                    timeout=self.THROTTLE_TIMEOUT,
+                )
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            logger.warning("the cache failed, not counting the probe: %s", e)
 
     @staticmethod
     def get_throttle_key(client_ip: str) -> str:

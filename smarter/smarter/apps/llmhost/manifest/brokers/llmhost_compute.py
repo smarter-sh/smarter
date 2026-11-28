@@ -44,8 +44,6 @@ from smarter.apps.llmhost.manifest.models.llmhost_compute.status import (
 from smarter.apps.llmhost.models import LLMHostCompute
 from smarter.apps.llmhost.models.compute import LLMHostComputeNodeGroupStatus
 from smarter.apps.llmhost.serializers import LLMHostComputeSerializer
-from smarter.apps.llmhost.services.compute import ComputeProvisioner
-from smarter.apps.llmhost.services.exceptions import LLMHostComputeError
 from smarter.apps.llmtool.signals import broker_ready
 from smarter.lib import logging
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -128,15 +126,15 @@ class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
     Broker for :py:class:`SAM <smarter.lib.manifest.models.AbstractSAMMetadataBase>` LLMHostCompute manifests.
 
     It converts between LLMHostCompute manifests and the
-    :class:`~smarter.apps.llmhost.models.LLMHostCompute` Django ORM model, and delegates the node
-    group to :class:`~smarter.apps.llmhost.services.compute.ComputeProvisioner`.
+    :class:`~smarter.apps.llmhost.models.LLMHostCompute` Django ORM model. The node group is the
+    infrastructure worker's: ``deploy`` queues its reconcile, and deleting the compute queues its
+    deletion (:mod:`smarter.apps.llmhost.tasks`).
     """
 
     _manifest: Optional[SAMLLMHostCompute] = None
     _pydantic_model: Type[SAMLLMHostCompute] = SAMLLMHostCompute
     deployable = True
     _compute: Optional[LLMHostCompute] = None
-    _provisioner: Optional[ComputeProvisioner] = None
     _name: Optional[str] = None
     _ready: bool = False
 
@@ -153,13 +151,6 @@ class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
     def SerializerClass(self) -> Type[ModelSerializer]:
         """The Django ORM model serializer class for the LLMHostCompute."""
         return LLMHostComputeSerializer
-
-    @property
-    def provisioner(self) -> ComputeProvisioner:
-        """The :class:`~smarter.apps.llmhost.services.compute.ComputeProvisioner` that manages the node group, created on first use."""
-        if self._provisioner is None:
-            self._provisioner = ComputeProvisioner()
-        return self._provisioner
 
     @property
     def ready(self) -> bool:
@@ -458,9 +449,10 @@ class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
         return self.dependency_brokers_for(self.compute)
 
     def delete(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Delete the LLMHostCompute, and its node group.
+        """Delete the LLMHostCompute, and queue the deletion of its node group.
 
-        Refused while LLMHosts use it.
+        Refused while LLMHosts use it. The infrastructure worker deletes the node group
+        (``delete_llmhost_nodegroup``).
         """
         command = SmarterJournalCliCommands(self.delete.__name__)
         compute = self.compute
@@ -469,7 +461,7 @@ class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
         self.verify_no_dependencies(command)
         try:
             self.cache_invalidations()
-            # the pre_delete receiver deletes the node group.
+            # the pre_delete receiver queues the deletion of the node group.
             compute.delete()
             self._compute = None
         except (ProtectedError, Exception) as e:
@@ -479,19 +471,30 @@ class SAMLLMHostComputeBroker(AbstractBroker[LLMHostCompute, LLMHostCompute]):
         return self.json_response_ok(command=command, data={})
 
     def deploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
-        """Reconcile the node group with its LLMHosts: create it, and add or remove nodes, as they need."""
+        """
+        Queue the reconcile of the node group with its LLMHosts: create it, and add or remove nodes, as they need.
+
+        The infrastructure worker does it (``reconcile_llmhost_compute``), and checks again every 30 seconds
+        until the node group is settled. It returns at once, with the compute's stored state: follow it with
+        ``describe``.
+        """
         command = SmarterJournalCliCommands(self.deploy.__name__)
         compute = self.compute
         if self.name is None or not compute:
             raise SAMBrokerErrorNotFound(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
-        try:
-            state = self.provisioner.reconcile(compute)
-        except LLMHostComputeError as e:
-            raise SAMLLMHostComputeBrokerError(
-                f"Failed to reconcile {self.kind} {self.name}: {e}", thing=self.kind, command=command
-            ) from e
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmhost.tasks import queue_reconcile
+
+        queue_reconcile(compute)
         self.cache_invalidations()
-        return self.json_response_ok(command=command, data=state.__dict__)
+        data = {
+            "compute": compute.name,
+            "nodegroup_status": compute.nodegroup_status,
+            "desired": compute.desired_nodes,
+            "ready": compute.ready_nodes,
+            "message": compute.status_message,
+        }
+        return self.json_response_ok(command=command, data=data)
 
     def undeploy(self, request: HttpRequest, *args, **kwargs) -> SmarterJournaledJsonResponse:
         """

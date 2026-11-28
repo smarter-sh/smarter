@@ -1,11 +1,12 @@
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """The database settings, from which Django's ``DATABASES`` is built."""
 
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
+from smarter.common.conf.credentials import DATABASE_ADMIN_POD_KINDS, HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -15,7 +16,7 @@ from smarter.common.conf.util import (
     parse_int_setting,
     with_derived_default,
 )
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
 
 
@@ -56,7 +57,7 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_root_username of type {type(v)} is not a non-empty string.")
         return v
 
-    subsystem_sql_root_password: Optional[SecretStr] = Field(
+    subsystem_sql_root_password: Annotated[Optional[SecretStr], HeldBy(*DATABASE_ADMIN_POD_KINDS)] = Field(
         None,
         description="The password of the database server's administrator, sql_root_username.",
         examples=["your-root-password"],
@@ -89,6 +90,43 @@ class DatabaseSettings(BaseModel):
             return None
         if not isinstance(v, SecretStr):
             raise SmarterConfigurationError(f"sql_root_password of type {type(v)} is not a SecretStr")
+        return v
+
+    subsystem_sql_backup_password: Annotated[Optional[SecretStr], HeldBy(*DATABASE_ADMIN_POD_KINDS)] = Field(
+        None,
+        description="The password of the read-only account that the nightly database backup dumps the database as.",
+        examples=["your-backup-password"],
+        title="MySQL Backup Password",
+    )
+    """
+    The password of the database's read-only backup account, ``smarter_backup`` by default.
+
+    Set it with ``SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD``. The Helm chart's init Job creates the account with it,
+    and its nightly backup Job dumps the database as that account; until it is set, the backup dumps as the
+    administrator, :attr:`subsystem_sql_root_password`. Only the chart's shell scripts use it, not Smarter's Python
+    code: it is a setting so that the credentials map (:mod:`smarter.common.conf.credentials`) says which pods hold
+    it, and the chart gives it to no other pod.
+
+    :type: Optional[SecretStr]
+    :default: None if it is not set.
+    :raises SmarterConfigurationError: If the value is not a SecretStr.
+    """
+
+    @before_field_validator("subsystem_sql_backup_password")
+    def validate_subsystem_sql_backup_password(cls, v: Optional[SecretStr]) -> Optional[SecretStr]:
+        """Validates the `sql_backup_password` field.
+
+        Args:
+            v (Optional[SecretStr]): The password to validate.
+        Returns:
+            Optional[SecretStr]: The validated password, or None if it is missing or a placeholder.
+        """
+        if v in THE_EMPTY_SET:
+            v = field_default(cls, "subsystem_sql_backup_password")
+        if is_missing_value(v):
+            return None
+        if not isinstance(v, SecretStr):
+            raise SmarterConfigurationError(f"sql_backup_password of type {type(v)} is not a SecretStr")
         return v
 
     subsystem_sql_host: str = Field(
@@ -216,7 +254,7 @@ class DatabaseSettings(BaseModel):
             raise SmarterConfigurationError(f"sql_user of type {type(v)} is not a non-empty string.")
         return v.strip()
 
-    subsystem_sql_password: Optional[SecretStr] = Field(
+    subsystem_sql_password: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.with_database)] = Field(
         None,
         description="The password of sql_user, the database user that the platform connects as.",
         examples=["your-database-password"],

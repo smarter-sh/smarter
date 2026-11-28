@@ -153,6 +153,7 @@ from smarter.common.conf import smarter_settings
 from smarter.common.mixins import SmarterHelperMixin, SmarterMiddlewareMixin
 from smarter.common.utils import is_authenticated_request
 from smarter.lib import logging
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 
@@ -291,7 +292,13 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
 
         throttle_key = self.get_throttle_key(client_ip)
 
-        blocked_count = cache.get(throttle_key, 0)
+        try:
+            blocked_count = cache.get(throttle_key, 0)
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            # The 404 isn't counted, and no client is blocked, until Redis is back (issue #1091).
+            logger.warning("the cache failed, not counting the 404 of %s: %s", request.path, e)
+            return response
 
         self.log_404_event(
             request=request,
@@ -339,25 +346,31 @@ class SmarterBlockExcessive404Middleware(SmarterMiddlewareMixin):
         """
         Add one to a client's 404 counter in the cache, and reset its ``THROTTLE_TIMEOUT``.
 
+        While the cache can't be written, e.g. during a Redis outage, the 404 isn't counted.
+
         :param throttle_key: The cache key of the client's counter, from :meth:`get_throttle_key`.
         """
 
         try:
-            blocked_count = cache.incr(throttle_key)
+            try:
+                blocked_count = cache.incr(throttle_key)
 
-        except ValueError:
-            cache.set(
-                throttle_key,
-                1,
-                timeout=self.THROTTLE_TIMEOUT,
-            )
+            except ValueError:
+                cache.set(
+                    throttle_key,
+                    1,
+                    timeout=self.THROTTLE_TIMEOUT,
+                )
 
-        else:
-            cache.set(
-                throttle_key,
-                blocked_count,
-                timeout=self.THROTTLE_TIMEOUT,
-            )
+            else:
+                cache.set(
+                    throttle_key,
+                    blocked_count,
+                    timeout=self.THROTTLE_TIMEOUT,
+                )
+        except CACHE_EXCEPTIONS as e:
+            # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+            logger.warning("the cache failed, not counting the 404: %s", e)
 
     def log_404_event(
         self,

@@ -7,6 +7,7 @@ The task is called directly, which runs it synchronously. The DNS service is moc
 from unittest.mock import MagicMock, patch
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.infrastructure.exceptions import DNSRecordTimeout
 from smarter.apps.infrastructure.services.dns import DNSRecord
 from smarter.apps.llmclient.models import (
     LLMClientCustomDomain,
@@ -65,6 +66,7 @@ class TestCreateCustomDomainDnsRecord(TestAccountMixin):
             record_type="A",
             ttl=600,
             values=["192.0.2.1"],
+            max_attempts=1,
         )
         dns_record = LLMClientCustomDomainDNS.objects.get(custom_domain=self.custom_domain)
         self.assertEqual(dns_record.record_name, "www.example.com")
@@ -81,3 +83,23 @@ class TestCreateCustomDomainDnsRecord(TestAccountMixin):
         dns_record = LLMClientCustomDomainDNS.objects.get(custom_domain=self.custom_domain)
         self.assertEqual(dns_record.record_value, "192.0.2.2")
         self.assertEqual(dns_record.record_ttl, 300)
+
+    def test_a_record_not_yet_in_its_zone_is_checked_again(self):
+        """The task looks once, and queues itself again with the DNS service's interval, rather than sleep."""
+        self.infrastructure.dns.get_or_create_record.side_effect = DNSRecordTimeout("not in the zone yet")
+        self.infrastructure.dns.record_wait_attempts = 10
+        self.infrastructure.dns.record_wait_seconds = 15
+        with patch.object(create_custom_domain_dns_record, "apply_async") as again:
+            self.assertIsNone(self.create(self.custom_domain.pk))
+        again.assert_called_once()
+        self.assertEqual(again.call_args.kwargs["countdown"], 15)
+        self.assertEqual(again.call_args.kwargs["kwargs"]["attempt"], 2)
+        self.assertFalse(LLMClientCustomDomainDNS.objects.filter(custom_domain=self.custom_domain).exists())
+
+    def test_out_of_attempts_fails_as_before(self):
+        self.infrastructure.dns.get_or_create_record.side_effect = DNSRecordTimeout("not in the zone yet")
+        self.infrastructure.dns.record_wait_attempts = 10
+        with patch.object(create_custom_domain_dns_record, "apply_async") as again:
+            with self.assertRaises(DNSRecordTimeout):
+                create_custom_domain_dns_record(self.custom_domain.pk, "www.example.com.", "A", "192.0.2.1", attempt=10)
+        again.assert_not_called()

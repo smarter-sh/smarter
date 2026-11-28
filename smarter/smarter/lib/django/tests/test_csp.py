@@ -22,6 +22,7 @@ from smarter.lib.django.csp import (
 )
 from smarter.lib.django.shortcuts import reverse
 from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.lib.unittest.cache_outage import unreachable_cache
 from smarter.urls.console import ConsoleReverseNames
 
 MODULE = "smarter.lib.django.csp"
@@ -149,6 +150,17 @@ class TestCspReportLogging(SmarterTestBase):
             self.assertTrue(log_violation(violation))
         logged = " ".join(str(value) for value in logger.warning.call_args.args)
         self.assertNotIn("None", logged)
+
+    def test_log_violation_while_the_cache_is_down(self):
+        """During a Redis outage a report is logged, every time, rather than answering 500 (issue #1091)."""
+        violation = self.violation()
+        with patch(f"{MODULE}.lazy_cache", unreachable_cache()), patch(f"{MODULE}.logger") as logger:
+            self.assertTrue(log_violation(violation))
+            self.assertTrue(log_violation(violation))
+        # each time: one line about the cache, then the violation.
+        self.assertEqual(logger.warning.call_count, 4)
+        first_message = logger.warning.call_args_list[0].args[0]
+        self.assertIn("without deduplicating", first_message)
 
 
 class TestWebAppManifest(SmarterTestBase):

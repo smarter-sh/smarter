@@ -97,14 +97,17 @@ class TestCertificateService(InfrastructureTestBase):
             with self.assertRaises(CertificateNotFound):
                 self.certificates.wait_for_validation_records("cert")
 
-    def test_wait_until_issued(self):
-        certificate_id, _ = self.certificates.get_or_create_certificate("example.com")
-        self.certificates.issue_wait_attempts = 3
-        with patch.object(self.certificates, "_sleep") as sleep:
-            self.assertFalse(self.certificates.wait_until_issued(certificate_id))
-        self.assertEqual(sleep.call_count, 2)
-        self.certificates.issue_all = True
-        self.assertTrue(self.certificates.wait_until_issued(certificate_id))
+    def test_one_attempt_never_sleeps(self):
+        """A Celery task looks once, and checks again later itself (ADR-030, rule 2)."""
+        with (
+            patch.object(self.certificates, "_describe_certificate", return_value=None),
+            patch.object(self.certificates, "_sleep") as sleep,
+        ):
+            with self.assertRaises(CertificateNotFound):
+                self.certificates.wait_for_validation_records("cert", max_attempts=1)
+            with self.assertRaises(CertificateNotFound):
+                self.certificates.create_validation_records("cert", max_attempts=1)
+        sleep.assert_not_called()
 
     def test_unknown_certificate(self):
         with self.assertRaises(CertificateNotFound):

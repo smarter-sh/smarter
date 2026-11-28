@@ -1,7 +1,7 @@
 # pylint: disable=W0212
 """Admin configuration for the llmhost app."""
 
-from django.contrib import admin, messages
+from django.contrib import admin
 
 from smarter.apps.account.models import User, get_resolved_user
 from smarter.apps.dashboard.admin import (
@@ -11,8 +11,6 @@ from smarter.apps.dashboard.admin import (
 from smarter.lib import logging
 
 from .models import LLMHost, LLMHostCompute, LLMHostEvent
-from .services.compute import ComputeProvisioner
-from .services.exceptions import LLMHostComputeError
 
 logger = logging.getSmarterLogger(__name__)
 
@@ -168,21 +166,21 @@ class LLMHostComputeAdmin(SmarterCustomerModelAdmin):
     @admin.action(description="Reconcile the node groups with their LLMHosts")
     def reconcile(self, request, queryset):
         """
-        Reconcile each selected LLMHostCompute's node group with its LLMHosts, and report the result.
+        Queue the reconcile of each selected LLMHostCompute's node group with its LLMHosts.
 
-        Calls the cloud provider: the node group may be created, and nodes added or removed.
+        The infrastructure worker calls the cloud provider (``reconcile_llmhost_compute``): the node group
+        may be created, and nodes added or removed. Each compute's status message then says what it did.
 
         :param request: The admin request.
         :param queryset: The selected LLMHostComputes.
         """
-        provisioner = ComputeProvisioner()
+        # pylint: disable=import-outside-toplevel
+        from .manifest.enum import SAMLLMHostQueuedMessage
+        from .tasks import queue_reconcile
+
         for compute in queryset:
-            try:
-                state = provisioner.reconcile(compute)
-                summary = "; ".join(state.actions) or state.message
-                self.message_user(request, f"{compute}: {summary}")
-            except LLMHostComputeError as e:
-                self.message_user(request, f"{compute}: {e}", level=messages.ERROR)
+            queue_reconcile(compute)
+            self.message_user(request, f"{compute}: {SAMLLMHostQueuedMessage.RECONCILE.value}")
 
 
 smarter_restricted_admin_site.register(LLMHost, LLMHostAdmin)

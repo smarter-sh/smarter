@@ -108,11 +108,14 @@ class VectorstoreListApiCloneView(SmarterAuthenticatedNeverCachedWebView):
 
 
 class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
-    """Destroy a vectorstore's database and data, unless deletionProtection is enabled, then delete it."""
+    """Delete a vectorstore, unless deletionProtection is enabled, and its database and data."""
 
     def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         """
-        Destroy the database of the vectorstore that the user owns, if it was deployed, then delete it and its API key Secret.
+        Delete the vectorstore that the user owns, and its API key Secret, or queue its deletion if it was deployed.
+
+        A deployed vectorstore is deleting until the infrastructure worker has destroyed its database
+        (:meth:`~smarter.apps.vectorstore.service.VectorstoreService.queue_delete`).
 
         :param request: The request.
         :param kwargs: The url's ``vectorstore_id``.
@@ -128,13 +131,7 @@ class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
         if vectorstore is None:
             return JsonResponse({"error": f"Vectorstore {vectorstore_id} not found."}, status=HTTPStatus.NOT_FOUND)
         try:
-            service = VectorstoreService(vectorstore)
-            if vectorstore.deployed_at or vectorstore.deletion_protection:
-                service.destroy()
-            secret = vectorstore.api_key_secret
-            vectorstore.delete()
-            if secret is not None:
-                secret.delete()
+            deleted = VectorstoreService(vectorstore).queue_delete()
         except VectorstoreServiceError as e:
             # a refusal written for the user, e.g. deletionProtection, not a failure.
             logger.warning("refused to delete %s: %s", vectorstore, e.message)
@@ -150,7 +147,10 @@ class VectorstoreListApiDeleteView(SmarterAuthenticatedNeverCachedWebView):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
         invalidate_all_cached_vectorstores_for_user_profile(user_profile=self.user_profile)  # type: ignore
-        return JsonResponse({"message": f"Vectorstore {vectorstore_id} deleted."}, status=HTTPStatus.OK)
+        message = f"Vectorstore {vectorstore_id} deleted."
+        if not deleted:
+            message = f"Vectorstore {vectorstore_id} is being deleted."
+        return JsonResponse({"message": message}, status=HTTPStatus.OK)
 
 
 class VectorstoreListApiRenameView(SmarterAuthenticatedNeverCachedWebView):

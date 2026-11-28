@@ -17,6 +17,8 @@ creates those that do not exist, and deletes them afterwards.
 import copy
 import glob
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Optional, Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -66,6 +68,15 @@ BUILTIN_COMPUTE_PATH = os.path.join(DATA_PATH, "llmhost-computes")
 """Copies of the example LLMHostCompute manifests, for the Smarter admin's computes."""
 BUILTIN_LLMHOST_PATH = os.path.join(DATA_PATH, "llmhosts")
 """Copies of some of the example LLMHost manifests: one of each engine, model source and task."""
+QUEUED_TASKS = (
+    "launch_llmhost",
+    "destroy_llmhost",
+    "delete_llmhost",
+    "reconcile_llmhost_compute",
+    "delete_llmhost_nodegroup",
+)
+"""The tasks that the brokers, the api, the admin and the receivers queue, which tests run in their own process."""
+
 NAMESPACE = "smarter-platform-test"
 HF_TOKEN_SECRET = "test_llmhost_hf_token"
 HF_TOKEN = "hf_test_token_value"
@@ -264,22 +275,30 @@ class BuiltinFixturesMixin(SmarterTestBase):
             super().tearDownClass()
 
 
-class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
+class InMemoryLLMHostInfrastructureMixin(SmarterTestBase):
     """
-    Base class for the llmhost app's database tests.
+    The llmhost app's infrastructure, in memory, for a whole test class: nothing reaches a cluster, a cloud or a worker.
 
-    - The cluster is an :class:`InMemoryClusterBackend`, emptied before each test.
+    - The cluster is an :class:`InMemoryClusterBackend`, and the node groups an :class:`InMemoryNodeGroupBackend`.
     - DNS records are disabled.
-    - The Secret test_llmhost_hf_token holds a fake Hugging Face token.
-    - The Smarter admin's example computes and LLMHosts exist: see :class:`BuiltinFixturesMixin`.
-    - :meth:`create_llmhost` creates LLMHosts from the manifests in ./data, and tearDownClass()
-      deletes every LLMHost, LLMHostEvent and generated Secret of the account.
+    - The tasks that the code under test queues (:data:`QUEUED_TASKS`) run in this process, against those
+      backends. Celery isn't eager in tests: ``.delay()`` would send each task to a real worker, which holds
+      real credentials. Each task's ``.delay`` is patched to call the task here instead, and records its calls
+      in :attr:`queued_tasks`, by the task's name. ``reconcile_llmhost_compute`` re-queues itself with
+      ``apply_async``, which is patched to record only, in :attr:`requeued`, so that it never loops.
+      :meth:`holding_queued_tasks` records the tasks without running them.
+
+    List it last among a test class's bases, e.g. ``class Test(TestAccountMixin, InMemoryLLMHostInfrastructureMixin)``,
+    so that it comes just before :class:`SmarterTestBase`: it is set up before any fixture is created, and torn
+    down after every fixture is deleted. Deleting a compute, e.g. when the account's deletion cascades, queues
+    the deletion of its node group, which must run here, against the in-memory node groups, too.
     """
 
     cluster: InMemoryClusterBackend
     nodegroups: InMemoryNodeGroupBackend
-    _dns_patcher: "_patch[Union[MagicMock, AsyncMock]]"
-    hf_secret: Secret
+    _infrastructure_patchers: list["_patch[Union[MagicMock, AsyncMock]]"]
+    queued_tasks: dict[str, MagicMock]
+    requeued: MagicMock
 
     @classmethod
     def setUpClass(cls):
@@ -291,16 +310,99 @@ class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
         # a safety net: tests must never reach the real cluster, nor create real node groups.
         assert isinstance(get_cluster(), InMemoryClusterBackend)
         assert isinstance(get_nodegroups(), InMemoryNodeGroupBackend)
-        cls._dns_patcher = patch("smarter.apps.llmhost.tasks.dns_enabled", return_value=False)
-        cls._dns_patcher.start()
+        cls._infrastructure_patchers = []
+        dns_patcher = patch("smarter.apps.llmhost.tasks.dns.dns_enabled", return_value=False)
+        dns_patcher.start()
+        cls._infrastructure_patchers.append(dns_patcher)
+        cls.start_queued_task_patchers()
+
+    @classmethod
+    def start_queued_task_patchers(cls) -> None:
+        """Patch each queued task's ``.delay`` to run it here, and ``reconcile_llmhost_compute.apply_async`` to record only."""
+        # pylint: disable=import-outside-toplevel
+        from smarter.apps.llmhost import tasks
+
+        cls.queued_tasks = {}
+        for name in QUEUED_TASKS:
+            task = getattr(tasks, name)
+            patcher = patch.object(task, "delay", side_effect=task)
+            cls.queued_tasks[name] = patcher.start()
+            cls._infrastructure_patchers.append(patcher)
+        requeue_patcher = patch.object(tasks.reconcile_llmhost_compute, "apply_async")
+        cls.requeued = requeue_patcher.start()
+        cls._infrastructure_patchers.append(requeue_patcher)
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            for patcher in reversed(cls._infrastructure_patchers):
+                patcher.stop()
+            configure_cluster(None)
+            configure_nodegroups(None)
+        finally:
+            super().tearDownClass()
+
+    def setUp(self):
+        """Empty the in-memory cluster and node groups, and forget the queued tasks' calls, before each test."""
+        super().setUp()
+        for mock_delay in self.queued_tasks.values():
+            mock_delay.reset_mock()
+        self.requeued.reset_mock()
+        self.cluster.resources.clear()
+        self.cluster.applied.clear()
+        self.cluster.deleted.clear()
+        self.cluster.ready = True
+        self.cluster.fail_apply = None
+        self.cluster.pod_logs = ""
+        self.nodegroups.nodegroups.clear()
+        self.nodegroups.created.clear()
+        self.nodegroups.removed.clear()
+        self.nodegroups.deleted.clear()
+        self.nodegroups.fail = None
+
+    @contextmanager
+    def holding_queued_tasks(self) -> Iterator[dict[str, MagicMock]]:
+        """
+        Record the tasks that the code under test queues, without running them.
+
+        So a test sees what the request itself did, e.g. that it wrote nothing to the cluster.
+
+        :returns: The ``.delay`` mock of each task in :data:`QUEUED_TASKS`, by name.
+        """
+        for mock_delay in self.queued_tasks.values():
+            mock_delay.side_effect = None
+        try:
+            yield self.queued_tasks
+        finally:
+            # pylint: disable=import-outside-toplevel
+            from smarter.apps.llmhost import tasks
+
+            for name, mock_delay in self.queued_tasks.items():
+                mock_delay.side_effect = getattr(tasks, name)
+
+
+class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin, InMemoryLLMHostInfrastructureMixin):
+    """
+    Base class for the llmhost app's database tests.
+
+    - The cluster, the node groups, DNS and the queued tasks are in memory: see
+      :class:`InMemoryLLMHostInfrastructureMixin`. The cluster is emptied before each test.
+    - The Secret test_llmhost_hf_token holds a fake Hugging Face token.
+    - The Smarter admin's example computes and LLMHosts exist: see :class:`BuiltinFixturesMixin`.
+    - :meth:`create_llmhost` creates LLMHosts from the manifests in ./data, and tearDownClass()
+      deletes every LLMHost, LLMHostEvent and generated Secret of the account.
+    """
+
+    hf_secret: Secret
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
         cls.hf_secret = cls.create_secret(HF_TOKEN_SECRET, HF_TOKEN)
 
     @classmethod
     def tearDownClass(cls):
         try:
-            cls._dns_patcher.stop()
-            configure_cluster(None)
-            configure_nodegroups(None)
             LLMHostEvent.objects.filter(llmhost__user_profile__account=cls.account).delete()
             LLMHost.objects.filter(user_profile__account=cls.account).delete()
             Secret.objects.filter(user_profile__account=cls.account, name__startswith="llmhost_").delete()
@@ -313,17 +415,6 @@ class LLMHostTestBase(TestAccountMixin, BuiltinFixturesMixin):
 
     def setUp(self):
         super().setUp()
-        self.cluster.resources.clear()
-        self.cluster.applied.clear()
-        self.cluster.deleted.clear()
-        self.cluster.ready = True
-        self.cluster.fail_apply = None
-        self.cluster.pod_logs = ""
-        self.nodegroups.nodegroups.clear()
-        self.nodegroups.created.clear()
-        self.nodegroups.removed.clear()
-        self.nodegroups.deleted.clear()
-        self.nodegroups.fail = None
         builtin_computes().update(
             nodegroup_status=LLMHostComputeNodeGroupStatus.ABSENT, desired_nodes=0, ready_nodes=0, status_message=""
         )

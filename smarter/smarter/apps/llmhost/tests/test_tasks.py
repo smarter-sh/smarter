@@ -1,4 +1,4 @@
-"""Test the Celery tasks: :mod:`smarter.apps.llmhost.tasks`.
+"""Test the Celery tasks: :mod:`smarter.apps.llmhost.tasks.llmhost`, :mod:`~smarter.apps.llmhost.tasks.compute` and :mod:`~smarter.apps.llmhost.tasks.dns`.
 
 They are called directly, i.e. synchronously.
 """
@@ -17,9 +17,13 @@ from smarter.apps.llmhost.const import (
     RECONCILE_INTERVAL_SECONDS,
     RECONCILE_MAX_ATTEMPTS,
 )
-from smarter.apps.llmhost.models import LLMHostCompute
+from smarter.apps.llmhost.manifest.enum import SAMLLMHostEventType
+from smarter.apps.llmhost.models import LLMHost, LLMHostCompute, LLMHostEvent
+from smarter.apps.llmhost.services.compute import builtin_computes
 from smarter.apps.llmhost.tasks import (
     charge_llmhost_computes,
+    delete_llmhost,
+    delete_llmhost_nodegroup,
     destroy_llmhost,
     launch_llmhost,
     managed_hostname,
@@ -33,14 +37,12 @@ from .base_classes import LLMHostTestBase
 
 
 class TestLLMHostTasks(LLMHostTestBase):
-    """Test launch_llmhost, destroy_llmhost, refresh_llmhost_status, the compute reconciles, and DNS records."""
+    """
+    Test the llmhost tasks, called directly, and DNS records.
 
-    def setUp(self):
-        super().setUp()
-        # Celery is not eager in tests: a queued task would reach the live worker.
-        patcher = patch.object(tasks.reconcile_llmhost_compute, "apply_async")
-        self.queued = patcher.start()
-        self.addCleanup(patcher.stop)
+    The reconcile that a task queues is recorded in :attr:`requeued`, never sent: see
+    :class:`~smarter.apps.llmhost.tests.base_classes.InMemoryLLMHostInfrastructureMixin`.
+    """
 
     def test_launch_and_destroy(self):
         """Test that launch and destroy each queue a reconcile of the compute, which follows its node group."""
@@ -49,10 +51,10 @@ class TestLLMHostTasks(LLMHostTestBase):
         self.assertIsNotNone(self.cluster.get("deployment", self.base_name(llmhost)))
         llmhost.refresh_from_db()
         compute = required(llmhost.compute, "llmhost.compute")
-        self.queued.assert_called_once_with((compute.pk,), countdown=RECONCILE_INTERVAL_SECONDS)
+        self.requeued.assert_called_once_with((compute.pk,), countdown=RECONCILE_INTERVAL_SECONDS)
         self.assertEqual(destroy_llmhost(llmhost.pk, purge=True), "inactive")
         self.assertEqual(self.cluster.resources, {})
-        self.assertEqual(self.queued.call_count, 2)
+        self.assertEqual(self.requeued.call_count, 2)
 
     def test_reconcile_compute(self):
         """Test that a reconcile queues another until the node group is settled, and checks the LLMHosts' status."""
@@ -60,22 +62,22 @@ class TestLLMHostTasks(LLMHostTestBase):
         launch_llmhost(llmhost.pk)
         llmhost.refresh_from_db()
         compute = required(llmhost.compute, "llmhost.compute")
-        self.queued.reset_mock()
+        self.requeued.reset_mock()
         state = reconcile_llmhost_compute(compute.pk)
         self.assertEqual((state["needed"], state["desired"], state["ready"]), (1, 1, 0))
-        self.queued.assert_called_once_with((compute.pk, 2), countdown=RECONCILE_INTERVAL_SECONDS)
+        self.requeued.assert_called_once_with((compute.pk, 2), countdown=RECONCILE_INTERVAL_SECONDS)
         # the node joins: the node group is settled, and the LLMHost waits only for its pods.
         self.join_nodes(compute)
-        self.queued.reset_mock()
+        self.requeued.reset_mock()
         state = reconcile_llmhost_compute(compute.pk, attempt=2)
         self.assertEqual(state["ready"], 1)
-        self.queued.assert_not_called()
+        self.requeued.assert_not_called()
         llmhost.refresh_from_db()
         self.assertEqual(llmhost.status, "pending")
         # it gives up after RECONCILE_MAX_ATTEMPTS, and Celery Beat's reconcile takes over.
         self.nodegroups.fail = "AWS is down"
         self.assertIsNone(reconcile_llmhost_compute(compute.pk, attempt=RECONCILE_MAX_ATTEMPTS))
-        self.queued.assert_not_called()
+        self.requeued.assert_not_called()
         self.assertIsNone(reconcile_llmhost_compute(0))
 
     def test_charge_llmhost_computes(self):
@@ -112,6 +114,78 @@ class TestLLMHostTasks(LLMHostTestBase):
     def test_missing(self):
         self.assertIsNone(launch_llmhost(0))
         self.assertIsNone(destroy_llmhost(0))
+        self.assertFalse(delete_llmhost(0))
+
+    def test_launch_failure_is_recorded(self):
+        """A launch that fails after it was queued, e.g. a Secret deleted since, is the LLMHost's message and event."""
+        llmhost = self.new_llmhost("test_tasks_launch_failed", model={"tokenSecret": "test_llmhost_deleted_since"})
+        self.assertEqual(launch_llmhost(llmhost.pk), llmhost.status)
+        llmhost.refresh_from_db()
+        self.assertTrue(llmhost.status_message.startswith("Launch failed: "), llmhost.status_message)
+        self.assertIn("test_llmhost_deleted_since", llmhost.status_message)
+        error = LLMHostEvent.objects.filter(llmhost=llmhost, event_type=SAMLLMHostEventType.ERROR.value).first()
+        self.assertIsNotNone(error)
+        self.assertEqual(self.cluster.applied, [])
+        self.requeued.assert_not_called()
+
+    def test_destroy_failure_is_recorded(self):
+        llmhost = self.new_llmhost("test_tasks_destroy_failed")
+        launch_llmhost(llmhost.pk)
+        self.cluster.ready = False
+        destroy_llmhost(llmhost.pk)
+        llmhost.refresh_from_db()
+        self.assertTrue(llmhost.status_message.startswith("Undeploy failed: "), llmhost.status_message)
+        self.assertNotEqual(self.cluster.resources, {})
+
+    def test_delete_llmhost(self):
+        """The task destroys the resources, including the model volume, deletes the LLMHost, and reconciles its compute."""
+        llmhost = self.new_llmhost("test_tasks_delete")
+        launch_llmhost(llmhost.pk)
+        llmhost.refresh_from_db()
+        compute = required(llmhost.compute, "llmhost.compute")
+        self.requeued.reset_mock()
+        self.assertTrue(delete_llmhost(llmhost.pk))
+        self.assertFalse(LLMHost.objects.filter(pk=llmhost.pk).exists())
+        self.assertEqual(self.cluster.resources, {})
+        self.requeued.assert_called_once_with((compute.pk,), countdown=RECONCILE_INTERVAL_SECONDS)
+
+    def test_delete_failure_keeps_the_llmhost(self):
+        """A deployed LLMHost whose cluster can't be reached is kept, with why, so that it can be deleted again."""
+        llmhost = self.new_llmhost("test_tasks_delete_failed")
+        launch_llmhost(llmhost.pk)
+        self.cluster.ready = False
+        self.assertFalse(delete_llmhost(llmhost.pk))
+        llmhost.refresh_from_db()
+        self.assertTrue(llmhost.status_message.startswith("Delete failed: "), llmhost.status_message)
+
+    def test_delete_llmhost_nodegroup(self):
+        """The node group is deleted by name; a cloud error is logged, and the task reports it."""
+        compute = builtin_computes().first()
+        assert compute is not None
+        self.nodegroups.create(compute, 0)
+        self.assertTrue(delete_llmhost_nodegroup(compute.nodegroup_name))
+        self.assertEqual(self.nodegroups.deleted, [compute.nodegroup_name])
+        self.assertNotIn(compute.nodegroup_name, self.nodegroups.nodegroups)
+        self.nodegroups.fail = "AWS is down"
+        with self.assertLogs("smarter.apps.llmhost.tasks.compute", level="ERROR") as logs:
+            self.assertFalse(delete_llmhost_nodegroup(compute.nodegroup_name))
+        self.assertIn("AWS is down", logs.output[0])
+
+    def test_task_names_are_kept(self):
+        """Each task keeps the name that Celery Beat's schedule, and messages already queued, use."""
+        for task in (
+            launch_llmhost,
+            destroy_llmhost,
+            delete_llmhost,
+            delete_llmhost_nodegroup,
+            tasks.refresh_llmhost_status,
+            tasks.reconcile_llmhost_compute,
+            tasks.reconcile_llmhost_computes,
+            tasks.charge_llmhost_computes,
+        ):
+            with self.subTest(task=task.name):
+                self.assertTrue(task.name.startswith("smarter.apps.llmhost.tasks."))
+                self.assertEqual(task.name.count("."), 4)
 
     def test_refresh(self):
         """Test that refresh checks one LLMHost, or every deployed LLMHost."""
@@ -140,8 +214,8 @@ class TestLLMHostTasks(LLMHostTestBase):
         llmhost = self.new_llmhost("test_tasks_dns")
         infrastructure = MagicMock()
         with (
-            patch.object(tasks, "dns_enabled", return_value=True),
-            patch.object(tasks, "infrastructure", infrastructure),
+            patch.object(tasks.dns, "dns_enabled", return_value=True),
+            patch.object(tasks.dns, "infrastructure", infrastructure),
             # the real task's delay: a MagicMock in place of the task would have a delay even if the task did not.
             patch.object(destroy_domain_A_record, "delay") as delay,
         ):
@@ -155,6 +229,6 @@ class TestLLMHostTasks(LLMHostTestBase):
             self.assertEqual(delay.call_args.kwargs["hostname"], managed_hostname(llmhost))
         # disabled by the test base class.
         infrastructure.reset_mock()
-        with patch.object(tasks, "infrastructure", infrastructure):
+        with patch.object(tasks.dns, "infrastructure", infrastructure):
             tasks.create_dns_record(llmhost)
         infrastructure.dns.create_domain_a_record.assert_not_called()

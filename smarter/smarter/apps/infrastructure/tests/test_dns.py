@@ -185,6 +185,18 @@ class TestDNSRecords(InfrastructureTestBase):
                 self.dns.get_or_create_record(self.zone.id, "www.example.com", "A", values=["192.0.2.1"])
         self.assertEqual(sleep.call_count, 2)
 
+    def test_one_attempt_never_sleeps(self):
+        """A Celery task looks once, and checks again later itself (ADR-030, rule 2); the next call finds the record."""
+        with (
+            patch.object(self.dns, "_upsert_record"),
+            patch.object(self.dns, "_sleep") as sleep,
+        ):
+            with self.assertRaisesRegex(DNSRecordTimeout, "after 1 attempts"):
+                self.dns.get_or_create_record(
+                    self.zone.id, "www.example.com", "A", values=["192.0.2.1"], max_attempts=1
+                )
+        sleep.assert_not_called()
+
     def test_record_appears_after_waiting(self):
         """A record that takes a moment to appear is waited for."""
         self.dns.record_wait_attempts = 3

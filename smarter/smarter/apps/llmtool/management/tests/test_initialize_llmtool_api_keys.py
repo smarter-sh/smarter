@@ -1,68 +1,56 @@
 """Test manage.py initialize_llmtool_api_keys: :mod:`smarter.apps.llmtool.management.commands.initialize_llmtool_api_keys`."""
 
-import os
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.llmtool.management.commands import initialize_llmtool_api_keys
 from smarter.apps.llmtool.management.commands.initialize_llmtool_api_keys import (
     Command,
 )
-from smarter.lib.unittest.base_classes import SmarterTestBase
-
-VARIABLES = (
-    "APP_LLMTOOL_TAVILY_API_KEY",
-    "SMARTER_APP_LLMTOOL_TAVILY_API_KEY",
-    "APP_LLMTOOL_BRAVE_SEARCH_API_KEY",
-    "SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY",
-)
+from smarter.apps.secret.models import Secret
 
 
-class TestInitializeLLMToolApiKeys(SmarterTestBase):
-    """Each llmtool api key that is set is stored as its Secret; a missing one is reported, never stored."""
+class TestInitializeLLMToolApiKeys(TestAccountMixin):
+    """The command reports which llmtool api key Secrets don't exist; it never reads an environment variable."""
 
     def setUp(self):
         super().setUp()
         self.command = Command(stdout=StringIO(), stderr=StringIO())
-        environ = patch.dict(os.environ, {})
-        environ.start()
-        self.addCleanup(environ.stop)
-        for name in VARIABLES:
-            os.environ.pop(name, None)
-        for target in ("initialize_secret", "smarter_cached_objects"):
-            patcher = patch.object(initialize_llmtool_api_keys, target)
-            setattr(self, target, patcher.start())
-            self.addCleanup(patcher.stop)
+        # the test account's user stands in for the Smarter admin, whose Secrets the command checks.
+        patcher = patch.object(
+            initialize_llmtool_api_keys,
+            "smarter_cached_objects",
+            MagicMock(smarter_admin_user_profile=self.user_profile),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def stored(self) -> dict[str, str]:
-        """The Secrets that the command stored, by name, with their values."""
-        return {
-            call.kwargs["secret_name"]: call.kwargs["secret_string"]
-            for call in self.initialize_secret.call_args_list  # type: ignore[attr-defined]
-        }
+    def admin_secret(self, name: str) -> None:
+        """Create one of the test admin's Secrets, deleted when the test ends."""
+        secret = Secret.objects.create(name=name, user_profile=self.user_profile, encrypted_value=Secret.encrypt("k"))
+        self.addCleanup(Secret.objects.filter(pk=secret.pk).delete)
 
-    def test_both_keys(self):
-        """The Tavily and Brave Search keys keep their Secrets' names, which the plugins' manifests name."""
-        os.environ["APP_LLMTOOL_TAVILY_API_KEY"] = "tavily-key"
-        os.environ["SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY"] = "brave-key"
+    def test_both_secrets_exist(self):
+        """The Tavily and Brave Search Secrets keep their names, which the plugins' manifests name."""
+        self.admin_secret("tavily_api_key")
+        self.admin_secret("brave_search_api_key")
         with patch.object(initialize_llmtool_api_keys.logger, "error") as error:
             self.command.handle()
-        self.assertEqual(self.stored(), {"tavily_api_key": "tavily-key", "brave_search_api_key": "brave-key"})
         error.assert_not_called()
 
-    def test_a_missing_key_is_not_stored(self):
-        """No key, a .env.example placeholder, or the Helm chart's, stores nothing, and the banner names the variable."""
-        for value in (None, "SET-ME-PLEASE", "SET-ME-IN-helm/charts/smarter/values.yaml"):
-            with self.subTest(value=value):
-                self.initialize_secret.reset_mock()  # type: ignore[attr-defined]
-                os.environ.pop("APP_LLMTOOL_TAVILY_API_KEY", None)
-                if value:
-                    os.environ["APP_LLMTOOL_TAVILY_API_KEY"] = value
-                os.environ["APP_LLMTOOL_BRAVE_SEARCH_API_KEY"] = "brave-key"
-                with patch.object(initialize_llmtool_api_keys.logger, "error") as error:
-                    self.command.handle()
-                self.assertEqual(self.stored(), {"brave_search_api_key": "brave-key"})
-                banner = error.call_args.args[0]
-                self.assertIn("SMARTER_APP_LLMTOOL_TAVILY_API_KEY", banner)
-                self.assertIn("manage.py initialize_llmtool_api_keys", banner)
-                self.assertNotIn("BRAVE", banner)
+    def test_a_missing_secret_is_reported(self):
+        """The banner names the missing Secret, and how to set it, never an environment variable."""
+        self.admin_secret("brave_search_api_key")
+        with (
+            patch.dict("os.environ", {"SMARTER_APP_LLMTOOL_TAVILY_API_KEY": "tavily-key"}),
+            patch.object(initialize_llmtool_api_keys.logger, "error") as error,
+        ):
+            self.command.handle()
+        banner = error.call_args.args[0]
+        self.assertIn("tavily_api_key", banner)
+        self.assertIn("bootstrap", banner)
+        self.assertNotIn("brave_search_api_key", banner)
+        self.assertNotIn("SMARTER_APP_LLMTOOL", banner)
+        # the variable is ignored: the key's only source is its Secret.
+        self.assertFalse(Secret.objects.filter(name="tavily_api_key", user_profile=self.user_profile).exists())

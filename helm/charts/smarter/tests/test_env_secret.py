@@ -87,27 +87,24 @@ def local_password(constant: str) -> str:
     """
     Return one of the compose files' Redis passwords, from the settings' source, which these tests can't import.
 
-    :param constant: The constant's name in cache.py, e.g. ``LOCAL_EXTENSION_WORKER_REDIS_PASSWORD``.
+    :param constant: The attribute's name in cache.py's RedisAclUsers, e.g. ``LOCAL_EXTENSION_WORKER_PASSWORD``.
     :returns: The password.
     """
     text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
-    match = re.search(rf'^{constant} = "([^"]+)"$', text, re.MULTILINE)
+    match = re.search(rf'^    {constant} = "([^"]+)"$', text, re.MULTILINE)
     if match is None:
-        raise AssertionError(f"cache.py has no {constant}")
+        raise AssertionError(f"cache.py's RedisAclUsers has no {constant}")
     return match.group(1)
 
 
 def local_tool_worker_password() -> str:
     """
-    Return LOCAL_TOOL_WORKER_REDIS_PASSWORD, from the settings' source, which these tests can't import.
+    Return RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD, from the settings' source, which these tests can't import.
 
     :returns: The password.
     """
-    text = CACHE_SETTINGS_PATH.read_text(encoding="utf-8")
-    match = re.search(r'^LOCAL_TOOL_WORKER_REDIS_PASSWORD = "([^"]+)"$', text, re.MULTILINE)
-    if match is None:
-        raise AssertionError("cache.py has no LOCAL_TOOL_WORKER_REDIS_PASSWORD")
-    return match.group(1)
+    password = local_password("LOCAL_TOOL_WORKER_PASSWORD")
+    return password
 
 
 def compose_redis_command(text: str) -> list[str]:
@@ -127,14 +124,15 @@ def compose_redis_command(text: str) -> list[str]:
     return arguments
 
 
-def env_helper() -> str:
+def env_helper(name: str = "smarter.env") -> str:
     """
-    Return the smarter.env template of _helpers.tpl.
+    Return a template of _helpers.tpl, smarter.env by default.
 
+    :param name: The template's name.
     :returns: Its text, from its define to its end.
     """
     text = HELPERS_PATH.read_text(encoding="utf-8")
-    start = text.index('{{- define "smarter.env" -}}')
+    start = text.index(f'{{{{- define "{name}" -}}}}')
     end = text.index("{{- end }}", start)
     return text[start:end]
 
@@ -162,7 +160,8 @@ class TestOptionalAwsKeys(unittest.TestCase):
     def test_secret_leaves_out_null_values(self):
         """The env Secret skips a null value, rather than rendering an empty one."""
         self.assertIn('{{- $isNull := kindIs "invalid" $value -}}', env_helper())
-        self.assertIn('include "smarter.env" . | fromYaml', TEMPLATE_PATH.read_text(encoding="utf-8"))
+        self.assertIn('include "smarter.env" .root | fromYaml', env_helper("smarter.podEnv"))
+        self.assertIn('include "smarter.podEnv" (dict "root" $ "pod" $pod)', TEMPLATE_PATH.read_text(encoding="utf-8"))
 
 
 class TestEnvironment(unittest.TestCase):
@@ -272,12 +271,12 @@ class TestEnvironment(unittest.TestCase):
         """
         Docker-compose.yml's and docker-compose.shard.yml's Redis define the same user, so the tests check the chart's rules.
 
-        The password is LOCAL_TOOL_WORKER_REDIS_PASSWORD, which the tests connect with.
+        The password is RedisAclUsers.LOCAL_TOOL_WORKER_PASSWORD, which the tests connect with.
         """
         password = local_tool_worker_password()
         arguments = ["redis-server", "--requirepass", "smarter", "--user", "tools", "on", f">{password}"]
         arguments.extend(acl_rules("tools"))
-        arguments.extend(["--user", "extensions", "on", f">{local_password('LOCAL_EXTENSION_WORKER_REDIS_PASSWORD')}"])
+        arguments.extend(["--user", "extensions", "on", f">{local_password('LOCAL_EXTENSION_WORKER_PASSWORD')}"])
         arguments.extend(acl_rules("extensions"))
         for path in COMPOSE_PATHS:
             with self.subTest(compose=path.name):
@@ -347,10 +346,10 @@ class TestMigrateEnvironment(unittest.TestCase):
         self.assertNotIn('name: "{{ .Values.global.appName }}-env"\n', job)
 
     def test_hook_secret_has_the_platform_settings(self):
-        """The hook Secret is built by smarter.env, like the env Secret, so it has the new release's names."""
+        """The hook Secret is built by smarter.podEnv, like the env Secrets, so it has the new release's names."""
         secret = MIGRATE_SECRET_PATH.read_text(encoding="utf-8")
         self.assertIn('name: "{{ .Values.global.appName }}-env-migrate"', secret)
-        self.assertIn('include "smarter.env" . | fromYaml', secret)
+        self.assertIn('include "smarter.podEnv" (dict "root" . "pod" "job-migrate") | fromYaml', secret)
 
     def test_hook_secret_is_created_before_the_job(self):
         """Both are pre-upgrade hooks, and the Secret's lower weight makes Helm create it first."""

@@ -404,20 +404,7 @@ jobs:
           DJANGO_AUTHENTICATION_BACKENDS: ${{ secrets.AUTHENTICATION_BACKENDS }}
           SMARTER_SUBSYSTEM_SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMARTER_SUBSYSTEM_SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          # LLM, vector store and Google API keys
-          SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SMARTER_APP_PROVIDER_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          SMARTER_APP_PROVIDER_FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}
-          SMARTER_APP_PROVIDER_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_AI_STUDIO_KEY: ${{ secrets.GOOGLE_AI_STUDIO_KEY }}
-          SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
-          SMARTER_APP_PROVIDER_LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
-          SMARTER_APP_PROVIDER_MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-          SMARTER_APP_PROVIDER_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SMARTER_APP_LLMTOOL_TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
-          SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           # the workflow's own token, for the GitHub api requests that retrieve the
           # example SkillPlugins' skills. Anonymous requests share the runner's IP
           # rate limit, and fail with 403, which fails `make docker-init`.
@@ -463,10 +450,7 @@ jobs:
             for name in \
               SMARTER_ENVIRONMENT SMARTER_SUBSYSTEM_SMTP_SENDER SMARTER_SUBSYSTEM_SMTP_FROM_EMAIL \
               SMARTER_PLATFORM_FERNET_ENCRYPTION_KEY DJANGO_AUTHENTICATION_BACKENDS SMARTER_SUBSYSTEM_SMTP_USERNAME SMARTER_SUBSYSTEM_SMTP_PASSWORD \
-              SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY SMARTER_APP_PROVIDER_COHERE_API_KEY SMARTER_APP_PROVIDER_FIREWORKS_API_KEY SMARTER_APP_PROVIDER_GEMINI_API_KEY \
-              GOOGLE_AI_STUDIO_KEY SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64 \
-              SMARTER_APP_PROVIDER_LLAMA_API_KEY SMARTER_APP_PROVIDER_MISTRAL_API_KEY SMARTER_APP_PROVIDER_OPENAI_API_KEY SMARTER_APP_LLMTOOL_TAVILY_API_KEY SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY \
-              SMARTER_APP_VECTORSTORE_PINECONE_API_KEY GITHUB_TOKEN \
+              GOOGLE_AI_STUDIO_KEY GITHUB_TOKEN \
               SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_KEY SMARTER_SUBSYSTEM_SOCIAL_AUTH_GITHUB_SECRET \
               SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY SMARTER_SUBSYSTEM_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET \
               SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY SMARTER_SUBSYSTEM_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET \
@@ -484,6 +468,29 @@ jobs:
               fi
             done
           } >> .env
+
+      #------------------------------------------------------------------------
+      # The keys of the built-in Providers, the search plugins and Pinecone
+      # (issue #1099): never in .env, which every container receives, but one
+      # file per Smarter Secret in bootstrap-secrets/, which only smarter-api
+      # mounts, and from which initialize_platform creates the Secrets.
+      #------------------------------------------------------------------------
+      - name: Write the bootstrap secrets
+        shell: bash
+        env:
+          SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SMARTER_APP_PROVIDER_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SMARTER_APP_PROVIDER_FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}
+          SMARTER_APP_PROVIDER_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          SMARTER_APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}
+          SMARTER_APP_PROVIDER_LLAMA_API_KEY: ${{ secrets.LLAMA_API_KEY }}
+          SMARTER_APP_PROVIDER_MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          SMARTER_APP_PROVIDER_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SMARTER_APP_LLMTOOL_TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY: ${{ secrets.TOGETHERAI_API_KEY }}
+          SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        run: python3 -I scripts/bootstrap_secrets.py
 
       #------------------------------------------------------------------------
       # Locally, developers run `make init` with the venv activated. Putting

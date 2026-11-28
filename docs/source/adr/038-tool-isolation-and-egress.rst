@@ -4,8 +4,9 @@ ADR-038: Tool Isolation and Egress Control
 Status
 ------
 Accepted. Phases 1 and 2 are implemented, and smarter-sh's deploy runs the tool worker. Phase 0's
-inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phases 3 and 4
-are not started.
+inventory of the code is done; its inventory of live traffic waits for phase 4's proxy. Phase 3 is in
+progress (issue #1084): each credential says which kinds of pod hold it, and pods report the ones they
+hold but don't use. Phase 4 is not started.
 
 Context
 -------
@@ -64,7 +65,10 @@ Three parts, each useful by itself.
      (:mod:`smarter.common.conf.credentials`). A deployment that passed the worker the platform's whole
      environment would fail at once, rather than run with every key in reach. docker-compose gives both
      workers only the settings that the Helm chart does, never ``.env``, so local development is isolated
-     the same way.
+     the same way. The check keys on ``SMARTER_DATABASE_UNAVAILABLE``, so a worker that lost that flag
+     would skip it; each pod also names its kind in ``SERVICE_TYPE``, and a ``worker-tools`` or
+     ``worker-extensions`` pod with a database refuses to start (``Settings.check_service_type()``). The
+     settings' first log line names the kind and the checks made for it.
    - ``ToolRunner`` has two implementations: in-process (today's behavior, for local development and
      tests) and remote. A setting chooses between them, so the change can ship turned off.
    - Transport: a Celery task on its own queue, ``tools_celery_task_queue``, whose result the app
@@ -221,6 +225,16 @@ Phase 0, inventory
    already do. Until then the app needs the write Role and the EKS permissions. Its reads need a
    read-only Role of their own either way.
 
+   Those writes are now infrastructure tasks (issue #1080), so the app only reads the cluster. The
+   LLMHost broker, the REST api, the admin's reconcile action and the compute's ``pre_delete`` receiver
+   call :mod:`smarter.apps.llmhost.tasks.queue`. Its functions check what can be checked with reads
+   alone, e.g. budgets, the spec, Secrets and whether the cluster is reachable, record the queued change
+   as the status message, and queue ``launch_llmhost``, ``destroy_llmhost``, ``delete_llmhost``,
+   ``reconcile_llmhost_compute`` or ``delete_llmhost_nodegroup``. The vectorstore broker, its REST api
+   and the console's delete call ``VectorstoreService.queue_provision()``, ``queue_undeploy()`` and
+   ``queue_delete()``, which queue ``provision_vectorstore``, ``undeploy_vectorstore`` and
+   ``delete_vectorstore``, as ``deploy()`` already queued ``deploy_vectorstore``.
+
    .. image:: ../_static/adr-038/egress.svg
       :alt: For each process, the services in the cluster it reaches, the fixed hosts on the internet,
             which seed phase 4's allowlist, and the hosts that a manifest author chooses. The app and the
@@ -346,7 +360,55 @@ Phase 2, the tool worker (smarter, Helm chart)
 
 Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    A ServiceAccount, IAM role and Secret per workload, from the phase 0 table. The Kubernetes Role
-   moves to ``smarter-worker-infrastructure`` only.
+   moves to ``smarter-worker-infrastructure`` only, and the app keeps a read-only Role that leaves out
+   Secrets: today's shared Role lets every pod that has it read every Secret in the namespace.
+
+   It is done in four steps, each shipped on its own. First, each credential setting says which kinds of
+   pod hold it, with ``HeldBy`` (:mod:`smarter.common.conf.credentials`), and ``make chart-credentials``
+   writes that for the chart (``files/credentials.json``). A pod that holds a credential its kind doesn't
+   use logs it, by name, and starts; a later release refuses it, as the tool worker already is. Then each
+   pod's Secret is built from that map, then each gets its ServiceAccount and Role, and smarter-infrastructure
+   its IAM roles.
+
+   Each kind of pod reads its own Secret, ``<appName>-env-<pod>`` (``templates/secret-env.yaml``), which
+   ``smarter.podEnv`` builds from the chart's ``env`` without the credentials that the map doesn't give that
+   kind; the shared ``<appName>-env`` is gone. Celery Beat and the migrate Job hold only the database's and
+   Redis's passwords, and only the init Job, the backup Job and the bastion the database administrator's.
+   Each pod's ``checksum/env`` is its own Secret's, so a changed credential rolls only the pods that hold it.
+   Making the map complete took a kind of pod and two settings. The backup CronJob is ``job-backup``: it
+   dumps the database, saves the dump to S3 and emails and posts its result, so it holds the administrator's
+   and the backup account's passwords, AWS's keys, SMTP's and the Slack bot token. The backup account's
+   password and the Slack bot's app token, which only the chart's scripts and the Slack bot use, are
+   credential settings now, so that the map says who holds them; the app token, ``HeldBy()``, reaches only
+   the Slack bot, from a Secret of its own, ``<appName>-env-slack-bot``.
+
+   Each kind of pod also runs as its own ServiceAccount, ``<appName>-<pod>``, whose Role and ClusterRole allow
+   only what an inventory of every Kubernetes call found its code does (``templates/rbac.yaml``). Every cluster
+   write is ``smarter-worker-infrastructure``'s, which alone may read a Secret. The app only reads: pods, their
+   logs, events and metrics, Deployments, StatefulSets and volumes, and no Secret; the web console's superuser
+   terminal runs a shell with its token, so it can do no more. The init Job may write only the LLMClient
+   Ingresses that ``initialize_platform`` retargets; ``smarter-worker`` reads only its namespace, when it starts;
+   Celery Beat, the migrate Job and the backup mount no token. The inventory found one write left in the app: a
+   vectorstore's status view took a stalled deploy over, and created its cluster resources, in the request. It
+   now leaves that to Beat's check, on the infrastructure worker (``VectorstoreService.reconcile(take_over=...)``).
+   Until step 4 gives each its own IAM role, every one of these ServiceAccounts has the shared
+   ``<namespace>-smarter-irsa``, whose trust policy names each of them.
+
+   A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
+   stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector
+   databases') have no setting and no environment variable (issue #1099). The chart's ``bootstrapSecrets``
+   values become the Kubernetes Secret ``smarter-bootstrap-secrets``, which only the init Job mounts, as
+   files, at ``smarter_settings.bootstrap_secrets_dir``. ``manage.py initialize_bootstrap_secrets`` turns
+   each file into the Smarter admin's Secret of the file's name, and every service reads the Secret. Google
+   Maps' key has no fallback when its Secret is missing, and a Provider without a key says which Secret to
+   set.
+
+   Checking each credential's readers corrected phase 0 twice. ``smarter-worker-infrastructure`` sends email
+   (a custom domain's verification result), so it holds the SMTP credentials. Both workers sign what the
+   app verifies: an account contact's email carries an unsubscribe token signed with ``SECRET_KEY``. So
+   ``require_django_secret_key()`` still requires the key in the app, both workers and the init Job, and no
+   longer in Celery Beat and the migrate Job, which sign nothing. The Stripe keys are read by nothing, and
+   held by no pod.
 
 Phase 4, the egress proxy (Helm chart, smarter-infrastructure)
    Smokescreen in the namespace, in log-only mode, then enforcing, and the network policies of every pod

@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 from smarter.apps.account.models import Account, User, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.llmhost.api.v1.urls import LLMHostApiV1ReverseViews as Names
+from smarter.apps.llmhost.manifest.enum import SAMLLMHostQueuedMessage
 from smarter.apps.llmhost.models import LLMHost
 from smarter.lib import json
 from smarter.lib.typing import SmarterDictType
@@ -86,16 +87,39 @@ class TestLLMHostApi(LLMHostTestBase):
         plan = self.request("get", url(Names.plan_by_hashed_id, **kwargs))
         self.assertIn("Deployment", [r["kind"] for r in plan["resources"]])
         deployed = self.request("post", url(Names.deploy_by_hashed_id, **kwargs), status=HTTPStatus.ACCEPTED)
-        self.assertEqual(deployed["status"], "provisioning")
+        # the api answers before the queued launch runs.
+        self.assertEqual(deployed["message"], SAMLLMHostQueuedMessage.LAUNCH.value)
+        self.queued_tasks["launch_llmhost"].assert_called_once_with(self.llmhost.pk)
+        self.llmhost.refresh_from_db()
+        self.assertEqual(self.llmhost.status, "provisioning")
         self.simulate_ready(self.llmhost)
         status = self.request("get", url(Names.status_by_hashed_id, **kwargs))
         self.assertEqual((status["status"], status["readyReplicas"]), ("active", 1))
         self.cluster.pod_logs = "INFO started"
         self.assertEqual(self.request("get", url(Names.logs_by_hashed_id, **kwargs))["logs"], "INFO started")
         self.request("get", url(Names.logs_by_hashed_id, **kwargs) + "?tail=x", status=HTTPStatus.BAD_REQUEST)
-        undeployed = self.request("post", url(Names.undeploy_by_hashed_id, **kwargs) + "?purge=true")
-        self.assertEqual(undeployed["status"], "inactive")
+        undeployed = self.request(
+            "post", url(Names.undeploy_by_hashed_id, **kwargs) + "?purge=true", status=HTTPStatus.ACCEPTED
+        )
+        self.assertEqual(undeployed["message"], SAMLLMHostQueuedMessage.UNDEPLOY.value)
+        self.queued_tasks["destroy_llmhost"].assert_called_once_with(self.llmhost.pk, purge=True)
+        self.llmhost.refresh_from_db()
+        self.assertEqual(self.llmhost.status, "inactive")
         self.assertEqual(self.cluster.resources, {})
+
+    def test_the_request_writes_nothing_to_the_cluster(self):
+        """Deploy, undeploy and delete only queue tasks: the infrastructure worker makes every change (#1080)."""
+        kwargs = {"hashed_id": self.llmhost.hashed_id}
+        with self.holding_queued_tasks() as queued:
+            self.request("post", url(Names.deploy_by_hashed_id, **kwargs), status=HTTPStatus.ACCEPTED)
+            self.request("post", url(Names.undeploy_by_hashed_id, **kwargs), status=HTTPStatus.ACCEPTED)
+            self.request("delete", url(Names.llmhost_by_hashed_id, **kwargs), status=HTTPStatus.ACCEPTED)
+        queued["launch_llmhost"].assert_called_once_with(self.llmhost.pk)
+        queued["destroy_llmhost"].assert_called_once_with(self.llmhost.pk, purge=False)
+        queued["delete_llmhost"].assert_called_once_with(self.llmhost.pk)
+        self.assertEqual(self.cluster.applied, [])
+        self.assertEqual(self.cluster.deleted, [])
+        self.assertTrue(LLMHost.objects.filter(pk=self.llmhost.pk).exists())
 
     def test_cluster_unavailable(self):
         """Test that an unavailable cluster is 503."""
@@ -133,7 +157,6 @@ class TestLLMHostApi(LLMHostTestBase):
 
     def test_delete(self):
         llmhost = self.new_llmhost("test_api_delete")
-        self.request(
-            "delete", url(Names.llmhost_by_hashed_id, hashed_id=llmhost.hashed_id), status=HTTPStatus.NO_CONTENT
-        )
+        self.request("delete", url(Names.llmhost_by_hashed_id, hashed_id=llmhost.hashed_id), status=HTTPStatus.ACCEPTED)
+        self.queued_tasks["delete_llmhost"].assert_called_once_with(llmhost.pk)
         self.assertFalse(LLMHost.objects.filter(pk=llmhost.pk).exists())

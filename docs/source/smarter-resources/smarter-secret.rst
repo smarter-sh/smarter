@@ -36,6 +36,17 @@ Secret that the user owns, prompting for the value if ``--value`` is not given:
    python manage.py get_secret --name openai_api_key --username admin
    python manage.py update_secret --name openai_api_key --username admin
 
+The platform account's api keys, those of the built-in LLM providers, Google, the search plugins
+and the managed vector databases, are never environment variables. They are the platform's
+bootstrap secrets: one file per Secret, named after it, such as ``openai_api_key``. On
+Kubernetes, the Helm chart's ``bootstrapSecrets`` values become the Kubernetes Secret
+``smarter-bootstrap-secrets``, which only the init job mounts; locally, they are the files in
+the repository's gitignored ``bootstrap-secrets/`` folder, which only the ``smarter-api``
+container mounts. ``manage.py initialize_bootstrap_secrets``, which ``manage.py
+initialize_platform`` runs before the commands that use these Secrets, turns each file into the
+Smarter admin's Secret of that name. It creates a missing Secret, updates one whose value has changed, skips an empty file or a
+placeholder, and logs only the Secrets' names.
+
 
 
 Technical Reference

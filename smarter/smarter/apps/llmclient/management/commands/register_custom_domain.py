@@ -64,7 +64,10 @@ class Command(SmarterCommand):
             self.handle_completed_failure(msg=f"The domain name {domain} does not exist.")
             return None
 
-        if not register_custom_domain(account_id=account.id, domain_name=domain):
+        # None: the domain's zone and certificate exist, and the task looks for their validation records again
+        # later, in the infrastructure worker. Only False is a failure.
+        registered = register_custom_domain(account_id=account.id, domain_name=domain)
+        if registered is False:
             self.handle_completed_failure(
                 msg=f"Failed to register the domain name {domain} for account {account.account_number} {account.company_name}."
             )

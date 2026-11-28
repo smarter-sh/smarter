@@ -3,6 +3,10 @@ Celery tasks of the vectorstore app.
 
 - :func:`deploy_vectorstore`: create a vectorstore's database, and check it until it is ready.
   Queued by ``deploy``. Each run checks once, and queues itself again, rather than waiting.
+- :func:`provision_vectorstore`, :func:`undeploy_vectorstore` and :func:`delete_vectorstore`: apply a
+  self-hosted server's changed spec, stop serving, and destroy the database, then delete the vectorstore.
+  Queued by the service's ``queue_*`` methods: the web server only reads the cluster, and the
+  infrastructure worker makes every change (ADR-038, phase 3, issue #1080).
 - :func:`load_vectorstore_document`: split, embed and load a document. Queued when a document
   is added.
 - :func:`delete_vectorstore_document`: remove a document's chunks, then the document.
@@ -27,7 +31,7 @@ from .models import (
     VectorstoreMeta,
     VectorstoreStatus,
 )
-from .service import VectorstoreService
+from .service import VectorstoreService, VectorstoreServiceError
 
 logger = logging.getSmarterLogger(
     __name__, any_switches=[SmarterWaffleSwitches.TASK_LOGGING, SmarterWaffleSwitches.VECTORSTORE_LOGGING]
@@ -53,13 +57,8 @@ def deploy_vectorstore(vectorstore_id: int, deployment_id: str) -> Optional[str]
     :param deployment_id: The deploy's id. A deploy that another deploy replaced stops.
     :returns: The vectorstore's status after the check, or None if it does not exist.
     """
-    vectorstore = (
-        VectorstoreMeta.objects.select_related("user_profile", "connection", "api_key_secret")
-        .filter(pk=vectorstore_id)
-        .first()
-    )
+    vectorstore = queued_vectorstore(vectorstore_id)
     if vectorstore is None:
-        logger.warning("vectorstore %s does not exist.", vectorstore_id)
         return None
     service = VectorstoreService(vectorstore)
     countdown = service.deployment_step(deployment_id)
@@ -68,6 +67,114 @@ def deploy_vectorstore(vectorstore_id: int, deployment_id: str) -> Optional[str]
             kwargs={"vectorstore_id": vectorstore_id, "deployment_id": deployment_id}, countdown=countdown
         )
     return service.vectorstore.status
+
+
+def queued_vectorstore(vectorstore_id: int) -> Optional[VectorstoreMeta]:
+    """
+    Read a vectorstore that a task was queued for, with what its backend needs.
+
+    :param vectorstore_id: The vectorstore's id.
+    :returns: The vectorstore, or None, logged, if it no longer exists.
+    """
+    vectorstore = (
+        VectorstoreMeta.objects.select_related("user_profile", "connection", "api_key_secret")
+        .filter(pk=vectorstore_id)
+        .first()
+    )
+    if vectorstore is None:
+        logger.warning("vectorstore %s does not exist.", vectorstore_id)
+    return vectorstore
+
+
+def record_task_failure(service: VectorstoreService, action: str, error: Exception) -> None:
+    """
+    Record that a queued change to a vectorstore failed, as its status message, keeping its status.
+
+    Whoever queued the change has already been answered, so this is where they see why: describe, and the
+    console. :meth:`~smarter.apps.vectorstore.service.VectorstoreService.destroy` records its own failure, failed.
+
+    :param service: The vectorstore's service.
+    :param action: What failed, e.g. ``Undeploy``.
+    :param error: Why.
+    """
+    message = f"{action} failed: {error}"
+    logger.error("%s of %s", message, service.vectorstore)
+    service.set_status(service.vectorstore.status, message)
+
+
+@app.task(queue=INFRASTRUCTURE_QUEUE)
+def provision_vectorstore(vectorstore_id: int) -> Optional[str]:
+    """
+    Apply a deployed self-hosted vectorstore's changed server, e.g. its cpu or memory.
+
+    Queued by :meth:`~smarter.apps.vectorstore.service.VectorstoreService.queue_provision`, when the manifest
+    broker applies a changed spec. A failure is recorded on the vectorstore, not raised.
+
+    :param vectorstore_id: The vectorstore's id.
+    :returns: The vectorstore's status, or None if it does not exist.
+    """
+    vectorstore = queued_vectorstore(vectorstore_id)
+    if vectorstore is None:
+        return None
+    service = VectorstoreService(vectorstore)
+    try:
+        service.backend.provision()
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        record_task_failure(service, "Provisioning", e)
+        return service.vectorstore.status
+    service.set_status(service.vectorstore.status, "")
+    return service.vectorstore.status
+
+
+@app.task(queue=INFRASTRUCTURE_QUEUE)
+def undeploy_vectorstore(vectorstore_id: int) -> Optional[str]:
+    """
+    Stop serving a vectorstore: a self-hosted server is deleted, and its volume and data kept.
+
+    Queued by :meth:`~smarter.apps.vectorstore.service.VectorstoreService.queue_undeploy`. A failure is recorded
+    on the vectorstore, not raised.
+
+    :param vectorstore_id: The vectorstore's id.
+    :returns: The vectorstore's status, or None if it does not exist.
+    """
+    vectorstore = queued_vectorstore(vectorstore_id)
+    if vectorstore is None:
+        return None
+    service = VectorstoreService(vectorstore)
+    try:
+        service.undeploy()
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        record_task_failure(service, "Undeploy", e)
+    return service.vectorstore.status
+
+
+@app.task(queue=INFRASTRUCTURE_QUEUE)
+def delete_vectorstore(vectorstore_id: int) -> bool:
+    """
+    Destroy a vectorstore's database and data, then delete the vectorstore and its api key Secret.
+
+    Queued by :meth:`~smarter.apps.vectorstore.service.VectorstoreService.queue_delete`. A failure keeps the
+    vectorstore, with why, so that it can be deleted again.
+
+    :param vectorstore_id: The vectorstore's id.
+    :returns: True if the vectorstore was deleted.
+    """
+    vectorstore = queued_vectorstore(vectorstore_id)
+    if vectorstore is None:
+        return False
+    service = VectorstoreService(vectorstore)
+    try:
+        service.delete()
+    except VectorstoreServiceError as e:
+        # e.g. deletionProtection, enabled since the deletion was queued.
+        record_task_failure(service, "Delete", e)
+        return False
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        # destroy() has recorded the failure, failed.
+        logger.error("could not delete %s: %s", service.vectorstore, e)
+        return False
+    logger.info("deleted vectorstore %s", vectorstore_id)
+    return True
 
 
 @app.task(queue=QUEUE)
@@ -155,10 +262,15 @@ def maintain_vectorstores() -> SmarterDictType:
 
 
 __all__ = [
+    "delete_vectorstore",
     "delete_vectorstore_document",
     "deploy_vectorstore",
     "load_vectorstore_document",
     "maintain_vectorstores",
+    "provision_vectorstore",
+    "queued_vectorstore",
     "reconcile_vectorstores",
+    "record_task_failure",
     "snapshot_vectorstore",
+    "undeploy_vectorstore",
 ]

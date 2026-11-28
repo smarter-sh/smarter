@@ -20,6 +20,7 @@ from cache_results import lazy_cache
 from storages.backends.s3 import S3Storage
 
 from smarter.lib import logging
+from smarter.lib.cache.exceptions import CACHE_EXCEPTIONS
 from smarter.lib.typing import SmarterDictType
 
 logger = logging.getSmarterLogger(__name__)
@@ -71,9 +72,16 @@ def mark_uploaded(name: str) -> None:
     """
     Record that a static file is on the CDN's bucket, once ``collectstatic`` has uploaded every file.
 
+    While the cache can't be written, e.g. during a Redis outage, nothing is recorded, and :func:`is_uploaded` asks
+    the bucket instead.
+
     :param name: The file's name, relative to the static files' root.
     """
-    lazy_cache.set(UPLOADED_CACHE_KEY_PREFIX + name, True, timeout=None)
+    try:
+        lazy_cache.set(UPLOADED_CACHE_KEY_PREFIX + name, True, timeout=None)
+    except CACHE_EXCEPTIONS as e:
+        # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+        logger.warning("the cache failed, not recording that %s is uploaded: %s", name, e)
 
 
 def is_uploaded(name: str) -> bool:
@@ -81,7 +89,8 @@ def is_uploaded(name: str) -> bool:
     Whether a static file is on the CDN's bucket.
 
     It is if :func:`mark_uploaded` recorded it, or, without that record, e.g. after the cache was cleared, if the
-    bucket has it, which is then recorded.
+    bucket has it, which is then recorded. A record that can't be read, e.g. during a Redis outage, is treated as
+    missing.
 
     :param name: The file's name, relative to the static files' root.
     :returns: True if it is there; False if it isn't, or if the bucket can't be asked.
@@ -89,7 +98,13 @@ def is_uploaded(name: str) -> bool:
     # pylint: disable=import-outside-toplevel
     from django.contrib.staticfiles.storage import staticfiles_storage
 
-    if lazy_cache.get(UPLOADED_CACHE_KEY_PREFIX + name):
+    try:
+        recorded = lazy_cache.get(UPLOADED_CACHE_KEY_PREFIX + name)
+    except CACHE_EXCEPTIONS as e:
+        # one line, no traceback: Redis being away is an outage to report, not a bug to debug.
+        logger.warning("the cache failed, asking the bucket for %s: %s", name, e)
+        recorded = None
+    if recorded:
         return True
     try:
         found = staticfiles_storage.exists(name)

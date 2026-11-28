@@ -39,7 +39,7 @@ ERROR_REASONS = frozenset(
 """Container waiting reasons that do not resolve without a change to the spec or the cluster."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class LLMHostObservation:
     """
     What is known about an LLMHost, as of a status check.

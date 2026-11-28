@@ -57,7 +57,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/env: "{{ include (print $.Template.BasePath "/secret-env.yaml") $ | sha256sum }}"
+        checksum/env: "{{ include "smarter.podEnv" (dict "root" $ "pod" "api") | sha256sum }}"
       labels:
         app.kubernetes.io/name: "{{ $name }}"
         app.kubernetes.io/component: api
@@ -65,12 +65,12 @@ spec:
         meta.helm.sh/application-version: "{{ $.Chart.Version }}"
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
-      serviceAccountName: "{{ $.Values.global.appName }}"
+      serviceAccountName: "{{ $.Values.global.appName }}-api"
       affinity:
         {{- toYaml $.Values.global.affinity | nindent 8 }}
       tolerations:
         {{- toYaml $.Values.global.tolerations | nindent 8 }}
-      {{- include "smarter.waitForDatabase" $ | nindent 6 }}
+      {{- include "smarter.waitForDatabase" (dict "root" $ "pod" "api") | nindent 6 }}
       containers:
         - name: "{{ $.Values.global.appName }}"
           image: '{{ $.Values.env.SMARTER_DOCKER_IMAGE | default (printf "%s:%s" $.Values.global.image.repository $.Values.global.image.tag) }}'
@@ -93,10 +93,10 @@ spec:
           imagePullPolicy: '{{ $.Values.global.image.pullPolicy | default "Always" }}'
           resources:
             {{- toYaml $.Values.api.resources | nindent 12 }}
-          # the platform's environment, from the Secret in secret-env.yaml
+          # this kind of pod's environment, from its own Secret in secret-env.yaml: only its own credentials (ADR-038)
           envFrom:
             - secretRef:
-                name: "{{ $.Values.global.appName }}-env"
+                name: "{{ include "smarter.podEnvName" (dict "root" $ "pod" "api") }}"
           env:
             # the kind of pod, which smarter_settings names, and checks, when it starts.
             - name: SERVICE_TYPE

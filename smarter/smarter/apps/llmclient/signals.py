@@ -120,17 +120,6 @@ Example::
 llmclient_undeploy = Signal()
 
 # tasks
-pre_verify_certificate = Signal()
-"""
-Signal triggered before verifying a certificate.
-
-Arguments:
-    certificate_arn (str): The ARN of the certificate to be verified.
-
-Example::
-
-    pre_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn)
-"""
 pre_create_llmclient_request = Signal()
 """
 Signal triggered before creating an llmclient request.
@@ -268,18 +257,6 @@ Arguments:
 Example::
 
     pre_deploy_custom_api.send(sender=deploy_custom_api, llmclient_id=llmclient_id)
-"""
-
-post_verify_certificate = Signal()
-"""
-Signal triggered after verifying a certificate.
-
-Arguments:
-    certificate_arn (str): The ARN of the verified certificate.
-
-Example::
-
-    post_verify_certificate.send(sender=verify_certificate, certificate_arn=certificate_arn)
 """
 
 post_create_llmclient_request = Signal()

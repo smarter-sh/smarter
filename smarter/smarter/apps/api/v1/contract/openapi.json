@@ -26866,7 +26866,7 @@
     },
     "/llmhosts/{id}/deploy/": {
       "post": {
-        "description": "Launch the LLMHost's inference server on the platform's Kubernetes cluster. It creates billable infrastructure, e.g. GPU nodes, and returns before the server is ready. Only the LLMHost's owner may call it.",
+        "description": "Launch the LLMHost's inference server on the platform's Kubernetes cluster. It creates billable infrastructure, e.g. GPU nodes. It checks the budgets, the spec, its Secrets and the cluster, then queues the launch and returns at once: follow the status, which the platform's infrastructure worker updates. Only the LLMHost's owner may call it.",
         "operationId": "llmhost_deploy",
         "parameters": [
           {
@@ -27048,7 +27048,7 @@
     },
     "/llmhosts/{id}/undeploy/": {
       "post": {
-        "description": "Destroy the LLMHost's Kubernetes resources. The LLMHost remains. Only the LLMHost's owner may call it.",
+        "description": "Queue the destruction of the LLMHost's Kubernetes resources, and return at once, with the message Undeploy queued. The LLMHost remains. Only the LLMHost's owner may call it.",
         "operationId": "llmhost_undeploy",
         "parameters": [
           {
@@ -27076,7 +27076,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
@@ -28847,7 +28847,7 @@
     },
     "/vectorstores/{id}/undeploy/": {
       "post": {
-        "description": "Stop serving the vectorstore. A self-hosted server's data is kept. Only the vectorstore's owner may call it.",
+        "description": "Queue stopping serving the vectorstore, and return at once: the platform's infrastructure worker stops it. A self-hosted server's data is kept. Only the vectorstore's owner may call it.",
         "operationId": "vectorstore_undeploy",
         "parameters": [
           {
@@ -28861,7 +28861,7 @@
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
