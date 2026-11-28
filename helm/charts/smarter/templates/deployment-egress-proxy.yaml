@@ -1,0 +1,102 @@
+# -----------------------------------------------------------------------------------
+# Deployment Manifest for the egress proxy (ADR-038, phase 4, #1085)
+#
+# Stripe's Smokescreen, an HTTP CONNECT proxy, which the app, the workers, Beat and the
+# Jobs send their HTTP and HTTPS requests through (smarter.egressProxyEnv in _helpers.tpl).
+# It allows hosts by name, refuses private, link-local and metadata addresses, and logs one
+# JSON line per connection, CANONICAL-PROXY-DECISION, with the host, the client pod's
+# address and enforce_would_deny: whether the allowlist would refuse it. Its configuration
+# is configmap-egress-proxy.yaml.
+#
+# - Usage: Managed via Helm; values are set in values.yaml (egressProxy). Off by default.
+# - Its pods are in the application-group <appName>-egress, not <appName>, so that
+#   smarter-infrastructure's policies for them are their own: the platform's pods may
+#   reach them on egressProxy.port, and they may reach DNS and the internet's public
+#   addresses on 443 and 80, and nothing else.
+# - No ServiceAccount token, no Secret, no environment: it holds nothing of the platform's.
+# - It runs as the platform's non-root user (global.podSecurityContext), from a read-only
+#   root filesystem: Smokescreen writes nothing but its log, to stderr.
+# -----------------------------------------------------------------------------------
+{{- if .Values.egressProxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}-egress"
+  name: "{{ .Values.global.appName }}-egress-proxy"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  replicas: {{ .Values.egressProxy.replicaCount | default 2 }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: "{{ include (print $.Template.BasePath "/configmap-egress-proxy.yaml") . | sha256sum }}"
+      labels:
+        app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+        app.kubernetes.io/application-group: "{{ .Values.global.appName }}-egress"
+    spec:
+      automountServiceAccountToken: false
+      affinity:
+        {{- toYaml .Values.global.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.global.tolerations | nindent 8 }}
+      containers:
+        - name: "{{ .Values.global.appName }}-egress-proxy"
+          image: {{ .Values.egressProxy.image | quote }}
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config-file"
+            - "/etc/smokescreen/config.yaml"
+            - "--listen-ip"
+            - "0.0.0.0"
+            - "--listen-port"
+            - "{{ .Values.egressProxy.port | default 4750 }}"
+          ports:
+            - name: proxy
+              containerPort: {{ .Values.egressProxy.port | default 4750 }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.egressProxy.resources | nindent 12 }}
+          # the image is distroless: no shell for an exec probe, and Smokescreen's /healthcheck needs
+          # a handler that its binary doesn't install. A TCP connection shows that it is listening.
+          readinessProbe:
+            tcpSocket:
+              port: proxy
+            initialDelaySeconds: 2
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: proxy
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/smokescreen
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: "{{ .Values.global.appName }}-egress-proxy"
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      restartPolicy: Always
+      securityContext:
+        {{- toYaml .Values.global.podSecurityContext | nindent 8 }}
+{{- end }}

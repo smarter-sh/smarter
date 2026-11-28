@@ -141,6 +141,7 @@ spec:
               # passed only when no backup account is configured (SMARTER_SUBSYSTEM_SQL_BACKUP_PASSWORD).
               # The passwords and AWS keys are read from the backup Job's Secret in secret-env.yaml.
               env:
+                {{- include "smarter.egressProxyEnv" $ | nindent 16 }}
                 - name: SMARTER_SUBSYSTEM_SQL_HOST
                   value: {{ $env.SMARTER_SUBSYSTEM_SQL_HOST | quote }}
                 - name: SMARTER_SUBSYSTEM_SQL_PORT
@@ -232,6 +233,7 @@ spec:
                 # the kind of pod, which smarter_settings names, and checks, when it starts.
                 - name: SERVICE_TYPE
                   value: "job-backup"
+                {{- include "smarter.egressProxyEnv" $ | nindent 16 }}
                 {{- range $env := .Values.api.env }}
                 - name: {{ $env.name }}
                   value: {{ $env.value | quote }}
