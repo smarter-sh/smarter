@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.6](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give each kind of pod a Secret of its own credentials ([b130796](https://github.com/smarter-sh/smarter/commit/b130796b00f1f8a5417a2550e8b87cd76d0809cb)), closes [#1084](https://github.com/smarter-sh/smarter/issues/1084)
+
 ## [1.0.0-alpha.5](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2026-11-28)
 
 ### Bug Fixes
