@@ -1,0 +1,51 @@
+# -----------------------------------------------------------------------------------
+# The egress proxy's configuration (ADR-038, phase 4, #1085): Smokescreen's config.yaml
+# and its ACL, acl.yaml, which deployment-egress-proxy.yaml mounts.
+#
+# - config.yaml: allow_missing_role, because the platform's pods present no TLS client
+#   certificate, from which Smokescreen would take each client's role: every request gets
+#   the ACL's default rule. Without it, Smokescreen refuses every request ("Client role
+#   cannot be determined"). Its pods log each request's client address, which names the pod.
+#   idle_timeout closes a tunnel after 15 minutes without a byte either way; an LLM's
+#   answer can take minutes, so no shorter.
+# - acl.yaml: the default rule, whose action is egressProxy.action (report: allow every
+#   host, and log the unlisted ones with enforce_would_deny; enforce: refuse them), and
+#   whose allowed_domains are egressProxy.allowedDomains, with the AWS endpoints of
+#   env.AWS_REGION and the account manager's api, api.am.<root domain>.
+#
+# Private, link-local and metadata addresses are refused by Smokescreen itself, whatever the
+# action. The pods send the cluster's services around the proxy (smarter.egressProxyNoProxy).
+# -----------------------------------------------------------------------------------
+{{- if .Values.egressProxy.enabled }}
+{{- $region := .Values.env.AWS_REGION | default "us-east-1" }}
+{{- $aws := list "sts.amazonaws.com" (printf "sts.%s.amazonaws.com" $region) "s3.amazonaws.com" (printf "s3.%s.amazonaws.com" $region) "route53.amazonaws.com" (printf "acm.%s.amazonaws.com" $region) (printf "eks.%s.amazonaws.com" $region) (printf "ec2.%s.amazonaws.com" $region) (printf "autoscaling.%s.amazonaws.com" $region) (printf "email.%s.amazonaws.com" $region) }}
+{{- $domains := concat (.Values.egressProxy.allowedDomains | default list) $aws }}
+{{- with .Values.env.SMARTER_PLATFORM_ROOT_DOMAIN }}
+{{- $domains = append $domains (printf "api.am.%s" .) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Values.global.appName }}-egress-proxy"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/name: "{{ .Values.global.appName }}-egress-proxy"
+    app.kubernetes.io/application-group: "{{ .Values.global.appName }}-egress"
+data:
+  config.yaml: |
+    allow_missing_role: true
+    acl_file: /etc/smokescreen/acl.yaml
+    idle_timeout: 15m
+  acl.yaml: |
+    version: v1
+    services: []
+    default:
+      name: "{{ .Values.global.appName }}"
+      project: "{{ .Values.global.appName }}"
+      action: {{ .Values.egressProxy.action | default "report" }}
+      allowed_domains:
+        {{- range $domain := uniq $domains }}
+        - {{ $domain | quote }}
+        {{- end }}
+{{- end }}

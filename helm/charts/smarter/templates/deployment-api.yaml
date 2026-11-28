@@ -101,6 +101,7 @@ spec:
             # the kind of pod, which smarter_settings names, and checks, when it starts.
             - name: SERVICE_TYPE
               value: "api"
+            {{- include "smarter.egressProxyEnv" $ | nindent 12 }}
             {{- range $env := $.Values.api.env }}
             - name: {{ $env.name }}
               value: {{ $env.value | quote }}

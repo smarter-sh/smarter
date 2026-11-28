@@ -421,3 +421,70 @@ that upgrades from an older release turns it on for one upgrade (see values.yaml
 {{- end -}}
 {{- join "," $names -}}
 {{- end }}
+
+{{/*
+The egress proxy's url (ADR-038, phase 4): its Service, egressProxy in values.yaml.
+*/}}
+{{- define "smarter.egressProxyUrl" -}}
+{{- printf "http://%s-egress-proxy.%s.svc.cluster.local:%v" .Values.global.appName .Release.Namespace (.Values.egressProxy.port | default 4750) -}}
+{{- end }}
+
+{{/*
+The hosts that the platform's pods reach without the egress proxy, comma-separated, for NO_PROXY.
+
+Smokescreen refuses private, link-local and metadata addresses, whatever its action, so everything in
+the cluster and the VPC goes around it:
+
+- localhost, and the in-cluster names: .svc and .cluster.local, which the LLMHosts' and the self-hosted
+  vectorstores' endpoints use, and the short names that the settings use: Loki's (from
+  SMARTER_SUBSYSTEM_LOGGING_LOKI_URL), the database's (SMARTER_SUBSYSTEM_SQL_HOST) and the app's Services;
+- .eks.amazonaws.com, the cluster's api, which kubectl reaches at its private endpoint from inside the VPC;
+- the instance metadata service and the EKS pod identity agent;
+- the private ranges, for the clients that read CIDRs in NO_PROXY (requests, and Go's: kubectl). httpx,
+  urllib and botocore don't, so an address in them must be reached by a name listed here.
+
+egressProxy.noProxy adds to it.
+*/}}
+{{- define "smarter.egressProxyNoProxy" -}}
+{{- $hosts := list "localhost" "127.0.0.1" "::1" ".svc" ".cluster.local" ".eks.amazonaws.com" "169.254.169.254" "169.254.170.2" "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16" -}}
+{{- $loki := .Values.env.SMARTER_SUBSYSTEM_LOGGING_LOKI_URL | default "" -}}
+{{- if $loki -}}
+{{- $hosts = append $hosts (first (splitList ":" (urlParse $loki).host)) -}}
+{{- end -}}
+{{- with .Values.env.SMARTER_SUBSYSTEM_SQL_HOST -}}
+{{- $hosts = append $hosts . -}}
+{{- end -}}
+{{- range $name := splitList "," (include "smarter.apiNames" .) -}}
+{{- $hosts = append $hosts $name -}}
+{{- end -}}
+{{- $hosts = concat $hosts (.Values.egressProxy.noProxy | default list) -}}
+{{- join "," (uniq $hosts) -}}
+{{- end }}
+
+{{/*
+The environment that sends a container's HTTP and HTTPS requests through the egress proxy, with
+egressProxy.enabled, or nothing: entries of a container's env list.
+
+Both cases of each name: Python and Go read either, but curl and apt, which the backup's container runs,
+read only the lower case ones.
+
+  env:
+    - name: SERVICE_TYPE
+      value: "api"
+    {{- include "smarter.egressProxyEnv" $ | nindent 12 }}
+*/}}
+{{- define "smarter.egressProxyEnv" -}}
+{{- if .Values.egressProxy.enabled -}}
+{{- $url := include "smarter.egressProxyUrl" . -}}
+{{- $noProxy := include "smarter.egressProxyNoProxy" . -}}
+# the egress proxy (ADR-038, phase 4): egressProxy in values.yaml
+{{- range $name := list "HTTPS_PROXY" "https_proxy" "HTTP_PROXY" "http_proxy" }}
+- name: {{ $name }}
+  value: {{ $url | quote }}
+{{- end }}
+{{- range $name := list "NO_PROXY" "no_proxy" }}
+- name: {{ $name }}
+  value: {{ $noProxy | quote }}
+{{- end }}
+{{- end -}}
+{{- end }}
