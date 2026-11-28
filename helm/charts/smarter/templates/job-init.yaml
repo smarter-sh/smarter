@@ -142,8 +142,17 @@ spec:
             {{- toYaml .Values.global.containerSecurityContext | nindent 12 }}
           volumeMounts:
             {{- include "smarter.writableVolumeMounts" . | nindent 12 }}
+            # the platform's bootstrap secrets, which initialize_bootstrap_secrets turns into Smarter Secrets
+            # (issue #1099): at smarter_settings.bootstrap_secrets_dir's default. Only this Job mounts them.
+            - name: smarter-bootstrap-secrets
+              mountPath: /home/smarter_user/bootstrap-secrets
+              readOnly: true
       volumes:
         {{- include "smarter.writableVolumes" . | nindent 8 }}
+        - name: smarter-bootstrap-secrets
+          secret:
+            secretName: "{{ .Values.global.appName }}-bootstrap-secrets"
+            optional: true
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never

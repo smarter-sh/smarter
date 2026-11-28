@@ -60,13 +60,16 @@ Step 1: Obtain an Anthropic API key
 Step 2: Add the key to Smarter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open the Smarter deployment ``.env`` file and add the Anthropic key:
+Smarter keeps the Anthropic key as a Smarter Secret named ``anthropic_api_key``,
+not in ``.env``. Locally, write it into a file of that name in the repository's
+gitignored ``bootstrap-secrets/`` folder:
 
 .. code-block:: bash
 
-   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   mkdir -p bootstrap-secrets
+   printf %s 'sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' > bootstrap-secrets/anthropic_api_key
 
-If you use a deployment helper, add the value there instead.
+On Kubernetes, set ``bootstrapSecrets.anthropic_api_key`` in the Helm chart's values instead.
 
 .. caution::
 
@@ -178,7 +181,7 @@ Prompt the model with a coding task.
 Step 7: Installation Verification checklist
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` exists in ``.env``.
+- The Smarter Secret ``anthropic_api_key`` exists.
 - ``smarter apply`` exits without manifest errors.
 - ``smarter describe provider anthropic-opus`` returns ``verified: true``.
 - The provider is visible in the Smarter console.
@@ -256,8 +259,7 @@ Troubleshooting
 
 **Problem: Verification failed**
 
-- Verify ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` is present in ``.env``.
-- Restart Smarter after changing ``.env`` using your deployment workflow. The repository does not include a ``make restart`` target; for local Docker deployments use ``docker compose restart``.
+- Verify ``bootstrap-secrets/anthropic_api_key`` holds the key, then run ``docker exec smarter-api python manage.py initialize_platform``, which creates or updates the Secret ``anthropic_api_key``.
 - Confirm the API key is active and has not been revoked.
 - Ensure network access can reach ``https://api.anthropic.com``.
 

@@ -15,7 +15,7 @@ from smarter.apps.prompt.models import Prompt
 from smarter.apps.prompt.signals import (
     llm_provider_initialized,
 )
-from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
+from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_SECRET_NAMES
 from smarter.apps.provider.models import Provider
 from smarter.apps.provider.services.text_completion.const import OpenAIMessageKeys
 from smarter.apps.provider.services.text_completion.utils import (
@@ -414,7 +414,7 @@ class SmarterChatProviderBase(ChatDbMixin):
         """
         Log, with instructions, that the provider has no API key, and raise.
 
-        A built-in Provider is created without a key when the init Job's variable is not set, so
+        A built-in Provider is created without a key when its Secret doesn't exist, so
         that the platform runs without it. Its prompts fail here, with an error that the prompt's
         response reports, rather than in the provider's SDK. The key's only source is the Provider's
         API key Secret, which no service reads from the environment (ADR-038, phase 3): the error says
@@ -422,20 +422,32 @@ class SmarterChatProviderBase(ChatDbMixin):
 
         :raises SmarterConfigurationError: Always.
         """
-        env_var = BUILTIN_PROVIDER_API_KEY_ENV_VARS.get(
-            str(self.provider_name), f"APP_PROVIDER_{str(self.provider_name).upper()}_API_KEY"
-        )
+        secret_name = BUILTIN_PROVIDER_API_KEY_SECRET_NAMES.get(str(self.provider_name))
+        if secret_name is None:
+            # not a built-in Provider: its key is the Secret that its manifest names, not a bootstrap secret.
+            message = (
+                f"The {self.provider_name} Provider has no API key. Set the API key Secret that its manifest "
+                "names, in the web console or with smarter apply."
+            )
+            logger.error(
+                SmarterFormattedText.banner(
+                    f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
+                    "Set the API key Secret that its manifest names, in the web console or with smarter apply.",
+                )
+            )
+            raise SmarterConfigurationError(message)
         message = (
-            f"The {self.provider_name} Provider has no API key. Set the Provider's API key Secret, in the web "
-            f"console or with smarter apply. On a new platform, the init Job creates it from SMARTER_{env_var}."
+            f"The {self.provider_name} Provider has no API key. Set its API key Secret, {secret_name}, in the web "
+            "console or with smarter apply. On a new platform, the init Job creates it from the platform's "
+            "bootstrap secrets."
         )
         logger.error(
             SmarterFormattedText.banner(
                 f"[PROVIDER WITHOUT API KEY] Prompts to the {self.provider_name} Provider fail: it has no API key.",
-                "Set the Provider's API key Secret, in the web console or with smarter apply.",
+                f"Set its API key Secret, {secret_name}, in the web console or with smarter apply.",
                 "",
-                f"On a new platform, the init Job creates it from SMARTER_{env_var}, which",
-                "only the init Job reads: no service reads the key from its environment.",
+                "On a new platform, the init Job creates it from the platform's bootstrap secrets: the Helm",
+                f"chart's bootstrapSecrets, or, locally, bootstrap-secrets/{secret_name} (make bootstrap-secrets).",
             )
         )
         raise SmarterConfigurationError(message)

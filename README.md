@@ -142,9 +142,11 @@ This setup uses Docker and takes around 20 minutes for first time installations.
 
 2. Optionally, add your credentials to [.env](./.env.example) in the root of
    this repo. None are needed to run the platform locally: `make` creates `.env`
-   with the one required value, an encryption key. Add an LLM provider's API key,
-   such as `SMARTER_APP_PROVIDER_OPENAI_API_KEY`, so that the built-in LLMClients can answer
-   prompts. A feature whose setting is missing logs what to set when it is used.
+   with the one required value, an encryption key. Add an LLM provider's API key
+   so that the built-in LLMClients can answer prompts: keys aren't `.env` variables,
+   but files in the gitignored `bootstrap-secrets/` folder, named after their Smarter
+   Secret, e.g. `printf %s 'sk-...' > bootstrap-secrets/openai_api_key`. A feature
+   whose setting is missing logs what to set when it is used.
 
 3. Initialize, build and run the application locally.
 

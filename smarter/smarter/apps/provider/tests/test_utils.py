@@ -14,19 +14,6 @@ from .test_models import ProviderTestBase
 class TestProviderUtils(ProviderTestBase):
     """Test the provider utils."""
 
-    def test_initialize_secret(self):
-        """Test that a secret is created, then updated, and that an error returns None."""
-        name = f"test_provider_utils_secret_{self.hash_suffix}"
-        self.addCleanup(Secret.objects.filter(name=name).delete)
-        secret = utils.initialize_secret("first", name, "a test secret", self.user_profile)
-        assert secret is not None
-        self.assertEqual(secret.get_secret(), "first")
-        secret = utils.initialize_secret("second", name, "a test secret", self.user_profile)
-        assert secret is not None
-        self.assertEqual(Secret.objects.get(pk=secret.pk).get_secret(), "second")
-        with patch.object(Secret.objects, "update_or_create", side_effect=RuntimeError("database down")):
-            self.assertIsNone(utils.initialize_secret("third", name, "a test secret", self.user_profile))
-
     def test_web_page(self):
         page = MagicMock(status_code=200, text="<!DOCTYPE html><html>Terms of Service</html>")
         with patch.object(utils.requests, "get", return_value=page):
@@ -79,8 +66,8 @@ class TestProviderUtils(ProviderTestBase):
         self.addCleanup(lambda: (other_user_profile.delete(), other_user.delete(), other_account.delete()))
         for user_profile in (self.user_profile, other_user_profile):
             self.addCleanup(Secret.objects.filter(name=name, user_profile=user_profile).delete)
-        utils.initialize_secret('{"type": "admin"}', name, "test", self.user_profile)
-        utils.initialize_secret('{"type": "other"}', name, "test", other_user_profile)
+        for value, owner in (('{"type": "admin"}', self.user_profile), ('{"type": "other"}', other_user_profile)):
+            Secret.objects.create(name=name, user_profile=owner, encrypted_value=Secret.encrypt(value))
         credentials = MagicMock(token="bearer-token")
         cached_objects = MagicMock(smarter_admin_user_profile=self.user_profile)
         with (

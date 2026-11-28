@@ -714,10 +714,11 @@ class TestChatProviderBaseUnits(SmarterTestBase):
             "default_temperature": 0.5,
             "default_max_tokens": 100,
         }
-        for provider_name, env_var, api_key in (
-            ("openai", "APP_PROVIDER_OPENAI_API_KEY", None),
-            ("googleai", "APP_PROVIDER_GEMINI_API_KEY", ""),
-            ("custom", "APP_PROVIDER_CUSTOM_API_KEY", "SET-ME-PLEASE"),
+        # a built-in Provider names its bootstrap secret; another one, the Secret that its manifest names.
+        for provider_name, expected, api_key in (
+            ("openai", "openai_api_key", None),
+            ("googleai", "gemini_api_key", ""),
+            ("custom", "the API key Secret that its manifest names", "SET-ME-PLEASE"),
         ):
             with (
                 self.subTest(provider=provider_name),
@@ -731,10 +732,13 @@ class TestChatProviderBaseUnits(SmarterTestBase):
             ):
                 with self.assertRaises(SmarterConfigurationError) as context:
                     self.client.validate()
-                self.assertIn(f"SMARTER_{env_var}", str(context.exception))
+                self.assertIn(expected, str(context.exception))
                 self.assertIn("API key Secret", str(context.exception))
+                self.assertNotIn("SMARTER_APP_PROVIDER_", str(context.exception))
                 self.assertNotIn("docker exec smarter-api", str(context.exception))
-                self.assertIn(f"SMARTER_{env_var}", logger.error.call_args.args[0])
+                self.assertIn(expected, logger.error.call_args.args[0])
+                if provider_name == "custom":
+                    self.assertNotIn("bootstrap", str(context.exception))
 
     def test_default_model_from_the_provider(self):
         self.patch_properties(provider=MagicMock(default_model="provider-model"))

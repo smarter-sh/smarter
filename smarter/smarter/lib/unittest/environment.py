@@ -17,8 +17,6 @@ from unittest.mock import patch
 
 from smarter.common.conf import Settings
 from smarter.common.conf.credentials import (
-    SecretBootstrapVariable,
-    bootstrap_variable_names,
     environment_variables,
     is_credential,
     restricted_workers_may_hold,
@@ -32,9 +30,6 @@ def forbidden_credential_variables() -> list[str]:
     """
     Return the environment variables of every credential that the restricted workers must not hold.
 
-    Every credential setting's but their Redis password's, and every :class:`SecretBootstrapVariable`, which has no
-    setting, with and without its prefix.
-
     :returns: The variables' names, e.g. ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``.
     """
     retval: list[str] = []
@@ -44,8 +39,6 @@ def forbidden_credential_variables() -> list[str]:
         if restricted_workers_may_hold(field):
             continue
         retval.extend(environment_variables(name, field))
-    for bootstrap_name in SecretBootstrapVariable.all():
-        retval.extend(bootstrap_variable_names(bootstrap_name))
     return retval
 
 

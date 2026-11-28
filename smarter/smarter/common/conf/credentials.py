@@ -31,93 +31,9 @@ from pydantic.fields import FieldInfo
 
 from smarter.common.conf.env import is_missing_value
 from smarter.common.const import SmarterKubernetesPodKinds
-from smarter.common.enum import SmarterEnumAbstract
 
 ENVIRONMENT_PREFIX = "SMARTER_"
 """The prefix of a setting's environment variable, as ``Settings.model_config``'s ``env_prefix``."""
-
-
-class SecretBootstrapVariable(SmarterEnumAbstract):
-    """
-    The environment variables from which the init Job creates Smarter Secrets, and that nothing else reads.
-
-    Temporary. These are three apps' names (provider, llmtool, vectorstore), listed here, in the settings' layer,
-    only because they reach the init Job as environment variables, and the settings' checks, which run before any
-    app is loaded, must keep them out of every other pod and out of the log. The keys are to reach the init Job as a
-    Kubernetes Secret instead, keyed by the Smarter Secrets' own names, and this class then goes.
-
-    ``initialize_providers``, ``initialize_llmtool_api_keys`` and ``initialize_vectorstore_providers``, which
-    ``initialize_platform`` runs, read each one (with ``get_env``, as ``SMARTER_<value>`` or ``<value>``) and store it
-    as the Smarter Secret that its member names. From then on, every service reads the Secret, never the variable,
-    and no setting exists for it: a credential with a Smarter Secret has one source. So the init Job (``job-init``)
-    alone holds them, and :func:`forbidden_credentials` reports them in any other pod. A test keeps the members equal
-    to the variables that those commands read.
-    """
-
-    LLMTOOL_BRAVE_SEARCH = "APP_LLMTOOL_BRAVE_SEARCH_API_KEY"
-    """``initialize_llmtool_api_keys`` stores it as the Secret ``brave_search_api_key``."""
-
-    LLMTOOL_TAVILY = "APP_LLMTOOL_TAVILY_API_KEY"
-    """``initialize_llmtool_api_keys`` stores it as the Secret ``tavily_api_key``."""
-
-    PROVIDER_ANTHROPIC = "APP_PROVIDER_ANTHROPIC_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``anthropic_api_key``."""
-
-    PROVIDER_COHERE = "APP_PROVIDER_COHERE_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``cohere_api_key``."""
-
-    PROVIDER_FIREWORKS = "APP_PROVIDER_FIREWORKS_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``fireworks_api_key``."""
-
-    PROVIDER_GEMINI = "APP_PROVIDER_GEMINI_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``gemini_api_key``."""
-
-    PROVIDER_GOOGLE_MAPS = "APP_PROVIDER_GOOGLE_MAPS_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``google_maps_api_key``."""
-
-    PROVIDER_GOOGLE_SERVICE_ACCOUNT = "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64"
-    """``initialize_providers`` stores it as the Secret ``google_service_account``."""
-
-    PROVIDER_LLAMA = "APP_PROVIDER_LLAMA_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``llama_api_key``."""
-
-    PROVIDER_MISTRAL = "APP_PROVIDER_MISTRAL_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``mistral_api_key``."""
-
-    PROVIDER_OPENAI = "APP_PROVIDER_OPENAI_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``openai_api_key``."""
-
-    PROVIDER_TOGETHERAI = "APP_PROVIDER_TOGETHERAI_API_KEY"
-    """``initialize_providers`` stores it as the Secret ``togetherai_api_key``."""
-
-    VECTORSTORE_PINECONE = "APP_VECTORSTORE_PINECONE_API_KEY"
-    """``initialize_vectorstore_providers`` stores it as the Secret ``pinecone_api_key``."""
-
-    VECTORSTORE_QDRANT_CLOUD = "APP_VECTORSTORE_QDRANT_CLOUD_API_KEY"
-    """``initialize_vectorstore_providers`` stores it as the Secret ``qdrant_cloud_api_key``."""
-
-
-def bootstrap_variable_names(name: str) -> list[str]:
-    """
-    Return the environment variables that a bootstrap variable is read from, as ``get_env`` reads it.
-
-    :param name: The variable, without the prefix, e.g. ``APP_PROVIDER_OPENAI_API_KEY``.
-    :returns: ``SMARTER_<name>``, which the Helm chart sets, then ``<name>``.
-    """
-    names = [f"{ENVIRONMENT_PREFIX}{name}", name]
-    return names
-
-
-def is_bootstrap_variable(variable: str) -> bool:
-    """
-    Return whether an environment variable is one of :class:`SecretBootstrapVariable`, with or without its prefix.
-
-    :param variable: The variable, e.g. ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``.
-    :returns: True if it is.
-    """
-    name = variable.removeprefix(ENVIRONMENT_PREFIX)
-    retval = name in SecretBootstrapVariable.all()
-    return retval
 
 
 AWS_POD_KINDS: tuple[str, ...] = (
@@ -242,8 +158,6 @@ def forbidden_credentials(
     """
     Return the names of the credentials that a kind of pod was given, but doesn't use.
 
-    That includes :class:`SecretBootstrapVariable`, named by their variable, in every pod but the init Job.
-
     A credential counts only if the process's environment sets one of its variables to a value. A value that the
     settings derive themselves, e.g. a generated Fernet key or the local environment's default database
     password, is not one that the worker was given, and doesn't count. Names only: never a value.
@@ -251,7 +165,7 @@ def forbidden_credentials(
     :param settings: The settings.
     :param environ: The process's environment, e.g. ``os.environ``.
     :param pod_kind: The kind of pod, e.g. ``worker``. The tool worker's by default.
-    :returns: The settings' names, and the bootstrap variables' names, sorted, or an empty list.
+    :returns: The settings' names, sorted, or an empty list.
     """
     retval: list[str] = []
     for name, field in type(settings).model_fields.items():
@@ -261,11 +175,6 @@ def forbidden_credentials(
             continue
         if is_given(environ, environment_variables(name, field)):
             retval.append(name)
-    if pod_kind != SmarterKubernetesPodKinds.JOB_INIT:
-        for bootstrap_name in SecretBootstrapVariable.all():
-            for variable in bootstrap_variable_names(bootstrap_name):
-                if is_given(environ, [variable]):
-                    retval.append(variable)
     retval.sort()
     return retval
 
@@ -279,7 +188,6 @@ def credential_holders_by_variable(settings_class: type[BaseModel]) -> dict[str,
 
     :param settings_class: The settings' class, :class:`smarter.common.conf.settings.Settings`.
     :returns: Each variable, sorted, and its pod kinds, sorted. A credential that no pod holds maps to an empty list.
-        Each of :class:`SecretBootstrapVariable` maps to the init Job alone.
     """
     retval: dict[str, list[str]] = {}
     for name, field in settings_class.model_fields.items():
@@ -289,9 +197,6 @@ def credential_holders_by_variable(settings_class: type[BaseModel]) -> dict[str,
         pods = sorted(holders)
         for variable in environment_variables(name, field):
             retval[variable] = pods
-    for bootstrap_name in SecretBootstrapVariable.all():
-        variable = f"{ENVIRONMENT_PREFIX}{bootstrap_name}"
-        retval[variable] = [SmarterKubernetesPodKinds.JOB_INIT]
     sorted_retval = dict(sorted(retval.items()))
     return sorted_retval
 
@@ -336,14 +241,11 @@ __all__ = [
     "AWS_POD_KINDS",
     "CHART_CREDENTIALS_PATH",
     "ENVIRONMENT_PREFIX",
-    "SecretBootstrapVariable",
     "HeldBy",
-    "bootstrap_variable_names",
     "credential_holders",
     "credential_holders_by_variable",
     "environment_variables",
     "forbidden_credentials",
-    "is_bootstrap_variable",
     "is_given",
     "is_credential",
     "may_hold",

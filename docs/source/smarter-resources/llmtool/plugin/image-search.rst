@@ -70,9 +70,10 @@ The plugin needs a Brave Search API key, in the Smarter Secret that the manifest
 1. Sign up at the `Brave Search API dashboard <https://api-dashboard.search.brave.com>`__,
    subscribe to a plan that includes image search, and create an
    `api key <https://api-dashboard.search.brave.com/app/keys>`__.
-2. Set ``SMARTER_APP_LLMTOOL_BRAVE_SEARCH_API_KEY`` in ``.env``, and run ``manage.py initialize_llmtool_api_keys``,
-   which ``initialize_platform`` also runs, to store it as the Secret. Alternatively, apply a
-   Secret manifest named ``brave_search_api_key``.
+2. Write it into ``bootstrap-secrets/brave_search_api_key`` (on Kubernetes, the Helm chart's
+   ``bootstrapSecrets.brave_search_api_key``), and run ``manage.py initialize_platform``, whose
+   ``initialize_bootstrap_secrets`` stores it as the Secret. Alternatively, apply a Secret
+   manifest named ``brave_search_api_key``.
 
 If the Secret is missing, the plugin returns an empty list, and logs a warning that explains how
 to create it. If Brave rejects the key, or its plan's quota is exceeded, the plugin also returns

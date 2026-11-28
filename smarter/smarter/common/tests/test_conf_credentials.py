@@ -5,27 +5,18 @@ Each credential says which kinds of pod hold it (ADR-038, phase 3). The tool wor
 no credential but their own Redis user's password (ADR-038, phase 2).
 """
 
-import inspect
 import json
 import os
 from unittest.mock import PropertyMock, patch
 
-from smarter.apps.llmtool.management.commands import initialize_llmtool_api_keys
-from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_ENV_VARS
-from smarter.apps.provider.management.commands import initialize_providers
-from smarter.apps.vectorstore.management.commands import (
-    initialize_vectorstore_providers,
-)
+from smarter.apps.provider.const import BUILTIN_PROVIDER_API_KEY_SECRET_NAMES
 from smarter.common.conf import Settings
 from smarter.common.conf.credentials import (
     CHART_CREDENTIALS_PATH,
-    SecretBootstrapVariable,
-    bootstrap_variable_names,
     credential_holders,
     credential_holders_by_variable,
     environment_variables,
     forbidden_credentials,
-    is_bootstrap_variable,
     is_credential,
     may_hold,
     render_chart_credentials,
@@ -81,12 +72,9 @@ class TestCredentials(SmarterTestBase):
             "SMARTER_SUBSYSTEM_SQL_PASSWORD": "SET-ME-PLEASE",
             "SMARTER_GITHUB_TOKEN": "  ",
         }
-        # a bootstrap variable is named by its variable: it has no setting.
-        self.assertEqual(
-            forbidden_credentials(settings, environ), ["SMARTER_APP_PROVIDER_OPENAI_API_KEY", "aws_secret_access_key"]
-        )
+        # a Provider's key has no setting, so it isn't a credential that a pod holds.
+        self.assertEqual(forbidden_credentials(settings, environ), ["aws_secret_access_key"])
         self.assertEqual(forbidden_credentials(settings, RESTRICTED_WORKER_ENVIRONMENT), [])
-        # the init Job holds the bootstrap variables, and the AWS key.
         self.assertEqual(forbidden_credentials(settings, environ, SmarterKubernetesPodKinds.JOB_INIT), [])
 
 
@@ -145,47 +133,11 @@ class TestHolders(SmarterTestBase):
         self.assertFalse(may_hold(fields["django_secret_key"], SmarterKubernetesPodKinds.JOB_MIGRATE))
 
     def test_a_credential_with_a_smarter_secret_has_no_setting(self):
-        """Each key that the init Job stores as a Smarter Secret has the Secret as its only source: no setting reads it."""
-        variables = []
-        for name, field in Settings.model_fields.items():
-            variables.extend(environment_variables(name, field))
-        for bootstrap_name in SecretBootstrapVariable.all():
-            with self.subTest(variable=bootstrap_name):
-                for variable in bootstrap_variable_names(bootstrap_name):
-                    self.assertNotIn(variable, variables)
-                    self.assertNotIn(bootstrap_name.lower(), Settings.model_fields)
-
-    def test_only_the_init_job_holds_the_bootstrap_variables(self):
-        holders = credential_holders_by_variable(Settings)
-        for bootstrap_name in SecretBootstrapVariable.all():
-            with self.subTest(variable=bootstrap_name):
-                self.assertEqual(holders[f"SMARTER_{bootstrap_name}"], [SmarterKubernetesPodKinds.JOB_INIT])
-        self.assertTrue(is_bootstrap_variable("SMARTER_APP_PROVIDER_OPENAI_API_KEY"))
-        self.assertTrue(is_bootstrap_variable("APP_PROVIDER_OPENAI_API_KEY"))
-        self.assertFalse(is_bootstrap_variable("SMARTER_GITHUB_TOKEN"))
-
-    def test_the_bootstrap_variables_are_what_the_init_commands_read(self):
-        """The list is the variables that initialize_providers, initialize_llmtool_api_keys and initialize_vectorstore_providers read."""
-        read = set(BUILTIN_PROVIDER_API_KEY_ENV_VARS.values())
-        read.update(
-            {
-                "APP_PROVIDER_GOOGLE_MAPS_API_KEY",
-                "APP_PROVIDER_GOOGLE_SERVICE_ACCOUNT_B64",
-                "APP_LLMTOOL_TAVILY_API_KEY",
-                "APP_LLMTOOL_BRAVE_SEARCH_API_KEY",
-                "APP_VECTORSTORE_PINECONE_API_KEY",
-                "APP_VECTORSTORE_QDRANT_CLOUD_API_KEY",
-            }
-        )
-        self.assertEqual(set(SecretBootstrapVariable.all()), read)
-        source = ""
-        for command in (initialize_providers, initialize_llmtool_api_keys, initialize_vectorstore_providers):
-            source += inspect.getsource(command)
-        for bootstrap_name in SecretBootstrapVariable.all():
-            with self.subTest(variable=bootstrap_name):
-                if bootstrap_name in BUILTIN_PROVIDER_API_KEY_ENV_VARS.values():
-                    continue
-                self.assertIn(f'"{bootstrap_name}"', source)
+        """A built-in Provider's key has its Smarter Secret as its only source: no setting reads it (issue #1099)."""
+        for secret_name in BUILTIN_PROVIDER_API_KEY_SECRET_NAMES.values():
+            with self.subTest(secret=secret_name):
+                for name in Settings.model_fields:
+                    self.assertFalse(name.endswith(secret_name), name)
 
     def test_the_committed_file_is_current(self):
         """Credentials.json, which make chart-credentials copies into the Helm chart, matches the settings."""
@@ -245,12 +197,12 @@ class TestRestrictedWorkerCredentials(SmarterTestBase):
 
     def test_a_restricted_worker_with_another_credential_is_refused(self):
         """A restricted worker given e.g. a provider's SmarterKubernetesPodKinds.API key refuses to start, naming the setting, not its value."""
-        environment = {**RESTRICTED_WORKER_ENVIRONMENT, "SMARTER_APP_PROVIDER_OPENAI_API_KEY": "sk-test-value"}
+        environment = {**RESTRICTED_WORKER_ENVIRONMENT, "GITHUB_TOKEN": "sk-test-value"}
         with patch.dict(os.environ, environment, clear=True):
             with self.assertRaises(SmarterConfigurationError) as raised:
                 Settings()
         message = str(raised.exception)
-        self.assertIn("SMARTER_APP_PROVIDER_OPENAI_API_KEY", message)
+        self.assertIn("github_token", message)
         self.assertNotIn("sk-test-value", message)
         self.assertNotIn("a-redis-password", message)
 

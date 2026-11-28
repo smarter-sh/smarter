@@ -171,10 +171,10 @@ Each credential setting also says which kinds of pod use it (``HeldBy`` in its a
 :mod:`smarter.common.conf.credentials`): e.g. Celery Beat holds only the database's and Redis's passwords.
 A credential that has a Smarter Secret, such as a built-in Provider's, a search service's or a managed vector
 database's key, has the Secret as its only source: no setting exists for it, and every service reads the
-Secret. Only the init Job holds its environment variable (``SecretBootstrapVariable``), from which
-``initialize_platform`` creates the Secret; any other pod that holds one reports it, and the startup log
-masks it. Outside the
-local environment, a pod that holds a credential that its kind doesn't use logs one error line naming
+Secret. No pod holds it in its environment: the chart's ``bootstrapSecrets`` values become the
+Kubernetes Secret ``smarter-bootstrap-secrets``, which only the init Job mounts, as one file per Smarter
+Secret, and ``manage.py initialize_bootstrap_secrets`` (run by ``initialize_platform``) creates each
+Secret from its file (issue #1099). Outside the local environment, a pod that holds a credential that its kind doesn't use logs one error line naming
 it, never its value (``Settings.check_pod_credentials()``), and starts; a later release will refuse it.
 Only those kinds of pod need the platform's Django secret key, too: Beat and the migrate Job, which sign
 nothing, start without it. ``make chart-credentials`` writes the same map, as JSON, for the Helm chart

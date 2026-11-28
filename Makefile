@@ -23,7 +23,7 @@ include .env
 # workspace, published to npm as @smarter.sh/ui-chat.
 
 
-.PHONY: api-contract chart-credentials chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
+.PHONY: api-contract bootstrap-secrets chart-credentials chat-contract extension-contract llmtool-list-contract llmclient-deployment-contract llmclient-architecture-contract console-session-contract i18n-messages all init activate collectstatic build run test clean tear-down lint analyze coverage pre-commit-init pre-commit-run release change-log \
 	terraform-init terraform-plan terraform-apply \
 	docker-check docker-init docker-shell docker-build docker-run docker-test docker-prune \
 	docker-build-for-react \
@@ -421,6 +421,16 @@ console: ## Install the pinned release of the web console into the static folder
 # make build in a smarter-console checkout, then make console-local CONSOLE_DIST=../smarter-console/dist
 console-local: ## Install a local smarter-console build: CONSOLE_DIST=../smarter-console/dist
 	python3 -I scripts/fetch_console.py --from-dir $(or $(CONSOLE_DIST),../smarter-console/dist)
+
+# ---------------------------------------------------------
+# Bootstrap secrets (issue #1099)
+# ---------------------------------------------------------
+# The local keys of the built-in Providers, the search plugins and the managed vector databases:
+# from .env's SMARTER_APP_*_API_KEY variables into bootstrap-secrets/, one file per Smarter Secret,
+# which smarter-api mounts and initialize_platform turns into Secrets. Then delete those variables
+# from .env, and run make docker-init. See scripts/bootstrap_secrets.py.
+bootstrap-secrets: ## Write .env's AI service keys into bootstrap-secrets/, one file per Smarter Secret
+	python3 -I scripts/bootstrap_secrets.py --env-file .env
 
 # Regenerate the Smarter Chat api contract's JSON Schema and examples from its Pydantic models
 # (smarter.apps.prompt.contract.models), in the smarter-api container. Run it after changing the

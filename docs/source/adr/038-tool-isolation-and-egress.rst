@@ -372,10 +372,12 @@ Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
 
    A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
    stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector
-   databases') have no setting: only the init Job reads their environment variables
-   (``SecretBootstrapVariable``), and every service reads the Secret. Google Maps' key used to fall back to
-   its environment variable when its Secret was missing, and no longer does; a Provider without a key now
-   says to set its Secret.
+   databases') have no setting and no environment variable (issue #1099). The chart's ``bootstrapSecrets``
+   values become the Kubernetes Secret ``smarter-bootstrap-secrets``, which only the init Job mounts, as
+   files, at ``smarter_settings.bootstrap_secrets_dir``. ``manage.py initialize_bootstrap_secrets`` turns
+   each file into the Smarter admin's Secret of the file's name, and every service reads the Secret. Google
+   Maps' key has no fallback when its Secret is missing, and a Provider without a key says which Secret to
+   set.
 
    Checking each credential's readers corrected phase 0 twice. ``smarter-worker-infrastructure`` sends email
    (a custom domain's verification result), so it holds the SMTP credentials. Both workers sign what the

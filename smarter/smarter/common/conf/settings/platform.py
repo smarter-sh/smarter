@@ -54,6 +54,27 @@ class PlatformSettings(BaseModel):
     :default: ``"/home/smarter_user/overrides/settings.yaml"``
     """
 
+    bootstrap_secrets_dir: str = Field(
+        "/home/smarter_user/bootstrap-secrets",
+        description="The folder of files from which the init Job creates Smarter Secrets, one per file.",
+        examples=["/home/smarter_user/bootstrap-secrets"],
+        title="Bootstrap Secrets Folder",
+    )
+    """
+    The folder from which ``manage.py initialize_bootstrap_secrets`` creates Smarter Secrets, one per file.
+
+    Each file is named after its Secret, e.g. ``openai_api_key``, and holds its value (issue #1099).
+
+    This is how a built-in Provider's, a search service's or a managed vector database's key reaches the platform,
+    rather than as an environment variable: the key's only source is then its Smarter Secret, which every service
+    reads. The Helm chart mounts the Kubernetes Secret ``smarter-bootstrap-secrets`` here, in the init Job only.
+    Locally, docker-compose mounts the repository's ``bootstrap-secrets/`` here, in ``smarter-api`` only, which
+    ``make bootstrap-secrets`` fills from ``.env``. A missing folder is not an error: there is nothing to create.
+
+    :type: str
+    :default: ``"/home/smarter_user/bootstrap-secrets"``
+    """
+
     service_type: Optional[str] = Field(
         None,
         validation_alias="SERVICE_TYPE",
