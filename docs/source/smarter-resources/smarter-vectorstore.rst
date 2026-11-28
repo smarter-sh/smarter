@@ -179,20 +179,26 @@ Managed Services
 ~~~~~~~~~~~~~~~~
 
 ``manage.py initialize_vectorstore_providers``, which ``initialize_platform`` runs, creates the
-ApiConnections of the managed services from these environment variables:
+ApiConnections of the managed services, from the platform's bootstrap Secrets and one setting:
 
 .. list-table::
    :header-rows: 1
 
    * - Service
-     - Environment variables
+     - Smarter Secret, setting
      - ApiConnection
    * - Pinecone
-     - ``APP_VECTORSTORE_PINECONE_API_KEY``
+     - ``pinecone_api_key``
      - ``pinecone``
    * - Qdrant Cloud
-     - ``APP_VECTORSTORE_QDRANT_CLOUD_URL``, ``APP_VECTORSTORE_QDRANT_CLOUD_API_KEY``
+     - ``qdrant_cloud_api_key``, ``SMARTER_APP_VECTORSTORE_QDRANT_CLOUD_URL``
      - ``qdrant_cloud``
+
+Smarter reaches a managed database from its tool worker, never from the app or its other workers
+(:doc:`ADR-038 </adr/038-tool-isolation-and-egress>`): the app embeds the texts and the query, and sends
+each operation, with the ApiConnection's url and api key, through the
+:doc:`tool runner <llmtool/runner>`. A Qdrant Cloud url must resolve to public addresses only, on any
+port: a Vectorstore can't point Smarter at a private network.
 
 A managed database's index name includes the account number, so that accounts that share a
 Pinecone project, or Qdrant Cloud cluster, never collide.
@@ -282,6 +288,7 @@ Technical Reference
    smarter-vectorstore/caching
    smarter-vectorstore/commands
    smarter-vectorstore/deployment
+   smarter-vectorstore/execution
    smarter-vectorstore/documents
    smarter-vectorstore/kubernetes
    smarter-vectorstore/manifest

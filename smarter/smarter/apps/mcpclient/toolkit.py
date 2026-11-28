@@ -29,11 +29,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from pydantic import JsonValue
-
-from smarter.apps.llmtool.runner import get_tool_runner
 from smarter.apps.mcpserver.services import is_staff_endpoint_url
-from smarter.lib import json, logging
+from smarter.lib import logging
 from smarter.lib.cache.tool_results import cached_tool_call
 from smarter.lib.django.waffle import SmarterWaffleSwitches
 from smarter.lib.typing import SmarterDictType
@@ -47,11 +44,10 @@ from .connection import (
     truncate,
 )
 from .exceptions import (
-    SmarterMCPClientConnectionError,
     SmarterMCPClientException,
     SmarterMCPClientToolError,
 )
-from .execution import READ_RESOURCE, TOOL, MCPToolCall
+from .execution import READ_RESOURCE, TOOL, MCPOperation, result_text, run_mcp_call
 from .models import MCPClient
 from .signals import (
     mcpclient_resource_read,
@@ -75,21 +71,6 @@ MAX_DESCRIPTION_LENGTH = 1024
 """The maximum length of a tool description offered to the LLM."""
 TOOL_CACHE_NAMESPACE = "mcpclient"
 """The namespace of MCP tool results in :func:`~smarter.lib.cache.tool_results.cached_tool_call`."""
-
-
-def result_text(value: JsonValue) -> str:
-    """
-    Return a tool runner's result as text for the LLM.
-
-    :param value: The result's ``value``: an MCP tool's text, or None.
-    :returns: The text, or JSON for any other value.
-    """
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value
-    text = json.dumps(value)
-    return text
 
 
 @dataclass(frozen=True)
@@ -296,17 +277,14 @@ class MCPToolkit:
                 connection.require_allowed_resource(uri)
             else:
                 connection.require_allowed_tool(function.tool_name or "")
-            operation = READ_RESOURCE if function.kind == READ_RESOURCE else TOOL
-            call = MCPToolCall(
-                endpoint=connection.endpoint(),
-                operation=operation,
+            operation: MCPOperation = READ_RESOURCE if function.kind == READ_RESOURCE else TOOL
+            result = run_mcp_call(
+                connection,
+                operation,
                 tool_name=function.tool_name or "",
                 uri=uri,
                 arguments=arguments,
             )
-            result = get_tool_runner().run(call)
-            if result.failure is not None:
-                raise SmarterMCPClientConnectionError(result.failure)
             text = result_text(result.value)
             if result.is_error:
                 # raised, rather than returned, so that an error is never cached.

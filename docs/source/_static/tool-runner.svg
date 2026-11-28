@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 1090" width="1300" height="1090" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 1200" width="1300" height="1200" role="img" aria-labelledby="t d">
 <title id="t">How an LLM tool call runs</title>
-<desc id="d">When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or ApiConnection.execute_query(), checks the permissions and the cache. On a cache miss it resolves the call: it reads the credential from its Smarter Secret, decrypts it, signs the acting user, and builds a ToolCall, such as an MCPToolCall, an ApiToolCall, an HttpToolCall or a WebFetchToolCall, of plain values that travel as JSON. It hands the call to the tool runner, from get_tool_runner(), which finds the executor of the call's kind in TOOL_EXECUTORS: execute_mcp_call for MCP clients, execute_api_call for API plugins, execute_sql_call for SQL plugins, through an SSH tunnel when the connection uses one, execute_extension_call for Extensions, whose third-party code gets its settings, switches and caller as plain values, execute_http_call for the web search apis (Brave, Tavily), the Brave image search, the checks of each image's url and websites' robots.txt, and execute_webfetch_call for the pages the web search plugin reads, with its domain policy and robots.txt checked again on each redirect. The executor reads no database and no Secret: it calls the MCP server, the api, the search api or the website, through safe_http, to public addresses only. It returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app sends the signals, stores the result in the cache, and gives it to the LLM. The in-process runner executes the call in the app's process. The remote runner sends it, as JSON, in a Celery task through Redis to the tool worker, smarter-worker-tools, which has no database, no Secret and no cloud credential: it runs the same executor, and returns the result through Redis.</desc>
+<desc id="d">When the LLM asks for a tool, the tool's code in the app, such as MCPToolkit.call() or ApiConnection.execute_query(), checks the permissions and the cache. On a cache miss it resolves the call: it reads the credential from its Smarter Secret, decrypts it, signs the acting user, and builds a ToolCall, such as an MCPToolCall, an ApiToolCall, an HttpToolCall or a WebFetchToolCall, of plain values that travel as JSON. It hands the call to the tool runner, from get_tool_runner(), which finds the executor of the call's kind in TOOL_EXECUTORS: execute_mcp_call for MCP clients, execute_api_call for API plugins, execute_sql_call for SQL plugins, through an SSH tunnel when the connection uses one, execute_extension_call for Extensions, whose third-party code gets its settings, switches and caller as plain values, execute_http_call for the web search apis (Brave, Tavily), the Brave image search, the checks of each image's url and websites' robots.txt, execute_webfetch_call for the pages the web search plugin reads, with its domain policy and robots.txt checked again on each redirect, and execute_vectorstore_call for a managed vectorstore's operations, on Pinecone or Qdrant Cloud, with its vectors embedded in the app. The executor reads no database and no Secret: it calls the MCP server, the api, the search api, the website or the vector database, to public addresses only. It returns a ToolCallResult, with a value, is_error, failure and status_code, and the tool's code in the app sends the signals, stores the result in the cache, and gives it to the LLM. The in-process runner executes the call in the app's process. The remote runner sends it, as JSON, in a Celery task through Redis to the tool worker, smarter-worker-tools, which has no database, no Secret and no cloud credential: it runs the same executor, and returns the result through Redis.</desc>
 <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C959F"/></marker><marker id="head-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1A7F37"/></marker><marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CF222E"/></marker><marker id="head-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980B9"/></marker></defs>
-<rect width="1300" height="1090" rx="14" fill="#F6F8FA"/>
+<rect width="1300" height="1200" rx="14" fill="#F6F8FA"/>
 <text x="650.0" y="34" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#24292F" text-anchor="middle">How an LLM tool call runs</text>
 <text x="650.0" y="54" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="normal" fill="#57606A" text-anchor="middle">resolved in the app, where the credentials are; executed by the tool runner, without them (ADR-038)</text>
 <text x="28" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">1 · In the app</text>
@@ -45,7 +45,7 @@
 <text x="442" y="448" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#116329" text-anchor="start">Redis</text>
 <text x="442" y="472" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">tools_celery_task_queue</text>
 <text x="442" y="490" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the task, then its result</text>
-<rect x="380" y="580" width="250" height="164" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<rect x="380" y="580" width="250" height="181" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
 <path d="M380,589 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
 <text x="392" y="598" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">Executors, by kind</text>
 <text x="392" y="622" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">TOOL_EXECUTORS</text>
@@ -55,16 +55,17 @@
 <text x="392" y="691" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">extension: execute_extension_call</text>
 <text x="392" y="708" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">http: execute_http_call</text>
 <text x="392" y="725" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">webfetch: execute_webfetch_call</text>
-<rect x="380" y="900" width="250" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M380,909 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
-<text x="392" y="918" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">ToolCallResult</text>
-<text x="392" y="942" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">JSON</text>
-<text x="392" y="960" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">value · is_error</text>
-<text x="392" y="977" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">failure · status_code</text>
-<text x="392" y="994" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">remote: back through Redis</text>
+<text x="392" y="742" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">vectorstore: execute_vectorstore_call</text>
+<rect x="380" y="1010" width="250" height="113" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M380,1019 a9,9 0 0 1 9,-9 h232 a9,9 0 0 1 9,9 v17 h-250 z" fill="#EAEEF2"/>
+<text x="392" y="1028" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">ToolCallResult</text>
+<text x="392" y="1052" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">JSON</text>
+<text x="392" y="1070" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">value · is_error</text>
+<text x="392" y="1087" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">failure · status_code</text>
+<text x="392" y="1104" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">remote: back through Redis</text>
 <text x="690" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">3 · Execution</text>
 <rect x="690" y="106" width="300" height="2" fill="#2980B9" fill-opacity="0.35"/>
-<rect x="676" y="150" width="328" height="716" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
+<rect x="676" y="150" width="328" height="826" rx="10" fill="none" stroke="#8C959F" stroke-width="1.2" stroke-dasharray="6 4"/>
 <text x="688" y="169" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="bold" fill="#57606A" text-anchor="start">no database · no Secrets</text>
 <text x="688" y="185" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">smarter-worker-tools (remote), or the app (in_process)</text>
 <rect x="690" y="200" width="300" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
@@ -103,6 +104,12 @@
 <text x="702" y="792" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">safe_http.fetch(redirect_policy=)</text>
 <text x="702" y="810" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a page that the LLM chose</text>
 <text x="702" y="827" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">policy and robots.txt on each hop</text>
+<rect x="690" y="860" width="300" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M690,869 a9,9 0 0 1 9,-9 h282 a9,9 0 0 1 9,9 v17 h-300 z" fill="#EAEEF2"/>
+<text x="702" y="878" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#24292F" text-anchor="start">execute_vectorstore_call()</text>
+<text x="702" y="902" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">QdrantClient · Pinecone</text>
+<text x="702" y="920" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">a managed vectorstore's operation,</text>
+<text x="702" y="937" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">its vectors embedded in the app</text>
 <text x="1046" y="100" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#2980B9" text-anchor="start">4 · The internet</text>
 <rect x="1046" y="106" width="226" height="2" fill="#2980B9" fill-opacity="0.35"/>
 <rect x="1046" y="200" width="226" height="79" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
@@ -139,6 +146,12 @@
 <text x="1058" y="792" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https · 443</text>
 <text x="1058" y="810" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">the pages the LLM reads</text>
 <text x="1058" y="827" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">and their robots.txt</text>
+<rect x="1046" y="860" width="226" height="96" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M1046,869 a9,9 0 0 1 9,-9 h208 a9,9 0 0 1 9,9 v17 h-226 z" fill="#FFF1E5"/>
+<text x="1058" y="878" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="bold" fill="#8A4600" text-anchor="start">Vector databases</text>
+<text x="1058" y="902" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start">https · 443 or 6333</text>
+<text x="1058" y="920" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">Pinecone, or the Qdrant Cloud</text>
+<text x="1058" y="937" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#24292F" text-anchor="start">cluster of the ApiConnection</text>
 <path d="M178.0,246 L178.0,288" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
 <path d="M178.0,403 L178.0,448" fill="none" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
 <text x="190" y="432" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">on a cache miss</text>
@@ -152,29 +165,31 @@
 <text x="540" y="556" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#2980B9" text-anchor="start" font-style="italic">the worker takes it</text>
 <path d="M400,396 L400,578" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
 <text x="412" y="568" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="normal" fill="#57606A" text-anchor="start" font-style="italic">in_process</text>
-<path d="M630,662.0 L660,662.0 L660,248.0 L688,248.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,662.0 L660,662.0 L660,358.0 L688,358.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,662.0 L660,662.0 L660,468.0 L688,468.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,662.0 L660,662.0 L660,578.0 L688,578.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,662.0 L660,662.0 L660,688.0 L688,688.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<path d="M630,662.0 L660,662.0 L660,798.0 L688,798.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,248.0 L688,248.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,358.0 L688,358.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,468.0 L688,468.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,578.0 L688,578.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,688.0 L688,688.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,798.0 L688,798.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<path d="M630,670.5 L660,670.5 L660,908.0 L688,908.0" fill="none" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
 <path d="M990,248.0 L1044,239.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
 <path d="M990,358.0 L1044,349.5" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
 <path d="M990,468.0 L1044,468.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
 <path d="M990,578.0 L1044,578.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
 <path d="M990,688.0 L1044,688.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
 <path d="M990,798.0 L1044,798.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
-<path d="M840.0,866 L840.0,956.5 L630,956.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<path d="M378,956.5 L344,956.5 L344,346.5 L328,346.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<rect x="28" y="1026" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
-<path d="M48,1046 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
-<text x="92" y="1050" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the call</text>
-<path d="M176.8,1046 h34" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
-<text x="220.8" y="1050" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">its result</text>
-<path d="M317.8,1046 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
-<text x="361.8" y="1050" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a credential, or a request that leaves the cluster</text>
-<path d="M702.8,1046 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
-<text x="746.8" y="1050" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">in the same process</text>
-<rect x="898.6999999999999" y="1038" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
-<text x="942.6999999999999" y="1050" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">where the runner draws the line</text>
+<path d="M990,908.0 L1044,908.0" fill="none" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<path d="M840.0,976 L840.0,1066.5 L630,1066.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<path d="M378,1066.5 L344,1066.5 L344,346.5 L328,346.5" fill="none" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<rect x="28" y="1136" width="1244" height="40" rx="9" fill="#FFFFFF" stroke="#D0D7DE"/>
+<path d="M48,1156 h34" stroke="#2980B9" stroke-width="1.8" marker-end="url(#head-blue)"/>
+<text x="92" y="1160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">the call</text>
+<path d="M176.8,1156 h34" stroke="#2980B9" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#head-blue)"/>
+<text x="220.8" y="1160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">its result</text>
+<path d="M317.8,1156 h34" stroke="#1A7F37" stroke-width="1.8" marker-end="url(#head-green)"/>
+<text x="361.8" y="1160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">a credential, or a request that leaves the cluster</text>
+<path d="M702.8,1156 h34" stroke="#8C959F" stroke-width="1.8" marker-end="url(#head)"/>
+<text x="746.8" y="1160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">in the same process</text>
+<rect x="898.6999999999999" y="1148" width="34" height="16" rx="4" fill="none" stroke="#8C959F" stroke-dasharray="6 4"/>
+<text x="942.6999999999999" y="1160" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="normal" fill="#57606A" text-anchor="start">where the runner draws the line</text>
 </svg>

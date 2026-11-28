@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from langchain_core.embeddings import Embeddings
+from pydantic import JsonValue
 
 from smarter.apps.vectorstore.deployment import TRUE
 from smarter.apps.vectorstore.manifest.models.vectorstore.status import (
@@ -60,6 +61,87 @@ class SnapshotInfo:
     name: str
     size_bytes: Optional[int] = None
     ready: bool = True
+
+
+DEFAULT_MMR_LAMBDA = 0.5
+"""MMR's balance of relevance, 1, and diversity, 0, unless a search names its own."""
+
+
+def mmr_fetch_k(k: int, fetch_k: Optional[int]) -> int:
+    """How many candidates MMR re-ranks: ``fetch_k``, or four times ``k`` and at least 20."""
+    if fetch_k:
+        return fetch_k
+    return max(20, k * 4)
+
+
+def json_dict(value: JsonValue) -> SmarterDictType:
+    """An operation's result that is a JSON object, as a dict; anything else, an empty one."""
+    if isinstance(value, dict):
+        return dict(value)
+    return {}
+
+
+def json_dicts(value: JsonValue) -> list[SmarterDictType]:
+    """An operation's result that is a list of JSON objects, e.g. a query's matches; anything else, an empty list."""
+    if not isinstance(value, list):
+        return []
+    retval: list[SmarterDictType] = []
+    for item in value:
+        if isinstance(item, dict):
+            retval.append(dict(item))
+    return retval
+
+
+def json_int(value: JsonValue) -> Optional[int]:
+    """An operation's result that is an integer, e.g. a snapshot's size; anything else, None."""
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    return None
+
+
+def result_of(match: SmarterDictType, score: Optional[float]) -> SearchResult:
+    """
+    Return a database's match as a search result.
+
+    :param match: A match, as :mod:`smarter.apps.vectorstore.execution`'s query operations return it: its id, text and
+        metadata.
+    :param score: Its score, or None, e.g. for MMR's results.
+    """
+    match_id = match.get("id")
+    result = SearchResult(
+        id=str(match_id) if match_id else None,
+        text=str(match.get("text") or ""),
+        metadata=dict(match.get("metadata") or {}),
+        score=score,
+    )
+    return result
+
+
+def select_mmr(
+    query_vector: list[float], matches: list[SmarterDictType], k: int, lambda_mult: Optional[float]
+) -> list[SearchResult]:
+    """
+    Re-rank matches for diversity, with maximal marginal relevance, in the app.
+
+    :param query_vector: The query's embedding.
+    :param matches: The candidates, each with its ``vector``.
+    :param k: How many results.
+    :param lambda_mult: MMR's balance of relevance, 1, and diversity, 0. By default :data:`DEFAULT_MMR_LAMBDA`.
+    :returns: The results, without scores.
+    """
+    # pylint: disable=import-outside-toplevel
+    import numpy as np
+    from langchain_core.vectorstores.utils import maximal_marginal_relevance
+
+    if not matches:
+        return []
+    query_vectors = np.array([query_vector], dtype=np.float32)
+    match_vectors = [match["vector"] for match in matches]
+    selected = maximal_marginal_relevance(
+        query_vectors, match_vectors, k=k, lambda_mult=lambda_mult or DEFAULT_MMR_LAMBDA
+    )
+    results = [result_of(matches[i], score=None) for i in selected]
+    return results
 
 
 class SmarterVectorstoreBackend(ABC):
@@ -223,8 +305,15 @@ class SmarterVectorstoreBackend(ABC):
 
 
 __all__ = [
+    "DEFAULT_MMR_LAMBDA",
     "SEARCH_TYPES",
     "SearchResult",
+    "json_dict",
+    "json_dicts",
+    "json_int",
+    "mmr_fetch_k",
+    "result_of",
+    "select_mmr",
     "SmarterVectorstoreBackend",
     "SnapshotInfo",
     "VectorStoreBackendConnectionError",

@@ -10,8 +10,10 @@ Tool Runner
          its settings, switches and caller as plain values, execute_http_call for the web search
          apis, the Brave image search, the checks of each image's url and websites' robots.txt, and
          execute_webfetch_call for the pages that the web search plugin reads, with its domain policy and robots.txt
-         checked again on each redirect. The executor reads neither the app's database nor a Secret, and calls the MCP
-         server, the api, the SqlConnection's database, the search api or the website. Its ToolCallResult returns to the tool's code in the app, which
+         checked again on each redirect, and execute_vectorstore_call for a managed vectorstore's operations, on
+         Pinecone or Qdrant Cloud, with its vectors embedded in the app. The executor reads neither the app's database
+         nor a Secret, and calls the MCP server, the api, the SqlConnection's database, the search api, the website or
+         the vector database. Its ToolCallResult returns to the tool's code in the app, which
          sends the signals, caches the result and gives it to the LLM. The in-process runner executes the call in the
          app's process. The remote runner sends it as JSON through Redis to the tool worker, smarter-worker-tools, which
          has no database, no Secret and no cloud credential, runs the same executor there, and returns the result
@@ -28,7 +30,9 @@ runs, and, from the result, sends the signals, stores the result in the cache an
 The executor of each kind of call, registered in ``TOOL_EXECUTORS``, reads no database and no
 Smarter Secret. These go through it:
 
-- MCP clients, with :mod:`smarter.apps.mcpclient.execution`;
+- MCP clients, with :mod:`smarter.apps.mcpclient.execution`: their tool calls and resources, the listing of
+  their servers' tools, the catalog, which a chat and the console refresh, and the MCPClient api's own tool
+  call. ``run_mcp_call()`` sends every one of them;
 - API plugins, with :mod:`smarter.apps.connection.execution`;
 - SQL plugins, with :mod:`smarter.apps.connection.execution`, through an SSH tunnel
   (:mod:`smarter.apps.connection.ssh`) for a connection that uses one;
@@ -44,7 +48,14 @@ Smarter Secret. These go through it:
 - the WebsearchPlugin's fetch of a page, with ``WebFetchToolCall`` and ``execute_webfetch_call()`` in
   :mod:`smarter.apps.llmtool.plugin.websearch_fetch`. ``fetch``'s ``redirect_policy`` is a function,
   which can't travel with a call, so the call carries what it decides on, the domain policy and
-  whether to obey robots.txt, and the executor builds the function where the call runs.
+  whether to obey robots.txt, and the executor builds the function where the call runs;
+- a managed vectorstore's operations, on Pinecone or a Qdrant Cloud cluster at its ApiConnection's url,
+  with :mod:`smarter.apps.vectorstore.execution`: create, upsert, delete, query, stats and dumps. The
+  vendors' clients can't travel with a call, so each operation is one of the module's functions of the
+  client, with its parameters as JSON. The app embeds the texts and the query first, so the tool worker
+  needs no LLM provider's key. The executor refuses a url that resolves to a private address, as the
+  tool worker's network policy does. A self-hosted Qdrant server, in the cluster, runs the same
+  operations in the app's process: the tool worker can't reach the cluster's network.
 
 Choosing the runner
 -------------------
