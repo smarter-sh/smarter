@@ -444,6 +444,10 @@ Phase 4, the egress proxy (Helm chart, smarter-infrastructure)
 Decisions for the maintainers
 -----------------------------
 1. Custom LLM endpoints: through the tool worker, or added to the allowlist when a manifest is applied.
-2. Email: SES's HTTPS api, closing 587, or 587 to SES only.
+   Decided: through the tool worker. An LLMClient's or LLMHost's custom endpoint is a host that a manifest
+   author chooses, like every other one that #1081 moved behind the runner, so the app's allowlist stays
+   fixed: the built-in providers only.
+2. Email: SES's HTTPS api, closing 587, or 587 to SES only. Decided: SES's HTTPS api, through the proxy,
+   with the pods' IAM roles; port 587 closes, and the SMTP user's password goes.
 3. Whether phase 2 ships before phase 3. Decided: it did, because the tool worker contains extensions,
    the larger risk, and doesn't depend on the credential split.
