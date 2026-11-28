@@ -157,7 +157,22 @@ image, and is an administrator of the environment's namespace only. The platform
 Each server checks what it depends on when it starts, so that a pod whose credentials or
 connections don't work says so in its first log lines, not at the first request or deploy. The
 settings ask AWS STS whether boto3's credentials work as they load, in every process but the tool
-worker, and warn if they don't (``smarter_settings.aws_is_configured``). Then
+worker, and warn if they don't (``smarter_settings.aws_is_configured``).
+
+Every pod names its kind in ``SERVICE_TYPE``: ``api``, ``worker``, ``worker-infrastructure``,
+``beat``, ``worker-tools``, ``worker-extensions``, ``job-init``, ``job-migrate`` or ``bastion``. The
+Helm chart sets it on each Deployment and Job, and docker-compose on each service
+(``smarter_settings.service_type``). The settings refuse to start a pod whose kind contradicts what
+they see, e.g. a ``worker-tools`` pod with a database, and the tool worker or the Extension worker
+if its environment gives it any credential but its own Redis password
+(``Settings.check_restricted_worker_credentials()``, ADR-038). Their first line then names the kind
+and the checks made for it::
+
+    Pydantic version: 2.14.3 smarter_settings are READY for the tool worker: it holds no credential but its own Redis password (checked).
+    Pydantic version: 2.14.3 smarter_settings are READY for the api server: the root domain, AWS credentials (checked).
+
+Without ``SERVICE_TYPE``, e.g. in a ``manage.py`` shell or a script, the line says that the kind of pod
+is unknown. Then
 :mod:`smarter.apps.infrastructure.startup` runs once per server, and logs one line per check:
 
 - the web server checks the database, the Redis cache, the Celery broker, and that kubectl
@@ -167,8 +182,8 @@ worker, and warn if they don't (``smarter_settings.aws_is_configured``). Then
   credentials in its environment, no ServiceAccount token, and no route to the instance
   metadata service or the Kubernetes api. Each is an INFO line that confirms it, or an ERROR
   that reports a breach. It also confirms that it reaches the internet, which tool calls need.
-  These run only in a pod: in docker-compose, the tool worker shares ``.env`` with the other
-  services, and no network policy applies.
+  These run only in a pod: in docker-compose, no network policy applies. The tool worker
+  doesn't load ``.env`` there either: it gets only the settings that the Helm chart gives it.
 
 Signals
 -------

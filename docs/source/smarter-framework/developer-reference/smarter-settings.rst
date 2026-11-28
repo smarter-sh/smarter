@@ -18,6 +18,11 @@ Topics
 
 .. autopydantic_model:: smarter.common.conf.settings.platform.PlatformSettings
 
+.. autodata:: smarter.common.conf.settings.platform.POD_KINDS
+   :no-value:
+
+.. autodata:: smarter.common.conf.settings.platform.RESTRICTED_POD_KINDS
+
 .. autopydantic_model:: smarter.common.conf.settings.domains.DomainSettings
 
 .. autopydantic_model:: smarter.common.conf.settings.aws.AwsSettings

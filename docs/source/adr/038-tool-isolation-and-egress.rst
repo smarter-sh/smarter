@@ -64,7 +64,10 @@ Three parts, each useful by itself.
      (:mod:`smarter.common.conf.credentials`). A deployment that passed the worker the platform's whole
      environment would fail at once, rather than run with every key in reach. docker-compose gives both
      workers only the settings that the Helm chart does, never ``.env``, so local development is isolated
-     the same way.
+     the same way. The check keys on ``SMARTER_DATABASE_UNAVAILABLE``, so a worker that lost that flag
+     would skip it; each pod also names its kind in ``SERVICE_TYPE``, and a ``worker-tools`` or
+     ``worker-extensions`` pod with a database refuses to start (``Settings.check_service_type()``). The
+     settings' first log line names the kind and the checks made for it.
    - ``ToolRunner`` has two implementations: in-process (today's behavior, for local development and
      tests) and remote. A setting chooses between them, so the change can ship turned off.
    - Transport: a Celery task on its own queue, ``tools_celery_task_queue``, whose result the app
