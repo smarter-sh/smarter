@@ -96,17 +96,23 @@ the `Claude API documentation <https://platform.claude.com/docs/en/home>`_.
 Step 5: Add the Anthropic Key to Smarter's Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open the ``.env`` file at the root of your Smarter deployment and add:
+Smarter keeps the key as a Smarter Secret named ``anthropic_api_key``, not
+as an environment variable. In local development, write it into a file of
+that name in the repository's gitignored ``bootstrap-secrets/`` folder:
 
 .. code-block:: bash
 
-   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   mkdir -p bootstrap-secrets
+   printf %s 'sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' > bootstrap-secrets/anthropic_api_key
 
-Restart the application so the new credential is loaded:
+Then create the Secret from it:
 
 .. code-block:: bash
 
-   make restart
+   docker exec smarter-api python manage.py initialize_platform
+
+On Kubernetes, set ``bootstrapSecrets.anthropic_api_key`` in the Helm chart's
+values instead; the chart's init job creates the Secret on deployment.
 
 Concept Overview
 ----------------
@@ -350,18 +356,20 @@ for use in llmclients and the Workbench.
 Troubleshooting
 ---------------
 
-Startup error: "API key not found"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Prompt error: "set the Secret anthropic_api_key"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY`` variable is missing from ``.env`` or the
-application has not been restarted. Double-check the variable name (it is
-case-sensitive) and run ``make restart``.
+The Smarter Secret ``anthropic_api_key`` doesn't exist: its file in
+``bootstrap-secrets/`` is missing or empty, or ``manage.py initialize_platform``
+has not run since you wrote it. Double-check the file name (it is
+case-sensitive) and run the command.
 
 Provider status: "verification failed"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The API key is invalid, expired, or has been revoked. Generate a new key at
-`console.anthropic.com <https://console.anthropic.com/>`_ and update ``.env``.
+`console.anthropic.com <https://console.anthropic.com/>`_, update
+``bootstrap-secrets/anthropic_api_key``, and run ``manage.py initialize_platform``.
 See the `Claude API documentation <https://platform.claude.com/docs/en/home>`_
 for guidance on key rotation.
 

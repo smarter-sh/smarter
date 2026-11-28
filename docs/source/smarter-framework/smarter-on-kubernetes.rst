@@ -94,8 +94,11 @@ differs.
 
 The two Celery queues are separate on purpose. The infrastructure queue carries the slow tasks that
 deploy, verify and destroy DNS records, ingresses, certificates, node groups and databases, so that
-they can never delay the operational tasks that record prompt history, charges and budgets. See
-:doc:`ADR-030 <../adr/030-task-queues>`.
+they can never delay the operational tasks that record prompt history, charges and budgets. The queue is
+also a permission: each worker registers only the tasks that declare a queue it consumes, so a message
+for an infrastructure task that lands on the operational queue is rejected as an unregistered task, not
+run, and the reverse. Each worker's log names, as it starts, how many tasks it runs and from which queue.
+See :doc:`ADR-030 <../adr/030-task-queues>`.
 
 The Helm chart also runs a Job, ``smarter-job-init``, on every install and upgrade. It migrates the
 database, initializes the platform, loads the example resources and deploys the built-in LLMClients.

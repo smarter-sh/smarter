@@ -165,13 +165,17 @@ runs:
         echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> .env
         echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> .env
 
-        # AI services
-        # -----------------------
-        echo "SMARTER_APP_PROVIDER_OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
-        echo "SMARTER_APP_VECTORSTORE_PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
-        echo "SMARTER_APP_PROVIDER_GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .env
-        echo "SMARTER_APP_PROVIDER_LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .env
-        echo "SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
+    # the AI services' keys (issue #1099): one file per Smarter Secret in bootstrap-secrets/,
+    # never in .env, from which initialize_platform creates the Secrets.
+    - name: Write the bootstrap secrets
+      shell: bash
+      env:
+        SMARTER_APP_PROVIDER_OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        SMARTER_APP_VECTORSTORE_PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
+        SMARTER_APP_PROVIDER_GEMINI_API_KEY: ${{ inputs.gemini-api-key }}
+        SMARTER_APP_PROVIDER_LLAMA_API_KEY: ${{ inputs.llama-api-key }}
+        SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY: ${{ inputs.google-maps-api-key }}
+      run: python3 -I scripts/bootstrap_secrets.py
 
     #--------------------------------------------------------------------------
     # Test

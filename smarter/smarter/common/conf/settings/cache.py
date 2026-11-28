@@ -6,7 +6,7 @@ from typing import Annotated, Optional, Union
 from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from smarter.common.conf.const import THE_EMPTY_SET
-from smarter.common.conf.credentials import RestrictedWorkerCredential
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
@@ -16,33 +16,44 @@ from smarter.common.conf.util import (
     parse_int_setting,
     with_derived_default,
 )
-from smarter.common.const import SmarterEnvironments
+from smarter.common.const import SmarterEnvironments, SmarterKubernetesPodKinds
 from smarter.common.exceptions import SmarterConfigurationError
 
-LOCAL_REDIS_PASSWORD = "smarter"
-"""The password of docker-compose.yml's smarter-redis service, the local environment's default."""
 
-TOOL_WORKER_REDIS_USERNAME = "tools"
-"""
-The Redis ACL user of the tool worker, ``smarter-worker-tools`` (ADR-030, rule 8).
+# pylint: disable=too-few-public-methods
+class RedisAclUsers:
+    """
+    The platform's Redis ACL users, and their passwords in docker-compose (ADR-030, rule 8).
 
-The Helm chart's ``redis.master.preExecCmds`` and both docker-compose files define it, with the same rules.
-"""
+    Every pod but the tool worker and the Extension worker is Redis's ``default`` user. Each of those two has a user
+    of its own, which the Helm chart's ``redis.master.preExecCmds`` and both docker-compose files define, with the
+    same rules. The passwords here are docker-compose's only: smarter-infrastructure generates every deployed
+    environment's.
+    """
 
-LOCAL_TOOL_WORKER_REDIS_PASSWORD = "smarter-tools"
-"""The password of :data:`TOOL_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
+    TOOL_WORKER = "tools"
+    """
+    The tool worker's user, ``smarter-worker-tools``.
 
-EXTENSION_WORKER_REDIS_USERNAME = "extensions"
-"""
-The Redis ACL user of the Extension worker, ``smarter-worker-extensions`` (issue #1077).
+    It reaches only its own queue, its results, Extensions' archives and a few cache keys.
+    """
 
-It reaches only the Extensions queue, the results and Extensions' archives, so an Extension's code can't read the
-tool worker's queue, where API, SQL and MCP calls wait with their credentials. Defined like
-:data:`TOOL_WORKER_REDIS_USERNAME`.
-"""
+    EXTENSION_WORKER = "extensions"
+    """
+    The Extension worker's user, ``smarter-worker-extensions`` (issue #1077).
 
-LOCAL_EXTENSION_WORKER_REDIS_PASSWORD = "smarter-extensions"
-"""The password of :data:`EXTENSION_WORKER_REDIS_USERNAME` in docker-compose.yml and docker-compose.shard.yml."""
+    It reaches only the Extensions queue, the results and Extensions' archives, so an Extension's code can't read the
+    tool worker's queue, where API, SQL and MCP calls wait with their credentials.
+    """
+
+    LOCAL_DEFAULT_PASSWORD = "smarter"
+    """The password of docker-compose.yml's smarter-redis service's ``default`` user, the local environment's default."""
+
+    LOCAL_TOOL_WORKER_PASSWORD = "smarter-tools"
+    """The password of :attr:`TOOL_WORKER` in docker-compose.yml and docker-compose.shard.yml."""
+
+    LOCAL_EXTENSION_WORKER_PASSWORD = "smarter-extensions"
+    """The password of :attr:`EXTENSION_WORKER` in docker-compose.yml and docker-compose.shard.yml."""
 
 
 class CacheSettings(BaseModel):
@@ -58,7 +69,7 @@ class CacheSettings(BaseModel):
     The Redis ACL user that this process authenticates as.
 
     Every process but the tool worker uses Redis's ``default`` user, which may do anything. The tool worker
-    is given its own user, ``tools`` (:data:`TOOL_WORKER_REDIS_USERNAME`), which may touch only its own
+    is given its own user, ``tools`` (:attr:`RedisAclUsers.TOOL_WORKER`), which may touch only its own
     queue, its results, Extensions' archives and a few cache keys (ADR-030, rule 8), with
     :attr:`subsystem_redis_password` set to that user's password.
 
@@ -88,7 +99,7 @@ class CacheSettings(BaseModel):
         return username
 
     # the one credential that the tool worker and the Extension worker may hold: their own Redis user's password.
-    subsystem_redis_password: Annotated[Optional[SecretStr], RestrictedWorkerCredential()] = Field(
+    subsystem_redis_password: Annotated[Optional[SecretStr], HeldBy(*SmarterKubernetesPodKinds.all)] = Field(
         None,
         description="The password of the platform's Redis: the Celery broker, the cache and the sessions.",
         examples=["your-redis-password"],
@@ -149,7 +160,7 @@ class CacheSettings(BaseModel):
         environment = input_value(cls, data, "environment")
         if environment != SmarterEnvironments.LOCAL:
             return data
-        return with_derived_default(data, "subsystem_redis_password", LOCAL_REDIS_PASSWORD)
+        return with_derived_default(data, "subsystem_redis_password", RedisAclUsers.LOCAL_DEFAULT_PASSWORD)
 
     subsystem_cache_expiration: int = Field(
         60 * 1,
@@ -328,10 +339,6 @@ class CacheSettings(BaseModel):
 
 
 __all__ = [
-    "EXTENSION_WORKER_REDIS_USERNAME",
-    "LOCAL_EXTENSION_WORKER_REDIS_PASSWORD",
-    "LOCAL_REDIS_PASSWORD",
-    "LOCAL_TOOL_WORKER_REDIS_PASSWORD",
-    "TOOL_WORKER_REDIS_USERNAME",
+    "RedisAclUsers",
     "CacheSettings",
 ]

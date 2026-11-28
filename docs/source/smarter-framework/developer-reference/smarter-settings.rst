@@ -18,6 +18,10 @@ Topics
 
 .. autopydantic_model:: smarter.common.conf.settings.platform.PlatformSettings
 
+.. autoclass:: smarter.common.const.SmarterKubernetesPodKinds
+   :members:
+   :no-index:
+
 .. autopydantic_model:: smarter.common.conf.settings.domains.DomainSettings
 
 .. autopydantic_model:: smarter.common.conf.settings.aws.AwsSettings

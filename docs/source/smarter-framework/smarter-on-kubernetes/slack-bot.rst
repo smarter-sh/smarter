@@ -82,8 +82,9 @@ Setting It Up
 
    The deploy workflow passes the app token and the url to the prod deployment only, because two
    bots with the same Slack app would each receive part of the messages. It passes the tokens to
-   the chart as ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN`` and ``env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``, which are
-   stored in the platform's environment Secret, and the url as ``slackBot.agentUrl``. It sets
+   the chart as ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN`` and ``env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``, which the
+   chart stores in the bot's own Secret, ``<appName>-env-slack-bot``, and the url as ``slackBot.agentUrl``.
+   No other pod receives the app token; the init Job and the backup Job receive the bot token. It sets
    ``slackBot.enabled`` to ``true`` only when all three are set. The bot token alone, which only
    posts, goes to every environment, whose init Job and database backup post their outcome with
    it, to the channel that ``databaseInit.notifySlackChannel`` and
@@ -125,8 +126,9 @@ Values
    * - ``slackBot.resources``
      - The container's requests and limits: 50m CPU and 128Mi of memory, up to 256Mi.
    * - ``env.SMARTER_SUBSYSTEM_SLACK_BOT_TOKEN``, ``env.SMARTER_SUBSYSTEM_SLACK_APP_TOKEN``
-     - The Slack app's bot and app-level tokens. The platform also reads the bot token, as
-       ``smarter_settings.subsystem_slack_bot_token``, to post its Jobs' logs, whether or not the bot is
+     - The Slack app's bot and app-level tokens, which the bot reads from its own Secret,
+       ``<appName>-env-slack-bot``. The platform's init Job and backup Job also read the bot token, as
+       ``smarter_settings.subsystem_slack_bot_token``, to post their logs, whether or not the bot is
        enabled.
 
 Operating It

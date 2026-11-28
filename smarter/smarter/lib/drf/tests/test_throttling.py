@@ -6,16 +6,21 @@ from cache_results import lazy_cache
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.throttling import (
     CREDENTIALS_THROTTLE_RATE,
     SMARTER_THROTTLE_CLASSES,
     SmarterAnonRateThrottle,
+    SmarterCacheFailOpenThrottleMixin,
+    SmarterCredentialsRateThrottle,
     SmarterUserRateThrottle,
     credentials_throttle_wait,
     throttle_wait,
 )
+from smarter.lib.unittest.cache_outage import unreachable_cache
 
 MODULE = "smarter.lib.drf.throttling"
 
@@ -116,3 +121,73 @@ class TestCredentialsThrottle(TestAccountMixin):
             wait = credentials_throttle_wait(request, Mock())
         self.assertIsNotNone(wait)
         self.assertGreaterEqual(wait, 1)  # type: ignore[arg-type]
+
+
+class TestThrottlesWhileTheCacheIsDown(TestAccountMixin):
+    """Test that every throttle lets its requests through during a Redis outage, rather than raising (issue #1091)."""
+
+    def request(self, user=None):
+        request = RequestFactory().post("/api/v1/prompt/", REMOTE_ADDR=CLIENT_IP)
+        request.user = user or AnonymousUser()
+        return request
+
+    def test_every_throttle_is_a_fail_open_throttle(self):
+        throttle_classes = [*SMARTER_THROTTLE_CLASSES, SmarterCredentialsRateThrottle]
+        for throttle_class in throttle_classes:
+            with self.subTest(throttle=throttle_class.__name__):
+                self.assertTrue(issubclass(throttle_class, SmarterCacheFailOpenThrottleMixin))
+                # the mixin's allow_request() comes before Django REST Framework's.
+                self.assertIs(throttle_class.allow_request, SmarterCacheFailOpenThrottleMixin.allow_request)
+
+    def test_throttle_wait_lets_requests_through(self):
+        """A deployed LLMClient's /config/ is served, anonymous or signed in, with one warning line per throttle."""
+        with (
+            patch(f"{MODULE}.smarter_settings", rates(anon="1/minute", user="1/minute")),
+            patch.object(SmarterAnonRateThrottle, "cache", unreachable_cache()),
+            patch.object(SmarterUserRateThrottle, "cache", unreachable_cache()),
+            self.assertLogs(MODULE, level="WARNING") as logs,
+        ):
+            for _ in range(3):
+                self.assertIsNone(throttle_wait(self.request(), Mock()))
+                self.assertIsNone(throttle_wait(self.request(user=self.non_admin_user), Mock()))
+        output = "\n".join(logs.output)
+        self.assertIn("SmarterAnonRateThrottle unthrottled", output)
+        self.assertIn("SmarterUserRateThrottle unthrottled", output)
+        self.assertNotIn("Traceback", output)
+        self.assertNotIn(CLIENT_IP, output)
+
+    def test_credentials_throttle_lets_requests_through(self):
+        """Signing in still works during an outage, without its rate limit, as the maintainers chose."""
+        request = RequestFactory().post("/api/web/account/login/", REMOTE_ADDR=CREDENTIALS_CLIENT_IP)
+        request.user = AnonymousUser()
+        with (
+            patch(f"{MODULE}.CREDENTIALS_THROTTLE_RATE", "1/minute"),
+            patch.object(SmarterCredentialsRateThrottle, "cache", unreachable_cache()),
+            self.assertLogs(MODULE, level="WARNING") as logs,
+        ):
+            for _ in range(3):
+                self.assertIsNone(credentials_throttle_wait(request, Mock()))
+        self.assertEqual(len(logs.output), 3)
+        self.assertIn("/api/web/account/login/", logs.output[0])
+
+    def test_a_drf_view_answers_while_the_cache_is_down(self):
+        """A Django REST Framework view, throttled by DEFAULT_THROTTLE_CLASSES, still answers."""
+
+        class PingView(APIView):
+            """A view with the default throttles, and no authentication to set up."""
+
+            authentication_classes: list = []
+            permission_classes: list = []
+
+            def get(self, request):
+                return Response({"ok": True})
+
+        request = RequestFactory().get("/ping/", REMOTE_ADDR=CLIENT_IP)
+        with (
+            patch(f"{MODULE}.smarter_settings", rates()),
+            patch.object(SmarterAnonRateThrottle, "cache", unreachable_cache()),
+            patch.object(SmarterUserRateThrottle, "cache", unreachable_cache()),
+            self.assertLogs(MODULE, level="WARNING"),
+        ):
+            response = PingView.as_view()(request)
+        self.assertEqual(response.status_code, 200)

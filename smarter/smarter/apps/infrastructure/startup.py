@@ -563,7 +563,7 @@ def log_tool_worker_readiness(results: dict[str, bool], tasks: Sequence[str], qu
     Each check logs its own lines; this says what they add up to, so that a pod's log ends with one line
     that an operator can look for. It names what the worker runs and where it takes it from, read from the
     worker itself, not from its settings: the tasks left in its registry after
-    :func:`smarter.lib.celery_conf.keep_only_tool_worker_tasks`, and the queue it consumes.
+    :func:`smarter.lib.celery_conf.restrict_worker_tasks`, and the queue it consumes.
 
     Outside Kubernetes, :func:`check_tool_worker_isolation` checks nothing and passes, so the line says that
     the isolation wasn't checked, rather than claim it.

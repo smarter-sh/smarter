@@ -61,12 +61,13 @@ spec:
         app.kubernetes.io/application-group: "{{ .Values.global.appName }}"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
-      serviceAccountName: "{{ $.Values.global.appName }}"
+      serviceAccountName: "{{ $.Values.global.appName }}-job-migrate"
       affinity:
         {{- toYaml .Values.global.affinity | nindent 8 }}
       tolerations:
         {{- toYaml .Values.global.tolerations | nindent 8 }}
-      automountServiceAccountToken: true
+      # migrations never call Kubernetes, so the Job's token isn't mounted.
+      automountServiceAccountToken: false
       containers:
         - resources:
             requests:

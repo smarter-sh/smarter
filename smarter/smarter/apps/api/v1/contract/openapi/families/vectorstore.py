@@ -122,10 +122,12 @@ def vectorstore_paths() -> dict[str, OpenApiPathItem]:
             post=rest_operation(
                 family.operation_id("undeploy"),
                 f"Undeploy {family.a}",
-                f"Stop serving the {resource}. A self-hosted server's data is kept. {owner}",
+                f"Queue stopping serving the {resource}, and return at once: the platform's infrastructure worker "
+                f"stops it. A self-hosted server's data is kept. {owner}",
                 tag,
                 VectorstoreApiVectorstore.__name__,
                 parameters=[vectorstore_id],
+                status="202",
             )
         ),
         family.path("{id}/documents/"): OpenApiPathItem(

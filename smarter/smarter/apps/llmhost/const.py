@@ -96,3 +96,11 @@ RECONCILE_INTERVAL_SECONDS = 30
 """How often a compute is reconciled while its node group is adding or removing nodes."""
 RECONCILE_MAX_ATTEMPTS = 60
 """How many times a compute is reconciled before Celery Beat's reconcile takes over: 30 minutes."""
+TASK_NAME_PREFIX = "smarter.apps.llmhost.tasks"
+"""
+The prefix of every llmhost task's Celery name, e.g. ``smarter.apps.llmhost.tasks.launch_llmhost``.
+
+The tasks are defined in the modules of :mod:`smarter.apps.llmhost.tasks`, and each names itself with this
+prefix, rather than by its module, so that its name stays the one that Celery Beat's schedule
+(``smarter.workers.celerybeat``) and any message already waiting in Redis use.
+"""

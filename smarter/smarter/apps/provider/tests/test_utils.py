@@ -14,19 +14,6 @@ from .test_models import ProviderTestBase
 class TestProviderUtils(ProviderTestBase):
     """Test the provider utils."""
 
-    def test_initialize_secret(self):
-        """Test that a secret is created, then updated, and that an error returns None."""
-        name = f"test_provider_utils_secret_{self.hash_suffix}"
-        self.addCleanup(Secret.objects.filter(name=name).delete)
-        secret = utils.initialize_secret("first", name, "a test secret", self.user_profile)
-        assert secret is not None
-        self.assertEqual(secret.get_secret(), "first")
-        secret = utils.initialize_secret("second", name, "a test secret", self.user_profile)
-        assert secret is not None
-        self.assertEqual(Secret.objects.get(pk=secret.pk).get_secret(), "second")
-        with patch.object(Secret.objects, "update_or_create", side_effect=RuntimeError("database down")):
-            self.assertIsNone(utils.initialize_secret("third", name, "a test secret", self.user_profile))
-
     def test_web_page(self):
         page = MagicMock(status_code=200, text="<!DOCTYPE html><html>Terms of Service</html>")
         with patch.object(utils.requests, "get", return_value=page):
@@ -38,7 +25,7 @@ class TestProviderUtils(ProviderTestBase):
             self.assertFalse(utils.test_web_page("https://example.com/tos", ""))
 
     def test_get_google_maps_api_key(self):
-        """Test that the key is read from the smarter admin's secret, which is initialized when it is missing."""
+        """Test that the key is read from the smarter admin's Secret, its only source, never from the environment."""
         secret = MagicMock()
         secret.get_secret.return_value = "maps-key"
         with patch.object(Secret, "get_cached_object", return_value=secret):
@@ -47,23 +34,18 @@ class TestProviderUtils(ProviderTestBase):
             secret.get_secret.return_value = missing
             with patch.object(Secret, "get_cached_object", return_value=secret):
                 self.assertIsNone(utils.get_google_maps_api_key())
+        environment = {"SMARTER_APP_PROVIDER_GOOGLE_MAPS_API_KEY": "maps-key-from-the-environment"}
         with (
+            patch.dict("os.environ", environment),
             patch.object(Secret, "get_cached_object", side_effect=Secret.DoesNotExist),
-            patch.object(utils, "initialize_google_maps") as initialize,
+            patch.object(utils, "logger") as logger,
         ):
             self.assertIsNone(utils.get_google_maps_api_key())
-        initialize.assert_called_once()
+        logged = str(logger.error.call_args)
+        self.assertIn("google_maps_api_key", logged)
+        self.assertNotIn("maps-key-from-the-environment", logged)
         with patch.object(Secret, "get_cached_object", side_effect=RuntimeError("cache down")):
             self.assertIsNone(utils.get_google_maps_api_key())
-
-    def test_initialize_google_maps(self):
-        with patch.object(utils, "get_env", return_value="maps-key"), patch.object(utils, "initialize_secret") as init:
-            utils.initialize_google_maps()
-        self.assertEqual(init.call_args.kwargs["secret_string"], "maps-key")
-        for missing in ("", "SET-ME-PLEASE"):
-            with patch.object(utils, "get_env", return_value=missing), patch.object(utils, "initialize_secret") as init:
-                utils.initialize_google_maps()
-            init.assert_not_called()
 
     def test_google_service_account_bearer_token_errors(self):
         """Test that a missing, empty or invalid service account returns None."""
@@ -84,8 +66,8 @@ class TestProviderUtils(ProviderTestBase):
         self.addCleanup(lambda: (other_user_profile.delete(), other_user.delete(), other_account.delete()))
         for user_profile in (self.user_profile, other_user_profile):
             self.addCleanup(Secret.objects.filter(name=name, user_profile=user_profile).delete)
-        utils.initialize_secret('{"type": "admin"}', name, "test", self.user_profile)
-        utils.initialize_secret('{"type": "other"}', name, "test", other_user_profile)
+        for value, owner in (('{"type": "admin"}', self.user_profile), ('{"type": "other"}', other_user_profile)):
+            Secret.objects.create(name=name, user_profile=owner, encrypted_value=Secret.encrypt(value))
         credentials = MagicMock(token="bearer-token")
         cached_objects = MagicMock(smarter_admin_user_profile=self.user_profile)
         with (

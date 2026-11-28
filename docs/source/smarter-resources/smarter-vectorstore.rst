@@ -93,12 +93,20 @@ may describe and search them.
    * - failed
      - The deploy gave up, or a check of a ready database failed. See its status message and ``lastError``. Celery Beat keeps checking a deployed database, so a transient error clears itself.
    * - deleting
-     - Its database is being destroyed.
+     - Its database is being destroyed. The Vectorstore is deleted once it is.
 
 Once a Vectorstore is deployed, its ``backend``, ``hosting``, index name, dimension and metric,
 and a self-hosted server's storage, cannot change, because the database would no longer match.
 Delete it, and apply it again, to change them. Its embeddings model can change: its documents are
 then loaded again.
+
+``undeploy`` and ``delete`` return at once. The platform's infrastructure worker, the one process
+that changes the cluster, stops the server or destroys the database, and the status message says
+``Undeploy queued.`` or ``Delete queued.`` until it has. A deployed Vectorstore is listed, deleting,
+until its database is destroyed, and then it is deleted. If that fails, it stays, failed, with the
+reason, so that you can delete it again. A Vectorstore that was never deployed has no database, and
+is deleted at once. Applying a changed spec to a deployed self-hosted server, for example its cpu or
+memory, queues the change for the same worker.
 
 A database with ``index.deletionProtection: true`` cannot be destroyed until it is disabled.
 

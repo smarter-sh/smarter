@@ -41,6 +41,7 @@ Exception
     Any exception during task execution will trigger a retry according to Celery settings.
 """
 
+from smarter.apps.infrastructure.exceptions import DNSRecordTimeout
 from smarter.apps.infrastructure.services import infrastructure
 from smarter.apps.llmclient.models import (
     LLMClientCustomDomain,
@@ -70,8 +71,13 @@ logger = logging.getSmarterLogger(
     queue=smarter_settings.app_infrastructure_tasks_celery_task_queue,
 )
 def create_custom_domain_dns_record(
-    llmclient_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
-):
+    llmclient_custom_domain_id: int,
+    record_name: str,
+    record_type: str,
+    record_value: str,
+    record_ttl: int = 600,
+    attempt: int = 1,
+) -> None:
     """
     Get or create a DNS record in the DNS zone of an llmclient custom domain.
 
@@ -96,6 +102,10 @@ def create_custom_domain_dns_record(
         The value for the DNS record (e.g., IP address or CNAME target).
     record_ttl : int, optional
         The TTL (time to live) for the DNS record, in seconds. Default is 600.
+    attempt : int, optional
+        The number of this run. A new record can take a moment to appear in its zone: rather than sleep
+        (ADR-030, rule 2), the task looks once, and queues itself again, up to the DNS service's
+        ``record_wait_attempts`` runs.
 
     Returns
     -------
@@ -136,13 +146,32 @@ def create_custom_domain_dns_record(
         logger.error(err)
         raise LLMClientCustomDomainNotFound(err) from e
 
-    record, _ = infrastructure.dns.get_or_create_record(
-        zone_id=custom_domain.aws_hosted_zone_id,
-        name=record_name,
-        record_type=record_type,
-        ttl=record_ttl,
-        values=[record_value],
-    )
+    try:
+        record, _ = infrastructure.dns.get_or_create_record(
+            zone_id=custom_domain.aws_hosted_zone_id,
+            name=record_name,
+            record_type=record_type,
+            ttl=record_ttl,
+            values=[record_value],
+            max_attempts=1,
+        )
+    except DNSRecordTimeout as e:
+        if attempt >= infrastructure.dns.record_wait_attempts:
+            raise
+        countdown = infrastructure.dns.record_wait_seconds
+        logger.info("%s Checking again in %s seconds, attempt %s. task_id: %s", e, countdown, attempt + 1, task_id)
+        create_custom_domain_dns_record.apply_async(
+            kwargs={
+                "llmclient_custom_domain_id": llmclient_custom_domain_id,
+                "record_name": record_name,
+                "record_type": record_type,
+                "record_value": record_value,
+                "record_ttl": record_ttl,
+                "attempt": attempt + 1,
+            },
+            countdown=countdown,
+        )
+        return
     try:
         # note: we cannot use the get_or_create method here because
         # of validation errors that are raised if record_value is

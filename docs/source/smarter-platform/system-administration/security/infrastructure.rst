@@ -118,10 +118,11 @@ AWS: roles, not access keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ../../../_static/security/aws-identity.svg
-   :alt: The platform's pods run as the ServiceAccount smarter, which assumes the IAM role
+   :alt: The platform's pods each run as their own ServiceAccount, smarter-<pod>, which assumes the IAM role
          <namespace>-smarter-irsa: Route53, ACM, reading the cluster, LLMHost node groups with the environment's
-         tag, and the environment's S3 buckets. Kubernetes permissions come from RBAC: a Role in the namespace and
-         read-only cluster-wide access. The nightly backup runs as smarter-backup, whose role may only write to
+         tag, and the environment's S3 buckets. Kubernetes permissions come from RBAC: a Role per kind of pod in the
+         namespace, where only the infrastructure worker writes or reads Secrets, and each kind's own cluster-wide
+         reads. The nightly backup runs as smarter-backup, whose role may only write to
          backups/sql/. Two IAM users still have access keys: the deploy user, which GitHub Actions uses to push the
          image and run helm in the namespace, and the SMTP user, whose SES SMTP password the pods use to send email.
    :width: 100%
@@ -132,8 +133,8 @@ with `IAM Roles for Service Accounts <https://docs.aws.amazon.com/eks/latest/use
 that role only. Each environment has its own roles, so ``alpha`` can't touch ``prod``'s buckets or
 node groups.
 
-- ``<namespace>-smarter-irsa``, the ServiceAccount ``smarter`` (the app, the workers, beat and the
-  init Job): Route53 and ACM for deployed LLMClients' and custom domains' DNS and certificates; read
+- ``<namespace>-smarter-irsa``, the ServiceAccounts of the app, the workers, beat, the init Job and the
+  migrate Job (``smarter-api``, ``smarter-worker``, and so on, one per kind of pod): Route53 and ACM for deployed LLMClients' and custom domains' DNS and certificates; read
   access to the cluster's status; LLMHost node groups, which it may create only with the
   environment's tag and change only by the environment's name prefix; and read and write access to
   the environment's own S3 buckets.
@@ -153,10 +154,22 @@ users' secret keys are in the Terraform state. Rotate them by tainting the acces
 Kubernetes RBAC
 ~~~~~~~~~~~~~~~
 
-The ServiceAccount ``smarter`` has a **Role in its own namespace** (the chart's ``rbac.yaml``), to
-manage the resources of deployed LLMClients: Deployments, Services, Ingresses, Secrets and
-certificates. Its only cluster-wide permissions are reads: its own namespace, nodes,
-PersistentVolumes and node metrics, in a ClusterRole that smarter-infrastructure creates
+Each kind of pod runs as its **own ServiceAccount**, ``smarter-<pod>``, with a Role in its own namespace
+(the chart's ``rbac.yaml``) that allows only what its code does:
+
+- ``smarter-worker-infrastructure`` makes every change to the cluster, from the infrastructure queue: the
+  Ingresses, certificates and TLS Secrets of deployed LLMClients, and the Deployments, StatefulSets,
+  Services, Secrets and volumes of LLMHosts and vectorstores. It is the only one that may read a Secret.
+- ``smarter-api``, the app, only reads: pods, their logs, events and metrics, Deployments, StatefulSets
+  and volumes, for status pages and logs. The web console's superuser terminal runs a shell in this pod,
+  with its token, so a terminal user can't change the cluster or read a Secret either.
+- ``smarter-job-init`` may create and update the LLMClients' Ingresses that ``initialize_platform``
+  retargets, and list Services, Ingresses and certificates for the inventory.
+- ``smarter-worker`` only reads its namespace, when it starts. Celery Beat, the migrate Job and the
+  backup mount no token at all.
+
+Their only cluster-wide permissions are reads, each kind's own: its namespace, nodes,
+PersistentVolumes and node metrics, in ClusterRoles that smarter-infrastructure creates
 (``serviceAccount.createClusterRole: false`` in the chart's values). The deploy user's EKS access
 entry is also limited to the environment's namespace.
 

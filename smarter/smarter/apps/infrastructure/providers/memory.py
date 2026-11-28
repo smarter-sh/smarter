@@ -108,7 +108,6 @@ class InMemoryCertificateService(CertificateService):
     """TLS certificates in memory, issued once their validation records exist, or at once with :attr:`issue_all`."""
 
     validation_wait_seconds = 0
-    issue_wait_seconds = 0
 
     def __init__(self, provider: "InMemoryProvider", dns: DNSService, **kwargs):
         super().__init__(provider.provider_name, dns, **kwargs)

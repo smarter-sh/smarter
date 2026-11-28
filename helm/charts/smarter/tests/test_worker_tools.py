@@ -227,7 +227,7 @@ class TestServiceType(unittest.TestCase):
         "job-migrate.yaml": "job-migrate",
         "deployment-bastion.yaml": "bastion",
     }
-    """Each pod template with a Smarter container, and its kind: smarter.common.conf.settings.platform.POD_KINDS."""
+    """Each pod template with a Smarter container, and its kind: smarter.common.const.SmarterKubernetesPodKinds."""
 
     def test_each_pod_names_its_kind(self):
         """Each pod template sets SERVICE_TYPE to its own kind."""

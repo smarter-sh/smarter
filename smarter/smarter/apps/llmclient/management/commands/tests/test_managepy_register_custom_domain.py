@@ -52,7 +52,9 @@ class TestRegisterCustomDomain(TestAccountMixin):
         self.assertEqual(custom_domain.aws_hosted_zone_id, "ZREGISTERED")
         self.assertEqual(custom_domain.user_profile.account, self.account)
         self.assertEqual(custom_domain.verification_status, Status.VERIFYING)
-        self.infrastructure.certificates.create_validation_records.assert_called_once_with("arn:certificate")
+        self.infrastructure.certificates.create_validation_records.assert_called_once_with(
+            "arn:certificate", max_attempts=1
+        )
         self.verify_custom_domain.delay.assert_called_once_with(hosted_zone_id="ZREGISTERED")
 
     def test_register_applied_domain(self):

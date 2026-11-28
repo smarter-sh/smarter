@@ -6,10 +6,9 @@ import requests
 from google.auth.exceptions import GoogleAuthError
 from google.oauth2 import service_account
 
-from smarter.apps.account.models.user_profile import UserProfile
 from smarter.apps.account.utils import smarter_cached_objects
 from smarter.apps.secret.models import Secret
-from smarter.common.conf.env import get_env, is_missing_value
+from smarter.common.conf.env import is_missing_value
 from smarter.lib import json, logging
 from smarter.lib.django import waffle
 from smarter.lib.django.waffle import SmarterWaffleSwitches
@@ -39,33 +38,6 @@ def should_log(level):
 
 
 logger = logging.getSmarterLogger(__name__, condition_func=should_log)
-
-
-def initialize_secret(
-    secret_string: str, secret_name: str, description: str, user_profile: UserProfile
-) -> Secret | None:
-    """
-    Initialize a secret from an environment variable.
-
-    Args:
-        env_var (str): The name of the environment variable containing the secret value.
-        secret_name (str): The name to assign to the created/updated Secret object.
-        description (str): A description for the Secret object.
-    """
-    try:
-        secret, _ = Secret.objects.update_or_create(
-            name=secret_name,
-            user_profile=user_profile,
-            defaults={
-                "description": description,
-                "encrypted_value": Secret.encrypt(secret_string),
-            },
-        )
-    # pylint: disable=broad-except
-    except Exception as e:
-        logger.error("Failed to initialize secret %s. Error: %s", secret_name, e)
-        return None
-    return secret
 
 
 def get_provider_verification_for_type(
@@ -240,46 +212,31 @@ def get_google_service_account_bearer_token() -> str | None:
     return bearer_token
 
 
-def initialize_google_maps() -> None:
-    """Initialize Google Maps provider."""
-    NAME = "google maps"
-    API_KEY_ENV_VAR = "APP_PROVIDER_GOOGLE_MAPS_API_KEY"
-    API_KEY_NAME = GOOGLE_MAPS_API_KEY_SECRET_NAME
+def get_google_maps_api_key() -> str | None:
+    """
+    Get the Google Maps API key from its Smarter Secret, ``google_maps_api_key``, the Smarter admin's.
 
-    api_key = get_env(API_KEY_ENV_VAR, "", is_secret=True)
-    if is_missing_value(api_key):
-        logger.warning("Google Maps API key environment variable %s is not set.", API_KEY_ENV_VAR)
-        return
+    The Secret is the key's only source: the init Job creates it from the platform's bootstrap secrets
+    (``initialize_bootstrap_secrets``, issue #1099), and no service reads an environment variable for it.
 
-    initialize_secret(
-        secret_string=api_key,
-        secret_name=API_KEY_NAME,
-        description=f"API key for {NAME} services.",
-        user_profile=smarter_cached_objects.smarter_admin_user_profile,
-    )
-
-
-def get_google_maps_api_key(recursed=False) -> str | None:
-    """Get the Google Maps API key from the secret store."""
+    :returns: The key, or None, logged with how to create it, if the Secret is missing or empty.
+    """
     user_profile = smarter_cached_objects.smarter_admin_user_profile
     try:
-        secret = Secret.get_cached_object(name="google_maps_api_key", user_profile=user_profile)
+        secret = Secret.get_cached_object(name=GOOGLE_MAPS_API_KEY_SECRET_NAME, user_profile=user_profile)
         api_key = secret.get_secret()
         if is_missing_value(api_key):
             logger.error("Google Maps API key secret is empty.")
             return None
         return api_key
     except Secret.DoesNotExist:
-        if recursed:
-            logger.error(
-                "Google Maps API key secret still not found after having initialized."
-                "Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview."
-                "Add your APP_PROVIDER_GOOGLE_MAPS_API_KEY to .env"
-            )
-            return None
-        logger.error("Google Maps API key secret not found.")
-        initialize_google_maps()
-        return get_google_maps_api_key(recursed=True)
+        logger.error(
+            "Google Maps API key secret %s not found. Create it with smarter apply, or in the web console, or set "
+            "it in the Helm chart's bootstrapSecrets, or, locally, in bootstrap-secrets/, for the init Job. "
+            "See https://developers.google.com/maps/documentation/geolocation/overview.",
+            GOOGLE_MAPS_API_KEY_SECRET_NAME,
+        )
+        return None
     # pylint: disable=broad-except
     except Exception as e:
         logger.error("Unexpected error retrieving Google Maps API key: %s", e)

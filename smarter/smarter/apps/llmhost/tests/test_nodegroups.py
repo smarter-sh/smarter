@@ -140,10 +140,10 @@ class TestEKSNodeGroupBackend(SmarterTestBase):
 
     def test_delete(self):
         """Test that delete is idempotent."""
-        self.backend.delete(compute())
+        self.backend.delete(compute().nodegroup_name)
         self.eks.delete_nodegroup.assert_called_once()
         self.eks.delete_nodegroup.side_effect = ResourceNotFoundException("gone")
-        self.backend.delete(compute())
+        self.backend.delete(compute().nodegroup_name)
 
 
 class TestInMemoryNodeGroupBackend(SmarterTestBase):
@@ -157,7 +157,7 @@ class TestInMemoryNodeGroupBackend(SmarterTestBase):
         self.assertEqual(required(backend.describe(compute()), "nodegroup").desired, 3)
         backend.remove_node(compute(), "aws:///us-east-1a/i-1")
         self.assertEqual(required(backend.describe(compute()), "nodegroup").desired, 2)
-        backend.delete(compute())
+        backend.delete(compute().nodegroup_name)
         self.assertIsNone(backend.describe(compute()))
         backend.fail = "down"
         with self.assertRaises(LLMHostComputeError):

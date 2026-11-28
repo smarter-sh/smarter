@@ -206,7 +206,11 @@ box(
     320,
     w,
     "Helm release",
-    ["the Secret <appName>-env holds env;", "every pod reads it with envFrom:", "api, workers, beat, init and migrate"],
+    [
+        "a Secret per kind of pod, <appName>-env-<pod>,",
+        "holds env, without others' credentials;",
+        "each pod reads its own with envFrom",
+    ],
     code="templates/secret-env.yaml",
 )
 box(

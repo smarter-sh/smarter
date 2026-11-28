@@ -10,3 +10,8 @@ Management Commands
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: smarter.apps.secret.management.commands.initialize_bootstrap_secrets
+    :members:
+    :undoc-members:
+    :show-inheritance:

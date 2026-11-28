@@ -447,7 +447,7 @@ Subclass ``OpenAICompatibleChatProvider`` exactly as shown below:
    class ClaudeChatProvider(OpenAICompatibleChatProvider):
        provider = PROVIDER_NAME
        base_url = BASE_URL
-       api_key = smarter_settings.anthropic_api_key.get_secret_value()
+       api_key = None  # the Provider's API key Secret, anthropic_api_key, supplies it
        default_model = DEFAULT_MODEL
        default_system_role = smarter_settings.llm_default_system_role
        default_temperature = smarter_settings.llm_default_temperature
@@ -533,9 +533,10 @@ Add ``initialize_anthropic()`` (or ``initialize_claude()``):
 .. code-block:: python
 
    def initialize_anthropic(self):
-       secret = Secret.objects.create(
-           value=smarter_settings.anthropic_api_key.get_secret_value()
-       )
+       # initialize_bootstrap_secrets has already created the admin's Secret, if a key was given.
+       secret = Secret.objects.filter(
+           name=BUILTIN_PROVIDER_API_KEY_SECRET_NAMES["anthropic"], user_profile=self.user_profile
+       ).first()
        Provider.objects.get_or_create(
            name=ANTHROPIC_API,
            defaults=dict(
@@ -627,20 +628,21 @@ Optionally, add provider initialization tests in ``smarter/apps/provider/tests/`
 Step 6: Update Environment Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Requirement Variable
+Required Secret
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Add the required environment variable ``.env``:
+The key is not an environment variable but a Smarter Secret, ``anthropic_api_key``,
+owned by the Smarter admin. Locally, write it into the gitignored ``bootstrap-secrets/``
+folder, and ``manage.py initialize_platform`` creates the Secret from it:
 
 .. code-block:: bash
 
    # Anthropic / Claude provider
-   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=your-anthropic-api-key-here
+   printf %s 'your-anthropic-api-key-here' > bootstrap-secrets/anthropic_api_key
 
-.. note::
-
-   If you wish to support a ``SMARTER_CLAUDE_API_KEY`` alias, add an alias resolver
-   in ``smarter_settings`` and document both names here.
+On Kubernetes, the Helm chart's ``bootstrapSecrets.anthropic_api_key`` does the same.
+Add the Secret's name to ``BUILTIN_PROVIDER_API_KEY_SECRET_NAMES`` in
+``smarter/apps/provider/const.py``, and to section 3 of ``.env.example``.
 
 Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -676,10 +678,10 @@ Use the following names consistently across the codebase:
      - ``claude``
    * - Supported model names
      - ``claude-code-1-0``
-   * - Settings config key
-     - ``smarter_settings.anthropic_api_key``
-   * - Environment variable
-     - ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``
+   * - Smarter Secret
+     - ``anthropic_api_key``
+   * - Bootstrap secret file
+     - ``bootstrap-secrets/anthropic_api_key``
    * - Database display name
      - ``Anthropic`` (or ``Claude``)
 

@@ -268,7 +268,7 @@ See `GitHub Secrets Configuration <https://github.com/smarter-sh/smarter/setting
    * - BRAVE_SEARCH_API_KEY
      - API key for the Brave Search API, stored as the Secret brave_search_api_key, which ImageSearchPlugins and the Brave WebsearchPlugin samples use. See :doc:`ImageSearchPlugin <../smarter-resources/llmtool/plugin/image-search>`
    * - GOOGLE_SERVICE_ACCOUNT_B64
-     - Base64-encoded Google service account credentials
+     - Base64-encoded Google service account credentials. The deploy action decodes them into the Secret google_service_account, which holds the service account's JSON
    * - LLAMA_API_KEY
      - API key for Llama AI integrations
    * - OPENAI_API_KEY

@@ -20,26 +20,26 @@ Supported Providers
 Smarter supports two categories of LLM providers.
 
 **Built-in providers** are pre-initialized automatically during deployment.
-You only need to supply the API key in ``.env``:
+You only need to supply the API key, stored as a Smarter Secret:
 
 .. list-table::
    :header-rows: 1
    :widths: 20 40 40
 
    * - Provider
-     - Environment Variable
+     - Smarter Secret
      - API Key Console
    * - OpenAI *(required)*
-     - ``SMARTER_APP_PROVIDER_OPENAI_API_KEY``
+     - ``openai_api_key``
      - `platform.openai.com/api-keys <https://platform.openai.com/api-keys>`_
    * - GoogleAI
-     - ``SMARTER_APP_PROVIDER_GEMINI_API_KEY``
+     - ``gemini_api_key``
      - `aistudio.google.com/app/apikey <https://aistudio.google.com/app/apikey>`_
    * - MetaAI
-     - ``SMARTER_APP_PROVIDER_LLAMA_API_KEY``
+     - ``llama_api_key``
      - `console.apillm.com <https://console.apillm.com/en/dashboard/api-token>`_
 
-**Additional providers** require both an API key in ``.env`` **and** a
+**Additional providers** require both an API key, stored as a Smarter Secret, **and** a
 Provider manifest applied via the CLI:
 
 .. list-table::
@@ -47,22 +47,22 @@ Provider manifest applied via the CLI:
    :widths: 20 40 40
 
    * - Provider
-     - Environment Variable
+     - Smarter Secret
      - API Key Console
    * - Anthropic
-     - ``SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY``
+     - ``anthropic_api_key``
      - `console.anthropic.com <https://console.anthropic.com/>`_
    * - Cohere
-     - ``SMARTER_APP_PROVIDER_COHERE_API_KEY``
+     - ``cohere_api_key``
      - `dashboard.cohere.com/api-keys <https://dashboard.cohere.com/api-keys>`_
    * - Fireworks
-     - ``SMARTER_APP_PROVIDER_FIREWORKS_API_KEY``
+     - ``fireworks_api_key``
      - `fireworks.ai/api-keys <https://fireworks.ai/api-keys/>`_
    * - Mistral
-     - ``SMARTER_APP_PROVIDER_MISTRAL_API_KEY``
+     - ``mistral_api_key``
      - `console.mistral.ai/api-keys <https://console.mistral.ai/api-keys/>`_
    * - TogetherAI
-     - ``SMARTER_APP_PROVIDER_TOGETHERAI_API_KEY``
+     - ``togetherai_api_key``
      - `together.ai/settings/api-keys <https://together.ai/settings/api-keys>`_
 
 Prerequisites
@@ -105,17 +105,24 @@ For Anthropic:
 Step 2: Add the Key to Smarter
 --------------------------------
 
-Open the ``.env`` file at the root of your Smarter deployment and add:
+Each provider's key is a Smarter Secret owned by the Smarter admin, here
+``anthropic_api_key``, never an environment variable. In local development,
+write the key into a file named after the Secret, in the repository's
+gitignored ``bootstrap-secrets/`` folder:
 
 .. code-block:: bash
 
-   SMARTER_APP_PROVIDER_ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   mkdir -p bootstrap-secrets
+   printf %s 'sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' > bootstrap-secrets/anthropic_api_key
 
-Restart the application to load the new credential:
+On Kubernetes, put it in the Helm chart's values instead, as
+``bootstrapSecrets.anthropic_api_key``. Then create the Secret from it:
 
 .. code-block:: bash
 
-   make restart
+   docker exec smarter-api python manage.py initialize_platform
+
+On Kubernetes, the chart's init job runs this command on every deployment.
 
 Concept Overview
 ================
@@ -265,13 +272,15 @@ Expected output for each provider:
 Troubleshooting
 ===============
 
-**Startup error: "API key not found"**
-   The ``SMARTER_*_API_KEY`` variable is missing from ``.env`` or the
-   application has not been restarted. Run ``make restart``.
+**Prompt error naming a Secret to set**
+   The provider's Smarter Secret, e.g. ``anthropic_api_key``, doesn't exist.
+   Write its file in ``bootstrap-secrets/`` (or its ``bootstrapSecrets`` value
+   in the Helm chart), then run ``manage.py initialize_platform``.
 
 **Provider status: "verification failed"**
    The API key is invalid or has been revoked. Generate a new key at the
-   provider's console and update ``.env``.
+   provider's console, update its file in ``bootstrap-secrets/``, and run
+   ``manage.py initialize_platform``, which updates the Secret.
 
 **Apply error: "Model not found"**
    The ``model`` value in your manifest does not match the provider's published

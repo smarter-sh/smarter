@@ -20,6 +20,7 @@ from smarter.lib.django.middleware.sensitive_files import (
     is_sensitive_path,
 )
 from smarter.lib.django.waffle import SmarterWaffleSwitches
+from smarter.lib.unittest.cache_outage import unreachable_cache
 from smarter.lib.unittest.narrowing import http_response
 
 
@@ -176,6 +177,22 @@ class TestSmarterBlockSensitiveFilesMiddleware(unittest.TestCase):
         args = mock_logger.warning.call_args.args
         self.assertIn("/.env.remote", args)
         self.assertNotIn(ip, " ".join(str(arg) for arg in args))
+
+    def test_requests_pass_while_the_cache_is_down(self):
+        """During a Redis outage, e.g. /jsi18n/ is served rather than answering 500 (issue #1091)."""
+        with (
+            patch("smarter.lib.django.middleware.sensitive_files.cache", unreachable_cache()),
+            self.assertLogs("smarter.lib.django.middleware.sensitive_files", level="WARNING") as logs,
+        ):
+            ok = http_response(self.middleware(self.make_request("/jsi18n/")))
+            blocked = http_response(self.middleware(self.make_request("/.env")))
+        self.assertEqual(ok.content, b"OK")
+        # a sensitive path is still blocked: only its count is lost.
+        self.assertEqual(blocked.status_code, 404)
+        output = "\n".join(logs.output)
+        self.assertIn("not throttling", output)
+        self.assertIn("not counting the probe", output)
+        self.assertNotIn("Traceback", output)
 
     def test_blocked_path_looks_like_any_missing_page(self):
         """Test that a blocked path gets the platform's ordinary 404, with no sign that it was blocked."""
