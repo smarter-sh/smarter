@@ -391,8 +391,18 @@ Phase 3, credentials by workload (Helm chart, smarter-infrastructure)
    Celery Beat, the migrate Job and the backup mount no token. The inventory found one write left in the app: a
    vectorstore's status view took a stalled deploy over, and created its cluster resources, in the request. It
    now leaves that to Beat's check, on the infrastructure worker (``VectorstoreService.reconcile(take_over=...)``).
-   Until step 4 gives each its own IAM role, every one of these ServiceAccounts has the shared
-   ``<namespace>-smarter-irsa``, whose trust policy names each of them.
+   Step 4 gives each of them its own IAM role, ``<namespace>-smarter-<pod>-irsa``, trusted by that
+   ServiceAccount only, from a second inventory, of every AWS call. Every Route53, ACM and node group change
+   is ``smarter-worker-infrastructure``'s; the init Job also writes the platform's own DNS records
+   (``verify_dns_configuration``). The app reads the cluster's status and uses the environment's bucket
+   (profile images, Provider logos, static files); the worker uses only the data exports bucket. Celery Beat
+   and the migrate Job make no AWS call: they have no role, ``AWS_EC2_METADATA_DISABLED`` keeps boto3 from
+   asking the node for one, and the settings don't ask STS for credentials they don't use
+   (``Settings.uses_aws``, from ``SmarterPodCapabilities.aws``). Five actions that nothing called left the policy: Route53
+   ``DeleteHostedZone``, ``GetChange`` and ``ListHostedZonesByName``, ACM ``DeleteCertificate`` and EC2
+   ``DescribeRegions``. The deploy action derives each role's ARN from the shared one's, by
+   smarter-infrastructure's naming, so no secret was added. The backup's role may now save a log too large
+   to email, which it couldn't before.
 
    A credential that has a Smarter Secret has the Secret as its only source. The 14 keys that the init Job
    stores as Secrets (the built-in Providers', Google's, the search services' and the managed vector

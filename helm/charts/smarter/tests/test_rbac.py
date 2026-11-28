@@ -28,6 +28,7 @@ from chart_render import (
 )
 
 ROLE_ARN = "arn:aws:iam::000000000000:role/test-smarter-irsa"
+API_ROLE_ARN = "arn:aws:iam::000000000000:role/test-smarter-api-irsa"
 
 WRITE_VERBS = {"create", "update", "patch", "delete", "deletecollection"}
 
@@ -62,7 +63,13 @@ class TestRbac(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        values = {"serviceAccount": {"awsRoleArn": ROLE_ARN, "createClusterRole": True}}
+        values = {
+            "serviceAccount": {
+                "awsRoleArn": ROLE_ARN,
+                "awsRoleArns": {"api": API_ROLE_ARN},
+                "createClusterRole": True,
+            }
+        }
         cls.documents = render(values)
         cls.service_accounts = documents_of_kind(cls.documents, "ServiceAccount")
         cls.roles = documents_of_kind(cls.documents, "Role")
@@ -101,12 +108,32 @@ class TestRbac(unittest.TestCase):
         self.assertNotIn(APP_NAME, self.roles)
         self.assertNotIn(f"{APP_NAME}-{NAMESPACE}", self.cluster_roles)
 
-    def test_every_platform_service_account_has_the_iam_role(self):
-        """Until each gets its own IAM role (step 4), every platform ServiceAccount has the shared one."""
-        for pod in ("api", "worker", "worker-infrastructure", "beat", "job-init", "job-migrate"):
+    def test_each_service_account_has_its_kinds_iam_role(self):
+        """A kind's role from awsRoleArns, else awsRoleArn; Celery Beat and the migrate Job, which call no AWS, none."""
+        expected = {
+            "api": API_ROLE_ARN,
+            "worker": ROLE_ARN,
+            "worker-infrastructure": ROLE_ARN,
+            "job-init": ROLE_ARN,
+            "beat": None,
+            "job-migrate": None,
+        }
+        for pod, role_arn in expected.items():
             with self.subTest(pod=pod):
                 account = self.service_accounts[service_account_name(pod)]
-                self.assertIn(f'eks.amazonaws.com/role-arn: "{ROLE_ARN}"', account)
+                if role_arn is None:
+                    self.assertNotIn("eks.amazonaws.com/role-arn", account)
+                else:
+                    self.assertIn(f'eks.amazonaws.com/role-arn: "{role_arn}"', account)
+
+    def test_the_pods_without_a_role_never_ask_the_node(self):
+        """Without a role, boto3 would ask the node's metadata service for the node's: Beat and migrate say no."""
+        for name, document in self.workloads.items():
+            pod = service_type(document)
+            if pod not in ("beat", "job-migrate"):
+                continue
+            with self.subTest(workload=name):
+                self.assertRegex(document, r'- name: AWS_EC2_METADATA_DISABLED\n\s+value: "true"')
 
     def test_the_migrate_jobs_service_account_exists_before_the_job(self):
         """The migrate Job runs before the release's resources: its ServiceAccount is an earlier pre-upgrade hook."""

@@ -89,6 +89,9 @@ spec:
             # the kind of pod, which smarter_settings names, and checks, when it starts.
             - name: SERVICE_TYPE
               value: "job-migrate"
+            # no IAM role, by design (ADR-038): boto3 mustn't ask the node's metadata service for one.
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- range $env := .Values.api.env }}

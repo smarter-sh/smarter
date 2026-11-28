@@ -13,13 +13,14 @@ from botocore.exceptions import (
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr, ValidationInfo
 
 from smarter.common.conf.const import DEFAULT_MISSING_VALUE, THE_EMPTY_SET
-from smarter.common.conf.credentials import AWS_POD_KINDS, HeldBy
+from smarter.common.conf.credentials import HeldBy
 from smarter.common.conf.env import is_missing_value
 from smarter.common.conf.util import (
     before_field_validator,
     comma_separated,
     field_default,
 )
+from smarter.common.const import SmarterPodCapabilities
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.lib import logging
 
@@ -174,7 +175,7 @@ class AwsSettings(BaseModel):
             return field_default(cls, "aws_profile")
         return v
 
-    aws_access_key_id: Annotated[Optional[SecretStr], HeldBy(*AWS_POD_KINDS)] = Field(
+    aws_access_key_id: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.aws)] = Field(
         None,
         validation_alias="AWS_ACCESS_KEY_ID",
         description="The AWS access key ID for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
@@ -228,7 +229,7 @@ class AwsSettings(BaseModel):
         warn_static_aws_key_pair("aws_access_key_id")
         return v
 
-    aws_secret_access_key: Annotated[Optional[SecretStr], HeldBy(*AWS_POD_KINDS)] = Field(
+    aws_secret_access_key: Annotated[Optional[SecretStr], HeldBy(*SmarterPodCapabilities.aws)] = Field(
         None,
         validation_alias="AWS_SECRET_ACCESS_KEY",
         description="The AWS secret access key for authentication. Used if AWS_PROFILE is not set. Masked by pydantic SecretStr.",
