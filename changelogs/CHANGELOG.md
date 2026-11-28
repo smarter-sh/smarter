@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.1](https://github.com/smarter-sh/smarter/compare/v1.0.0...v1.0.1) (2026-11-28)
+
+### Bug Fixes
+
+* **helm:** give each kind of pod its own IAM role ([5d649e9](https://github.com/smarter-sh/smarter/commit/5d649e9144130952f49370fb6621ee0c0a573d7d)), closes [#1084](https://github.com/smarter-sh/smarter/issues/1084)
+
 ## [1.0.1-alpha.1](https://github.com/smarter-sh/smarter/compare/v1.0.0...v1.0.1-alpha.1) (2026-11-28)
 
 ### Bug Fixes
