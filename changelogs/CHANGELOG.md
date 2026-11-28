@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [1.0.0-alpha.2](https://github.com/smarter-sh/smarter/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2026-11-28)
+
+### ⚠ BREAKING CHANGES
+
+* **vectorstore:** to the REST api (pre-1.0, so no breaking-change marker): POST /api/v1/vectorstores/{id}/undeploy/ now answers 202 instead of 200, with the message Undeploy queued. and the status unchanged until the worker has stopped serving. The console's delete answers 200 with Vectorstore N is being deleted. for a deployed one. openapi.json is regenerated with make api-contract: undeploy's description and status changed. The SDKs that copy it pick this up with make contracts. The cli's undeploy and delete return the same journaled response, with the queued message.
+
+Tests:
+
+- VectorstoreTestBase patches the three new tasks' .delay for each test (provision_task, undeploy_task, delete_vectorstore_task), as it does deploy_vectorstore's, so nothing reaches a worker. A test runs a task itself, as deploy_now does a deploy's checks.
+
+- test_tasks.py: provision_vectorstore applies the server, and records a cluster error; undeploy_vectorstore stops serving, and records a failure keeping the status; delete_vectorstore deletes the vectorstore, its Secret and its volume; a deletionProtection enabled since, or a backend error, keeps the vectorstore with why; and each returns None or False for a vectorstore that no longer exists.
+
+- test_service.py: queue_provision and queue_undeploy record their message and queue their task, and the cluster sees no apply and no delete; queue_delete queues for a deployed vectorstore, deletes one never deployed at once, and refuses a protected one.
+
+- The broker's lifecycle, the REST api's undeploy, the OpenAPI contract test and the console's delete now assert that the request queues, writes nothing to the cluster, and answers with the queued message or 202, then run the task and assert its result. The console's delete also deletes a never-deployed vectorstore at once.
+
+- make docker-test: 8367 tests in 9 shards, OK; the vectorstore app alone, 112. The pre-commit hooks and check-docs.sh pass. Not run by hand: a self-hosted deploy, which would create a Qdrant server and volume in the shared cluster's smarter-local namespace.
+
+Docs: the Vectorstore page says that undeploy and delete return at once, what the status message says until the worker is done, that a deployed Vectorstore is listed, deleting, until its database is destroyed, and that a changed self-hosted spec is applied by the worker. ADR-038's inventory of the app's cluster writes records that the vectorstore's are infrastructure tasks too, so the app only reads the cluster.
+
+Co-authored-by: Lawrence McDaniel <lpm0073@gmail.com>
+
+### Bug Fixes
+
+* **vectorstore:** queue cluster writes for the infrastructure worker ([f2e2344](https://github.com/smarter-sh/smarter/commit/f2e2344e7819165ad9d8ced9a9944dc275343964)), closes [#1080](https://github.com/smarter-sh/smarter/issues/1080) [#1084](https://github.com/smarter-sh/smarter/issues/1084)
+
 ## [1.0.0-alpha.1](https://github.com/smarter-sh/smarter/compare/v0.48.16-alpha.2...v1.0.0-alpha.1) (2026-11-28)
 
 ### ⚠ BREAKING CHANGES
